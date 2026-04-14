@@ -1,18 +1,13 @@
 {
   "name": "open-dpp",
   "description": "",
-  "author": "open-dpp GmbH",
-  "private": true,
   "license": "LGPL-3.0-only",
-  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48",
-  "devDependencies": {
-    "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
-    "@dotenvx/dotenvx": "^1.52.0",
-    "turbo": "^2.7.6"
-  },
+  "author": "open-dpp GmbH",
   "scripts": {
-    "lint": "turbo lint",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "build": "turbo build --env-mode=loose",
     "build:main": "turbo build --filter=./apps/main --env-mode=loose",
     "build:docs": "turbo docs:build --filter=./docs",
@@ -31,5 +26,14 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish"
-  }
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
+    "@dotenvx/dotenvx": "^1.52.0",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "turbo": "^2.7.6"
+  },
+  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
 }

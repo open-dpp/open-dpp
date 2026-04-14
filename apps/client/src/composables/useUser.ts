@@ -15,11 +15,9 @@ export function useUser() {
     try {
       const { data } = await apiClient.dpp.users.getById(id);
       user.value = data;
-    }
-    catch (e: unknown) {
+    } catch (e: unknown) {
       errorHandlingStore.logErrorWithNotification(t("notifications.error"), e);
-    }
-    finally {
+    } finally {
       loading.value = false;
     }
   };

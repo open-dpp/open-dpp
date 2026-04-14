@@ -55,9 +55,12 @@ describe("mediaController", () => {
         },
       ],
       controllers: [MediaController],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     app = module.createNestApplication();
     controller = module.get<MediaController>(MediaController);

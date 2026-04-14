@@ -9,10 +9,7 @@ import type { BreadcrumbTitle } from "../stores/layout.ts";
  * @param fallback - The localization key to use if `target` is not provided.
  * @returns BreadcrumbTitle object with text and localization flag.
  */
-export function textOrLocalizedFallback(
-  target: string,
-  fallback: string,
-): BreadcrumbTitle {
+export function textOrLocalizedFallback(target: string, fallback: string): BreadcrumbTitle {
   if (target) {
     return {
       text: target,

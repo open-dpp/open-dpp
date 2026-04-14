@@ -31,10 +31,7 @@ describe("date-value helpers", () => {
 
     it("round-trips a DateTime value to the same instant regardless of viewer TZ", () => {
       const original = new Date("2026-04-10T14:00:00+02:00");
-      const serialized = formatDateValueForModel(
-        original,
-        DataTypeDef.DateTime,
-      );
+      const serialized = formatDateValueForModel(original, DataTypeDef.DateTime);
       const parsed = parseDateValueFromModel(serialized);
       expect(parsed).not.toBeNull();
       expect(parsed!.getTime()).toBe(original.getTime());
@@ -71,34 +68,18 @@ describe("date-value helpers", () => {
 
   describe("formatDateValueForDisplay", () => {
     it("returns null for null / empty", () => {
-      expect(
-        formatDateValueForDisplay(null, DataTypeDef.DateTime, "Europe/Berlin"),
-      ).toBeNull();
-      expect(
-        formatDateValueForDisplay("", DataTypeDef.Date, "Europe/Berlin"),
-      ).toBeNull();
+      expect(formatDateValueForDisplay(null, DataTypeDef.DateTime, "Europe/Berlin")).toBeNull();
+      expect(formatDateValueForDisplay("", DataTypeDef.Date, "Europe/Berlin")).toBeNull();
     });
 
     it("formats Date values as a localized date with a zone suffix", () => {
-      const out = formatDateValueForDisplay(
-        "2026-04-10",
-        DataTypeDef.Date,
-        "Europe/Berlin",
-      );
+      const out = formatDateValueForDisplay("2026-04-10", DataTypeDef.Date, "Europe/Berlin");
       expect(out).toBe("2026-04-10 Europe/Berlin");
     });
 
     it("shows the zone label on Date values even though the day itself does not shift", () => {
-      const berlin = formatDateValueForDisplay(
-        "2026-04-10",
-        DataTypeDef.Date,
-        "Europe/Berlin",
-      );
-      const tokyo = formatDateValueForDisplay(
-        "2026-04-10",
-        DataTypeDef.Date,
-        "Asia/Tokyo",
-      );
+      const berlin = formatDateValueForDisplay("2026-04-10", DataTypeDef.Date, "Europe/Berlin");
+      const tokyo = formatDateValueForDisplay("2026-04-10", DataTypeDef.Date, "Asia/Tokyo");
       expect(berlin).toBe("2026-04-10 Europe/Berlin");
       expect(tokyo).toBe("2026-04-10 Asia/Tokyo");
     });
@@ -113,9 +94,7 @@ describe("date-value helpers", () => {
       // 14:00 UTC → 16:00 Berlin
       expect(out!).toContain("16:00");
       // zone must be explicit somewhere in the string
-      expect(
-        out!.includes("Europe/Berlin") || out!.includes("CEST"),
-      ).toBe(true);
+      expect(out!.includes("Europe/Berlin") || out!.includes("CEST")).toBe(true);
     });
 
     it("shifts DateTime rendering when viewer timezone changes", () => {
@@ -136,11 +115,7 @@ describe("date-value helpers", () => {
     });
 
     it("returns the raw string when the value is not a valid date", () => {
-      const out = formatDateValueForDisplay(
-        "not-a-date",
-        DataTypeDef.DateTime,
-        "Europe/Berlin",
-      );
+      const out = formatDateValueForDisplay("not-a-date", DataTypeDef.DateTime, "Europe/Berlin");
       expect(out).toBe("not-a-date");
     });
   });

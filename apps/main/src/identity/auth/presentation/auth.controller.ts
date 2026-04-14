@@ -11,8 +11,7 @@ export class AuthController {
   constructor(
     @Inject(AUTH) private readonly auth: Auth,
     private readonly instanceSettingsService: InstanceSettingsService,
-  ) {
-  }
+  ) {}
 
   @Post("*path")
   @OptionalAuth()

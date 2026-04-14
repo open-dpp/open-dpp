@@ -1,22 +1,24 @@
-import { z } from 'zod'
-import { AssetAdministrationShellCreateDtoSchema } from '../aas/asset-administration-shell-json-schema'
-import { SharedDppDtoSchema } from '../shared/dpp.schemas'
-import { PagingMetadataDtoSchema } from '../shared/pagination.dto'
+import { z } from "zod";
+import { AssetAdministrationShellCreateDtoSchema } from "../aas/asset-administration-shell-json-schema";
+import { SharedDppDtoSchema } from "../shared/dpp.schemas";
+import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 export const PassportDtoSchema = SharedDppDtoSchema.extend({
   templateId: z.string().nullable(),
   /** UPI uuid for presentation/chat links; set when listing passports */
   uniqueProductIdentifierUuid: z.uuid().optional(),
-})
+});
 
-export type PassportDto = z.infer<typeof PassportDtoSchema>
+export type PassportDto = z.infer<typeof PassportDtoSchema>;
 
-export const PassportPaginationDtoSchema = z.object({
-  ...PagingMetadataDtoSchema.shape,
-  result: PassportDtoSchema.array(),
-}).meta({ id: 'Passports' })
+export const PassportPaginationDtoSchema = z
+  .object({
+    ...PagingMetadataDtoSchema.shape,
+    result: PassportDtoSchema.array(),
+  })
+  .meta({ id: "Passports" });
 
-export type PassportPaginationDto = z.infer<typeof PassportPaginationDtoSchema>
+export type PassportPaginationDto = z.infer<typeof PassportPaginationDtoSchema>;
 
 export const PassportRequestCreateDtoSchema = z.xor([
   z.object({
@@ -27,6 +29,6 @@ export const PassportRequestCreateDtoSchema = z.xor([
       assetAdministrationShells: AssetAdministrationShellCreateDtoSchema.array().max(1),
     }),
   }),
-])
+]);
 
-export type PassportRequestCreateDto = z.input<typeof PassportRequestCreateDtoSchema>
+export type PassportRequestCreateDto = z.input<typeof PassportRequestCreateDtoSchema>;

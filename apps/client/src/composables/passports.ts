@@ -1,9 +1,11 @@
-import type { LanguageTextDto, PagingParamsDto, PassportPaginationDto, PassportRequestCreateDto } from "@open-dpp/dto";
-import type { PagingResult } from "./pagination.ts";
-import {
-
-  Populates,
+import type {
+  LanguageTextDto,
+  PagingParamsDto,
+  PassportPaginationDto,
+  PassportRequestCreateDto,
 } from "@open-dpp/dto";
+import type { PagingResult } from "./pagination.ts";
+import { Populates } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -27,16 +29,15 @@ export function usePassports() {
     return response.data;
   };
 
-  const createPassport = async (params: { templateId: string } | { displayName: LanguageTextDto[] }) => {
+  const createPassport = async (
+    params: { templateId: string } | { displayName: LanguageTextDto[] },
+  ) => {
     const body = match(params)
       .returnType<PassportRequestCreateDto>()
-      .with(
-        { templateId: P.string },
-        ({ templateId }) => ({
-          templateId,
-        }),
-      )
-      .otherwise(data => ({
+      .with({ templateId: P.string }, ({ templateId }) => ({
+        templateId,
+      }))
+      .otherwise((data) => ({
         environment: {
           assetAdministrationShells: [{ ...data }],
         },

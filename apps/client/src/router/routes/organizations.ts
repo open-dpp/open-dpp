@@ -1,7 +1,4 @@
-import type {
-  RouteLocationNormalizedGeneric,
-  RouteRecordRaw,
-} from "vue-router";
+import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
 import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 import { ORGANIZATION_ANALYTICS_PARENT } from "./analytics.ts";
@@ -12,8 +9,7 @@ import { ORGANIZATION_TEMPLATES_PARENT } from "./templates/templates.ts";
 export const ORGANIZATION_LIST: RouteRecordRaw = {
   path: "",
   name: "Organizations",
-  component: () =>
-    import("../../view/organizations/SelectOrganizationView.vue"),
+  component: () => import("../../view/organizations/SelectOrganizationView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = organizationListBreadCrumbs(to);
@@ -33,8 +29,7 @@ function organizationListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
 export const ORGANIZATION_CREATE: RouteRecordRaw = {
   path: "create",
   name: "OrganizationCreate",
-  component: () =>
-    import("../../view/organizations/CreateOrganizationView.vue"),
+  component: () => import("../../view/organizations/CreateOrganizationView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = organizationListBreadCrumbs(to);
@@ -51,8 +46,7 @@ export const ORGANIZATION: RouteRecordRaw = {
 export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
   path: "members",
   name: "OrganizationMembers",
-  component: () =>
-    import("../../view/organizations/OrganizationMembersView.vue"),
+  component: () => import("../../view/organizations/OrganizationMembersView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
@@ -68,8 +62,7 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
 export const ORGANIZATION_SETTINGS: RouteRecordRaw = {
   path: "settings",
   name: "OrganizationSettings",
-  component: () =>
-    import("../../view/organizations/OrganizationSettingsView.vue"),
+  component: () => import("../../view/organizations/OrganizationSettingsView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [

@@ -17,8 +17,7 @@ export const AccessControlSchema = z.object({
 export class AccessControl {
   private administrator = SubjectAttributes.create({ userRole: UserRole.ADMIN });
 
-  private constructor(private _accessPermissionRules: AccessPermissionRule[]) {
-  }
+  private constructor(private _accessPermissionRules: AccessPermissionRule[]) {}
 
   get accessPermissionRules(): AccessPermissionRule[] {
     return this._accessPermissionRules;
@@ -35,28 +34,24 @@ export class AccessControl {
 
   static fromPlain(json: unknown): AccessControl {
     const parsed = AccessControlSchema.parse(json);
-    return new AccessControl(
-      parsed.accessPermissionRules.map(AccessPermissionRule.fromPlain),
-    );
+    return new AccessControl(parsed.accessPermissionRules.map(AccessPermissionRule.fromPlain));
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     if (options?.ability) {
       const rules = this.findRulesOfAllVisibleRolesOfSubject(options.ability.getSubject());
       return {
-        accessPermissionRules: rules.map(p => p.toPlain(options)),
+        accessPermissionRules: rules.map((p) => p.toPlain(options)),
       };
     }
     return {
-      accessPermissionRules: this.accessPermissionRules.map(p => p.toPlain(options)),
+      accessPermissionRules: this.accessPermissionRules.map((p) => p.toPlain(options)),
     };
   }
 
   findRulesOfAllVisibleRolesOfSubject(subject: SubjectAttributes): AccessPermissionRule[] {
     const subjectsToConsider = [subject, ...subject.getSubjectsWithSubordinatedRoles()];
-    return subjectsToConsider.map(s => this.findRuleOfSubject(s)).filter(
-      r => !!r,
-    );
+    return subjectsToConsider.map((s) => this.findRuleOfSubject(s)).filter((r) => !!r);
   }
 
   modifyPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
@@ -65,7 +60,9 @@ export class AccessControl {
     this.allowedCombinationOfPermissionsOrFail(permissions);
     const rule = this.findRuleOfSubject(subject);
     if (!rule) {
-      throw new ForbiddenError(`Policy for subject { userRole: ${subject.userRole}, memberRole: ${subject.memberRole} } and object ${object.toString()} does not exist.`);
+      throw new ForbiddenError(
+        `Policy for subject { userRole: ${subject.userRole}, memberRole: ${subject.memberRole} } and object ${object.toString()} does not exist.`,
+      );
     }
     const aasObject = createAasObject(object);
     rule.modifyPermissionForObject(aasObject, permissions);
@@ -77,7 +74,7 @@ export class AccessControl {
     if (rule) {
       rule.deletePermissionPerObject(object, { exactPathMatch: true });
       if (rule.permissionsPerObject.length === 0) {
-        this._accessPermissionRules = this.accessPermissionRules.filter(r => r !== rule);
+        this._accessPermissionRules = this.accessPermissionRules.filter((r) => r !== rule);
       }
     }
   }
@@ -95,9 +92,7 @@ export class AccessControl {
   }
 
   findRuleOfSubject(subject: SubjectAttributes): AccessPermissionRule | undefined {
-    return this.accessPermissionRules.find(
-      rule => rule.targetSubjectAttributes.isEqual(subject),
-    );
+    return this.accessPermissionRules.find((rule) => rule.targetSubjectAttributes.isEqual(subject));
   }
 
   addRule(rule: AccessPermissionRule): void {
@@ -105,11 +100,13 @@ export class AccessControl {
   }
 
   private allowedCombinationOfPermissionsOrFail(permissions: Permission[]) {
-    const readPermission = permissions.find(p => p.permission === Permissions.Read);
+    const readPermission = permissions.find((p) => p.permission === Permissions.Read);
     for (const permission of permissions) {
       if (permission.permission !== Permissions.Read) {
         if (!readPermission) {
-          throw new ValueError(`Permission ${permission.permission} is not allowed without Read permission.`);
+          throw new ValueError(
+            `Permission ${permission.permission} is not allowed without Read permission.`,
+          );
         }
       }
     }
@@ -119,17 +116,27 @@ export class AccessControl {
     this.administratePolicyGuard(subject);
     this.allowedCombinationOfPermissionsOrFail(permissions);
     const rule = this.findRuleOfSubject(subject);
-    const permissionPerObject = PermissionPerObject.create({ object: createAasObject(object), permissions });
+    const permissionPerObject = PermissionPerObject.create({
+      object: createAasObject(object),
+      permissions,
+    });
     if (rule) {
       rule.addPermissionPerObject(permissionPerObject);
-    }
-    else {
-      this.addRule(AccessPermissionRule.create({ targetSubjectAttributes: subject, permissionsPerObject: [permissionPerObject] }));
+    } else {
+      this.addRule(
+        AccessPermissionRule.create({
+          targetSubjectAttributes: subject,
+          permissionsPerObject: [permissionPerObject],
+        }),
+      );
     }
   }
 
   private administratePolicyGuard(subject: SubjectAttributes) {
-    if (this.administrator.userRole !== UserRole.ADMIN && this.administrator.hasLowerThanOrEqualRoles(subject)) {
+    if (
+      this.administrator.userRole !== UserRole.ADMIN &&
+      this.administrator.hasLowerThanOrEqualRoles(subject)
+    ) {
       throw new ForbiddenError(`Administrator has no permission to add/ modify/ delete policy.`);
     }
   }

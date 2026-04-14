@@ -1,32 +1,29 @@
-import type { AxiosRequestConfig } from 'axios'
-import axios from 'axios'
+import type { AxiosRequestConfig } from "axios";
+import axios from "axios";
 
 export interface IApiClient {
-  setApiKey: (apiKey: string) => void
-  setActiveOrganizationId: (id: string) => void
+  setApiKey: (apiKey: string) => void;
+  setActiveOrganizationId: (id: string) => void;
 }
 
 export interface ApiClientOptions extends AxiosRequestConfig {
-  apiKey?: string
-  serviceToken?: string
-  activeOrganizationId?: string
+  apiKey?: string;
+  serviceToken?: string;
+  activeOrganizationId?: string;
 }
 
-export function createAxiosClient(
-  options: ApiClientOptions,
-  defaultBaseUrl: string,
-) {
+export function createAxiosClient(options: ApiClientOptions, defaultBaseUrl: string) {
   return axios.create({
     ...options,
     baseURL: options.baseURL ?? defaultBaseUrl,
     withCredentials: true,
     headers: {
       ...options.headers,
-      'service_token': options.serviceToken ? options.serviceToken : '',
-      'x-api-key': options.apiKey ? options.apiKey : '',
+      service_token: options.serviceToken ? options.serviceToken : "",
+      "x-api-key": options.apiKey ? options.apiKey : "",
       ...(options.activeOrganizationId
-        ? { 'X-OPEN-DPP-ORGANIZATION-ID': options.activeOrganizationId }
+        ? { "X-OPEN-DPP-ORGANIZATION-ID": options.activeOrganizationId }
         : {}),
     },
-  })
+  });
 }

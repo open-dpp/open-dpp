@@ -1,7 +1,7 @@
-import { z } from 'zod'
-import { QualifierKindEnum } from '../enums/qualifier-kind-enum'
-import { ValueTypeSchema } from './basic-json-schema'
-import { ReferenceJsonSchema } from './reference-json-schema'
+import { z } from "zod";
+import { QualifierKindEnum } from "../enums/qualifier-kind-enum";
+import { ValueTypeSchema } from "./basic-json-schema";
+import { ReferenceJsonSchema } from "./reference-json-schema";
 
 export const QualifierJsonSchema = z.object({
   type: z.string(),
@@ -11,4 +11,4 @@ export const QualifierJsonSchema = z.object({
   kind: QualifierKindEnum,
   value: z.string().nullish(),
   valueId: ReferenceJsonSchema.nullish(),
-})
+});

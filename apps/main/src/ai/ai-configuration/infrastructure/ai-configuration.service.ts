@@ -71,14 +71,10 @@ export class AiConfigurationService {
     return aiConfiguration;
   }
 
-  async findOneByOrganizationId(
-    id: string,
-  ): Promise<AiConfiguration | undefined> {
+  async findOneByOrganizationId(id: string): Promise<AiConfiguration | undefined> {
     const aiConfigurationDocument = await this.aiConfigurationDoc.findOne({
       ownedByOrganizationId: id,
     });
-    return aiConfigurationDocument
-      ? this.convertToDomain(aiConfigurationDocument)
-      : undefined;
+    return aiConfigurationDocument ? this.convertToDomain(aiConfigurationDocument) : undefined;
   }
 }

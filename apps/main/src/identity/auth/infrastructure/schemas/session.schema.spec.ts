@@ -22,9 +22,7 @@ describe("sessionSchema", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([
-          { name: Session.name, schema: SessionSchema },
-        ]),
+        MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());
@@ -104,9 +102,7 @@ describe("sessionSchema", () => {
       updatedAt: new Date(),
     };
 
-    await expect(
-      new SessionModel(duplicateSessionData).save(),
-    ).rejects.toMatchObject({
+    await expect(new SessionModel(duplicateSessionData).save()).rejects.toMatchObject({
       code: 11000,
     });
   });

@@ -17,20 +17,18 @@ onMounted(async () => {
 
 <template>
   <section class="pt-5">
-    <div
-      class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm max-w-xl"
-    >
+    <div class="max-w-xl divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm">
       <div class="px-4 py-5 sm:px-6">
-        {{ t('common.presentationMode') }}
+        {{ t("common.presentationMode") }}
       </div>
       <div class="px-4 py-5 sm:p-6">
         <canvas ref="canvas" class="mx-auto h-12 w-12 text-gray-400" />
       </div>
-      <div class="flex flex-row gap-1 px-4 py-4 sm:px-6 text-blue-600">
+      <div class="flex flex-row gap-1 px-4 py-4 text-blue-600 sm:px-6">
         <router-link :to="props.link" class="mt-2 text-sm font-semibold">
           {{ props.link }}
         </router-link>
-        <ArrowTopRightOnSquareIcon class="w-5 mt-auto" />
+        <ArrowTopRightOnSquareIcon class="mt-auto w-5" />
       </div>
     </div>
   </section>

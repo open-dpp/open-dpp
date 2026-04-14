@@ -12,9 +12,7 @@ import { AiConfigurationUpsertDtoSchema } from "./dto/ai-configuration.dto";
 export class AiConfigurationController {
   private readonly aiConfigurationService: AiConfigurationService;
 
-  constructor(
-    aiConfigurationService: AiConfigurationService,
-  ) {
+  constructor(aiConfigurationService: AiConfigurationService) {
     this.aiConfigurationService = aiConfigurationService;
   }
 
@@ -25,13 +23,11 @@ export class AiConfigurationController {
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
     aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
   ) {
-    let aiConfiguration
-      = await this.aiConfigurationService.findOneByOrganizationId(organizationId);
+    let aiConfiguration = await this.aiConfigurationService.findOneByOrganizationId(organizationId);
 
     if (aiConfiguration) {
       aiConfiguration.update(aiConfigurationUpsertDto);
-    }
-    else {
+    } else {
       aiConfiguration = AiConfiguration.create({
         ownedByOrganizationId: organizationId,
         createdByUserId: session.userId,
@@ -47,13 +43,9 @@ export class AiConfigurationController {
   }
 
   @Get()
-  async findConfigurationByOrganization(
-    @OrganizationId() organizationId: string,
-  ) {
+  async findConfigurationByOrganization(@OrganizationId() organizationId: string) {
     return aiConfigurationDto.aiConfigurationToDto(
-      await this.aiConfigurationService.findOneByOrganizationIdOrFail(
-        organizationId,
-      ),
+      await this.aiConfigurationService.findOneByOrganizationIdOrFail(organizationId),
     );
   }
 }

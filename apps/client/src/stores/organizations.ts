@@ -19,8 +19,7 @@ export const useOrganizationsStore = defineStore("organizations", () => {
     try {
       const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
       organizations.value = data || [];
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(t("organizations.fetchError"), error);
     }
   };
@@ -35,8 +34,7 @@ export const useOrganizationsStore = defineStore("organizations", () => {
         addOrganization(data);
         return data;
       }
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(t("organizations.createError"), error);
       return null;
     }
@@ -47,12 +45,13 @@ export const useOrganizationsStore = defineStore("organizations", () => {
     try {
       const { data: session } = await authClient.getSession();
       if (session?.session.activeOrganizationId) {
-        const { data } = await apiClient.dpp.organizations.getById(session.session.activeOrganizationId);
+        const { data } = await apiClient.dpp.organizations.getById(
+          session.session.activeOrganizationId,
+        );
         return data;
       }
       return null;
-    }
-    catch (error: unknown) {
+    } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(t("organizations.fetchCurrentError"), error);
       return null;
     }

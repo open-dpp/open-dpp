@@ -11,9 +11,7 @@ describe("aiConfiguration", () => {
     const aiConfiguration = AiConfiguration.create(props);
     expect(aiConfiguration).toBeInstanceOf(AiConfiguration);
     expect(aiConfiguration.id).toEqual(expect.any(String));
-    expect(aiConfiguration.ownedByOrganizationId).toEqual(
-      props.ownedByOrganizationId,
-    );
+    expect(aiConfiguration.ownedByOrganizationId).toEqual(props.ownedByOrganizationId);
     expect(aiConfiguration.provider).toEqual(AiProvider.Mistral);
     expect(aiConfiguration.model).toEqual("codestral-latest");
     expect(aiConfiguration.createdByUserId).toEqual(props.createdByUserId);
@@ -38,9 +36,7 @@ describe("aiConfiguration", () => {
     const aiConfiguration = AiConfiguration.loadFromDb(props);
     expect(aiConfiguration).toBeInstanceOf(AiConfiguration);
     expect(aiConfiguration.id).toEqual(props.id);
-    expect(aiConfiguration.ownedByOrganizationId).toEqual(
-      props.ownedByOrganizationId,
-    );
+    expect(aiConfiguration.ownedByOrganizationId).toEqual(props.ownedByOrganizationId);
     expect(aiConfiguration.createdByUserId).toEqual(props.createdByUserId);
     expect(aiConfiguration.provider).toEqual(AiProvider.Mistral);
     expect(aiConfiguration.model).toEqual("codestral-latest");

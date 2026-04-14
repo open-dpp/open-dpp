@@ -23,9 +23,7 @@ export class PassportMetricAggregation {
     private readonly endDate: Date,
   ) {}
 
-  static create(
-    data: PassportMetricAggregationProps,
-  ): PassportMetricAggregation {
+  static create(data: PassportMetricAggregationProps): PassportMetricAggregation {
     return new PassportMetricAggregation(
       data.type,
       data.valueKey,
@@ -94,9 +92,7 @@ export class PassportMetricAggregation {
     ];
   }
 
-  getAggregateQueryForTimePeriod(
-    timePeriod: TimePeriod,
-  ): mongoose.PipelineStage[] {
+  getAggregateQueryForTimePeriod(timePeriod: TimePeriod): mongoose.PipelineStage[] {
     const matchKey = {
       "values.key": this.valueKey,
     };

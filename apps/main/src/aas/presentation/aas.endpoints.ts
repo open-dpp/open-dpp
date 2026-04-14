@@ -23,11 +23,45 @@ import { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../domain/common/id-short-path";
 
 export interface IAasReadEndpointsWithOrganizationId {
-  getShells: (organizationId: string, id: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<AssetAdministrationShellPaginationResponseDto>;
-  getSubmodels: (organizationId: string, id: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelPaginationResponseDto>;
-  getSubmodelById: (organizationId: string, id: string, submodelId: string, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelResponseDto>;
-  getSubmodelValue: (organizationId: string, id: string, submodelId: string, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<ValueResponseDto>;
-  getSubmodelElements: (organizationId: string, id: string, submodelId: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelElementPaginationResponseDto>;
+  getShells: (
+    organizationId: string,
+    id: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<AssetAdministrationShellPaginationResponseDto>;
+  getSubmodels: (
+    organizationId: string,
+    id: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelPaginationResponseDto>;
+  getSubmodelById: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelResponseDto>;
+  getSubmodelValue: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<ValueResponseDto>;
+  getSubmodelElements: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelElementPaginationResponseDto>;
   getSubmodelElementById: (
     organizationId: string,
     id: string,
@@ -47,11 +81,40 @@ export interface IAasReadEndpointsWithOrganizationId {
 }
 
 export interface IAasReadEndpoints {
-  getShells: (id: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<AssetAdministrationShellPaginationResponseDto>;
-  getSubmodels: (id: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelPaginationResponseDto>;
-  getSubmodelById: (id: string, submodelId: string, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelResponseDto>;
-  getSubmodelValue: (id: string, submodelId: string, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<ValueResponseDto>;
-  getSubmodelElements: (id: string, submodelId: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelElementPaginationResponseDto>;
+  getShells: (
+    id: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<AssetAdministrationShellPaginationResponseDto>;
+  getSubmodels: (
+    id: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelPaginationResponseDto>;
+  getSubmodelById: (
+    id: string,
+    submodelId: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelResponseDto>;
+  getSubmodelValue: (
+    id: string,
+    submodelId: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<ValueResponseDto>;
+  getSubmodelElements: (
+    id: string,
+    submodelId: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelElementPaginationResponseDto>;
   getSubmodelElementById: (
     id: string,
     submodelId: string,
@@ -69,7 +132,13 @@ export interface IAasReadEndpoints {
 }
 
 export interface IAasCreateEndpoints {
-  createSubmodel: (organizationId: string, id: string, body: SubmodelRequestDto, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelResponseDto>;
+  createSubmodel: (
+    organizationId: string,
+    id: string,
+    body: SubmodelRequestDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
     organizationId: string,
     id: string,
@@ -109,8 +178,22 @@ export interface IAasCreateEndpoints {
 }
 
 export interface IAasModifyEndpoints {
-  modifyShell: (organizationId: string, id: string, aasId: string, body: AssetAdministrationShellModificationDto, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<AssetAdministrationShellResponseDto>;
-  modifySubmodel: (organizationId: string, id: string, submodelId: string, body: SubmodelModificationDto, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelResponseDto>;
+  modifyShell: (
+    organizationId: string,
+    id: string,
+    aasId: string,
+    body: AssetAdministrationShellModificationDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<AssetAdministrationShellResponseDto>;
+  modifySubmodel: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: SubmodelModificationDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
     organizationId: string,
     id: string,
@@ -120,7 +203,15 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
   ) => Promise<SubmodelElementResponseDto>;
-  modifySubmodelElementValue: (organizationId: string, id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<SubmodelElementResponseDto>;
+  modifySubmodelElementValue: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: ValueRequestDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<SubmodelElementResponseDto>;
   modifyColumnOfSubmodelElementList: (
     organizationId: string,
     id: string,
@@ -134,8 +225,21 @@ export interface IAasModifyEndpoints {
 }
 
 export interface IAasDeleteEndpoints {
-  deleteSubmodel: (organizationId: string, id: string, submodelId: string, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<void>;
-  deleteSubmodelElement: (organizationId: string, id: string, submodelId: string, idShortPath: IdShortPath, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<void>;
+  deleteSubmodel: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<void>;
+  deleteSubmodelElement: (
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<void>;
   deleteColumnFromSubmodelElementList: (
     organizationId: string,
     id: string,

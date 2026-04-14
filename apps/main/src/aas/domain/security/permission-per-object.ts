@@ -10,10 +10,15 @@ export const PermissionPerObjectSchema = z.object({
 
 export class PermissionPerObject {
   // object maybe submodel, and objectAttributes maybe IdShortPaths
-  private constructor(public readonly object: ReferenceElement, public permissions: Permission[]) {
-  }
+  private constructor(
+    public readonly object: ReferenceElement,
+    public permissions: Permission[],
+  ) {}
 
-  static create(data: { object: ReferenceElement; permissions?: Permission[] }): PermissionPerObject {
+  static create(data: {
+    object: ReferenceElement;
+    permissions?: Permission[];
+  }): PermissionPerObject {
     return new PermissionPerObject(data.object, data.permissions ?? []);
   }
 
@@ -28,7 +33,7 @@ export class PermissionPerObject {
   toPlain(): Record<string, any> {
     return {
       object: this.object.toPlain(),
-      permissions: this.permissions.map(p => p.toPlain()),
+      permissions: this.permissions.map((p) => p.toPlain()),
     };
   }
 }

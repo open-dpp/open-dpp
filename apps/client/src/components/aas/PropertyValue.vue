@@ -4,10 +4,7 @@ import { DataTypeDef } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
-import {
-  formatDateValueForModel,
-  parseDateValueFromModel,
-} from "../../lib/date-value.ts";
+import { formatDateValueForModel, parseDateValueFromModel } from "../../lib/date-value.ts";
 
 const props = defineProps<{
   id: string;
@@ -46,9 +43,7 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Decimal,
 ]);
 
-const isNumeric = computed(() =>
-  props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
-);
+const isNumeric = computed(() => (props.valueType ? NUMERIC_TYPES.has(props.valueType) : false));
 
 const isDate = computed(() => props.valueType === DataTypeDef.Date);
 
@@ -62,12 +57,11 @@ const numericValue = computed({
   get: () => {
     try {
       return z.coerce.number().nullish().parse(props.modelValue);
-    }
-    catch {
+    } catch {
       return null;
     }
   },
-  set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+  set: (v) => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
 });
 
 const dateValue = computed({

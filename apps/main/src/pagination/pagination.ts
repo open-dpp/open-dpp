@@ -1,8 +1,10 @@
 import { Buffer } from "node:buffer";
 
 export class Pagination {
-  private constructor(private _cursor: string | null, public readonly limit: number | null) {
-  }
+  private constructor(
+    private _cursor: string | null,
+    public readonly limit: number | null,
+  ) {}
 
   static create(data: { cursor?: string; limit?: number }): Pagination {
     return new Pagination(data.cursor ?? null, data.limit ?? null);
@@ -18,7 +20,9 @@ export class Pagination {
 
   nextPages(pageIds: string[]) {
     const startIndex = this._cursor ? pageIds.indexOf(this._cursor) + 1 : 0;
-    const nextPages = this.limit ? pageIds.slice(startIndex, startIndex + this.limit) : pageIds.slice(startIndex);
+    const nextPages = this.limit
+      ? pageIds.slice(startIndex, startIndex + this.limit)
+      : pageIds.slice(startIndex);
     this._cursor = nextPages[nextPages.length - 1] ?? null;
     return nextPages;
   }

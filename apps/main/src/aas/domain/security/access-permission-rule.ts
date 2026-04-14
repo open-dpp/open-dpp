@@ -13,9 +13,15 @@ export const AccessPermissionRuleSchema = z.object({
 });
 
 export class AccessPermissionRule {
-  private constructor(public readonly targetSubjectAttributes: SubjectAttributes, private _permissionsPerObject: PermissionPerObject[]) {}
+  private constructor(
+    public readonly targetSubjectAttributes: SubjectAttributes,
+    private _permissionsPerObject: PermissionPerObject[],
+  ) {}
 
-  static create(data: { targetSubjectAttributes: SubjectAttributes; permissionsPerObject?: PermissionPerObject[] }): AccessPermissionRule {
+  static create(data: {
+    targetSubjectAttributes: SubjectAttributes;
+    permissionsPerObject?: PermissionPerObject[];
+  }): AccessPermissionRule {
     return new AccessPermissionRule(data.targetSubjectAttributes, data.permissionsPerObject ?? []);
   }
 
@@ -23,14 +29,16 @@ export class AccessPermissionRule {
     return this._permissionsPerObject;
   }
 
-  deletePermissionPerObject(object: IdShortPath, options: { exactPathMatch?: boolean } = { exactPathMatch: false }): void {
+  deletePermissionPerObject(
+    object: IdShortPath,
+    options: { exactPathMatch?: boolean } = { exactPathMatch: false },
+  ): void {
     const keepPermissions = [];
     for (const permissionsPerObject of this.permissionsPerObject) {
       const idShortPath = IdShortPath.create({ path: permissionsPerObject.object.idShort });
       if (!options.exactPathMatch && !idShortPath.isChildOf(object)) {
         keepPermissions.push(permissionsPerObject);
-      }
-      else if (options.exactPathMatch && !idShortPath.isEqual(object)) {
+      } else if (options.exactPathMatch && !idShortPath.isEqual(object)) {
         keepPermissions.push(permissionsPerObject);
       }
     }
@@ -39,20 +47,28 @@ export class AccessPermissionRule {
   }
 
   hasPermissionForObject(permissionPerObject: PermissionPerObject): boolean {
-    return this.permissionsPerObject.some(p => p.object.idShort === permissionPerObject.object.idShort);
+    return this.permissionsPerObject.some(
+      (p) => p.object.idShort === permissionPerObject.object.idShort,
+    );
   }
 
   addPermissionPerObject(permissionPerObject: PermissionPerObject): void {
     if (this.hasPermissionForObject(permissionPerObject)) {
-      throw new ValueError(`Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${permissionPerObject.object.idShort} already exists`);
+      throw new ValueError(
+        `Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${permissionPerObject.object.idShort} already exists`,
+      );
     }
     this.permissionsPerObject.push(permissionPerObject);
   }
 
   modifyPermissionForObject(object: ReferenceElement, permissions: Permission[]): void {
-    const permissionsPerObject = this.permissionsPerObject.find(p => p.object.idShort === object.idShort);
+    const permissionsPerObject = this.permissionsPerObject.find(
+      (p) => p.object.idShort === object.idShort,
+    );
     if (!permissionsPerObject) {
-      throw new ValueError(`Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${object.idShort} does not exist`);
+      throw new ValueError(
+        `Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${object.idShort} does not exist`,
+      );
     }
     permissionsPerObject.permissions = permissions;
   }
@@ -69,17 +85,20 @@ export class AccessPermissionRule {
     let filteredPermissionsPerObject: PermissionPerObject[] = [];
     if (options?.context?.filterSubmodels) {
       for (const submodel of options.context.filterSubmodels) {
-        filteredPermissionsPerObject.push(...this.permissionsPerObject.filter(
-          p => IdShortPath.create({ path: p.object.idShort }).isChildOf(IdShortPath.create({ path: submodel.idShort })),
-        ));
+        filteredPermissionsPerObject.push(
+          ...this.permissionsPerObject.filter((p) =>
+            IdShortPath.create({ path: p.object.idShort }).isChildOf(
+              IdShortPath.create({ path: submodel.idShort }),
+            ),
+          ),
+        );
       }
-    }
-    else {
+    } else {
       filteredPermissionsPerObject = this.permissionsPerObject;
     }
     return {
       targetSubjectAttributes: this.targetSubjectAttributes.toPlain(),
-      permissionsPerObject: filteredPermissionsPerObject.map(p => p.toPlain()),
+      permissionsPerObject: filteredPermissionsPerObject.map((p) => p.toPlain()),
     };
   }
 }

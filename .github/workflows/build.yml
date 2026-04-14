@@ -19,29 +19,29 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: 24
     steps:
-      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Install pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
-      # Step 3: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
-      # Step 4: Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 5: Run linting
       - name: Run linter
         run: pnpm run lint
+
+      - name: Check formatting
+        run: pnpm run format:check
 
   test:
     runs-on: ubuntu-latest

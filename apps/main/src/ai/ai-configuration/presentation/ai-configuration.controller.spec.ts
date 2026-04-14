@@ -8,9 +8,7 @@ import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../../test/better-auth-helper";
-import {
-  getApp,
-} from "../../../../test/utils.for.test";
+import { getApp } from "../../../../test/utils.for.test";
 import { generateMongoConfig } from "../../../database/config";
 import { EmailService } from "../../../email/email.service";
 import { AuthModule } from "../../../identity/auth/auth.module";
@@ -104,8 +102,7 @@ describe("aiConfigurationController", () => {
       .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
-    const found
-      = await aiConfigurationService.findOneByOrganizationIdOrFail(org.id);
+    const found = await aiConfigurationService.findOneByOrganizationIdOrFail(org.id);
     expect(found).toBeDefined();
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -147,8 +144,7 @@ describe("aiConfigurationController", () => {
       .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
-    const found
-      = await aiConfigurationService.findOneByOrganizationIdOrFail(org.id);
+    const found = await aiConfigurationService.findOneByOrganizationIdOrFail(org.id);
     expect(found.id).toEqual(id);
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);

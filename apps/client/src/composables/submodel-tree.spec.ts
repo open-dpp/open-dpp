@@ -23,7 +23,7 @@ describe("getSubmodelTreeElementsBefore", () => {
   it("returns elements before a nested target in pre-order traversal", () => {
     const result = getSubmodelTreeElementsBefore(tree, "B1");
 
-    expect(result.map(element => element.idShort)).toEqual(["A", "A1", "A2", "B"]);
+    expect(result.map((element) => element.idShort)).toEqual(["A", "A1", "A2", "B"]);
   });
 
   it("returns an empty array when target is first root element", () => {

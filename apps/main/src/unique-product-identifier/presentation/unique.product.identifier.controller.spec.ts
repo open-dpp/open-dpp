@@ -48,7 +48,6 @@ describe("uniqueProductIdentifierController", () => {
         schema: UniqueProductIdentifierSchema,
       },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
-
     ],
     UniqueProductIdentifierService,
     SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
@@ -59,7 +58,7 @@ describe("uniqueProductIdentifierController", () => {
 
     const environment = Environment.create({
       assetAdministrationShells: [aas.id],
-      submodels: submodels.map(s => s.id),
+      submodels: submodels.map((s) => s.id),
       conceptDescriptions: [],
     });
 
@@ -87,14 +86,14 @@ describe("uniqueProductIdentifierController", () => {
   }
 
   it(`/GET passport from unique product identifier`, async () => {
-    const { userCookie } = await ctx.globals().betterAuthHelper.getUserWithCookie(ctx.globals().userId);
+    const { userCookie } = await ctx
+      .globals()
+      .betterAuthHelper.getUserWithCookie(ctx.globals().userId);
 
     const upid = await createPassportWithUniqueProductIdentifier();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(
-        `/unique-product-identifiers/${upid.id}/passport`,
-      )
+      .get(`/unique-product-identifiers/${upid.id}/passport`)
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
@@ -106,20 +105,18 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET unique product identifier from reference`, async () => {
-    const { userCookie } = await ctx.globals().betterAuthHelper.getUserWithCookie(ctx.globals().userId);
+    const { userCookie } = await ctx
+      .globals()
+      .betterAuthHelper.getUserWithCookie(ctx.globals().userId);
 
     const upid = await createPassportWithUniqueProductIdentifier();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(
-        `/unique-product-identifiers?reference=${upid.passport.id}`,
-      )
+      .get(`/unique-product-identifiers?reference=${upid.passport.id}`)
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual([
-      upid.upid.toPlain(),
-    ]);
+    expect(response.body).toEqual([upid.upid.toPlain()]);
   });
 
   it(`/GET shells`, async () => {

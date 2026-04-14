@@ -1,4 +1,14 @@
-import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Headers,
+  Logger,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
@@ -15,7 +25,7 @@ export class OrganizationsController {
   constructor(
     private readonly organizationsService: OrganizationsService,
     private readonly membersService: MembersService,
-  ) { }
+  ) {}
 
   @Post()
   async createOrganization(
@@ -37,9 +47,7 @@ export class OrganizationsController {
   // Returns all organizations for admin users
   // Otherwise responds with 403
   @Get()
-  async getOrganizations(
-    @AuthSession() session: Session,
-  ) {
+  async getOrganizations(@AuthSession() session: Session) {
     return this.organizationsService.getAllOrganizations(session);
   }
 
@@ -66,7 +74,10 @@ export class OrganizationsController {
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ): Promise<Organization[]> {
-    return this.organizationsService.getMemberOrganizations(session.userId, extractBetterAuthHeaders(headers));
+    return this.organizationsService.getMemberOrganizations(
+      session.userId,
+      extractBetterAuthHeaders(headers),
+    );
   }
 
   @Get(":id")
@@ -111,7 +122,10 @@ export class OrganizationsController {
     @Param("id") organizationId: string,
     @AuthSession() session: Session,
   ) {
-    const name = await this.organizationsService.getOrganizationNameIfUserInvited(organizationId, session);
+    const name = await this.organizationsService.getOrganizationNameIfUserInvited(
+      organizationId,
+      session,
+    );
     if (!name) {
       throw new ForbiddenException();
     }

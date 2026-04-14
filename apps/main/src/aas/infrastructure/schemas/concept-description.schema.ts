@@ -10,7 +10,8 @@ import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 export const ConceptDescriptionDocSchemaVersion = {
   v1_0_0: "1.0.0",
 } as const;
-type ConceptDescriptionDocSchemaVersionType = (typeof ConceptDescriptionDocSchemaVersion)[keyof typeof ConceptDescriptionDocSchemaVersion];
+type ConceptDescriptionDocSchemaVersionType =
+  (typeof ConceptDescriptionDocSchemaVersion)[keyof typeof ConceptDescriptionDocSchemaVersion];
 
 @Schema({ collection: "concept_descriptions" })
 export class ConceptDescriptionDoc extends Document<string> {

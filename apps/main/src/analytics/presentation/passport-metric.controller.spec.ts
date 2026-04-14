@@ -8,9 +8,7 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import {
-  getApp,
-} from "../../../test/utils.for.test";
+import { getApp } from "../../../test/utils.for.test";
 import { Environment } from "../../aas/domain/environment";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
@@ -28,12 +26,8 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import {
-  UniqueProductIdentifierService,
-} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import {
-  UniqueProductIdentifierApplicationService,
-} from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { AnalyticsModule } from "../analytics.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { TimePeriod } from "../domain/time-period";
@@ -92,11 +86,11 @@ describe("passportMetricController", () => {
       })
       .compile();
 
-    passportMetricService = module.get<PassportMetricService>(
-      PassportMetricService,
-    );
+    passportMetricService = module.get<PassportMetricService>(PassportMetricService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
-    uniqueProductIdentifierService = module.get<UniqueProductIdentifierService>(UniqueProductIdentifierService);
+    uniqueProductIdentifierService = module.get<UniqueProductIdentifierService>(
+      UniqueProductIdentifierService,
+    );
     betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
@@ -130,9 +124,7 @@ describe("passportMetricController", () => {
     await passportRepository.save(passport);
 
     const page = "http://example.com/page";
-    const response: { status: number; body: { id: string } } = await request(
-      getApp(app),
-    )
+    const response: { status: number; body: { id: string } } = await request(getApp(app))
       .post(`/passport-metrics/page-views`)
       .set("Cookie", userCookie)
       .send({
@@ -140,9 +132,7 @@ describe("passportMetricController", () => {
         uuid: uniqueProductIdentifier.uuid,
       });
     expect(response.status).toEqual(201);
-    const passportMetric = await passportMetricService.findByIdOrFail(
-      response.body.id,
-    );
+    const passportMetric = await passportMetricService.findByIdOrFail(response.body.id);
     expect(passportMetric.source).toEqual({
       organizationId: passport.getOrganizationId(),
       templateId: passport.templateId,
@@ -189,26 +179,26 @@ describe("passportMetricController", () => {
       .send();
 
     expect(response.status).toEqual(200);
-    expect(response.body)
-      .toEqual([
-        {
-          datetime: "2025-01-01T00:00:00.000Z",
-          sum: 2,
-        },
-        {
-          datetime: "2025-02-01T00:00:00.000Z",
-          sum: 0,
-        },
-        {
-          datetime: "2025-03-01T00:00:00.000Z",
-          sum: 0,
-        },
-      ]);
+    expect(response.body).toEqual([
+      {
+        datetime: "2025-01-01T00:00:00.000Z",
+        sum: 2,
+      },
+      {
+        datetime: "2025-02-01T00:00:00.000Z",
+        sum: 0,
+      },
+      {
+        datetime: "2025-03-01T00:00:00.000Z",
+        sum: 0,
+      },
+    ]);
   });
   //
   it(`/GET passport returns metric results with sum value equal to zero if template is not part of organization`, async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    const { org: org2, userCookie: user2Cookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org: org2, userCookie: user2Cookie } =
+      await betterAuthHelper.createOrganizationAndUserWithCookie();
     const templateId = randomUUID();
     const date = new Date("2025-01-01T13:00:00Z");
     const source = {
@@ -233,13 +223,16 @@ describe("passportMetricController", () => {
       .set("X-OPEN-DPP-ORGANIZATION-ID", org2.id)
       .send();
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual([{
-      datetime: "2025-01-01T00:00:00.000Z",
-      sum: 0,
-    }, {
-      datetime: "2025-02-01T00:00:00.000Z",
-      sum: 0,
-    }]);
+    expect(response.body).toEqual([
+      {
+        datetime: "2025-01-01T00:00:00.000Z",
+        sum: 0,
+      },
+      {
+        datetime: "2025-02-01T00:00:00.000Z",
+        sum: 0,
+      },
+    ]);
   });
 
   it(`/GET passport metrics fails if user is not member of organization`, async () => {

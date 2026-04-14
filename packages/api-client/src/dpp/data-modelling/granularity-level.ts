@@ -1,4 +1,4 @@
 export enum GranularityLevel {
-  MODEL = 'Model',
-  ITEM = 'Item',
+  MODEL = "Model",
+  ITEM = "Item",
 }

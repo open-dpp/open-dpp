@@ -16,7 +16,10 @@ import { Property } from "./property";
 describe("annotatedRelationshipElement", () => {
   it("should add submodel element", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
@@ -30,30 +33,45 @@ describe("annotatedRelationshipElement", () => {
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement]);
-    expect(() => annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability })).toThrow(new ValueError(
-      "Submodel element with idShort prop1 already exists",
-    ));
+    expect(() =>
+      annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability }),
+    ).toThrow(new ValueError("Submodel element with idShort prop1 already exists"));
   });
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const first = Reference.create(
-      { type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "urn:uuid:first" })],
-      },
-    );
-    const second = Reference.create(
-      { type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "urn:uuid:second" })],
-      },
-    );
-    const annotatedRelationshipElement = AnnotatedRelationshipElement.create({ idShort: "prop1", first, second });
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    const first = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [Key.create({ type: KeyTypes.GlobalReference, value: "urn:uuid:first" })],
+    });
+    const second = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [Key.create({ type: KeyTypes.GlobalReference, value: "urn:uuid:second" })],
+    });
+    const annotatedRelationshipElement = AnnotatedRelationshipElement.create({
+      idShort: "prop1",
+      first,
+      second,
+    });
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(annotatedRelationshipElement.toPlain({ ability })).toMatchObject({
       idShort: "prop1",
-      first: { type: ReferenceTypes.ExternalReference, keys: [{ type: KeyTypes.GlobalReference, value: "urn:uuid:first" }] },
-      second: { type: ReferenceTypes.ExternalReference, keys: [{ type: KeyTypes.GlobalReference, value: "urn:uuid:second" }] },
+      first: {
+        type: ReferenceTypes.ExternalReference,
+        keys: [{ type: KeyTypes.GlobalReference, value: "urn:uuid:first" }],
+      },
+      second: {
+        type: ReferenceTypes.ExternalReference,
+        keys: [{ type: KeyTypes.GlobalReference, value: "urn:uuid:second" }],
+      },
     });
     ability = security.defineAbilityForSubject(anonymous);
     expect(annotatedRelationshipElement.toPlain({ ability })).toEqual({});
@@ -66,7 +84,10 @@ describe("annotatedRelationshipElement", () => {
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
       Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
@@ -77,12 +98,20 @@ describe("annotatedRelationshipElement", () => {
     annotatedRelationshipElement.addSubmodelElement(submodelElement0, { ability });
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement1, { ability });
-    expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
+    expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([
+      submodelElement0,
+      submodelElement1,
+    ]);
     const onDelete = jest.fn();
-    annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, { ability, onDelete });
+    annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, {
+      ability,
+      onDelete,
+    });
     expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);
-    expect(() => annotatedRelationshipElement.deleteSubmodelElement("unknown", { ability, onDelete })).toThrow(ValueError);
+    expect(() =>
+      annotatedRelationshipElement.deleteSubmodelElement("unknown", { ability, onDelete }),
+    ).toThrow(ValueError);
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 });

@@ -23,9 +23,7 @@ describe("organizationSchema", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([
-          { name: Organization.name, schema: OrganizationSchema },
-        ]),
+        MongooseModule.forFeature([{ name: Organization.name, schema: OrganizationSchema }]),
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());

@@ -41,9 +41,7 @@ describe("uniqueProductIdentifierService", () => {
       ],
       providers: [UniqueProductIdentifierService],
     }).compile();
-    service = module.get<UniqueProductIdentifierService>(
-      UniqueProductIdentifierService,
-    );
+    service = module.get<UniqueProductIdentifierService>(UniqueProductIdentifierService);
     uniqueProductIdentifierDoc = module.get<Model<UniqueProductIdentifierDoc>>(
       getModelToken(UniqueProductIdentifierDoc.name),
     );

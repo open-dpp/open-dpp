@@ -1,9 +1,9 @@
-import { z } from 'zod'
-import { NameAndDescriptionModificationSchema } from '../common/basic-json-schema'
-import { LanguageTextJsonSchema } from '../common/language-text-json-schema'
-import { QualifierJsonSchema } from '../common/qualifier-json-schema'
-import { ReferenceJsonSchema } from '../common/reference-json-schema'
-import { EmbeddedDataSpecificationJsonSchema } from '../embedded-data-specification-json-schema'
+import { z } from "zod";
+import { NameAndDescriptionModificationSchema } from "../common/basic-json-schema";
+import { LanguageTextJsonSchema } from "../common/language-text-json-schema";
+import { QualifierJsonSchema } from "../common/qualifier-json-schema";
+import { ReferenceJsonSchema } from "../common/reference-json-schema";
+import { EmbeddedDataSpecificationJsonSchema } from "../embedded-data-specification-json-schema";
 
 export const SubmodelBaseJsonSchema = z.object({
   category: z.nullish(z.string()),
@@ -14,6 +14,8 @@ export const SubmodelBaseJsonSchema = z.object({
   supplementalSemanticIds: z.array(ReferenceJsonSchema).default([]),
   qualifiers: z.array(QualifierJsonSchema).default([]),
   embeddedDataSpecifications: z.array(EmbeddedDataSpecificationJsonSchema).default([]),
-})
+});
 
-export const SubmodelBaseModificationSchema = NameAndDescriptionModificationSchema.extend({ idShort: z.string() })
+export const SubmodelBaseModificationSchema = NameAndDescriptionModificationSchema.extend({
+  idShort: z.string(),
+});

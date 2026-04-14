@@ -20,7 +20,14 @@ export class Quota extends Cap {
   private count: number;
   private lastSetBack: Date;
 
-  protected constructor(key: PolicyKey, limit: number, organizationId: string, count: number, period: QuotaPeriod, lastSetBack: Date) {
+  protected constructor(
+    key: PolicyKey,
+    limit: number,
+    organizationId: string,
+    count: number,
+    period: QuotaPeriod,
+    lastSetBack: Date,
+  ) {
     super(key, limit, organizationId);
     this.count = count;
     this.period = period;
@@ -32,17 +39,24 @@ export class Quota extends Cap {
   }
 
   static loadFromDb(props: QuotaCreateDbProps) {
-    return new Quota(props.key, props.limit, props.organizationId, props.count, props.period, props.lastSetBack);
+    return new Quota(
+      props.key,
+      props.limit,
+      props.organizationId,
+      props.count,
+      props.period,
+      props.lastSetBack,
+    );
   }
 
   needsReset(): boolean {
     const currentDate = new Date();
     const sameYear = currentDate.getFullYear() === this.lastSetBack.getFullYear();
     const sameMonth = currentDate.getMonth() === this.lastSetBack.getMonth();
-    const sameDay
-      = currentDate.getFullYear() === this.lastSetBack.getFullYear()
-        && currentDate.getMonth() === this.lastSetBack.getMonth()
-        && currentDate.getDate() === this.lastSetBack.getDate();
+    const sameDay =
+      currentDate.getFullYear() === this.lastSetBack.getFullYear() &&
+      currentDate.getMonth() === this.lastSetBack.getMonth() &&
+      currentDate.getDate() === this.lastSetBack.getDate();
 
     switch (this.period) {
       case "day":

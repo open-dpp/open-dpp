@@ -33,7 +33,7 @@ describe("pagination", () => {
   });
 
   it("should evaluate next pages where cursor and limit undefined", () => {
-    const pagination = Pagination.create({ });
+    const pagination = Pagination.create({});
     expect(pagination.nextPages(pages)).toEqual(["1", "2", "3", "4"]);
     expect(pagination.cursor).toEqual("4");
   });

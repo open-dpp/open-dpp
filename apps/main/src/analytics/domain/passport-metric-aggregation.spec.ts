@@ -21,7 +21,7 @@ describe("passportMetricAggregation", () => {
           "source.passportId": props.passportId,
           "source.organizationId": props.organizationId,
           "source.type": props.type,
-          "date": {
+          date: {
             $gte: props.startDate,
             $lte: props.endDate,
           },
@@ -55,9 +55,7 @@ describe("passportMetricAggregation", () => {
       },
     ]);
 
-    expect(
-      passportMetricAggregation.getAggregateQueryForTimePeriod(TimePeriod.DAY),
-    ).toEqual([
+    expect(passportMetricAggregation.getAggregateQueryForTimePeriod(TimePeriod.DAY)).toEqual([
       {
         $unwind: "$values",
       },

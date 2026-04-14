@@ -12,9 +12,7 @@ import { RelationshipElementDbSchema } from "./relationship-element-db-schema";
 import { SubmodelElementCollectionDbSchemaImpl } from "./submodel-element-collection-db-schema";
 import { SubmodelElementListDbSchemaImpl } from "./submodel-element-list-db-schema";
 
-export const SubmodelElementDbSchema: z.ZodTypeAny = z.lazy(() =>
-  SubmodelElementSchemaDbImpl(),
-);
+export const SubmodelElementDbSchema: z.ZodTypeAny = z.lazy(() => SubmodelElementSchemaDbImpl());
 
 export function SubmodelElementSchemaDbImpl() {
   return z.discriminatedUnion("modelType", [

@@ -15,7 +15,11 @@ export const AUTH = "auth";
 export const AuthProvider: Provider = {
   provide: AUTH,
   inject: [EnvService, EmailService, getConnectionToken()],
-  useFactory: async (configService: EnvService, emailService: EmailService, mongooseConnection: Connection) => {
+  useFactory: async (
+    configService: EnvService,
+    emailService: EmailService,
+    mongooseConnection: Connection,
+  ) => {
     const logger = new Logger("AuthProvider");
 
     if (mongooseConnection.readyState !== 1) {
@@ -24,7 +28,11 @@ export const AuthProvider: Provider = {
         const timer = setTimeout(() => {
           mongooseConnection.off("open", onOpen);
           mongooseConnection.off("error", onError);
-          reject(new Error(`MongoDB connection timed out after ${connectionTimeoutMs}ms (readyState: ${mongooseConnection.readyState})`));
+          reject(
+            new Error(
+              `MongoDB connection timed out after ${connectionTimeoutMs}ms (readyState: ${mongooseConnection.readyState})`,
+            ),
+          );
         }, connectionTimeoutMs);
 
         function onOpen() {
@@ -58,8 +66,7 @@ export const AuthProvider: Provider = {
       logger: {
         disabled: false,
         log: (level, message, ...args) => {
-          const formattedMessage
-            = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
+          const formattedMessage = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
           switch (level) {
             case "error":
               logger.error(formattedMessage);
@@ -100,28 +107,32 @@ export const AuthProvider: Provider = {
         enabled: true,
         sendResetPassword: async ({ user, token }) => {
           const firstName = (user as any).firstName ?? "User";
-          await emailService.send(PasswordResetMail.create({
-            to: user.email,
-            subject: "Password reset",
-            templateProperties: {
-              link: `${configService.get("OPEN_DPP_URL")}/password-reset?token=${token}`,
-              firstName,
-            },
-          }));
+          await emailService.send(
+            PasswordResetMail.create({
+              to: user.email,
+              subject: "Password reset",
+              templateProperties: {
+                link: `${configService.get("OPEN_DPP_URL")}/password-reset?token=${token}`,
+                firstName,
+              },
+            }),
+          );
         },
       },
       emailVerification: {
         sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }: { user: any; url: string; token: string }) => {
           const firstName = (user as any).firstName ?? "User";
-          await emailService.send(VerifyEmailMail.create({
-            to: user.email,
-            subject: "Verify E-Mail address",
-            templateProperties: {
-              link: url,
-              firstName,
-            },
-          }));
+          await emailService.send(
+            VerifyEmailMail.create({
+              to: user.email,
+              subject: "Verify E-Mail address",
+              templateProperties: {
+                link: url,
+                firstName,
+              },
+            }),
+          );
         },
       },
       databaseHooks: {
@@ -137,10 +148,9 @@ export const AuthProvider: Provider = {
                 const userIdQuery = Types.ObjectId.isValid(session.userId)
                   ? new Types.ObjectId(session.userId)
                   : session.userId;
-                const member = await db.collection("member").findOne(
-                  { userId: userIdQuery },
-                  { sort: { createdAt: 1 } },
-                );
+                const member = await db
+                  .collection("member")
+                  .findOne({ userId: userIdQuery }, { sort: { createdAt: 1 } });
 
                 let organizationId;
                 if (member) {
@@ -153,8 +163,7 @@ export const AuthProvider: Provider = {
                     activeOrganizationId: organizationId,
                   },
                 };
-              }
-              catch (error) {
+              } catch (error) {
                 logger.error("Failed to get active organization for session", error);
                 return {
                   data: session,
@@ -165,42 +174,49 @@ export const AuthProvider: Provider = {
         },
       },
       hooks: {},
-      plugins: [apiKey({
-        enableSessionForAPIKeys: false,
-        rateLimit: {
-          enabled: true,
-          timeWindow: 1000 * 60, // 1 minute
-          maxRequests: 100, // 100 requests per timeWindow
-        },
-      }), organization({
-        async sendInvitationEmail(data) {
-          try {
-            if (!data.organization) {
-              logger.error("Organization data is missing in sendInvitationEmail", data);
-              return;
+      plugins: [
+        apiKey({
+          enableSessionForAPIKeys: false,
+          rateLimit: {
+            enabled: true,
+            timeWindow: 1000 * 60, // 1 minute
+            maxRequests: 100, // 100 requests per timeWindow
+          },
+        }),
+        organization({
+          async sendInvitationEmail(data) {
+            try {
+              if (!data.organization) {
+                logger.error("Organization data is missing in sendInvitationEmail", data);
+                return;
+              }
+              const inviteLink = `${configService.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
+              await emailService.send(
+                InviteUserToOrganizationMail.create({
+                  to: data.email,
+                  subject: "Invitation to join organization",
+                  templateProperties: {
+                    link: inviteLink,
+                    firstName: "User",
+                    organizationName: data.organization.name,
+                  },
+                }),
+              );
+            } catch (error) {
+              logger.error("Failed to send invitation email", error);
             }
-            const inviteLink = `${configService.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
-            await emailService.send(InviteUserToOrganizationMail.create({
-              to: data.email,
-              subject: "Invitation to join organization",
-              templateProperties: {
-                link: inviteLink,
-                firstName: "User",
-                organizationName: data.organization.name,
-              },
-            }));
-          }
-          catch (error) {
-            logger.error("Failed to send invitation email", error);
-          }
-        },
-      }), admin({})],
+          },
+        }),
+        admin({}),
+      ],
       database: mongodbAdapter(db, {
         client: configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
 
-    const isAuthAdminProvided = !!configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") && !!configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+    const isAuthAdminProvided =
+      !!configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") &&
+      !!configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
     if (isAuthAdminProvided) {
       const adminUsername = configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
       const adminPassword = configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
@@ -219,12 +235,10 @@ export const AuthProvider: Provider = {
           },
         });
         logger.log("Admin Account created");
-      }
-      catch (error) {
+      } catch (error) {
         if (error instanceof APIError) {
           logger.warn("Account with set admin username already exists and wont be updated.");
-        }
-        else {
+        } else {
           logger.error("Failed to create admin account", error);
         }
       }

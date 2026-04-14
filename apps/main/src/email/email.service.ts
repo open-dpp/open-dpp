@@ -15,9 +15,7 @@ export class EmailService implements OnApplicationBootstrap {
   private transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private configService: EnvService;
 
-  constructor(
-    configService: EnvService,
-  ) {
+  constructor(configService: EnvService) {
     this.configService = configService;
   }
 

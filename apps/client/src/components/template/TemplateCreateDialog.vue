@@ -48,21 +48,11 @@ async function submit() {
 </script>
 
 <template>
-  <Dialog
-    v-model:visible="visible"
-    modal
-    :header="t('templates.create')"
-    @hide="close"
-  >
+  <Dialog v-model:visible="visible" modal :header="t('templates.create')" @hide="close">
     <div class="flex flex-col gap-4">
       <DisplayNameForm :show-errors="showErrors" :errors="errors" />
       <div class="flex justify-end gap-2">
-        <Button
-          type="button"
-          :label="t('common.cancel')"
-          severity="secondary"
-          @click="close"
-        />
+        <Button type="button" :label="t('common.cancel')" severity="secondary" @click="close" />
         <Button type="button" :label="t('common.add')" @click="submit" />
       </div>
     </div>

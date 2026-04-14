@@ -30,10 +30,7 @@ const size = 340;
     :show-indicators="productImagesExist"
   >
     <template #item="slotProps">
-      <div
-        class="flex items-center justify-center w-full"
-        :style="`height: ${size}px;`"
-      >
+      <div class="flex w-full items-center justify-center" :style="`height: ${size}px;`">
         <Image
           :src="slotProps.item.url"
           alt="Image"

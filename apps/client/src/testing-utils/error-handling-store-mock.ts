@@ -1,10 +1,11 @@
 import type { Mock } from "vitest";
-import type { ErrorHandlingOptionsAsync, ErrorHandlingOptionsSync } from "../stores/error.handling.ts";
+import type {
+  ErrorHandlingOptionsAsync,
+  ErrorHandlingOptionsSync,
+} from "../stores/error.handling.ts";
 import { vi } from "vitest";
 
-export function generatedErrorHandlingStoreMock(
-  logErrorWithNotification?: Mock,
-) {
+export function generatedErrorHandlingStoreMock(logErrorWithNotification?: Mock) {
   return {
     logErrorWithNotification: logErrorWithNotification ?? vi.fn(),
     withErrorHandlingAsync: async <T>(
@@ -13,10 +14,7 @@ export function generatedErrorHandlingStoreMock(
     ) => {
       await callback();
     },
-    withErrorHandlingSync: <T>(
-      callback: () => T,
-      _options: ErrorHandlingOptionsSync,
-    ) => {
+    withErrorHandlingSync: <T>(callback: () => T, _options: ErrorHandlingOptionsSync) => {
       callback();
     },
   };

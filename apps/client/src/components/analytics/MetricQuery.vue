@@ -16,7 +16,7 @@ dayjs.extend(utc);
 const { t } = useI18n();
 const analyticsStore = useAnalyticsStore();
 
-const timeViewOptions = Object.values(TimeView).map(value => ({
+const timeViewOptions = Object.values(TimeView).map((value) => ({
   id: value,
   label: t(`analytics.${value}`),
 }));
@@ -28,12 +28,7 @@ const selectedView = ref<string>(timeViewOptions[0]!.id);
 const selectedPassport = ref<PassportDto | undefined>(undefined);
 
 const isQueryValid = computed(() => {
-  return (
-    selectedPassport.value
-    && selectedView.value
-    && range.value
-    && range.value.length === 2
-  );
+  return selectedPassport.value && selectedView.value && range.value && range.value.length === 2;
 });
 
 function selectRange(date: Date) {
@@ -46,10 +41,7 @@ function selectRange(date: Date) {
   };
 
   const unit = units[z.enum(TimeView).parse(selectedView.value)];
-  range.value = [
-    currentDate.startOf(unit).toDate(),
-    currentDate.endOf(unit).toDate(),
-  ];
+  range.value = [currentDate.startOf(unit).toDate(), currentDate.endOf(unit).toDate()];
 }
 
 watch(

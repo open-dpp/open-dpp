@@ -7,7 +7,8 @@ export const AiConfigurationSchemaVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
-export type AiConfigurationSchemaVersion_TYPE = (typeof AiConfigurationSchemaVersion)[keyof typeof AiConfigurationSchemaVersion];
+export type AiConfigurationSchemaVersion_TYPE =
+  (typeof AiConfigurationSchemaVersion)[keyof typeof AiConfigurationSchemaVersion];
 
 @Schema({ collection: "configuration" })
 export class AiConfigurationDoc extends Document {
@@ -43,7 +44,6 @@ export class AiConfigurationDoc extends Document {
   @Prop({ required: true })
   updatedAt: Date;
 }
-export const AiConfigurationDbSchema
-  = SchemaFactory.createForClass(AiConfigurationDoc);
+export const AiConfigurationDbSchema = SchemaFactory.createForClass(AiConfigurationDoc);
 
 AiConfigurationDbSchema.index({ ownedByOrganizationId: 1 }, { unique: true });

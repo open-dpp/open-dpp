@@ -34,16 +34,18 @@ const roleOptions = computed(() => [
 ]);
 
 const selectedRoleLabel = computed(() => {
-  const option = roleOptions.value.find(o => o.value === selectedRole.value);
+  const option = roleOptions.value.find((o) => o.value === selectedRole.value);
   return option?.label ?? selectedRole.value;
 });
 
 const currentRoleLabel = computed(() => {
-  const option = roleOptions.value.find(o => o.value === props.currentRole);
+  const option = roleOptions.value.find((o) => o.value === props.currentRole);
   return option?.label ?? props.currentRole;
 });
 
-const isEscalation = computed(() => selectedRole.value === "admin" && props.currentRole !== "admin");
+const isEscalation = computed(
+  () => selectedRole.value === "admin" && props.currentRole !== "admin",
+);
 
 function requestChangeRole() {
   if (!selectedRole.value || selectedRole.value === props.currentRole) {
@@ -75,29 +77,24 @@ async function changeRole() {
       apiClient.dpp.users.setRole(props.userId, {
         role: selectedRole.value,
       }),
-      new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
+      new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS)),
     ]);
     success.value = true;
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     if (isAxiosError(error)) {
       const status = error.response?.status;
       if (status === 403 || status === 401) {
         errors.value.push(t("organizations.admin.changeRoleDialog.errorForbidden"));
-      }
-      else if (status === 404) {
+      } else if (status === 404) {
         errors.value.push(t("organizations.admin.changeRoleDialog.errorNotFound"));
-      }
-      else {
+      } else {
         errors.value.push(t("organizations.admin.changeRoleDialog.error"));
       }
-    }
-    else {
+    } else {
       errors.value.push(t("organizations.admin.changeRoleDialog.error"));
     }
-  }
-  finally {
+  } finally {
     loading.value = false;
   }
 }
@@ -116,9 +113,7 @@ async function changeRole() {
   >
     <div class="flex flex-col gap-5">
       <div class="flex items-center gap-3">
-        <div
-          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-purple-100"
-        >
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-purple-100">
           <i class="pi pi-user text-purple-600" aria-hidden="true" />
         </div>
         <div class="min-w-0">
@@ -126,34 +121,26 @@ async function changeRole() {
             {{ userEmail }}
           </p>
           <p class="text-xs text-gray-500">
-            {{ t('organizations.admin.changeRoleDialog.currentRole', { role: currentRoleLabel }) }}
+            {{ t("organizations.admin.changeRoleDialog.currentRole", { role: currentRoleLabel }) }}
           </p>
         </div>
       </div>
 
       <div v-if="success" class="flex flex-col gap-4">
         <Message severity="success" :closable="false">
-          {{ t('organizations.admin.changeRoleDialog.success', { role: selectedRoleLabel }) }}
+          {{ t("organizations.admin.changeRoleDialog.success", { role: selectedRoleLabel }) }}
         </Message>
         <div class="flex justify-end">
-          <Button
-            :label="t('common.close')"
-            severity="success"
-            @click="emit('success')"
-          />
+          <Button :label="t('common.close')" severity="success" @click="emit('success')" />
         </div>
       </div>
 
       <div v-else-if="confirming" class="flex flex-col gap-4">
         <Message severity="warn" :closable="false">
-          {{ t('organizations.admin.changeRoleDialog.confirmEscalation') }}
+          {{ t("organizations.admin.changeRoleDialog.confirmEscalation") }}
         </Message>
         <div class="flex justify-end gap-2">
-          <Button
-            :label="t('common.cancel')"
-            severity="secondary"
-            @click="cancelConfirmation"
-          />
+          <Button :label="t('common.cancel')" severity="secondary" @click="cancelConfirmation" />
           <Button
             :label="t('organizations.admin.changeRoleDialog.confirmChange')"
             severity="danger"
@@ -172,7 +159,7 @@ async function changeRole() {
 
           <div class="flex flex-col gap-1.5">
             <label for="role" class="text-sm font-medium text-gray-700">
-              {{ t('organizations.admin.changeRoleDialog.selectRole') }}
+              {{ t("organizations.admin.changeRoleDialog.selectRole") }}
             </label>
             <Select
               id="role"

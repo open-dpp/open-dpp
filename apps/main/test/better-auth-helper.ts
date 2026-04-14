@@ -60,7 +60,7 @@ export class BetterAuthHelper {
     // We only want the "name=value" part of cookies that start with "better-auth.".
     const matches = setCookieHeader.match(/(?:^|,\s*)(better-auth\.[^=]+=[^;]+)/g) || [];
     const cookie = matches
-      .map(m => m.replace(/^,\s*/, "").trim())
+      .map((m) => m.replace(/^,\s*/, "").trim())
       .filter(Boolean)
       .join("; ");
     if (!cookie) {
@@ -114,7 +114,7 @@ export class BetterAuthHelper {
     if (!this.auth) {
       throw new Error("No auth setup");
     }
-    const dataOrg = await (this.auth.api as any).createOrganization({
+    const dataOrg = (await (this.auth.api as any).createOrganization({
       body: {
         name: "My Organization",
         slug: randomUUID(),
@@ -122,7 +122,7 @@ export class BetterAuthHelper {
         keepCurrentActiveOrganization: false,
         logo: "org-image-media-id",
       },
-    }) as BetterAuthOrganization;
+    })) as BetterAuthOrganization;
     this.organizationMap.set(dataOrg.id, dataOrg);
     return dataOrg;
   }

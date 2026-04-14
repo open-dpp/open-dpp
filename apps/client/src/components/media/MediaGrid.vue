@@ -19,17 +19,15 @@ const mediaFiles = computed(() => {
 });
 
 function onSelect(media: MediaInfo) {
-  if (props.selected.some(f => f.id === media.id)) {
+  if (props.selected.some((f) => f.id === media.id)) {
     emits(
       "updateSelectedItems",
-      props.selected.filter(f => f.id !== media.id),
+      props.selected.filter((f) => f.id !== media.id),
     );
-  }
-  else {
+  } else {
     if (props.multiple) {
       emits("updateSelectedItems", props.selected.concat(media));
-    }
-    else {
+    } else {
       emits("updateSelectedItems", [media]);
     }
   }
@@ -45,9 +43,9 @@ onMounted(async () => {
     <template #grid="slotProps">
       <div class="grid grid-cols-12 gap-4">
         <div
-          v-for="(item) in slotProps.items"
+          v-for="item in slotProps.items"
           :key="item.id"
-          class="col-span-12 lg:col-span-6 xl:col-span-4 2xl:col-span-3 p-2"
+          class="col-span-12 p-2 lg:col-span-6 xl:col-span-4 2xl:col-span-3"
         >
           <MediaListItem
             :data-cy="`select-media-${item.id}`"

@@ -1,10 +1,20 @@
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberRoleEnum, MemberRoleType } from "../../domain/member-role.enum";
-import { Organization, OrganizationCreateProps, OrganizationUpdateProps } from "../../domain/organization";
+import {
+  Organization,
+  OrganizationCreateProps,
+  OrganizationUpdateProps,
+} from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -18,7 +28,7 @@ export class OrganizationsService {
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly invitationsRepository: InvitationsRepository,
-  ) { }
+  ) {}
 
   async createOrganization(
     data: OrganizationCreateProps,
@@ -44,7 +54,10 @@ export class OrganizationsService {
     session: Session,
     headers: BetterAuthHeaders,
   ): Promise<Organization> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+      session.userId,
+      organizationId,
+    );
     if (!member?.isOwner()) {
       const user = await this.usersRepository.findOneById(session.userId);
       if (user?.role !== UserRole.ADMIN) {
@@ -65,18 +78,21 @@ export class OrganizationsService {
     return result;
   }
 
-  async getMemberOrganizations(userId: string, headers: BetterAuthHeaders): Promise<Organization[]> {
+  async getMemberOrganizations(
+    userId: string,
+    headers: BetterAuthHeaders,
+  ): Promise<Organization[]> {
     this.logger.debug(`Getting organizations for user: ${userId}`);
     // Using default repo (BetterAuth) as per original handler
     return this.organizationsRepository.findManyByMember(headers);
   }
 
-  async getOrganization(
-    organizationId: string,
-    session?: Session,
-  ): Promise<Organization | null> {
+  async getOrganization(organizationId: string, session?: Session): Promise<Organization | null> {
     if (session) {
-      const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+      const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+        session.userId,
+        organizationId,
+      );
 
       if (!member) {
         this.logger.warn("Authorization denied in getOrganization: requester is not a member");
@@ -94,11 +110,16 @@ export class OrganizationsService {
     session: Session,
     headers?: BetterAuthHeaders,
   ): Promise<void> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+      session.userId,
+      organizationId,
+    );
     if (!member?.isOwner()) {
       const user = await this.usersRepository.findOneById(session.userId);
       if (user?.role !== UserRole.ADMIN) {
-        throw new ForbiddenException("You are not authorized to invite members to this organization");
+        throw new ForbiddenException(
+          "You are not authorized to invite members to this organization",
+        );
       }
     }
 
@@ -110,12 +131,18 @@ export class OrganizationsService {
     await this.invitationsRepository.save(invitation, headers);
   }
 
-  async getOrganizationNameIfUserInvited(organizationId: string, session: Session): Promise<string | null> {
+  async getOrganizationNameIfUserInvited(
+    organizationId: string,
+    session: Session,
+  ): Promise<string | null> {
     const user = await this.usersRepository.findOneById(session.userId);
     if (!user) {
       return null;
     }
-    const invitation = await this.invitationsRepository.findOneUnexpiredByEmailAndOrganization(user.email, organizationId);
+    const invitation = await this.invitationsRepository.findOneUnexpiredByEmailAndOrganization(
+      user.email,
+      organizationId,
+    );
     if (!invitation) {
       return null;
     }
@@ -135,9 +162,7 @@ export class OrganizationsService {
   }
 
   // ! only used for organisation data in passports
-  async getOrganizationDataForPermalink(
-    organizationId: string,
-  ): Promise<Organization | null> {
+  async getOrganizationDataForPermalink(organizationId: string): Promise<Organization | null> {
     return this.organizationsRepository.findOneById(organizationId);
   }
 }

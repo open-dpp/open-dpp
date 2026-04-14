@@ -1,7 +1,5 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
-import {
-  Injectable,
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Session } from "better-auth";
 import { Socket } from "socket.io";
 import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
@@ -18,9 +16,7 @@ export class WebsocketAuthGuard implements CanActivate {
     private readonly sessionsService: SessionsService,
     private readonly membersRepository: MembersRepository,
     private readonly usersRepository: UsersRepository,
-  ) {
-
-  }
+  ) {}
 
   /**
    * Validates if the current request is authenticated
@@ -39,8 +35,7 @@ export class WebsocketAuthGuard implements CanActivate {
 
     try {
       session = await this.sessionsService.getSession(headers);
-    }
-    catch {
+    } catch {
       // If session retrieval fails, treat as no session
     }
 
@@ -48,7 +43,10 @@ export class WebsocketAuthGuard implements CanActivate {
       client.data.user = (await this.usersRepository.findOneById(session.userId)) ?? null;
       const organizationId = client.handshake.auth.organizationId ?? null;
       if (organizationId) {
-        client.data.member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+        client.data.member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+          session.userId,
+          organizationId,
+        );
       }
     }
 

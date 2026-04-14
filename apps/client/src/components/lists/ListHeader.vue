@@ -21,7 +21,7 @@ const emits = defineEmits<{
         {{ props.description }}
       </p>
     </div>
-    <div v-if="creationLabel" class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+    <div v-if="creationLabel" class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
       <component
         :is="creationLink ? 'router-link' : 'button'"
         :to="creationLink"

@@ -20,7 +20,9 @@ export type SessionDbProps = SessionCreateProps & {
 };
 
 function generate24CharId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
+  const timestamp = Math.floor(Date.now() / 1000)
+    .toString(16)
+    .padStart(8, "0");
   const random = randomBytes(8).toString("hex");
   return timestamp + random;
 }

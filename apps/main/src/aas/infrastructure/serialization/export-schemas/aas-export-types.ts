@@ -2,7 +2,10 @@ import { z } from "zod";
 import { aasExportSchemaJsonV1_0 } from "./aas-export-v1.schema";
 import { aasExportSchemaJsonV2_0 } from "./aas-export-v2.schema";
 
-export const AasExportSchemas = z.discriminatedUnion("version", [aasExportSchemaJsonV1_0, aasExportSchemaJsonV2_0]);
+export const AasExportSchemas = z.discriminatedUnion("version", [
+  aasExportSchemaJsonV1_0,
+  aasExportSchemaJsonV2_0,
+]);
 
 export type AasExport = z.infer<typeof AasExportSchemas>;
 

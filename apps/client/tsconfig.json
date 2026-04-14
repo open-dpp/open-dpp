@@ -1,11 +1,5 @@
 {
   "extends": "@vue/tsconfig/tsconfig.json",
-  "include": [
-    "**/*.ts",
-    "**/*.vue",
-    "tailwind.config.js"
-  ],
-  "exclude": [
-    "vitest.config.ts"
-  ]
+  "include": ["**/*.ts", "**/*.vue", "tailwind.config.js"],
+  "exclude": ["vitest.config.ts"]
 }

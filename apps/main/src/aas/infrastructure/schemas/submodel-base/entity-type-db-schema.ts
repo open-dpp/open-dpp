@@ -5,9 +5,7 @@ import { SpecificAssetIdDbSchema } from "../specific-asset-id-db-schema";
 import { SubmodelBaseDbSchema } from "./submodel-base-db-schema";
 import { SubmodelElementDbSchema } from "./submodel-element-db-schema";
 
-export const EntityTypeDbSchema = z.lazy(() =>
-  EntityTypeDbSchemaImpl(),
-);
+export const EntityTypeDbSchema = z.lazy(() => EntityTypeDbSchemaImpl());
 
 export function EntityTypeDbSchemaImpl() {
   return z.object({
@@ -17,6 +15,5 @@ export function EntityTypeDbSchemaImpl() {
     statements: SubmodelElementDbSchema.array().default([]),
     globalAssetId: z.nullish(z.string()),
     specificAssetIds: SpecificAssetIdDbSchema.array().default([]),
-  },
-  );
+  });
 }

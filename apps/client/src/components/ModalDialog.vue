@@ -1,15 +1,6 @@
 <script lang="ts" setup>
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from "@headlessui/vue";
-import {
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-} from "@heroicons/vue/24/outline";
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from "@headlessui/vue";
+import { ExclamationTriangleIcon, InformationCircleIcon } from "@heroicons/vue/24/outline";
 import { useI18n } from "vue-i18n";
 import { useModelDialogStore } from "../stores/modal.dialog";
 import BaseButton from "./basics/BaseButton.vue";
@@ -59,17 +50,10 @@ const modelDialogStore = useModelDialogStore();
                     aria-hidden="true"
                     class="size-6 text-red-600"
                   />
-                  <InformationCircleIcon
-                    v-else
-                    aria-hidden="true"
-                    class="size-6 text-indigo-600"
-                  />
+                  <InformationCircleIcon v-else aria-hidden="true" class="size-6 text-indigo-600" />
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <DialogTitle
-                    as="h3"
-                    class="text-base font-semibold text-gray-900"
-                  >
+                  <DialogTitle as="h3" class="text-base font-semibold text-gray-900">
                     {{ modelDialogStore.content.title }}
                   </DialogTitle>
                   <div class="mt-2">
@@ -81,18 +65,14 @@ const modelDialogStore = useModelDialogStore();
               </div>
               <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                 <BaseButton
-                  :variant="
-                    modelDialogStore.content.type === 'warning'
-                      ? 'error'
-                      : 'primary'
-                  "
+                  :variant="modelDialogStore.content.type === 'warning' ? 'error' : 'primary'"
                   type="button"
                   @click="modelDialogStore.confirm"
                 >
-                  {{ t('common.submit') }}
+                  {{ t("common.submit") }}
                 </BaseButton>
                 <BaseButton type="button" @click="modelDialogStore.cancel">
-                  {{ t('common.abort') }}
+                  {{ t("common.abort") }}
                 </BaseButton>
               </div>
             </DialogPanel>

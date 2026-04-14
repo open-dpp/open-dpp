@@ -55,10 +55,7 @@ export class MediaController {
     file: Express.Multer.File,
     @AuthSession() session: Session,
   ): Promise<void> {
-    await this.filesService.uploadProfilePicture(
-      file.buffer,
-      session.userId,
-    );
+    await this.filesService.uploadProfilePicture(file.buffer, session.userId);
   }
 
   @Post("dpp/:upi/:dataFieldId")
@@ -120,10 +117,7 @@ export class MediaController {
     @Res() res: express.Response,
   ): Promise<void> {
     try {
-      const result = await this.filesService.getFilestreamOfProductPassport(
-        dataFieldId,
-        upi,
-      );
+      const result = await this.filesService.getFilestreamOfProductPassport(dataFieldId, upi);
       res.setHeader("Content-Type", result.media.mimeType);
       res.setHeader("Cross-Origin-Resource-Policy", "same-site");
       if (result.media.updatedAt) {
@@ -136,25 +130,19 @@ export class MediaController {
           res.status(500).json({ error: "Failed to retrieve file" });
         }
       });
-    }
-    catch {
+    } catch {
       res.status(404).json({ error: "File not found" });
     }
   }
 
   @Get("by-organization")
-  async getFileInfoByOrganization(
-    @OrganizationId() organizationId: string,
-  ): Promise<Array<Media>> {
+  async getFileInfoByOrganization(@OrganizationId() organizationId: string): Promise<Array<Media>> {
     return this.filesService.findAllByOrganizationId(organizationId);
   }
 
   @Get(":id/download")
   @AllowAnonymous()
-  async streamFile(
-    @Param("id") id: string,
-    @Res() res: express.Response,
-  ): Promise<void> {
+  async streamFile(@Param("id") id: string, @Res() res: express.Response): Promise<void> {
     try {
       const result = await this.filesService.getFilestreamById(id);
       res.setHeader("Content-Type", result.media.mimeType);
@@ -169,8 +157,7 @@ export class MediaController {
           res.status(500).json({ error: "Failed to retrieve file" });
         }
       });
-    }
-    catch {
+    } catch {
       res.status(404).json({ error: "File not found" });
     }
   }

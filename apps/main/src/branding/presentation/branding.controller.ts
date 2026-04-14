@@ -8,23 +8,18 @@ import { BrandingRepository } from "../infrastructure/branding.repository";
 
 @Controller("/branding")
 export class BrandingController {
-  constructor(
-    private readonly brandingRepository: BrandingRepository,
-  ) {
-  }
+  constructor(private readonly brandingRepository: BrandingRepository) {}
 
   @Get()
-  async getOrganizationBranding(
-    @OrganizationId() organizationId: string,
-  ): Promise<BrandingDto> {
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(organizationId)).toPlain());
+  async getOrganizationBranding(@OrganizationId() organizationId: string): Promise<BrandingDto> {
+    return BrandingDtoSchema.parse(
+      (await this.brandingRepository.findOneByOrganizationId(organizationId)).toPlain(),
+    );
   }
 
   @AllowAnonymous()
   @Get("/instance")
-  async getInstanceBranding(
-    @Res() response: express.Response,
-  ) {
+  async getInstanceBranding(@Res() response: express.Response) {
     const file = await this.brandingRepository.getInstanceBrandingPath();
     const fileContent = await readFile(file.path);
     response.type(file.filetype);

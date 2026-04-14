@@ -1,7 +1,4 @@
-import type {
-  AccessPermissionRuleResponseDto,
-  PermissionType,
-} from "@open-dpp/dto";
+import type { AccessPermissionRuleResponseDto, PermissionType } from "@open-dpp/dto";
 import { PermissionKind } from "@open-dpp/dto";
 import { ruleHelper } from "../lib/aas-security.ts";
 import { useUserStore } from "../stores/user.ts";
@@ -14,15 +11,13 @@ export interface AasAbilityProps {
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
 }
 
-export function useAasAbility({
-  getAccessPermissionRules,
-}: AasAbilityProps): IAasAbility {
+export function useAasAbility({ getAccessPermissionRules }: AasAbilityProps): IAasAbility {
   const { asSubject } = useUserStore();
 
-  function findPermissionForObject(
-    object: string,
-  ) {
-    const rulesOfSubject = getAccessPermissionRules().filter(r => ruleHelper(r).hasEqualSubject(asSubject()));
+  function findPermissionForObject(object: string) {
+    const rulesOfSubject = getAccessPermissionRules().filter((r) =>
+      ruleHelper(r).hasEqualSubject(asSubject()),
+    );
     for (const rule of rulesOfSubject) {
       for (const permissionPerObject of rule.permissionsPerObject) {
         if (permissionPerObject.object.idShort === object.toString()) {
@@ -35,7 +30,9 @@ export function useAasAbility({
   function can(action: PermissionType, object: string): boolean {
     const permissionForObject = findPermissionForObject(object);
     if (permissionForObject) {
-      return permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Allow);
+      return permissionForObject.permissions.some(
+        (p) => p.permission === action && p.kindOfPermission === PermissionKind.Allow,
+      );
     }
 
     const parentPath = object.split(".").slice(0, -1);

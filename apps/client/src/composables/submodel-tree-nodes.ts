@@ -11,30 +11,19 @@ function mapToTreeNodes(
   fallbackLabel: string,
   parentId?: string,
 ): TreeNode[] {
-  return elements.map(element => ({
+  return elements.map((element) => ({
     key: element.idShort,
     label: resolveDisplayName(element.name, locale, fallbackLabel),
     data: { parentId },
-    children: mapToTreeNodes(
-      element.children,
-      locale,
-      fallbackLabel,
-      element.idShort,
-    ),
+    children: mapToTreeNodes(element.children, locale, fallbackLabel, element.idShort),
   }));
 }
 
-export function useSubmodelTreeNodes(
-  submodelTree: ComputedRef<SubmodelTreeElement[]>,
-) {
+export function useSubmodelTreeNodes(submodelTree: ComputedRef<SubmodelTreeElement[]>) {
   const { locale, t } = useI18n();
 
   const treeNodes = computed<TreeNode[]>(() =>
-    mapToTreeNodes(
-      submodelTree.value,
-      locale.value,
-      t("common.unknownName"),
-    ),
+    mapToTreeNodes(submodelTree.value, locale.value, t("common.unknownName")),
   );
 
   return { treeNodes };

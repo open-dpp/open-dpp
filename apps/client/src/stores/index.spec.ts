@@ -58,9 +58,7 @@ describe("indexStore", () => {
     const indexStore = useIndexStore();
     const id = "someId";
     indexStore.selectOrganization(id);
-    await waitFor(() =>
-      expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id),
-    );
+    await waitFor(() => expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id));
     await waitFor(() => expect(userStore.memberRole).toEqual(MemberRoleDto.MEMBER));
   });
 
@@ -70,8 +68,6 @@ describe("indexStore", () => {
     const id = "initialId";
     localStorage.setItem(LAST_SELECTED_ORGANIZATION_ID_KEY, id);
     useIndexStore();
-    await waitFor(() =>
-      expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id),
-    );
+    await waitFor(() => expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id));
   });
 });

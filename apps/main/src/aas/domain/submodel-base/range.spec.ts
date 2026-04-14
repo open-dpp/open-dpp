@@ -15,9 +15,9 @@ import { Range } from "./range";
 describe("range", () => {
   it("should add submodel element", () => {
     const range = Range.create({ idShort: "b1", valueType: DataTypeDef.String });
-    expect(() => range.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build()))).toThrow(
-      new ValueError("Range cannot contain submodel elements"),
-    );
+    expect(() =>
+      range.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build())),
+    ).toThrow(new ValueError("Range cannot contain submodel elements"));
   });
 
   it("should get submodel elements", () => {
@@ -27,14 +27,19 @@ describe("range", () => {
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const range = Range.create({
       idShort: "prop1",
       valueType: DataTypeDef.String,
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(range.toPlain({ ability })).toMatchObject({
       idShort: "prop1",

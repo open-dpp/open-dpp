@@ -41,8 +41,7 @@ export const useModelDialogStore = defineStore("model-dialog-store", () => {
     if (confirmAction.value) {
       try {
         await confirmAction.value();
-      }
-      catch {
+      } catch {
         const notificationStore = useNotificationStore();
         notificationStore.addErrorNotification(t("common.unknownErrorOccurred"));
       }

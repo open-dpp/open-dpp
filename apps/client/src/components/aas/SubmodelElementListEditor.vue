@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
-import type {
-  ColumnMenuOptions,
-  RowMenuOptions,
-} from "../../composables/aas-table-extension.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -24,12 +21,9 @@ import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<
-      SubmodelElementListEditorProps,
-      SubmodelElementListModificationDto
-    >
+const props =
+  defineProps<
+    SharedEditorProps<SubmodelElementListEditorProps, SubmodelElementListModificationDto>
   >();
 
 const columnMenuPopover = ref();
@@ -58,9 +52,7 @@ const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
 });
 
-const idShortPathList = computed(
-  () => props.path.idShortPathIncludingSubmodel ?? "",
-);
+const idShortPathList = computed(() => props.path.idShortPathIncludingSubmodel ?? "");
 
 const canCreateColumnsAndRows = computed(() => {
   return can(Permissions.Create, idShortPathList.value);
@@ -116,12 +108,8 @@ async function submit() {
         await permissionsFormRef.value.savePermissions();
       }
       await save();
-    }
-    catch (e) {
-      props.errorHandlingStore.logErrorWithNotification(
-        t("aasEditor.table.errorEditEntries"),
-        e,
-      );
+    } catch (e) {
+      props.errorHandlingStore.logErrorWithNotification(t("aasEditor.table.errorEditEntries"), e);
     }
     await props.callback({ ...data });
   })();
@@ -143,12 +131,7 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
   columnMenuPopover.value.toggle(event);
 }
 
-function onFileChange(
-  value: string | undefined,
-  cellData: any,
-  rowIndex: number,
-  field: string,
-) {
+function onFileChange(value: string | undefined, cellData: any, rowIndex: number, field: string) {
   onCellEditComplete({
     data: cellData,
     newValue: value ?? null,
@@ -157,10 +140,7 @@ function onFileChange(
   });
 }
 onErrorCaptured((err) => {
-  props.errorHandlingStore.logErrorWithNotification(
-    t("common.errorOccurred"),
-    err,
-  );
+  props.errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), err);
   return false; // stops error from bubbling further
 });
 
@@ -182,9 +162,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         :path="props.path"
         :modify-shell="props.modifyShell"
         :get-access-permission-rules="props.getAccessPermissionRules"
-        :delete-policy-by-subject-and-object="
-          props.deletePolicyBySubjectAndObject
-        "
+        :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
       />
     </FormContainer>
     <DataTable
@@ -204,13 +182,9 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{
-            t("aasEditor.table.entries")
-          }}</span>
+          <span class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</span>
           <Button
-            v-tooltip.top="
-              !canCreateColumnsAndRows ? missingPermissionsMsg : undefined
-            "
+            v-tooltip.top="!canCreateColumnsAndRows ? missingPermissionsMsg : undefined"
             :label="t('aasEditor.table.addColumnEnd')"
             :disabled="!canCreateColumnsAndRows"
             @click="toggleColumnMenu($event, { position: columns.length })"
@@ -220,7 +194,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
       <Column style="width: 10px" frozen class="font-bold">
         <template #body="{ index }">
           <div class="flex">
-            <div class="flex items-center rounded-md gap-2">
+            <div class="flex items-center gap-2 rounded-md">
               <Button
                 icon="pi pi-ellipsis-v"
                 severity="secondary"
@@ -231,11 +205,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           </div>
         </template>
       </Column>
-      <Column
-        v-for="(col, index) of columns"
-        :key="col.idShort"
-        :field="col.idShort"
-      >
+      <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
           <Button
             icon="pi pi-ellipsis-v"
@@ -255,33 +225,31 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           <div v-else>
             <FileField
               v-if="
-                canEdit
-                  && col.plain.modelType === AasSubmodelElements.File
-                  && rowsContext[rowIndex] != null
-                  && rowsContext[rowIndex][field] != null
+                canEdit &&
+                col.plain.modelType === AasSubmodelElements.File &&
+                rowsContext[rowIndex] != null &&
+                rowsContext[rowIndex][field] != null
               "
               :id="`${rowIndex}-${field}`"
               v-model:content-type="rowsContext[rowIndex][field].contentType"
               :disabled="!canEdit"
               :model-value="cellData[field]"
-              @update:model-value="
-                (value) => onFileChange(value, cellData, rowIndex, field)
-              "
+              @update:model-value="(value) => onFileChange(value, cellData, rowIndex, field)"
             />
             <MediaFieldView
               v-else-if="
-                !canEdit
-                  && col.plain.modelType === AasSubmodelElements.File
-                  && cellData[field] != null
+                !canEdit &&
+                col.plain.modelType === AasSubmodelElements.File &&
+                cellData[field] != null
               "
               :media-id="cellData[field]"
             />
             <PropertyValue
               v-else-if="
-                canEdit
-                  && col.plain.modelType === AasSubmodelElements.Property
-                  && (col.plain.valueType === DataTypeDef.Date
-                    || col.plain.valueType === DataTypeDef.DateTime)
+                canEdit &&
+                col.plain.modelType === AasSubmodelElements.Property &&
+                (col.plain.valueType === DataTypeDef.Date ||
+                  col.plain.valueType === DataTypeDef.DateTime)
               "
               :id="`${rowIndex}-${field}`"
               :model-value="cellData[field]"
@@ -298,10 +266,9 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             />
             <span
               v-else-if="
-                (col.plain.modelType === AasSubmodelElements.Property
-                  || col.plain.modelType
-                    === AasSubmodelElements.ReferenceElement)
-                  && cellData[field] != null
+                (col.plain.modelType === AasSubmodelElements.Property ||
+                  col.plain.modelType === AasSubmodelElements.ReferenceElement) &&
+                cellData[field] != null
               "
             >
               {{ formatCellValue(cellData[field], col) }}
@@ -311,13 +278,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         </template>
         <template
           v-if="
-            canEdit
-              && col.plain.modelType !== AasSubmodelElements.File
-              && !(
-                col.plain.modelType === AasSubmodelElements.Property
-                && (col.plain.valueType === DataTypeDef.Date
-                  || col.plain.valueType === DataTypeDef.DateTime)
-              )
+            canEdit &&
+            col.plain.modelType !== AasSubmodelElements.File &&
+            !(
+              col.plain.modelType === AasSubmodelElements.Property &&
+              (col.plain.valueType === DataTypeDef.Date ||
+                col.plain.valueType === DataTypeDef.DateTime)
+            )
           "
           #editor="{ data: editorData, field, index: rowIndex }"
         >
@@ -328,9 +295,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             :value-type="col.plain.valueType"
           />
           <LinkCellField
-            v-else-if="
-              col.plain.modelType === AasSubmodelElements.ReferenceElement
-            "
+            v-else-if="col.plain.modelType === AasSubmodelElements.ReferenceElement"
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
           />

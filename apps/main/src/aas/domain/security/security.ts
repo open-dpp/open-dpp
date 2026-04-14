@@ -18,8 +18,7 @@ export const SecuritySchema = z.object({
 });
 
 export class Security {
-  private constructor(public readonly localAccessControl: AccessControl) {
-  }
+  private constructor(public readonly localAccessControl: AccessControl) {}
 
   static create(data: { localAccessControl?: AccessControl }): Security {
     return new Security(data.localAccessControl ?? AccessControl.create({}));
@@ -27,9 +26,7 @@ export class Security {
 
   static fromPlain(json: unknown): Security {
     const parsed = SecuritySchema.parse(json);
-    return new Security(
-      AccessControl.fromPlain(parsed.localAccessControl),
-    );
+    return new Security(AccessControl.fromPlain(parsed.localAccessControl));
   }
 
   withAdministrator(newAdministrator: SubjectAttributes): Security {
@@ -49,16 +46,19 @@ export class Security {
   }
 
   private hasPoliciesForObject(object: IdShortPath): boolean {
-    return this.localAccessControl.accessPermissionRules.some(
-      rule => rule.permissionsPerObject.some(
-        p => p.object.idShort === object.toString(),
-      ),
+    return this.localAccessControl.accessPermissionRules.some((rule) =>
+      rule.permissionsPerObject.some((p) => p.object.idShort === object.toString()),
     );
   }
 
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
     const rule = this.localAccessControl.findRuleOfSubject(subject);
-    return !!rule && rule.hasPermissionForObject(PermissionPerObject.create({ object: createAasObject(object), permissions }));
+    return (
+      !!rule &&
+      rule.hasPermissionForObject(
+        PermissionPerObject.create({ object: createAasObject(object), permissions }),
+      )
+    );
   }
 
   addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
@@ -80,11 +80,14 @@ export class Security {
   applyModifiedRules(modifications: AccessPermissionRule[]): void {
     for (const modification of modifications) {
       for (const permissionsPerObject of modification.permissionsPerObject) {
-        const policy = { subject: modification.targetSubjectAttributes, object: IdShortPath.create({ path: permissionsPerObject.object.idShort }), permissions: permissionsPerObject.permissions };
+        const policy = {
+          subject: modification.targetSubjectAttributes,
+          object: IdShortPath.create({ path: permissionsPerObject.object.idShort }),
+          permissions: permissionsPerObject.permissions,
+        };
         if (this.hasPolicy(policy.subject, policy.object, policy.permissions)) {
           this.modifyPolicy(policy.subject, policy.object, policy.permissions);
-        }
-        else {
+        } else {
           this.addPolicy(policy.subject, policy.object, policy.permissions);
         }
       }
@@ -100,8 +103,8 @@ export class Security {
       ];
 
       for (const subject of subjectsWithAllPermissions) {
-        const permissions = Object.values(Permissions).map(
-          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
+        const permissions = Object.values(Permissions).map((p) =>
+          Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
         );
 
         if (!this.hasPolicy(subject, object, permissions)) {
@@ -110,7 +113,9 @@ export class Security {
       }
 
       const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-      const permissions = [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })];
+      const permissions = [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      ];
 
       if (!this.hasPolicy(anonymous, object, permissions)) {
         this.addPolicy(anonymous, object, permissions);
