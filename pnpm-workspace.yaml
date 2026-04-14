@@ -1,5 +1,4 @@
 packages:
-  - apps/*/*
   - apps/*
   - packages/*
   - docs
@@ -20,3 +19,4 @@ onlyBuiltDependencies:
   - msw
   - sharp
   - unrs-resolver
+  - vue-demi

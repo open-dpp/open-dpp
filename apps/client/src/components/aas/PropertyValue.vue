@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
-import dayjs from "dayjs";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import {
+  formatDateValueForModel,
+  parseDateValueFromModel,
+} from "../../lib/date-value.ts";
 
 const props = defineProps<{
   id: string;
@@ -43,18 +46,13 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Decimal,
 ]);
 
-const DATE_TYPES = new Set<DataTypeDefType>([
-  DataTypeDef.Date,
-  DataTypeDef.DateTime,
-]);
-
 const isNumeric = computed(() =>
   props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
 );
 
-const isDate = computed(() =>
-  props.valueType ? DATE_TYPES.has(props.valueType) : false,
-);
+const isDate = computed(() => props.valueType === DataTypeDef.Date);
+
+const isDateTime = computed(() => props.valueType === DataTypeDef.DateTime);
 
 const maxFractionDigits = computed(() =>
   props.valueType && INTEGER_TYPES.has(props.valueType) ? 0 : 5,
@@ -73,18 +71,13 @@ const numericValue = computed({
 });
 
 const dateValue = computed({
-  get: () => {
-    if (!props.modelValue)
-      return null;
-    const parsed = dayjs(props.modelValue);
-    return parsed.isValid() ? parsed.toDate() : null;
-  },
+  get: () => parseDateValueFromModel(props.modelValue),
   set: (v: Date | null | undefined) => {
-    if (!v) {
+    if (!props.valueType) {
       emit("update:modelValue", null);
       return;
     }
-    emit("update:modelValue", dayjs(v).format("YYYY-MM-DD"));
+    emit("update:modelValue", formatDateValueForModel(v ?? null, props.valueType));
   },
 });
 
@@ -109,12 +102,15 @@ const textValue = computed({
     show-buttons
   />
   <DatePicker
-    v-else-if="isDate"
+    v-else-if="isDate || isDateTime"
     :id="props.id"
     v-model="dateValue"
     :disabled="props.disabled"
     :invalid="props.invalid"
+    :show-time="isDateTime"
+    :show-seconds="isDateTime"
     show-icon
+    icon-display="input"
     fluid
   />
   <InputText

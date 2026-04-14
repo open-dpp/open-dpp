@@ -7,6 +7,9 @@ test:
 full:
 	docker compose up -d
 
+clean-nodemodules:
+	find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
+
 clean-pnpm:
 	find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
 	find . -name "pnpm-lock.yaml" -type f -delete
@@ -18,4 +21,4 @@ clean-turbo:
 clean-dist:
 	find . -name "dist" -type d -prune -exec rm -rf '{}' +
 
-.PHONY: dev test full clean-pnpm clean-turbo clean-dist
+.PHONY: dev test full clean-pnpm clean-turbo clean-dist clean-nodemodules
