@@ -1,262 +1,249 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { getModelToken } from "@nestjs/mongoose";
+import type { INestApplication } from "@nestjs/common";
+import type { Auth } from "better-auth";
+import { randomUUID } from "node:crypto";
+import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { ObjectId } from "mongodb";
+import { generateMongoConfig } from "../../../../database/config";
+import { EmailService } from "../../../../email/email.service";
+import { AuthModule } from "../../../auth/auth.module";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
-import { User as UserSchema } from "../schemas/user.schema";
+import { UsersModule } from "../../users.module";
 import { UsersRepository } from "./users.repository";
 
 describe("UsersRepository", () => {
+  let module: TestingModule;
+  let app: INestApplication;
   let repository: UsersRepository;
-  let mockUserModel: any;
-  let mockAuth: any;
+  let auth: Auth;
 
-  beforeEach(async () => {
-    mockUserModel = {
-      find: jest.fn(),
-      findOne: jest.fn(),
-      findOneAndUpdate: jest.fn(),
-      findOneById: jest.fn(),
-    };
-    mockAuth = {
-      api: {
-        createUser: jest.fn(),
-      },
-    };
+  async function seedUser(overrides?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    password?: string;
+  }): Promise<User> {
+    const email = overrides?.email ?? `${randomUUID()}@test.test`;
+    const user = User.create({
+      email,
+      firstName: overrides?.firstName ?? "John",
+      lastName: overrides?.lastName ?? "Doe",
+      role: UserRole.USER,
+    });
+    const saved = await repository.save(user, overrides?.password ?? "test-password-1234");
+    if (!saved) {
+      throw new Error(`Failed to seed user with email ${email}`);
+    }
+    return saved;
+  }
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersRepository,
-        {
-          provide: getModelToken(UserSchema.name),
-          useValue: mockUserModel,
-        },
-        {
-          provide: AUTH,
-          useValue: mockAuth,
-        },
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => generateMongoConfig(configService),
+          inject: [EnvService],
+        }),
+        AuthModule,
+        UsersModule,
       ],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({ send: jest.fn() })
+      .compile();
+
+    app = module.createNestApplication();
+    await app.init();
 
     repository = module.get<UsersRepository>(UsersRepository);
+    auth = module.get<Auth>(AUTH);
   });
 
-  it("should save user via auth api", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: "John",
-      lastName: "Doe",
-      role: UserRole.USER,
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
+  });
+
+  describe("save", () => {
+    it("persists a user and makes it retrievable by email", async () => {
+      const email = `${randomUUID()}@test.test`;
+      const user = User.create({
+        email,
+        firstName: "Alice",
+        lastName: "Smith",
+        role: UserRole.USER,
+      });
+
+      const saved = await repository.save(user);
+
+      expect(saved).toBeInstanceOf(User);
+      expect(saved!.email).toBe(email);
+      expect(saved!.firstName).toBe("Alice");
+      expect(saved!.lastName).toBe("Smith");
+      expect(saved!.name).toBe("Alice Smith");
+      expect(saved!.role).toBe(UserRole.USER);
+      expect(ObjectId.isValid(saved!.id)).toBe(true);
+
+      const found = await repository.findOneByEmail(email);
+      expect(found).toBeInstanceOf(User);
+      expect(found!.id).toBe(saved!.id);
     });
 
-    mockUserModel.findOne.mockResolvedValue({
-      _id: new ObjectId(),
-      email: "test@example.com",
-      firstName: "John",
-      lastName: "Doe",
-      role: UserRole.USER,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    it("allows sign-in with the provided password", async () => {
+      const email = `${randomUUID()}@test.test`;
+      const password = "secure-password-1234";
+      const user = User.create({
+        email,
+        firstName: "Bob",
+        lastName: "Jones",
+        role: UserRole.USER,
+      });
+
+      const saved = await repository.save(user, password);
+      expect(saved).not.toBeNull();
+
+      const signIn = await auth.api.signInEmail({
+        body: { email, password },
+      });
+
+      expect(signIn).toBeDefined();
+      expect(signIn.user.email).toBe(email);
+    });
+  });
+
+  describe("findOneById", () => {
+    it("returns the user by id", async () => {
+      const seeded = await seedUser();
+      const found = await repository.findOneById(seeded.id);
+
+      expect(found).toBeInstanceOf(User);
+      expect(found!.id).toBe(seeded.id);
+      expect(found!.email).toBe(seeded.email);
     });
 
-    const result = await repository.save(user);
-
-    // Check that createUser was called with correct arguments
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        email: "test@example.com",
-        name: "John Doe",
-        data: expect.objectContaining({
-          firstName: "John",
-          lastName: "Doe",
-        }),
-      }),
-    }));
-
-    // Verify password was generated (should be a non-empty string)
-    const callArgs = (mockAuth.api.createUser as jest.Mock).mock.calls[0][0] as any;
-    expect(callArgs.body.password).toBeTruthy();
-    expect(callArgs.body.password.length).toBeGreaterThan(0);
-
-    expect(result).toBeInstanceOf(User);
-  });
-
-  it("should handle null firstName in name fallback", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: null as any,
-      lastName: "Doe",
-      role: UserRole.USER,
+    it("returns null for an invalid ObjectId", async () => {
+      const result = await repository.findOneById("invalid-id");
+      expect(result).toBeNull();
     });
 
-    mockUserModel.findOne.mockResolvedValue({
-      _id: new ObjectId(),
-      email: "test@example.com",
+    it("returns null for a valid-but-nonexistent ObjectId", async () => {
+      const result = await repository.findOneById(new ObjectId().toString());
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findOneByEmail", () => {
+    it("returns the user by email", async () => {
+      const seeded = await seedUser();
+      const found = await repository.findOneByEmail(seeded.email);
+
+      expect(found).toBeInstanceOf(User);
+      expect(found!.email).toBe(seeded.email);
+      expect(found!.id).toBe(seeded.id);
     });
 
-    await repository.save(user);
-
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        name: "Doe",
-      }),
-    }));
+    it("returns null when email is not found", async () => {
+      const result = await repository.findOneByEmail(`${randomUUID()}@missing.test`);
+      expect(result).toBeNull();
+    });
   });
 
-  it("should handle null lastName in name fallback", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: "John",
-      lastName: null as any,
-      role: UserRole.USER,
+  describe("findAllByIds", () => {
+    it("returns all users with matching ids", async () => {
+      const a = await seedUser();
+      const b = await seedUser();
+
+      const result = await repository.findAllByIds([a.id, b.id]);
+
+      expect(result).toHaveLength(2);
+      const resultIds = result.map(u => u.id).sort();
+      expect(resultIds).toEqual([a.id, b.id].sort());
     });
 
-    mockUserModel.findOne.mockResolvedValue({
-      _id: new ObjectId(),
-      email: "test@example.com",
+    it("filters out invalid ids and returns only valid matches", async () => {
+      const seeded = await seedUser();
+
+      const result = await repository.findAllByIds([seeded.id, "invalid-id"]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(seeded.id);
     });
 
-    await repository.save(user);
-
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        name: "John",
-      }),
-    }));
-  });
-
-  it("should handle null firstName and lastName in name fallback", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: null as any,
-      lastName: null as any,
-      role: UserRole.USER,
+    it("returns empty array when all ids are invalid", async () => {
+      const result = await repository.findAllByIds(["invalid-1", "invalid-2"]);
+      expect(result).toEqual([]);
     });
 
-    mockUserModel.findOne.mockResolvedValue({
-      _id: new ObjectId(),
-      email: "test@example.com",
+    it("returns empty array when ids are valid but no user matches", async () => {
+      const result = await repository.findAllByIds([
+        new ObjectId().toString(),
+        new ObjectId().toString(),
+      ]);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("update", () => {
+    it("persists role changes and returns the updated user", async () => {
+      const seeded = await seedUser();
+      expect(seeded.role).toBe(UserRole.USER);
+
+      const updated = seeded.withRole(UserRole.ADMIN);
+      const result = await repository.update(updated);
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.role).toBe(UserRole.ADMIN);
+      expect(result!.id).toBe(seeded.id);
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.role).toBe(UserRole.ADMIN);
     });
 
-    await repository.save(user);
+    it("persists emailVerified changes", async () => {
+      const seeded = await seedUser();
+      const target = !seeded.emailVerified;
 
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        name: "", // Should be empty string, not "null null"
-      }),
-    }));
-  });
+      const updated = seeded.withEmailVerified(target);
+      const result = await repository.update(updated);
 
-  it("should save user with provided password", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: "Jane",
-      lastName: "Doe",
-      role: UserRole.USER,
+      expect(result).toBeInstanceOf(User);
+      expect(result!.emailVerified).toBe(target);
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.emailVerified).toBe(target);
     });
 
-    const userObjectId = new ObjectId();
-    mockUserModel.findOne.mockResolvedValue({
-      _id: userObjectId,
-      email: "test@example.com",
+    it("returns null for a user whose id is not a valid ObjectId", async () => {
+      const user = User.create({
+        email: `${randomUUID()}@test.test`,
+        firstName: "John",
+        lastName: "Doe",
+      });
+
+      const result = await repository.update(user);
+      expect(result).toBeNull();
     });
 
-    await repository.save(user, "secure-password-123");
+    it("returns null when the user is not found", async () => {
+      const user = User.loadFromDb({
+        id: new ObjectId().toString(),
+        email: `${randomUUID()}@ghost.test`,
+        firstName: "Ghost",
+        lastName: "User",
+        role: UserRole.USER,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        password: "secure-password-123",
-      }),
-    }));
-  });
-
-  it("should find one by id using workaround", async () => {
-    const userObjectId = new ObjectId();
-    const doc = {
-      _id: userObjectId,
-      email: "test@example.com",
-      role: "user",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    mockUserModel.findOne.mockResolvedValue(doc);
-
-    const result = await repository.findOneById(userObjectId.toString());
-
-    expect(result).toBeInstanceOf(User);
-    expect(result?.id).toBe(userObjectId.toString());
-  });
-
-  it("should find one by email", async () => {
-    const userObjectId = new ObjectId();
-    const doc = {
-      _id: userObjectId,
-      email: "test@example.com",
-      role: "user",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    mockUserModel.findOne.mockResolvedValue(doc);
-
-    const result = await repository.findOneByEmail("test@example.com");
-
-    expect(result).toBeInstanceOf(User);
-    expect(result?.email).toBe("test@example.com");
-  });
-
-  it("should return null for invalid id in findOneById", async () => {
-    const result = await repository.findOneById("invalid-id");
-    expect(result).toBeNull();
-    expect(mockUserModel.findOne).not.toHaveBeenCalled();
-  });
-
-  it("should find all by ids", async () => {
-    const userObjectId = new ObjectId();
-    const doc = {
-      _id: userObjectId,
-      email: "test@example.com",
-      role: "user",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    mockUserModel.find.mockResolvedValue([doc]);
-
-    const result = await repository.findAllByIds([userObjectId.toString()]);
-
-    expect(result).toHaveLength(1);
-    expect(mockUserModel.find).toHaveBeenCalledWith({ _id: { $in: [new ObjectId(userObjectId)] } });
-  });
-
-  it("should filter invalid ids in findAllByIds", async () => {
-    const userObjectId = new ObjectId();
-    const doc = {
-      _id: userObjectId,
-      email: "test@example.com",
-      role: "user",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    mockUserModel.find.mockResolvedValue([doc]);
-
-    const result = await repository.findAllByIds([userObjectId.toString(), "invalid-id"]);
-
-    expect(result).toHaveLength(1);
-    expect(mockUserModel.find).toHaveBeenCalledWith({ _id: { $in: [new ObjectId(userObjectId)] } });
-  });
-
-  it("should return empty array if all ids are invalid in findAllByIds", async () => {
-    const result = await repository.findAllByIds(["invalid-id-1", "invalid-id-2"]);
-    expect(result).toEqual([]);
-    expect(mockUserModel.find).not.toHaveBeenCalled();
-  });
-
-  it("should set email verified", async () => {
-    await repository.setUserEmailVerified("test@example.com", true);
-    expect(mockUserModel.findOneAndUpdate).toHaveBeenCalledWith(
-      { email: "test@example.com" },
-      { $set: { emailVerified: true } },
-    );
+      const result = await repository.update(user);
+      expect(result).toBeNull();
+    });
   });
 });

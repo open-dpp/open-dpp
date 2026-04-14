@@ -7,7 +7,6 @@ import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
-import { UserRoleType } from "../../domain/user-role.enum";
 import { UserMapper } from "../mappers/user.mapper";
 import { User as UserSchema } from "../schemas/user.schema";
 
@@ -92,17 +91,14 @@ export class UsersRepository {
     return documents.map(doc => UserMapper.toDomain(doc));
   }
 
-  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
-    await this.userModel.findOneAndUpdate({ email }, { $set: { emailVerified } });
-  }
-
-  async setUserRole(id: string, role: UserRoleType): Promise<User | null> {
-    if (!ObjectId.isValid(id)) {
+  async update(user: User): Promise<User | null> {
+    if (!ObjectId.isValid(user.id)) {
       return null;
     }
+    const { _id, ...fields } = UserMapper.toPersistence(user);
     const document = await this.userModel.findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: { role } },
+      { _id: new ObjectId(user.id) },
+      { $set: fields },
       { new: true },
     );
     if (!document)
