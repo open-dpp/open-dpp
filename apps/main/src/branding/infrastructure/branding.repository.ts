@@ -26,7 +26,7 @@ export class BrandingRepository {
     if (!brandingDoc) {
       const activeOrganization = await this.organizationsService.getOrganization(organizationId);
       if (!activeOrganization) {
-        throw new NotFoundException("User is not part of any organization");
+        throw new NotFoundException("Organization not found");
       }
 
       this.logger.debug("migrating branding from organization collection to branding collection");
