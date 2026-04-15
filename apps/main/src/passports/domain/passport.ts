@@ -1,13 +1,28 @@
 import { randomUUID } from "node:crypto";
-import { PassportDtoSchema } from "@open-dpp/dto";
+import { z } from "zod";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
+import {
+  archiveDpp,
+  DppStatus,
+  DppStatusChange,
+  IDppStatusChangeable,
+  publishDpp,
+  restoreDpp,
+} from "../../dpp/domain/dpp-status";
+import { SharedDppSchema } from "../../dpp/domain/dpp.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 
-export class Passport implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt {
+const PassportSchema = SharedDppSchema.extend({
+  templateId: z.string().nullable(),
+  /** UPI uuid for presentation/chat links; set when listing passports */
+  uniqueProductIdentifierUuid: z.uuid().optional(),
+});
+
+export class Passport implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable {
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,
@@ -15,6 +30,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    private lastStatusChange: DppStatusChange,
   ) {
   }
 
@@ -25,6 +41,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
     environment: Environment;
     createdAt?: Date;
     updatedAt?: Date;
+    lastStatusChange?: DppStatusChange;
   }) {
     const now = DateTime.now();
 
@@ -35,11 +52,12 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
       data.environment,
       data.createdAt ?? now,
       data.updatedAt ?? now,
+      data.lastStatusChange ?? DppStatusChange.create({}),
     );
   }
 
   static fromPlain(data: unknown) {
-    const parsed = PassportDtoSchema.parse(data);
+    const parsed = PassportSchema.parse(data);
     return new Passport(
       parsed.id,
       parsed.organizationId,
@@ -47,6 +65,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
       Environment.fromPlain(parsed.environment),
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
+      DppStatusChange.fromPlain(parsed.lastStatusChange),
     );
   }
 
@@ -58,6 +77,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
       templateId: this.templateId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      lastStatusChange: this.lastStatusChange.toPlain(),
     };
   }
 
@@ -73,5 +93,29 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
     return UniqueProductIdentifier.create({
       referenceId: this.id,
     });
+  }
+
+  publish() {
+    this.lastStatusChange = publishDpp(this.lastStatusChange);
+  }
+
+  archive() {
+    this.lastStatusChange = archiveDpp(this.lastStatusChange);
+  }
+
+  restore() {
+    this.lastStatusChange = restoreDpp(this.lastStatusChange);
+  }
+
+  isPublished(): boolean {
+    return this.lastStatusChange.currentStatus === DppStatus.Published;
+  }
+
+  isArchived(): boolean {
+    return this.lastStatusChange.currentStatus === DppStatus.Archived;
+  }
+
+  isDraft(): boolean {
+    return this.lastStatusChange.currentStatus === DppStatus.Draft;
   }
 }

@@ -67,7 +67,7 @@ export async function findByIds<T extends Document<string>, V>(ids: string[], do
   return result;
 }
 
-export async function findAllByOrganizationId<T extends Document<string>, V extends IPersistable & HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V, organizationId: string, pagination?: Pagination) {
+export async function findAllByOrganizationId<T extends Document<string>, V extends IPersistable & HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => Promise<V>, organizationId: string, pagination?: Pagination) {
   const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
   const docs = await docModel.find(
     {
@@ -83,7 +83,7 @@ export async function findAllByOrganizationId<T extends Document<string>, V exte
       }),
     },
   ).sort({ createdAt: -1, id: -1 }).limit(tmpPagination.limit ?? 100).exec();
-  const domainObjects = docs.map(fromPlain);
+  const domainObjects = await Promise.all(docs.map(fromPlain));
   if (domainObjects.length > 0) {
     const lastObject = domainObjects[domainObjects.length - 1];
     tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));

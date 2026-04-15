@@ -1,21 +1,24 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Model, Model as MongooseModel } from "mongoose";
 import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 import { generateMongoConfig } from "../../database/config";
+import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
-import { TemplateDoc, TemplateSchema } from "./template.schema";
+import { TemplateDoc, TemplateDocVersion, TemplateSchema } from "./template.schema";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;
+  let TemplateDocument: MongooseModel<TemplateDoc>;
 
   let module: TestingModule;
 
@@ -44,6 +47,9 @@ describe("templateRepository", () => {
     }).compile();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
+    TemplateDocument = module.get<Model<TemplateDoc>>(
+      getModelToken(TemplateDoc.name),
+    );
   });
 
   it("should save a template", async () => {
@@ -55,10 +61,41 @@ describe("templateRepository", () => {
         submodels: [randomUUID()],
         conceptDescriptions: [randomUUID()],
       }),
+      lastStatusChange: DppStatusChange.create({
+        previousStatus: DppStatus.Draft,
+        currentStatus: DppStatus.Published,
+      }),
     });
     await templateRepository.save(template);
     const foundTemplate = await templateRepository.findOneOrFail(template.id);
     expect(foundTemplate).toEqual(template);
+  });
+
+  it(`should load and migrate passport from version 1.0.0 to 1.1.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new TemplateDocument({
+      _id: id,
+      _schemaVersion: TemplateDocVersion.v1_0_0,
+      organizationId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundTemplate = await templateRepository.findOneOrFail(id);
+    expect(foundTemplate).toEqual(Template.fromPlain({
+      id,
+      environment: Environment.fromPlain(legacyDoc.environment),
+      organizationId: legacyDoc.organizationId,
+      createdAt: legacyDoc.createdAt,
+      updatedAt: legacyDoc.updatedAt,
+      lastStatusChange: DppStatusChange.create({}),
+    }));
   });
 
   it("should delete a template", async () => {

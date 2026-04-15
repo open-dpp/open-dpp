@@ -1,24 +1,27 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Model, Model as MongooseModel } from "mongoose";
+
 import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 
 import { generateMongoConfig } from "../../database/config";
+import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "./passport.repository";
-import { PassportDoc, PassportSchema } from "./passport.schema";
+import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
 
 describe("passportRepository", () => {
   let passportRepository: PassportRepository;
-
+  let PassportDocument: MongooseModel<PassportDoc>;
   let module: TestingModule;
 
   beforeAll(async () => {
@@ -46,6 +49,9 @@ describe("passportRepository", () => {
     }).compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
+    PassportDocument = module.get<Model<PassportDoc>>(
+      getModelToken(PassportDoc.name),
+    );
   });
 
   it("should save a passport", async () => {
@@ -57,10 +63,43 @@ describe("passportRepository", () => {
         submodels: [randomUUID()],
         conceptDescriptions: [randomUUID()],
       }),
+      lastStatusChange: DppStatusChange.create({
+        previousStatus: DppStatus.Draft,
+        currentStatus: DppStatus.Published,
+      }),
     });
     await passportRepository.save(passport);
     const foundAas = await passportRepository.findOneOrFail(passport.id);
     expect(foundAas).toEqual(passport);
+  });
+
+  it(`should load and migrate passport from version 1.0.0 to 1.1.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new PassportDocument({
+      _id: id,
+      _schemaVersion: PassportDocVersion.v1_0_0,
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundPassport = await passportRepository.findOneOrFail(id);
+    expect(foundPassport).toEqual(Passport.fromPlain({
+      id,
+      environment: Environment.fromPlain(legacyDoc.environment),
+      templateId: legacyDoc.templateId,
+      organizationId: legacyDoc.organizationId,
+      createdAt: legacyDoc.createdAt,
+      updatedAt: legacyDoc.updatedAt,
+      lastStatusChange: DppStatusChange.create({}),
+    }));
   });
 
   it("should delete a passport", async () => {

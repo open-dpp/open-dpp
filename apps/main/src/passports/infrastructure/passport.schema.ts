@@ -1,9 +1,11 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import { EnvironmentDoc, EnvironmentSchema } from "../../aas/infrastructure/schemas/environment.schema";
+import { DppStatusChangeDbSchema, DppStatusChangeDoc } from "../../dpp/infrastructure/dpp-status-change-db.schema";
 
 export const PassportDocVersion = {
   v1_0_0: "1.0.0",
+  v1_1_0: "1.1.0",
 } as const;
 type PassportDocVersionType = (typeof PassportDocVersion)[keyof typeof PassportDocVersion];
 
@@ -33,6 +35,9 @@ export class PassportDoc extends Document<string> {
 
   @Prop({ required: true })
   updatedAt: Date;
+
+  @Prop({ type: DppStatusChangeDbSchema, required: true })
+  lastStatusChange: DppStatusChangeDoc;
 }
 
 export const PassportSchema = SchemaFactory.createForClass(PassportDoc);
