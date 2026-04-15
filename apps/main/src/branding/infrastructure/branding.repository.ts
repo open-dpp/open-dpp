@@ -1,10 +1,13 @@
+import type { Model as MongooseModel } from "mongoose";
 import { access } from "node:fs/promises";
 import path from "node:path";
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { OrganizationsService } from "../../identity/organizations/application/services/organizations.service";
 import { Branding } from "../domain/branding";
 import { BrandingFile } from "../domain/brandingFile";
+import { BrandingDoc, BrandingDocVersion } from "./branding.schema";
 
 @Injectable()
 export class BrandingRepository {
@@ -13,15 +16,53 @@ export class BrandingRepository {
   constructor(
     private readonly organizationsService: OrganizationsService,
     private readonly envService: EnvService,
+    @InjectModel(BrandingDoc.name)
+    private readonly BrandingDoc: MongooseModel<BrandingDoc>,
   ) {}
 
-  async findOneByOrganizationId(orgId: string): Promise<Branding> {
-    const activeOrganization = await this.organizationsService.getOrganization(orgId);
-    if (!activeOrganization) {
-      throw new NotFoundException("User is not part of any organization");
+  async findOneByOrganizationId(organizationId: string): Promise<Branding> {
+    const brandingDoc = await this.BrandingDoc.findOne({ organizationId });
+
+    if (!brandingDoc) {
+      const activeOrganization = await this.organizationsService.getOrganization(organizationId);
+      if (!activeOrganization) {
+        throw new NotFoundException("Organization not found");
+      }
+
+      this.logger.debug("migrating branding from organization collection to branding collection");
+
+      return await this.save(
+        Branding.fromPlain(
+          {
+            logo: activeOrganization.logo,
+          },
+          organizationId,
+        ),
+      );
     }
 
-    return Branding.fromPlain({ logo: activeOrganization.logo ?? null });
+    return Branding.loadFromDb(brandingDoc.toObject());
+  }
+
+  getDefaultBranding(): Branding {
+    return Branding.getDefault();
+  }
+
+  async save(branding: Branding): Promise<Branding> {
+    let brandingDoc = await this.BrandingDoc.findOne({ organizationId: branding.organizationId });
+    if (!brandingDoc) {
+      brandingDoc = new this.BrandingDoc({
+        _schemaVersion: BrandingDocVersion.v1_0_0,
+        _id: branding.id,
+      });
+    }
+
+    brandingDoc.set({
+      ...branding.toDb(),
+      _id: brandingDoc._id,
+    });
+
+    return Branding.loadFromDb((await brandingDoc.save()).toObject());
   }
 
   async getInstanceBrandingPath(): Promise<BrandingFile> {

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { OrganizationDto } from "@open-dpp/api-client";
+import type { BrandingDto } from "@open-dpp/dto";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import { onMounted, ref } from "vue";
@@ -20,24 +21,39 @@ const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
 
 const organization = ref<OrganizationDto | null>(null);
+const branding = ref<BrandingDto | null>(null);
 const nameInvalid = ref(false);
 const { applyBranding } = useBranding();
 
 async function save() {
-  if (!organization.value || !indexStore.selectedOrganization) return;
-
   try {
-    const result = await apiClient.dpp.organizations.update(indexStore.selectedOrganization, {
-      name: organization.value.name,
-      logo: organization.value.logo,
-    });
+    let updatedSettings = false;
+    if (organization.value && indexStore.selectedOrganization) {
+      const result = await apiClient.dpp.organizations.update(indexStore.selectedOrganization, {
+        name: organization.value.name,
+      });
 
-    nameInvalid.value = false;
-    organization.value = result.data;
+      nameInvalid.value = false;
+      organization.value = result.data;
+      updatedSettings = true;
 
-    await organizationStore.fetchOrganizations();
-    await applyBranding();
-    notificationStore.addSuccessNotification(t("organizations.form.updateSuccess"));
+      await organizationStore.fetchOrganizations();
+    }
+
+    if (branding.value) {
+      const brandingResult = await apiClient.dpp.branding.set({
+        logo: branding.value.logo,
+        primaryColor: branding.value.primaryColor,
+      });
+
+      branding.value = brandingResult.data;
+      updatedSettings = true;
+    }
+
+    if (updatedSettings) {
+      await applyBranding();
+      notificationStore.addSuccessNotification(t("organizations.form.updateSuccess"));
+    }
   } catch (e) {
     nameInvalid.value = true;
     errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
@@ -46,6 +62,7 @@ async function save() {
 
 onMounted(async () => {
   organization.value = await organizationStore.fetchCurrentOrganization();
+  branding.value = (await apiClient.dpp.branding.get()).data;
 });
 </script>
 
@@ -55,31 +72,59 @@ onMounted(async () => {
       {{ t("organizations.settings.title") }}
     </h3>
     <div class="mt-5 max-w-xl">
-      <form v-if="organization" @submit.prevent="save">
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-2">
-            <label for="name" class="block text-sm leading-6 font-medium text-gray-900">{{
-              t("organizations.form.name.label")
-            }}</label>
-            <InputText id="name" v-model="organization.name" :invalid="nameInvalid" />
-            <small v-if="nameInvalid" class="text-red-500">{{
-              t("organizations.form.name.error")
-            }}</small>
-          </div>
+      <form v-if="organization" class="flex flex-col gap-4" @submit.prevent="save">
+        <div class="flex flex-col gap-2">
+          <label for="name" class="block text-sm leading-6 font-medium text-gray-900">{{
+            t("organizations.form.name.label")
+          }}</label>
+          <InputText id="name" v-model="organization.name" :invalid="nameInvalid" />
+          <small v-if="nameInvalid" class="text-red-500">{{
+            t("organizations.form.name.error")
+          }}</small>
+        </div>
+      </form>
+      <form v-if="branding" class="mt-5" @submit.prevent="save">
+        <h3 class="py-2 text-lg leading-6 font-semibold text-gray-900">
+          {{ t("organizations.settings.branding") }}
+        </h3>
 
-          <div class="flex flex-col gap-2">
-            <MediaInput
-              v-model="organization.logo"
-              context="organization"
-              :label="t('organizations.form.image.label')"
-            />
-          </div>
-
-          <div class="mt-4">
-            <Button type="submit" :label="t('common.save')" />
+        <MediaInput
+          v-model="branding.logo"
+          class="mt-4"
+          context="organization"
+          :label="t('organizations.form.image.label')"
+        />
+        <div class="flex flex-col gap-2">
+          <label for="name" class="block text-sm leading-6 font-medium text-gray-900">{{
+            t("organizations.form.color.label")
+          }}</label>
+          <small class="text-gray-700">{{ t("organizations.form.color.description") }}</small>
+          <div class="flex items-center gap-2">
+            <ColorPicker id="name" v-model="branding.primaryColor" :invalid="nameInvalid" />
+            <InputGroup>
+              <InputGroupAddon>#</InputGroupAddon>
+              <InputText
+                id="name"
+                v-model="branding.primaryColor"
+                maxlength="6"
+                inputmode="text"
+                :invalid="nameInvalid"
+              />
+            </InputGroup>
+            <Button
+              severity="secondary"
+              :disabled="branding.primaryColor === null"
+              @click="branding.primaryColor = null"
+            >
+              {{ t("common.reset") }}
+            </Button>
           </div>
         </div>
       </form>
+
+      <div class="mt-4">
+        <Button type="submit" :label="t('common.save')" @click="save" />
+      </div>
     </div>
   </ContentViewWrapper>
 </template>
