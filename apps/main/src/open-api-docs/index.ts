@@ -32,13 +32,13 @@ const document = createDocument({
     },
     securitySchemes: {
       bearerAuth: {
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-api-key',
-        description: 'JWT token passed in the x-api-key header',
+        type: "apiKey",
+        in: "header",
+        name: "x-api-key",
+        description: "JWT token passed in the x-api-key header",
       },
     },
-  }
+  },
 });
 
 export function buildOpenApiDocumentation(): OpenAPIObject {

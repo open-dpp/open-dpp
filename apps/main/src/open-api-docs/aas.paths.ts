@@ -58,7 +58,7 @@ const ContentType = {
 } as const;
 
 const security = [{ apiKeyAuth: [] }];
-const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" }
+const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };
 
 export function createAasPaths(tag: string) {
   return {
@@ -66,10 +66,7 @@ export function createAasPaths(tag: string) {
       get: {
         tags: [tag],
         summary: "Returns all Asset Administration Shells",
-        parameters: [
-          IdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema,
-          orgaIdHeader
-        ],
+        parameters: [IdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -77,7 +74,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiPatchShellPath}`]: {
@@ -97,7 +94,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiSubmodelsPath}`]: {
@@ -112,13 +109,13 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       post: {
         operationId: "createSubmodel",
         tags: [tag],
         summary: `Creates submodel for ${tag.slice(0, -1)}`,
-        parameters: [IdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, orgaIdHeader],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelRequestDtoSchema },
@@ -131,14 +128,14 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiGetSubmodelByIdPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel by id`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -146,13 +143,13 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       patch: {
         operationId: "patchSubmodel",
         tags: [tag],
         summary: `Modify submodel with id`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelModificationSchema },
@@ -165,23 +162,23 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       delete: {
         tags: [tag],
         summary: `Deletes Submodel by id`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.NO_CONTENT]: {},
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiGetSubmodelValuePath}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel value representation`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -189,7 +186,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiSubmodelElementsPath}`]: {
@@ -201,7 +198,7 @@ export function createAasPaths(tag: string) {
           SubmodelIdParamSchema,
           LimitQueryParamSchema,
           CursorQueryParamSchema,
-          orgaIdHeader
+          orgaIdHeader,
         ],
         responses: {
           [HTTPCode.OK]: {
@@ -210,12 +207,12 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       post: {
         tags: [tag],
         summary: `Add Submodel Element to the given Submodel`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementSchema },
@@ -228,7 +225,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiPostColumnPath}`]: {
@@ -240,7 +237,7 @@ export function createAasPaths(tag: string) {
           SubmodelIdParamSchema,
           IdShortPathParamSchema,
           PositionQueryParamSchema,
-          orgaIdHeader
+          orgaIdHeader,
         ],
         requestBody: {
           content: {
@@ -254,7 +251,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiGetColumnByIdShortPath}`]: {
@@ -267,7 +264,7 @@ export function createAasPaths(tag: string) {
           SubmodelIdParamSchema,
           IdShortPathParamSchema,
           ColumnParamSchema,
-          orgaIdHeader
+          orgaIdHeader,
         ],
         responses: {
           [HTTPCode.OK]: {
@@ -276,7 +273,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       patch: {
         tags: [tag],
@@ -287,7 +284,7 @@ export function createAasPaths(tag: string) {
           SubmodelIdParamSchema,
           IdShortPathParamSchema,
           ColumnParamSchema,
-          orgaIdHeader
+          orgaIdHeader,
         ],
         requestBody: {
           content: {
@@ -301,7 +298,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiPostRowPath}`]: {
@@ -313,7 +310,7 @@ export function createAasPaths(tag: string) {
           SubmodelIdParamSchema,
           IdShortPathParamSchema,
           PositionQueryParamSchema,
-          orgaIdHeader
+          orgaIdHeader,
         ],
         responses: {
           [HTTPCode.CREATED]: {
@@ -322,7 +319,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiDeletePolicyPath}`]: {
@@ -338,14 +335,20 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.NO_CONTENT]: {},
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiDeleteRowPath}`]: {
       delete: {
         tags: [tag],
         summary: `Deletes row with specified idShort from Submodel Element List with specified idShortPath.`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, RowParamSchema,orgaIdHeader],
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          RowParamSchema,
+          orgaIdHeader,
+        ],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -353,14 +356,14 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiGetSubmodelElementByIdPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel Element by idShortPath`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -368,12 +371,12 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       post: {
         tags: [tag],
         summary: `Creates a new Submodel Element at a specified path within submodel elements hierarchy`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementSchema },
@@ -386,12 +389,12 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       patch: {
         tags: [tag],
         summary: `Modify Submodel Element`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
@@ -404,23 +407,23 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
       delete: {
         tags: [tag],
         summary: `Deletes a Submodel Element at a specified path within submodel elements hierarchy`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.NO_CONTENT]: {},
         },
-        security
+        security,
       },
     },
     [`/${tag}${ApiGetSubmodelElementValuePath}`]: {
       get: {
         tags: [tag],
         summary: `Returns value representation of Submodel Element`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -428,7 +431,7 @@ export function createAasPaths(tag: string) {
             },
           },
         },
-        security
+        security,
       },
     },
   };
@@ -442,7 +445,12 @@ function createTemplatePaths() {
       get: {
         tags: [tag],
         summary: `Get templates`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema,orgaIdHeader],
+        parameters: [
+          LimitQueryParamSchema,
+          CursorQueryParamSchema,
+          PopulateQueryParamSchema,
+          orgaIdHeader,
+        ],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -450,7 +458,7 @@ function createTemplatePaths() {
             },
           },
         },
-        security
+        security,
       },
       post: {
         tags: [tag],
@@ -468,14 +476,14 @@ function createTemplatePaths() {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}/{id}/export`]: {
       get: {
         tags: [tag],
         summary: `Exports a template`,
-        parameters: [IdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -483,7 +491,7 @@ function createTemplatePaths() {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}/import`]: {
@@ -518,7 +526,7 @@ function createTemplatePaths() {
             },
           },
         },
-        security
+        security,
       },
     },
   };
@@ -532,7 +540,12 @@ function createPassportPaths() {
       get: {
         tags: [tag],
         summary: `Get passports`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema,orgaIdHeader],
+        parameters: [
+          LimitQueryParamSchema,
+          CursorQueryParamSchema,
+          PopulateQueryParamSchema,
+          orgaIdHeader,
+        ],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -540,7 +553,7 @@ function createPassportPaths() {
             },
           },
         },
-        security
+        security,
       },
       post: {
         tags: [tag],
@@ -558,14 +571,14 @@ function createPassportPaths() {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}/{id}/export`]: {
       get: {
         tags: [tag],
         summary: `Exports a passport`,
-        parameters: [IdParamSchema,orgaIdHeader],
+        parameters: [IdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -573,7 +586,7 @@ function createPassportPaths() {
             },
           },
         },
-        security
+        security,
       },
     },
     [`/${tag}/import`]: {
@@ -608,7 +621,7 @@ function createPassportPaths() {
             },
           },
         },
-        security
+        security,
       },
     },
   };
