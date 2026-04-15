@@ -53,6 +53,7 @@ describe("templateController", () => {
     orgId?: string,
     createdAt?: Date,
     updatedAt?: Date,
+    archived?: boolean,
   ): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
     const template = Template.create({
@@ -65,6 +66,10 @@ describe("templateController", () => {
       }),
       createdAt,
       updatedAt,
+      lastStatusChange: DppStatusChange.create({
+        currentStatus: archived ? DppStatus.Archived : DppStatus.Draft,
+        previousStatus: archived ? DppStatus.Draft : undefined,
+      }),
     });
     return ctx.getRepositories().dppIdentifiableRepository.save(template);
   }
@@ -170,7 +175,7 @@ describe("templateController", () => {
     const { aas } = ctx.getAasObjects();
 
     const t1 = await createTemplate(org.id, date1, date1);
-    const t2 = await createTemplate(org.id, date2, date2);
+    const t2 = await createTemplate(org.id, date2, date2, true);
     const t3 = await createTemplate(org.id, date3, date3);
 
     let response = await request(app.getHttpServer())
@@ -212,6 +217,23 @@ describe("templateController", () => {
         updatedAt: t.updatedAt.toISOString(),
       })),
     );
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}?status=Archived`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [t2].map((p) => ({
+        ...p.toPlain(),
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
   });
 
   it(`/POST a template`, async () => {

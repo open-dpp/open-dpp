@@ -13,6 +13,7 @@ export const DppStatusDto = {
 } as const;
 
 export const DppStatusDtoEnum = z.enum(DppStatusDto);
+export type DppStatusDtoType = z.infer<typeof DppStatusDtoEnum>;
 
 export const DppStatusModificationMethodDto = {
   Publish: "Publish",

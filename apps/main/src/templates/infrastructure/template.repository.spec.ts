@@ -1,8 +1,8 @@
 import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Model, Model as MongooseModel } from "mongoose";
@@ -112,6 +112,42 @@ describe("templateRepository", () => {
     expect(foundTemplate).toBeUndefined();
   });
 
+  it("should filter templates of version 1.0.0 as draft", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const createLegacyDoc = async (date: Date) => {
+      const legacyDoc = new TemplateDocument({
+        _id: randomUUID(),
+        _schemaVersion: TemplateDocVersion.v1_0_0,
+        organizationId,
+        environment: {
+          submodels: [],
+          assetAdministrationShells: [],
+          conceptDescriptions: [],
+        },
+        createdAt: date,
+        updatedAt: date,
+      });
+      return await legacyDoc.save({ validateBeforeSave: false });
+    };
+
+    const legacyDoc1 = await createLegacyDoc(date1);
+    const legacyDoc2 = await createLegacyDoc(date2);
+    let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DppStatus.Draft,
+      },
+    });
+    expect(foundTemplates.items.map((p) => p.id)).toEqual([legacyDoc2.id, legacyDoc1.id]);
+    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DppStatus.Published,
+      },
+    });
+    expect(foundTemplates.items.map((p) => p.id)).toEqual([]);
+  });
+
   it("should find all templates of organization", async () => {
     const organizationId = randomUUID();
     const otherOrganizationId = randomUUID();
@@ -120,6 +156,7 @@ describe("templateRepository", () => {
     const date2 = new Date("2022-02-01T00:00:00.000Z");
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-02T00:00:00.000Z");
+    const date5 = new Date("2022-03-03T00:00:00.000Z");
 
     const t1 = Template.create({
       id: randomUUID(),
@@ -156,10 +193,24 @@ describe("templateRepository", () => {
       }),
       createdAt: date4,
     });
+    const t5 = Template.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+      }),
+      createdAt: date5,
+      lastStatusChange: DppStatusChange.create({
+        previousStatus: DppStatus.Draft,
+        currentStatus: DppStatus.Archived,
+      }),
+    });
+
     await templateRepository.save(t1);
     await templateRepository.save(t2OtherOrganization);
     await templateRepository.save(t3);
     await templateRepository.save(t4);
+    await templateRepository.save(t5);
 
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId);
 
@@ -169,13 +220,32 @@ describe("templateRepository", () => {
           cursor: encodeCursor(t1.createdAt.toISOString(), t1.id),
           limit: 100,
         }),
-        items: [t4, t3, t1],
+        items: [t5, t4, t3, t1],
       }),
     );
+
+    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DppStatus.Archived,
+      },
+    });
+
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(t5.createdAt.toISOString(), t5.id),
+          limit: 100,
+        }),
+        items: [t5],
+      }),
+    );
+
     let pagination = Pagination.create({
       cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
     });
-    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
+    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+    });
     expect(foundTemplates).toEqual(
       PagingResult.create({
         pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
@@ -186,7 +256,9 @@ describe("templateRepository", () => {
       cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
       limit: 1,
     });
-    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
+    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+    });
     expect(foundTemplates).toEqual(
       PagingResult.create({
         pagination: Pagination.create({

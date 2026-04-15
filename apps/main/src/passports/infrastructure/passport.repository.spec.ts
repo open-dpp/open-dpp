@@ -116,6 +116,43 @@ describe("passportRepository", () => {
     expect(foundAas).toBeUndefined();
   });
 
+  it("should filter passports of version 1.0.0 as draft", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const createLegacyDoc = async (date: Date) => {
+      const legacyDoc = new PassportDocument({
+        _id: randomUUID(),
+        _schemaVersion: PassportDocVersion.v1_0_0,
+        organizationId,
+        templateId: randomUUID(),
+        environment: {
+          submodels: [],
+          assetAdministrationShells: [],
+          conceptDescriptions: [],
+        },
+        createdAt: date,
+        updatedAt: date,
+      });
+      return await legacyDoc.save({ validateBeforeSave: false });
+    };
+
+    const legacyDoc1 = await createLegacyDoc(date1);
+    const legacyDoc2 = await createLegacyDoc(date2);
+    let foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DppStatus.Draft,
+      },
+    });
+    expect(foundPassports.items.map((p) => p.id)).toEqual([legacyDoc2.id, legacyDoc1.id]);
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DppStatus.Published,
+      },
+    });
+    expect(foundPassports.items.map((p) => p.id)).toEqual([]);
+  });
+
   it("should find all passports of organization", async () => {
     const organizationId = randomUUID();
     const otherOrganizationId = randomUUID();
@@ -124,6 +161,7 @@ describe("passportRepository", () => {
     const date2 = new Date("2022-02-01T00:00:00.000Z");
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-02T00:00:00.000Z");
+    const date5 = new Date("2022-03-03T00:00:00.000Z");
 
     const p1 = Passport.create({
       id: randomUUID(),
@@ -161,27 +199,60 @@ describe("passportRepository", () => {
       createdAt: date4,
     });
 
+    const p5 = Passport.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+      }),
+      createdAt: date5,
+      lastStatusChange: DppStatusChange.create({
+        previousStatus: DppStatus.Draft,
+        currentStatus: DppStatus.Archived,
+      }),
+    });
+
     await passportRepository.save(p1);
     await passportRepository.save(p2OtherOrganization);
     await passportRepository.save(p3);
     await passportRepository.save(p4);
+    await passportRepository.save(p5);
 
-    let foundTemplates = await passportRepository.findAllByOrganizationId(organizationId);
+    let foundPassports = await passportRepository.findAllByOrganizationId(organizationId);
 
-    expect(foundTemplates).toEqual(
+    expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({
           cursor: encodeCursor(p1.createdAt.toISOString(), p1.id),
           limit: 100,
         }),
-        items: [p4, p3, p1],
+        items: [p5, p4, p3, p1],
       }),
     );
+
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DppStatus.Archived,
+      },
+    });
+
+    expect(foundPassports).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(p5.createdAt.toISOString(), p5.id),
+          limit: 100,
+        }),
+        items: [p5],
+      }),
+    );
+
     let pagination = Pagination.create({
       cursor: encodeCursor(p4.createdAt.toISOString(), p4.id),
     });
-    foundTemplates = await passportRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+    });
+    expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
         items: [p3, p1],
@@ -191,8 +262,10 @@ describe("passportRepository", () => {
       cursor: encodeCursor(p4.createdAt.toISOString(), p4.id),
       limit: 1,
     });
-    foundTemplates = await passportRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+    });
+    expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({
           cursor: encodeCursor(p3.createdAt.toISOString(), p3.id),

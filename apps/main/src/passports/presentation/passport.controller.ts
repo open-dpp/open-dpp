@@ -11,6 +11,7 @@ import type {
   SubmodelModificationDto,
   SubmodelRequestDto,
   ValueRequestDto,
+  DppStatusDtoType,
 } from "@open-dpp/dto";
 import type express from "express";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
@@ -82,7 +83,6 @@ import {
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
-  PopulateQueryParam,
   PositionQueryParam,
   RequestParam,
   RowParam,
@@ -112,6 +112,7 @@ import { UniqueProductIdentifierRepository } from "../../unique-product-identifi
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
+import { PopulateQueryParam, StatusQueryParam } from "../../dpp/presentation/dpp-decorators";
 
 @Controller("/passports")
 export class PassportController
@@ -135,6 +136,7 @@ export class PassportController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
+    @StatusQueryParam() status: DppStatusDtoType | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
@@ -143,7 +145,7 @@ export class PassportController
     const pagination = Pagination.create({ limit, cursor });
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(
       organizationId,
-      pagination,
+      { pagination, ...(status ? { filter: { status } } : {}) },
     );
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(

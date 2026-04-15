@@ -9,6 +9,7 @@ import type {
   TemplateCreateDto,
   DppStatusModificationDto,
   ValueRequestDto,
+  DppStatusDtoType,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -67,7 +68,6 @@ import {
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
-  PopulateQueryParam,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -93,6 +93,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
+import { PopulateQueryParam, StatusQueryParam } from "../../dpp/presentation/dpp-decorators";
 
 @Controller("/templates")
 export class TemplateController
@@ -703,6 +704,7 @@ export class TemplateController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
+    @StatusQueryParam() status: DppStatusDtoType | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
@@ -710,7 +712,7 @@ export class TemplateController
     const pagination = Pagination.create({ limit, cursor });
     let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(
       organizationId,
-      pagination,
+      { pagination, ...(status ? { filter: { status } } : {}) },
     );
     const subject = SubjectAttributes.create({ userRole, memberRole });
     if (populate.includes(Populates.assetAdministrationShells)) {

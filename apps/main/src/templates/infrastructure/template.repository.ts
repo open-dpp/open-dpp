@@ -4,8 +4,13 @@ import { InjectModel } from "@nestjs/mongoose";
 import { IDigitalProductPassportIdentifiableRepository } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { DbSessionOptions } from "../../database/query-options";
 import { DppStatus } from "../../dpp/domain/dpp-status";
-import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
-import { Pagination } from "../../pagination/pagination";
+import {
+  findAllByOrganizationId,
+  findOne,
+  findOneOrFail,
+  FindOptions,
+  save,
+} from "../../lib/repositories";
 import { Template } from "../domain/template";
 import { TemplateDoc, TemplateDocVersion } from "./template.schema";
 
@@ -61,12 +66,12 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
     return await findOne(id, this.templateDoc, this.fromPlainWithMigration.bind(this));
   }
 
-  async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {
+  async findAllByOrganizationId(organizationId: string, options?: FindOptions) {
     return await findAllByOrganizationId(
       this.templateDoc,
       this.fromPlainWithMigration.bind(this),
       organizationId,
-      pagination,
+      options,
     );
   }
 

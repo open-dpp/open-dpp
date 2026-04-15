@@ -7,6 +7,7 @@ import { DbSessionOptions } from "../database/query-options";
 import { decodeCursor, encodeCursor, Pagination } from "../pagination/pagination";
 import { PagingResult } from "../pagination/paging-result";
 import { HasCreatedAt } from "./has-created-at";
+import { DppStatus, DppStatusType } from "../dpp/domain/dpp-status";
 
 export async function convertToDomain<T>(
   mongoDoc: Document<string>,
@@ -28,7 +29,6 @@ export async function save<T extends Document<string>, V>(
   let doc = await docModel.findById(domainObject.id).session(options?.session ?? null);
   // 2. If none exists, create a new discriminator document
   if (!doc) {
-    // eslint-disable-next-line new-cap
     doc = new docModel({
       _id: domainObject.id, // top-level discriminator
     });
@@ -87,6 +87,11 @@ export async function findByIds<T extends Document<string>, V>(
   return result;
 }
 
+export type FindOptions = {
+  pagination?: Pagination;
+  filter?: { status: DppStatusType };
+};
+
 export async function findAllByOrganizationId<
   T extends Document<string>,
   V extends IPersistable & HasCreatedAt & IConvertableToPlain,
@@ -94,12 +99,19 @@ export async function findAllByOrganizationId<
   docModel: MongooseModel<T>,
   fromPlain: (plain: unknown) => Promise<V>,
   organizationId: string,
-  pagination?: Pagination,
+  options?: FindOptions,
 ) {
-  const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
+  const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
+  const status = options?.filter?.status;
   const docs = await docModel
     .find({
       organizationId,
+      ...(status && {
+        $or: [
+          { "lastStatusChange.currentStatus": status },
+          ...(status === DppStatus.Draft ? [{ _schemaVersion: "1.0.0" }] : []),
+        ],
+      }),
       ...(tmpPagination.cursor && {
         $or: [
           { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
@@ -113,7 +125,7 @@ export async function findAllByOrganizationId<
     .sort({ createdAt: -1, id: -1 })
     .limit(tmpPagination.limit ?? 100)
     .exec();
-  const domainObjects = await Promise.all(docs.map(fromPlain));
+  const domainObjects = await Promise.all(docs.map((d) => convertToDomain(d, fromPlain)));
   if (domainObjects.length > 0) {
     const lastObject = domainObjects[domainObjects.length - 1];
     tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));

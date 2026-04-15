@@ -4,7 +4,13 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { DbSessionOptions } from "../../database/query-options";
 import { DppStatus } from "../../dpp/domain/dpp-status";
-import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
+import {
+  findAllByOrganizationId,
+  findOne,
+  findOneOrFail,
+  FindOptions,
+  save,
+} from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
@@ -64,13 +70,13 @@ export class PassportRepository {
 
   async findAllByOrganizationId(
     organizationId: string,
-    pagination?: Pagination,
+    options?: FindOptions,
   ): Promise<PagingResult<Passport>> {
     return await findAllByOrganizationId(
       this.passportDoc,
       this.fromPlainWithMigration.bind(this),
       organizationId,
-      pagination,
+      options,
     );
   }
 

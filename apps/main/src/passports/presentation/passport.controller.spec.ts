@@ -122,6 +122,10 @@ describe("passportController", () => {
       }),
       createdAt: secondCreate,
       updatedAt: secondCreate,
+      lastStatusChange: DppStatusChange.create({
+        currentStatus: DppStatus.Archived,
+        previousStatus: DppStatus.Draft,
+      }),
     });
 
     await passportRepository.save(firstPassport);
@@ -165,6 +169,23 @@ describe("passportController", () => {
         cursor: expect.any(String),
       },
       result: [secondPassport, firstPassport].map((p) => ({
+        ...p.toPlain(),
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}?status=Archived`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [secondPassport].map((p) => ({
         ...p.toPlain(),
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),

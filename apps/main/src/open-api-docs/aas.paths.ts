@@ -40,11 +40,11 @@ import {
   IdParamSchema,
   IdShortPathParamSchema,
   LimitQueryParamSchema,
-  PopulateQueryParamSchema,
   PositionQueryParamSchema,
   RowParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
+import { PopulateQueryParamSchema } from "../dpp/presentation/dpp-decorators";
 
 const HTTPCode = {
   OK: 200,

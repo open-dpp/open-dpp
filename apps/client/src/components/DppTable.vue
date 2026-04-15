@@ -72,6 +72,13 @@ async function editItem(item: SharedDppDto) {
         </p>
       </template>
     </Column>
+    <Column field="lastStatusChange" header="Status">
+      <template #body="slotProps">
+        <p>
+          {{ slotProps.data.lastStatusChange.currentStatus }}
+        </p>
+      </template>
+    </Column>
     <Column :header="t('templates.createdAt')">
       <template #body="slotProps">
         <p>
