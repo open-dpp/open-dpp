@@ -4,6 +4,7 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "../../organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
+import { DppStatusDto } from "@open-dpp/dto";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const passport1 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
@@ -43,7 +44,10 @@ export function passportsHandlers() {
       return HttpResponse.json(
         {
           passport1,
-          lastStatusChange: { ...passport1.lastStatusChange, currentStatus: "PUBLISHED" },
+          lastStatusChange: {
+            ...passport1.lastStatusChange,
+            currentStatus: DppStatusDto.Published,
+          },
         },
         { status: 201 },
       );

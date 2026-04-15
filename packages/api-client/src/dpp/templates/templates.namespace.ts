@@ -1,4 +1,5 @@
 import type {
+  DppStatusModificationDto,
   PagingParamsDto,
   TemplateCreateDto,
   TemplateDto,
@@ -40,5 +41,15 @@ export class TemplatesNamespace {
 
   public async deleteById(id: string) {
     return await this.axiosInstance.delete(`${this.templatesEndpoint}/${id}`);
+  }
+
+  public async modifyStatus(
+    id: string,
+    data: DppStatusModificationDto,
+  ): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.post<TemplateDto>(
+      `${this.templatesEndpoint}/${id}/status`,
+      data,
+    );
   }
 }

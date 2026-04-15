@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "../../organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
+import { DppStatusDto } from "@open-dpp/dto";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const template1 = templatesPlainFactory.build({ organizationId: activeOrganization.id });
@@ -40,11 +41,14 @@ export function templatesHandlers() {
     http.delete(`${templatesEndpointUrl}/${template1.id}`, async () => {
       return HttpResponse.json(undefined, { status: 204 });
     }),
-    http.post(`${templatesEndpointUrl}/${template1.id}`, async () => {
+    http.post(`${templatesEndpointUrl}/${template1.id}/status`, async () => {
       return HttpResponse.json(
         {
           ...template1,
-          lastStatusChange: { ...template1.lastStatusChange, currentStatus: "PUBLISHED" },
+          lastStatusChange: {
+            ...template1.lastStatusChange,
+            currentStatus: DppStatusDto.Published,
+          },
         },
         { status: 201 },
       );

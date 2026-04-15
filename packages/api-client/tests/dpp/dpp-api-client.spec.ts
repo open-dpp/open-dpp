@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { SubmodelElementSchema, UserRoleDto } from "@open-dpp/dto";
+import { DppStatusDto, SubmodelElementSchema, UserRoleDto } from "@open-dpp/dto";
 import {
   propertyModificationPlainFactory,
   subjectPlainFactory,
@@ -70,9 +70,7 @@ describe("apiClient", () => {
       const response = await sdk.dpp.templates.modifyStatus(template1.id, {
         method: "Publish",
       });
-      expect(response.data.lastStatusChange.currentStatus).toEqual({
-
-      );
+      expect(response.data.lastStatusChange.currentStatus).toEqual(DppStatusDto.Published);
     });
   });
 
@@ -102,6 +100,13 @@ describe("apiClient", () => {
     it("should delete passport", async () => {
       const response = await sdk.dpp.passports.deleteById(passport1.id);
       expect(response.status).toEqual(204);
+    });
+
+    it("should modify status of passport", async () => {
+      const response = await sdk.dpp.passports.modifyStatus(passport1.id, {
+        method: "Publish",
+      });
+      expect(response.data.lastStatusChange.currentStatus).toEqual(DppStatusDto.Published);
     });
   });
 

@@ -1,4 +1,5 @@
 import type {
+  DppStatusModificationDto,
   PagingParamsDto,
   PassportDto,
   PassportPaginationDto,
@@ -41,5 +42,15 @@ export class PassportNamespace {
 
   public async deleteById(id: string) {
     return await this.axiosInstance.delete(`${this.passportEndpoint}/${id}`);
+  }
+
+  public async modifyStatus(
+    id: string,
+    data: DppStatusModificationDto,
+  ): Promise<AxiosResponse<PassportDto>> {
+    return await this.axiosInstance.post<PassportDto>(
+      `${this.passportEndpoint}/${id}/status`,
+      data,
+    );
   }
 }
