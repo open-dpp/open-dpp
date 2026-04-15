@@ -497,7 +497,7 @@ function createTemplatePaths() {
     [`/${tag}/{id}`]: {
       delete: {
         tags: [tag],
-        summary: `Deletes template`,
+        summary: `Delete template by specified id. Only templates with the status "draft" can be deleted.`,
         parameters: [IdParamSchema],
         responses: {
           [HTTPCode.NO_CONTENT]: {},
@@ -602,7 +602,7 @@ function createPassportPaths() {
     [`/${tag}/{id}`]: {
       delete: {
         tags: [tag],
-        summary: `Deletes passport`,
+        summary: `Delete passport by specified id. Only passports with the status "draft" can be deleted.`,
         parameters: [IdParamSchema],
         responses: {
           [HTTPCode.NO_CONTENT]: {},

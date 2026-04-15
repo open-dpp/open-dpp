@@ -7,20 +7,12 @@ import type {
   SubmodelModificationDto,
   SubmodelRequestDto,
   TemplateCreateDto,
+  DppStatusModificationDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import {
-  Body,
-  Controller,
-  Delete,
-  ForbiddenException,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -31,6 +23,7 @@ import {
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
   TemplateCreateDtoSchema,
+  DppStatusModificationDtoSchema,
   TemplateDto,
   TemplateDtoSchema,
   TemplatePaginationDto,
@@ -640,6 +633,20 @@ export class TemplateController
     );
   }
 
+  // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
+  @Post(":id/status")
+  async modifyTemplateStatus(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Body(new ZodValidationPipe(DppStatusModificationDtoSchema))
+    body: DppStatusModificationDto,
+  ): Promise<TemplateDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return this.templateService.modifyTemplateStatus(id, organizationId, subject, body);
+  }
+
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteTemplate(
@@ -720,17 +727,5 @@ export class TemplateController
     return async (options: DbSessionOptions) => {
       await this.templateRepository.save(template, options);
     };
-  }
-
-  private async loadTemplateAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Template> {
-    const template = await this.templateRepository.findOneOrFail(id);
-    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return template;
   }
 }

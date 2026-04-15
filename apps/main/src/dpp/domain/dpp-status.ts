@@ -1,5 +1,7 @@
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod";
+import { BadRequestException } from "@nestjs/common";
+import { DppStatusModificationDto } from "@open-dpp/dto";
 
 export const DppStatus = {
   Draft: "Draft",
@@ -58,6 +60,21 @@ export function restoreDpp(lastDppStatusChange: DppStatusChange) {
     previousStatus: lastDppStatusChange.currentStatus,
     currentStatus: lastDppStatusChange.previousStatus,
   });
+}
+
+export function handleDppStatusChangeRequest(
+  changeable: IDppStatusChangeable,
+  body: DppStatusModificationDto,
+) {
+  if (body.method === "Publish") {
+    changeable.publish();
+  } else if (body.method === "Archive") {
+    changeable.archive();
+  } else if (body.method === "Restore") {
+    changeable.restore();
+  } else {
+    throw new BadRequestException("Invalid method");
+  }
 }
 
 export class DppStatusChange {

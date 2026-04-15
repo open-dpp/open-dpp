@@ -30,6 +30,7 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplatesModule } from "../templates.module";
 import { TemplateController } from "./template.controller";
+import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
 
 describe("templateController", () => {
   const basePath = "/templates";
@@ -241,6 +242,10 @@ describe("templateController", () => {
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      lastStatusChange: {
+        currentStatus: DppStatus.Draft,
+        previousStatus: null,
+      },
     });
     const foundAas = await ctx
       .getRepositories()
@@ -341,6 +346,33 @@ describe("templateController", () => {
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
   });
 
+  it("/POST template status", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository } = ctx.getRepositories();
+
+    const template = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await dppIdentifiableRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${template.id}/status`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        method: "Publish",
+      });
+    expect(response.status).toEqual(201);
+    const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
+    expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
   it("/DELETE template", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
@@ -374,6 +406,26 @@ describe("templateController", () => {
     expect(await aasRepository.findOne(aas.id)).toBeUndefined();
     expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
     expect(await dppIdentifiableRepository.findOne(template.id)).toBeUndefined();
+
+    const publishedTemplate = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastStatusChange: DppStatusChange.create({ currentStatus: DppStatus.Published }),
+    });
+
+    await dppIdentifiableRepository.save(publishedTemplate);
+
+    const responseForPublishedTemplate = await request(app.getHttpServer())
+      .delete(`${basePath}/${publishedTemplate.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(responseForPublishedTemplate.status).toEqual(403);
+    expect(responseForPublishedTemplate.body.message).toEqual(
+      'Only templates with the status "Draft" can be deleted',
+    );
   });
 
   it("/POST import and /GET export template with all submodel element types", async () => {

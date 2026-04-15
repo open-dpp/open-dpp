@@ -13,7 +13,25 @@ export const DppStatusDto = {
 } as const;
 
 export const DppStatusDtoEnum = z.enum(DppStatusDto);
-export type DppStatusDtoType = z.infer<typeof DppStatusDtoEnum>;
+
+export const DppStatusModificationDto = {
+  Publish: "Publish",
+  Archive: "Archive",
+  Restore: "Restore",
+} as const;
+
+export const DppStatusModificationDtoEnum = z.enum(DppStatusModificationDto);
+
+export const DppStatusChangeDtoSchema = z.object({
+  previousStatus: DppStatusDtoEnum.nullish(),
+  currentStatus: DppStatusDtoEnum,
+});
+
+export const DppStatusModificationDtoSchema = z.object({
+  method: DppStatusModificationDtoEnum,
+});
+
+export type DppStatusModificationDto = z.infer<typeof DppStatusModificationDtoSchema>;
 
 export const SharedDppDtoSchema = z.object({
   id: z.string(),
@@ -21,6 +39,7 @@ export const SharedDppDtoSchema = z.object({
   environment: z.union([EnvironmentJsonSchema, ExtendedEnvironmentJsonSchema]),
   createdAt: DateTimeSchema,
   updatedAt: DateTimeSchema,
+  lastStatusChange: DppStatusChangeDtoSchema,
 });
 
 export type SharedDppDto = z.infer<typeof SharedDppDtoSchema>;

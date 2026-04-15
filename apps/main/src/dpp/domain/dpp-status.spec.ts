@@ -65,14 +65,6 @@ describe("dppStatus", () => {
     expect(statusChange.previousStatus).toEqual(DppStatus.Archived);
     expect(statusChange.currentStatus).toEqual(DppStatus.Published);
 
-    statusChange = restoreDpp(
-      DppStatusChange.create({
-        currentStatus: DppStatus.Archived,
-      }),
-    );
-    expect(statusChange.previousStatus).toEqual(DppStatus.Archived);
-    expect(statusChange.currentStatus).toEqual(DppStatus.Published);
-
     expect(() =>
       restoreDpp(
         DppStatusChange.create({

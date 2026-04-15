@@ -1,6 +1,7 @@
 import type {
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
+  DppStatusModificationDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -34,6 +35,7 @@ import {
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
+  DppStatusModificationDtoSchema,
   Populates,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -187,6 +189,20 @@ export class PassportController
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.deletePassport(id, organizationId, subject);
+  }
+
+  // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
+  @Post(":id/status")
+  async modifyPassportStatus(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Body(new ZodValidationPipe(DppStatusModificationDtoSchema))
+    body: DppStatusModificationDto,
+  ): Promise<PassportDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return this.passportService.modifyPassportStatus(id, organizationId, subject, body);
   }
 
   @Post()
@@ -798,18 +814,6 @@ export class PassportController
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());
-  }
-
-  private async loadPassportAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Passport> {
-    const passport = await this.passportRepository.findOneOrFail(id);
-    if (passport.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return passport;
   }
 
   private async loadTemplateAndCheckOwnership(

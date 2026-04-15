@@ -36,6 +36,7 @@ import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
 import { PassportsModule } from "../passports.module";
 import { PassportController } from "./passport.controller";
+import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
 
 describe("passportController", () => {
   const basePath = "/passports";
@@ -237,6 +238,10 @@ describe("passportController", () => {
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      lastStatusChange: {
+        currentStatus: DppStatus.Draft,
+        previousStatus: null,
+      },
     });
 
     const aasRepository = ctx.getModuleRef().get(AasRepository);
@@ -297,6 +302,10 @@ describe("passportController", () => {
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      lastStatusChange: {
+        currentStatus: DppStatus.Draft,
+        previousStatus: null,
+      },
     });
 
     expect(response.body.environment.assetAdministrationShells).toHaveLength(
@@ -463,6 +472,36 @@ describe("passportController", () => {
     expect(response.status).toEqual(400);
   });
 
+  it("/POST passport status", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository, uniqueProductIdentifierService } = ctx.getRepositories();
+
+    const passport = Passport.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const upi = passport.createUniqueProductIdentifier();
+
+    await uniqueProductIdentifierService.save(upi);
+    await dppIdentifiableRepository.save(passport);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${passport.id}/status`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        method: "Publish",
+      });
+    expect(response.status).toEqual(201);
+    const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
+    expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
   it("/DELETE passport", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
@@ -505,6 +544,26 @@ describe("passportController", () => {
     expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
     expect(await uniqueProductIdentifierService.findOne(upi.uuid)).toBeUndefined();
     expect(await dppIdentifiableRepository.findOne(passport.id)).toBeUndefined();
+
+    const publishedPassport = Passport.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastStatusChange: DppStatusChange.create({ currentStatus: DppStatus.Published }),
+    });
+
+    await dppIdentifiableRepository.save(publishedPassport);
+
+    const responseForPublishedPassport = await request(app.getHttpServer())
+      .delete(`${basePath}/${publishedPassport.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(responseForPublishedPassport.status).toEqual(403);
+    expect(responseForPublishedPassport.body.message).toEqual(
+      'Only passports with the status "Draft" can be deleted',
+    );
   });
 
   it("/POST import and /GET export empty passport round-trip", async () => {

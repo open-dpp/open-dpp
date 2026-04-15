@@ -9,6 +9,8 @@ import { EnvironmentService } from "../../../aas/presentation/environment.servic
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
+import { DppStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
+import { handleDppStatusChangeRequest } from "../../../dpp/domain/dpp-status";
 
 @Injectable()
 export class PassportService {
@@ -50,8 +52,22 @@ export class PassportService {
     return AasExportable.createFromPassport(passport, expandedEnvironment);
   }
 
+  async modifyPassportStatus(
+    id: string,
+    organizationId: string,
+    subject: SubjectAttributes,
+    body: DppStatusModificationDto,
+  ) {
+    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    handleDppStatusChangeRequest(passport, body);
+    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
+  }
+
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    if (!passport.isDraft()) {
+      throw new ForbiddenException('Only passports with the status "Draft" can be deleted');
+    }
 
     const session = await this.connection.startSession();
     try {
