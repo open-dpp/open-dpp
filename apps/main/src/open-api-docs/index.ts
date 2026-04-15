@@ -18,6 +18,27 @@ const document = createDocument({
   paths: {
     ...aasPaths,
   },
+  components: {
+    parameters: {
+      OrganizationIdHeader: {
+        name: "x-open-dpp-organization-id",
+        in: "header",
+        required: true,
+        schema: {
+          type: "string",
+        },
+        description: "Organization identifier",
+      },
+    },
+    securitySchemes: {
+      apiKeyAuth: {
+        type: "apiKey",
+        in: "header",
+        name: "x-api-key",
+        description: "API Key passed in the x-api-key header",
+      },
+    },
+  },
 });
 
 export function buildOpenApiDocumentation(): OpenAPIObject {
