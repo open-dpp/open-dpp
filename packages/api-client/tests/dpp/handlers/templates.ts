@@ -23,8 +23,8 @@ export function templatesHandlers() {
       });
 
       return (
-        errorResponse||
-         HttpResponse.json(
+        errorResponse ||
+        HttpResponse.json(
           {
             paging_metadata: {
               cursor: template2.id,
@@ -35,10 +35,10 @@ export function templatesHandlers() {
             status: 200,
           },
         )
-      )
+      );
     }),
     http.delete(`${templatesEndpointUrl}/${template1.id}`, async () => {
-      return HttpResponse.json(undefined, { status: 204 })
+      return HttpResponse.json(undefined, { status: 204 });
     }),
-  ]
+  ];
 }

@@ -79,12 +79,10 @@ export function usePassports() {
           const response = await apiClient.dpp.passports.deleteById(id);
           if (response.status === HTTPCode.NO_CONTENT) {
             await onDeleted();
-          }
-          else {
+          } else {
             errorHandlingStore.logErrorWithNotification(errorMessage);
           }
-        }
-        catch (e) {
+        } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
       },

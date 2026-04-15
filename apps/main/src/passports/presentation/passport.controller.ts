@@ -105,9 +105,7 @@ import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import {
-  UniqueProductIdentifierRepository,
-} from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
@@ -255,7 +253,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(
       passport.getEnvironment(),
@@ -275,7 +277,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifyAasShell(
       passport.getEnvironment(),
       aasId,
@@ -294,7 +300,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(
       passport.getEnvironment(),
@@ -312,7 +322,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addSubmodelToEnvironment(
       passport.getEnvironment(),
       body,
@@ -331,7 +345,11 @@ export class PassportController
     const administrator = SubjectAttributes.create({ userRole, memberRole });
     const subject = SubjectAttributes.fromPlain(body.subject);
     const object = IdShortPath.create({ path: body.object });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, administrator, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      administrator,
+      organizationId,
+    );
     await this.environmentService.deletePolicyBySubjectAndObject(
       passport.getEnvironment(),
       object,
@@ -349,7 +367,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     await this.environmentService.deleteSubmodelFromEnvironment(
       passport.getEnvironment(),
       submodelId,
@@ -368,7 +390,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifySubmodel(
       passport.getEnvironment(),
       submodelId,
@@ -386,7 +412,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelById(
       passport.getEnvironment(),
       submodelId,
@@ -403,7 +433,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelValue(
       passport.getEnvironment(),
       submodelId,
@@ -423,7 +457,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(
       passport.getEnvironment(),
@@ -447,7 +485,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifyColumn(
       passport.getEnvironment(),
       submodelId,
@@ -469,7 +511,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.deleteColumn(
       passport.getEnvironment(),
       submodelId,
@@ -490,7 +536,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addRow(
       passport.getEnvironment(),
       submodelId,
@@ -511,7 +561,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.deleteRow(
       passport.getEnvironment(),
       submodelId,
@@ -531,7 +585,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addSubmodelElement(
       passport.getEnvironment(),
       submodelId,
@@ -550,7 +608,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     await this.environmentService.deleteSubmodelElement(
       passport.getEnvironment(),
       submodelId,
@@ -570,7 +632,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifySubmodelElement(
       passport.getEnvironment(),
       submodelId,
@@ -591,7 +657,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifyValueOfSubmodelElement(
       passport.getEnvironment(),
       submodelId,
@@ -612,7 +682,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(
       passport.getEnvironment(),
@@ -632,7 +706,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelElementById(
       passport.getEnvironment(),
       submodelId,
@@ -652,7 +730,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addSubmodelElement(
       passport.getEnvironment(),
       submodelId,
@@ -672,7 +754,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelElementValue(
       passport.getEnvironment(),
       submodelId,
@@ -689,7 +775,11 @@ export class PassportController
     @OrganizationId() organizationId: string,
   ): Promise<any> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.passportService.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.aasSerializationService.exportPassport(passport, subject);
   }
 

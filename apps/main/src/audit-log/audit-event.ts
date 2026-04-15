@@ -20,8 +20,7 @@ export class AuditEventHeader {
     public readonly type: string,
     public readonly userId: string | null,
     public readonly version: string,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     id?: string;
@@ -54,6 +53,18 @@ export class AuditEventHeader {
       parsed.userId,
       parsed.version,
     );
+  }
+
+  toPlain(): Record<string, unknown> {
+    return {
+      id: this.id,
+      aggregateId: this.aggregateId,
+      correlationId: this.correlationId,
+      timestamp: this.timestamp,
+      type: this.type,
+      userId: this.userId,
+      version: this.version,
+    };
   }
 }
 

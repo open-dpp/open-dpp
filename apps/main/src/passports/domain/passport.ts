@@ -22,7 +22,9 @@ const PassportSchema = SharedDppSchema.extend({
   uniqueProductIdentifierUuid: z.uuid().optional(),
 });
 
-export class Passport implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable {
+export class Passport
+  implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable
+{
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,

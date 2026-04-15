@@ -105,7 +105,9 @@ describe("uniqueProductIdentifierRepository", () => {
     const upi1 = UniqueProductIdentifier.create({ referenceId });
     await uniqueProductIdentifierRepository.save(upi1);
     await uniqueProductIdentifierRepository.deleteByReferenceId(referenceId);
-    expect(await uniqueProductIdentifierRepository.findOneByReferencedId(referenceId)).toBeUndefined();
+    expect(
+      await uniqueProductIdentifierRepository.findOneByReferencedId(referenceId),
+    ).toBeUndefined();
   });
 
   afterAll(async () => {

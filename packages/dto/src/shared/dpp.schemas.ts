@@ -7,13 +7,13 @@ import {
 export const DateTimeSchema = z.union([z.iso.datetime(), z.date()]);
 
 export const DppStatusDto = {
-  Draft: 'Draft',
-  Published: 'Published',
-  Archived: 'Archived',
-} as const
+  Draft: "Draft",
+  Published: "Published",
+  Archived: "Archived",
+} as const;
 
-export const DppStatusDtoEnum = z.enum(DppStatusDto)
-export type DppStatusDtoType = z.infer<typeof DppStatusDtoEnum>
+export const DppStatusDtoEnum = z.enum(DppStatusDto);
+export type DppStatusDtoType = z.infer<typeof DppStatusDtoEnum>;
 
 export const SharedDppDtoSchema = z.object({
   id: z.string(),

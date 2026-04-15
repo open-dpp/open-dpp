@@ -47,9 +47,7 @@ describe("passportRepository", () => {
     }).compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
-    PassportDocument = module.get<Model<PassportDoc>>(
-      getModelToken(PassportDoc.name),
-    );
+    PassportDocument = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
   });
 
   it("should save a passport", async () => {
@@ -89,15 +87,17 @@ describe("passportRepository", () => {
     });
     await legacyDoc.save({ validateBeforeSave: false });
     const foundPassport = await passportRepository.findOneOrFail(id);
-    expect(foundPassport).toEqual(Passport.fromPlain({
-      id,
-      environment: Environment.fromPlain(legacyDoc.environment),
-      templateId: legacyDoc.templateId,
-      organizationId: legacyDoc.organizationId,
-      createdAt: legacyDoc.createdAt,
-      updatedAt: legacyDoc.updatedAt,
-      lastStatusChange: DppStatusChange.create({}),
-    }));
+    expect(foundPassport).toEqual(
+      Passport.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        templateId: legacyDoc.templateId,
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DppStatusChange.create({}),
+      }),
+    );
   });
 
   it("should delete a passport", async () => {

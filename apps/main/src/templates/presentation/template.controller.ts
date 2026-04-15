@@ -15,6 +15,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -125,7 +126,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(
       template.getEnvironment(),
@@ -145,7 +150,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifyAasShell(
       template.getEnvironment(),
       aasId,
@@ -164,7 +173,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(
       template.getEnvironment(),
@@ -182,7 +195,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addSubmodelToEnvironment(
       template.getEnvironment(),
       body,
@@ -201,7 +218,11 @@ export class TemplateController
     const administrator = SubjectAttributes.create({ userRole, memberRole });
     const subject = SubjectAttributes.fromPlain(body.subject);
     const object = IdShortPath.create({ path: body.object });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, administrator, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      administrator,
+      organizationId,
+    );
     await this.environmentService.deletePolicyBySubjectAndObject(
       template.getEnvironment(),
       object,
@@ -219,7 +240,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     await this.environmentService.deleteSubmodelFromEnvironment(
       template.getEnvironment(),
       submodelId,
@@ -238,7 +263,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifySubmodel(
       template.getEnvironment(),
       submodelId,
@@ -256,7 +285,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelById(
       template.getEnvironment(),
       submodelId,
@@ -273,7 +306,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelValue(
       template.getEnvironment(),
       submodelId,
@@ -292,7 +329,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(
       template.getEnvironment(),
@@ -312,7 +353,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addSubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -331,7 +376,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     await this.environmentService.deleteSubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -352,7 +401,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(
       template.getEnvironment(),
@@ -376,7 +429,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifyColumn(
       template.getEnvironment(),
       submodelId,
@@ -398,7 +455,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.deleteColumn(
       template.getEnvironment(),
       submodelId,
@@ -419,7 +480,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addRow(
       template.getEnvironment(),
       submodelId,
@@ -440,7 +505,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.deleteRow(
       template.getEnvironment(),
       submodelId,
@@ -461,7 +530,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifySubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -482,7 +555,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.modifyValueOfSubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -502,7 +579,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelElementById(
       template.getEnvironment(),
       submodelId,
@@ -522,7 +603,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.addSubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -542,7 +627,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.environmentService.getSubmodelElementValue(
       template.getEnvironment(),
       submodelId,
@@ -581,7 +670,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     return await this.aasSerializationService.exportTemplate(template, subject);
   }
 

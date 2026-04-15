@@ -10,9 +10,7 @@ import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas
 import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
-import {
-  UniqueProductIdentifierRepository,
-} from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -46,11 +44,7 @@ describe("passportService", () => {
         UsersModule,
         OrganizationsModule,
       ],
-      providers: [
-        PassportService,
-        PassportRepository,
-        UniqueProductIdentifierRepository,
-      ],
+      providers: [PassportService, PassportRepository, UniqueProductIdentifierRepository],
     }).compile();
 
     service = module.get<PassportService>(PassportService);

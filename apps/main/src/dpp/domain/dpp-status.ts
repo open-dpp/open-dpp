@@ -28,14 +28,20 @@ export function publishDpp(lastDppStatusChange: DppStatusChange) {
   if (lastDppStatusChange.currentStatus !== DppStatus.Draft) {
     throw new ValueError("Only drafts can be published.");
   }
-  return DppStatusChange.create({ previousStatus: lastDppStatusChange.currentStatus, currentStatus: DppStatus.Published });
+  return DppStatusChange.create({
+    previousStatus: lastDppStatusChange.currentStatus,
+    currentStatus: DppStatus.Published,
+  });
 }
 
 export function archiveDpp(lastDppStatusChange: DppStatusChange) {
   if (lastDppStatusChange.currentStatus === DppStatus.Archived) {
     throw new ValueError("A dpp can only archived once.");
   }
-  return DppStatusChange.create({ previousStatus: lastDppStatusChange.currentStatus, currentStatus: DppStatus.Archived });
+  return DppStatusChange.create({
+    previousStatus: lastDppStatusChange.currentStatus,
+    currentStatus: DppStatus.Archived,
+  });
 }
 
 export function restoreDpp(lastDppStatusChange: DppStatusChange) {
@@ -48,12 +54,17 @@ export function restoreDpp(lastDppStatusChange: DppStatusChange) {
   if (lastDppStatusChange.currentStatus !== DppStatus.Archived) {
     throw new ValueError("Only archived dpps can be restored.");
   }
-  return DppStatusChange.create({ previousStatus: lastDppStatusChange.currentStatus, currentStatus: lastDppStatusChange.previousStatus });
+  return DppStatusChange.create({
+    previousStatus: lastDppStatusChange.currentStatus,
+    currentStatus: lastDppStatusChange.previousStatus,
+  });
 }
 
 export class DppStatusChange {
-  private constructor(public readonly previousStatus: DppStatusType | null, public readonly currentStatus: DppStatusType) {
-  }
+  private constructor(
+    public readonly previousStatus: DppStatusType | null,
+    public readonly currentStatus: DppStatusType,
+  ) {}
 
   static create(data: { previousStatus?: DppStatusType; currentStatus?: DppStatusType }) {
     return new DppStatusChange(data.previousStatus ?? null, data.currentStatus ?? DppStatus.Draft);

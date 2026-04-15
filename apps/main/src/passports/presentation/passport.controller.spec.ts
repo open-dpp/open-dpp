@@ -26,9 +26,7 @@ import { DateTime } from "../../lib/date-time";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import {
-  UniqueProductIdentifierRepository,
-} from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -81,7 +79,7 @@ describe("passportController", () => {
     );
   }
 
-  async function savePassport(passport: Passport): Promise<Template> {
+  async function savePassport(passport: Passport): Promise<Passport> {
     return ctx.getRepositories().dppIdentifiableRepository.save(passport);
   }
 
@@ -472,7 +470,12 @@ describe("passportController", () => {
     const aas = AssetAdministrationShell.create({});
     const submodel = Submodel.create({ idShort: "testSubmodel" });
     aas.addSubmodel(submodel);
-    const { aasRepository, dppIdentifiableRepository, submodelRepository, uniqueProductIdentifierService } = ctx.getRepositories();
+    const {
+      aasRepository,
+      dppIdentifiableRepository,
+      submodelRepository,
+      uniqueProductIdentifierService,
+    } = ctx.getRepositories();
     await aasRepository.save(aas);
     await submodelRepository.save(submodel);
 

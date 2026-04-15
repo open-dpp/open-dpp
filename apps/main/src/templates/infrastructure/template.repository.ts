@@ -66,7 +66,8 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
       this.templateDoc,
       this.fromPlainWithMigration.bind(this),
       organizationId,
-      pagination,);
+      pagination,
+    );
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {

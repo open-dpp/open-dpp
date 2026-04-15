@@ -47,9 +47,7 @@ import { UsersService } from "../../identity/users/application/services/users.se
 
 import { UsersModule } from "../../identity/users/users.module";
 import { MediaModule } from "../../media/media.module";
-import {
-  UniqueProductIdentifierRepository,
-} from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 
 import {
   UniqueProductIdentifierDoc,
@@ -157,7 +155,9 @@ export function createAasTestContext<T>(
     dppIdentifiableRepository = moduleRef.get<T>(EntityRepositoryClass);
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
-    uniqueProductIdentifierRepository = moduleRef.get<UniqueProductIdentifierRepository>(UniqueProductIdentifierRepository);
+    uniqueProductIdentifierRepository = moduleRef.get<UniqueProductIdentifierRepository>(
+      UniqueProductIdentifierRepository,
+    );
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel1 = Submodel.fromPlain(
@@ -1005,7 +1005,12 @@ export function createAasTestContext<T>(
       userId: user1data.user.id,
       getOrganizationAndUserWithCookie,
     }),
-    getRepositories: () => ({ dppIdentifiableRepository, aasRepository, submodelRepository, uniqueProductIdentifierService: uniqueProductIdentifierRepository }),
+    getRepositories: () => ({
+      dppIdentifiableRepository,
+      aasRepository,
+      submodelRepository,
+      uniqueProductIdentifierService: uniqueProductIdentifierRepository,
+    }),
     getAasObjects: () => ({ aas, submodels }),
     getModuleRef: () => moduleRef,
     asserts: {

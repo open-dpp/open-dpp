@@ -5,14 +5,20 @@ import { Passport } from "./passport";
 
 describe("passport", () => {
   it("should be published", () => {
-    const passport = Passport.create({ organizationId: randomUUID(), environment: Environment.create({}) });
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
     expect(passport.isPublished()).toBeFalsy();
     passport.publish();
     expect(passport.isPublished()).toBeTruthy();
   });
 
   it("should be archived", () => {
-    const passport = Passport.create({ organizationId: randomUUID(), environment: Environment.create({}) });
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
     expect(passport.isArchived()).toBeFalsy();
     passport.archive();
     expect(passport.isArchived()).toBeTruthy();

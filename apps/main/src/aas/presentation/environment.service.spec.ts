@@ -84,7 +84,9 @@ describe("environmentService", () => {
     aasRepository = module.get<AasRepository>(AasRepository);
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
     connection = module.get<Connection>(getConnectionToken());
-    conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(ConceptDescriptionRepository);
+    conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(
+      ConceptDescriptionRepository,
+    );
   });
 
   it("should create environment", async () => {

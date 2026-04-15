@@ -45,9 +45,7 @@ describe("templateRepository", () => {
     }).compile();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
-    TemplateDocument = module.get<Model<TemplateDoc>>(
-      getModelToken(TemplateDoc.name),
-    );
+    TemplateDocument = module.get<Model<TemplateDoc>>(getModelToken(TemplateDoc.name));
   });
 
   it("should save a template", async () => {
@@ -86,14 +84,16 @@ describe("templateRepository", () => {
     });
     await legacyDoc.save({ validateBeforeSave: false });
     const foundTemplate = await templateRepository.findOneOrFail(id);
-    expect(foundTemplate).toEqual(Template.fromPlain({
-      id,
-      environment: Environment.fromPlain(legacyDoc.environment),
-      organizationId: legacyDoc.organizationId,
-      createdAt: legacyDoc.createdAt,
-      updatedAt: legacyDoc.updatedAt,
-      lastStatusChange: DppStatusChange.create({}),
-    }));
+    expect(foundTemplate).toEqual(
+      Template.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DppStatusChange.create({}),
+      }),
+    );
   });
 
   it("should delete a template", async () => {

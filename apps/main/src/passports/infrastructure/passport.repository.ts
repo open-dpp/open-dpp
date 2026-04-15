@@ -70,7 +70,8 @@ export class PassportRepository {
       this.passportDoc,
       this.fromPlainWithMigration.bind(this),
       organizationId,
-      pagination,);
+      pagination,
+    );
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {

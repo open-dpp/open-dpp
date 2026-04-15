@@ -1,16 +1,12 @@
 import type { Connection } from "mongoose";
-import {
-  ForbiddenException, Injectable, Logger, NotFoundException
-} from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
-import {
-  UniqueProductIdentifierRepository,
-} from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
@@ -64,13 +60,16 @@ export class PassportService {
         await this.passportRepository.deleteById(passport.id, { session });
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
       });
-    }
-    finally {
+    } finally {
       await session.endSession();
     }
   }
 
-  public async loadPassportAndCheckOwnership(id: string, subject: SubjectAttributes, organizationId: string): Promise<Passport> {
+  public async loadPassportAndCheckOwnership(
+    id: string,
+    subject: SubjectAttributes,
+    organizationId: string,
+  ): Promise<Passport> {
     const passport = await this.passportRepository.findOneOrFail(id);
     if (passport.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
       throw new ForbiddenException();

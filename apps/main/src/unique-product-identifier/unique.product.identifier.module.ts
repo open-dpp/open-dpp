@@ -31,13 +31,7 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
     BrandingModule,
   ],
   controllers: [UniqueProductIdentifierController],
-  providers: [
-    UniqueProductIdentifierApplicationService,
-    UniqueProductIdentifierRepository,
-  ],
-  exports: [
-    UniqueProductIdentifierRepository,
-    UniqueProductIdentifierApplicationService,
-  ],
+  providers: [UniqueProductIdentifierApplicationService, UniqueProductIdentifierRepository],
+  exports: [UniqueProductIdentifierRepository, UniqueProductIdentifierApplicationService],
 })
 export class UniqueProductIdentifierModule {}

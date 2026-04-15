@@ -4,7 +4,10 @@ import {
   EnvironmentDoc,
   EnvironmentSchema,
 } from "../../aas/infrastructure/schemas/environment.schema";
-import { DppStatusChangeDbSchema, DppStatusChangeDoc } from "../../dpp/infrastructure/dpp-status-change-db.schema";
+import {
+  DppStatusChangeDbSchema,
+  DppStatusChangeDoc,
+} from "../../dpp/infrastructure/dpp-status-change-db.schema";
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",

@@ -5,14 +5,20 @@ import { Template } from "./template";
 
 describe("template", () => {
   it("should be published", () => {
-    const passport = Template.create({ organizationId: randomUUID(), environment: Environment.create({}) });
+    const passport = Template.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
     expect(passport.isPublished()).toBeFalsy();
     passport.publish();
     expect(passport.isPublished()).toBeTruthy();
   });
 
   it("should be archived", () => {
-    const passport = Template.create({ organizationId: randomUUID(), environment: Environment.create({}) });
+    const passport = Template.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
     expect(passport.isArchived()).toBeFalsy();
     passport.archive();
     expect(passport.isArchived()).toBeTruthy();

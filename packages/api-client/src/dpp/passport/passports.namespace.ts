@@ -40,6 +40,6 @@ export class PassportNamespace {
   }
 
   public async deleteById(id: string) {
-    return await this.axiosInstance.delete(`${this.passportEndpoint}/${id}`)
+    return await this.axiosInstance.delete(`${this.passportEndpoint}/${id}`);
   }
 }

@@ -1,9 +1,5 @@
 import type { Connection } from "mongoose";
-import {
-  ForbiddenException,
-  Injectable,
-  Logger,
-} from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -30,13 +26,16 @@ export class TemplateService {
         await this.environmentService.deleteEnvironment(template.environment, session);
         await this.templateRepository.deleteById(template.id, { session });
       });
-    }
-    finally {
+    } finally {
       await session.endSession();
     }
   }
 
-  public async loadTemplateAndCheckOwnership(id: string, subject: SubjectAttributes, organizationId: string): Promise<Template> {
+  public async loadTemplateAndCheckOwnership(
+    id: string,
+    subject: SubjectAttributes,
+    organizationId: string,
+  ): Promise<Template> {
     const template = await this.templateRepository.findOneOrFail(id);
     if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
       throw new ForbiddenException();

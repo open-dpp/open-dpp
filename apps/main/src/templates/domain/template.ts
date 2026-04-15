@@ -21,7 +21,9 @@ export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "envir
 
 const TemplateSchema = SharedDppSchema;
 
-export class Template implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable {
+export class Template
+  implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable
+{
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,

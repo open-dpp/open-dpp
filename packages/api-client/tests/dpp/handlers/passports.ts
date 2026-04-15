@@ -25,8 +25,8 @@ export function passportsHandlers() {
       });
 
       return (
-        errorResponse||
-         HttpResponse.json(
+        errorResponse ||
+        HttpResponse.json(
           {
             paging_metadata: {
               cursor: passport2.id,
@@ -37,10 +37,10 @@ export function passportsHandlers() {
             status: 200,
           },
         )
-      )
+      );
     }),
     http.delete(`${passportsEndpointUrl}/${passport1.id}`, async () => {
-      return HttpResponse.json(undefined, { status: 204 })
+      return HttpResponse.json(undefined, { status: 204 });
     }),
-  ]
+  ];
 }

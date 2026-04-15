@@ -97,12 +97,10 @@ export function useTemplates({
           const response = await apiClient.dpp.templates.deleteById(id);
           if (response.status === HTTPCode.NO_CONTENT) {
             await onDeleted();
-          }
-          else {
+          } else {
             errorHandlingStore.logErrorWithNotification(errorMessage);
           }
-        }
-        catch (e) {
+        } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
       },
