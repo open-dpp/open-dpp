@@ -31,11 +31,11 @@ const document = createDocument({
       },
     },
     securitySchemes: {
-      bearerAuth: {
+      apiKeyAuth: {
         type: "apiKey",
         in: "header",
         name: "x-api-key",
-        description: "JWT token passed in the x-api-key header",
+        description: "API Key passed in the x-api-key header",
       },
     },
   },
