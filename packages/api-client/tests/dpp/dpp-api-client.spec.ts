@@ -65,6 +65,15 @@ describe("apiClient", () => {
       const response = await sdk.dpp.templates.deleteById(template1.id);
       expect(response.status).toEqual(204);
     });
+
+    it("should modify status of template", async () => {
+      const response = await sdk.dpp.templates.modifyStatus(template1.id, {
+        method: "Publish",
+      });
+      expect(response.data.lastStatusChange.currentStatus).toEqual({
+
+      );
+    });
   });
 
   describe("passports", () => {

@@ -40,5 +40,14 @@ export function templatesHandlers() {
     http.delete(`${templatesEndpointUrl}/${template1.id}`, async () => {
       return HttpResponse.json(undefined, { status: 204 });
     }),
+    http.post(`${templatesEndpointUrl}/${template1.id}`, async () => {
+      return HttpResponse.json(
+        {
+          ...template1,
+          lastStatusChange: { ...template1.lastStatusChange, currentStatus: "PUBLISHED" },
+        },
+        { status: 201 },
+      );
+    }),
   ];
 }

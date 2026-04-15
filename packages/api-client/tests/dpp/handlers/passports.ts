@@ -8,9 +8,6 @@ import { baseURL } from "./index";
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const passport1 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
 export const passport2 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
-export const passportFromtemplate = passportsPlainFactory.build({
-  organizationId: activeOrganization.id,
-});
 
 export function passportsHandlers() {
   const passportsEndpointUrl = `${baseURL}/passports`;
@@ -41,6 +38,15 @@ export function passportsHandlers() {
     }),
     http.delete(`${passportsEndpointUrl}/${passport1.id}`, async () => {
       return HttpResponse.json(undefined, { status: 204 });
+    }),
+    http.post(`${passportsEndpointUrl}/${passport1.id}/status`, async () => {
+      return HttpResponse.json(
+        {
+          passport1,
+          lastStatusChange: { ...passport1.lastStatusChange, currentStatus: "PUBLISHED" },
+        },
+        { status: 201 },
+      );
     }),
   ];
 }
