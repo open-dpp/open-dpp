@@ -28,6 +28,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
 } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -192,7 +193,7 @@ export class PassportController
   }
 
   // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
-  @Post(":id/status")
+  @Put(":id/status")
   async modifyPassportStatus(
     @OrganizationId() organizationId: string,
     @IdParam() id: string,

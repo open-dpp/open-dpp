@@ -504,6 +504,21 @@ function createTemplatePaths() {
         },
       },
     },
+    [`/${tag}/{id}/status`]: {
+      put: {
+        tags: [tag],
+        summary: `Change status of template by specified id.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
     [`/${tag}/import`]: {
       post: {
         tags: [tag],
@@ -607,6 +622,21 @@ function createPassportPaths() {
         responses: {
           [HTTPCode.NO_CONTENT]: {},
         },
+      },
+    },
+    [`/${tag}/{id}/status`]: {
+      put: {
+        tags: [tag],
+        summary: `Change status of passport by specified id.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+        },
+        security,
       },
     },
     [`/${tag}/import`]: {

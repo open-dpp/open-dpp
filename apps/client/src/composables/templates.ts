@@ -1,4 +1,10 @@
-import type { LanguageTextDto, PagingParamsDto, TemplatePaginationDto } from "@open-dpp/dto";
+import {
+  type DppStatusModificationDto,
+  DppStatusModificationMethodDto,
+  type LanguageTextDto,
+  type PagingParamsDto,
+  type TemplatePaginationDto,
+} from "@open-dpp/dto";
 import type { Ref } from "vue";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import { Populates } from "@open-dpp/dto";
@@ -24,6 +30,9 @@ export interface ITemplateComposables extends IPagination {
   deleteTemplate: (id: string, onDeleted: () => Promise<void>) => Promise<void>;
   loading: Ref<boolean>;
   init: () => Promise<void>;
+  publish: (id: string) => Promise<void>;
+  archive: (id: string) => Promise<void>;
+  restore: (id: string) => Promise<void>;
 }
 
 export function useTemplates({
@@ -73,6 +82,30 @@ export function useTemplates({
     }
   };
 
+  async function modifyStatus(id: string, data: DppStatusModificationDto) {
+    const errorMessage = t("templates.errorModifyStatus");
+    try {
+      const response = await apiClient.dpp.templates.modifyStatus(id, data);
+      if (response.status !== HTTPCode.OK) {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    } catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
+
+  async function publish(id: string) {
+    await modifyStatus(id, { method: DppStatusModificationMethodDto.Publish });
+  }
+
+  async function archive(id: string) {
+    await modifyStatus(id, { method: DppStatusModificationMethodDto.Archive });
+  }
+
+  async function restore(id: string) {
+    await modifyStatus(id, { method: DppStatusModificationMethodDto.Restore });
+  }
+
   async function deleteTemplate(id: string, onDeleted: () => Promise<void>) {
     const errorMessage = t("templates.errorDelete");
     const removeLabel = t("common.remove");
@@ -107,5 +140,15 @@ export function useTemplates({
     });
   }
 
-  return { createTemplate, deleteTemplate, templates, loading, init, ...pagination };
+  return {
+    createTemplate,
+    deleteTemplate,
+    templates,
+    loading,
+    init,
+    publish,
+    archive,
+    restore,
+    ...pagination,
+  };
 }

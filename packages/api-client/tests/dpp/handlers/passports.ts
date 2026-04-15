@@ -40,7 +40,7 @@ export function passportsHandlers() {
     http.delete(`${passportsEndpointUrl}/${passport1.id}`, async () => {
       return HttpResponse.json(undefined, { status: 204 });
     }),
-    http.post(`${passportsEndpointUrl}/${passport1.id}/status`, async () => {
+    http.put(`${passportsEndpointUrl}/${passport1.id}/status`, async () => {
       return HttpResponse.json(
         {
           passport1,
@@ -49,7 +49,7 @@ export function passportsHandlers() {
             currentStatus: DppStatusDto.Published,
           },
         },
-        { status: 201 },
+        { status: 200 },
       );
     }),
   ];

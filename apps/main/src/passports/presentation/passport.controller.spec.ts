@@ -37,6 +37,7 @@ import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
 import { PassportsModule } from "../passports.module";
 import { PassportController } from "./passport.controller";
 import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
+import { DppStatusModificationMethodDto } from "@open-dpp/dto";
 
 describe("passportController", () => {
   const basePath = "/passports";
@@ -472,7 +473,7 @@ describe("passportController", () => {
     expect(response.status).toEqual(400);
   });
 
-  it("/POST passport status", async () => {
+  it("/PUT passport status", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
 
@@ -491,13 +492,13 @@ describe("passportController", () => {
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${passport.id}/status`)
+      .put(`${basePath}/${passport.id}/status`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
-        method: "Publish",
+        method: DppStatusModificationMethodDto.Publish,
       });
-    expect(response.status).toEqual(201);
+    expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
     expect(foundPassport.isPublished()).toBeTruthy();
   });

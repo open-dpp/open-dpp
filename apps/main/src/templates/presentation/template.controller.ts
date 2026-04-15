@@ -12,7 +12,7 @@ import type {
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put } from "@nestjs/common";
 
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -634,7 +634,7 @@ export class TemplateController
   }
 
   // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
-  @Post(":id/status")
+  @Put(":id/status")
   async modifyTemplateStatus(
     @OrganizationId() organizationId: string,
     @IdParam() id: string,

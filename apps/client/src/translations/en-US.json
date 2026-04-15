@@ -435,6 +435,7 @@
     "create": "Create passport",
     "errorDelete": "Failed to delete the product passport",
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
+    "errorModifyStatus": "Failed to modify passport status",
     "blank": "Blank",
     "fromTemplate": "From template",
     "selectTemplate": "Select template"
@@ -444,6 +445,7 @@
     "create": "Create passport template",
     "errorDelete": "Failed to delete the passport template",
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
+    "errorModifyStatus": "Failed to modify passport template status",
     "createdAt": "Created at",
     "updatedAt": "Updated at"
   },

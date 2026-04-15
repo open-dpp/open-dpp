@@ -1,4 +1,10 @@
-import type { LanguageTextDto, PagingParamsDto, TemplateDto } from "@open-dpp/dto";
+import {
+  DppStatusDto,
+  DppStatusModificationMethodDto,
+  type LanguageTextDto,
+  type PagingParamsDto,
+  type TemplateDto,
+} from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { TemplateProps } from "./templates.ts";
 import { Populates } from "@open-dpp/dto";
@@ -17,6 +23,7 @@ const mocks = vi.hoisted(() => {
     routerPush: vi.fn(),
     deleteById: vi.fn(),
     confirm: vi.fn(),
+    modifyStatus: vi.fn(),
   };
 });
 
@@ -28,6 +35,7 @@ vi.mock("../lib/api-client", () => ({
         create: mocks.createTemplate,
         getAll: mocks.fetchTemplates,
         deleteById: mocks.deleteById,
+        modifyStatus: mocks.modifyStatus,
       },
     },
   },
@@ -99,6 +107,60 @@ describe("templates", () => {
       },
     });
     expect(mocks.routerPush).toHaveBeenCalledWith(`/templates/${t1.id}`);
+  });
+
+  it("should modify passport status", async () => {
+    const { publish, archive, restore } = mountHarness({ changeQueryParams });
+    const t1 = templatesPlainFactory.build();
+
+    mocks.modifyStatus.mockResolvedValueOnce({
+      data: {
+        ...t1,
+        lastStatusChange: {
+          currentStatus: DppStatusDto.Published,
+          previousStatus: DppStatusDto.Draft,
+        },
+      },
+      status: HTTPCode.OK,
+    });
+    await publish(t1.id);
+    expect(mocks.modifyStatus).toHaveBeenCalledWith(t1.id, {
+      method: DppStatusModificationMethodDto.Publish,
+    });
+
+    mocks.modifyStatus.mockResolvedValueOnce({
+      data: {
+        ...t1,
+        lastStatusChange: {
+          currentStatus: DppStatusDto.Archived,
+          previousStatus: DppStatusDto.Draft,
+        },
+      },
+      status: HTTPCode.OK,
+    });
+    await archive(t1.id);
+    expect(mocks.modifyStatus).toHaveBeenCalledWith(t1.id, {
+      method: DppStatusModificationMethodDto.Archive,
+    });
+
+    const t2 = templatesPlainFactory.build({
+      lastStatusChange: {
+        currentStatus: DppStatusDto.Archived,
+        previousStatus: DppStatusDto.Draft,
+      },
+    });
+
+    mocks.modifyStatus.mockResolvedValueOnce({
+      data: {
+        ...t2,
+        lastStatusChange: {
+          currentStatus: DppStatusDto.Draft,
+          previousStatus: DppStatusDto.Archived,
+        },
+      },
+      status: HTTPCode.OK,
+    });
+    await restore(t2.id);
   });
 
   it("should delete template", async () => {

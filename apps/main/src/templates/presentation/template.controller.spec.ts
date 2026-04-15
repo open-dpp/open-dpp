@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
 
-import { AssetKind } from "@open-dpp/dto";
+import { AssetKind, DppStatusModificationMethodDto } from "@open-dpp/dto";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -346,7 +346,7 @@ describe("templateController", () => {
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
   });
 
-  it("/POST template status", async () => {
+  it("/PUT template status", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
 
@@ -362,13 +362,13 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(template);
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${template.id}/status`)
+      .put(`${basePath}/${template.id}/status`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
-        method: "Publish",
+        method: DppStatusModificationMethodDto.Publish,
       });
-    expect(response.status).toEqual(201);
+    expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
     expect(foundPassport.isPublished()).toBeTruthy();
   });

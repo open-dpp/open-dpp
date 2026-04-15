@@ -48,9 +48,6 @@ export class PassportNamespace {
     id: string,
     data: DppStatusModificationDto,
   ): Promise<AxiosResponse<PassportDto>> {
-    return await this.axiosInstance.post<PassportDto>(
-      `${this.passportEndpoint}/${id}/status`,
-      data,
-    );
+    return await this.axiosInstance.put<PassportDto>(`${this.passportEndpoint}/${id}/status`, data);
   }
 }

@@ -1,5 +1,5 @@
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import { Language, Populates } from "@open-dpp/dto";
+import { DppStatusDto, DppStatusModificationMethodDto, Language, Populates } from "@open-dpp/dto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     fetchPassports: vi.fn(),
     routerPush: vi.fn(),
     confirm: vi.fn(),
+    modifyStatus: vi.fn(),
   };
 });
 
@@ -27,6 +28,7 @@ vi.mock("../lib/api-client", () => ({
         create: mocks.createPassport,
         getAll: mocks.fetchPassports,
         deleteById: mocks.deleteById,
+        modifyStatus: mocks.modifyStatus,
       },
     },
   },
@@ -76,6 +78,60 @@ describe("passports", () => {
       ...(wrapper.vm.api as ReturnType<typeof usePassports>),
     };
   }
+
+  it("should modify passport status", async () => {
+    const { publish, archive, restore } = mountHarness();
+    const p1 = passportsPlainFactory.build();
+
+    mocks.modifyStatus.mockResolvedValueOnce({
+      data: {
+        ...p1,
+        lastStatusChange: {
+          currentStatus: DppStatusDto.Published,
+          previousStatus: DppStatusDto.Draft,
+        },
+      },
+      status: HTTPCode.OK,
+    });
+    await publish(p1.id);
+    expect(mocks.modifyStatus).toHaveBeenCalledWith(p1.id, {
+      method: DppStatusModificationMethodDto.Publish,
+    });
+
+    mocks.modifyStatus.mockResolvedValueOnce({
+      data: {
+        ...p1,
+        lastStatusChange: {
+          currentStatus: DppStatusDto.Archived,
+          previousStatus: DppStatusDto.Draft,
+        },
+      },
+      status: HTTPCode.OK,
+    });
+    await archive(p1.id);
+    expect(mocks.modifyStatus).toHaveBeenCalledWith(p1.id, {
+      method: DppStatusModificationMethodDto.Archive,
+    });
+
+    const p2 = passportsPlainFactory.build({
+      lastStatusChange: {
+        currentStatus: DppStatusDto.Archived,
+        previousStatus: DppStatusDto.Draft,
+      },
+    });
+
+    mocks.modifyStatus.mockResolvedValueOnce({
+      data: {
+        ...p2,
+        lastStatusChange: {
+          currentStatus: DppStatusDto.Draft,
+          previousStatus: DppStatusDto.Archived,
+        },
+      },
+      status: HTTPCode.OK,
+    });
+    await restore(p2.id);
+  });
 
   it("should create passport", async () => {
     const { createPassport } = mountHarness();

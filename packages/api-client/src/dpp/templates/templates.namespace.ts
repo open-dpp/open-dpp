@@ -47,7 +47,7 @@ export class TemplatesNamespace {
     id: string,
     data: DppStatusModificationDto,
   ): Promise<AxiosResponse<TemplateDto>> {
-    return await this.axiosInstance.post<TemplateDto>(
+    return await this.axiosInstance.put<TemplateDto>(
       `${this.templatesEndpoint}/${id}/status`,
       data,
     );

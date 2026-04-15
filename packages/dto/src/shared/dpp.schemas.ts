@@ -14,13 +14,13 @@ export const DppStatusDto = {
 
 export const DppStatusDtoEnum = z.enum(DppStatusDto);
 
-export const DppStatusModificationDto = {
+export const DppStatusModificationMethodDto = {
   Publish: "Publish",
   Archive: "Archive",
   Restore: "Restore",
 } as const;
 
-export const DppStatusModificationDtoEnum = z.enum(DppStatusModificationDto);
+export const DppStatusModificationDtoEnum = z.enum(DppStatusModificationMethodDto);
 
 export const DppStatusChangeDtoSchema = z.object({
   previousStatus: DppStatusDtoEnum.nullish(),

@@ -1,8 +1,10 @@
-import type {
-  LanguageTextDto,
-  PagingParamsDto,
-  PassportPaginationDto,
-  PassportRequestCreateDto,
+import {
+  type DppStatusModificationDto,
+  DppStatusModificationMethodDto,
+  type LanguageTextDto,
+  type PagingParamsDto,
+  type PassportPaginationDto,
+  type PassportRequestCreateDto,
 } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
 import type { PagingResult } from "./pagination.ts";
@@ -55,6 +57,30 @@ export function usePassports() {
     return response.data;
   };
 
+  async function modifyStatus(id: string, data: DppStatusModificationDto) {
+    const errorMessage = t("passports.errorModifyStatus");
+    try {
+      const response = await apiClient.dpp.passports.modifyStatus(id, data);
+      if (response.status !== HTTPCode.OK) {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    } catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
+
+  async function publish(id: string) {
+    await modifyStatus(id, { method: DppStatusModificationMethodDto.Publish });
+  }
+
+  async function archive(id: string) {
+    await modifyStatus(id, { method: DppStatusModificationMethodDto.Archive });
+  }
+
+  async function restore(id: string) {
+    await modifyStatus(id, { method: DppStatusModificationMethodDto.Restore });
+  }
+
   async function deletePassport(id: string, onDeleted: () => Promise<void>) {
     const errorMessage = t("passports.errorDelete");
     const removeLabel = t("common.remove");
@@ -89,5 +115,14 @@ export function usePassports() {
     });
   }
 
-  return { createPassport, fetchPassports, passports, loading, deletePassport };
+  return {
+    createPassport,
+    fetchPassports,
+    passports,
+    loading,
+    deletePassport,
+    publish,
+    archive,
+    restore,
+  };
 }

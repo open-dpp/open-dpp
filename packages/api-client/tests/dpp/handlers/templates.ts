@@ -41,7 +41,7 @@ export function templatesHandlers() {
     http.delete(`${templatesEndpointUrl}/${template1.id}`, async () => {
       return HttpResponse.json(undefined, { status: 204 });
     }),
-    http.post(`${templatesEndpointUrl}/${template1.id}/status`, async () => {
+    http.put(`${templatesEndpointUrl}/${template1.id}/status`, async () => {
       return HttpResponse.json(
         {
           ...template1,
@@ -50,7 +50,7 @@ export function templatesHandlers() {
             currentStatus: DppStatusDto.Published,
           },
         },
-        { status: 201 },
+        { status: 200 },
       );
     }),
   ];
