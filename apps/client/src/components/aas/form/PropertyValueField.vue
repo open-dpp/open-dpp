@@ -23,9 +23,7 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const isDateOrDateTime = computed(
-  () =>
-    props.valueType === DataTypeDef.Date
-    || props.valueType === DataTypeDef.DateTime,
+  () => props.valueType === DataTypeDef.Date || props.valueType === DataTypeDef.DateTime,
 );
 const currentTimezone = computed(() => getCurrentTimezone());
 </script>
@@ -47,19 +45,10 @@ const currentTimezone = computed(() => getCurrentTimezone());
       </FloatLabel>
       <slot name="addon-right" />
     </InputGroup>
-    <small
-      v-if="isDateOrDateTime"
-      class="text-muted-color"
-      data-testid="property-value-timezone"
-    >
+    <small v-if="isDateOrDateTime" class="text-muted-color" data-testid="property-value-timezone">
       {{ t("aasEditor.timezone") }}: {{ currentTimezone }}
     </small>
-    <Message
-      v-if="props.showError && props.error"
-      size="small"
-      severity="error"
-      variant="simple"
-    >
+    <Message v-if="props.showError && props.error" size="small" severity="error" variant="simple">
       {{ props.error }}
     </Message>
   </div>

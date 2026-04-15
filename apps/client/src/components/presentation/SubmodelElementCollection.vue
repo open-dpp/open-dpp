@@ -26,7 +26,7 @@ const { t } = useI18n();
   <router-link
     :to="`?submodelid=${parentId}`"
     :data-cy="parentId"
-    class="inline-flex items-center gap-1.5 mt-1 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+    class="text-primary-600 hover:text-primary-700 mt-1 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
   >
     <span>{{ t("presentation.moreInfo") }}</span>
     <ChevronRightIcon class="size-4 shrink-0" aria-hidden="true" />

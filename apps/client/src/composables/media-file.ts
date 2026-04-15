@@ -2,10 +2,7 @@ import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import { onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-
-  useErrorHandlingStore,
-} from "../stores/error.handling.ts";
+import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useMediaStore } from "../stores/media.ts";
 
 export function useMediaFile() {
@@ -20,16 +17,13 @@ export function useMediaFile() {
       if (fileUrl.value) {
         URL.revokeObjectURL(fileUrl.value);
       }
-      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(
-        mediaId,
-      );
+      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(mediaId);
 
       if (blob) {
         fileUrl.value = URL.createObjectURL(blob);
       }
       mediaInfo.value = fetchedMediaInfo;
-    }
-    catch (error) {
+    } catch (error) {
       errorHandlingStore.logErrorWithNotification(t("file.downloadError"), error);
       fileUrl.value = null;
       mediaInfo.value = null;
@@ -55,10 +49,11 @@ export interface MediaFileCollectionProps {
   translate: (label: string, ...args: unknown[]) => string;
 }
 
-export function useMediaFileCollection({ errorHandlingStore, translate }: MediaFileCollectionProps) {
-  const files = ref<
-    MediaFileCollectionItem[]
-  >([]);
+export function useMediaFileCollection({
+  errorHandlingStore,
+  translate,
+}: MediaFileCollectionProps) {
+  const files = ref<MediaFileCollectionItem[]>([]);
   const mediaStore = useMediaStore();
 
   async function download(mediaIds: string[]) {
@@ -67,24 +62,18 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
       for (const mediaId of mediaIds) {
         await add(mediaId);
       }
-    }
-    catch (error) {
-      errorHandlingStore.logErrorWithNotification(
-        translate("file.downloadError"),
-        error,
-      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(translate("file.downloadError"), error);
     }
   }
 
   async function add(mediaId: string, position?: number) {
     const errorMsg = translate("file.couldNotBeLoaded");
-    if (files.value.some(file => file.mediaInfo.id === mediaId)) {
+    if (files.value.some((file) => file.mediaInfo.id === mediaId)) {
       return false;
     }
     try {
-      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(
-        mediaId,
-      );
+      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(mediaId);
       if (blob) {
         const newMedia = {
           blob,
@@ -97,26 +86,21 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
             URL.revokeObjectURL(files.value[position].url);
           }
           files.value[position] = newMedia;
-        }
-        else {
+        } else {
           files.value.push(newMedia);
         }
         return true;
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMsg);
       }
-    }
-    catch (error) {
+    } catch (error) {
       errorHandlingStore.logErrorWithNotification(errorMsg, error);
     }
     return false;
   }
 
   function remove(mediaId: string) {
-    const foundIndex = files.value.findIndex(
-      file => file.mediaInfo.id === mediaId,
-    );
+    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === mediaId);
     if (foundIndex !== -1) {
       if (files.value[foundIndex]) {
         URL.revokeObjectURL(files.value[foundIndex].url);
@@ -126,9 +110,7 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
   }
 
   function move(mediaId: string, newIndex: number) {
-    const foundIndex = files.value.findIndex(
-      file => file.mediaInfo.id === mediaId,
-    );
+    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === mediaId);
     if (foundIndex !== -1) {
       const media = files.value.splice(foundIndex, 1)[0];
       if (media) {
@@ -138,9 +120,7 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
   }
 
   async function modify(oldMediaId: string, newMediaId: string) {
-    const foundIndex = files.value.findIndex(
-      file => file.mediaInfo.id === oldMediaId,
-    );
+    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === oldMediaId);
     if (foundIndex === -1) {
       return;
     }

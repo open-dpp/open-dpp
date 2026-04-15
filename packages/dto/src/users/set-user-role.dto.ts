@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 export const SetUserRoleDtoSchema = z.object({
-  role: z.enum(['admin', 'user']),
-})
+  role: z.enum(["admin", "user"]),
+});
 
-export type SetUserRoleDto = z.infer<typeof SetUserRoleDtoSchema>
+export type SetUserRoleDto = z.infer<typeof SetUserRoleDtoSchema>;

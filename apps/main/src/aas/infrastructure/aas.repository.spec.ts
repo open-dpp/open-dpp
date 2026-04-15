@@ -62,14 +62,13 @@ describe("aasRepository", () => {
           },
         ]),
       ],
-      providers: [
-        PassportRepository,
-        AasRepository,
-        SubmodelRepository,
-      ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+      providers: [PassportRepository, AasRepository, SubmodelRepository],
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     aasRepository = module.get<AasRepository>(AasRepository);
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
@@ -109,19 +108,23 @@ describe("aasRepository", () => {
     });
     await legacyDoc.save({ validateBeforeSave: false });
     const foundAas = await aasRepository.findOneOrFail(id);
-    expect(foundAas).toEqual(AssetAdministrationShell.fromPlain({
-      id,
-      assetInformation: {
-        assetKind: AssetKind.Instance,
-        defaultThumbnails: [{
-          path: "https://example.png",
-          contentType: "image/png",
-        }],
-        specificAssetIds: [],
-        globalAssetId: id,
-      },
-      security: Security.create({}).toPlain(),
-    }));
+    expect(foundAas).toEqual(
+      AssetAdministrationShell.fromPlain({
+        id,
+        assetInformation: {
+          assetKind: AssetKind.Instance,
+          defaultThumbnails: [
+            {
+              path: "https://example.png",
+              contentType: "image/png",
+            },
+          ],
+          specificAssetIds: [],
+          globalAssetId: id,
+        },
+        security: Security.create({}).toPlain(),
+      }),
+    );
   });
 
   it(`should load and migrate aas without security from version $1.1.0 to 1.2.0`, async () => {
@@ -130,25 +133,28 @@ describe("aasRepository", () => {
     const submodel2 = Submodel.create({ idShort: "submodel2" });
     await submodelRepository.save(submodel1);
     await submodelRepository.save(submodel2);
-    const submodelReferences = [{
-      type: ReferenceTypes.ModelReference,
-      referredSemanticId: null,
-      keys: [
-        {
-          type: AasSubmodelElements.SubmodelElement,
-          value: submodel1.id,
-        },
-      ],
-    }, {
-      type: ReferenceTypes.ModelReference,
-      referredSemanticId: null,
-      keys: [
-        {
-          type: AasSubmodelElements.SubmodelElement,
-          value: submodel2.id,
-        },
-      ],
-    }];
+    const submodelReferences = [
+      {
+        type: ReferenceTypes.ModelReference,
+        referredSemanticId: null,
+        keys: [
+          {
+            type: AasSubmodelElements.SubmodelElement,
+            value: submodel1.id,
+          },
+        ],
+      },
+      {
+        type: ReferenceTypes.ModelReference,
+        referredSemanticId: null,
+        keys: [
+          {
+            type: AasSubmodelElements.SubmodelElement,
+            value: submodel2.id,
+          },
+        ],
+      },
+    ];
 
     const legacyDoc = new AasDoc({
       _id: id,
@@ -165,29 +171,56 @@ describe("aasRepository", () => {
     const foundAas = await aasRepository.findOneOrFail(id);
     const security = foundAas.security;
     // admin should have all permissions
-    let ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }));
-    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
+    let ability = security.defineAbilityForSubject(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+    );
+    for (const permission of [
+      Permissions.Create,
+      Permissions.Read,
+      Permissions.Edit,
+      Permissions.Delete,
+    ]) {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
     }
 
     // member of the organization to which the passport belongs to should have all permissions
-    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
-    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
+    ability = security.defineAbilityForSubject(
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+    );
+    for (const permission of [
+      Permissions.Create,
+      Permissions.Read,
+      Permissions.Edit,
+      Permissions.Delete,
+    ]) {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
     }
 
-    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }));
-    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
+    ability = security.defineAbilityForSubject(
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
+    );
+    for (const permission of [
+      Permissions.Create,
+      Permissions.Read,
+      Permissions.Edit,
+      Permissions.Delete,
+    ]) {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
     }
 
     // anonymous user should have only read permissions
-    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
-    expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
-    expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
+    ability = security.defineAbilityForSubject(
+      SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+    );
+    expect(
+      ability.can(Permissions.Read, IdShortPath.create({ path: submodel1.idShort })),
+    ).toBeTruthy();
+    expect(
+      ability.can(Permissions.Read, IdShortPath.create({ path: submodel2.idShort })),
+    ).toBeTruthy();
 
     for (const permission of [Permissions.Create, Permissions.Edit, Permissions.Delete]) {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeFalsy();

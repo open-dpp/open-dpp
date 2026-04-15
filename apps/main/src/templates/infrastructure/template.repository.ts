@@ -1,9 +1,7 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import {
-  IDigitalProductPassportIdentifiableRepository,
-} from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
+import { IDigitalProductPassportIdentifiableRepository } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { DbSessionOptions } from "../../database/query-options";
 import { DppStatus } from "../../dpp/domain/dpp-status";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
@@ -45,7 +43,14 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
   }
 
   async save(template: Template, options?: DbSessionOptions) {
-    return await save(template, this.templateDoc, TemplateDocVersion.v1_1_0, this.fromPlain.bind(this), undefined, options);
+    return await save(
+      template,
+      this.templateDoc,
+      TemplateDocVersion.v1_1_0,
+      this.fromPlain.bind(this),
+      undefined,
+      options,
+    );
   }
 
   async findOneOrFail(id: string) {
@@ -57,7 +62,11 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
   }
 
   async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {
-    return await findAllByOrganizationId(this.templateDoc, this.fromPlainWithMigration.bind(this), organizationId, pagination);
+    return await findAllByOrganizationId(
+      this.templateDoc,
+      this.fromPlainWithMigration.bind(this),
+      organizationId,
+      pagination,);
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {

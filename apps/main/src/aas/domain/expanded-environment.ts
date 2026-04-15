@@ -56,22 +56,30 @@ export class ExpandedEnvironment {
     submodelMap: Map<string, Submodel>,
     conceptDescriptionMap: Map<string, ConceptDescription>,
   ): ExpandedEnvironment {
-    const missingShellIds = environment.assetAdministrationShells.filter(id => !shellMap.has(id));
-    const missingSubmodelIds = environment.submodels.filter(id => !submodelMap.has(id));
-    const missingConceptDescriptionIds = environment.conceptDescriptions.filter(id => !conceptDescriptionMap.has(id));
+    const missingShellIds = environment.assetAdministrationShells.filter((id) => !shellMap.has(id));
+    const missingSubmodelIds = environment.submodels.filter((id) => !submodelMap.has(id));
+    const missingConceptDescriptionIds = environment.conceptDescriptions.filter(
+      (id) => !conceptDescriptionMap.has(id),
+    );
 
-    if (missingShellIds.length > 0 || missingSubmodelIds.length > 0 || missingConceptDescriptionIds.length > 0) {
+    if (
+      missingShellIds.length > 0 ||
+      missingSubmodelIds.length > 0 ||
+      missingConceptDescriptionIds.length > 0
+    ) {
       throw new ValueError(
-        `Environment references entities missing from the database. `
-        + `Missing shells: [${missingShellIds.join(", ")}], `
-        + `missing submodels: [${missingSubmodelIds.join(", ")}], `
-        + `missing concept descriptions: [${missingConceptDescriptionIds.join(", ")}]`,
+        `Environment references entities missing from the database. ` +
+          `Missing shells: [${missingShellIds.join(", ")}], ` +
+          `missing submodels: [${missingSubmodelIds.join(", ")}], ` +
+          `missing concept descriptions: [${missingConceptDescriptionIds.join(", ")}]`,
       );
     }
 
-    const shells = environment.assetAdministrationShells.map(id => shellMap.get(id)!);
-    const submodels = environment.submodels.map(id => submodelMap.get(id)!);
-    const conceptDescriptions = environment.conceptDescriptions.map(id => conceptDescriptionMap.get(id)!);
+    const shells = environment.assetAdministrationShells.map((id) => shellMap.get(id)!);
+    const submodels = environment.submodels.map((id) => submodelMap.get(id)!);
+    const conceptDescriptions = environment.conceptDescriptions.map(
+      (id) => conceptDescriptionMap.get(id)!,
+    );
 
     return new ExpandedEnvironment(shells, submodels, conceptDescriptions);
   }
@@ -84,8 +92,7 @@ export class ExpandedEnvironment {
     let parsed: z.infer<typeof ExpandedEnvironmentSchema>;
     try {
       parsed = ExpandedEnvironmentSchema.parse(data);
-    }
-    catch (err) {
+    } catch (err) {
       if (err instanceof ZodError) {
         throw new ValueError(`Invalid environment data: ${err.message}`);
       }
@@ -97,15 +104,12 @@ export class ExpandedEnvironment {
       const submodelData = parsed.submodels[index];
       const oldId = submodelData.id;
       if (!oldId || typeof oldId !== "string") {
-        throw new ValueError(
-          `Submodel at index ${index} has a missing or invalid id`,
-        );
+        throw new ValueError(`Submodel at index ${index} has a missing or invalid id`);
       }
 
       try {
         submodels.push(Submodel.fromPlain(submodelData));
-      }
-      catch (err) {
+      } catch (err) {
         if (err instanceof ZodError) {
           throw new ValueError(`Invalid submodel at index ${index}: ${err.message}`);
         }
@@ -118,10 +122,11 @@ export class ExpandedEnvironment {
       const shellData = parsed.assetAdministrationShells[index];
       try {
         shells.push(AssetAdministrationShell.fromPlain(shellData));
-      }
-      catch (err) {
+      } catch (err) {
         if (err instanceof ZodError) {
-          throw new ValueError(`Invalid assetAdministrationShell at index ${index}: ${err.message}`);
+          throw new ValueError(
+            `Invalid assetAdministrationShell at index ${index}: ${err.message}`,
+          );
         }
         throw err;
       }
@@ -132,8 +137,7 @@ export class ExpandedEnvironment {
       const cdData = parsed.conceptDescriptions![index];
       try {
         conceptDescriptions.push(ConceptDescription.fromPlain(cdData));
-      }
-      catch (err) {
+      } catch (err) {
         if (err instanceof ZodError) {
           throw new ValueError(`Invalid conceptDescription at index ${index}: ${err.message}`);
         }
@@ -145,21 +149,21 @@ export class ExpandedEnvironment {
   }
 
   toPlain(options?: ConvertToPlainOptions): ExpandedEnvironmentPlain {
-    const submodels = removeEmptyItems(this.submodels.map(submodel => submodel.toPlain(options)));
+    const submodels = removeEmptyItems(this.submodels.map((submodel) => submodel.toPlain(options)));
     return {
-      assetAdministrationShells: this.shells.map(
-        shell => shell.toPlain({ context: { filterSubmodels: submodels } }),
+      assetAdministrationShells: this.shells.map((shell) =>
+        shell.toPlain({ context: { filterSubmodels: submodels } }),
       ),
       submodels,
-      conceptDescriptions: this.conceptDescriptions.map(cd => cd.toPlain()),
+      conceptDescriptions: this.conceptDescriptions.map((cd) => cd.toPlain()),
     };
   }
 
   toEnvironment(): Environment {
     return Environment.create({
-      assetAdministrationShells: this.shells.map(s => s.id),
-      submodels: this.submodels.map(s => s.id),
-      conceptDescriptions: this.conceptDescriptions.map(cd => cd.id),
+      assetAdministrationShells: this.shells.map((s) => s.id),
+      submodels: this.submodels.map((s) => s.id),
+      conceptDescriptions: this.conceptDescriptions.map((cd) => cd.id),
     });
   }
 }

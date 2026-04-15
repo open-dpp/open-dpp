@@ -24,7 +24,7 @@ const isComplexType = computed(() =>
       isComplexType ? 'col-span-full py-5' : 'flex items-baseline justify-between gap-4 py-4',
     ]"
   >
-    <dt class="text-sm font-medium text-gray-500 shrink-0">
+    <dt class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
     </dt>
     <SubmodelElementValue :element="element" />

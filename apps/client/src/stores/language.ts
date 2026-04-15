@@ -8,10 +8,8 @@ import { enPrimeVue } from "../translations/primevue/en.ts";
 
 export function getShortLocale(localeValue: string) {
   const code = localeValue.toLowerCase();
-  if (code.startsWith("de"))
-    return "de";
-  if (code.startsWith("en"))
-    return "en";
+  if (code.startsWith("de")) return "de";
+  if (code.startsWith("en")) return "en";
   return "en"; // fallback
 }
 
@@ -25,8 +23,7 @@ export const useLanguageStore = defineStore("language", () => {
     // update dayjs locale
     dayjs.locale(shortLocale.value);
     // update primevue locale
-    primevue.config.locale
-      = shortLocale.value === "de" ? dePrimeVue : enPrimeVue;
+    primevue.config.locale = shortLocale.value === "de" ? dePrimeVue : enPrimeVue;
   };
 
   return { shortLocale, onI18nLocaleChange };

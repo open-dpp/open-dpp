@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 export const StatusDtoSchema = z.object({
   version: z.string(),
-})
+});
 
-export type StatusDto = z.infer<typeof StatusDtoSchema>
+export type StatusDto = z.infer<typeof StatusDtoSchema>;

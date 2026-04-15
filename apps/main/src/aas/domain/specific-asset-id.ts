@@ -10,8 +10,7 @@ export class SpecificAssetId implements IHasSemantics, IVisitable {
     public readonly semanticId: Reference | null = null,
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly externalSubjectId: Reference | null = null,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     name: string;
@@ -35,7 +34,7 @@ export class SpecificAssetId implements IHasSemantics, IVisitable {
       parsed.name,
       parsed.value,
       parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : null,
-      parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
+      parsed.supplementalSemanticIds.map((s) => Reference.fromPlain(s)),
       parsed.externalSubjectId ? Reference.fromPlain(parsed.externalSubjectId) : null,
     );
   }

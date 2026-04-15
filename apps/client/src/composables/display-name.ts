@@ -13,10 +13,10 @@ export function resolveDisplayName(
 ): string {
   const shortLocale = locale.split("-")[0];
 
-  let option = options.find(opt => opt.language === shortLocale);
+  let option = options.find((opt) => opt.language === shortLocale);
 
   if (!option) {
-    option = options.find(opt => opt.language === "en");
+    option = options.find((opt) => opt.language === "en");
   }
 
   if (!option) {

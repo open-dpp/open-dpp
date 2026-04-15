@@ -5,8 +5,8 @@
   --color-primary-600: #00965e;
 }
 
-@plugin '@tailwindcss/forms';
-@plugin '@tailwindcss/aspect-ratio';
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/aspect-ratio";
 
 @custom-variant dark (&:is(.dark *));
 

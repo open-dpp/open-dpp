@@ -1,6 +1,5 @@
 export class IdShortPath {
-  constructor(private readonly _segments: Array<string>) {
-  }
+  constructor(private readonly _segments: Array<string>) {}
 
   static create(data: { path: string }): IdShortPath {
     return new IdShortPath(data.path.split("."));

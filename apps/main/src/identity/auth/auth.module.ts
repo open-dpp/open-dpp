@@ -14,13 +14,8 @@ import { AuthController } from "./presentation/auth.controller";
     InstanceSettingsModule,
     forwardRef(() => OrganizationsModule),
   ],
-  controllers: [
-    AuthController,
-  ],
-  providers: [
-    AuthProvider,
-    SessionsService,
-  ],
+  controllers: [AuthController],
+  providers: [AuthProvider, SessionsService],
   exports: [SessionsService, AUTH, EnvModule],
 })
-export class AuthModule { }
+export class AuthModule {}

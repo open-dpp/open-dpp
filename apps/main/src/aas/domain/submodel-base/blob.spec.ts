@@ -15,9 +15,9 @@ import { Property } from "./property";
 describe("blob", () => {
   it("should add submodel element", () => {
     const blob = Blob.create({ idShort: "b1", contentType: "image/jpg" });
-    expect(() => blob.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build()))).toThrow(
-      new ValueError("Blob cannot contain submodel elements"),
-    );
+    expect(() =>
+      blob.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build())),
+    ).toThrow(new ValueError("Blob cannot contain submodel elements"));
   });
 
   it("should get submodel elements", () => {
@@ -27,10 +27,15 @@ describe("blob", () => {
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const blob = Blob.create({ idShort: "prop1", contentType: "image/jpg" });
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(blob.toPlain({ ability })).toMatchObject({
       idShort: "prop1",

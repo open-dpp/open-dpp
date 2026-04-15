@@ -11,10 +11,7 @@ export interface SubmodelStatic {
 export const registry = new Map<KeyTypesType, SubmodelStatic>();
 
 // Type-safe registration function
-export function registerSubmodelElement(
-  type: KeyTypesType,
-  constructor: SubmodelStatic,
-): void {
+export function registerSubmodelElement(type: KeyTypesType, constructor: SubmodelStatic): void {
   registry.set(type, constructor);
 }
 

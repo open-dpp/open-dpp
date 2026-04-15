@@ -17,13 +17,11 @@ const rowMenuItems = ref<MenuItem[]>([]);
 const activeRowId = ref("");
 
 const rows = computed(() => {
-  return props.organizations.map(i => ({
+  return props.organizations.map((i) => ({
     id: i.id,
     name: i.name,
     createdAt:
-      i.createdAt && dayjs(i.createdAt).isValid()
-        ? dayjs(i.createdAt).format("DD.MM.YYYY")
-        : "",
+      i.createdAt && dayjs(i.createdAt).isValid() ? dayjs(i.createdAt).format("DD.MM.YYYY") : "",
   }));
 });
 
@@ -42,7 +40,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   <DataTable :value="rows" table-style="min-width: 50rem">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t('organizations.admin.organizations') }}</span>
+        <span class="text-xl font-bold">{{ t("organizations.admin.organizations") }}</span>
       </div>
     </template>
     <Column field="name" header="Name" />
@@ -63,13 +61,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
       </template>
     </Column>
   </DataTable>
-  <Menu
-    id="overlay_org_menu"
-    ref="rowMenuRef"
-    :model="rowMenuItems"
-    :popup="true"
-    class="p-2"
-  >
+  <Menu id="overlay_org_menu" ref="rowMenuRef" :model="rowMenuItems" :popup="true" class="p-2">
     <template #start>
       <div>
         <InputGroup>

@@ -15,7 +15,7 @@ export class OrganizationsRepository {
     @InjectModel(OrganizationSchema.name)
     private readonly organizationModel: Model<OrganizationSchema>,
     @Inject(AUTH) private readonly auth: Auth,
-  ) { }
+  ) {}
 
   async findManyByMember(headers: BetterAuthHeaders): Promise<Organization[]> {
     const result = await (this.auth.api as any).listOrganizations({
@@ -29,7 +29,10 @@ export class OrganizationsRepository {
     return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
   }
 
-  async create(organization: Organization, headers: BetterAuthHeaders): Promise<Organization | null> {
+  async create(
+    organization: Organization,
+    headers: BetterAuthHeaders,
+  ): Promise<Organization | null> {
     const result = await (this.auth.api as any).createOrganization({
       headers,
       body: {
@@ -45,7 +48,10 @@ export class OrganizationsRepository {
     return OrganizationMapper.toDomainFromBetterAuth(result);
   }
 
-  async update(organization: Organization, headers: BetterAuthHeaders): Promise<Organization | null> {
+  async update(
+    organization: Organization,
+    headers: BetterAuthHeaders,
+  ): Promise<Organization | null> {
     await (this.auth.api as any).updateOrganization({
       headers,
       body: {
@@ -63,8 +69,7 @@ export class OrganizationsRepository {
 
   async findOneById(id: string): Promise<Organization | null> {
     const document = await this.organizationModel.findOne({ _id: new ObjectId(id) });
-    if (!document)
-      return null;
+    if (!document) return null;
     return OrganizationMapper.toDomain(document);
   }
 
@@ -75,20 +80,19 @@ export class OrganizationsRepository {
     }
 
     const document = await this.organizationModel.findOne({ slug: { $eq: slug } });
-    if (!document)
-      return null;
+    if (!document) return null;
     return OrganizationMapper.toDomain(document);
   }
 
   async findManyByIds(ids: string[]): Promise<Organization[]> {
-    const documents = await this.organizationModel.find({ _id: { $in: ids.map(id => new ObjectId(id)) } });
+    const documents = await this.organizationModel.find({
+      _id: { $in: ids.map((id) => new ObjectId(id)) },
+    });
     return documents.map(OrganizationMapper.toDomain);
   }
 
   async getAllOrganizations() {
-    const organizations = await this.organizationModel
-      .find()
-      .limit(100);
-    return organizations.map(org => OrganizationMapper.toDomain(org));
+    const organizations = await this.organizationModel.find().limit(100);
+    return organizations.map((org) => OrganizationMapper.toDomain(org));
   }
 }

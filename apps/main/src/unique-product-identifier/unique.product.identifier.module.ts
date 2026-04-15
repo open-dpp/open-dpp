@@ -12,9 +12,7 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "./infrastructure/unique-product-identifier.schema";
-import {
-  UniqueProductIdentifierApplicationService,
-} from "./presentation/unique.product.identifier.application.service";
+import { UniqueProductIdentifierApplicationService } from "./presentation/unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./presentation/unique.product.identifier.controller";
 
 @Module({

@@ -41,11 +41,6 @@ import { OrganizationsController } from "./presentation/organizations.controller
     MembersService,
     SessionsService,
   ],
-  exports: [
-    OrganizationsRepository,
-    MembersRepository,
-    OrganizationsService,
-    MembersService,
-  ],
+  exports: [OrganizationsRepository, MembersRepository, OrganizationsService, MembersService],
 })
-export class OrganizationsModule { }
+export class OrganizationsModule {}

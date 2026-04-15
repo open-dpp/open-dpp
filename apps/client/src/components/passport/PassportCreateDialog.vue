@@ -32,8 +32,8 @@ function open() {
 }
 
 async function newPassport() {
-  const passportParams
-    = mode.value === "template" && template.value
+  const passportParams =
+    mode.value === "template" && template.value
       ? { templateId: template.value }
       : { displayName: [] };
 
@@ -47,7 +47,12 @@ async function loadMoreTemplates() {
   if (hasNext.value) {
     await nextPage();
     if (templates.value) {
-      templateList.value.push(...templates.value.result.map(template => ({ ...template, label: getOptionLabel(template) })));
+      templateList.value.push(
+        ...templates.value.result.map((template) => ({
+          ...template,
+          label: getOptionLabel(template),
+        })),
+      );
     }
   }
 }
@@ -69,7 +74,12 @@ defineExpose({
 onMounted(async () => {
   await init();
   if (templates.value) {
-    templateList.value.push(...templates.value.result.map(template => ({ ...template, label: getOptionLabel(template) })));
+    templateList.value.push(
+      ...templates.value.result.map((template) => ({
+        ...template,
+        label: getOptionLabel(template),
+      })),
+    );
   }
 });
 
@@ -84,29 +94,14 @@ function getOptionLabel(option: TemplateDto): string {
 </script>
 
 <template>
-  <Dialog
-    v-model:visible="visible"
-    modal
-    :header="t('passports.create')"
-    @hide="close"
-  >
-    <div class="flex flex-col flex-wrap gap-4 mb-8">
+  <Dialog v-model:visible="visible" modal :header="t('passports.create')" @hide="close">
+    <div class="mb-8 flex flex-col flex-wrap gap-4">
       <div class="flex items-center gap-2">
-        <RadioButton
-          v-model="mode"
-          input-id="blank"
-          name="mode"
-          value="blank"
-        />
+        <RadioButton v-model="mode" input-id="blank" name="mode" value="blank" />
         <label for="blank">{{ t("passports.blank") }}</label>
       </div>
       <div class="flex items-center gap-2">
-        <RadioButton
-          v-model="mode"
-          input-id="template"
-          name="mode"
-          value="template"
-        />
+        <RadioButton v-model="mode" input-id="template" name="mode" value="template" />
         <label for="template" class="flex flex-col">
           <span>
             {{ t("passports.fromTemplate") }}

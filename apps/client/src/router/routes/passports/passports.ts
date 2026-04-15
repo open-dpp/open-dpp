@@ -1,7 +1,4 @@
-import type {
-  RouteLocationNormalizedGeneric,
-  RouteRecordRaw,
-} from "vue-router";
+import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
 import { localizedBreadcrumb } from "../../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../../stores/layout";
 

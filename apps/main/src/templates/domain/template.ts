@@ -29,8 +29,7 @@ export class Template implements IPersistable, IDigitalProductPassportIdentifiab
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     private lastStatusChange: DppStatusChange,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     id?: string;

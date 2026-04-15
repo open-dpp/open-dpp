@@ -21,7 +21,9 @@ describe("authGuard Allowlist Repro", () => {
       verifyApiKey: jest.fn<() => Promise<null>>().mockResolvedValue(null),
     };
     mockMembersRepository = {
-      findOneByUserIdAndOrganizationId: jest.fn<() => Promise<Member | null>>().mockResolvedValue(null),
+      findOneByUserIdAndOrganizationId: jest
+        .fn<() => Promise<Member | null>>()
+        .mockResolvedValue(null),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -70,8 +72,8 @@ describe("authGuard Allowlist Repro", () => {
       switchToHttp: () => ({
         getRequest: () => request,
       }),
-      getHandler: () => { },
-      getClass: () => { },
+      getHandler: () => {},
+      getClass: () => {},
       _request: request,
     } as ExecutionContext & { _request: any };
   };
@@ -136,7 +138,9 @@ describe("authGuard Allowlist Repro", () => {
 
     it("should check org membership when API key and org header are provided", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue({ userId: "user-789" });
-      mockMembersRepository.findOneByUserIdAndOrganizationId.mockResolvedValue(Member.create({ userId: "user-789", organizationId: "org-1", role: MemberRole.MEMBER }));
+      mockMembersRepository.findOneByUserIdAndOrganizationId.mockResolvedValue(
+        Member.create({ userId: "user-789", organizationId: "org-1", role: MemberRole.MEMBER }),
+      );
       const context = createMockContext("/api/items", {
         "x-api-key": "valid-key",
         "x-open-dpp-organization-id": "org-1",
@@ -145,7 +149,10 @@ describe("authGuard Allowlist Repro", () => {
       const result = await guard.canActivate(context);
 
       expect(result).toBe(true);
-      expect(mockMembersRepository.findOneByUserIdAndOrganizationId).toHaveBeenCalledWith("user-789", "org-1");
+      expect(mockMembersRepository.findOneByUserIdAndOrganizationId).toHaveBeenCalledWith(
+        "user-789",
+        "org-1",
+      );
     });
 
     it("should deny when API key user is not member of org", async () => {

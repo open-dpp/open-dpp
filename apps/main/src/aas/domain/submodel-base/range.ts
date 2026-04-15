@@ -1,4 +1,9 @@
-import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, RangeJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  DataTypeDefType,
+  RangeJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -39,7 +44,9 @@ export class Range implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -60,12 +67,14 @@ export class Range implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    valueType: DataTypeDefType;
-    extensions?: Array<Extension>;
-    min?: string | null;
-    max?: string | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      valueType: DataTypeDefType;
+      extensions?: Array<Extension>;
+      min?: string | null;
+      max?: string | null;
+    },
+  ) {
     return new Range(
       data.valueType,
       data.extensions ?? [],

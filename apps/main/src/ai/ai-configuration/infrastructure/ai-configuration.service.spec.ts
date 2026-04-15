@@ -7,10 +7,7 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { generateMongoConfig } from "../../../database/config";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
-import {
-  AiConfigurationDbSchema,
-  AiConfigurationDoc,
-} from "./ai-configuration.schema";
+import { AiConfigurationDbSchema, AiConfigurationDoc } from "./ai-configuration.schema";
 import { AiConfigurationService } from "./ai-configuration.service";
 
 describe("aiConfigurationService", () => {
@@ -56,9 +53,7 @@ describe("aiConfigurationService", () => {
   });
 
   it("should save configuration", async () => {
-    const aiConfiguration = AiConfiguration.loadFromDb(
-      aiConfigurationFactory.build(),
-    );
+    const aiConfiguration = AiConfiguration.loadFromDb(aiConfigurationFactory.build());
 
     const { id } = await service.save(aiConfiguration);
     const found = await service.findOneOrFail(id);

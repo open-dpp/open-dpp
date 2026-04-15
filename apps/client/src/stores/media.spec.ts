@@ -63,14 +63,12 @@ describe("media store", () => {
           "uuid",
           "field",
           new File(["a"], "a.txt"),
-          p => progressCalls.push(p),
+          (p) => progressCalls.push(p),
         );
         expect(mediaId).toBe(`mid-${status}`);
         // Verify URL formatting
         expect(postMock).toHaveBeenLastCalledWith(
-          expect.stringMatching(
-            /\/media\/dpp\/uuid\/field$/,
-          ),
+          expect.stringMatching(/\/media\/dpp\/uuid\/field$/),
           expect.any(FormData),
           expect.objectContaining({ onUploadProgress: expect.any(Function) }),
         );
@@ -89,11 +87,8 @@ describe("media store", () => {
         },
       );
       const progressCalls: number[] = [];
-      await apiClient.media.media.uploadDppMedia(
-        "uuid",
-        "field",
-        new File(["a"], "a.txt"),
-        p => progressCalls.push(p),
+      await apiClient.media.media.uploadDppMedia("uuid", "field", new File(["a"], "a.txt"), (p) =>
+        progressCalls.push(p),
       );
       expect(progressCalls).toEqual([12300]);
     });
@@ -109,9 +104,7 @@ describe("media store", () => {
   describe("getDppMediaInfo", () => {
     it("throws if no uuid provided", async () => {
       const store = useMediaStore();
-      await expect(store.getDppMediaInfo(undefined, "field")).rejects.toThrow(
-        "No UUID provided",
-      );
+      await expect(store.getDppMediaInfo(undefined, "field")).rejects.toThrow("No UUID provided");
     });
 
     it("returns media info from endpoint", async () => {
@@ -134,9 +127,7 @@ describe("media store", () => {
   describe("downloadDppMedia", () => {
     it("throws if no uuid provided", async () => {
       const store = useMediaStore();
-      await expect(store.downloadDppMedia(undefined, "field")).rejects.toThrow(
-        "No UUID provided",
-      );
+      await expect(store.downloadDppMedia(undefined, "field")).rejects.toThrow("No UUID provided");
     });
 
     it("returns blob from endpoint", async () => {

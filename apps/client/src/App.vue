@@ -7,21 +7,15 @@ import SafelistTailwindCss from "./SafelistTailwindCss.vue";
 
 const route = useRoute();
 
-const LayoutDefault = defineAsyncComponent(
-  () => import("./components/layout/Layout.vue"),
-);
+const LayoutDefault = defineAsyncComponent(() => import("./components/layout/Layout.vue"));
 const LayoutPresentation = defineAsyncComponent(
   () => import("./components/layout/LayoutPresentation.vue"),
 );
-const LayoutNone = defineAsyncComponent(
-  () => import("./components/layout/LayoutNone.vue"),
-);
+const LayoutNone = defineAsyncComponent(() => import("./components/layout/LayoutNone.vue"));
 
 const layout = computed(() => {
-  if (route.meta.layout === "presentation")
-    return LayoutPresentation;
-  else if (route.meta.layout === "none")
-    return LayoutNone;
+  if (route.meta.layout === "presentation") return LayoutPresentation;
+  else if (route.meta.layout === "none") return LayoutNone;
   return LayoutDefault;
 });
 </script>

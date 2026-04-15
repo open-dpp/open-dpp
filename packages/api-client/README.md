@@ -21,29 +21,28 @@ $ npm install @open-dpp/api-client
 Create a new instance of a client with the baseURL parameter directing to your API.
 
 ```typescript
-const apiClient = new OpenDppApiClient({ baseURL: API_URL })
+const apiClient = new OpenDppApiClient({ baseURL: API_URL });
 ```
 
 Set the ApiKey for the client to enable it to authenticate to your API.
 
 ```typescript
-apiClient.setApiKey(token)
+apiClient.setApiKey(token);
 ```
 
 Use any function of the client. E.g., create an organization.
 
 ```typescript
 async function addOrganization() {
-  console.log('Creating organization...')
+  console.log("Creating organization...");
   const response = await apiClient.postOrganization({
-    name: 'Test',
-  })
-  console.log('Finished creating an organization.')
+    name: "Test",
+  });
+  console.log("Finished creating an organization.");
   if (response.status === 201) {
-    console.log('Successfully created an organization.')
-  }
-  else {
-    console.error('Error on creating an organization.')
+    console.log("Successfully created an organization.");
+  } else {
+    console.error("Error on creating an organization.");
   }
 }
 ```
@@ -60,8 +59,8 @@ $ npm install
 
 1. Commit your current changed files for a clean working tree in the next step
 2. Merge your changes on the main branch
-3. Run ```npm run build``` to see if your code compiles
-4. Run ```npm run test``` to see if your code fails
+3. Run `npm run build` to see if your code compiles
+4. Run `npm run test` to see if your code fails
 5. Determine whether you want to create a patch, minor or major version. Run the fitting npm scripts (e.g., npm run
    patch)
    1. This updates the version number in the package.json

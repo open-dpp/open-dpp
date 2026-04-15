@@ -1,7 +1,7 @@
-import { z } from 'zod'
-import { AssetKindEnum } from './enums/asset-kind-enum'
-import { ResourceJsonSchema } from './resource-json-schema'
-import { SpecificAssetIdJsonSchema } from './specific-asset-id-json-schema'
+import { z } from "zod";
+import { AssetKindEnum } from "./enums/asset-kind-enum";
+import { ResourceJsonSchema } from "./resource-json-schema";
+import { SpecificAssetIdJsonSchema } from "./specific-asset-id-json-schema";
 
 export const AssetInformationJsonSchema = z.object({
   assetKind: AssetKindEnum,
@@ -9,10 +9,12 @@ export const AssetInformationJsonSchema = z.object({
   specificAssetIds: SpecificAssetIdJsonSchema.array().default([]),
   assetType: z.nullish(z.string()),
   defaultThumbnails: ResourceJsonSchema.array().default([]),
-})
+});
 
-export type AssetInformationDto = z.infer<typeof AssetInformationJsonSchema>
+export type AssetInformationDto = z.infer<typeof AssetInformationJsonSchema>;
 
-export const AssetInformationModificationSchema = AssetInformationJsonSchema.pick({ defaultThumbnails: true }).partial()
+export const AssetInformationModificationSchema = AssetInformationJsonSchema.pick({
+  defaultThumbnails: true,
+}).partial();
 
-export type AssetInformationModificationDto = z.input<typeof AssetInformationModificationSchema>
+export type AssetInformationModificationDto = z.input<typeof AssetInformationModificationSchema>;

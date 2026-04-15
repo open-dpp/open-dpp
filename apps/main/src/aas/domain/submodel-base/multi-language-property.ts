@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, MultiLanguagePropertyJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  MultiLanguagePropertyJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -38,7 +42,9 @@ export class MultiLanguageProperty implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -59,11 +65,13 @@ export class MultiLanguageProperty implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    extensions?: Extension[];
-    value?: LanguageText[];
-    valueId?: Reference | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      extensions?: Extension[];
+      value?: LanguageText[];
+      valueId?: Reference | null;
+    },
+  ) {
     return new MultiLanguageProperty(
       data.extensions ?? [],
       data.category ?? null,
@@ -83,7 +91,7 @@ export class MultiLanguageProperty implements ISubmodelElement {
     const parsed = MultiLanguagePropertyJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new MultiLanguageProperty(
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,
@@ -92,7 +100,7 @@ export class MultiLanguageProperty implements ISubmodelElement {
       baseObjects.supplementalSemanticIds,
       baseObjects.qualifiers,
       baseObjects.embeddedDataSpecifications,
-      parsed.value.map(l => LanguageText.fromPlain(l)),
+      parsed.value.map((l) => LanguageText.fromPlain(l)),
       parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
     );
   }

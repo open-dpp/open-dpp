@@ -14,9 +14,7 @@ export default defineConfig({
   title: "open-dpp Documentation",
   description: "Documentation for the open-dpp project.",
   head: [["link", { rel: "icon", href: "/logo.svg" }]],
-  ignoreDeadLinks: [
-    /^https?:\/\/localhost/,
-  ],
+  ignoreDeadLinks: [/^https?:\/\/localhost/],
   themeConfig: {
     logo: {
       src: "/logo.svg",
@@ -57,24 +55,20 @@ export default defineConfig({
           },
           {
             text: "Reference",
-            items: [
-              { text: "Configuration", link: "/reference/configuration"}
-            ] 
+            items: [{ text: "Configuration", link: "/reference/configuration" }],
           },
           {
             text: "Guides",
             items: [
-              { text: "Branding", link: "/guides/branding"},
-              { text: "AI Integration", link: "/guides/ai"},
-              { text: "Development", link: "/guides/development"},
-            ]
-          }
+              { text: "Branding", link: "/guides/branding" },
+              { text: "AI Integration", link: "/guides/ai" },
+              { text: "Development", link: "/guides/development" },
+            ],
+          },
         ],
       },
     },
 
-    socialLinks: [
-      { icon: "github", link: "https://github.com/open-dpp/open-dpp" },
-    ],
+    socialLinks: [{ icon: "github", link: "https://github.com/open-dpp/open-dpp" }],
   },
 });

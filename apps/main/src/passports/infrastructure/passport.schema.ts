@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { EnvironmentDoc, EnvironmentSchema } from "../../aas/infrastructure/schemas/environment.schema";
+import {
+  EnvironmentDoc,
+  EnvironmentSchema,
+} from "../../aas/infrastructure/schemas/environment.schema";
 import { DppStatusChangeDbSchema, DppStatusChangeDoc } from "../../dpp/infrastructure/dpp-status-change-db.schema";
 
 export const PassportDocVersion = {

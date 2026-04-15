@@ -33,13 +33,14 @@ import { SubmodelElementCollection } from "./submodel-base/submodel-element-coll
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
-export interface ValueVisitorOptions { ability: AasAbility }
-export interface ValueVisitorContextType { }
+export interface ValueVisitorOptions {
+  ability: AasAbility;
+}
+export interface ValueVisitorContextType {}
 
 export type JsonType = z.infer<typeof z.json>;
 export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType> {
-  constructor(private readonly options: ValueVisitorOptions) {
-  }
+  constructor(private readonly options: ValueVisitorOptions) {}
 
   private filterByAbility(plainToFilter: any, element: ISubmodelBase): any {
     const idShortPath = element.getIdShortPath();
@@ -52,7 +53,7 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
   }
 
   private removeUndefined(plainToFilter: any): any {
-    return pickBy(plainToFilter, value => value !== undefined);
+    return pickBy(plainToFilter, (value) => value !== undefined);
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: any): JsonType {
@@ -61,8 +62,14 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     );
   }
 
-  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, _context?: ValueVisitorContextType): JsonType {
-    return this.filterByAbility({ first: element.first.accept(this), second: element.second.accept(this) }, element);
+  visitAnnotatedRelationshipElement(
+    element: AnnotatedRelationshipElement,
+    _context?: ValueVisitorContextType,
+  ): JsonType {
+    return this.filterByAbility(
+      { first: element.first.accept(this), second: element.second.accept(this) },
+      element,
+    );
   }
 
   visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: any): JsonType {
@@ -72,20 +79,18 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
   }
 
   visitAssetInformation(_element: AssetInformation, _context: any): JsonType {
-    throw new NotSupportedError(
-      "AssetInformation is not supported for value serialization.",
-    );
+    throw new NotSupportedError("AssetInformation is not supported for value serialization.");
   }
 
   visitBlob(element: Blob, _context?: ValueVisitorContextType): JsonType {
-    const plain = element.value ? { contentType: element.contentType, value: Buffer.from(element.value).toString("utf-8") } : { contentType: element.contentType, value: undefined };
+    const plain = element.value
+      ? { contentType: element.contentType, value: Buffer.from(element.value).toString("utf-8") }
+      : { contentType: element.contentType, value: undefined };
     return this.filterByAbility(plain, element);
   }
 
   visitConceptDescription(_element: ConceptDescription, _context: any): JsonType {
-    throw new NotSupportedError(
-      "ConceptDescription is not supported for value serialization.",
-    );
+    throw new NotSupportedError("ConceptDescription is not supported for value serialization.");
   }
 
   visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: any): JsonType {
@@ -95,25 +100,30 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
   }
 
   visitEntity(element: Entity, _context?: ValueVisitorContextType): JsonType {
-    const statements = element.statements.map(st => this.removeUndefined({ [st.idShort]: st.accept(this) })).filter(s => !isEmptyObject(s));
+    const statements = element.statements
+      .map((st) => this.removeUndefined({ [st.idShort]: st.accept(this) }))
+      .filter((s) => !isEmptyObject(s));
 
     const plain = {
       entityType: element.entityType,
       globalAssetId: element.globalAssetId,
       statements,
-      specificAssetIds: element.specificAssetIds.map(specificAssetId => specificAssetId.accept(this)),
+      specificAssetIds: element.specificAssetIds.map((specificAssetId) =>
+        specificAssetId.accept(this),
+      ),
     };
     return statements.length > 0 ? plain : this.filterByAbility(plain, element);
   }
 
   visitExtension(_element: Extension, _context: any): JsonType {
-    throw new NotSupportedError(
-      "Extension is not supported for value serialization.",
-    );
+    throw new NotSupportedError("Extension is not supported for value serialization.");
   }
 
   visitFile(element: File, _context?: ValueVisitorContextType): JsonType {
-    return this.filterByAbility({ contentType: element.contentType, value: element.value }, element);
+    return this.filterByAbility(
+      { contentType: element.contentType, value: element.value },
+      element,
+    );
   }
 
   visitKey(element: Key, _context: any): JsonType {
@@ -124,8 +134,11 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     return { [element.language]: element.text };
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty, _context?: ValueVisitorContextType): JsonType {
-    const plain = element.value.map(v => v.accept(this));
+  visitMultiLanguageProperty(
+    element: MultiLanguageProperty,
+    _context?: ValueVisitorContextType,
+  ): JsonType {
+    const plain = element.value.map((v) => v.accept(this));
     return this.filterByAbility(plain, element);
   }
 
@@ -134,9 +147,7 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
   }
 
   visitQualifier(_element: Qualifier, _context: any): JsonType {
-    throw new NotSupportedError(
-      "Qualifier is not supported for value serialization.",
-    );
+    throw new NotSupportedError("Qualifier is not supported for value serialization.");
   }
 
   visitRange(element: Range, _context?: ValueVisitorContextType): JsonType {
@@ -146,8 +157,10 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
   visitReference(element: Reference, _context?: ValueVisitorContextType): JsonType {
     return {
       type: element.type,
-      ...(element.referredSemanticId && { referredSemanticId: element.referredSemanticId.accept(this) }),
-      keys: element.keys.map(key => key.accept(this)),
+      ...(element.referredSemanticId && {
+        referredSemanticId: element.referredSemanticId.accept(this),
+      }),
+      keys: element.keys.map((key) => key.accept(this)),
     };
   }
 
@@ -157,15 +170,16 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     return this.filterByAbility(plain, element);
   }
 
-  visitRelationshipElement(element: RelationshipElement, _context?: ValueVisitorContextType): JsonType {
+  visitRelationshipElement(
+    element: RelationshipElement,
+    _context?: ValueVisitorContextType,
+  ): JsonType {
     const plain = { first: element.first.accept(this), second: element.second.accept(this) };
     return this.filterByAbility(plain, element);
   }
 
   visitResource(_element: Resource, _context: any): JsonType {
-    throw new NotSupportedError(
-      "Resource is not supported for value serialization.",
-    );
+    throw new NotSupportedError("Resource is not supported for value serialization.");
   }
 
   visitSpecificAssetId(element: SpecificAssetId, _context: any): JsonType {
@@ -182,14 +196,20 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
 
     const cleaned = this.removeUndefined(value);
 
-    if (isEmptyObject(cleaned) && !this.options.ability?.can(Permissions.Read, IdShortPath.create({ path: element.idShort }))) {
+    if (
+      isEmptyObject(cleaned) &&
+      !this.options.ability?.can(Permissions.Read, IdShortPath.create({ path: element.idShort }))
+    ) {
       throw new ForbiddenError(`Cannot access submodel ${element.idShort}`);
     }
 
     return cleaned;
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection, _context?: ValueVisitorContextType): JsonType {
+  visitSubmodelElementCollection(
+    element: SubmodelElementCollection,
+    _context?: ValueVisitorContextType,
+  ): JsonType {
     const value: { [key: string]: any } = {};
     for (const submodelElement of element.value) {
       value[submodelElement.idShort] = submodelElement.accept(this);
@@ -198,7 +218,10 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     return isEmptyObject(cleaned) ? undefined : cleaned;
   }
 
-  visitSubmodelElementList(element: SubmodelElementList, _context?: ValueVisitorContextType): JsonType {
-    return element.value.map(v => v.accept(this)).filter(e => e !== undefined);
+  visitSubmodelElementList(
+    element: SubmodelElementList,
+    _context?: ValueVisitorContextType,
+  ): JsonType {
+    return element.value.map((v) => v.accept(this)).filter((e) => e !== undefined);
   }
 }

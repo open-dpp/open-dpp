@@ -30,12 +30,16 @@ export class AasRepository {
     return AssetAdministrationShell.fromPlain(AssetAdministrationShellDbSchema.encode(plain));
   }
 
-  migrate1_0_0To1_1_0(aas: { assetInformation: { defaultThumbnail: { path: string; contentType: string | null } } }) {
+  migrate1_0_0To1_1_0(aas: {
+    assetInformation: { defaultThumbnail: { path: string; contentType: string | null } };
+  }) {
     return {
       ...aas,
       assetInformation: {
         ...aas.assetInformation,
-        defaultThumbnails: aas.assetInformation.defaultThumbnail ? [aas.assetInformation.defaultThumbnail] : [],
+        defaultThumbnails: aas.assetInformation.defaultThumbnail
+          ? [aas.assetInformation.defaultThumbnail]
+          : [],
       },
       _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_1_0,
     };
@@ -73,7 +77,14 @@ export class AasRepository {
   }
 
   async save(assetAdministrationShell: AssetAdministrationShell, options?: DbSessionOptions) {
-    return await save(assetAdministrationShell, this.aasDoc, AssetAdministrationShellDocSchemaVersion.v1_2_0, this.fromPlain.bind(this), AssetAdministrationShellDbSchema, options);
+    return await save(
+      assetAdministrationShell,
+      this.aasDoc,
+      AssetAdministrationShellDocSchemaVersion.v1_2_0,
+      this.fromPlain.bind(this),
+      AssetAdministrationShellDbSchema,
+      options,
+    );
   }
 
   async findOneOrFail(id: string): Promise<AssetAdministrationShell> {

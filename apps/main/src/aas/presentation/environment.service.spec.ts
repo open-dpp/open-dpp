@@ -90,9 +90,12 @@ describe("environmentService", () => {
   it("should create environment", async () => {
     const displayName: LanguageTextDto[] = [{ language: "en", text: "Test AAS" }];
     const description: LanguageTextDto[] = [{ language: "en", text: "Test AAS description" }];
-    const environment = await environmentService.createEnvironment({
-      assetAdministrationShells: [{ displayName, description }],
-    }, true);
+    const environment = await environmentService.createEnvironment(
+      {
+        assetAdministrationShells: [{ displayName, description }],
+      },
+      true,
+    );
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Type);
@@ -101,23 +104,31 @@ describe("environmentService", () => {
   });
 
   it("should create environment with empty aas", async () => {
-    const environment = await environmentService.createEnvironment({
-      assetAdministrationShells: [],
-    }, false);
+    const environment = await environmentService.createEnvironment(
+      {
+        assetAdministrationShells: [],
+      },
+      false,
+    );
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
   });
 
   it("should populate paging result", async () => {
-    const assetAdministrationShell = AssetAdministrationShell.create(
-      { assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) },
-    );
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+    const assetAdministrationShell = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+    });
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+    });
     await aasRepository.save(assetAdministrationShell);
     const passport = Passport.create({ environment, organizationId: "organizationId" });
     await passportRepository.save(passport);
-    const pagingResult = PagingResult.create({ pagination: Pagination.create({}), items: [passport] });
+    const pagingResult = PagingResult.create({
+      pagination: Pagination.create({}),
+      items: [passport],
+    });
     const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const result = await environmentService.populateEnvironmentForPagingResult(
       pagingResult,
@@ -142,29 +153,49 @@ describe("environmentService", () => {
 
   it("should load security policies for given subject", async () => {
     const security = Security.create({});
-    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
-      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
-    ]);
-
-    const assetAdministrationShell = AssetAdministrationShell.create(
-      { assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }), security },
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      IdShortPath.create({ path: "section1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
     );
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      IdShortPath.create({ path: "section2" }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
+
+    const assetAdministrationShell = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+      security,
+    });
     await aasRepository.save(assetAdministrationShell);
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+    });
     await aasRepository.save(assetAdministrationShell);
-    const subject = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const result = await environmentService.loadAbility(environment, subject);
     expect(result.can(Permissions.Read, IdShortPath.create({ path: "section1" }))).toBeTruthy();
   });
 
   it("should modify asset administration shell", async () => {
     const security = Security.create({});
-    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      IdShortPath.create({ path: "section1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+    );
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
     await aasRepository.save(assetAdministrationShell);
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+    });
 
     const transientParams: SecurityPlainTransientParams = {
       policies: [
@@ -195,17 +226,21 @@ describe("environmentService", () => {
     await environmentService.modifyAasShell(
       environment,
       assetAdministrationShell.id,
-      { security: securityPlainFactory.build(
-        undefined,
-        { transient: transientParams },
-      ) },
+      { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
       SubjectAttributes.create({ userRole: UserRole.ADMIN }),
     );
 
     const foundAas = await aasRepository.findOneOrFail(assetAdministrationShell.id);
-    expect(foundAas.security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }))).toEqual([
+    expect(
+      foundAas.security.findPoliciesBySubject(
+        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      ),
+    ).toEqual([
       {
-        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+        targetSubjectAttributes: SubjectAttributes.create({
+          userRole: UserRole.USER,
+          memberRole: MemberRole.MEMBER,
+        }),
         _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
@@ -218,7 +253,10 @@ describe("environmentService", () => {
                 permission: Permissions.Create,
                 kindOfPermission: PermissionKind.Allow,
               }),
-              Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+              Permission.create({
+                permission: Permissions.Edit,
+                kindOfPermission: PermissionKind.Allow,
+              }),
             ],
           }),
         ],
@@ -233,12 +271,17 @@ describe("environmentService", () => {
       IdShortPath.create({ path: "section1" }),
       [
         Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({
+          permission: Permissions.Create,
+          kindOfPermission: PermissionKind.Allow,
+        }),
       ],
     );
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
     await aasRepository.save(assetAdministrationShell);
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+    });
 
     const transientParams: SecurityPlainTransientParams = {
       policies: [
@@ -261,45 +304,41 @@ describe("environmentService", () => {
       ],
     };
 
-    await expect(environmentService.modifyAasShell(
-      environment,
-      assetAdministrationShell.id,
-      { security: securityPlainFactory.build(
-        undefined,
-        { transient: transientParams },
-      ) },
-      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-    )).rejects.toThrow(new ForbiddenError("Administrator has no permission to add/ modify/ delete policy."));
+    await expect(
+      environmentService.modifyAasShell(
+        environment,
+        assetAdministrationShell.id,
+        { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
+        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      ),
+    ).rejects.toThrow(
+      new ForbiddenError("Administrator has no permission to add/ modify/ delete policy."),
+    );
   });
 
   async function createDefaultEnvironment() {
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
-    security.addPolicy(
-      admin,
-      IdShortPath.create({ path: "section1" }),
-      [
-        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({
-          permission: Permissions.Read,
-          kindOfPermission: PermissionKind.Allow,
-        }),
-        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
-      ],
-    );
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({
+        permission: Permissions.Read,
+        kindOfPermission: PermissionKind.Allow,
+      }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
 
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: "section1" }),
-      [
-        Permission.create({
-          permission: Permissions.Read,
-          kindOfPermission: PermissionKind.Allow,
-        }),
-      ],
-    );
+    security.addPolicy(member, IdShortPath.create({ path: "section1" }), [
+      Permission.create({
+        permission: Permissions.Read,
+        kindOfPermission: PermissionKind.Allow,
+      }),
+    ]);
     const ability = security.defineAbilityForSubject(admin);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
@@ -315,8 +354,19 @@ describe("environmentService", () => {
     assetAdministrationShell.addSubmodel(submodel1);
     await aasRepository.save(assetAdministrationShell);
 
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id], submodels: [submodel1.id] });
-    return { environment, admin, member, submodel1, submodelElementCollection1, property1, property2 };
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+      submodels: [submodel1.id],
+    });
+    return {
+      environment,
+      admin,
+      member,
+      submodel1,
+      submodelElementCollection1,
+      property1,
+      property2,
+    };
   }
 
   it("should return submodels for subject", async () => {
@@ -336,23 +386,46 @@ describe("environmentService", () => {
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
-    await expect(environmentService.getSubmodelById(environment, submodel1.id, anonymous)).rejects.toThrow(new ForbiddenError());
+    await expect(
+      environmentService.getSubmodelById(environment, submodel1.id, anonymous),
+    ).rejects.toThrow(new ForbiddenError());
   });
 
   it("should return submodels elements for submodel", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1 } = await createDefaultEnvironment();
+    const { environment, admin, member, submodel1, submodelElementCollection1 } =
+      await createDefaultEnvironment();
     const pagination = Pagination.create({ limit: 10 });
-    let submodelElements = await environmentService.getSubmodelElements(environment, submodel1.id, pagination, admin);
-    expect(submodelElements.result).toEqual([SubmodelElementSchema.parse(submodelElementCollection1.toPlain())]);
+    let submodelElements = await environmentService.getSubmodelElements(
+      environment,
+      submodel1.id,
+      pagination,
+      admin,
+    );
+    expect(submodelElements.result).toEqual([
+      SubmodelElementSchema.parse(submodelElementCollection1.toPlain()),
+    ]);
 
-    submodelElements = await environmentService.getSubmodelElements(environment, submodel1.id, pagination, member);
+    submodelElements = await environmentService.getSubmodelElements(
+      environment,
+      submodel1.id,
+      pagination,
+      member,
+    );
     expect(submodelElements.result).toEqual([]);
   });
 
   it("should return submodel element by id", async () => {
-    const { environment, admin, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
-    const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
-    const submodelElement = await environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, admin);
+    const { environment, admin, submodel1, submodelElementCollection1, property1 } =
+      await createDefaultEnvironment();
+    const idShortPath = IdShortPath.create({
+      path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+    });
+    const submodelElement = await environmentService.getSubmodelElementById(
+      environment,
+      submodel1.id,
+      idShortPath,
+      admin,
+    );
     expect(submodelElement).toEqual(SubmodelElementSchema.parse(property1.toPlain()));
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
@@ -362,9 +435,17 @@ describe("environmentService", () => {
   });
 
   it("should return value representation of submodel element by idShortPath", async () => {
-    const { environment, admin, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
-    const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
-    const submodelElement = await environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, admin);
+    const { environment, admin, submodel1, submodelElementCollection1, property1 } =
+      await createDefaultEnvironment();
+    const idShortPath = IdShortPath.create({
+      path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+    });
+    const submodelElement = await environmentService.getSubmodelElementValue(
+      environment,
+      submodel1.id,
+      idShortPath,
+      admin,
+    );
     expect(submodelElement).toEqual(property1.value);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -376,8 +457,13 @@ describe("environmentService", () => {
   });
 
   it("should return value representation of submodel value ", async () => {
-    const { environment, admin, submodel1, property1, property2 } = await createDefaultEnvironment();
-    const submodelValue = await environmentService.getSubmodelValue(environment, submodel1.id, admin);
+    const { environment, admin, submodel1, property1, property2 } =
+      await createDefaultEnvironment();
+    const submodelValue = await environmentService.getSubmodelValue(
+      environment,
+      submodel1.id,
+      admin,
+    );
     expect(submodelValue).toEqual({
       subSection1: {
         property1: property1.value,
@@ -395,7 +481,10 @@ describe("environmentService", () => {
 
   it("should modify submodel", async () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
-    const modification = { idShort: submodel1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
+    const modification = {
+      idShort: submodel1.idShort,
+      displayName: [LanguageText.create({ text: "Test", language: "en" })],
+    };
     await environmentService.modifySubmodel(environment, submodel1.id, modification, admin);
     //
     await expect(
@@ -404,9 +493,15 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel elemement", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
-    const modification = { idShort: property1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
-    const idShortPathToProperty1 = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } =
+      await createDefaultEnvironment();
+    const modification = {
+      idShort: property1.idShort,
+      displayName: [LanguageText.create({ text: "Test", language: "en" })],
+    };
+    const idShortPathToProperty1 = IdShortPath.create({
+      path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+    });
     await environmentService.modifySubmodelElement(
       environment,
       submodel1.id,
@@ -416,15 +511,21 @@ describe("environmentService", () => {
     );
     //
     await expect(
-      environmentService.modifySubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
-    ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+      environmentService.modifySubmodelElement(
+        environment,
+        submodel1.id,
+        modification,
+        idShortPathToProperty1,
+        member,
+      ),
+    ).rejects.toThrow(
+      new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),
+    );
   });
 
   it("should copy environment", async () => {
     const { environment } = await createDefaultEnvironment();
-    const copy = await environmentService.copyEnvironment(
-      environment,
-    );
+    const copy = await environmentService.copyEnvironment(environment);
 
     expect(copy.submodels).toHaveLength(1);
   });
@@ -432,25 +533,27 @@ describe("environmentService", () => {
   async function createEnvironmentWithList() {
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
-    security.addPolicy(
-      admin,
-      IdShortPath.create({ path: "section1" }),
-      [
-        Permission.create({
-          permission: Permissions.Read,
-          kindOfPermission: PermissionKind.Allow,
-        }),
-        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-      ],
-    );
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [
+      Permission.create({
+        permission: Permissions.Read,
+        kindOfPermission: PermissionKind.Allow,
+      }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
     const ability = security.defineAbilityForSubject(admin);
 
-    const submodelElementList = SubmodelElementList.create({ idShort: "list", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "list",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
     submodel1.addSubmodelElement(submodelElementList, { ability });
 
     const listIdShortPath = IdShortPath.create({ path: submodelElementList.idShort });
@@ -462,13 +565,30 @@ describe("environmentService", () => {
     assetAdministrationShell.addSubmodel(submodel1);
     await aasRepository.save(assetAdministrationShell);
     const row1 = submodelElementList.getSubmodelElements()[0];
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id], submodels: [submodel1.id] });
-    return { security, environment, admin, member, submodel1, submodelElementList, row1, col1, listIdShortPath };
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+      submodels: [submodel1.id],
+    });
+    return {
+      security,
+      environment,
+      admin,
+      member,
+      submodel1,
+      submodelElementList,
+      row1,
+      col1,
+      listIdShortPath,
+    };
   }
 
   it("should modify column", async () => {
-    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } = await createEnvironmentWithList();
-    const modification = { idShort: col1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
+    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } =
+      await createEnvironmentWithList();
+    const modification = {
+      idShort: col1.idShort,
+      displayName: [LanguageText.create({ text: "Test", language: "en" })],
+    };
     await environmentService.modifyColumn(
       environment,
       submodel1.id,
@@ -479,15 +599,37 @@ describe("environmentService", () => {
     );
     //
     await expect(
-      environmentService.modifyColumn(environment, submodel1.id, listIdShortPath, col1.idShort, modification, member),
-    ).rejects.toThrow(new ForbiddenError(`Missing permissions to modify element section1.list.${row1.idShort}.col1.`));
+      environmentService.modifyColumn(
+        environment,
+        submodel1.id,
+        listIdShortPath,
+        col1.idShort,
+        modification,
+        member,
+      ),
+    ).rejects.toThrow(
+      new ForbiddenError(
+        `Missing permissions to modify element section1.list.${row1.idShort}.col1.`,
+      ),
+    );
   });
 
   it("should delete column", async () => {
-    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } = await createEnvironmentWithList();
+    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } =
+      await createEnvironmentWithList();
     await expect(
-      environmentService.deleteColumn(environment, submodel1.id, listIdShortPath, col1.idShort, member),
-    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.col1.`));
+      environmentService.deleteColumn(
+        environment,
+        submodel1.id,
+        listIdShortPath,
+        col1.idShort,
+        member,
+      ),
+    ).rejects.toThrow(
+      new ForbiddenError(
+        `Missing permissions to delete element section1.list.${row1.idShort}.col1.`,
+      ),
+    );
 
     const list: any = await environmentService.deleteColumn(
       environment,
@@ -501,11 +643,20 @@ describe("environmentService", () => {
   });
 
   it("should delete row", async () => {
-    const { environment, admin, member, submodel1, row1, listIdShortPath } = await createEnvironmentWithList();
+    const { environment, admin, member, submodel1, row1, listIdShortPath } =
+      await createEnvironmentWithList();
 
     await expect(
-      environmentService.deleteRow(environment, submodel1.id, listIdShortPath, row1.idShort, member),
-    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`));
+      environmentService.deleteRow(
+        environment,
+        submodel1.id,
+        listIdShortPath,
+        row1.idShort,
+        member,
+      ),
+    ).rejects.toThrow(
+      new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`),
+    );
 
     const list: any = await environmentService.deleteRow(
       environment,
@@ -519,9 +670,19 @@ describe("environmentService", () => {
   });
 
   it("should modify value of submodel element", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1, property2 } = await createDefaultEnvironment();
+    const {
+      environment,
+      admin,
+      member,
+      submodel1,
+      submodelElementCollection1,
+      property1,
+      property2,
+    } = await createDefaultEnvironment();
     const modification = { [property1.idShort]: "new value 1", [property2.idShort]: "new value 2" };
-    const idShortPathToProperty1 = IdShortPath.create({ path: `${submodelElementCollection1.idShort}` });
+    const idShortPathToProperty1 = IdShortPath.create({
+      path: `${submodelElementCollection1.idShort}`,
+    });
     await environmentService.modifyValueOfSubmodelElement(
       environment,
       submodel1.id,
@@ -531,8 +692,16 @@ describe("environmentService", () => {
     );
     //
     await expect(
-      environmentService.modifyValueOfSubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
-    ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+      environmentService.modifyValueOfSubmodelElement(
+        environment,
+        submodel1.id,
+        modification,
+        idShortPathToProperty1,
+        member,
+      ),
+    ).rejects.toThrow(
+      new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),
+    );
   });
 
   it("should delete policy", async () => {
@@ -561,7 +730,9 @@ describe("environmentService", () => {
         saveEnvironmentMock,
         member,
       ),
-    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.`));
+    ).rejects.toThrow(
+      new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.`),
+    );
 
     await environmentService.deleteSubmodelFromEnvironment(
       environment,
@@ -574,24 +745,21 @@ describe("environmentService", () => {
   });
 
   it("should delete submodel element", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
-    const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } =
+      await createDefaultEnvironment();
+    const idShortPath = IdShortPath.create({
+      path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+    });
 
     await expect(
-      environmentService.deleteSubmodelElement(
-        environment,
-        submodel1.id,
-        idShortPath,
-        member,
+      environmentService.deleteSubmodelElement(environment, submodel1.id, idShortPath, member),
+    ).rejects.toThrow(
+      new ForbiddenError(
+        `Missing permissions to delete element ${submodel1.idShort}.${idShortPath.toString()}.`,
       ),
-    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.${idShortPath.toString()}.`));
-
-    await environmentService.deleteSubmodelElement(
-      environment,
-      submodel1.id,
-      idShortPath,
-      admin,
     );
+
+    await environmentService.deleteSubmodelElement(environment, submodel1.id, idShortPath, admin);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
     expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeUndefined();
     //

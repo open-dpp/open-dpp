@@ -9,9 +9,7 @@ export interface VerifiedApiKey {
 
 @Injectable()
 export class SessionsService {
-  constructor(
-    @Inject(AUTH) private readonly auth: Auth,
-  ) {}
+  constructor(@Inject(AUTH) private readonly auth: Auth) {}
 
   async getSession(headers: Headers) {
     const betterAuthSession = await this.auth.api.getSession({

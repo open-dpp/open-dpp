@@ -9,7 +9,10 @@ export enum NotificationType {
   WARNING = "Warning",
 }
 
-interface ActionLink { to: string; label: string }
+interface ActionLink {
+  to: string;
+  label: string;
+}
 export interface Notification {
   id: string;
   type: NotificationType;
@@ -21,7 +24,7 @@ export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref<Notification[]>([]);
 
   const removeNotification = (id: string) => {
-    notifications.value = notifications.value.filter(n => n.id !== id);
+    notifications.value = notifications.value.filter((n) => n.id !== id);
   };
 
   const addNotification = (
@@ -53,19 +56,11 @@ export const useNotificationStore = defineStore("notification", () => {
     actionLink?: ActionLink,
     duration: number = 6000,
   ) => {
-    return addNotification(
-      message,
-      NotificationType.ERROR,
-      actionLink,
-      duration,
-    );
+    return addNotification(message, NotificationType.ERROR, actionLink, duration);
   };
 
-  const addInfoNotification = (
-    message: string,
-    actionLink?: ActionLink,
-    duration: number = 6000,
-  ) => addNotification(message, NotificationType.INFO, actionLink, duration);
+  const addInfoNotification = (message: string, actionLink?: ActionLink, duration: number = 6000) =>
+    addNotification(message, NotificationType.INFO, actionLink, duration);
 
   const addWarningNotification = (
     message: string,

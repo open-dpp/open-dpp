@@ -1,9 +1,10 @@
-import { z } from 'zod'
-import { EnvironmentJsonSchema, ExtendedEnvironmentJsonSchema } from '../aas/environment-json-schema'
+import { z } from "zod";
+import {
+  EnvironmentJsonSchema,
+  ExtendedEnvironmentJsonSchema,
+} from "../aas/environment-json-schema";
 
-export const DateTimeSchema = z.union(
-  [z.iso.datetime(), z.date()],
-)
+export const DateTimeSchema = z.union([z.iso.datetime(), z.date()]);
 
 export const DppStatusDto = {
   Draft: 'Draft',
@@ -20,6 +21,6 @@ export const SharedDppDtoSchema = z.object({
   environment: z.union([EnvironmentJsonSchema, ExtendedEnvironmentJsonSchema]),
   createdAt: DateTimeSchema,
   updatedAt: DateTimeSchema,
-})
+});
 
-export type SharedDppDto = z.infer<typeof SharedDppDtoSchema>
+export type SharedDppDto = z.infer<typeof SharedDppDtoSchema>;

@@ -46,14 +46,14 @@ describe("OrganizationsController", () => {
           useClass: AuthGuard,
         },
       ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
-    betterAuthHelper.init(
-      moduleRef.get<UsersService>(UsersService),
-      moduleRef.get<Auth>(AUTH),
-    );
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = moduleRef.createNestApplication();
     await app.init();
@@ -113,7 +113,8 @@ describe("OrganizationsController", () => {
 
   it("should return 403 when updating organization without rights", async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    const { userCookie: otherUserCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { userCookie: otherUserCookie } =
+      await betterAuthHelper.createOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
       .patch(`/organizations/${org.id}`)
@@ -135,14 +136,18 @@ describe("OrganizationsController", () => {
     expect(response.status).toEqual(201);
 
     const invitationsRepository = moduleRef.get<InvitationsRepository>(InvitationsRepository);
-    const invitation = await invitationsRepository.findOneUnexpiredByEmailAndOrganization(inviteEmail, org.id);
+    const invitation = await invitationsRepository.findOneUnexpiredByEmailAndOrganization(
+      inviteEmail,
+      org.id,
+    );
     expect(invitation).not.toBeNull();
     expect(invitation!.email).toEqual(inviteEmail);
   });
 
   it("should return 403 when inviting without rights", async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    const { userCookie: otherUserCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { userCookie: otherUserCookie } =
+      await betterAuthHelper.createOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
       .post(`/organizations/${org.id}/invite`)

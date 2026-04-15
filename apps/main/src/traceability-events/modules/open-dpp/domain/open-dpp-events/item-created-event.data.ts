@@ -11,11 +11,7 @@ export class ItemCreatedEventData extends OpenDppEventData {
     this.itemId = itemId;
   }
 
-  static createWithWrapper(data: {
-    userId: string;
-    itemId: string;
-    organizationId: string;
-  }) {
+  static createWithWrapper(data: { userId: string; itemId: string; organizationId: string }) {
     return OpenDppEvent.createWithWrapper({
       userId: data.userId,
       itemId: data.itemId,

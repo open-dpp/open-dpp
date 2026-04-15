@@ -12,7 +12,7 @@ export class EnvModule {
       global: true,
       imports: [
         ConfigModule.forRoot({
-          validate: env => validateEnv(env),
+          validate: (env) => validateEnv(env),
           expandVariables: true,
         }),
       ],

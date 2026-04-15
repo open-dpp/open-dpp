@@ -82,12 +82,9 @@ async function routeToQrCode(id: string) {
 
 function forwardToPresentationErrorMessage(e: unknown): string {
   if (e instanceof AxiosError) {
-    if (!e.response)
-      return t("dpp.forwardToPresentationErrorNetwork");
-    if (e.response.status === 404)
-      return t("dpp.forwardToPresentationError404");
-    if (e.response.status === 403)
-      return t("dpp.forwardToPresentationError403");
+    if (!e.response) return t("dpp.forwardToPresentationErrorNetwork");
+    if (e.response.status === 404) return t("dpp.forwardToPresentationError404");
+    if (e.response.status === 403) return t("dpp.forwardToPresentationError403");
   }
   return t("dpp.forwardToPresentationError");
 }
@@ -103,12 +100,8 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   try {
     const uuid = await resolvePassportUuid(item);
     await router.push(`/presentation/${uuid}/chat`);
-  }
-  catch (e) {
-    errorHandlingStore.logErrorWithNotification(
-      forwardToPresentationErrorMessage(e),
-      e,
-    );
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
   }
 }
 

@@ -1,13 +1,7 @@
 import type { MemberRoleDtoType, UserRoleDtoType } from "@open-dpp/dto";
 import type { Ref } from "vue";
 import type { Subject } from "../lib/aas-security.ts";
-import {
-  MemberRoleDtoEnum,
-
-  UserRoleDto,
-  UserRoleDtoEnum,
-
-} from "@open-dpp/dto";
+import { MemberRoleDtoEnum, UserRoleDto, UserRoleDtoEnum } from "@open-dpp/dto";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client.ts";
@@ -38,17 +32,19 @@ export interface IUserStore {
 }
 
 export const useUserStore = defineStore("user", (): IUserStore => {
-  const user = ref<{ role: UserRoleDtoType; id: string | null }>({ role: UserRoleDto.ANONYMOUS, id: null });
+  const user = ref<{ role: UserRoleDtoType; id: string | null }>({
+    role: UserRoleDto.ANONYMOUS,
+    id: null,
+  });
   const memberRole = ref<MemberRoleDtoType | undefined>(undefined);
 
-  function updateUserBySession(
-    session: { user: BetterAuthSession } | null,
-  ) {
+  function updateUserBySession(session: { user: BetterAuthSession } | null) {
     if (session) {
-      user.value.role = session.user.role ? UserRoleDtoEnum.parse(session.user.role) : UserRoleDto.USER;
+      user.value.role = session.user.role
+        ? UserRoleDtoEnum.parse(session.user.role)
+        : UserRoleDto.USER;
       user.value.id = session.user.id;
-    }
-    else {
+    } else {
       user.value.role = UserRoleDto.ANONYMOUS;
       user.value.id = null;
     }
@@ -58,16 +54,12 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     try {
       const response = await apiClient.dpp.organizations.getMembers(organizationId);
       if (response.status === HTTPCode.OK) {
-        const foundMember = response.data.find(
-          member => member.userId === user.value.id,
-        );
+        const foundMember = response.data.find((member) => member.userId === user.value.id);
         memberRole.value = MemberRoleDtoEnum.optional().parse(foundMember?.role);
-      }
-      else {
+      } else {
         memberRole.value = undefined;
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error fetching member role:", error);
       memberRole.value = undefined;
     }
@@ -76,7 +68,9 @@ export const useUserStore = defineStore("user", (): IUserStore => {
   function asSubject(ignoreMemberRoleForAdmin: boolean = true): Subject {
     return {
       userRole: user.value.role,
-      ...(ignoreMemberRoleForAdmin && user.value.role === UserRoleDto.ADMIN ? {} : { memberRole: memberRole.value }),
+      ...(ignoreMemberRoleForAdmin && user.value.role === UserRoleDto.ADMIN
+        ? {}
+        : { memberRole: memberRole.value }),
     };
   }
 

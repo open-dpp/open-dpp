@@ -12,16 +12,10 @@ interface AasUtilsProps {
 
 export interface IAasUtils {
   parseDisplayNameFromAas: (
-    assetAdministrationShell: Pick<
-      AssetAdministrationShellResponseDto,
-      "displayName"
-    >,
+    assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ) => string;
   parseDisplayNameFromEnvironment: (
-    environment: Pick<
-      ExtendedEnvironmentResponseDto,
-      "assetAdministrationShells"
-    >,
+    environment: Pick<ExtendedEnvironmentResponseDto, "assetAdministrationShells">,
   ) => string;
 }
 
@@ -30,7 +24,7 @@ export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAa
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ): string {
     const displayName = assetAdministrationShell.displayName.find(
-      d => d.language === selectedLanguage,
+      (d) => d.language === selectedLanguage,
     );
     return displayName?.text ?? translate("common.untitled");
   }
@@ -38,13 +32,18 @@ export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAa
   function parseDisplayNameFromEnvironment(
     environment: Pick<ExtendedEnvironmentResponseDto, "assetAdministrationShells">,
   ): string {
-    return match(environment).with({
-      assetAdministrationShells: [{ id: P.string, displayName: P.array() }],
-    }, ({ assetAdministrationShells }) => {
-      return parseDisplayNameFromAas(assetAdministrationShells[0]);
-    }).otherwise(() => {
-      return translate("common.untitled");
-    });
+    return match(environment)
+      .with(
+        {
+          assetAdministrationShells: [{ id: P.string, displayName: P.array() }],
+        },
+        ({ assetAdministrationShells }) => {
+          return parseDisplayNameFromAas(assetAdministrationShells[0]);
+        },
+      )
+      .otherwise(() => {
+        return translate("common.untitled");
+      });
   }
 
   return { parseDisplayNameFromAas, parseDisplayNameFromEnvironment };

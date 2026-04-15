@@ -4,7 +4,10 @@ import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
-import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchemaVersion } from "./unique-product-identifier.schema";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchemaVersion,
+} from "./unique-product-identifier.schema";
 
 @Injectable()
 export class UniqueProductIdentifierRepository {
@@ -43,8 +46,7 @@ export class UniqueProductIdentifierRepository {
   }
 
   async findOne(uuid: string) {
-    const uniqueProductIdentifierDoc
-      = await this.uniqueProductIdentifierDoc.findById(uuid);
+    const uniqueProductIdentifierDoc = await this.uniqueProductIdentifierDoc.findById(uuid);
     if (!uniqueProductIdentifierDoc) {
       return undefined;
     }
@@ -61,9 +63,11 @@ export class UniqueProductIdentifierRepository {
 
   async findOneByReferencedId(referenceId: string) {
     const uniqueProductIdentifierDoc = await this.uniqueProductIdentifierDoc
-      .findOne({ referenceId: {
-        $eq: referenceId,
-      } })
+      .findOne({
+        referenceId: {
+          $eq: referenceId,
+        },
+      })
       .sort({ createdAt: -1 });
     if (!uniqueProductIdentifierDoc) {
       return undefined;
@@ -72,14 +76,12 @@ export class UniqueProductIdentifierRepository {
   }
 
   async findAllByReferencedId(referenceId: string) {
-    const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find(
-      { referenceId: {
+    const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find({
+      referenceId: {
         $eq: referenceId,
-      } },
-    );
-    return uniqueProductIdentifiers.map(permalink =>
-      this.convertToDomain(permalink),
-    );
+      },
+    });
+    return uniqueProductIdentifiers.map((permalink) => this.convertToDomain(permalink));
   }
 
   async deleteByReferenceId(referenceId: string, options?: DbSessionOptions) {

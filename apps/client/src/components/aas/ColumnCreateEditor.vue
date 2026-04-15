@@ -17,10 +17,7 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<ColumnCreateEditorProps, SubmodelElementRequestDto>
-  >();
+const props = defineProps<SharedEditorProps<ColumnCreateEditorProps, SubmodelElementRequestDto>>();
 
 const columnFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -59,10 +56,6 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-4 p-2">
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.CREATE"
-    />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
   </div>
 </template>

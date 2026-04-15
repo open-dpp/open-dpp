@@ -13,11 +13,7 @@ import { UsersController } from "./presentation/users.controller";
     forwardRef(() => AuthModule),
   ],
   controllers: [UsersController],
-  providers: [
-    UsersService,
-    UserMapper,
-    UsersRepository,
-  ],
+  providers: [UsersService, UserMapper, UsersRepository],
   exports: [UsersService, UsersRepository],
 })
-export class UsersModule { }
+export class UsersModule {}

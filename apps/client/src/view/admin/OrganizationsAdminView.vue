@@ -17,12 +17,10 @@ async function fetchOrganizations() {
     if (res.data) {
       organizations.value = res.data;
     }
-  }
-  catch (error) {
+  } catch (error) {
     if (isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
       await router.push({ name: "Signin" });
-    }
-    else {
+    } else {
       errorHandlingStore.logErrorWithNotification("Failed to fetch organizations", error);
     }
   }

@@ -11,7 +11,15 @@ import type {
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from "@nestjs/common";
 
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -93,7 +101,13 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
-export class TemplateController implements IAasReadEndpointsWithOrganizationId, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
+export class TemplateController
+  implements
+    IAasReadEndpointsWithOrganizationId,
+    IAasCreateEndpoints,
+    IAasModifyEndpoints,
+    IAasDeleteEndpoints
+{
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly templateRepository: TemplateRepository,
@@ -113,7 +127,11 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(template.getEnvironment(), pagination, subject);
+    return await this.environmentService.getAasShells(
+      template.getEnvironment(),
+      pagination,
+      subject,
+    );
   }
 
   @ApiPatchShell()
@@ -121,13 +139,19 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @AssetAdministrationShellIdParam() aasId: string,
-    @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
+    @AssetAdministrationShellModificationRequestBody()
+    body: AssetAdministrationShellModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body, subject);
+    return await this.environmentService.modifyAasShell(
+      template.getEnvironment(),
+      aasId,
+      body,
+      subject,
+    );
   }
 
   @ApiGetSubmodels()
@@ -142,7 +166,11 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination, subject);
+    return await this.environmentService.getSubmodels(
+      template.getEnvironment(),
+      pagination,
+      subject,
+    );
   }
 
   @ApiPostSubmodel()
@@ -174,7 +202,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.fromPlain(body.subject);
     const object = IdShortPath.create({ path: body.object });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, administrator, organizationId);
-    await this.environmentService.deletePolicyBySubjectAndObject(template.getEnvironment(), object, subject, administrator);
+    await this.environmentService.deletePolicyBySubjectAndObject(
+      template.getEnvironment(),
+      object,
+      subject,
+      administrator,
+    );
   }
 
   @ApiDeleteSubmodelById()
@@ -187,7 +220,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template), subject);
+    await this.environmentService.deleteSubmodelFromEnvironment(
+      template.getEnvironment(),
+      submodelId,
+      this.saveEnvironmentCallback(template),
+      subject,
+    );
   }
 
   @ApiPatchSubmodel()
@@ -201,7 +239,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body, subject);
+    return await this.environmentService.modifySubmodel(
+      template.getEnvironment(),
+      submodelId,
+      body,
+      subject,
+    );
   }
 
   @ApiGetSubmodelById()
@@ -214,7 +257,11 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId, subject);
+    return await this.environmentService.getSubmodelById(
+      template.getEnvironment(),
+      submodelId,
+      subject,
+    );
   }
 
   @ApiGetSubmodelValue()
@@ -227,7 +274,11 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.getSubmodelValue(template.getEnvironment(), submodelId, subject);
+    return await this.environmentService.getSubmodelValue(
+      template.getEnvironment(),
+      submodelId,
+      subject,
+    );
   }
 
   @ApiGetSubmodelElements()
@@ -243,7 +294,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination, subject);
+    return await this.environmentService.getSubmodelElements(
+      template.getEnvironment(),
+      submodelId,
+      pagination,
+      subject,
+    );
   }
 
   @ApiPostSubmodelElement()
@@ -257,7 +313,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, subject);
+    return await this.environmentService.addSubmodelElement(
+      template.getEnvironment(),
+      submodelId,
+      body,
+      subject,
+    );
   }
 
   @ApiDeleteSubmodelElementById()
@@ -271,7 +332,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath, subject);
+    await this.environmentService.deleteSubmodelElement(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      subject,
+    );
   }
 
   @ApiPostColumn()
@@ -288,7 +354,14 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, subject, position);
+    return await this.environmentService.addColumn(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      column,
+      subject,
+      position,
+    );
   }
 
   @ApiPatchColumn()
@@ -304,7 +377,14 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body, subject);
+    return await this.environmentService.modifyColumn(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      body,
+      subject,
+    );
   }
 
   @ApiDeleteColumn()
@@ -319,7 +399,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, subject);
+    return await this.environmentService.deleteColumn(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      subject,
+    );
   }
 
   @ApiPostRow()
@@ -334,7 +420,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, subject, position);
+    return await this.environmentService.addRow(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      subject,
+      position,
+    );
   }
 
   @ApiDeleteRow()
@@ -349,7 +441,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow, subject);
+    return await this.environmentService.deleteRow(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      idShortOfRow,
+      subject,
+    );
   }
 
   @ApiPatchSubmodelElement()
@@ -364,7 +462,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath, subject);
+    return await this.environmentService.modifySubmodelElement(
+      template.getEnvironment(),
+      submodelId,
+      body,
+      idShortPath,
+      subject,
+    );
   }
 
   @ApiPatchSubmodelElementValue()
@@ -379,7 +483,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath, subject);
+    return await this.environmentService.modifyValueOfSubmodelElement(
+      template.getEnvironment(),
+      submodelId,
+      body,
+      idShortPath,
+      subject,
+    );
   }
 
   @ApiGetSubmodelElementById()
@@ -393,7 +503,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.getSubmodelElementById(template.getEnvironment(), submodelId, idShortPath, subject);
+    return await this.environmentService.getSubmodelElementById(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      subject,
+    );
   }
 
   @ApiPostSubmodelElementAtIdShortPath()
@@ -408,7 +523,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, subject, idShortPath);
+    return await this.environmentService.addSubmodelElement(
+      template.getEnvironment(),
+      submodelId,
+      body,
+      subject,
+      idShortPath,
+    );
   }
 
   @ApiGetSubmodelElementValue()
@@ -422,7 +543,12 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.templateService.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.getSubmodelElementValue(template.getEnvironment(), submodelId, idShortPath, subject);
+    return await this.environmentService.getSubmodelElementValue(
+      template.getEnvironment(),
+      submodelId,
+      idShortPath,
+      subject,
+    );
   }
 
   @Delete(":id")
@@ -442,10 +568,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     @Body(new ZodValidationPipe(TemplateCreateDtoSchema)) body: TemplateCreateDto,
     @OrganizationId() organizationId: string,
   ): Promise<TemplateDto> {
-    const environment = await this.environmentService.createEnvironment(
-      body.environment,
-      true,
-    );
+    const environment = await this.environmentService.createEnvironment(body.environment, true);
     const template = Template.create({ organizationId, environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
@@ -464,14 +587,13 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
 
   @Post("/import")
   @HttpCode(HttpStatus.CREATED)
-  async importTemplate(
-    @Body() body: any,
-    @OrganizationId() organizationId: string,
-  ) {
+  async importTemplate(@Body() body: any, @OrganizationId() organizationId: string) {
     const template = await this.aasSerializationService.importTemplate(
       body,
       organizationId,
-      async (t, options) => { await this.templateRepository.save(t, options); },
+      async (t, options) => {
+        await this.templateRepository.save(t, options);
+      },
     );
     return TemplateDtoSchema.parse(template.toPlain());
   }
@@ -486,7 +608,10 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
-    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(organizationId, pagination);
+    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(
+      organizationId,
+      pagination,
+    );
     const subject = SubjectAttributes.create({ userRole, memberRole });
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
@@ -502,5 +627,17 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     return async (options: DbSessionOptions) => {
       await this.templateRepository.save(template, options);
     };
+  }
+
+  private async loadTemplateAndCheckOwnership(
+    id: string,
+    subject: SubjectAttributes,
+    organizationId: string,
+  ): Promise<Template> {
+    const template = await this.templateRepository.findOneOrFail(id);
+    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    return template;
   }
 }

@@ -1,16 +1,13 @@
-import { randomUUID } from 'node:crypto'
-import {
-  SubmodelElementSchema,
-  UserRoleDto,
-} from '@open-dpp/dto'
+import { randomUUID } from "node:crypto";
+import { SubmodelElementSchema, UserRoleDto } from "@open-dpp/dto";
 import {
   propertyModificationPlainFactory,
   subjectPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelModificationPlainFactory,
-} from '@open-dpp/testing'
-import { AssetAdministrationShellType, OpenDppClient } from '../../src'
-import { activeOrganization, organizations } from '../organization'
+} from "@open-dpp/testing";
+import { AssetAdministrationShellType, OpenDppClient } from "../../src";
+import { activeOrganization, organizations } from "../organization";
 import {
   aasModification,
   aasResponse,
@@ -22,351 +19,314 @@ import {
   submodelDesignOfProduct,
   submodelDesignOfProductElement0,
   submodelValueResponse,
-} from './handlers/aas'
-import {
-  aasPropertiesWithParent,
-  connection,
-  connectionList,
-} from './handlers/aas-integration'
-import { passport1, passport2 } from './handlers/passports'
-import { template1, template2 } from './handlers/templates'
+} from "./handlers/aas";
+import { aasPropertiesWithParent, connection, connectionList } from "./handlers/aas-integration";
+import { passport1, passport2 } from "./handlers/passports";
+import { template1, template2 } from "./handlers/templates";
 
-import { server } from './msw.server'
+import { server } from "./msw.server";
 
-describe('apiClient', () => {
-  beforeAll(() => server.listen())
-  afterEach(() => server.resetHandlers())
-  afterAll(() => server.close())
-  const baseURL = 'https://api.cloud.open-dpp.de'
+describe("apiClient", () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+  const baseURL = "https://api.cloud.open-dpp.de";
 
-  describe('organizations', () => {
-    it('should return organizations', async () => {
+  describe("organizations", () => {
+    it("should return organizations", async () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
-      })
-      const response = await sdk.dpp.organizations.getAll()
-      expect(response.data).toEqual(organizations)
-    })
-  })
+      });
+      const response = await sdk.dpp.organizations.getAll();
+      expect(response.data).toEqual(organizations);
+    });
+  });
 
-  describe('templates', () => {
+  describe("templates", () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
-    })
-    sdk.setActiveOrganizationId(activeOrganization.id)
-    it('should get all templates', async () => {
-      const response = await sdk.dpp.templates.getAll(paginationParams)
-      expect(response.data.result).toEqual([template1, template2])
-    })
+    });
+    sdk.setActiveOrganizationId(activeOrganization.id);
+    it("should get all templates", async () => {
+      const response = await sdk.dpp.templates.getAll(paginationParams);
+      expect(response.data.result).toEqual([template1, template2]);
+    });
 
-    it('should create template', async () => {
+    it("should create template", async () => {
       const response = await sdk.dpp.templates.create({
         environment: {
-          assetAdministrationShells: [
-            { displayName: [{ language: 'en', text: 'test' }] },
-          ],
+          assetAdministrationShells: [{ displayName: [{ language: "en", text: "test" }] }],
         },
-      })
-      expect(response.data).toEqual(template1)
-    })
+      });
+      expect(response.data).toEqual(template1);
+    });
 
     it('should delete template', async () => {
       const response = await sdk.dpp.templates.deleteById(template1.id)
       expect(response.status).toEqual(204)
     })
-  })
+  });
 
-  describe('passports', () => {
+  describe("passports", () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
-    })
-    sdk.setActiveOrganizationId(activeOrganization.id)
-    it('should get all passports', async () => {
-      const response = await sdk.dpp.passports.getAll(paginationParams)
-      expect(response.data.result).toEqual([passport1, passport2])
-    })
+    });
+    sdk.setActiveOrganizationId(activeOrganization.id);
+    it("should get all passports", async () => {
+      const response = await sdk.dpp.passports.getAll(paginationParams);
+      expect(response.data.result).toEqual([passport1, passport2]);
+    });
 
-    it('should create passport', async () => {
-      let response = await sdk.dpp.passports.create({ templateId: 'temp' })
-      expect(response.data).toEqual(passport1)
+    it("should create passport", async () => {
+      let response = await sdk.dpp.passports.create({ templateId: "temp" });
+      expect(response.data).toEqual(passport1);
 
       response = await sdk.dpp.passports.create({
         environment: {
-          assetAdministrationShells: [
-            { displayName: [{ language: 'en', text: 'test' }] },
-          ],
+          assetAdministrationShells: [{ displayName: [{ language: "en", text: "test" }] }],
         },
-      })
+      });
 
-      expect(response.data).toEqual(passport1)
-    })
+      expect(response.data).toEqual(passport1);
+    });
 
     it('should delete passport', async () => {
       const response = await sdk.dpp.passports.deleteById(passport1.id)
       expect(response.status).toEqual(204)
     })
-  })
+  });
 
-  describe.each(['templates', 'passports'])('aas for %s', (appIdentifiable) => {
+  describe.each(["templates", "passports"])("aas for %s", (appIdentifiable) => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
-    })
+    });
 
-    it('should return shells', async () => {
-      const response = await sdk.dpp[appIdentifiable].aas.getShells(
-        aasWrapperId,
-        paginationParams,
-      )
-      expect(response.data.paging_metadata.cursor).toEqual(aasResponse.id)
-      expect(response.data.result).toEqual([aasResponse])
-    })
+    it("should return shells", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.getShells(aasWrapperId, paginationParams);
+      expect(response.data.paging_metadata.cursor).toEqual(aasResponse.id);
+      expect(response.data.result).toEqual([aasResponse]);
+    });
 
-    it('should modify', async () => {
+    it("should modify", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.modifyShell(
         aasWrapperId,
         btoa(aasResponse.id),
         aasModification,
-      )
+      );
       expect(response.data).toEqual({
         ...aasResponse,
         displayName: aasModification.displayName,
-      })
-    })
+      });
+    });
 
-    it('should return submodels', async () => {
+    it("should return submodels", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getSubmodels(
         aasWrapperId,
         paginationParams,
-      )
-      expect(response.data).toEqual([submodelCarbonFootprintResponse])
-    })
-    it('should return submodel by id', async () => {
+      );
+      expect(response.data).toEqual([submodelCarbonFootprintResponse]);
+    });
+    it("should return submodel by id", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getSubmodelById(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
-      )
-      expect(response.data).toEqual(submodelCarbonFootprintResponse)
-    })
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse);
+    });
 
-    it('should delete submodel by id', async () => {
+    it("should delete submodel by id", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.deleteSubmodelById(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
-      )
-      expect(response.status).toEqual(204)
-    })
-    it('should return submodel as value', async () => {
+      );
+      expect(response.status).toEqual(204);
+    });
+    it("should return submodel as value", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getSubmodelValue(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
-      )
-      expect(response.data).toEqual(submodelValueResponse)
-    })
-    it('should return submodel elements of submodel', async () => {
+      );
+      expect(response.data).toEqual(submodelValueResponse);
+    });
+    it("should return submodel elements of submodel", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getSubmodelElements(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
-      )
-      expect(response.data).toEqual(
-        submodelCarbonFootprintResponse.submodelElements,
-      )
-    })
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements);
+    });
 
-    it('should return submodel element by id', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.getSubmodelElementById(
+    it("should return submodel element by id", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.getSubmodelElementById(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
-      )
-      expect(response.data).toEqual(
-        submodelCarbonFootprintResponse.submodelElements[0],
-      )
-    })
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements[0]);
+    });
 
-    it('should delete policy by subject and object', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.deletePolicyBySubjectAndObject(
+    it("should delete policy by subject and object", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.deletePolicyBySubjectAndObject(
         aasWrapperId,
         {
-          subject: subjectPlainFactory.build(undefined, { transient: { userRole: UserRoleDto.ADMIN } }),
-          object: 'section1',
+          subject: subjectPlainFactory.build(undefined, {
+            transient: { userRole: UserRoleDto.ADMIN },
+          }),
+          object: "section1",
         },
-      )
-      expect(response.status).toEqual(204)
-    })
+      );
+      expect(response.status).toEqual(204);
+    });
 
-    it('should delete submodel element by id', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.deleteSubmodelElementById(
+    it("should delete submodel element by id", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.deleteSubmodelElementById(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
-      )
-      expect(response.status).toEqual(204)
-    })
+      );
+      expect(response.status).toEqual(204);
+    });
 
-    it('should return submodel element value', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.getSubmodelElementValue(
+    it("should return submodel element value", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.getSubmodelElementValue(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
         submodelDesignOfProductElement0.idShort,
-      )
-      expect(response.data).toEqual(submodelValueResponse.Design_V01)
-    })
+      );
+      expect(response.data).toEqual(submodelValueResponse.Design_V01);
+    });
 
-    it('should create submodel', async () => {
+    it("should create submodel", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.createSubmodel(
         aasWrapperId,
         submodelCarbonFootprintPlainFactory.build(),
-      )
-      expect(response.data).toEqual(submodelCarbonFootprintResponse)
-    })
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse);
+    });
 
-    it('should modify submodel', async () => {
+    it("should modify submodel", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.modifySubmodel(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         submodelModificationPlainFactory.build(),
-      )
-      expect(response.data).toEqual(submodelCarbonFootprintResponse)
-    })
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse);
+    });
 
-    it('should create submodel element', async () => {
+    it("should create submodel element", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.createSubmodelElement(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         propertyToAdd,
-      )
-      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
-    })
+      );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
 
-    it('should create submodel element at idShortPath', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.createSubmodelElementAtIdShortPath(
+    it("should create submodel element at idShortPath", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.createSubmodelElementAtIdShortPath(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
         propertyToAdd,
-      )
-      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
-    })
+      );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
 
-    it('should add column to submodel element list', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.addColumnToSubmodelElementList(
+    it("should add column to submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.addColumnToSubmodelElementList(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
-        'Design_V01.Author.ListProp',
+        "Design_V01.Author.ListProp",
         propertyModificationPlainFactory.build(),
         { position: 4 },
-      )
-      expect(response.data).toEqual(submodelDesignOfProductElement0)
-    })
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
 
-    it('should modify column of submodel element list', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.modifyColumnOfSubmodelElementList(
+    it("should modify column of submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyColumnOfSubmodelElementList(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
-        'Design_V01.Author.ListProp',
-        'column1',
-        propertyModificationPlainFactory.build({ idShort: 'column1' }),
-      )
-      expect(response.data).toEqual(submodelDesignOfProductElement0)
-    })
+        "Design_V01.Author.ListProp",
+        "column1",
+        propertyModificationPlainFactory.build({ idShort: "column1" }),
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
 
-    it('should delete column from submodel element list', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.deleteColumnFromSubmodelElementList(
+    it("should delete column from submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.deleteColumnFromSubmodelElementList(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
-        'Design_V01.Author.ListProp',
-        'column1',
-      )
-      expect(response.status).toEqual(200)
-      expect(response.data).toEqual(submodelDesignOfProductElement0)
-    })
+        "Design_V01.Author.ListProp",
+        "column1",
+      );
+      expect(response.status).toEqual(200);
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
 
-    it('should add row to submodel element list', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.addRowToSubmodelElementList(
+    it("should add row to submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.addRowToSubmodelElementList(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
-        'Design_V01.Author.ListProp',
+        "Design_V01.Author.ListProp",
         { position: 4 },
-      )
-      expect(response.data).toEqual(submodelDesignOfProductElement0)
-    })
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
 
-    it('should delete row from submodel element list', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.deleteRowFromSubmodelElementList(
+    it("should delete row from submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.deleteRowFromSubmodelElementList(
         aasWrapperId,
         btoa(submodelDesignOfProduct.id),
-        'Design_V01.Author.ListProp',
-        'row1',
-      )
-      expect(response.status).toEqual(200)
-      expect(response.data).toEqual(submodelDesignOfProductElement0)
-    })
+        "Design_V01.Author.ListProp",
+        "row1",
+      );
+      expect(response.status).toEqual(200);
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
 
-    it('should modify submodel element', async () => {
+    it("should modify submodel element", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.modifySubmodelElement(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
         propertyModificationPlainFactory.build(),
-      )
-      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
-    })
+      );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
 
-    it('should modify value of submodel element', async () => {
-      const response = await sdk.dpp[
-        appIdentifiable
-      ].aas.modifyValueOfSubmodelElement(
+    it("should modify value of submodel element", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyValueOfSubmodelElement(
         aasWrapperId,
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
-        { PCFCalculationMethod: 'GHG' },
-      )
-      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
-    })
-  })
+        { PCFCalculationMethod: "GHG" },
+      );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
+  });
 
-  describe('aas-integration', () => {
+  describe("aas-integration", () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
-    })
-    sdk.setActiveOrganizationId(activeOrganization.id)
-    it('should return aas connection', async () => {
-      const response = await sdk.dpp.aasIntegration.getConnection(
-        connection.id,
-      )
+    });
+    sdk.setActiveOrganizationId(activeOrganization.id);
+    it("should return aas connection", async () => {
+      const response = await sdk.dpp.aasIntegration.getConnection(connection.id);
       expect(response.data).toEqual({
         ...connection,
-      })
-    })
+      });
+    });
 
-    it('should return all aas connections of organization', async () => {
-      const response = await sdk.dpp.aasIntegration.getAllConnections()
-      expect(response.data).toEqual(connectionList)
-    })
+    it("should return all aas connections of organization", async () => {
+      const response = await sdk.dpp.aasIntegration.getAllConnections();
+      expect(response.data).toEqual(connectionList);
+    });
 
-    it('should create aas connection', async () => {
+    it("should create aas connection", async () => {
       const response = await sdk.dpp.aasIntegration.createConnection({
-        name: 'Connection 1',
+        name: "Connection 1",
         aasType: AssetAdministrationShellType.Truck,
         dataModelId: randomUUID(),
         modelId: randomUUID(),
@@ -374,42 +334,39 @@ describe('apiClient', () => {
           {
             dataFieldId: randomUUID(),
             sectionId: randomUUID(),
-            idShortParent: 'Parent',
-            idShort: 'Child',
+            idShortParent: "Parent",
+            idShort: "Child",
           },
         ],
-      })
+      });
       expect(response.data).toEqual({
         ...connection,
-      })
-    })
+      });
+    });
 
-    it('should patch aas connection', async () => {
-      const response = await sdk.dpp.aasIntegration.modifyConnection(
-        connection.id,
-        {
-          name: 'Connection 2',
-          modelId: randomUUID(),
-          fieldAssignments: [
-            {
-              dataFieldId: randomUUID(),
-              sectionId: randomUUID(),
-              idShortParent: 'Parent',
-              idShort: 'Child',
-            },
-          ],
-        },
-      )
+    it("should patch aas connection", async () => {
+      const response = await sdk.dpp.aasIntegration.modifyConnection(connection.id, {
+        name: "Connection 2",
+        modelId: randomUUID(),
+        fieldAssignments: [
+          {
+            dataFieldId: randomUUID(),
+            sectionId: randomUUID(),
+            idShortParent: "Parent",
+            idShort: "Child",
+          },
+        ],
+      });
       expect(response.data).toEqual({
         ...connection,
-      })
-    })
+      });
+    });
 
-    it('should return aas properties with parent for given aas type', async () => {
+    it("should return aas properties with parent for given aas type", async () => {
       const response = await sdk.dpp.aasIntegration.getPropertiesOfAas(
         AssetAdministrationShellType.Truck,
-      )
-      expect(response.data).toEqual(aasPropertiesWithParent)
-    })
-  })
-})
+      );
+      expect(response.data).toEqual(aasPropertiesWithParent);
+    });
+  });
+});

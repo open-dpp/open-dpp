@@ -10,7 +10,7 @@ export class MembersRepository {
   constructor(
     @InjectModel(MemberSchema.name)
     private readonly memberModel: Model<MemberSchema>,
-  ) { }
+  ) {}
 
   private toObjectIdIfValid(id: string): Types.ObjectId | string {
     return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
@@ -18,18 +18,16 @@ export class MembersRepository {
 
   async save(member: Member): Promise<Member> {
     const persistenceModel = MemberMapper.toPersistence(member);
-    const document = await this.memberModel.findByIdAndUpdate(
-      member.id,
-      persistenceModel,
-      { upsert: true, new: true },
-    );
+    const document = await this.memberModel.findByIdAndUpdate(member.id, persistenceModel, {
+      upsert: true,
+      new: true,
+    });
     return MemberMapper.toDomain(document);
   }
 
   async findOneById(id: string): Promise<Member | null> {
     const document = await this.memberModel.findById(id);
-    if (!document)
-      return null;
+    if (!document) return null;
     return MemberMapper.toDomain(document);
   }
 
@@ -39,7 +37,7 @@ export class MembersRepository {
       organizationId: this.toObjectIdIfValid(organizationId),
     };
     const documents = await this.memberModel.find(filter as any);
-    return documents.map(doc => MemberMapper.toDomain(doc));
+    return documents.map((doc) => MemberMapper.toDomain(doc));
   }
 
   async findByUserId(userId: string): Promise<Member[]> {
@@ -48,10 +46,13 @@ export class MembersRepository {
       userId: this.toObjectIdIfValid(userId),
     };
     const documents = await this.memberModel.find(filter as any);
-    return documents.map(doc => MemberMapper.toDomain(doc));
+    return documents.map((doc) => MemberMapper.toDomain(doc));
   }
 
-  async findOneByUserIdAndOrganizationId(userId: string, organizationId: string): Promise<Member | null> {
+  async findOneByUserIdAndOrganizationId(
+    userId: string,
+    organizationId: string,
+  ): Promise<Member | null> {
     // Better Auth stores userId and organizationId as ObjectIds, so we need to convert
     // the string query parameters to ObjectIds for the query to match
     const filter = {
@@ -61,8 +62,7 @@ export class MembersRepository {
 
     const document = await this.memberModel.findOne(filter as any);
 
-    if (!document)
-      return null;
+    if (!document) return null;
     return MemberMapper.toDomain(document);
   }
 }

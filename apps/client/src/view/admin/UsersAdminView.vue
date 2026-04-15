@@ -27,8 +27,7 @@ async function fetchUsers() {
     if (res.data) {
       users.value = res.data.users;
     }
-  }
-  catch (error) {
+  } catch (error) {
     errorHandlingStore.logErrorWithNotification("Failed to fetch users", error);
     users.value = [];
   }

@@ -5,20 +5,11 @@
     "type": {
       "type": "array",
       "readOnly": true,
-      "const": [
-        "DigitalTraceabilityEvent",
-        "VerifiableCredential"
-      ],
-      "default": [
-        "DigitalTraceabilityEvent",
-        "VerifiableCredential"
-      ],
+      "const": ["DigitalTraceabilityEvent", "VerifiableCredential"],
+      "default": ["DigitalTraceabilityEvent", "VerifiableCredential"],
       "items": {
         "type": "string",
-        "enum": [
-          "DigitalTraceabilityEvent",
-          "VerifiableCredential"
-        ]
+        "enum": ["DigitalTraceabilityEvent", "VerifiableCredential"]
       }
     },
     "id": {
@@ -67,11 +58,7 @@
     }
   },
   "description": "An array of Traceability Events as a VC",
-  "required": [
-    "id",
-    "@context",
-    "issuer"
-  ],
+  "required": ["id", "@context", "issuer"],
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
     "CredentialIssuer": {
@@ -81,17 +68,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "CredentialIssuer"
-          ],
-          "default": [
-            "CredentialIssuer"
-          ],
+          "const": ["CredentialIssuer"],
+          "default": ["CredentialIssuer"],
           "items": {
             "type": "string",
-            "enum": [
-              "CredentialIssuer"
-            ]
+            "enum": ["CredentialIssuer"]
           }
         },
         "id": {
@@ -114,10 +95,7 @@
         }
       },
       "description": "The issuer party (person or organisation) of a verifiable credential.",
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "Identifier": {
       "type": "object",
@@ -126,17 +104,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "Identifier"
-          ],
-          "default": [
-            "Identifier"
-          ],
+          "const": ["Identifier"],
+          "default": ["Identifier"],
           "items": {
             "type": "string",
-            "enum": [
-              "Identifier"
-            ]
+            "enum": ["Identifier"]
           }
         },
         "id": {
@@ -161,10 +133,7 @@
         }
       },
       "description": "The ID and Name of an identified entity such as a product, facility, party, standard, etc.  If the identifier is a W3C DID then the corresponding DID document SHOULD include a serviceEndpoint of type \"IdentityResolver\". If the identifier is not a W3C DID then the id property SHOULD be an identity resolver URL.",
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "IdentifierScheme": {
       "type": "object",
@@ -173,17 +142,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "IdentifierScheme"
-          ],
-          "default": [
-            "IdentifierScheme"
-          ],
+          "const": ["IdentifierScheme"],
+          "default": ["IdentifierScheme"],
           "items": {
             "type": "string",
-            "enum": [
-              "IdentifierScheme"
-            ]
+            "enum": ["IdentifierScheme"]
           }
         },
         "id": {
@@ -207,20 +170,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "TransformationEvent",
-            "Event"
-          ],
-          "default": [
-            "TransformationEvent",
-            "Event"
-          ],
+          "const": ["TransformationEvent", "Event"],
+          "default": ["TransformationEvent", "Event"],
           "items": {
             "type": "string",
-            "enum": [
-              "TransformationEvent",
-              "Event"
-            ]
+            "enum": ["TransformationEvent", "Event"]
           }
         },
         "id": {
@@ -243,11 +197,7 @@
         },
         "action": {
           "type": "string",
-          "enum": [
-            "observe",
-            "add",
-            "delete"
-          ],
+          "enum": ["observe", "add", "delete"],
           "example": "observe",
           "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
         },
@@ -312,17 +262,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "SensorElement"
-          ],
-          "default": [
-            "SensorElement"
-          ],
+          "const": ["SensorElement"],
+          "default": ["SensorElement"],
           "items": {
             "type": "string",
-            "enum": [
-              "SensorElement"
-            ]
+            "enum": ["SensorElement"]
           }
         },
         "sensorMetadata": {
@@ -351,17 +295,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "Sensor"
-          ],
-          "default": [
-            "Sensor"
-          ],
+          "const": ["Sensor"],
+          "default": ["Sensor"],
           "items": {
             "type": "string",
-            "enum": [
-              "Sensor"
-            ]
+            "enum": ["Sensor"]
           }
         },
         "device": {
@@ -384,17 +322,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "Item"
-          ],
-          "default": [
-            "Item"
-          ],
+          "const": ["Item"],
+          "default": ["Item"],
           "items": {
             "type": "string",
-            "enum": [
-              "Item"
-            ]
+            "enum": ["Item"]
           }
         },
         "id": {
@@ -410,10 +342,7 @@
         }
       },
       "description": "A specific serialised trade item which is an instance of a more generic product. ",
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "SensorData": {
       "type": "object",
@@ -422,17 +351,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "SensorData"
-          ],
-          "default": [
-            "SensorData"
-          ],
+          "const": ["SensorData"],
+          "default": ["SensorData"],
           "items": {
             "type": "string",
-            "enum": [
-              "SensorData"
-            ]
+            "enum": ["SensorData"]
           }
         },
         "time": {
@@ -467,17 +390,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "QuantityElement"
-          ],
-          "default": [
-            "QuantityElement"
-          ],
+          "const": ["QuantityElement"],
+          "default": ["QuantityElement"],
           "items": {
             "type": "string",
-            "enum": [
-              "QuantityElement"
-            ]
+            "enum": ["QuantityElement"]
           }
         },
         "productId": {
@@ -503,11 +420,7 @@
         }
       },
       "description": "The quantity element is used to define the quantity (eg 100 kg of a product class. Used when serialised items are not applicable.",
-      "required": [
-        "productId",
-        "productName",
-        "quantity"
-      ]
+      "required": ["productId", "productName", "quantity"]
     },
     "ObjectEvent": {
       "type": "object",
@@ -516,20 +429,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "ObjectEvent",
-            "Event"
-          ],
-          "default": [
-            "ObjectEvent",
-            "Event"
-          ],
+          "const": ["ObjectEvent", "Event"],
+          "default": ["ObjectEvent", "Event"],
           "items": {
             "type": "string",
-            "enum": [
-              "ObjectEvent",
-              "Event"
-            ]
+            "enum": ["ObjectEvent", "Event"]
           }
         },
         "id": {
@@ -552,11 +456,7 @@
         },
         "action": {
           "type": "string",
-          "enum": [
-            "observe",
-            "add",
-            "delete"
-          ],
+          "enum": ["observe", "add", "delete"],
           "example": "observe",
           "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
         },
@@ -607,20 +507,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "AggregationEvent",
-            "Event"
-          ],
-          "default": [
-            "AggregationEvent",
-            "Event"
-          ],
+          "const": ["AggregationEvent", "Event"],
+          "default": ["AggregationEvent", "Event"],
           "items": {
             "type": "string",
-            "enum": [
-              "AggregationEvent",
-              "Event"
-            ]
+            "enum": ["AggregationEvent", "Event"]
           }
         },
         "id": {
@@ -643,11 +534,7 @@
         },
         "action": {
           "type": "string",
-          "enum": [
-            "observe",
-            "add",
-            "delete"
-          ],
+          "enum": ["observe", "add", "delete"],
           "example": "observe",
           "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
         },
@@ -702,20 +589,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "TransactionEvent",
-            "Event"
-          ],
-          "default": [
-            "TransactionEvent",
-            "Event"
-          ],
+          "const": ["TransactionEvent", "Event"],
+          "default": ["TransactionEvent", "Event"],
           "items": {
             "type": "string",
-            "enum": [
-              "TransactionEvent",
-              "Event"
-            ]
+            "enum": ["TransactionEvent", "Event"]
           }
         },
         "id": {
@@ -738,11 +616,7 @@
         },
         "action": {
           "type": "string",
-          "enum": [
-            "observe",
-            "add",
-            "delete"
-          ],
+          "enum": ["observe", "add", "delete"],
           "example": "observe",
           "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
         },
@@ -802,10 +676,7 @@
         }
       },
       "description": "Transaction represents an event in which one or more objects become associated or disassociated with one or more identified business transactions - such as the purchase / shipment of goods between buyer and seller.",
-      "required": [
-        "sourcePartyId",
-        "destinationPartyId"
-      ]
+      "required": ["sourcePartyId", "destinationPartyId"]
     },
     "AssociationEvent": {
       "type": "object",
@@ -814,20 +685,11 @@
         "type": {
           "type": "array",
           "readOnly": true,
-          "const": [
-            "AssociationEvent",
-            "Event"
-          ],
-          "default": [
-            "AssociationEvent",
-            "Event"
-          ],
+          "const": ["AssociationEvent", "Event"],
+          "default": ["AssociationEvent", "Event"],
           "items": {
             "type": "string",
-            "enum": [
-              "AssociationEvent",
-              "Event"
-            ]
+            "enum": ["AssociationEvent", "Event"]
           }
         },
         "id": {
@@ -850,11 +712,7 @@
         },
         "action": {
           "type": "string",
-          "enum": [
-            "observe",
-            "add",
-            "delete"
-          ],
+          "enum": ["observe", "add", "delete"],
           "example": "observe",
           "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
         },

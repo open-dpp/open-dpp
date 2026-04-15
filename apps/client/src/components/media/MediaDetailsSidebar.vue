@@ -13,18 +13,13 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <Drawer
-    id="media-sidebar"
-    v-model:visible="open"
-    position="right"
-    header="Details"
-  >
+  <Drawer id="media-sidebar" v-model:visible="open" position="right" header="Details">
     <dl v-if="media" class="flex flex-col gap-4">
       <div class="flex-auto">
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
           {{ t("common.id") }}
         </dt>
-        <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
+        <dd class="mt-1 text-sm/6 text-gray-900 dark:text-white">
           {{ media.id }}
         </dd>
       </div>
@@ -32,20 +27,15 @@ const { t } = useI18n();
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
           {{ t("media.preview") }}
         </dt>
-        <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
-          <MediaPreview
-            :key="media.id"
-            :media="media"
-            :preview="true"
-            class="h-64 w-full"
-          />
+        <dd class="mt-1 text-sm/6 text-gray-900 dark:text-white">
+          <MediaPreview :key="media.id" :media="media" :preview="true" class="h-64 w-full" />
         </dd>
       </div>
       <div class="flex-auto">
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
           {{ t("file.type") }}
         </dt>
-        <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
+        <dd class="mt-1 text-sm/6 text-gray-900 dark:text-white">
           {{ media.mimeType }}
         </dd>
       </div>
@@ -53,7 +43,7 @@ const { t } = useI18n();
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
           {{ t("file.size") }}
         </dt>
-        <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
+        <dd class="mt-1 text-sm/6 text-gray-900 dark:text-white">
           {{ (media.size / 1024 / 1024).toFixed(1) }} MB
         </dd>
       </div>

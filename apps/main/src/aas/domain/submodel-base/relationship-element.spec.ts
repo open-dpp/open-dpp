@@ -20,9 +20,9 @@ describe("relationshipElement", () => {
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
-    expect(() => relationshipElement.addSubmodelElement(submodelElement)).toThrow(new ValueError(
-      "RelationshipElement cannot contain submodel elements",
-    ));
+    expect(() => relationshipElement.addSubmodelElement(submodelElement)).toThrow(
+      new ValueError("RelationshipElement cannot contain submodel elements"),
+    );
   });
 
   it("should get submodel element", () => {
@@ -36,7 +36,10 @@ describe("relationshipElement", () => {
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const relationshipElement = RelationshipElement.create({
       idShort: "prop1",
@@ -44,7 +47,9 @@ describe("relationshipElement", () => {
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(relationshipElement.toPlain({ ability })).toMatchObject({
       idShort: "prop1",

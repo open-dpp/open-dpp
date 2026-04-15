@@ -1,11 +1,20 @@
-import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, DeletePolicyDto, MemberRoleDtoType, PermissionType, UserRoleDtoType } from "@open-dpp/dto";
-import type { Ref } from "vue";
-import {
-  PermissionKind,
-  Permissions,
+import type {
+  AccessPermissionRuleResponseDto,
+  AssetAdministrationShellModificationDto,
+  DeletePolicyDto,
+  MemberRoleDtoType,
+  PermissionType,
+  UserRoleDtoType,
 } from "@open-dpp/dto";
+import type { Ref } from "vue";
+import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
-import { isEqualSubject, makeRule, makeSubjectAttributes, ruleHelper } from "../lib/aas-security.ts";
+import {
+  isEqualSubject,
+  makeRule,
+  makeSubjectAttributes,
+  ruleHelper,
+} from "../lib/aas-security.ts";
 import { useUserStore } from "../stores/user.ts";
 import { useRoleHierarchy } from "./role-hierarchy.ts";
 
@@ -56,7 +65,9 @@ export function useAasPermissionsForm({
     const clonedRules = structuredClone(toRaw(getAccessPermissionRules()));
     const foundRules: AccessPermissionRuleResponseDto[] = [];
     for (const rule of clonedRules) {
-      const foundPermissionsForObject = rule.permissionsPerObject.filter(p => p.object.idShort === object);
+      const foundPermissionsForObject = rule.permissionsPerObject.filter(
+        (p) => p.object.idShort === object,
+      );
       if (foundPermissionsForObject.length > 0) {
         foundRules.push({ ...rule, permissionsPerObject: foundPermissionsForObject });
       }
@@ -66,34 +77,35 @@ export function useAasPermissionsForm({
 
   async function resetToInheritedPermissions(subject: Subject) {
     await deletePolicyBySubjectAndObject({ subject: makeSubjectAttributes(subject), object });
-    accessPermissionRulesOfObjectWhichAreNotInherited.value = accessPermissionRulesOfObjectWhichAreNotInherited.value.filter(
-      r => !ruleHelper(r).hasEqualSubject(subject),
-    );
+    accessPermissionRulesOfObjectWhichAreNotInherited.value =
+      accessPermissionRulesOfObjectWhichAreNotInherited.value.filter(
+        (r) => !ruleHelper(r).hasEqualSubject(subject),
+      );
     updatePermissions();
   }
 
   function takeOverInheritedPermissions(subject: Subject) {
-    const newPermissions = permissions.value.find(p => isEqualSubject(p.subject, subject))?.permissions || [];
+    const newPermissions =
+      permissions.value.find((p) => isEqualSubject(p.subject, subject))?.permissions || [];
     editPermissions(newPermissions, subject);
   }
 
-  function editPermissions(
-    newPermissions: PermissionType[],
-    subject: Subject,
-  ) {
-    const foundRule = accessPermissionRulesOfObjectWhichAreNotInherited.value.find(r =>
+  function editPermissions(newPermissions: PermissionType[], subject: Subject) {
+    const foundRule = accessPermissionRulesOfObjectWhichAreNotInherited.value.find((r) =>
       ruleHelper(r).hasEqualSubject(subject),
     );
-    const allowedPermissions = newPermissions.map(p => ({
+    const allowedPermissions = newPermissions.map((p) => ({
       permission: p,
       kindOfPermission: PermissionKind.Allow,
     }));
 
     // Create / Edit / Delete do not make sense without Read permission
     if (
-      !newPermissions.includes(Permissions.Read)
-      && newPermissions.some(
-        p => p !== Permissions.Read && !(ignoredPermissionOptions && ignoredPermissionOptions.includes(p)),
+      !newPermissions.includes(Permissions.Read) &&
+      newPermissions.some(
+        (p) =>
+          p !== Permissions.Read &&
+          !(ignoredPermissionOptions && ignoredPermissionOptions.includes(p)),
       )
     ) {
       allowedPermissions.push({
@@ -106,8 +118,7 @@ export function useAasPermissionsForm({
       for (const permissionPerObject of foundRule.permissionsPerObject) {
         permissionPerObject.permissions = allowedPermissions;
       }
-    }
-    else {
+    } else {
       accessPermissionRulesOfObjectWhichAreNotInherited.value.push(
         makeRule({ subject, object, permissions: allowedPermissions }),
       );
@@ -139,13 +150,17 @@ export function useAasPermissionsForm({
   }
 
   function getPermissionsForAllSubjects() {
-    const allPermissions: { subject: Subject; permissions: PermissionType[]; inheritsPermissionsOf: string | null }[] = [];
-    const allSubjects = hierarchy.map(role => role.key);
+    const allPermissions: {
+      subject: Subject;
+      permissions: PermissionType[];
+      inheritsPermissionsOf: string | null;
+    }[] = [];
+    const allSubjects = hierarchy.map((role) => role.key);
     for (const subject of allSubjects) {
       const { permissions, inheritsPermissionsOf } = getPermissionsForSubject(subject);
       let filteredPermissions = permissions;
       if (ignoredPermissionOptions) {
-        filteredPermissions = permissions.filter(p => !ignoredPermissionOptions.includes(p));
+        filteredPermissions = permissions.filter((p) => !ignoredPermissionOptions.includes(p));
       }
 
       allPermissions.push({ subject, permissions: filteredPermissions, inheritsPermissionsOf });
@@ -157,17 +172,20 @@ export function useAasPermissionsForm({
     subject: Subject,
     consideredObject: string = object,
   ): { permissions: PermissionType[]; inheritsPermissionsOf: string | null } {
-    const inheritsPermissionsOf
-      = consideredObject === object ? null : consideredObject;
+    const inheritsPermissionsOf = consideredObject === object ? null : consideredObject;
 
-    const rules = inheritsPermissionsOf !== null
-      ? filterRulesForObject(consideredObject)
-      : accessPermissionRulesOfObjectWhichAreNotInherited.value;
+    const rules =
+      inheritsPermissionsOf !== null
+        ? filterRulesForObject(consideredObject)
+        : accessPermissionRulesOfObjectWhichAreNotInherited.value;
 
     for (const rule of rules) {
       for (const permissionPerObject of rule.permissionsPerObject) {
         if (ruleHelper(rule).hasEqualSubject(subject)) {
-          return { permissions: permissionPerObject.permissions.map(p => p.permission), inheritsPermissionsOf };
+          return {
+            permissions: permissionPerObject.permissions.map((p) => p.permission),
+            inheritsPermissionsOf,
+          };
         }
       }
     }
@@ -180,5 +198,11 @@ export function useAasPermissionsForm({
     return { permissions: [], inheritsPermissionsOf: null };
   }
 
-  return { permissions, editPermissions, savePermissions, resetToInheritedPermissions, takeOverInheritedPermissions };
+  return {
+    permissions,
+    editPermissions,
+    savePermissions,
+    resetToInheritedPermissions,
+    takeOverInheritedPermissions,
+  };
 }

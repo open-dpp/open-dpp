@@ -20,8 +20,7 @@ export function formatDateValueForModel(
   date: Date | null | undefined,
   valueType: DataTypeDefType,
 ): string | null {
-  if (!date)
-    return null;
+  if (!date) return null;
   if (valueType === DataTypeDef.DateTime) {
     return dayjs(date).toISOString();
   }
@@ -32,11 +31,8 @@ export function formatDateValueForModel(
  * Parse a stored value back into a Date for editor population.
  * Accepts both `YYYY-MM-DD` (Date) and full ISO-8601 (DateTime) forms.
  */
-export function parseDateValueFromModel(
-  value: string | null | undefined,
-): Date | null {
-  if (!value)
-    return null;
+export function parseDateValueFromModel(value: string | null | undefined): Date | null {
+  if (!value) return null;
   const parsed = dayjs(value);
   return parsed.isValid() ? parsed.toDate() : null;
 }
@@ -63,13 +59,11 @@ export function formatDateValueForDisplay(
   valueType: DataTypeDefType,
   viewerTimezone: string = getCurrentTimezone(),
 ): string | null {
-  if (!value)
-    return null;
+  if (!value) return null;
 
   if (valueType === DataTypeDef.DateTime) {
     const parsed = dayjs(value);
-    if (!parsed.isValid())
-      return value;
+    if (!parsed.isValid()) return value;
     const zoned = parsed.tz(viewerTimezone);
     const base = zoned.format(DATE_TIME_DISPLAY_FORMAT);
     // Always suffix with the IANA zone name: deterministic across Node/browsers
@@ -80,8 +74,7 @@ export function formatDateValueForDisplay(
 
   if (valueType === DataTypeDef.Date) {
     const parsed = dayjs(value);
-    if (!parsed.isValid())
-      return value;
+    if (!parsed.isValid()) return value;
     // Date values don't carry a time-of-day and so the *day* itself doesn't
     // shift with the viewer's timezone. We still append the viewer's zone so
     // the UI is symmetric with DateTime rendering and the reader always knows

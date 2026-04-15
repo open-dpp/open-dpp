@@ -1,17 +1,8 @@
 import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasAbilityProps } from "./aas-ability.ts";
-import {
-  MemberRoleDto,
-
-  PermissionKind,
-  Permissions,
-  UserRoleDto,
-} from "@open-dpp/dto";
-import {
-  securityPlainFactory,
-
-} from "@open-dpp/testing";
+import { MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
+import { securityPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -100,9 +91,13 @@ describe("aasAbility composable", () => {
         },
       ],
     };
-    const security: SecurityResponseDto = securityPlainFactory.build(undefined, { transient: transientParams });
+    const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+      transient: transientParams,
+    });
 
-    const { can } = mountHarness({ getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules });
+    const { can } = mountHarness({
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
+    });
 
     const member = {
       userRole: UserRoleDto.USER,

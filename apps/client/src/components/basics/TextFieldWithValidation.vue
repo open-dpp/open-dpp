@@ -14,7 +14,7 @@ const emit = defineEmits(["update:modelValue"]);
 
 const internalValue = computed({
   get: () => props.modelValue,
-  set: val => emit("update:modelValue", val === "" && props.treatEmptyStringAsNull ? null : val),
+  set: (val) => emit("update:modelValue", val === "" && props.treatEmptyStringAsNull ? null : val),
 });
 </script>
 
@@ -41,12 +41,7 @@ const internalValue = computed({
         :disabled="props.disabled"
       />
     </InputGroup>
-    <Message
-      v-if="props.showErrors && props.error"
-      size="small"
-      severity="error"
-      variant="simple"
-    >
+    <Message v-if="props.showErrors && props.error" size="small" severity="error" variant="simple">
       {{ props.error }}
     </Message>
   </div>

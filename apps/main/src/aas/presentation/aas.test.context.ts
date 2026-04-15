@@ -142,9 +142,12 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.providers || []),
       ],
       controllers: [...(metadataTestingModule.controllers || [])],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     const userService = moduleRef.get<UsersService>(UsersService);
     betterAuthHelper.init(userService, moduleRef.get<Auth>(AUTH));
@@ -157,8 +160,12 @@ export function createAasTestContext<T>(
     uniqueProductIdentifierRepository = moduleRef.get<UniqueProductIdentifierRepository>(UniqueProductIdentifierRepository);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel1 = Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodel2 = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodel1 = Submodel.fromPlain(
+      submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodel2 = Submodel.fromPlain(
+      submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
     user1data = await betterAuthHelper.createUser(subject.userRole);
     if (subject.memberRole === MemberRole.OWNER) {
       orga1 = await betterAuthHelper.createOrganization(user1data?.user.id as string);
@@ -171,22 +178,26 @@ export function createAasTestContext<T>(
       IdShortPath.create({ path: submodelBillOfMaterialPlainFactory.build().idShort! }),
       IdShortPath.create({ path: "toDelete" }),
     ].forEach((idShortPath) => {
-      security.addPolicy(
-        subject,
-        idShortPath,
-        [
-          Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-          Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
-          Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
-          Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-        ],
-      );
+      security.addPolicy(subject, idShortPath, [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({
+          permission: Permissions.Delete,
+          kindOfPermission: PermissionKind.Allow,
+        }),
+        Permission.create({
+          permission: Permissions.Create,
+          kindOfPermission: PermissionKind.Allow,
+        }),
+      ]);
     });
 
     ability = security.defineAbilityForSubject(subject);
 
     // { userRole: user, memberRole: owner }
-    aas = AssetAdministrationShell.fromPlain(aasPlainFactory.build({ security: security.toPlain() }, { transient: { iriDomain } }));
+    aas = AssetAdministrationShell.fromPlain(
+      aasPlainFactory.build({ security: security.toPlain() }, { transient: { iriDomain } }),
+    );
 
     submodels = [submodel1, submodel2];
     await aasRepository.save(aas);
@@ -195,13 +206,15 @@ export function createAasTestContext<T>(
     }
   });
 
-  type CreateEntity = (orgaId?: string) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
+  type CreateEntity = (
+    orgaId?: string,
+  ) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
   type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
 
   async function getOrganizationAndUserWithCookie() {
     return orga1
       ? await betterAuthHelper.getOrganizationAndUserWithCookie(orga1.id, user1data.user.id)
-      : { ...await betterAuthHelper.getUserWithCookie(user1data.user.id), org: undefined };
+      : { ...(await betterAuthHelper.getUserWithCookie(user1data.user.id)), org: undefined };
   }
 
   async function assertGetShells(createEntity: CreateEntity) {
@@ -218,7 +231,11 @@ export function createAasTestContext<T>(
     const response = await req.send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
-    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain({ ability })]));
+    expect(response.body.result).toEqual(
+      AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([
+        aas.toPlain({ ability }),
+      ]),
+    );
   }
 
   async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -261,10 +278,7 @@ export function createAasTestContext<T>(
 
     const body = {
       displayName: newDisplayName,
-      security: securityPlainFactory.build(
-        undefined,
-        { transient: transientParams },
-      ),
+      security: securityPlainFactory.build(undefined, { transient: transientParams }),
     };
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/shells/${btoa(newAas.id)}`)
@@ -282,11 +296,9 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createEntity(org?.id);
     const user = SubjectAttributes.create({ userRole: UserRoleDto.USER });
-    aas.security.addPolicy(
-      user,
-      IdShortPath.create({ path: "section1" }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-    );
+    aas.security.addPolicy(user, IdShortPath.create({ path: "section1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     await aasRepository.save(aas);
     const body = {
       subject: user.toPlain(),
@@ -317,7 +329,9 @@ export function createAasTestContext<T>(
     const response = await req.send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(submodels[1].id);
-    expect(response.body.result).toEqual(SubmodelPaginationResponseDtoSchema.shape.result.parse(submodels.map(s => s.toPlain())));
+    expect(response.body.result).toEqual(
+      SubmodelPaginationResponseDtoSchema.shape.result.parse(submodels.map((s) => s.toPlain())),
+    );
   }
 
   async function assertGetSubmodelById(createEntity: CreateEntity) {
@@ -341,7 +355,9 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createEntity(org?.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-    const submodelJson = submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } });
+    const submodelJson = submodelBillOfMaterialPlainFactory.build(undefined, {
+      transient: { iriDomain },
+    });
 
     const req = request(app.getHttpServer())
       .post(`${basePath}/${passport.id}/submodels`)
@@ -371,8 +387,12 @@ export function createAasTestContext<T>(
     const response = await req.send();
 
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort);
-    expect(response.body.result).toEqual(SubmodelElementSchema.array().parse(submodels[1].submodelElements.map(s => s.toPlain())));
+    expect(response.body.paging_metadata.cursor).toEqual(
+      submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort,
+    );
+    expect(response.body.result).toEqual(
+      SubmodelElementSchema.array().parse(submodels[1].submodelElements.map((s) => s.toPlain())),
+    );
   }
 
   async function assertPostSubmodelElement(createEntity: CreateEntity) {
@@ -388,16 +408,22 @@ export function createAasTestContext<T>(
 
     expect(response.status).toEqual(201);
     const foundSubmodelElement = await submodelRepository.findOneOrFail(submodels[1].id);
-    expect(response.body).toEqual(SubmodelElementSchema.parse(foundSubmodelElement.findSubmodelElementOrFail(
-      IdShortPath.create({ path: submodelElementJson.idShort }),
-    ).toPlain()));
+    expect(response.body).toEqual(
+      SubmodelElementSchema.parse(
+        foundSubmodelElement
+          .findSubmodelElementOrFail(IdShortPath.create({ path: submodelElementJson.idShort }))
+          .toPlain(),
+      ),
+    );
   }
 
   async function assertGetSubmodelElementById(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`)
+      .get(
+        `${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`,
+      )
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -439,15 +465,23 @@ export function createAasTestContext<T>(
     const submodelElementJson = propertyInputPlainFactory.build();
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`)
+      .post(
+        `${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(submodelElementJson);
     expect(response.status).toEqual(201);
     const foundSubmodelElement = await submodelRepository.findOneOrFail(submodels[0].id);
-    expect(response.body).toEqual(SubmodelElementSchema.parse(foundSubmodelElement.findSubmodelElementOrFail(
-      IdShortPath.create({ path: `Design_V01.Author.${submodelElementJson.idShort}` }),
-    ).toPlain()));
+    expect(response.body).toEqual(
+      SubmodelElementSchema.parse(
+        foundSubmodelElement
+          .findSubmodelElementOrFail(
+            IdShortPath.create({ path: `Design_V01.Author.${submodelElementJson.idShort}` }),
+          )
+          .toPlain(),
+      ),
+    );
   }
 
   async function assertGetSubmodelValue(createEntity: CreateEntity) {
@@ -465,89 +499,8 @@ export function createAasTestContext<T>(
     const response = await req.send();
 
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual(
-      {
-        ProductCarbonFootprint_A1A3: {
-          PCFCO2eq: "2.6300",
-          PCFCalculationMethod: "GHG Protocol",
-          PCFFactSheet: {
-            type: "ExternalReference",
-            keys: [
-              {
-                type: "GlobalReference",
-                value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-              },
-            ],
-          },
-          PCFGoodsAddressHandover: {
-            CityTown: "Kaiserslautern",
-            Country: "Germany",
-            HouseNumber: "122",
-            Latitude: "49.428006",
-            Longitude: "7.751222",
-            Street: "Trippstadter Strasse",
-            ZipCode: "67663",
-          },
-          PCFLifeCyclePhase: "A1-A3",
-          PCFQuantityOfMeasureForCalculation: "1",
-          PCFReferenceValueForCalculation: "piece",
-          PublicationDate: "2025-03-31",
-        },
-        ProductCarbonFootprint_A4: {
-          PCFCO2eq: "2.0000",
-          PCFCalculationMethod: "GHG Protocol",
-          PCFGoodsAddressHandover: {
-            CityTown: "Hannover",
-            Country: "Germany",
-            HouseNumber: "11",
-            Latitude: "52.31947731917296",
-            Longitude: "9.81000507976999",
-            Street: "Alte Kronsbergstraße",
-            ZipCode: "30521",
-          },
-          PCFLifeCyclePhase: "A4",
-          PCFQuantityOfMeasureForCalculation: "1",
-          PCFReferenceValueForCalculation: "piece",
-          PublicationDate: "2025-03-31",
-        },
-        ProductCarbonFootprint_B5: {
-          PCFCO2eq: "4.0000",
-          PCFCalculationMethod: "GHG Protocol",
-          PCFGoodsAddressHandover: {
-            CityTown: "Hannover",
-            Country: "Germany",
-            HouseNumber: "11",
-            Latitude: "52.31947731917296",
-            Longitude: "9.81000507976999",
-            Street: "Alte Kronsbergstraße",
-            ZipCode: "30521",
-          },
-          PCFLifeCyclePhase: "B5",
-          PCFQuantityOfMeasureForCalculation: "1",
-          PCFReferenceValueForCalculation: "piece",
-          PublicationDate: "2025-03-31",
-        },
-      },
-    );
-  }
-
-  async function assertGetSubmodelElementValue(createEntity: CreateEntity) {
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const entity = await createEntity(org?.id);
-    const req = request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`)
-      .set("Cookie", userCookie)
-      .send();
-
-    if (org?.id) {
-      req.set(ORGANIZATION_ID_HEADER, org.id);
-    }
-    const response = await req.send();
-
-    expect(response.status).toEqual(200);
-    expect(response.body).toEqual(
-      {
-
+    expect(response.body).toEqual({
+      ProductCarbonFootprint_A1A3: {
         PCFCO2eq: "2.6300",
         PCFCalculationMethod: "GHG Protocol",
         PCFFactSheet: {
@@ -573,7 +526,85 @@ export function createAasTestContext<T>(
         PCFReferenceValueForCalculation: "piece",
         PublicationDate: "2025-03-31",
       },
-    );
+      ProductCarbonFootprint_A4: {
+        PCFCO2eq: "2.0000",
+        PCFCalculationMethod: "GHG Protocol",
+        PCFGoodsAddressHandover: {
+          CityTown: "Hannover",
+          Country: "Germany",
+          HouseNumber: "11",
+          Latitude: "52.31947731917296",
+          Longitude: "9.81000507976999",
+          Street: "Alte Kronsbergstraße",
+          ZipCode: "30521",
+        },
+        PCFLifeCyclePhase: "A4",
+        PCFQuantityOfMeasureForCalculation: "1",
+        PCFReferenceValueForCalculation: "piece",
+        PublicationDate: "2025-03-31",
+      },
+      ProductCarbonFootprint_B5: {
+        PCFCO2eq: "4.0000",
+        PCFCalculationMethod: "GHG Protocol",
+        PCFGoodsAddressHandover: {
+          CityTown: "Hannover",
+          Country: "Germany",
+          HouseNumber: "11",
+          Latitude: "52.31947731917296",
+          Longitude: "9.81000507976999",
+          Street: "Alte Kronsbergstraße",
+          ZipCode: "30521",
+        },
+        PCFLifeCyclePhase: "B5",
+        PCFQuantityOfMeasureForCalculation: "1",
+        PCFReferenceValueForCalculation: "piece",
+        PublicationDate: "2025-03-31",
+      },
+    });
+  }
+
+  async function assertGetSubmodelElementValue(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org?.id);
+    const req = request(app.getHttpServer())
+      .get(
+        `${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`,
+      )
+      .set("Cookie", userCookie)
+      .send();
+
+    if (org?.id) {
+      req.set(ORGANIZATION_ID_HEADER, org.id);
+    }
+    const response = await req.send();
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      PCFCO2eq: "2.6300",
+      PCFCalculationMethod: "GHG Protocol",
+      PCFFactSheet: {
+        type: "ExternalReference",
+        keys: [
+          {
+            type: "GlobalReference",
+            value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
+          },
+        ],
+      },
+      PCFGoodsAddressHandover: {
+        CityTown: "Kaiserslautern",
+        Country: "Germany",
+        HouseNumber: "122",
+        Latitude: "49.428006",
+        Longitude: "7.751222",
+        Street: "Trippstadter Strasse",
+        ZipCode: "67663",
+      },
+      PCFLifeCyclePhase: "A1-A3",
+      PCFQuantityOfMeasureForCalculation: "1",
+      PCFReferenceValueForCalculation: "piece",
+      PublicationDate: "2025-03-31",
+    });
   }
 
   async function assertModifySubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -581,7 +612,9 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -600,7 +633,11 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
-    expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+    expect({
+      idShort: response.body.idShort,
+      displayName: response.body.displayName,
+      description: response.body.description,
+    }).toEqual(modificationBody);
   }
 
   async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -608,7 +645,9 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
     submodel.addSubmodelElement(property, { ability });
     await submodelRepository.save(submodel);
@@ -627,18 +666,29 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
-    expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+    expect({
+      idShort: response.body.idShort,
+      displayName: response.body.displayName,
+      description: response.body.description,
+    }).toEqual(modificationBody);
   }
 
-  async function assertModifySubmodelElementValue(createEntity: CreateEntity, saveEntity: SaveEntity) {
+  async function assertModifySubmodelElementValue(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
     submodel.addSubmodelElement(submodelElementCollection, { ability });
-    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }));
+    const property = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }),
+    );
 
     submodelElementCollection.addSubmodelElement(property, { ability });
 
@@ -651,12 +701,17 @@ export function createAasTestContext<T>(
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`)
+      .patch(
+        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
-    expect({ idShort: response.body.value[0].idShort, value: response.body.value[0].value }).toEqual({ idShort: property.idShort, value: "value new" });
+    expect({
+      idShort: response.body.value[0].idShort,
+      value: response.body.value[0].value,
+    }).toEqual({ idShort: property.idShort, value: "value new" });
   }
 
   async function assertAddColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -664,8 +719,13 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     submodel.addSubmodelElement(submodelElementList, { ability });
@@ -682,7 +742,9 @@ export function createAasTestContext<T>(
     const col0Body = propertyInputPlainFactory.build({ idShort: "column0" });
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`)
+      .post(
+        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(col0Body);
@@ -699,8 +761,13 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     submodel.addSubmodelElement(submodelElementList, { ability });
@@ -712,17 +779,21 @@ export function createAasTestContext<T>(
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
 
-    const newDisplayNames = [{
-      language: "de",
-      text: "CO2 Footprint New Text",
-    }];
+    const newDisplayNames = [
+      {
+        language: "de",
+        text: "CO2 Footprint New Text",
+      },
+    ];
     const colBody = {
       idShort: col1.idShort,
       displayName: newDisplayNames,
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
+      .patch(
+        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(colBody);
@@ -739,8 +810,13 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     submodel.addSubmodelElement(submodelElementList, { ability });
@@ -753,7 +829,9 @@ export function createAasTestContext<T>(
     await saveEntity(entity);
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
+      .delete(
+        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -761,7 +839,9 @@ export function createAasTestContext<T>(
     const bodyRow0 = response.body.value[0];
     expect(bodyRow0.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
-    const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
+    const foundList = foundSubmodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "tableList" }),
+    );
     const tableExtension = new TableExtension(foundList as SubmodelElementList);
     expect(tableExtension.columns).toEqual([]);
   }
@@ -771,8 +851,13 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     submodel.addSubmodelElement(submodelElementList, { ability });
@@ -785,7 +870,9 @@ export function createAasTestContext<T>(
     await saveEntity(entity);
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`)
+      .post(
+        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
@@ -803,8 +890,13 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     submodel.addSubmodelElement(submodelElementList, { ability });
@@ -817,14 +909,18 @@ export function createAasTestContext<T>(
     await saveEntity(entity);
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`)
+      .delete(
+        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
-    const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
+    const foundList = foundSubmodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "tableList" }),
+    );
     const tableExtension = new TableExtension(foundList as SubmodelElementList);
     expect(tableExtension.rows).toEqual([]);
   }
@@ -833,7 +929,12 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build({ idShort: "toDelete" }, { transient: { iriDomain } }));
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(
+        { idShort: "toDelete" },
+        { transient: { iriDomain } },
+      ),
+    );
     await submodelRepository.save(submodel);
     const submodelRef = Reference.create({
       type: ReferenceTypes.ModelReference,
@@ -846,7 +947,9 @@ export function createAasTestContext<T>(
     assetAdministrationShell.addSubmodelReference(submodelRef);
     await aasRepository.save(assetAdministrationShell);
     await saveEntity(entity);
-    expect(assetAdministrationShell.submodels.some(s => s.keys.some(k => k.value === submodel.id))).toBeTruthy();
+    expect(
+      assetAdministrationShell.submodels.some((s) => s.keys.some((k) => k.value === submodel.id)),
+    ).toBeTruthy();
 
     const response = await request(app.getHttpServer())
       .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
@@ -855,7 +958,7 @@ export function createAasTestContext<T>(
       .send();
     expect(response.status).toEqual(204);
     const foundAas = await aasRepository.findOneOrFail(aasId);
-    expect(foundAas.submodels.some(s => s.keys.some(k => k.value === submodel.id))).toBeFalsy();
+    expect(foundAas.submodels.some((s) => s.keys.some((k) => k.value === submodel.id))).toBeFalsy();
     expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
   }
 
@@ -863,8 +966,12 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElement = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElement = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "Property01" }),
+    );
     submodel.addSubmodelElement(submodelElement, { ability });
     entity.getEnvironment().addSubmodel(submodel);
     await saveEntity(entity);

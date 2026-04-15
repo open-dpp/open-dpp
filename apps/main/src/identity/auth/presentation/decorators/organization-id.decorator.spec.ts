@@ -39,8 +39,7 @@ describe("organizationId decorator", () => {
   });
 
   it("should throw BadRequestException when header is missing", async () => {
-    const response = await request(getApp(app))
-      .get("/test");
+    const response = await request(getApp(app)).get("/test");
 
     expect(response.status).toEqual(400);
   });

@@ -14,7 +14,8 @@ describe("InstanceSettingsService", () => {
   beforeEach(async () => {
     mockRepository = {
       findOne: jest.fn<() => Promise<InstanceSettings | null>>(),
-      save: jest.fn<(s: InstanceSettings) => Promise<InstanceSettings>>()
+      save: jest
+        .fn<(s: InstanceSettings) => Promise<InstanceSettings>>()
         .mockImplementation(async (s: InstanceSettings) => s),
     };
 
@@ -60,8 +61,7 @@ describe("InstanceSettingsService", () => {
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
       mockRepository.findOne.mockResolvedValue(existing);
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
-          return false;
+        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED") return false;
         return undefined;
       });
 
@@ -74,8 +74,7 @@ describe("InstanceSettingsService", () => {
     it("should mark signupEnabled as locked", async () => {
       mockRepository.findOne.mockResolvedValue(null);
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
-          return true;
+        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED") return true;
         return undefined;
       });
 
@@ -100,27 +99,23 @@ describe("InstanceSettingsService", () => {
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
       mockRepository.findOne.mockResolvedValue(existing);
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
-          return false;
+        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED") return false;
         return undefined;
       });
 
-      await expect(
-        service.updateSettings({ signupEnabled: true }),
-      ).rejects.toThrow(ValueError);
+      await expect(service.updateSettings({ signupEnabled: true })).rejects.toThrow(ValueError);
     });
 
     it("should include descriptive error message for locked fields", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
-          return false;
+        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED") return false;
         return undefined;
       });
 
-      await expect(
-        service.updateSettings({ signupEnabled: true }),
-      ).rejects.toThrow("Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is set");
+      await expect(service.updateSettings({ signupEnabled: true })).rejects.toThrow(
+        "Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is set",
+      );
     });
   });
 
@@ -130,8 +125,7 @@ describe("InstanceSettingsService", () => {
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
       mockRepository.findOne.mockResolvedValue(existing);
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
-          return false;
+        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED") return false;
         return undefined;
       });
 
@@ -145,8 +139,7 @@ describe("InstanceSettingsService", () => {
       // No DB, no env → result should be true (hardcoded)
       mockRepository.findOne.mockResolvedValue(null);
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
-          return undefined;
+        if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED") return undefined;
         return undefined;
       });
 

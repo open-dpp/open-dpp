@@ -18,18 +18,36 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div class="flex items-center gap-4 border border-primary bg-transparent rounded-full w-full py-1 px-2 justify-between">
+  <div
+    class="border-primary flex w-full items-center justify-between gap-4 rounded-full border bg-transparent px-2 py-1"
+  >
     <div class="g-1">
       <Button icon="pi pi-home" rounded text @click="emits('resetCursor')" />
-      <Button :disabled="!props.hasPrevious" icon="pi pi-chevron-left" rounded text @click="emits('previousPage')" />
+      <Button
+        :disabled="!props.hasPrevious"
+        icon="pi pi-chevron-left"
+        rounded
+        text
+        @click="emits('previousPage')"
+      />
     </div>
     <div class="text-color font-medium">
-      <span class="hidden sm:block">{{ t('pagination.footer', { from: currentPage.from + 1, to: currentPage.to + 1, count: currentPage.itemCount }) }}</span>
+      <span class="hidden sm:block">{{
+        t("pagination.footer", {
+          from: currentPage.from + 1,
+          to: currentPage.to + 1,
+          count: currentPage.itemCount,
+        })
+      }}</span>
     </div>
-    <Button icon="pi pi-chevron-right" rounded text :disabled="!props.hasNext" @click="emits('nextPage')" />
+    <Button
+      icon="pi pi-chevron-right"
+      rounded
+      text
+      :disabled="!props.hasNext"
+      @click="emits('nextPage')"
+    />
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

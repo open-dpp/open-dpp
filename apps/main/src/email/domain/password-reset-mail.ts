@@ -27,11 +27,6 @@ export class PasswordResetMail extends BaseEmail {
   }
 
   public static create(data: PasswordResetMailMailCreateProps) {
-    return new PasswordResetMail(
-      randomUUID(),
-      data.to,
-      data.subject,
-      data.templateProperties,
-    );
+    return new PasswordResetMail(randomUUID(), data.to, data.subject, data.templateProperties);
   }
 }

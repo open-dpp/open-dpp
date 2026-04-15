@@ -8,7 +8,8 @@ export const TraceabilityEventSchemaVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
-export type TraceabilityEventSchemaVersion_TYPE = (typeof TraceabilityEventSchemaVersion)[keyof typeof TraceabilityEventSchemaVersion];
+export type TraceabilityEventSchemaVersion_TYPE =
+  (typeof TraceabilityEventSchemaVersion)[keyof typeof TraceabilityEventSchemaVersion];
 
 /**
  * TraceabilityEvent schema
@@ -67,6 +68,4 @@ export class TraceabilityEventDocument extends Document {
   data: TraceabilityEvent;
 }
 
-export const DppEventSchema = SchemaFactory.createForClass(
-  TraceabilityEventDocument,
-);
+export const DppEventSchema = SchemaFactory.createForClass(TraceabilityEventDocument);

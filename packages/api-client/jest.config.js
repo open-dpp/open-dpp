@@ -1,13 +1,13 @@
 export default {
-  testRegex: '.*\\.spec\\.ts$',
+  testRegex: ".*\\.spec\\.ts$",
   transform: {
-    '^.+\\.(t|j)s$': [
-      '@swc/jest',
+    "^.+\\.(t|j)s$": [
+      "@swc/jest",
       {
         jsc: {
-          target: 'es2022',
+          target: "es2022",
           parser: {
-            syntax: 'typescript',
+            syntax: "typescript",
             decorators: true,
           },
           transform: {
@@ -15,16 +15,16 @@ export default {
           },
         },
         module: {
-          type: 'commonjs',
+          type: "commonjs",
         },
       },
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|until-async|uuid))(?:/|$))',
+    "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|until-async|uuid))(?:/|$))",
   ],
   moduleNameMapper: {
-    '^@open-dpp/(.*)$': '<rootDir>/../../packages/$1/src',
+    "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src",
   },
-  testEnvironment: 'node',
-}
+  testEnvironment: "node",
+};
