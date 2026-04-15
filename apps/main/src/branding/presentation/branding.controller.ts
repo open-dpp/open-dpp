@@ -1,7 +1,7 @@
 import type express from "express";
 import { readFile } from "node:fs/promises";
 import { Body, Controller, Get, Post, Res } from "@nestjs/common";
-import { BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
+import { type BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
