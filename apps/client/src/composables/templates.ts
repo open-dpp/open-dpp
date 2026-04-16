@@ -1,44 +1,39 @@
 import {
   type DppStatusModificationDto,
   DppStatusModificationMethodDto,
+  type FilterParamsDto,
   type LanguageTextDto,
   type PagingParamsDto,
+  Populates,
   type TemplatePaginationDto,
 } from "@open-dpp/dto";
 import type { Ref } from "vue";
-import type { IPagination, PagingResult } from "./pagination.ts";
-import { Populates } from "@open-dpp/dto";
-import { useConfirm } from "primevue/useconfirm";
 import { ref } from "vue";
+import type { IPagination, PagingResult } from "./pagination.ts";
+import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
-import { usePagination } from "./pagination.ts";
-
-export interface TemplateProps {
-  initialCursor?: string;
-  changeQueryParams: (params: Record<string, string | undefined>) => void;
-}
 
 export type CreateTemplateCallback = (data: { displayName: LanguageTextDto[] }) => Promise<void>;
 
-export interface ITemplateComposables extends IPagination {
+export interface ITemplateComposables {
   createTemplate: CreateTemplateCallback;
   templates: Ref<TemplatePaginationDto | undefined>;
   deleteTemplate: (id: string, onDeleted: () => Promise<void>) => Promise<void>;
   loading: Ref<boolean>;
-  init: () => Promise<void>;
+  fetchTemplates: (
+    pagingParams: PagingParamsDto,
+    filter: FilterParamsDto | undefined,
+  ) => Promise<PagingResult>;
   publish: (id: string) => Promise<void>;
   archive: (id: string) => Promise<void>;
   restore: (id: string) => Promise<void>;
 }
 
-export function useTemplates({
-  changeQueryParams,
-  initialCursor,
-}: TemplateProps): ITemplateComposables {
+export function useTemplates(): ITemplateComposables {
   const templates = ref<TemplatePaginationDto>();
   const loading = ref(false);
   const route = useRoute();
@@ -47,12 +42,16 @@ export function useTemplates({
   const errorHandlingStore = useErrorHandlingStore();
   const confirm = useConfirm();
 
-  const fetchTemplates = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
+  const fetchTemplates = async (
+    pagingParams: PagingParamsDto,
+    filter: FilterParamsDto | undefined = undefined,
+  ): Promise<PagingResult> => {
     loading.value = true;
     try {
       const response = await apiClient.dpp.templates.getAll({
-        ...pagingParams,
+        pagination: pagingParams,
         populate: [Populates.assetAdministrationShells],
+        ...(filter && { filter }),
       });
       templates.value = response.data;
       return response.data;
@@ -60,16 +59,6 @@ export function useTemplates({
       loading.value = false;
     }
   };
-  const pagination = usePagination({
-    initialCursor,
-    limit: 10,
-    fetchCallback: fetchTemplates,
-    changeQueryParams,
-  });
-
-  async function init() {
-    await pagination.nextPage();
-  }
 
   const createTemplate = async (data: { displayName: LanguageTextDto[] }) => {
     const response = await apiClient.dpp.templates.create({
@@ -141,14 +130,13 @@ export function useTemplates({
   }
 
   return {
+    fetchTemplates,
     createTemplate,
     deleteTemplate,
     templates,
     loading,
-    init,
     publish,
     archive,
     restore,
-    ...pagination,
   };
 }

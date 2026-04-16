@@ -183,12 +183,12 @@ describe("passports", () => {
     const p1 = passportsPlainFactory.build();
     const passportsResponse = { paging_metadata: { cursor: p1.id }, result: [p1] };
     mocks.fetchPassports.mockResolvedValueOnce({ data: passportsResponse });
-    await fetchPassports({ limit: 10, cursor: undefined });
+    await fetchPassports({ limit: 10, cursor: undefined }, { status: DppStatusDto.Archived });
 
     expect(mocks.fetchPassports).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: undefined,
+      pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
+      filter: { status: DppStatusDto.Archived },
     });
     expect(passports.value).toEqual(passportsResponse);
   });

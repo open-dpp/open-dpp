@@ -6,7 +6,6 @@ import {
   type TemplateDto,
 } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import type { TemplateProps } from "./templates.ts";
 import { Populates } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
@@ -15,6 +14,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useTemplates } from "./templates.ts";
+import { usePagination } from "./pagination.ts";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -68,11 +68,11 @@ describe("templates", () => {
 
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
-  function mountHarness(props: TemplateProps) {
+  function mountHarness() {
     const Harness = defineComponent({
       name: "use-templates-harness",
       setup() {
-        const api = useTemplates(props);
+        const api = useTemplates();
         return { api };
       },
       template: "<div></div>",
@@ -89,7 +89,7 @@ describe("templates", () => {
   const changeQueryParams = vi.fn();
 
   it("should create template", async () => {
-    const templatesStore = mountHarness({ changeQueryParams });
+    const templatesStore = mountHarness();
     const t1 = templatesPlainFactory.build();
 
     mocks.createTemplate.mockResolvedValueOnce({ data: t1, status: HTTPCode.CREATED });
@@ -110,7 +110,7 @@ describe("templates", () => {
   });
 
   it("should modify passport status", async () => {
-    const { publish, archive, restore } = mountHarness({ changeQueryParams });
+    const { publish, archive, restore } = mountHarness();
     const t1 = templatesPlainFactory.build();
 
     mocks.modifyStatus.mockResolvedValueOnce({
@@ -164,7 +164,7 @@ describe("templates", () => {
   });
 
   it("should delete template", async () => {
-    const { deleteTemplate } = mountHarness({ changeQueryParams });
+    const { deleteTemplate } = mountHarness();
 
     // From template
     mocks.deleteById.mockResolvedValueOnce({
@@ -182,51 +182,17 @@ describe("templates", () => {
     });
   });
 
-  it("should init templates", async () => {
-    const { templates, init } = mountHarness({ changeQueryParams });
+  it("should fetch templates", async () => {
+    const { templates, fetchTemplates } = mountHarness();
     const t1 = templatesPlainFactory.build();
     const templatesResponse = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templatesResponse });
-    await init();
+    await fetchTemplates({ limit: 10, cursor: undefined }, { status: DppStatusDto.Archived });
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: undefined,
+      pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
+      filter: { status: DppStatusDto.Archived },
     });
     expect(templates.value).toEqual(templatesResponse);
-  });
-
-  it("should fetch next or previous templates", async () => {
-    const { templates, init, nextPage, previousPage } = mountHarness({ changeQueryParams });
-    const templatesResponse: TemplateDto[] = [...Array.from({ length: 20 }).keys()].map((key) =>
-      templatesPlainFactory.build({ id: key.toFixed() }),
-    );
-    const firstBlock = {
-      paging_metadata: { cursor: templatesResponse[9]?.id },
-      result: templatesResponse.slice(0, 10),
-    };
-    const secondBlock = {
-      paging_metadata: { cursor: templatesResponse[19]?.id },
-      result: templatesResponse.slice(10, 20),
-    };
-
-    mocks.fetchTemplates.mockImplementation(({ cursor }: PagingParamsDto) =>
-      cursor === undefined ? { data: firstBlock } : { data: secondBlock },
-    );
-    await init();
-    await nextPage();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: templatesResponse[9]?.id,
-      populate: [Populates.assetAdministrationShells],
-    });
-    expect(templates.value).toEqual(secondBlock);
-    await previousPage();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: undefined,
-      populate: [Populates.assetAdministrationShells],
-    });
-    expect(templates.value).toEqual(firstBlock);
   });
 });

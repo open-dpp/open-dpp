@@ -5,6 +5,7 @@ import { activeOrganization } from "../../organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DppStatusDto } from "@open-dpp/dto";
+import { filterParams } from "./aas";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const passport1 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
@@ -20,6 +21,7 @@ export function passportsHandlers() {
     http.get(`${passportsEndpointUrl}`, async ({ request }) => {
       const errorResponse = checkQueryParameters(request, {
         limit: paginationParams.limit.toFixed(),
+        status: filterParams.status,
       });
 
       return (

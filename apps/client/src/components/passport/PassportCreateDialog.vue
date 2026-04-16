@@ -7,14 +7,19 @@ import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassports } from "../../composables/passports";
 import { useTemplates } from "../../composables/templates";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { usePagination } from "../../composables/pagination.ts";
 
 const route = useRoute();
 
 function changeQueryParams(_: Record<string, string | undefined>) {}
 
-const { templates, loading, init, hasNext, nextPage } = useTemplates({
-  changeQueryParams,
+const { templates, loading, fetchTemplates } = useTemplates();
+
+const { hasNext, nextPage } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  limit: 10,
+  fetchCallback: (pagingParams) => fetchTemplates(pagingParams, undefined),
+  changeQueryParams,
 });
 
 const { createPassport } = usePassports();
@@ -72,7 +77,7 @@ defineExpose({
 });
 
 onMounted(async () => {
-  await init();
+  await nextPage();
   if (templates.value) {
     templateList.value.push(
       ...templates.value.result.map((template) => ({

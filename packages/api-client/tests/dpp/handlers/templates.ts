@@ -6,6 +6,7 @@ import { activeOrganization } from "../../organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DppStatusDto } from "@open-dpp/dto";
+import { filterParams } from "./aas";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const template1 = templatesPlainFactory.build({ organizationId: activeOrganization.id });
@@ -21,6 +22,7 @@ export function templatesHandlers() {
     http.get(`${templatesEndpointUrl}`, async ({ request }) => {
       const errorResponse = checkQueryParameters(request, {
         limit: paginationParams.limit.toFixed(),
+        status: filterParams.status,
       });
 
       return (

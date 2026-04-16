@@ -8,6 +8,7 @@ import TemplateCreateDialog from "../../components/template/TemplateCreateDialog
 import { useExportImport } from "../../composables/export-import.ts";
 import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
+import { usePagination } from "../../composables/pagination.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -21,23 +22,23 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
+const { createTemplate, templates, loading, deleteTemplate, fetchTemplates } = useTemplates();
+
 const {
-  createTemplate,
   resetCursor,
   hasPrevious,
   hasNext,
   previousPage,
   nextPage,
   currentPage,
-  templates,
-  loading,
-  init,
   reloadCurrentPage,
-  deleteTemplate,
-} = useTemplates({
-  changeQueryParams,
+} = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  limit: 10,
+  fetchCallback: (pagingParams) => fetchTemplates(pagingParams, undefined),
+  changeQueryParams,
 });
+
 const { t } = useI18n();
 
 const createDialogVisible = ref(false);
@@ -65,7 +66,7 @@ async function onDeleteButtonClick(item: SharedDppDto) {
 }
 
 onMounted(async () => {
-  await init();
+  await nextPage();
 });
 </script>
 

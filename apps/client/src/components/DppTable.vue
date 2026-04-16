@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { SharedDppDto } from "@open-dpp/dto";
+import type { DppStatusDtoType, SharedDppDto } from "@open-dpp/dto";
 import type { Page } from "../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -11,6 +11,7 @@ import { useAasUtils } from "../composables/aas-utils.ts";
 
 import { convertLocaleToLanguage } from "../translations/i18n.ts";
 import TablePagination from "./pagination/TablePagination.vue";
+import DppStatusSelect from "./dpp/DppStatusSelect.vue";
 
 const props = defineProps<{
   title: string;
@@ -20,6 +21,8 @@ const props = defineProps<{
   hasPrevious: boolean;
   hasNext: boolean;
 }>();
+
+const selectedStatus = defineModel<DppStatusDtoType>("selectedStatus");
 
 const emits = defineEmits<{
   (e: "create"): Promise<void>;
@@ -56,7 +59,10 @@ async function editItem(item: SharedDppDto) {
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ props.title }}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-xl font-bold">{{ props.title }} with status</span>
+          <DppStatusSelect v-model="selectedStatus" />
+        </div>
         <div class="flex items-center gap-2">
           <slot name="headerActions">
             <Button :label="t('common.add')" @click="emits('create')" />

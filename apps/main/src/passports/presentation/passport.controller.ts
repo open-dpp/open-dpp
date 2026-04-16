@@ -147,7 +147,7 @@ export class PassportController
       organizationId,
       { pagination, ...(status ? { filter: { status } } : {}) },
     );
-    if (populate.includes(Populates.assetAdministrationShells)) {
+    if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },

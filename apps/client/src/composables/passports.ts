@@ -1,6 +1,7 @@
 import {
   type DppStatusModificationDto,
   DppStatusModificationMethodDto,
+  type FilterParamsDto,
   type LanguageTextDto,
   type PagingParamsDto,
   type PassportPaginationDto,
@@ -26,11 +27,15 @@ export function usePassports() {
   const errorHandlingStore = useErrorHandlingStore();
   const confirm = useConfirm();
 
-  const fetchPassports = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
+  const fetchPassports = async (
+    pagingParams: PagingParamsDto,
+    filter: FilterParamsDto | undefined = undefined,
+  ): Promise<PagingResult> => {
     loading.value = true;
     const response = await apiClient.dpp.passports.getAll({
-      ...pagingParams,
+      pagination: pagingParams,
       populate: [Populates.assetAdministrationShells],
+      ...(filter && { filter }),
     });
     passports.value = response.data;
     loading.value = false;

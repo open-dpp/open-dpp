@@ -12,6 +12,7 @@ import {
   aasModification,
   aasResponse,
   aasWrapperId,
+  filterParams,
   paginationParams,
   propertyToAdd,
   submodelCarbonFootprintElement0,
@@ -48,7 +49,10 @@ describe("apiClient", () => {
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should get all templates", async () => {
-      const response = await sdk.dpp.templates.getAll(paginationParams);
+      const response = await sdk.dpp.templates.getAll({
+        pagination: paginationParams,
+        filter: filterParams,
+      });
       expect(response.data.result).toEqual([template1, template2]);
     });
 
@@ -80,7 +84,10 @@ describe("apiClient", () => {
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should get all passports", async () => {
-      const response = await sdk.dpp.passports.getAll(paginationParams);
+      const response = await sdk.dpp.passports.getAll({
+        pagination: paginationParams,
+        filter: filterParams,
+      });
       expect(response.data.result).toEqual([passport1, passport2]);
     });
 

@@ -1,8 +1,13 @@
 <script lang="ts" setup>
-import type { SharedDppDto } from "@open-dpp/dto";
+import {
+  DppStatusDto,
+  type DppStatusDtoType,
+  type PagingParamsDto,
+  type SharedDppDto,
+} from "@open-dpp/dto";
 import { AxiosError } from "axios";
 import { useToast } from "primevue/usetoast";
-import { onMounted, useTemplateRef } from "vue";
+import { onMounted, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import DppTable from "../../components/DppTable.vue";
@@ -12,6 +17,7 @@ import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
+import DppStatusSelect from "../../components/dpp/DppStatusSelect.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -28,6 +34,11 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const { passports, loading, fetchPassports, deletePassport } = usePassports();
+const selectedStatus = ref<DppStatusDtoType>(DppStatusDto.Draft);
+
+function fetchCallback(pagingParams: PagingParamsDto) {
+  return fetchPassports(pagingParams, { status: selectedStatus.value });
+}
 
 const {
   hasPrevious,
@@ -40,7 +51,7 @@ const {
 } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
-  fetchCallback: fetchPassports,
+  fetchCallback,
   changeQueryParams,
 });
 
@@ -109,6 +120,13 @@ async function onDeleteButtonClick(item: SharedDppDto) {
   await deletePassport(item.id, reloadCurrentPage);
 }
 
+watch(
+  () => selectedStatus.value,
+  async () => {
+    await resetCursor();
+  },
+);
+
 onMounted(async () => {
   await nextPage();
 });
@@ -123,6 +141,7 @@ onMounted(async () => {
     :items="passports ? passports.result : []"
     :loading="loading"
     :title="t('passports.label', 2)"
+    v-model:selected-status="selectedStatus"
     @reset-cursor="resetCursor"
     @next-page="nextPage"
     @previous-page="previousPage"

@@ -1,6 +1,6 @@
 import type {
   DppStatusModificationDto,
-  PagingParamsDto,
+  GetAllParamsDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -8,6 +8,7 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
+import { parseGetAllParams } from "../parse-get-all-params";
 
 export class PassportNamespace {
   public aas!: AasNamespace;
@@ -17,9 +18,9 @@ export class PassportNamespace {
     this.aas = new AasNamespace(this.axiosInstance, "passports");
   }
 
-  public async getAll(params: PagingParamsDto) {
+  public async getAll(params: GetAllParamsDto) {
     return await this.axiosInstance.get<PassportPaginationDto>(this.passportEndpoint, {
-      params,
+      params: parseGetAllParams(params),
       paramsSerializer: {
         indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
       },

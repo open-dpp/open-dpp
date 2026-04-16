@@ -715,7 +715,7 @@ export class TemplateController
       { pagination, ...(status ? { filter: { status } } : {}) },
     );
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    if (populate.includes(Populates.assetAdministrationShells)) {
+    if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
