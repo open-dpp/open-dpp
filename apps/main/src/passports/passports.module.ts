@@ -4,6 +4,7 @@ import { AasModule } from "../aas/aas.module";
 
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
 import {
@@ -35,6 +36,7 @@ import { PassportController } from "./presentation/passport.controller";
     AasModule,
     AuthModule,
     OrganizationsModule,
+    PresentationConfigurationsModule,
   ],
   controllers: [PassportController],
   providers: [

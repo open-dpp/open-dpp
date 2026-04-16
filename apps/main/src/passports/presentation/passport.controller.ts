@@ -98,6 +98,7 @@ import { DbSessionOptions } from "../../database/query-options";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../../templates/domain/template";
@@ -122,6 +123,7 @@ export class PassportController
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @Get()
@@ -155,7 +157,9 @@ export class PassportController
     @RequestParam() req: express.Request,
     @Param("passportId") id: string,
   ): Promise<PassportDto> {
-    return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
+    const passport = await this.passportRepository.findOneOrFail(id);
+    await this.presentationConfigurationService.getOrCreateForPassport(passport);
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   @Get(":id/unique-product-identifier")
@@ -702,6 +706,7 @@ export class PassportController
     if (passport.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
       throw new ForbiddenException();
     }
+    await this.presentationConfigurationService.getOrCreateForPassport(passport);
     return passport;
   }
 
@@ -714,6 +719,7 @@ export class PassportController
     if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
       throw new ForbiddenException();
     }
+    await this.presentationConfigurationService.getOrCreateForTemplate(template);
     return template;
   }
 

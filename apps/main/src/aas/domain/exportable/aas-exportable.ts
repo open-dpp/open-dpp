@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { Template } from "../../../templates/domain/template";
 import { AasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
 import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/export-schemas/aas-export-v1.schema";
@@ -9,7 +10,7 @@ import { SubjectAttributes } from "../security/subject-attributes";
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
-  private readonly EXPORT_VERSION = AasExportVersion.v2_0;
+  private readonly EXPORT_VERSION = AasExportVersion.v3_0;
 
   private constructor(
     public readonly id: string,
@@ -18,6 +19,7 @@ export class AasExportable {
     public readonly environment: ExpandedEnvironment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public readonly presentationConfiguration: PresentationConfiguration | null = null,
   ) {}
 
   static create(data: {
@@ -27,6 +29,7 @@ export class AasExportable {
     environment: ExpandedEnvironment;
     createdAt?: Date;
     updatedAt?: Date;
+    presentationConfiguration?: PresentationConfiguration | null;
   }) {
     const now = DateTime.now();
 
@@ -37,10 +40,15 @@ export class AasExportable {
       data.environment,
       data.createdAt ?? now,
       data.updatedAt ?? now,
+      data.presentationConfiguration ?? null,
     );
   }
 
-  static createFromPassport(data: Passport, expandedEnvironment: ExpandedEnvironment) {
+  static createFromPassport(
+    data: Passport,
+    expandedEnvironment: ExpandedEnvironment,
+    presentationConfiguration: PresentationConfiguration | null = null,
+  ) {
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -48,16 +56,22 @@ export class AasExportable {
       environment: expandedEnvironment,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      presentationConfiguration,
     });
   }
 
-  static createFromTemplate(data: Template, expandedEnvironment: ExpandedEnvironment) {
+  static createFromTemplate(
+    data: Template,
+    expandedEnvironment: ExpandedEnvironment,
+    presentationConfiguration: PresentationConfiguration | null = null,
+  ) {
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
       environment: expandedEnvironment,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      presentationConfiguration,
     });
   }
 
@@ -80,6 +94,7 @@ export class AasExportable {
         : undefined;
 
     const envPlain = this.environment.toPlain({ ability });
+    const presentationConfigurationPlain = this.presentationConfiguration?.toPlain();
     return {
       id: this.id,
       environment: {
@@ -90,6 +105,14 @@ export class AasExportable {
       updatedAt: this.updatedAt.toISOString(),
       format: this.EXPORT_FORMAT,
       version: this.EXPORT_VERSION,
+      ...(presentationConfigurationPlain
+        ? {
+            presentationConfiguration: {
+              elementDesign: presentationConfigurationPlain.elementDesign,
+              defaultComponents: presentationConfigurationPlain.defaultComponents,
+            },
+          }
+        : {}),
     };
   }
 }

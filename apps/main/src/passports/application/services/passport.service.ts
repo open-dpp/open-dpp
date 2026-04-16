@@ -3,6 +3,7 @@ import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
 @Injectable()
@@ -12,6 +13,7 @@ export class PassportService {
   constructor(
     private readonly passportRepository: PassportRepository,
     private readonly environmentService: EnvironmentService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   async getExpandedProductPassport(passportId: string): Promise<AasExportable> {
@@ -19,6 +21,7 @@ export class PassportService {
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
+    await this.presentationConfigurationService.getOrCreateForPassport(passport);
 
     if (!passport.environment) {
       this.logger.warn(

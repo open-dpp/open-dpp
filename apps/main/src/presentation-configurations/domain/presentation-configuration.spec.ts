@@ -1,0 +1,94 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "@jest/globals";
+import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { PresentationConfiguration } from "./presentation-configuration";
+
+describe("PresentationConfiguration", () => {
+  const baseInput = () => ({
+    organizationId: "org-1",
+    referenceId: randomUUID(),
+    referenceType: PresentationReferenceType.Template,
+  });
+
+  it("creates with empty maps by default", () => {
+    const config = PresentationConfiguration.create(baseInput());
+
+    expect(config.id).toBeTruthy();
+    expect(config.organizationId).toBe("org-1");
+    expect(config.referenceType).toBe(PresentationReferenceType.Template);
+    expect(config.elementDesign.size).toBe(0);
+    expect(config.defaultComponents.size).toBe(0);
+    expect(config.createdAt).toBeInstanceOf(Date);
+    expect(config.updatedAt).toBeInstanceOf(Date);
+  });
+
+  it("round-trips through toPlain/fromPlain", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "submodel-1.prop-1": "TextField" },
+      defaultComponents: { [KeyTypes.Property]: "TextField" },
+    });
+
+    const plain = config.toPlain();
+    const restored = PresentationConfiguration.fromPlain(plain);
+
+    expect(restored.id).toBe(config.id);
+    expect(restored.organizationId).toBe(config.organizationId);
+    expect(restored.referenceId).toBe(config.referenceId);
+    expect(restored.referenceType).toBe(config.referenceType);
+    expect(Object.fromEntries(restored.elementDesign)).toEqual({
+      "submodel-1.prop-1": "TextField",
+    });
+    expect(Object.fromEntries(restored.defaultComponents)).toEqual({
+      [KeyTypes.Property]: "TextField",
+    });
+  });
+
+  it("withElementDesign produces a new instance and bumps updatedAt", async () => {
+    const config = PresentationConfiguration.create(baseInput());
+    await new Promise((resolve) => setTimeout(resolve, 2));
+
+    const next = config.withElementDesign("submodel-1.prop-1", "TextField");
+
+    expect(next).not.toBe(config);
+    expect(config.elementDesign.size).toBe(0);
+    expect(next.elementDesign.get("submodel-1.prop-1")).toBe("TextField");
+    expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(config.updatedAt.getTime());
+    expect(next.createdAt).toBe(config.createdAt);
+  });
+
+  it("withoutElementDesign returns the same instance when the key is absent", () => {
+    const config = PresentationConfiguration.create(baseInput());
+
+    expect(config.withoutElementDesign("missing")).toBe(config);
+  });
+
+  it("withoutElementDesign returns a new instance when the key is present", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "submodel-1.prop-1": "TextField" },
+    });
+
+    const next = config.withoutElementDesign("submodel-1.prop-1");
+
+    expect(next).not.toBe(config);
+    expect(next.elementDesign.size).toBe(0);
+    expect(config.elementDesign.size).toBe(1);
+  });
+
+  it("withDefaultComponent adds or overwrites per KeyType", () => {
+    const config = PresentationConfiguration.create(baseInput())
+      .withDefaultComponent(KeyTypes.Property, "TextField")
+      .withDefaultComponent(KeyTypes.File, "FileDownload")
+      .withDefaultComponent(KeyTypes.Property, "RichText");
+
+    expect(config.defaultComponents.get(KeyTypes.Property)).toBe("RichText");
+    expect(config.defaultComponents.get(KeyTypes.File)).toBe("FileDownload");
+  });
+
+  it("withoutDefaultComponent is a no-op when the key is absent", () => {
+    const config = PresentationConfiguration.create(baseInput());
+
+    expect(config.withoutDefaultComponent(KeyTypes.Property)).toBe(config);
+  });
+});
