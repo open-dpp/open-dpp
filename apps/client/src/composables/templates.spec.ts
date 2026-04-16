@@ -2,11 +2,9 @@ import {
   DppStatusDto,
   DppStatusModificationMethodDto,
   type LanguageTextDto,
-  type PagingParamsDto,
-  type TemplateDto,
+  Populates,
 } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import { Populates } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
@@ -14,7 +12,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useTemplates } from "./templates.ts";
-import { usePagination } from "./pagination.ts";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -85,8 +82,6 @@ describe("templates", () => {
       ...(wrapper.vm.api as ReturnType<typeof useTemplates>),
     };
   }
-
-  const changeQueryParams = vi.fn();
 
   it("should create template", async () => {
     const templatesStore = mountHarness();

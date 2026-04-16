@@ -461,8 +461,15 @@
     "fromTemplate": "Aus Produktpassvorlage",
     "selectTemplate": "Passvorlage auswählen"
   },
+  "status": {
+    "withStatus": "mit Status",
+    "selectStatus": "Status auswählen",
+    "draft": "Entwurf",
+    "published": "Veröffentlicht",
+    "archived": "Archiviert"
+  },
   "templates": {
-    "label": "Passvorlagen",
+    "label": "Passvorlage | Passvorlagen",
     "create": "Neue Passvorlage erstellen",
     "delete": "Soll die Passvorlage wirklich gelöscht werden? Damit ist diese nicht mehr verfügbar.",
     "errorDelete": "Löschen der Passvorlage fehlgeschlagen",

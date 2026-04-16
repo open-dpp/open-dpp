@@ -440,6 +440,13 @@
     "fromTemplate": "From template",
     "selectTemplate": "Select template"
   },
+  "status": {
+    "withStatus": "with status",
+    "selectStatus": "Select status",
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived"
+  },
   "templates": {
     "label": "Passport templates",
     "create": "Create passport template",

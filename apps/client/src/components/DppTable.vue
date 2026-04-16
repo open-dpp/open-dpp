@@ -4,7 +4,7 @@ import type { Page } from "../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../composables/aas-utils.ts";
@@ -21,6 +21,8 @@ const props = defineProps<{
   hasPrevious: boolean;
   hasNext: boolean;
 }>();
+const route = useRoute();
+const router = useRouter();
 
 const selectedStatus = defineModel<DppStatusDtoType>("selectedStatus");
 
@@ -34,8 +36,6 @@ const emits = defineEmits<{
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 
-const route = useRoute();
-const router = useRouter();
 const { t, locale } = useI18n();
 const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
 const { parseDisplayNameFromEnvironment } = useAasUtils({
@@ -60,7 +60,7 @@ async function editItem(item: SharedDppDto) {
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <span class="text-xl font-bold">{{ props.title }} with status</span>
+          <span class="text-xl font-bold">{{ `${props.title} ${t("status.withStatus")}` }} </span>
           <DppStatusSelect v-model="selectedStatus" />
         </div>
         <div class="flex items-center gap-2">

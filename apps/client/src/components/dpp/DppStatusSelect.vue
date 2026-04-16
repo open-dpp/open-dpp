@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { DppStatusDto, type DppStatusDtoType } from "@open-dpp/dto";
+import { useI18n } from "vue-i18n";
 
 const model = defineModel<DppStatusDtoType>();
-
-const options = Object.entries(DppStatusDto).map(([key, value]) => ({ key, value }));
+const { t } = useI18n();
+const options = Object.entries(DppStatusDto).map(([key, value]) => ({
+  key,
+  value: t(`status.${value.toLowerCase()}`),
+}));
 </script>
 
 <template>
@@ -13,6 +17,6 @@ const options = Object.entries(DppStatusDto).map(([key, value]) => ({ key, value
     option-label="value"
     option-value="key"
     placeholder="Select a Status"
-    class="w-40"
+    class="w-42"
   />
 </template>

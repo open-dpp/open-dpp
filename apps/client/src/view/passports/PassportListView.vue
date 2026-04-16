@@ -18,6 +18,7 @@ import { usePassports } from "../../composables/passports";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import DppStatusSelect from "../../components/dpp/DppStatusSelect.vue";
+import { useDppFilter } from "../../composables/dpp-filter.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -34,10 +35,11 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const { passports, loading, fetchPassports, deletePassport } = usePassports();
-const selectedStatus = ref<DppStatusDtoType>(DppStatusDto.Draft);
+
+const { status, changeStatus } = useDppFilter();
 
 function fetchCallback(pagingParams: PagingParamsDto) {
-  return fetchPassports(pagingParams, { status: selectedStatus.value });
+  return fetchPassports(pagingParams, { status: status.value });
 }
 
 const {
@@ -120,12 +122,10 @@ async function onDeleteButtonClick(item: SharedDppDto) {
   await deletePassport(item.id, reloadCurrentPage);
 }
 
-watch(
-  () => selectedStatus.value,
-  async () => {
-    await resetCursor();
-  },
-);
+async function onSelectedStatusChange(newStatus: DppStatusDtoType | undefined) {
+  await changeStatus(newStatus);
+  await resetCursor();
+}
 
 onMounted(async () => {
   await nextPage();
@@ -141,10 +141,11 @@ onMounted(async () => {
     :items="passports ? passports.result : []"
     :loading="loading"
     :title="t('passports.label', 2)"
-    v-model:selected-status="selectedStatus"
     @reset-cursor="resetCursor"
     @next-page="nextPage"
     @previous-page="previousPage"
+    :selected-status="status"
+    @update:selected-status="onSelectedStatusChange"
   >
     <template #headerActions>
       <Button :label="t('common.add')" @click="newPassport" />
