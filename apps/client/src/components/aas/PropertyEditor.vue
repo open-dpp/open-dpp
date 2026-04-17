@@ -27,14 +27,12 @@ const permissionsFormRef = ref<{
 
 export type FormValues = z.infer<typeof formSchema>;
 
-const { handleSubmit, meta, submitCount, errors } = useForm<FormValues>({
+const { handleSubmit, submitCount, errors } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: { ...props.data },
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
