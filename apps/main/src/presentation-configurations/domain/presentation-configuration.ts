@@ -158,10 +158,7 @@ function toStringMap(
 }
 
 function toKeyTypesMap(
-  input:
-    | ReadonlyMap<KeyTypesType, string>
-    | Partial<Record<KeyTypesType, string>>
-    | undefined,
+  input: ReadonlyMap<KeyTypesType, string> | Partial<Record<KeyTypesType, string>> | undefined,
 ): ReadonlyMap<KeyTypesType, string> {
   if (!input) return new Map();
   if (input instanceof Map) return new Map(input);

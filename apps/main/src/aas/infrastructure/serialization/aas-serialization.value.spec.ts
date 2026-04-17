@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
-import { DataTypeDef } from "@open-dpp/dto";
+import { DataTypeDef, PresentationReferenceType } from "@open-dpp/dto";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
+import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { Environment } from "../../domain/environment";
 import { ExpandedEnvironment } from "../../domain/expanded-environment";
@@ -45,6 +48,21 @@ describe("export submodel value", () => {
           provide: MediaService,
           useValue: { findByIds: jest.fn<() => Promise<string[]>>().mockResolvedValue([]) },
         },
+        {
+          provide: PresentationConfigurationService,
+          useValue: {
+            getOrCreateForPassport: jest
+              .fn<(passport: Passport) => Promise<PresentationConfiguration>>()
+              .mockImplementation(async (passport: Passport) =>
+                PresentationConfiguration.create({
+                  organizationId: passport.organizationId,
+                  referenceId: passport.id,
+                  referenceType: PresentationReferenceType.Passport,
+                }),
+              ),
+          },
+        },
+        { provide: PresentationConfigurationRepository, useValue: {} },
       ],
     }).compile();
 

@@ -124,10 +124,7 @@ export class AasSerializationService {
         async (options) => {
           await savePassport(passport, options);
           if (presentationConfiguration) {
-            await this.presentationConfigurationRepository.save(
-              presentationConfiguration,
-              options,
-            );
+            await this.presentationConfigurationRepository.save(presentationConfiguration, options);
           }
         },
       );
@@ -180,10 +177,7 @@ export class AasSerializationService {
         async (options) => {
           await saveTemplate(template, options);
           if (presentationConfiguration) {
-            await this.presentationConfigurationRepository.save(
-              presentationConfiguration,
-              options,
-            );
+            await this.presentationConfigurationRepository.save(presentationConfiguration, options);
           }
         },
       );

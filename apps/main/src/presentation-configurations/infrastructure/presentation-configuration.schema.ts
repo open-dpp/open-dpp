@@ -50,8 +50,5 @@ export const PresentationConfigurationSchema = SchemaFactory.createForClass(
   PresentationConfigurationDoc,
 );
 
-PresentationConfigurationSchema.index(
-  { referenceType: 1, referenceId: 1 },
-  { unique: true },
-);
+PresentationConfigurationSchema.index({ referenceType: 1, referenceId: 1 }, { unique: true });
 PresentationConfigurationSchema.index({ organizationId: 1, createdAt: -1, _id: -1 });
