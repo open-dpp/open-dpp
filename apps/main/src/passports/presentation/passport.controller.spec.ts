@@ -21,6 +21,7 @@ import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorat
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
@@ -40,7 +41,7 @@ describe("passportController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [PassportsModule, AasModule],
+      imports: [PassportsModule, AasModule, PresentationConfigurationsModule],
       providers: [
         PassportRepository,
         TemplateRepository,
@@ -408,7 +409,7 @@ describe("passportController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
-    expect(response.body.version).toEqual(AasExportVersion.v2_0);
+    expect(response.body.version).toEqual(AasExportVersion.v3_0);
     expect(response.body.id).toBeDefined();
     expect(response.body.environment).toBeDefined();
     expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
@@ -492,7 +493,7 @@ describe("passportController", () => {
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
-    expect(exportResponse.body.version).toEqual(AasExportVersion.v2_0);
+    expect(exportResponse.body.version).toEqual(AasExportVersion.v3_0);
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);

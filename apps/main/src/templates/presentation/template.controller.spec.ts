@@ -23,6 +23,7 @@ import { MemberRole } from "../../identity/organizations/domain/member-role.enum
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
@@ -34,7 +35,7 @@ describe("templateController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [TemplatesModule],
+      imports: [TemplatesModule, PresentationConfigurationsModule],
       providers: [TemplateRepository, AasSerializationService],
       controllers: [TemplateController],
     },
@@ -259,7 +260,7 @@ describe("templateController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
-    expect(response.body.version).toEqual(AasExportVersion.v2_0);
+    expect(response.body.version).toEqual(AasExportVersion.v3_0);
     expect(response.body.id).toBeDefined();
     expect(response.body.environment).toBeDefined();
     expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
@@ -333,7 +334,7 @@ describe("templateController", () => {
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
-    expect(exportResponse.body.version).toEqual(AasExportVersion.v2_0);
+    expect(exportResponse.body.version).toEqual(AasExportVersion.v3_0);
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);

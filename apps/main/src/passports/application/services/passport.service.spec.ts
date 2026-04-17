@@ -10,6 +10,7 @@ import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas
 import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
+import { PresentationConfigurationsModule } from "../../../presentation-configurations/presentation-configurations.module";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
@@ -37,6 +38,7 @@ describe("passportService", () => {
         AasModule,
         UsersModule,
         OrganizationsModule,
+        PresentationConfigurationsModule,
       ],
       providers: [PassportService, PassportRepository],
     }).compile();
