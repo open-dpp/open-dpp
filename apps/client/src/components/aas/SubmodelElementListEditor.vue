@@ -218,7 +218,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                 })
               "
             />
-            <span>ö{{ col.label }}</span>
+            <span>{{ col.label }}</span>
           </div>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
