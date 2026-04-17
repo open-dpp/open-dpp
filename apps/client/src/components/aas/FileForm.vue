@@ -1,30 +1,31 @@
 <script setup lang="ts">
 import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { useField } from "vee-validate";
-import { computed } from "vue";
+import { computed, useId } from "vue";
 import { useI18n } from "vue-i18n";
 import FileField from "./form/FileField.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = withDefaults(
-  defineProps<{
-    id?: string;
-    showErrors: boolean;
-    editorMode: EditorModeType;
-    disabled?: boolean;
-  }>(),
-  {
-    id: "file-value",
-  },
-);
+const props = defineProps<{
+  id?: string;
+  showErrors: boolean;
+  editorMode: EditorModeType;
+  disabled?: boolean;
+}>();
+
+// Vue 3.5+ provides useId() for SSR-safe unique ids per component instance.
+// Parents may still pass an explicit `id` to override when they need a
+// predictable handle (e.g. for tests or external labelling).
+const autoId = useId();
+const effectiveId = computed(() => props.id ?? autoId);
 
 const { value, errorMessage } = useField<string | undefined>("value");
 const { t } = useI18n();
 
 const { value: contentType } = useField<string | undefined>("contentType");
 
-const labelId = computed(() => `${props.id}-label`);
-const errorMessageId = computed(() => `${props.id}-error`);
+const labelId = computed(() => `${effectiveId.value}-label`);
+const errorMessageId = computed(() => `${effectiveId.value}-error`);
 const describedBy = computed(() => (errorMessage.value ? errorMessageId.value : undefined));
 </script>
 
