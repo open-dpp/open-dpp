@@ -4,13 +4,12 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "../../organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
+import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { filterParams } from "./aas";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const passport1 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
 export const passport2 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
-export const passportFromtemplate = passportsPlainFactory.build({
-  organizationId: activeOrganization.id,
-});
 
 export function passportsHandlers() {
   const passportsEndpointUrl = `${baseURL}/passports`;
@@ -22,6 +21,7 @@ export function passportsHandlers() {
     http.get(`${passportsEndpointUrl}`, async ({ request }) => {
       const errorResponse = checkQueryParameters(request, {
         limit: paginationParams.limit.toFixed(),
+        status: filterParams.status,
       });
 
       return (
@@ -37,6 +37,21 @@ export function passportsHandlers() {
             status: 200,
           },
         )
+      );
+    }),
+    http.delete(`${passportsEndpointUrl}/${passport1.id}`, async () => {
+      return HttpResponse.json(undefined, { status: 204 });
+    }),
+    http.put(`${passportsEndpointUrl}/${passport1.id}/status`, async () => {
+      return HttpResponse.json(
+        {
+          passport1,
+          lastStatusChange: {
+            ...passport1.lastStatusChange,
+            currentStatus: DigitalProductDocumentStatusDto.Published,
+          },
+        },
+        { status: 200 },
       );
     }),
   ];

@@ -1,35 +1,21 @@
 <script lang="ts" setup>
-import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/16/solid";
 import { toCanvas } from "qrcode";
 import { onMounted, ref } from "vue";
-import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
-  content: string;
   link: string;
+  size: number;
 }>();
-const { t } = useI18n();
 const canvas = ref<HTMLCanvasElement>();
 onMounted(async () => {
-  toCanvas(canvas.value, props.content, () => {});
+  if (!canvas.value) return;
+
+  canvas.value.width = props.size;
+  canvas.value.height = props.size;
+  toCanvas(canvas.value, props.link, { width: props.size, margin: 1 }, () => {});
 });
 </script>
 
 <template>
-  <section class="pt-5">
-    <div class="max-w-xl divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm">
-      <div class="px-4 py-5 sm:px-6">
-        {{ t("common.presentationMode") }}
-      </div>
-      <div class="px-4 py-5 sm:p-6">
-        <canvas ref="canvas" class="mx-auto h-12 w-12 text-gray-400" />
-      </div>
-      <div class="flex flex-row gap-1 px-4 py-4 text-blue-600 sm:px-6">
-        <router-link :to="props.link" class="mt-2 text-sm font-semibold">
-          {{ props.link }}
-        </router-link>
-        <ArrowTopRightOnSquareIcon class="mt-auto w-5" />
-      </div>
-    </div>
-  </section>
+  <canvas ref="canvas" class="block w-full text-gray-400" />
 </template>

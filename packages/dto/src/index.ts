@@ -5,6 +5,9 @@ export * from "./aas/common/basic-json-schema";
 export * from "./aas/common/key-json-schema";
 export * from "./aas/common/language-text-json-schema";
 
+export * from "./shared/get-all-params.dto";
+export * from "./shared/filter.dto";
+
 export * from "./aas/common/qualifier-json-schema";
 export * from "./aas/common/reference-json-schema";
 export * from "./aas/concept-description-json-schema";

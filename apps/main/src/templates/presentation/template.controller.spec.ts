@@ -2,15 +2,17 @@ import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
 
-import { AssetKind } from "@open-dpp/dto";
+import { AssetKind, DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
   buildRichExportPayload,
 } from "../../../test/export-payload.fixtures";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
 import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
@@ -28,6 +30,10 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplatesModule } from "../templates.module";
 import { TemplateController } from "./template.controller";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 
 describe("templateController", () => {
   const basePath = "/templates";
@@ -50,6 +56,7 @@ describe("templateController", () => {
     orgId?: string,
     createdAt?: Date,
     updatedAt?: Date,
+    archived?: boolean,
   ): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
     const template = Template.create({
@@ -62,6 +69,12 @@ describe("templateController", () => {
       }),
       createdAt,
       updatedAt,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: archived
+          ? DigitalProductDocumentStatus.Archived
+          : DigitalProductDocumentStatus.Draft,
+        previousStatus: archived ? DigitalProductDocumentStatus.Draft : undefined,
+      }),
     });
     return ctx.getRepositories().dppIdentifiableRepository.save(template);
   }
@@ -167,7 +180,7 @@ describe("templateController", () => {
     const { aas } = ctx.getAasObjects();
 
     const t1 = await createTemplate(org.id, date1, date1);
-    const t2 = await createTemplate(org.id, date2, date2);
+    const t2 = await createTemplate(org.id, date2, date2, true);
     const t3 = await createTemplate(org.id, date3, date3);
 
     let response = await request(app.getHttpServer())
@@ -209,6 +222,23 @@ describe("templateController", () => {
         updatedAt: t.updatedAt.toISOString(),
       })),
     );
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}?status=Archived`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [t2].map((p) => ({
+        ...p.toPlain(),
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
   });
 
   it(`/POST a template`, async () => {
@@ -239,6 +269,10 @@ describe("templateController", () => {
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+        previousStatus: null,
+      },
     });
     const foundAas = await ctx
       .getRepositories()
@@ -337,6 +371,90 @@ describe("templateController", () => {
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
+  });
+
+  it("/PUT template status", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository } = ctx.getRepositories();
+
+    const template = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await dppIdentifiableRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .put(`${basePath}/${template.id}/status`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        method: DigitalProductDocumentStatusModificationMethodDto.Publish,
+      });
+    expect(response.status).toEqual(200);
+    const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
+    expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
+  it("/DELETE template", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const aas = AssetAdministrationShell.create({});
+    const submodel = Submodel.create({ idShort: "testSubmodel" });
+    aas.addSubmodel(submodel);
+    const { aasRepository, dppIdentifiableRepository, submodelRepository } = ctx.getRepositories();
+    await aasRepository.save(aas);
+    await submodelRepository.save(submodel);
+
+    const template = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: [submodel.id],
+        conceptDescriptions: [],
+      }),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await dppIdentifiableRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${template.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(response.status).toEqual(204);
+    expect(await aasRepository.findOne(aas.id)).toBeUndefined();
+    expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
+    expect(await dppIdentifiableRepository.findOne(template.id)).toBeUndefined();
+
+    const publishedTemplate = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
+    });
+
+    await dppIdentifiableRepository.save(publishedTemplate);
+
+    const responseForPublishedTemplate = await request(app.getHttpServer())
+      .delete(`${basePath}/${publishedTemplate.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(responseForPublishedTemplate.status).toEqual(403);
+    expect(responseForPublishedTemplate.body.message).toEqual(
+      'Only templates with the status "Draft" can be deleted',
+    );
   });
 
   it("/POST import and /GET export template with all submodel element types", async () => {

@@ -1,24 +1,30 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Model, Model as MongooseModel } from "mongoose";
+
 import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 
 import { generateMongoConfig } from "../../database/config";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "./passport.repository";
-import { PassportDoc, PassportSchema } from "./passport.schema";
+import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
 
 describe("passportRepository", () => {
   let passportRepository: PassportRepository;
-
+  let PassportDocument: MongooseModel<PassportDoc>;
   let module: TestingModule;
 
   beforeAll(async () => {
@@ -44,6 +50,7 @@ describe("passportRepository", () => {
     }).compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
+    PassportDocument = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
   });
 
   it("should save a passport", async () => {
@@ -55,10 +62,98 @@ describe("passportRepository", () => {
         submodels: [randomUUID()],
         conceptDescriptions: [randomUUID()],
       }),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
     });
     await passportRepository.save(passport);
     const foundAas = await passportRepository.findOneOrFail(passport.id);
     expect(foundAas).toEqual(passport);
+  });
+
+  it(`should load and migrate passport from version 1.0.0 to 1.1.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new PassportDocument({
+      _id: id,
+      _schemaVersion: PassportDocVersion.v1_0_0,
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundPassport = await passportRepository.findOneOrFail(id);
+    expect(foundPassport).toEqual(
+      Passport.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        templateId: legacyDoc.templateId,
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({}),
+      }),
+    );
+  });
+
+  it("should delete a passport", async () => {
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [randomUUID()],
+        conceptDescriptions: [randomUUID()],
+      }),
+    });
+    await passportRepository.save(passport);
+    await passportRepository.deleteById(passport.id);
+    const foundAas = await passportRepository.findOne(passport.id);
+    expect(foundAas).toBeUndefined();
+  });
+
+  it("should filter passports of version 1.0.0 as draft", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const createLegacyDoc = async (date: Date) => {
+      const legacyDoc = new PassportDocument({
+        _id: randomUUID(),
+        _schemaVersion: PassportDocVersion.v1_0_0,
+        organizationId,
+        templateId: randomUUID(),
+        environment: {
+          submodels: [],
+          assetAdministrationShells: [],
+          conceptDescriptions: [],
+        },
+        createdAt: date,
+        updatedAt: date,
+      });
+      return await legacyDoc.save({ validateBeforeSave: false });
+    };
+
+    const legacyDoc1 = await createLegacyDoc(date1);
+    const legacyDoc2 = await createLegacyDoc(date2);
+    let foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DigitalProductDocumentStatus.Draft,
+      },
+    });
+    expect(foundPassports.items.map((p) => p.id)).toEqual([legacyDoc2.id, legacyDoc1.id]);
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DigitalProductDocumentStatus.Published,
+      },
+    });
+    expect(foundPassports.items.map((p) => p.id)).toEqual([]);
   });
 
   it("should find all passports of organization", async () => {
@@ -69,6 +164,7 @@ describe("passportRepository", () => {
     const date2 = new Date("2022-02-01T00:00:00.000Z");
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-02T00:00:00.000Z");
+    const date5 = new Date("2022-03-03T00:00:00.000Z");
 
     const p1 = Passport.create({
       id: randomUUID(),
@@ -106,27 +202,60 @@ describe("passportRepository", () => {
       createdAt: date4,
     });
 
+    const p5 = Passport.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+      }),
+      createdAt: date5,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      }),
+    });
+
     await passportRepository.save(p1);
     await passportRepository.save(p2OtherOrganization);
     await passportRepository.save(p3);
     await passportRepository.save(p4);
+    await passportRepository.save(p5);
 
-    let foundTemplates = await passportRepository.findAllByOrganizationId(organizationId);
+    let foundPassports = await passportRepository.findAllByOrganizationId(organizationId);
 
-    expect(foundTemplates).toEqual(
+    expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({
           cursor: encodeCursor(p1.createdAt.toISOString(), p1.id),
           limit: 100,
         }),
-        items: [p4, p3, p1],
+        items: [p5, p4, p3, p1],
       }),
     );
+
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: DigitalProductDocumentStatus.Archived,
+      },
+    });
+
+    expect(foundPassports).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(p5.createdAt.toISOString(), p5.id),
+          limit: 100,
+        }),
+        items: [p5],
+      }),
+    );
+
     let pagination = Pagination.create({
       cursor: encodeCursor(p4.createdAt.toISOString(), p4.id),
     });
-    foundTemplates = await passportRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+    });
+    expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
         items: [p3, p1],
@@ -136,8 +265,10 @@ describe("passportRepository", () => {
       cursor: encodeCursor(p4.createdAt.toISOString(), p4.id),
       limit: 1,
     });
-    foundTemplates = await passportRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(
+    foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination,
+    });
+    expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({
           cursor: encodeCursor(p3.createdAt.toISOString(), p3.id),

@@ -1,25 +1,30 @@
 <script lang="ts" setup>
-import type { SharedDppDto } from "@open-dpp/dto";
-import type { Page } from "../composables/pagination.ts";
+import type { DigitalProductDocumentStatusDtoType, DigitalProductDocumentDto } from "@open-dpp/dto";
+import type { Page } from "../../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import { useAasUtils } from "../composables/aas-utils.ts";
+import { useAasUtils } from "../../composables/aas-utils.ts";
 
-import { convertLocaleToLanguage } from "../translations/i18n.ts";
-import TablePagination from "./pagination/TablePagination.vue";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import TablePagination from "../pagination/TablePagination.vue";
+import DigitalProductDocumentStatusSelect from "./DigitalProductDocumentStatusSelect.vue";
 
 const props = defineProps<{
   title: string;
-  items: SharedDppDto[];
+  items: DigitalProductDocumentDto[];
   loading: boolean;
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
 }>();
+const route = useRoute();
+const router = useRouter();
+
+const selectedStatus = defineModel<DigitalProductDocumentStatusDtoType>("selectedStatus");
 
 const emits = defineEmits<{
   (e: "create"): Promise<void>;
@@ -31,8 +36,6 @@ const emits = defineEmits<{
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 
-const route = useRoute();
-const router = useRouter();
 const { t, locale } = useI18n();
 const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
 const { parseDisplayNameFromEnvironment } = useAasUtils({
@@ -40,7 +43,7 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   selectedLanguage: selectedLanguage.value,
 });
 
-async function editItem(item: SharedDppDto) {
+async function editItem(item: DigitalProductDocumentDto) {
   await router.push(`${route.path}/${item.id}`);
 }
 </script>
@@ -56,7 +59,10 @@ async function editItem(item: SharedDppDto) {
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ props.title }}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-xl font-bold">{{ `${props.title} ${t("status.withStatus")}` }} </span>
+          <DigitalProductDocumentStatusSelect v-model="selectedStatus" />
+        </div>
         <div class="flex items-center gap-2">
           <slot name="headerActions">
             <Button :label="t('common.add')" @click="emits('create')" />
