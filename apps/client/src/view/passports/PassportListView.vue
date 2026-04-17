@@ -16,8 +16,10 @@ import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
-import { useDppFilter } from "../../composables/dpp-filter.ts";
+import { useDigitalProductDocumentFilter } from "../../composables/digital-product-document-filter.ts";
 import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
+import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
+import { DigitalProductDocumentType } from "../../lib/digital-product-document.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -33,10 +35,13 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
-const { passports, loading, fetchPassports, deletePassport, publish, archive, restore } =
-  usePassports();
+const { passports, loading, fetchPassports } = usePassports();
 
-const { status, changeStatus } = useDppFilter();
+const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
+  DigitalProductDocumentType.Passport,
+);
+
+const { status, changeStatus } = useDigitalProductDocumentFilter();
 
 function fetchCallback(pagingParams: PagingParamsDto) {
   return fetchPassports(pagingParams, { status: status.value });
@@ -123,7 +128,7 @@ async function forwardToPresentationChat(item: DigitalProductDocumentDto) {
 }
 
 async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
-  await deletePassport(item.id, reloadCurrentPage);
+  await deleteDPD(item.id, reloadCurrentPage);
 }
 
 async function onPublishButtonClicked(item: DigitalProductDocumentDto) {

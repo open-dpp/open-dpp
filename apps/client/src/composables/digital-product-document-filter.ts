@@ -6,7 +6,7 @@ import {
   type DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
 
-export function useDppFilter() {
+export function useDigitalProductDocumentFilter() {
   const route = useRoute();
   const router = useRouter();
   const status = ref<DigitalProductDocumentStatusDtoType>(

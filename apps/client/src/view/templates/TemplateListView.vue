@@ -13,8 +13,10 @@ import { useExportImport } from "../../composables/export-import.ts";
 import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
 import { usePagination } from "../../composables/pagination.ts";
-import { useDppFilter } from "../../composables/dpp-filter.ts";
+import { useDigitalProductDocumentFilter } from "../../composables/digital-product-document-filter.ts";
 import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
+import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
+import { DigitalProductDocumentType } from "../../lib/digital-product-document.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -28,8 +30,13 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
-const { createTemplate, templates, loading, deleteTemplate, fetchTemplates } = useTemplates();
-const { status, changeStatus } = useDppFilter();
+const { createTemplate, templates, loading, fetchTemplates } = useTemplates();
+
+const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
+  DigitalProductDocumentType.Template,
+);
+
+const { status, changeStatus } = useDigitalProductDocumentFilter();
 
 function fetchCallback(pagingParams: PagingParamsDto) {
   return fetchTemplates(pagingParams, { status: status.value });
@@ -71,8 +78,23 @@ const {
   importErrorKey: "common.templateImportFailed",
 });
 
-async function onDeleteButtonClick(item: DigitalProductDocumentDto) {
-  await deleteTemplate(item.id, reloadCurrentPage);
+async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
+  await deleteDPD(item.id, reloadCurrentPage);
+}
+
+async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  await publish(item.id);
+  await reloadCurrentPage();
+}
+
+async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {
+  await archive(item.id);
+  await reloadCurrentPage();
+}
+
+async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
+  await restore(item.id);
+  await reloadCurrentPage();
 }
 
 async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
@@ -130,7 +152,10 @@ onMounted(async () => {
       />
       <DigitalProductDocumentStatusChangeMenu
         :item="passport"
-        @on-delete-clicked="onDeleteButtonClick"
+        @on-delete-clicked="onDeleteButtonClicked"
+        @on-publish-clicked="onPublishButtonClicked"
+        @on-archive-clicked="onArchiveButtonClicked"
+        @on-restore-clicked="onRestoreButtonClicked"
       />
     </template>
   </DigitalProductDocumentTable>

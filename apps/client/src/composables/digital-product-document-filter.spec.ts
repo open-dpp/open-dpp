@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { defineComponent } from "vue";
 import { createPinia, setActivePinia } from "pinia";
-import { useDppFilter } from "./dpp-filter.ts";
+import { useDigitalProductDocumentFilter } from "./digital-product-document-filter.ts";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 
 const mocks = vi.hoisted(() => ({
@@ -24,7 +24,7 @@ describe("useDppFilter", () => {
     const Harness = defineComponent({
       name: "MediaFileCollectionHarness",
       setup() {
-        const api = useDppFilter();
+        const api = useDigitalProductDocumentFilter();
         return { api };
       },
       template: "<div />",
@@ -34,7 +34,7 @@ describe("useDppFilter", () => {
     mountedWrappers.push(wrapper);
     return {
       wrapper,
-      ...(wrapper.vm.api as ReturnType<typeof useDppFilter>),
+      ...(wrapper.vm.api as ReturnType<typeof useDigitalProductDocumentFilter>),
     };
   }
 

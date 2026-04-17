@@ -1,30 +1,71 @@
 <script setup lang="ts">
 import { DigitalProductDocumentStatusDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import { AasEditMode, type AasEditModeType } from "../../lib/aas-editor.ts";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import {
+  DigitalProductDocumentType,
+  type DigitalProductDocumentTypeType,
+} from "../../lib/digital-product-document.ts";
+import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
+import { useRouterUtils } from "../../composables/router-utils.ts";
 
 const { t } = useI18n();
 
 const props = defineProps<{
-  dppItem: DigitalProductDocumentDto | null;
-  editorMode: AasEditModeType;
+  id: string;
+  type: DigitalProductDocumentTypeType;
 }>();
+const { goToParent } = useRouterUtils();
+const item = ref<DigitalProductDocumentDto>();
+const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 
-const emits = defineEmits<{
-  (e: "onDeleteClicked", item: DigitalProductDocumentDto): void;
-  (e: "onPublishClicked", item: DigitalProductDocumentDto): void;
-  (e: "onArchiveClicked", item: DigitalProductDocumentDto): void;
-  (e: "onRestoreClicked", item: DigitalProductDocumentDto): void;
-}>();
+async function fetchDPD(id: string) {
+  if (id) {
+    item.value = await fetchById(id);
+  }
+}
+
+watch(
+  () => props.id,
+  async (newValue) => {
+    if (newValue) {
+      await fetchDPD(newValue);
+    } else {
+      item.value = undefined;
+    }
+  },
+  { immediate: true },
+);
+
 const qrCodeDialogVisible = ref<boolean>(false);
 
-const status = computed(() => props.dppItem?.lastStatusChange.currentStatus);
+async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
+  await deleteDPD(item.id, async () => {
+    await goToParent();
+  });
+}
+
+async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {
+  await archive(item.id);
+  await fetchDPD(item.id);
+}
+
+async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
+  await restore(item.id);
+  await fetchDPD(item.id);
+}
+
+async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  await publish(item.id);
+  await fetchDPD(item.id);
+}
+
+const status = computed(() => item.value?.lastStatusChange.currentStatus);
 </script>
 
 <template>
   <div class="card">
-    <Toolbar v-if="status && props.dppItem">
+    <Toolbar v-if="status && item">
       <template #start>
         <div class="flex gap-2">
           <Button
@@ -34,7 +75,7 @@ const status = computed(() => props.dppItem?.lastStatusChange.currentStatus);
             text
             :aria-label="t('common.remove')"
             v-tooltip.bottom="t('common.remove')"
-            @click="emits('onDeleteClicked', props.dppItem)"
+            @click="onDeleteButtonClicked(item)"
           />
           <Button
             v-if="
@@ -46,7 +87,7 @@ const status = computed(() => props.dppItem?.lastStatusChange.currentStatus);
             text
             :aria-label="t('status.archive')"
             v-tooltip.bottom="t('status.archive')"
-            @click="emits('onArchiveClicked', props.dppItem)"
+            @click="onArchiveButtonClicked(item)"
           />
           <Button
             v-if="status === DigitalProductDocumentStatusDto.Archived"
@@ -55,7 +96,7 @@ const status = computed(() => props.dppItem?.lastStatusChange.currentStatus);
             text
             :aria-label="t('status.restore')"
             v-tooltip.bottom="t('status.restore')"
-            @click="emits('onRestoreClicked', props.dppItem)"
+            @click="onRestoreButtonClicked(item)"
           />
           <Button
             v-if="status === DigitalProductDocumentStatusDto.Draft"
@@ -64,25 +105,25 @@ const status = computed(() => props.dppItem?.lastStatusChange.currentStatus);
             severity="secondary"
             :aria-label="t('status.publish')"
             v-tooltip.bottom="t('status.publish')"
-            @click="emits('onPublishClicked', props.dppItem)"
+            @click="onPublishButtonClicked(item)"
           />
         </div>
       </template>
       <template #center>
-        <Tag v-if="editorMode === AasEditMode.Passport" severity="contrast">{{
+        <Tag v-if="type === DigitalProductDocumentType.Passport" severity="contrast">{{
           t(`status.${status.toLowerCase()}`)
         }}</Tag>
       </template>
       <template #end>
         <div class="flex items-center gap-2">
           <Button
-            v-if="editorMode === AasEditMode.Passport"
+            v-if="type === DigitalProductDocumentType.Passport"
             icon="pi pi-qrcode"
             severity="primary"
             :label="t('common.qrCode')"
             @click="qrCodeDialogVisible = true"
           />
-          <Tag v-if="editorMode === AasEditMode.Template" severity="contrast">{{
+          <Tag v-if="type === DigitalProductDocumentType.Template" severity="contrast">{{
             t(`status.${status.toLowerCase()}`)
           }}</Tag>
         </div>
@@ -90,9 +131,9 @@ const status = computed(() => props.dppItem?.lastStatusChange.currentStatus);
     </Toolbar>
   </div>
   <PassportQrCodeDialog
-    v-if="editorMode === AasEditMode.Passport && props.dppItem"
+    v-if="type === DigitalProductDocumentType.Passport && item"
     v-model:visible="qrCodeDialogVisible"
-    :passportId="props.dppItem.id"
+    :passportId="item.id"
   />
 </template>
 

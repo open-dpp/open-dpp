@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
-import type { AasEditModeType } from "../../lib/aas-editor.ts";
-import { AasEditMode } from "../../lib/aas-editor.ts";
 import { KeyTypes } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
@@ -14,10 +12,14 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 import TablePagination from "../pagination/TablePagination.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
+import {
+  DigitalProductDocumentType,
+  type DigitalProductDocumentTypeType,
+} from "../../lib/digital-product-document.ts";
 
 const props = defineProps<{
   id: string;
-  editorMode: AasEditModeType;
+  type: DigitalProductDocumentTypeType;
 }>();
 const route = useRoute();
 const router = useRouter();
@@ -41,7 +43,7 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const errorHandlingStore = useErrorHandlingStore();
 const aasNamespace =
-  props.editorMode === AasEditMode.Passport
+  props.type === DigitalProductDocumentType.Passport
     ? apiClient.dpp.passports.aas
     : apiClient.dpp.templates.aas;
 

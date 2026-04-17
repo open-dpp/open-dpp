@@ -1,10 +1,4 @@
-import {
-  DigitalProductDocumentStatusDto,
-  DigitalProductDocumentStatusModificationMethodDto,
-  type LanguageTextDto,
-  Populates,
-} from "@open-dpp/dto";
-import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import { DigitalProductDocumentStatusDto, type LanguageTextDto, Populates } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
@@ -18,9 +12,6 @@ const mocks = vi.hoisted(() => {
     createTemplate: vi.fn(),
     fetchTemplates: vi.fn(),
     routerPush: vi.fn(),
-    deleteById: vi.fn(),
-    confirm: vi.fn(),
-    modifyStatus: vi.fn(),
   };
 });
 
@@ -31,8 +22,6 @@ vi.mock("../lib/api-client", () => ({
       templates: {
         create: mocks.createTemplate,
         getAll: mocks.fetchTemplates,
-        deleteById: mocks.deleteById,
-        modifyStatus: mocks.modifyStatus,
       },
     },
   },
@@ -48,12 +37,6 @@ vi.mock("vue-router", () => ({
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
     t: (key: string) => key,
-  }),
-}));
-
-vi.mock("primevue/useconfirm", () => ({
-  useConfirm: () => ({
-    require: mocks.confirm,
   }),
 }));
 
@@ -102,79 +85,6 @@ describe("templates", () => {
       },
     });
     expect(mocks.routerPush).toHaveBeenCalledWith(`/templates/${t1.id}`);
-  });
-
-  it("should modify passport status", async () => {
-    const { publish, archive, restore } = mountHarness();
-    const t1 = templatesPlainFactory.build();
-
-    mocks.modifyStatus.mockResolvedValueOnce({
-      data: {
-        ...t1,
-        lastStatusChange: {
-          currentStatus: DigitalProductDocumentStatusDto.Published,
-          previousStatus: DigitalProductDocumentStatusDto.Draft,
-        },
-      },
-      status: HTTPCode.OK,
-    });
-    await publish(t1.id);
-    expect(mocks.modifyStatus).toHaveBeenCalledWith(t1.id, {
-      method: DigitalProductDocumentStatusModificationMethodDto.Publish,
-    });
-
-    mocks.modifyStatus.mockResolvedValueOnce({
-      data: {
-        ...t1,
-        lastStatusChange: {
-          currentStatus: DigitalProductDocumentStatusDto.Archived,
-          previousStatus: DigitalProductDocumentStatusDto.Draft,
-        },
-      },
-      status: HTTPCode.OK,
-    });
-    await archive(t1.id);
-    expect(mocks.modifyStatus).toHaveBeenCalledWith(t1.id, {
-      method: DigitalProductDocumentStatusModificationMethodDto.Archive,
-    });
-
-    const t2 = templatesPlainFactory.build({
-      lastStatusChange: {
-        currentStatus: DigitalProductDocumentStatusDto.Archived,
-        previousStatus: DigitalProductDocumentStatusDto.Draft,
-      },
-    });
-
-    mocks.modifyStatus.mockResolvedValueOnce({
-      data: {
-        ...t2,
-        lastStatusChange: {
-          currentStatus: DigitalProductDocumentStatusDto.Draft,
-          previousStatus: DigitalProductDocumentStatusDto.Archived,
-        },
-      },
-      status: HTTPCode.OK,
-    });
-    await restore(t2.id);
-  });
-
-  it("should delete template", async () => {
-    const { deleteTemplate } = mountHarness();
-
-    // From template
-    mocks.deleteById.mockResolvedValueOnce({
-      status: HTTPCode.NO_CONTENT,
-    });
-    const id = "123";
-    const onDelete = vi.fn();
-    mocks.confirm.mockImplementation(async (data: ConfirmationOptions) => {
-      data.accept!();
-    });
-    await deleteTemplate(id, onDelete);
-    await vi.waitFor(() => {
-      expect(mocks.deleteById).toHaveBeenCalledWith(id);
-      expect(onDelete).toHaveBeenCalled();
-    });
   });
 
   it("should fetch templates", async () => {
