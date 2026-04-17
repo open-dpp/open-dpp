@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
 
-import { AssetKind, DppStatusModificationMethodDto } from "@open-dpp/dto";
+import { AssetKind, DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -30,7 +30,10 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplatesModule } from "../templates.module";
 import { TemplateController } from "./template.controller";
-import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 
 describe("templateController", () => {
   const basePath = "/templates";
@@ -66,9 +69,11 @@ describe("templateController", () => {
       }),
       createdAt,
       updatedAt,
-      lastStatusChange: DppStatusChange.create({
-        currentStatus: archived ? DppStatus.Archived : DppStatus.Draft,
-        previousStatus: archived ? DppStatus.Draft : undefined,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: archived
+          ? DigitalProductDocumentStatus.Archived
+          : DigitalProductDocumentStatus.Draft,
+        previousStatus: archived ? DigitalProductDocumentStatus.Draft : undefined,
       }),
     });
     return ctx.getRepositories().dppIdentifiableRepository.save(template);
@@ -265,7 +270,7 @@ describe("templateController", () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       lastStatusChange: {
-        currentStatus: DppStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
     });
@@ -388,7 +393,7 @@ describe("templateController", () => {
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
-        method: DppStatusModificationMethodDto.Publish,
+        method: DigitalProductDocumentStatusModificationMethodDto.Publish,
       });
     expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
@@ -434,7 +439,9 @@ describe("templateController", () => {
       environment: Environment.create({}),
       createdAt: new Date(),
       updatedAt: new Date(),
-      lastStatusChange: DppStatusChange.create({ currentStatus: DppStatus.Published }),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
     });
 
     await dppIdentifiableRepository.save(publishedTemplate);

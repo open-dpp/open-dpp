@@ -5,25 +5,29 @@ import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import {
   archiveDpp,
-  DppStatus,
-  DppStatusChange,
-  IDppStatusChangeable,
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+  IDigitalProductDocumentStatusChangeable,
   publishDpp,
   restoreDpp,
-} from "../../dpp/domain/dpp-status";
-import { SharedDppSchema } from "../../dpp/domain/dpp.schema";
+} from "../../digital-product-document/domain/digital-product-document-status";
+import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 
-const PassportSchema = SharedDppSchema.extend({
+const PassportSchema = DigitalProductDocumentSchema.extend({
   templateId: z.string().nullable(),
   /** UPI uuid for presentation/chat links; set when listing passports */
   uniqueProductIdentifierUuid: z.uuid().optional(),
 });
 
 export class Passport
-  implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable
+  implements
+    IPersistable,
+    IDigitalProductPassportIdentifiable,
+    HasCreatedAt,
+    IDigitalProductDocumentStatusChangeable
 {
   private constructor(
     public readonly id: string,
@@ -32,7 +36,7 @@ export class Passport
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    private lastStatusChange: DppStatusChange,
+    private lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -42,7 +46,7 @@ export class Passport
     environment: Environment;
     createdAt?: Date;
     updatedAt?: Date;
-    lastStatusChange?: DppStatusChange;
+    lastStatusChange?: DigitalProductDocumentStatusChange;
   }) {
     const now = DateTime.now();
 
@@ -53,7 +57,7 @@ export class Passport
       data.environment,
       data.createdAt ?? now,
       data.updatedAt ?? now,
-      data.lastStatusChange ?? DppStatusChange.create({}),
+      data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
     );
   }
 
@@ -66,7 +70,7 @@ export class Passport
       Environment.fromPlain(parsed.environment),
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
-      DppStatusChange.fromPlain(parsed.lastStatusChange),
+      DigitalProductDocumentStatusChange.fromPlain(parsed.lastStatusChange),
     );
   }
 
@@ -109,14 +113,14 @@ export class Passport
   }
 
   isPublished(): boolean {
-    return this.lastStatusChange.currentStatus === DppStatus.Published;
+    return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Published;
   }
 
   isArchived(): boolean {
-    return this.lastStatusChange.currentStatus === DppStatus.Archived;
+    return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Archived;
   }
 
   isDraft(): boolean {
-    return this.lastStatusChange.currentStatus === DppStatus.Draft;
+    return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
   }
 }

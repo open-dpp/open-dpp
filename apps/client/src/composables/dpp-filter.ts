@@ -1,16 +1,22 @@
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { DppStatusDto, DppStatusDtoEnum, type DppStatusDtoType } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  DigitalProductDocumentStatusDtoEnum,
+  type DigitalProductDocumentStatusDtoType,
+} from "@open-dpp/dto";
 
 export function useDppFilter() {
   const route = useRoute();
   const router = useRouter();
-  const status = ref<DppStatusDtoType>(
-    DppStatusDtoEnum.parse(route.query.status ?? DppStatusDto.Draft),
+  const status = ref<DigitalProductDocumentStatusDtoType>(
+    DigitalProductDocumentStatusDtoEnum.parse(
+      route.query.status ?? DigitalProductDocumentStatusDto.Draft,
+    ),
   );
 
-  async function changeStatus(newStatus: DppStatusDtoType | undefined) {
-    status.value = newStatus ?? DppStatusDto.Draft;
+  async function changeStatus(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
+    status.value = newStatus ?? DigitalProductDocumentStatusDto.Draft;
     await router.push({
       query: {
         ...route.query,

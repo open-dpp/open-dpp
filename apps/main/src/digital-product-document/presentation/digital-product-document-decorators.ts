@@ -1,6 +1,6 @@
 import { Query } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { DppStatusDtoEnum, PopulateSchema } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDtoEnum, PopulateSchema } from "@open-dpp/dto";
 
 export const PopulateQueryParamSchema = PopulateSchema.meta({
   description: "Populates specified environment property",
@@ -10,7 +10,7 @@ export const PopulateQueryParamSchema = PopulateSchema.meta({
 export const PopulateQueryParam = () =>
   Query("populate", new ZodValidationPipe(PopulateQueryParamSchema));
 
-export const StatusQueryParamSchema = DppStatusDtoEnum.optional().meta({
+export const StatusQueryParamSchema = DigitalProductDocumentStatusDtoEnum.optional().meta({
   description: "Filters by the specified status",
   example: "Draft",
   param: { in: "query", name: "status" },

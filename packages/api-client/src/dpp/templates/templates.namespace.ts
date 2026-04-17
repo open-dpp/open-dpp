@@ -1,5 +1,5 @@
 import type {
-  DppStatusModificationDto,
+  DigitalProductDocumentStatusModificationDto,
   GetAllParamsDto,
   TemplateCreateDto,
   TemplateDto,
@@ -7,9 +7,10 @@ import type {
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
-import { parseGetAllParams } from "../parse-get-all-params";
+import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
 
-export class TemplatesNamespace {
+export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
   private readonly templatesEndpoint = "/templates";
 
@@ -24,6 +25,10 @@ export class TemplatesNamespace {
         indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
       },
     });
+  }
+
+  public async getById(id: string) {
+    return await this.axiosInstance.get<TemplateDto>(`${this.templatesEndpoint}/${id}`);
   }
 
   public async create(data: TemplateCreateDto): Promise<AxiosResponse<TemplateDto>> {
@@ -46,7 +51,7 @@ export class TemplatesNamespace {
 
   public async modifyStatus(
     id: string,
-    data: DppStatusModificationDto,
+    data: DigitalProductDocumentStatusModificationDto,
   ): Promise<AxiosResponse<TemplateDto>> {
     return await this.axiosInstance.put<TemplateDto>(
       `${this.templatesEndpoint}/${id}/status`,

@@ -1,25 +1,23 @@
 <script lang="ts" setup>
 import {
-  DppStatusDto,
-  type DppStatusDtoType,
+  type DigitalProductDocumentStatusDtoType,
   type PagingParamsDto,
-  type SharedDppDto,
+  type DigitalProductDocumentDto,
 } from "@open-dpp/dto";
 import { AxiosError } from "axios";
 import { useToast } from "primevue/usetoast";
-import { onMounted, ref, useTemplateRef, watch } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import DppTable from "../../components/DppTable.vue";
+import DigitalProductDocumentTable from "../../components/digital-product-document/DigitalProductDocumentTable.vue";
 import PassportCreateDialog from "../../components/passport/PassportCreateDialog.vue";
 import { useExportImport } from "../../composables/export-import";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
-import DppStatusSelect from "../../components/dpp/DppStatusSelect.vue";
 import { useDppFilter } from "../../composables/dpp-filter.ts";
-import DppStatusChangeMenu from "../../components/dpp/DppStatusChangeMenu.vue";
+import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -74,7 +72,7 @@ const {
   },
   importFn: async (json) => {
     await axiosIns.post("/passports/import", json);
-    resetCursor();
+    await resetCursor();
     toast.add({
       severity: "success",
       summary: t("notifications.success"),
@@ -91,8 +89,12 @@ function newPassport() {
   createDialog.value?.open();
 }
 
-async function routeToQrCode(id: string) {
-  await router.push(`${route.path}/${id}/qr-code`);
+const qrCodeDialogItem = ref<DigitalProductDocumentDto | null>(null);
+const qrCodeDialogVisible = ref(false);
+
+async function showQrCode(item: DigitalProductDocumentDto) {
+  qrCodeDialogItem.value = item;
+  qrCodeDialogVisible.value = true;
 }
 
 function forwardToPresentationErrorMessage(e: unknown): string {
@@ -104,14 +106,14 @@ function forwardToPresentationErrorMessage(e: unknown): string {
   return t("dpp.forwardToPresentationError");
 }
 
-async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
+async function resolvePassportUuid(item: DigitalProductDocumentDto): Promise<string> {
   const { data } = await axiosIns.get<{ uuid: string }>(
     `/passports/${item.id}/unique-product-identifier`,
   );
   return data.uuid;
 }
 
-async function forwardToPresentationChat(item: SharedDppDto) {
+async function forwardToPresentationChat(item: DigitalProductDocumentDto) {
   try {
     const uuid = await resolvePassportUuid(item);
     await router.push(`/presentation/${uuid}/chat`);
@@ -120,26 +122,26 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   }
 }
 
-async function onDeleteButtonClicked(item: SharedDppDto) {
+async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
   await deletePassport(item.id, reloadCurrentPage);
 }
 
-async function onPublishButtonClicked(item: SharedDppDto) {
+async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await publish(item.id);
   await reloadCurrentPage();
 }
 
-async function onArchiveButtonClicked(item: SharedDppDto) {
+async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {
   await archive(item.id);
   await reloadCurrentPage();
 }
 
-async function onRestoreButtonClicked(item: SharedDppDto) {
+async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
   await restore(item.id);
   await reloadCurrentPage();
 }
 
-async function onSelectedStatusChange(newStatus: DppStatusDtoType | undefined) {
+async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
   await changeStatus(newStatus);
   await resetCursor();
 }
@@ -150,7 +152,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DppTable
+  <DigitalProductDocumentTable
     key="templates-list"
     :has-previous="hasPrevious"
     :has-next="hasNext"
@@ -182,7 +184,7 @@ onMounted(async () => {
         severity="info"
         :aria-label="t('common.qrCode')"
         :title="t('common.qrCode')"
-        @click="routeToQrCode(passport.id)"
+        @click="showQrCode(passport)"
       />
       <Button
         icon="pi pi-pencil"
@@ -205,7 +207,7 @@ onMounted(async () => {
         :title="t('common.exportPassport')"
         @click="exportPassport(passport.id)"
       />
-      <DppStatusChangeMenu
+      <DigitalProductDocumentStatusChangeMenu
         :item="passport"
         @on-delete-clicked="onDeleteButtonClicked"
         @on-publish-clicked="onPublishButtonClicked"
@@ -213,7 +215,8 @@ onMounted(async () => {
         @on-restore-clicked="onRestoreButtonClicked"
       />
     </template>
-  </DppTable>
+  </DigitalProductDocumentTable>
   <PassportCreateDialog ref="createDialog" />
   <ConfirmDialog />
+  <PassportQrCodeDialog v-model="qrCodeDialogVisible" :passport-id="qrCodeDialogItem?.id" />
 </template>

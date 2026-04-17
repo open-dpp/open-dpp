@@ -5,9 +5,9 @@ import {
   EnvironmentSchema,
 } from "../../aas/infrastructure/schemas/environment.schema";
 import {
-  DppStatusChangeDbSchema,
-  DppStatusChangeDoc,
-} from "../../dpp/infrastructure/dpp-status-change-db.schema";
+  DigitalProductDocumentStatusChangeDbSchema,
+  DigitalProductDocumentStatusChangeDoc,
+} from "../../digital-product-document/infrastructure/digital-product-document-status-change-db.schema";
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",
@@ -39,8 +39,8 @@ export class TemplateDoc extends Document<string> {
   @Prop({ required: true })
   updatedAt: Date;
 
-  @Prop({ type: DppStatusChangeDbSchema, required: true })
-  lastStatusChange: DppStatusChangeDoc;
+  @Prop({ type: DigitalProductDocumentStatusChangeDbSchema, required: true })
+  lastStatusChange: DigitalProductDocumentStatusChangeDoc;
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);

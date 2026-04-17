@@ -44,7 +44,7 @@ import {
   RowParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
-import { PopulateQueryParamSchema } from "../dpp/presentation/dpp-decorators";
+import { PopulateQueryParamSchema } from "../digital-product-document/presentation/digital-product-document-decorators";
 
 const HTTPCode = {
   OK: 200,

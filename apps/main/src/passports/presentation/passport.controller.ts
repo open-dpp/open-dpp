@@ -1,7 +1,7 @@
 import type {
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
-  DppStatusModificationDto,
+  DigitalProductDocumentStatusModificationDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -11,7 +11,7 @@ import type {
   SubmodelModificationDto,
   SubmodelRequestDto,
   ValueRequestDto,
-  DppStatusDtoType,
+  DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
 import type express from "express";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
@@ -37,7 +37,7 @@ import {
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
-  DppStatusModificationDtoSchema,
+  DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -112,7 +112,10 @@ import { UniqueProductIdentifierRepository } from "../../unique-product-identifi
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
-import { PopulateQueryParam, StatusQueryParam } from "../../dpp/presentation/dpp-decorators";
+import {
+  PopulateQueryParam,
+  StatusQueryParam,
+} from "../../digital-product-document/presentation/digital-product-document-decorators";
 
 @Controller("/passports")
 export class PassportController
@@ -136,7 +139,7 @@ export class PassportController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
-    @StatusQueryParam() status: DppStatusDtoType | undefined,
+    @StatusQueryParam() status: DigitalProductDocumentStatusDtoType | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
@@ -201,8 +204,8 @@ export class PassportController
     @IdParam() id: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Body(new ZodValidationPipe(DppStatusModificationDtoSchema))
-    body: DppStatusModificationDto,
+    @Body(new ZodValidationPipe(DigitalProductDocumentStatusModificationDtoSchema))
+    body: DigitalProductDocumentStatusModificationDto,
   ): Promise<PassportDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return this.passportService.modifyPassportStatus(id, organizationId, subject, body);

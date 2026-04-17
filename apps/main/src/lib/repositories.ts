@@ -7,7 +7,10 @@ import { DbSessionOptions } from "../database/query-options";
 import { decodeCursor, encodeCursor, Pagination } from "../pagination/pagination";
 import { PagingResult } from "../pagination/paging-result";
 import { HasCreatedAt } from "./has-created-at";
-import { DppStatus, DppStatusType } from "../dpp/domain/dpp-status";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusType,
+} from "../digital-product-document/domain/digital-product-document-status";
 
 export async function convertToDomain<T>(
   mongoDoc: Document<string>,
@@ -89,7 +92,7 @@ export async function findByIds<T extends Document<string>, V>(
 
 export type FindOptions = {
   pagination?: Pagination;
-  filter?: { status: DppStatusType };
+  filter?: { status: DigitalProductDocumentStatusType };
 };
 
 export async function findAllByOrganizationId<
@@ -109,7 +112,7 @@ export async function findAllByOrganizationId<
       ...(status && {
         $or: [
           { "lastStatusChange.currentStatus": status },
-          ...(status === DppStatus.Draft ? [{ _schemaVersion: "1.0.0" }] : []),
+          ...(status === DigitalProductDocumentStatus.Draft ? [{ _schemaVersion: "1.0.0" }] : []),
         ],
       }),
       ...(tmpPagination.cursor && {

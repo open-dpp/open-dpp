@@ -1,6 +1,6 @@
 import {
-  type DppStatusModificationDto,
-  DppStatusModificationMethodDto,
+  type DigitalProductDocumentStatusModificationDto,
+  DigitalProductDocumentStatusModificationMethodDto,
   type FilterParamsDto,
   type LanguageTextDto,
   type PagingParamsDto,
@@ -62,7 +62,7 @@ export function usePassports() {
     return response.data;
   };
 
-  async function modifyStatus(id: string, data: DppStatusModificationDto) {
+  async function modifyStatus(id: string, data: DigitalProductDocumentStatusModificationDto) {
     const errorMessage = t("passports.errorModifyStatus");
     try {
       const response = await apiClient.dpp.passports.modifyStatus(id, data);
@@ -75,15 +75,15 @@ export function usePassports() {
   }
 
   async function publish(id: string) {
-    await modifyStatus(id, { method: DppStatusModificationMethodDto.Publish });
+    await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Publish });
   }
 
   async function archive(id: string) {
-    await modifyStatus(id, { method: DppStatusModificationMethodDto.Archive });
+    await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Archive });
   }
 
   async function restore(id: string) {
-    await modifyStatus(id, { method: DppStatusModificationMethodDto.Restore });
+    await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Restore });
   }
 
   async function deletePassport(id: string, onDeleted: () => Promise<void>) {

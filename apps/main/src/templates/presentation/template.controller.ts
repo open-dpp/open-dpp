@@ -7,9 +7,9 @@ import type {
   SubmodelModificationDto,
   SubmodelRequestDto,
   TemplateCreateDto,
-  DppStatusModificationDto,
+  DigitalProductDocumentStatusModificationDto,
   ValueRequestDto,
-  DppStatusDtoType,
+  DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -24,7 +24,7 @@ import {
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
   TemplateCreateDtoSchema,
-  DppStatusModificationDtoSchema,
+  DigitalProductDocumentStatusModificationDtoSchema,
   TemplateDto,
   TemplateDtoSchema,
   TemplatePaginationDto,
@@ -93,7 +93,10 @@ import { PagingResult } from "../../pagination/paging-result";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
-import { PopulateQueryParam, StatusQueryParam } from "../../dpp/presentation/dpp-decorators";
+import {
+  PopulateQueryParam,
+  StatusQueryParam,
+} from "../../digital-product-document/presentation/digital-product-document-decorators";
 
 @Controller("/templates")
 export class TemplateController
@@ -641,8 +644,8 @@ export class TemplateController
     @IdParam() id: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Body(new ZodValidationPipe(DppStatusModificationDtoSchema))
-    body: DppStatusModificationDto,
+    @Body(new ZodValidationPipe(DigitalProductDocumentStatusModificationDtoSchema))
+    body: DigitalProductDocumentStatusModificationDto,
   ): Promise<TemplateDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return this.templateService.modifyTemplateStatus(id, organizationId, subject, body);
@@ -704,7 +707,7 @@ export class TemplateController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
-    @StatusQueryParam() status: DppStatusDtoType | undefined,
+    @StatusQueryParam() status: DigitalProductDocumentStatusDtoType | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,

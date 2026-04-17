@@ -9,7 +9,10 @@ import { Model, Model as MongooseModel } from "mongoose";
 import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 import { generateMongoConfig } from "../../database/config";
-import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
@@ -57,9 +60,9 @@ describe("templateRepository", () => {
         submodels: [randomUUID()],
         conceptDescriptions: [randomUUID()],
       }),
-      lastStatusChange: DppStatusChange.create({
-        previousStatus: DppStatus.Draft,
-        currentStatus: DppStatus.Published,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
       }),
     });
     await templateRepository.save(template);
@@ -91,7 +94,7 @@ describe("templateRepository", () => {
         organizationId: legacyDoc.organizationId,
         createdAt: legacyDoc.createdAt,
         updatedAt: legacyDoc.updatedAt,
-        lastStatusChange: DppStatusChange.create({}),
+        lastStatusChange: DigitalProductDocumentStatusChange.create({}),
       }),
     );
   });
@@ -136,13 +139,13 @@ describe("templateRepository", () => {
     const legacyDoc2 = await createLegacyDoc(date2);
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DppStatus.Draft,
+        status: DigitalProductDocumentStatus.Draft,
       },
     });
     expect(foundTemplates.items.map((p) => p.id)).toEqual([legacyDoc2.id, legacyDoc1.id]);
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DppStatus.Published,
+        status: DigitalProductDocumentStatus.Published,
       },
     });
     expect(foundTemplates.items.map((p) => p.id)).toEqual([]);
@@ -200,9 +203,9 @@ describe("templateRepository", () => {
         assetAdministrationShells: [randomUUID()],
       }),
       createdAt: date5,
-      lastStatusChange: DppStatusChange.create({
-        previousStatus: DppStatus.Draft,
-        currentStatus: DppStatus.Archived,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
       }),
     });
 
@@ -226,7 +229,7 @@ describe("templateRepository", () => {
 
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DppStatus.Archived,
+        status: DigitalProductDocumentStatus.Archived,
       },
     });
 

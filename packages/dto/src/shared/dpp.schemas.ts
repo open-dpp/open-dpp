@@ -6,41 +6,47 @@ import {
 
 export const DateTimeSchema = z.union([z.iso.datetime(), z.date()]);
 
-export const DppStatusDto = {
+export const DigitalProductDocumentStatusDto = {
   Draft: "Draft",
   Published: "Published",
   Archived: "Archived",
 } as const;
 
-export const DppStatusDtoEnum = z.enum(DppStatusDto);
-export type DppStatusDtoType = z.infer<typeof DppStatusDtoEnum>;
+export const DigitalProductDocumentStatusDtoEnum = z.enum(DigitalProductDocumentStatusDto);
+export type DigitalProductDocumentStatusDtoType = z.infer<
+  typeof DigitalProductDocumentStatusDtoEnum
+>;
 
-export const DppStatusModificationMethodDto = {
+export const DigitalProductDocumentStatusModificationMethodDto = {
   Publish: "Publish",
   Archive: "Archive",
   Restore: "Restore",
 } as const;
 
-export const DppStatusModificationDtoEnum = z.enum(DppStatusModificationMethodDto);
+export const DigitalProductDocumentStatusModificationDtoEnum = z.enum(
+  DigitalProductDocumentStatusModificationMethodDto,
+);
 
-export const DppStatusChangeDtoSchema = z.object({
-  previousStatus: DppStatusDtoEnum.nullish(),
-  currentStatus: DppStatusDtoEnum,
+export const DigitalProductDocumentStatusChangeDtoSchema = z.object({
+  previousStatus: DigitalProductDocumentStatusDtoEnum.nullish(),
+  currentStatus: DigitalProductDocumentStatusDtoEnum,
 });
 
-export const DppStatusModificationDtoSchema = z.object({
-  method: DppStatusModificationDtoEnum,
+export const DigitalProductDocumentStatusModificationDtoSchema = z.object({
+  method: DigitalProductDocumentStatusModificationDtoEnum,
 });
 
-export type DppStatusModificationDto = z.infer<typeof DppStatusModificationDtoSchema>;
+export type DigitalProductDocumentStatusModificationDto = z.infer<
+  typeof DigitalProductDocumentStatusModificationDtoSchema
+>;
 
-export const SharedDppDtoSchema = z.object({
+export const DigitalProductDocumentDtoSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
   environment: z.union([EnvironmentJsonSchema, ExtendedEnvironmentJsonSchema]),
   createdAt: DateTimeSchema,
   updatedAt: DateTimeSchema,
-  lastStatusChange: DppStatusChangeDtoSchema,
+  lastStatusChange: DigitalProductDocumentStatusChangeDtoSchema,
 });
 
-export type SharedDppDto = z.infer<typeof SharedDppDtoSchema>;
+export type DigitalProductDocumentDto = z.infer<typeof DigitalProductDocumentDtoSchema>;

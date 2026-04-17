@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { IDigitalProductPassportIdentifiableRepository } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { DbSessionOptions } from "../../database/query-options";
-import { DppStatus } from "../../dpp/domain/dpp-status";
+import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
 import {
   findAllByOrganizationId,
   findOne,
@@ -33,7 +33,7 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
     return {
       ...plain,
       lastStatusChange: {
-        currentStatus: DppStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Draft,
       },
       _schemaVersion: TemplateDocVersion.v1_1_0,
     };

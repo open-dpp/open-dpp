@@ -1,4 +1,4 @@
-import { DppStatusDto, GetAllParamsDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, GetAllParamsDto } from "@open-dpp/dto";
 import { parseGetAllParams } from "./parse-get-all-params";
 
 describe("parseGetAllParams", () => {
@@ -7,7 +7,7 @@ describe("parseGetAllParams", () => {
       pagination: { limit: 10, cursor: "cursor" },
       populate: ["environment.assetAdministrationsShells"],
       filter: {
-        status: DppStatusDto.Archived,
+        status: DigitalProductDocumentStatusDto.Archived,
       },
     };
 
@@ -16,7 +16,7 @@ describe("parseGetAllParams", () => {
       limit: 10,
       cursor: "cursor",
       populate: ["environment.assetAdministrationsShells"],
-      status: DppStatusDto.Archived,
+      status: DigitalProductDocumentStatusDto.Archived,
     });
   });
 });

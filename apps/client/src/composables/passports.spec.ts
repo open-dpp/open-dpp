@@ -1,5 +1,10 @@
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import { DppStatusDto, DppStatusModificationMethodDto, Language, Populates } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  DigitalProductDocumentStatusModificationMethodDto,
+  Language,
+  Populates,
+} from "@open-dpp/dto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
@@ -87,36 +92,36 @@ describe("passports", () => {
       data: {
         ...p1,
         lastStatusChange: {
-          currentStatus: DppStatusDto.Published,
-          previousStatus: DppStatusDto.Draft,
+          currentStatus: DigitalProductDocumentStatusDto.Published,
+          previousStatus: DigitalProductDocumentStatusDto.Draft,
         },
       },
       status: HTTPCode.OK,
     });
     await publish(p1.id);
     expect(mocks.modifyStatus).toHaveBeenCalledWith(p1.id, {
-      method: DppStatusModificationMethodDto.Publish,
+      method: DigitalProductDocumentStatusModificationMethodDto.Publish,
     });
 
     mocks.modifyStatus.mockResolvedValueOnce({
       data: {
         ...p1,
         lastStatusChange: {
-          currentStatus: DppStatusDto.Archived,
-          previousStatus: DppStatusDto.Draft,
+          currentStatus: DigitalProductDocumentStatusDto.Archived,
+          previousStatus: DigitalProductDocumentStatusDto.Draft,
         },
       },
       status: HTTPCode.OK,
     });
     await archive(p1.id);
     expect(mocks.modifyStatus).toHaveBeenCalledWith(p1.id, {
-      method: DppStatusModificationMethodDto.Archive,
+      method: DigitalProductDocumentStatusModificationMethodDto.Archive,
     });
 
     const p2 = passportsPlainFactory.build({
       lastStatusChange: {
-        currentStatus: DppStatusDto.Archived,
-        previousStatus: DppStatusDto.Draft,
+        currentStatus: DigitalProductDocumentStatusDto.Archived,
+        previousStatus: DigitalProductDocumentStatusDto.Draft,
       },
     });
 
@@ -124,8 +129,8 @@ describe("passports", () => {
       data: {
         ...p2,
         lastStatusChange: {
-          currentStatus: DppStatusDto.Draft,
-          previousStatus: DppStatusDto.Archived,
+          currentStatus: DigitalProductDocumentStatusDto.Draft,
+          previousStatus: DigitalProductDocumentStatusDto.Archived,
         },
       },
       status: HTTPCode.OK,
@@ -183,12 +188,15 @@ describe("passports", () => {
     const p1 = passportsPlainFactory.build();
     const passportsResponse = { paging_metadata: { cursor: p1.id }, result: [p1] };
     mocks.fetchPassports.mockResolvedValueOnce({ data: passportsResponse });
-    await fetchPassports({ limit: 10, cursor: undefined }, { status: DppStatusDto.Archived });
+    await fetchPassports(
+      { limit: 10, cursor: undefined },
+      { status: DigitalProductDocumentStatusDto.Archived },
+    );
 
     expect(mocks.fetchPassports).toHaveBeenCalledWith({
       pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
-      filter: { status: DppStatusDto.Archived },
+      filter: { status: DigitalProductDocumentStatusDto.Archived },
     });
     expect(passports.value).toEqual(passportsResponse);
   });

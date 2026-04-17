@@ -6,8 +6,8 @@ import { SubjectAttributes } from "../../aas/domain/security/subject-attributes"
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
-import { DppStatusModificationDto, TemplateDtoSchema } from "@open-dpp/dto";
-import { handleDppStatusChangeRequest } from "../../dpp/domain/dpp-status";
+import { DigitalProductDocumentStatusModificationDto, TemplateDtoSchema } from "@open-dpp/dto";
+import { handleDppStatusChangeRequest } from "../../digital-product-document/domain/digital-product-document-status";
 
 @Injectable()
 export class TemplateService {
@@ -23,7 +23,7 @@ export class TemplateService {
     id: string,
     organizationId: string,
     subject: SubjectAttributes,
-    body: DppStatusModificationDto,
+    body: DigitalProductDocumentStatusModificationDto,
   ) {
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     handleDppStatusChangeRequest(template, body);

@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { DppStatusDto, type SharedDppDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
 import type { MenuItem } from "primevue/menuitem";
 
 const props = defineProps<{
-  item: SharedDppDto;
+  item: DigitalProductDocumentDto;
 }>();
 
 const emits = defineEmits<{
-  (e: "onDeleteClicked", item: SharedDppDto): void;
-  (e: "onPublishClicked", item: SharedDppDto): void;
-  (e: "onArchiveClicked", item: SharedDppDto): void;
-  (e: "onRestoreClicked", item: SharedDppDto): void;
+  (e: "onDeleteClicked", item: DigitalProductDocumentDto): void;
+  (e: "onPublishClicked", item: DigitalProductDocumentDto): void;
+  (e: "onArchiveClicked", item: DigitalProductDocumentDto): void;
+  (e: "onRestoreClicked", item: DigitalProductDocumentDto): void;
 }>();
 const menu = ref();
 const { t } = useI18n();
@@ -32,9 +32,9 @@ const items = computed<MenuItem[]>(() => {
     command: () => emits("onArchiveClicked", props.item),
   };
 
-  if (currentStatus === DppStatusDto.Published) {
+  if (currentStatus === DigitalProductDocumentStatusDto.Published) {
     return [archiveMenuItem];
-  } else if (currentStatus === DppStatusDto.Archived) {
+  } else if (currentStatus === DigitalProductDocumentStatusDto.Archived) {
     return [restoreMenuItem];
   } else {
     return [

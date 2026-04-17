@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 
 import { DbSessionOptions } from "../../database/query-options";
-import { DppStatus } from "../../dpp/domain/dpp-status";
+import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
 import {
   findAllByOrganizationId,
   findOne,
@@ -11,7 +11,6 @@ import {
   FindOptions,
   save,
 } from "../../lib/repositories";
-import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportDoc, PassportDocVersion } from "./passport.schema";
@@ -35,7 +34,7 @@ export class PassportRepository {
     return {
       ...plain,
       lastStatusChange: {
-        currentStatus: DppStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Draft,
       },
       _schemaVersion: PassportDocVersion.v1_1_0,
     };

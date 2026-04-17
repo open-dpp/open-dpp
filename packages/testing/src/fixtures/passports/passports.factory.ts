@@ -1,4 +1,4 @@
-import { DppStatusDto, PassportDtoSchema } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PassportDtoSchema } from "@open-dpp/dto";
 import type { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";
@@ -23,7 +23,7 @@ export const passportsPlainFactory = Factory.define<
   createdAt: new Date(Date.now()).toISOString(),
   updatedAt: new Date(Date.now()).toISOString(),
   lastStatusChange: {
-    currentStatus: DppStatusDto.Draft,
+    currentStatus: DigitalProductDocumentStatusDto.Draft,
     previousStatus: null,
   },
 }));

@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { Environment } from "../../aas/domain/environment";
-import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 import { Passport } from "./passport";
 
 describe("passport", () => {
@@ -28,9 +31,9 @@ describe("passport", () => {
     const passport = Passport.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
-      lastStatusChange: DppStatusChange.create({
-        previousStatus: DppStatus.Draft,
-        currentStatus: DppStatus.Archived,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
       }),
     });
     expect(passport.isArchived()).toBeTruthy();

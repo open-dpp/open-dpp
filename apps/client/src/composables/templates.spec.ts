@@ -1,6 +1,6 @@
 import {
-  DppStatusDto,
-  DppStatusModificationMethodDto,
+  DigitalProductDocumentStatusDto,
+  DigitalProductDocumentStatusModificationMethodDto,
   type LanguageTextDto,
   Populates,
 } from "@open-dpp/dto";
@@ -112,36 +112,36 @@ describe("templates", () => {
       data: {
         ...t1,
         lastStatusChange: {
-          currentStatus: DppStatusDto.Published,
-          previousStatus: DppStatusDto.Draft,
+          currentStatus: DigitalProductDocumentStatusDto.Published,
+          previousStatus: DigitalProductDocumentStatusDto.Draft,
         },
       },
       status: HTTPCode.OK,
     });
     await publish(t1.id);
     expect(mocks.modifyStatus).toHaveBeenCalledWith(t1.id, {
-      method: DppStatusModificationMethodDto.Publish,
+      method: DigitalProductDocumentStatusModificationMethodDto.Publish,
     });
 
     mocks.modifyStatus.mockResolvedValueOnce({
       data: {
         ...t1,
         lastStatusChange: {
-          currentStatus: DppStatusDto.Archived,
-          previousStatus: DppStatusDto.Draft,
+          currentStatus: DigitalProductDocumentStatusDto.Archived,
+          previousStatus: DigitalProductDocumentStatusDto.Draft,
         },
       },
       status: HTTPCode.OK,
     });
     await archive(t1.id);
     expect(mocks.modifyStatus).toHaveBeenCalledWith(t1.id, {
-      method: DppStatusModificationMethodDto.Archive,
+      method: DigitalProductDocumentStatusModificationMethodDto.Archive,
     });
 
     const t2 = templatesPlainFactory.build({
       lastStatusChange: {
-        currentStatus: DppStatusDto.Archived,
-        previousStatus: DppStatusDto.Draft,
+        currentStatus: DigitalProductDocumentStatusDto.Archived,
+        previousStatus: DigitalProductDocumentStatusDto.Draft,
       },
     });
 
@@ -149,8 +149,8 @@ describe("templates", () => {
       data: {
         ...t2,
         lastStatusChange: {
-          currentStatus: DppStatusDto.Draft,
-          previousStatus: DppStatusDto.Archived,
+          currentStatus: DigitalProductDocumentStatusDto.Draft,
+          previousStatus: DigitalProductDocumentStatusDto.Archived,
         },
       },
       status: HTTPCode.OK,
@@ -182,11 +182,14 @@ describe("templates", () => {
     const t1 = templatesPlainFactory.build();
     const templatesResponse = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templatesResponse });
-    await fetchTemplates({ limit: 10, cursor: undefined }, { status: DppStatusDto.Archived });
+    await fetchTemplates(
+      { limit: 10, cursor: undefined },
+      { status: DigitalProductDocumentStatusDto.Archived },
+    );
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({
       pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
-      filter: { status: DppStatusDto.Archived },
+      filter: { status: DigitalProductDocumentStatusDto.Archived },
     });
     expect(templates.value).toEqual(templatesResponse);
   });

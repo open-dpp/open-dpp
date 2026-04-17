@@ -1,16 +1,20 @@
 <script lang="ts" setup>
-import type { DppStatusDtoType, PagingParamsDto, SharedDppDto } from "@open-dpp/dto";
+import type {
+  DigitalProductDocumentStatusDtoType,
+  PagingParamsDto,
+  DigitalProductDocumentDto,
+} from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import DppTable from "../../components/DppTable.vue";
+import DigitalProductDocumentTable from "../../components/digital-product-document/DigitalProductDocumentTable.vue";
 import TemplateCreateDialog from "../../components/template/TemplateCreateDialog.vue";
 import { useExportImport } from "../../composables/export-import.ts";
 import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
 import { usePagination } from "../../composables/pagination.ts";
 import { useDppFilter } from "../../composables/dpp-filter.ts";
-import DppStatusChangeMenu from "../../components/dpp/DppStatusChangeMenu.vue";
+import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -67,11 +71,11 @@ const {
   importErrorKey: "common.templateImportFailed",
 });
 
-async function onDeleteButtonClick(item: SharedDppDto) {
+async function onDeleteButtonClick(item: DigitalProductDocumentDto) {
   await deleteTemplate(item.id, reloadCurrentPage);
 }
 
-async function onSelectedStatusChange(newStatus: DppStatusDtoType | undefined) {
+async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
   await changeStatus(newStatus);
   await resetCursor();
 }
@@ -82,7 +86,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DppTable
+  <DigitalProductDocumentTable
     key="templates-list"
     :has-previous="hasPrevious"
     :has-next="hasNext"
@@ -124,9 +128,12 @@ onMounted(async () => {
         :title="t('common.exportTemplate')"
         @click="exportTemplate(passport.id)"
       />
-      <DppStatusChangeMenu :item="passport" @on-delete-clicked="onDeleteButtonClick" />
+      <DigitalProductDocumentStatusChangeMenu
+        :item="passport"
+        @on-delete-clicked="onDeleteButtonClick"
+      />
     </template>
-  </DppTable>
+  </DigitalProductDocumentTable>
   <TemplateCreateDialog
     v-if="createDialogVisible"
     v-model="createDialogVisible"

@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { defineComponent } from "vue";
 import { createPinia, setActivePinia } from "pinia";
 import { useDppFilter } from "./dpp-filter.ts";
-import { DppStatusDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 
 const mocks = vi.hoisted(() => ({
   query: vi.fn(),
@@ -52,13 +52,13 @@ describe("useDppFilter", () => {
   });
 
   it("should change status", async () => {
-    mocks.query.mockReturnValue({ status: DppStatusDto.Draft });
+    mocks.query.mockReturnValue({ status: DigitalProductDocumentStatusDto.Draft });
     const { status, changeStatus } = mountHarness();
-    expect(status.value).toEqual(DppStatusDto.Draft);
-    await changeStatus(DppStatusDto.Published);
+    expect(status.value).toEqual(DigitalProductDocumentStatusDto.Draft);
+    await changeStatus(DigitalProductDocumentStatusDto.Published);
     expect(mocks.routerPush).toHaveBeenCalledWith({
-      query: expect.objectContaining({ status: DppStatusDto.Published }),
+      query: expect.objectContaining({ status: DigitalProductDocumentStatusDto.Published }),
     });
-    expect(status.value).toEqual(DppStatusDto.Published);
+    expect(status.value).toEqual(DigitalProductDocumentStatusDto.Published);
   });
 });

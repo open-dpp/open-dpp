@@ -36,8 +36,11 @@ import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
 import { PassportsModule } from "../passports.module";
 import { PassportController } from "./passport.controller";
-import { DppStatus, DppStatusChange } from "../../dpp/domain/dpp-status";
-import { DppStatusModificationMethodDto } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
+import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 
 describe("passportController", () => {
   const basePath = "/passports";
@@ -122,9 +125,9 @@ describe("passportController", () => {
       }),
       createdAt: secondCreate,
       updatedAt: secondCreate,
-      lastStatusChange: DppStatusChange.create({
-        currentStatus: DppStatus.Archived,
-        previousStatus: DppStatus.Draft,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Archived,
+        previousStatus: DigitalProductDocumentStatus.Draft,
       }),
     });
 
@@ -261,7 +264,7 @@ describe("passportController", () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       lastStatusChange: {
-        currentStatus: DppStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
     });
@@ -325,7 +328,7 @@ describe("passportController", () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       lastStatusChange: {
-        currentStatus: DppStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
     });
@@ -517,7 +520,7 @@ describe("passportController", () => {
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
-        method: DppStatusModificationMethodDto.Publish,
+        method: DigitalProductDocumentStatusModificationMethodDto.Publish,
       });
     expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
@@ -572,7 +575,9 @@ describe("passportController", () => {
       environment: Environment.create({}),
       createdAt: new Date(),
       updatedAt: new Date(),
-      lastStatusChange: DppStatusChange.create({ currentStatus: DppStatus.Published }),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
     });
 
     await dppIdentifiableRepository.save(publishedPassport);

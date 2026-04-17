@@ -1,5 +1,5 @@
 import type {
-  DppStatusModificationDto,
+  DigitalProductDocumentStatusModificationDto,
   GetAllParamsDto,
   PassportDto,
   PassportPaginationDto,
@@ -8,9 +8,10 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
-import { parseGetAllParams } from "../parse-get-all-params";
+import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
 
-export class PassportNamespace {
+export class PassportNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
   private readonly passportEndpoint = "/passports";
 
@@ -42,12 +43,12 @@ export class PassportNamespace {
   }
 
   public async deleteById(id: string) {
-    return await this.axiosInstance.delete(`${this.passportEndpoint}/${id}`);
+    return await this.axiosInstance.delete<void>(`${this.passportEndpoint}/${id}`);
   }
 
   public async modifyStatus(
     id: string,
-    data: DppStatusModificationDto,
+    data: DigitalProductDocumentStatusModificationDto,
   ): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.put<PassportDto>(`${this.passportEndpoint}/${id}/status`, data);
   }

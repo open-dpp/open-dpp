@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "../../organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
-import { DppStatusDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
@@ -48,7 +48,7 @@ export function passportsHandlers() {
           passport1,
           lastStatusChange: {
             ...passport1.lastStatusChange,
-            currentStatus: DppStatusDto.Published,
+            currentStatus: DigitalProductDocumentStatusDto.Published,
           },
         },
         { status: 200 },

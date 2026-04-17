@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { DppStatusDtoEnum } from "./dpp.schemas";
+import { DigitalProductDocumentStatusDtoEnum } from "./dpp.schemas";
 
 export const FilterParamsDtoSchema = z.object({
-  status: DppStatusDtoEnum.optional(),
+  status: DigitalProductDocumentStatusDtoEnum.optional(),
 });
 
 export type FilterParamsDto = z.infer<typeof FilterParamsDtoSchema>;

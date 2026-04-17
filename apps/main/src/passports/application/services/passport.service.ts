@@ -9,8 +9,8 @@ import { EnvironmentService } from "../../../aas/presentation/environment.servic
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
-import { DppStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
-import { handleDppStatusChangeRequest } from "../../../dpp/domain/dpp-status";
+import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
+import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 
 @Injectable()
 export class PassportService {
@@ -56,7 +56,7 @@ export class PassportService {
     id: string,
     organizationId: string,
     subject: SubjectAttributes,
-    body: DppStatusModificationDto,
+    body: DigitalProductDocumentStatusModificationDto,
   ) {
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
     handleDppStatusChangeRequest(passport, body);

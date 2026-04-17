@@ -1,6 +1,6 @@
 import {
-  type DppStatusModificationDto,
-  DppStatusModificationMethodDto,
+  type DigitalProductDocumentStatusModificationDto,
+  DigitalProductDocumentStatusModificationMethodDto,
   type FilterParamsDto,
   type LanguageTextDto,
   type PagingParamsDto,
@@ -9,7 +9,7 @@ import {
 } from "@open-dpp/dto";
 import type { Ref } from "vue";
 import { ref } from "vue";
-import type { IPagination, PagingResult } from "./pagination.ts";
+import type { PagingResult } from "./pagination.ts";
 import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -71,7 +71,7 @@ export function useTemplates(): ITemplateComposables {
     }
   };
 
-  async function modifyStatus(id: string, data: DppStatusModificationDto) {
+  async function modifyStatus(id: string, data: DigitalProductDocumentStatusModificationDto) {
     const errorMessage = t("templates.errorModifyStatus");
     try {
       const response = await apiClient.dpp.templates.modifyStatus(id, data);
@@ -84,15 +84,15 @@ export function useTemplates(): ITemplateComposables {
   }
 
   async function publish(id: string) {
-    await modifyStatus(id, { method: DppStatusModificationMethodDto.Publish });
+    await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Publish });
   }
 
   async function archive(id: string) {
-    await modifyStatus(id, { method: DppStatusModificationMethodDto.Archive });
+    await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Archive });
   }
 
   async function restore(id: string) {
-    await modifyStatus(id, { method: DppStatusModificationMethodDto.Restore });
+    await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Restore });
   }
 
   async function deleteTemplate(id: string, onDeleted: () => Promise<void>) {

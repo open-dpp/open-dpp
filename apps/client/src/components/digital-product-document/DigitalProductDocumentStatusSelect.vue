@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { DppStatusDto, type DppStatusDtoType } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  type DigitalProductDocumentStatusDtoType,
+} from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 
-const model = defineModel<DppStatusDtoType>();
+const model = defineModel<DigitalProductDocumentStatusDtoType>();
 const { t } = useI18n();
-const options = Object.entries(DppStatusDto).map(([key, value]) => ({
+const options = Object.entries(DigitalProductDocumentStatusDto).map(([key, value]) => ({
   key,
   value: t(`status.${value.toLowerCase()}`),
 }));

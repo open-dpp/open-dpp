@@ -5,13 +5,13 @@ import { ExpandedEnvironmentPlain } from "../../aas/domain/expanded-environment"
 import { IPersistable } from "../../aas/domain/persistable";
 import {
   archiveDpp,
-  DppStatus,
-  DppStatusChange,
-  IDppStatusChangeable,
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+  IDigitalProductDocumentStatusChangeable,
   publishDpp,
   restoreDpp,
-} from "../../dpp/domain/dpp-status";
-import { SharedDppSchema } from "../../dpp/domain/dpp.schema";
+} from "../../digital-product-document/domain/digital-product-document-status";
+import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 
@@ -19,10 +19,14 @@ export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "envir
   environment: ExpandedEnvironmentPlain;
 };
 
-const TemplateSchema = SharedDppSchema;
+const TemplateSchema = DigitalProductDocumentSchema;
 
 export class Template
-  implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt, IDppStatusChangeable
+  implements
+    IPersistable,
+    IDigitalProductPassportIdentifiable,
+    HasCreatedAt,
+    IDigitalProductDocumentStatusChangeable
 {
   private constructor(
     public readonly id: string,
@@ -30,7 +34,7 @@ export class Template
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    private lastStatusChange: DppStatusChange,
+    private lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -39,7 +43,7 @@ export class Template
     environment?: Environment;
     createdAt?: Date;
     updatedAt?: Date;
-    lastStatusChange?: DppStatusChange;
+    lastStatusChange?: DigitalProductDocumentStatusChange;
   }) {
     const now = DateTime.now();
     return new Template(
@@ -48,7 +52,7 @@ export class Template
       data.environment ?? Environment.create({}),
       data.createdAt ?? now,
       data.updatedAt ?? now,
-      data.lastStatusChange ?? DppStatusChange.create({}),
+      data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
     );
   }
 
@@ -60,7 +64,7 @@ export class Template
       Environment.fromPlain(parsed.environment),
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
-      DppStatusChange.fromPlain(parsed.lastStatusChange),
+      DigitalProductDocumentStatusChange.fromPlain(parsed.lastStatusChange),
     );
   }
 
@@ -96,14 +100,14 @@ export class Template
   }
 
   isPublished(): boolean {
-    return this.lastStatusChange.currentStatus === DppStatus.Published;
+    return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Published;
   }
 
   isArchived(): boolean {
-    return this.lastStatusChange.currentStatus === DppStatus.Archived;
+    return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Archived;
   }
 
   isDraft(): boolean {
-    return this.lastStatusChange.currentStatus === DppStatus.Draft;
+    return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
   }
 }
