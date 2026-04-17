@@ -25,16 +25,14 @@ const columnFormSchema = z.object({
 const { locale } = useI18n();
 export type FormValues = z.infer<typeof columnFormSchema>;
 
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(columnFormSchema),
   initialValues: {
     ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)),
   },
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 async function submit() {
   await handleSubmit(async (data) => {
@@ -56,6 +54,6 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-4 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
+    <SubmodelBaseForm :show-errors="showErrors" :editor-mode="EditorMode.CREATE" />
   </div>
 </template>

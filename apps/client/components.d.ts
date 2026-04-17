@@ -34,6 +34,7 @@ declare module 'vue' {
     DatePicker: typeof import('primevue/datepicker')['default']
     Dialog: typeof import('primevue/dialog')['default']
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
+    DisplayNameRow: typeof import('./src/components/aas/form/DisplayNameRow.vue')['default']
     Divider: typeof import('primevue/divider')['default']
     DppTable: typeof import('./src/components/DppTable.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
@@ -157,6 +158,7 @@ declare global {
   const DatePicker: (typeof import("primevue/datepicker"))["default"];
   const Dialog: (typeof import("primevue/dialog"))["default"];
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
+  const DisplayNameRow: (typeof import("./src/components/aas/form/DisplayNameRow.vue"))["default"];
   const Divider: (typeof import("primevue/divider"))["default"];
   const DppTable: (typeof import("./src/components/DppTable.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];

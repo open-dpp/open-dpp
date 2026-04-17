@@ -24,16 +24,14 @@ const propertyFormSchema = z.object({
 
 export type FormValues = z.infer<typeof propertyFormSchema>;
 
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
   initialValues: {
     ...props.data,
   },
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;
@@ -68,7 +66,6 @@ defineExpose<{
     <SubmodelBaseForm
       :disabled="disableEdit"
       :show-errors="showErrors"
-      :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
     <PermissionsForm

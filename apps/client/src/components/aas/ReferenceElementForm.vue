@@ -21,13 +21,12 @@ const { t } = useI18n();
 <template>
   <SubmodelBaseForm
     :show-errors="props.showErrors"
-    :errors="props.errors"
     :editor-mode="props.editorMode"
     :disabled="props.disabled"
   />
   <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">
     <div class="flex flex-col gap-2">
-      <span class="text-xl font-bold">{{ t("aasEditor.formLabels.value") }}</span>
+      <h3 class="text-xl font-bold">{{ t("aasEditor.formLabels.value") }}</h3>
       <TextFieldWithValidation
         id="value"
         v-model="value"

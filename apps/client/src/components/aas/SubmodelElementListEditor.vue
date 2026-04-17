@@ -35,7 +35,7 @@ const propertyFormSchema = z.object({
 
 export type FormValues = z.infer<typeof propertyFormSchema>;
 
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
   initialValues: {
     ...props.data,
@@ -97,9 +97,7 @@ const {
   disableColumnEditing: !canEdit.value,
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 async function submit() {
   await handleSubmit(async (data) => {
@@ -152,7 +150,6 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
     <FormContainer>
       <SubmodelBaseForm
         :show-errors="showErrors"
-        :errors="errors"
         :editor-mode="EditorMode.EDIT"
         :disabled="!canEdit"
       />
@@ -182,7 +179,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</span>
+          <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
           <Button
             v-tooltip.top="!canCreateColumnsAndRows ? missingPermissionsMsg : undefined"
             :label="t('aasEditor.table.addColumnEnd')"
@@ -191,34 +188,38 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           />
         </div>
       </template>
-      <Column style="width: 10px" frozen class="font-bold">
+      <Column class="w-12 font-bold" frozen>
         <template #body="{ index }">
-          <div class="flex">
-            <div class="flex items-center gap-2 rounded-md">
-              <Button
-                icon="pi pi-ellipsis-v"
-                severity="secondary"
-                size="small"
-                @click="toggleRowMenu($event, { position: index })"
-              />
-            </div>
+          <div class="flex items-center gap-2 rounded-md">
+            <Button
+              :data-cy="`row-menu-${index}`"
+              :aria-label="t('common.actions')"
+              icon="pi pi-ellipsis-v"
+              severity="secondary"
+              size="small"
+              @click="toggleRowMenu($event, { position: index })"
+            />
           </div>
         </template>
       </Column>
       <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
-          <Button
-            icon="pi pi-ellipsis-v"
-            severity="secondary"
-            size="small"
-            @click="
-              toggleColumnMenu($event, {
-                position: index,
-                addColumnActions: true,
-              })
-            "
-          />
-          <span>{{ col.label }}</span>
+          <div class="flex items-center gap-2">
+            <Button
+              :data-cy="`column-menu-${col.idShort}`"
+              :aria-label="t('common.actions')"
+              icon="pi pi-ellipsis-v"
+              severity="secondary"
+              size="small"
+              @click="
+                toggleColumnMenu($event, {
+                  position: index,
+                  addColumnActions: true,
+                })
+              "
+            />
+            <span>{{ col.label }}</span>
+          </div>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
           <span v-if="typeof field !== 'string'">N/A</span>
