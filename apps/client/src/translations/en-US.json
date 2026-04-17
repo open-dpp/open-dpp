@@ -445,7 +445,10 @@
     "selectStatus": "Select status",
     "draft": "Draft",
     "published": "Published",
-    "archived": "Archived"
+    "archived": "Archived",
+    "publish": "Publish",
+    "restore": "Restore",
+    "archive": "Archive"
   },
   "templates": {
     "label": "Passport templates",

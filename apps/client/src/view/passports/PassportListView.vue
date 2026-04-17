@@ -19,6 +19,7 @@ import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import DppStatusSelect from "../../components/dpp/DppStatusSelect.vue";
 import { useDppFilter } from "../../composables/dpp-filter.ts";
+import DppStatusChangeMenu from "../../components/dpp/DppStatusChangeMenu.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -34,7 +35,8 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
-const { passports, loading, fetchPassports, deletePassport } = usePassports();
+const { passports, loading, fetchPassports, deletePassport, publish, archive, restore } =
+  usePassports();
 
 const { status, changeStatus } = useDppFilter();
 
@@ -118,8 +120,23 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   }
 }
 
-async function onDeleteButtonClick(item: SharedDppDto) {
+async function onDeleteButtonClicked(item: SharedDppDto) {
   await deletePassport(item.id, reloadCurrentPage);
+}
+
+async function onPublishButtonClicked(item: SharedDppDto) {
+  await publish(item.id);
+  await reloadCurrentPage();
+}
+
+async function onArchiveButtonClicked(item: SharedDppDto) {
+  await archive(item.id);
+  await reloadCurrentPage();
+}
+
+async function onRestoreButtonClicked(item: SharedDppDto) {
+  await restore(item.id);
+  await reloadCurrentPage();
 }
 
 async function onSelectedStatusChange(newStatus: DppStatusDtoType | undefined) {
@@ -188,12 +205,12 @@ onMounted(async () => {
         :title="t('common.exportPassport')"
         @click="exportPassport(passport.id)"
       />
-      <Button
-        icon="pi pi-trash"
-        severity="danger"
-        :aria-label="t('common.remove')"
-        :title="t('common.remove')"
-        @click="onDeleteButtonClick(passport)"
+      <DppStatusChangeMenu
+        :item="passport"
+        @on-delete-clicked="onDeleteButtonClicked"
+        @on-publish-clicked="onPublishButtonClicked"
+        @on-archive-clicked="onArchiveButtonClicked"
+        @on-restore-clicked="onRestoreButtonClicked"
       />
     </template>
   </DppTable>

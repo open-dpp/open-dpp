@@ -10,6 +10,7 @@ import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
 import { usePagination } from "../../composables/pagination.ts";
 import { useDppFilter } from "../../composables/dpp-filter.ts";
+import DppStatusChangeMenu from "../../components/dpp/DppStatusChangeMenu.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -123,13 +124,7 @@ onMounted(async () => {
         :title="t('common.exportTemplate')"
         @click="exportTemplate(passport.id)"
       />
-      <Button
-        icon="pi pi-trash"
-        severity="danger"
-        :aria-label="t('common.remove')"
-        :title="t('common.remove')"
-        @click="onDeleteButtonClick(passport)"
-      />
+      <DppStatusChangeMenu :item="passport" @on-delete-clicked="onDeleteButtonClick" />
     </template>
   </DppTable>
   <TemplateCreateDialog

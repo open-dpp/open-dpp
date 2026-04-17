@@ -466,7 +466,10 @@
     "selectStatus": "Status auswählen",
     "draft": "Entwurf",
     "published": "Veröffentlicht",
-    "archived": "Archiviert"
+    "archived": "Archiviert",
+    "publish": "Veröffentlichen",
+    "restore": "Wiederherstellen",
+    "archive": "Archivieren"
   },
   "templates": {
     "label": "Passvorlage | Passvorlagen",
