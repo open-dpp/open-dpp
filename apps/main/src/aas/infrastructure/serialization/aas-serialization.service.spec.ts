@@ -882,14 +882,8 @@ describe("aasSerializationService", () => {
           }),
         ).rejects.toThrow("boom");
 
-        expect(logSpy).toHaveBeenCalledWith(
-          expect.stringContaining(orgId),
-          expect.anything(),
-        );
-        expect(logSpy).toHaveBeenCalledWith(
-          expect.stringContaining("passport"),
-          expect.anything(),
-        );
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(orgId), expect.anything());
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("passport"), expect.anything());
       } finally {
         saveSpy.mockRestore();
         logSpy.mockRestore();
@@ -939,14 +933,8 @@ describe("aasSerializationService", () => {
           }),
         ).rejects.toThrow("boom");
 
-        expect(logSpy).toHaveBeenCalledWith(
-          expect.stringContaining(orgId),
-          expect.anything(),
-        );
-        expect(logSpy).toHaveBeenCalledWith(
-          expect.stringContaining("template"),
-          expect.anything(),
-        );
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(orgId), expect.anything());
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("template"), expect.anything());
       } finally {
         saveSpy.mockRestore();
         logSpy.mockRestore();

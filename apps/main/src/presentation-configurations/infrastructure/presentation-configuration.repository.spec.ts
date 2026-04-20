@@ -147,9 +147,7 @@ describe("presentationConfigurationRepository", () => {
     const findByReferenceSpy = jest
       .spyOn(repository, "findByReference")
       .mockResolvedValueOnce(undefined);
-    const saveSpy = jest
-      .spyOn(repository, "save")
-      .mockRejectedValueOnce(new Error("network fail"));
+    const saveSpy = jest.spyOn(repository, "save").mockRejectedValueOnce(new Error("network fail"));
 
     try {
       await expect(

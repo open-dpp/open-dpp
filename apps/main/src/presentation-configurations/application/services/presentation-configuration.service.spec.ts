@@ -12,9 +12,7 @@ import { PresentationConfigurationService } from "./presentation-configuration.s
 describe("PresentationConfigurationService", () => {
   let service: PresentationConfigurationService;
   let mockRepository: {
-    findOrCreateByReference: jest.Mock<
-      (...args: never[]) => Promise<PresentationConfiguration>
-    >;
+    findOrCreateByReference: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
   };
 
   beforeEach(async () => {
