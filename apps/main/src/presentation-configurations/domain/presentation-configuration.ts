@@ -47,7 +47,9 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-        throw new ValueError(`Invalid PresentationConfiguration: ${details.join("; ")}`);
+        throw new ValueError(`Invalid PresentationConfiguration: ${details.join("; ")}`, {
+          cause: error,
+        });
       }
       throw error;
     }

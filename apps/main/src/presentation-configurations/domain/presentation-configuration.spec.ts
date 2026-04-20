@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { ZodError } from "zod";
 import { PresentationConfiguration } from "./presentation-configuration";
 
 describe("PresentationConfiguration", () => {
@@ -40,6 +41,19 @@ describe("PresentationConfiguration", () => {
         referenceType: "invalid" as never,
       }),
     ).toThrow(ValueError);
+  });
+
+  it("preserves the original ZodError as the ValueError cause", () => {
+    try {
+      PresentationConfiguration.create({
+        ...baseInput(),
+        organizationId: "",
+      });
+      throw new Error("expected create() to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValueError);
+      expect((error as Error).cause).toBeInstanceOf(ZodError);
+    }
   });
 
   it("creates with empty maps by default", () => {
