@@ -193,6 +193,101 @@ describe("presentationConfigurationRepository", () => {
     }
   });
 
+  it("findOrCreateByReference recovers when E11000 surfaces via error.cause.code", async () => {
+    const referenceId = randomUUID();
+    const organizationId = "org-cause";
+    const winner = PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(winner);
+    const wrappedError = Object.assign(new Error("duplicate"), {
+      cause: { code: 11000 },
+    });
+    const saveSpy = jest.spyOn(repository, "save").mockRejectedValueOnce(wrappedError);
+
+    try {
+      const result = await repository.findOrCreateByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId,
+        organizationId,
+      });
+
+      expect(result.id).toBe(winner.id);
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(2);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
+  });
+
+  it("findOrCreateByReference recovers when E11000 surfaces via error.writeErrors[0].code", async () => {
+    const referenceId = randomUUID();
+    const organizationId = "org-bulk";
+    const winner = PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(winner);
+    const bulkError = Object.assign(new Error("bulk"), {
+      writeErrors: [{ code: 11000 }],
+    });
+    const saveSpy = jest.spyOn(repository, "save").mockRejectedValueOnce(bulkError);
+
+    try {
+      const result = await repository.findOrCreateByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId,
+        organizationId,
+      });
+
+      expect(result.id).toBe(winner.id);
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(2);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
+  });
+
+  it("findOrCreateByReference does not misrecover on non-duplicate errors nested in cause", async () => {
+    const referenceId = randomUUID();
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined);
+    const unrelated = Object.assign(new Error("network"), {
+      cause: { code: 99 },
+    });
+    const saveSpy = jest.spyOn(repository, "save").mockRejectedValueOnce(unrelated);
+
+    try {
+      await expect(
+        repository.findOrCreateByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId,
+          organizationId: "org-nested-other",
+        }),
+      ).rejects.toThrow("network");
+
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(1);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
+  });
+
   it("findOrCreateByReference rolls back when the session transaction aborts", async () => {
     const referenceId = randomUUID();
     const session = await connection.startSession();
