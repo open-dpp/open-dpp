@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   KeyTypesType,
   PresentationConfigurationDtoSchema,
+  PresentationConfigurationInvariantsSchema,
   PresentationReferenceType,
   PresentationReferenceTypeType,
 } from "@open-dpp/dto";
@@ -35,6 +36,11 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     createdAt?: Date;
     updatedAt?: Date;
   }): PresentationConfiguration {
+    PresentationConfigurationInvariantsSchema.parse({
+      organizationId: data.organizationId,
+      referenceId: data.referenceId,
+      referenceType: data.referenceType,
+    });
     const now = DateTime.now();
     return new PresentationConfiguration(
       data.id ?? randomUUID(),

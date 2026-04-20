@@ -13,7 +13,7 @@ export type PresentationReferenceTypeType = z.infer<typeof PresentationReference
 export const PresentationConfigurationDtoSchema = z
   .object({
     id: z.uuid(),
-    organizationId: z.string(),
+    organizationId: z.string().min(1),
     referenceId: z.uuid(),
     referenceType: PresentationReferenceTypeEnum,
     elementDesign: z.record(z.string(), z.string()).default({}),
@@ -24,6 +24,12 @@ export const PresentationConfigurationDtoSchema = z
   .meta({ id: "PresentationConfiguration" });
 
 export type PresentationConfigurationDto = z.infer<typeof PresentationConfigurationDtoSchema>;
+
+export const PresentationConfigurationInvariantsSchema = z.object({
+  organizationId: z.string().min(1),
+  referenceId: z.uuid(),
+  referenceType: PresentationReferenceTypeEnum,
+});
 
 export const PresentationConfigurationExportSchema = z.object({
   elementDesign: z.record(z.string(), z.string()).default({}),

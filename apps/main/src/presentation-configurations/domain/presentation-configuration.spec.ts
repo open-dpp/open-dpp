@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { ZodError } from "zod";
 import { PresentationConfiguration } from "./presentation-configuration";
 
 describe("PresentationConfiguration", () => {
@@ -8,6 +9,33 @@ describe("PresentationConfiguration", () => {
     organizationId: "org-1",
     referenceId: randomUUID(),
     referenceType: PresentationReferenceType.Template,
+  });
+
+  it("rejects empty organizationId in create()", () => {
+    expect(() =>
+      PresentationConfiguration.create({
+        ...baseInput(),
+        organizationId: "",
+      }),
+    ).toThrow(ZodError);
+  });
+
+  it("rejects non-uuid referenceId in create()", () => {
+    expect(() =>
+      PresentationConfiguration.create({
+        ...baseInput(),
+        referenceId: "not-a-uuid",
+      }),
+    ).toThrow(ZodError);
+  });
+
+  it("rejects invalid referenceType in create()", () => {
+    expect(() =>
+      PresentationConfiguration.create({
+        ...baseInput(),
+        referenceType: "invalid" as never,
+      }),
+    ).toThrow(ZodError);
   });
 
   it("creates with empty maps by default", () => {
