@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { PresentationReferenceTypeType } from "@open-dpp/dto";
 import type { Model as MongooseModel } from "mongoose";
@@ -19,6 +19,7 @@ const MONGO_DUPLICATE_KEY_ERROR_CODE = 11000;
 
 @Injectable()
 export class PresentationConfigurationRepository {
+  private readonly logger = new Logger(PresentationConfigurationRepository.name);
   private readonly presentationConfigurationDoc: MongooseModel<PresentationConfigurationDoc>;
 
   constructor(
@@ -103,6 +104,9 @@ export class PresentationConfigurationRepository {
       if (isDuplicateKeyError(error)) {
         const retry = await this.findByReference(ref, options);
         if (retry) {
+          this.logger.warn(
+            `findOrCreateByReference: race on (${data.referenceType}, ${data.referenceId}) recovered via re-read`,
+          );
           return retry;
         }
       }

@@ -1,6 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
@@ -285,6 +286,42 @@ describe("presentationConfigurationRepository", () => {
     } finally {
       findByReferenceSpy.mockRestore();
       saveSpy.mockRestore();
+    }
+  });
+
+  it("findOrCreateByReference logs a warning when recovering from a duplicate-key race", async () => {
+    const referenceId = randomUUID();
+    const organizationId = "org-race-log";
+    const winner = PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(winner);
+    const saveSpy = jest
+      .spyOn(repository, "save")
+      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
+
+    const repoLogger = (repository as unknown as { logger: Logger }).logger;
+    const warnSpy = jest.spyOn(repoLogger, "warn").mockImplementation(() => {});
+
+    try {
+      await repository.findOrCreateByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId,
+        organizationId,
+      });
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(referenceId));
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+      warnSpy.mockRestore();
     }
   });
 
