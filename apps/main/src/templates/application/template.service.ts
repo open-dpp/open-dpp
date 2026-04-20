@@ -8,16 +8,23 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { DigitalProductDocumentStatusModificationDto, TemplateDtoSchema } from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../digital-product-document/domain/digital-product-document-status";
+import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 
 @Injectable()
 export class TemplateService {
   private readonly logger = new Logger(TemplateService.name);
+  public readonly digitalProductDocumentService: DigitalProductDocumentService<Template>;
 
   constructor(
     private readonly templateRepository: TemplateRepository,
     private readonly environmentService: EnvironmentService,
     @InjectConnection() private connection: Connection,
-  ) {}
+  ) {
+    this.digitalProductDocumentService = new DigitalProductDocumentService(
+      this.environmentService,
+      this.templateRepository,
+    );
+  }
 
   async modifyTemplateStatus(
     id: string,
@@ -25,13 +32,23 @@ export class TemplateService {
     subject: SubjectAttributes,
     body: DigitalProductDocumentStatusModificationDto,
   ) {
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     handleDppStatusChangeRequest(template, body);
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    const template =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     if (!template.isDraft()) {
       throw new ForbiddenException('Only templates with the status "Draft" can be deleted');
     }
@@ -45,17 +62,5 @@ export class TemplateService {
     } finally {
       await session.endSession();
     }
-  }
-
-  public async loadTemplateAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Template> {
-    const template = await this.templateRepository.findOneOrFail(id);
-    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return template;
   }
 }

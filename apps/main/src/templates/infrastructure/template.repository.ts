@@ -1,7 +1,6 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { IDigitalProductPassportIdentifiableRepository } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
 import {
@@ -13,9 +12,10 @@ import {
 } from "../../lib/repositories";
 import { Template } from "../domain/template";
 import { TemplateDoc, TemplateDocVersion } from "./template.schema";
+import { IDigitalProductDocumentRepository } from "../../digital-product-document/infrastructure/digital-product-document-repository.interface";
 
 @Injectable()
-export class TemplateRepository implements IDigitalProductPassportIdentifiableRepository {
+export class TemplateRepository implements IDigitalProductDocumentRepository<Template> {
   private templateDoc: MongooseModel<TemplateDoc>;
 
   constructor(

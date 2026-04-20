@@ -11,17 +11,24 @@ import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
+import { DbSessionOptions } from "../../../database/query-options";
+import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 
 @Injectable()
 export class PassportService {
   private readonly logger = new Logger(PassportService.name);
-
+  public readonly digitalProductDocumentService: DigitalProductDocumentService<Passport>;
   constructor(
     private readonly passportRepository: PassportRepository,
     private readonly environmentService: EnvironmentService,
     @InjectConnection() private connection: Connection,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
-  ) {}
+  ) {
+    this.digitalProductDocumentService = new DigitalProductDocumentService(
+      this.environmentService,
+      this.passportRepository,
+    );
+  }
 
   async getExpandedProductPassport(passportId: string): Promise<AasExportable> {
     const passport = await this.passportRepository.findOne(passportId);
@@ -58,13 +65,23 @@ export class PassportService {
     subject: SubjectAttributes,
     body: DigitalProductDocumentStatusModificationDto,
   ) {
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     handleDppStatusChangeRequest(passport, body);
     return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
   }
 
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     if (!passport.isDraft()) {
       throw new ForbiddenException('Only passports with the status "Draft" can be deleted');
     }
@@ -72,24 +89,12 @@ export class PassportService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.environmentService.deleteEnvironment(passport.environment, session);
+        await this.environmentService.deleteEnvironment(passport.getEnvironment(), session);
         await this.passportRepository.deleteById(passport.id, { session });
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
       });
     } finally {
       await session.endSession();
     }
-  }
-
-  public async loadPassportAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Passport> {
-    const passport = await this.passportRepository.findOneOrFail(id);
-    if (passport.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return passport;
   }
 }

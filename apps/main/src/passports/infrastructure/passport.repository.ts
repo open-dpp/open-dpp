@@ -14,9 +14,10 @@ import {
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportDoc, PassportDocVersion } from "./passport.schema";
+import { IDigitalProductDocumentRepository } from "../../digital-product-document/infrastructure/digital-product-document-repository.interface";
 
 @Injectable()
-export class PassportRepository {
+export class PassportRepository implements IDigitalProductDocumentRepository<Passport> {
   private passportDoc: MongooseModel<PassportDoc>;
 
   constructor(

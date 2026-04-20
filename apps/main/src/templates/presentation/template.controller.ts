@@ -1,17 +1,32 @@
-import {
+import type {
   AssetAdministrationShellModificationDto,
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  DigitalProductDocumentStatusDtoType,
+  DigitalProductDocumentStatusModificationDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
+  SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
   SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
   SubmodelRequestDto,
+  SubmodelResponseDto,
   TemplateCreateDto,
-  DigitalProductDocumentStatusModificationDto,
+  TemplateDto,
+  TemplatePaginationDto,
   ValueRequestDto,
-  DigitalProductDocumentStatusDtoType,
-  PassportDto,
-  PassportDtoSchema,
+  ValueResponseDto,
+} from "@open-dpp/dto";
+
+import {
+  DigitalProductDocumentStatusModificationDtoSchema,
+  Populates,
+  TemplateCreateDtoSchema,
+  TemplateDtoSchema,
+  TemplatePaginationDtoSchema,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -26,23 +41,6 @@ import {
   Post,
   Put,
 } from "@nestjs/common";
-
-import {
-  AssetAdministrationShellPaginationResponseDto,
-  AssetAdministrationShellResponseDto,
-  Populates,
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementResponseDto,
-  SubmodelPaginationResponseDto,
-  SubmodelResponseDto,
-  TemplateCreateDtoSchema,
-  DigitalProductDocumentStatusModificationDtoSchema,
-  TemplateDto,
-  TemplateDtoSchema,
-  TemplatePaginationDto,
-  TemplatePaginationDtoSchema,
-  ValueResponseDto,
-} from "@open-dpp/dto";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
@@ -81,7 +79,6 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   PositionQueryParam,
-  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -97,7 +94,6 @@ import {
   IAasReadEndpointsWithOrganizationId,
 } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
-import { DbSessionOptions } from "../../database/query-options";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
@@ -110,7 +106,6 @@ import {
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
-import type express from "express";
 
 @Controller("/templates")
 export class TemplateController
@@ -137,11 +132,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(
       template.getEnvironment(),
@@ -161,13 +157,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return this.templateService.digitalProductDocumentService.modifyShell(
       organizationId,
-    );
-    return await this.environmentService.modifyAasShell(
-      template.getEnvironment(),
+      id,
       aasId,
       body,
       subject,
@@ -184,11 +176,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(
       template.getEnvironment(),
@@ -206,15 +199,16 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.addSubmodelToEnvironment(
       template.getEnvironment(),
       body,
-      this.saveEnvironmentCallback(template),
+      this.templateService.digitalProductDocumentService.saveEnvironmentCallback(template),
     );
   }
 
@@ -227,17 +221,10 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const administrator = SubjectAttributes.create({ userRole, memberRole });
-    const subject = SubjectAttributes.fromPlain(body.subject);
-    const object = IdShortPath.create({ path: body.object });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      administrator,
+    await this.templateService.digitalProductDocumentService.deletePolicyBySubjectAndObject(
       organizationId,
-    );
-    await this.environmentService.deletePolicyBySubjectAndObject(
-      template.getEnvironment(),
-      object,
-      subject,
+      id,
+      body,
       administrator,
     );
   }
@@ -251,15 +238,10 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    await this.templateService.digitalProductDocumentService.deleteSubmodel(
       organizationId,
-    );
-    await this.environmentService.deleteSubmodelFromEnvironment(
-      template.getEnvironment(),
+      id,
       submodelId,
-      this.saveEnvironmentCallback(template),
       subject,
     );
   }
@@ -274,13 +256,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return await this.templateService.digitalProductDocumentService.modifySubmodel(
       organizationId,
-    );
-    return await this.environmentService.modifySubmodel(
-      template.getEnvironment(),
+      id,
       submodelId,
       body,
       subject,
@@ -296,11 +274,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelById(
       template.getEnvironment(),
       submodelId,
@@ -317,11 +296,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelValue(
       template.getEnvironment(),
       submodelId,
@@ -340,11 +320,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(
       template.getEnvironment(),
@@ -364,11 +345,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.addSubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -387,13 +369,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    await this.templateService.digitalProductDocumentService.deleteSubmodelElement(
       organizationId,
-    );
-    await this.environmentService.deleteSubmodelElement(
-      template.getEnvironment(),
+      id,
       submodelId,
       idShortPath,
       subject,
@@ -412,11 +390,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(
       template.getEnvironment(),
@@ -440,13 +419,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
       organizationId,
-    );
-    return await this.environmentService.modifyColumn(
-      template.getEnvironment(),
+      id,
       submodelId,
       idShortPath,
       idShortOfColumn,
@@ -466,13 +441,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return await this.templateService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
       organizationId,
-    );
-    return await this.environmentService.deleteColumn(
-      template.getEnvironment(),
+      id,
       submodelId,
       idShortPath,
       idShortOfColumn,
@@ -491,11 +462,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.addRow(
       template.getEnvironment(),
       submodelId,
@@ -516,13 +488,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return await this.templateService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
       organizationId,
-    );
-    return await this.environmentService.deleteRow(
-      template.getEnvironment(),
+      id,
       submodelId,
       idShortPath,
       idShortOfRow,
@@ -541,16 +509,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return await this.templateService.digitalProductDocumentService.modifySubmodelElement(
       organizationId,
-    );
-    return await this.environmentService.modifySubmodelElement(
-      template.getEnvironment(),
+      id,
       submodelId,
-      body,
       idShortPath,
+      body,
       subject,
     );
   }
@@ -566,16 +530,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
+    return await this.templateService.digitalProductDocumentService.modifySubmodelElementValue(
       organizationId,
-    );
-    return await this.environmentService.modifyValueOfSubmodelElement(
-      template.getEnvironment(),
+      id,
       submodelId,
-      body,
       idShortPath,
+      body,
       subject,
     );
   }
@@ -590,11 +550,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelElementById(
       template.getEnvironment(),
       submodelId,
@@ -614,11 +575,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.addSubmodelElement(
       template.getEnvironment(),
       submodelId,
@@ -638,11 +600,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelElementValue(
       template.getEnvironment(),
       submodelId,
@@ -695,11 +658,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.aasSerializationService.exportTemplate(template, subject);
   }
 
@@ -749,17 +713,12 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Param("id") id: string,
   ): Promise<TemplateDto> {
-    const template = await this.templateService.loadTemplateAndCheckOwnership(
-      id,
-      SubjectAttributes.create({ userRole, memberRole }),
-      organizationId,
-    );
+    const template =
+      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        SubjectAttributes.create({ userRole, memberRole }),
+        organizationId,
+      );
     return TemplateDtoSchema.parse(template.toPlain());
-  }
-
-  private saveEnvironmentCallback(template: Template) {
-    return async (options: DbSessionOptions) => {
-      await this.templateRepository.save(template, options);
-    };
   }
 }

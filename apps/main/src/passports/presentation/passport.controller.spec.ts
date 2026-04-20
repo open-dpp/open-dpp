@@ -224,6 +224,7 @@ describe("passportController", () => {
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
 
     expect(response.status).toEqual(200);
