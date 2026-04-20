@@ -158,6 +158,9 @@ export class PassportController
     @Param("passportId") id: string,
   ): Promise<PassportDto> {
     const passport = await this.passportRepository.findOneOrFail(id);
+    // Lazy-init: passports created before the presentation-configuration feature have no
+    // row. Materialize a default on first read instead of backfilling via migration.
+    // The duplicate-key retry inside findOrCreateByReference makes this safe under load.
     await this.presentationConfigurationService.getOrCreateForPassport(passport);
     return PassportDtoSchema.parse(passport.toPlain());
   }

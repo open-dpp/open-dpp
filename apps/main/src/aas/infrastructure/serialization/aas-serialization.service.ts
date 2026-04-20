@@ -289,6 +289,9 @@ function buildImportedPresentationConfiguration(params: {
   referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
 }): PresentationConfiguration | null {
   const { schema, organizationId, referenceId, referenceType } = params;
+  // AasExport is a discriminated union (v1 | v2 | v3). `presentationConfiguration` only
+  // exists on the v3 variant, so we need the `in` guard to narrow before accessing it —
+  // a plain truthy check won't type-check here.
   if (!("presentationConfiguration" in schema) || !schema.presentationConfiguration) {
     return null;
   }

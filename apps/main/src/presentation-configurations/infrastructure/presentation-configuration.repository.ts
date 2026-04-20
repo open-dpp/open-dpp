@@ -94,6 +94,9 @@ export class PresentationConfigurationRepository {
       referenceType: data.referenceType,
     });
 
+    // Concurrent callers can both pass the findByReference check above and race to save.
+    // The unique index on (referenceType, referenceId) serializes them: the loser sees
+    // E11000 and re-reads the winner's record. Any non-duplicate error still surfaces.
     try {
       return await this.save(fresh, options);
     } catch (error) {

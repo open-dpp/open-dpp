@@ -10,6 +10,9 @@ import { SubjectAttributes } from "../security/subject-attributes";
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
+  // Must stay in lockstep with `aasExportSchemaJsonLatest` in
+  // infrastructure/serialization/export-schemas/aas-export-types.ts. Bumping one
+  // without the other produces exports whose `version` field disagrees with their shape.
   private readonly EXPORT_VERSION = AasExportVersion.v3_0;
 
   private constructor(
