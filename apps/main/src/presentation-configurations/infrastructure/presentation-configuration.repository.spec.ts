@@ -1,10 +1,11 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import type { Connection } from "mongoose";
 
 import { generateMongoConfig } from "../../database/config";
 import { PresentationConfiguration } from "../domain/presentation-configuration";
@@ -16,6 +17,7 @@ import {
 
 describe("presentationConfigurationRepository", () => {
   let repository: PresentationConfigurationRepository;
+  let connection: Connection;
   let module: TestingModule;
 
   beforeAll(async () => {
@@ -42,6 +44,7 @@ describe("presentationConfigurationRepository", () => {
     repository = module.get<PresentationConfigurationRepository>(
       PresentationConfigurationRepository,
     );
+    connection = module.get<Connection>(getConnectionToken());
   });
 
   it("persists a presentation configuration and loads it back by id", async () => {
@@ -102,6 +105,31 @@ describe("presentationConfigurationRepository", () => {
     });
 
     expect(second.id).toBe(first.id);
+  });
+
+  it("findOrCreateByReference rolls back when the session transaction aborts", async () => {
+    const referenceId = randomUUID();
+    const session = await connection.startSession();
+    try {
+      session.startTransaction();
+      await repository.findOrCreateByReference(
+        {
+          referenceType: PresentationReferenceType.Template,
+          referenceId,
+          organizationId: "org-tx",
+        },
+        { session },
+      );
+      await session.abortTransaction();
+    } finally {
+      await session.endSession();
+    }
+
+    const found = await repository.findByReference({
+      referenceType: PresentationReferenceType.Template,
+      referenceId,
+    });
+    expect(found).toBeUndefined();
   });
 
   afterAll(async () => {

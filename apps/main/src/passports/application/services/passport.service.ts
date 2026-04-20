@@ -21,7 +21,8 @@ export class PassportService {
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
-    await this.presentationConfigurationService.getOrCreateForPassport(passport);
+    const presentationConfiguration =
+      await this.presentationConfigurationService.getOrCreateForPassport(passport);
 
     if (!passport.environment) {
       this.logger.warn(
@@ -36,6 +37,7 @@ export class PassportService {
           new Map(),
           new Map(),
         ),
+        presentationConfiguration,
       );
     }
 
@@ -43,6 +45,10 @@ export class PassportService {
       passport.environment,
     );
 
-    return AasExportable.createFromPassport(passport, expandedEnvironment);
+    return AasExportable.createFromPassport(
+      passport,
+      expandedEnvironment,
+      presentationConfiguration,
+    );
   }
 }

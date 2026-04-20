@@ -56,11 +56,14 @@ export class PresentationConfigurationRepository {
 
   async findByReference(
     ref: PresentationConfigurationReference,
+    options?: DbSessionOptions,
   ): Promise<PresentationConfiguration | undefined> {
-    const doc = await this.presentationConfigurationDoc.findOne({
-      referenceType: ref.referenceType,
-      referenceId: ref.referenceId,
-    });
+    const doc = await this.presentationConfigurationDoc
+      .findOne({
+        referenceType: ref.referenceType,
+        referenceId: ref.referenceId,
+      })
+      .session(options?.session ?? null);
     if (!doc) {
       return undefined;
     }
@@ -68,15 +71,19 @@ export class PresentationConfigurationRepository {
     return PresentationConfiguration.fromPlain({ ...plain, id: plain._id });
   }
 
-  async findOrCreateByReference(data: {
-    referenceType: PresentationReferenceTypeType;
-    referenceId: string;
-    organizationId: string;
-  }): Promise<PresentationConfiguration> {
-    const existing = await this.findByReference({
+  async findOrCreateByReference(
+    data: {
+      referenceType: PresentationReferenceTypeType;
+      referenceId: string;
+      organizationId: string;
+    },
+    options?: DbSessionOptions,
+  ): Promise<PresentationConfiguration> {
+    const ref = {
       referenceType: data.referenceType,
       referenceId: data.referenceId,
-    });
+    };
+    const existing = await this.findByReference(ref, options);
     if (existing) {
       return existing;
     }
@@ -88,13 +95,10 @@ export class PresentationConfigurationRepository {
     });
 
     try {
-      return await this.save(fresh);
+      return await this.save(fresh, options);
     } catch (error) {
       if (isDuplicateKeyError(error)) {
-        const retry = await this.findByReference({
-          referenceType: data.referenceType,
-          referenceId: data.referenceId,
-        });
+        const retry = await this.findByReference(ref, options);
         if (retry) {
           return retry;
         }
