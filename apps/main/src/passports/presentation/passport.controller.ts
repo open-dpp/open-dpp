@@ -49,7 +49,6 @@ import { match, P } from "ts-pattern";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
@@ -351,16 +350,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addSubmodelToEnvironment(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.createSubmodel(
+      organizationId,
+      id,
       body,
-      this.passportService.digitalProductDocumentService.saveEnvironmentCallback(passport),
+      subject,
     );
   }
 
@@ -473,20 +467,14 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
-      column,
-      subject,
+      body,
       position,
+      subject,
     );
   }
 
@@ -545,18 +533,13 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addRow(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.addRowToSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
-      subject,
       position,
+      subject,
     );
   }
 
@@ -591,14 +574,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addSubmodelElement(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.createSubmodelElement(
+      organizationId,
+      id,
       submodelId,
       body,
       subject,
@@ -727,18 +705,13 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addSubmodelElement(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
+      organizationId,
+      id,
       submodelId,
+      idShortPath,
       body,
       subject,
-      idShortPath,
     );
   }
 

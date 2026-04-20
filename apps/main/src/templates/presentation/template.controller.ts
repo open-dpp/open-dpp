@@ -45,7 +45,6 @@ import {
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
@@ -199,16 +198,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template =
-      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addSubmodelToEnvironment(
-      template.getEnvironment(),
+    return await this.templateService.digitalProductDocumentService.createSubmodel(
+      organizationId,
+      id,
       body,
-      this.templateService.digitalProductDocumentService.saveEnvironmentCallback(template),
+      subject,
     );
   }
 
@@ -345,14 +339,9 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template =
-      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addSubmodelElement(
-      template.getEnvironment(),
+    return await this.templateService.digitalProductDocumentService.createSubmodelElement(
+      organizationId,
+      id,
       submodelId,
       body,
       subject,
@@ -390,20 +379,14 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template =
-      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(
-      template.getEnvironment(),
+    return await this.templateService.digitalProductDocumentService.addColumnToSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
-      column,
-      subject,
+      body,
       position,
+      subject,
     );
   }
 
@@ -462,18 +445,13 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template =
-      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addRow(
-      template.getEnvironment(),
+    return await this.templateService.digitalProductDocumentService.addRowToSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
-      subject,
       position,
+      subject,
     );
   }
 
@@ -575,18 +553,13 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template =
-      await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.environmentService.addSubmodelElement(
-      template.getEnvironment(),
+    return await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
+      organizationId,
+      id,
       submodelId,
+      idShortPath,
       body,
       subject,
-      idShortPath,
     );
   }
 

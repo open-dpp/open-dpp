@@ -37,6 +37,7 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
+import { KeyTypes } from "@open-dpp/dto";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -186,6 +187,77 @@ describe("DigitalProductDocumentService", () => {
             memberRole: MemberRole.MEMBER,
           }),
           object: "policy1",
+        },
+        subject,
+      ),
+    ).rejects.toThrow(exception);
+
+    await expect(
+      service.createSubmodel(passport.organizationId, passport.id, { idShort: "sub" }, subject),
+    ).rejects.toThrow(exception);
+
+    await expect(
+      service.addColumnToSubmodelElementList(
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        IdShortPath.create({ path: "sub" }),
+        {
+          idShort: "col1",
+          modelType: KeyTypes.Property,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
+        undefined,
+        subject,
+      ),
+    ).rejects.toThrow(exception);
+
+    await expect(
+      service.addRowToSubmodelElementList(
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        IdShortPath.create({ path: "sub" }),
+        undefined,
+        subject,
+      ),
+    ).rejects.toThrow(exception);
+
+    await expect(
+      service.createSubmodelElement(
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        {
+          idShort: "prop1",
+          modelType: KeyTypes.Property,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
+        subject,
+      ),
+    ).rejects.toThrow(exception);
+    await expect(
+      service.createSubmodelElementAtIdShortPath(
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        IdShortPath.create({ path: "sub" }),
+        {
+          idShort: "prop1",
+          modelType: KeyTypes.Property,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
         },
         subject,
       ),

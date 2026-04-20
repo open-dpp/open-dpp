@@ -8,8 +8,10 @@ import {
   DeletePolicyDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
+  type SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelModificationDto,
+  type SubmodelRequestDto,
   SubmodelResponseDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
@@ -19,12 +21,125 @@ import {
   DigitalProductDocumentEntity,
   IDigitalProductDocumentRepository,
 } from "../infrastructure/digital-product-document-repository.interface";
+import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly digitalProductDocRepository: IDigitalProductDocumentRepository<T>,
   ) {}
+
+  async createSubmodel(
+    organizationId: string,
+    id: string,
+    body: SubmodelRequestDto,
+    subject: SubjectAttributes,
+  ): Promise<SubmodelResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.addSubmodelToEnvironment(
+      item.getEnvironment(),
+      body,
+      this.saveEnvironmentCallback(item),
+    );
+  }
+
+  async addColumnToSubmodelElementList(
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: SubmodelElementRequestDto,
+    position: number | undefined,
+    subject: SubjectAttributes,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    const column = parseSubmodelElement(body);
+    return await this.environmentService.addColumn(
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      column,
+      subject,
+      position,
+    );
+  }
+
+  async addRowToSubmodelElementList(
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    position: number | undefined,
+    subject: SubjectAttributes,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.addRow(
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      subject,
+      position,
+    );
+  }
+
+  async createSubmodelElement(
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: SubmodelElementRequestDto,
+    subject: SubjectAttributes,
+  ): Promise<SubmodelElementResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.addSubmodelElement(
+      item.getEnvironment(),
+      submodelId,
+      body,
+      subject,
+    );
+  }
+
+  async createSubmodelElementAtIdShortPath(
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: SubmodelElementRequestDto,
+    subject: SubjectAttributes,
+  ): Promise<SubmodelElementResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.addSubmodelElement(
+      item.getEnvironment(),
+      submodelId,
+      body,
+      subject,
+      idShortPath,
+    );
+  }
 
   async modifyShell(
     organizationId: string,
