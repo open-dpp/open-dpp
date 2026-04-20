@@ -131,10 +131,7 @@ function onSubmit() {
 
 const isFullPosition = computed(() => position.value === fullPosition);
 
-const tabLabels = computed(() => [
-  t("aasEditor.tabs.structure"),
-  t("aasEditor.tabs.presentation"),
-]);
+const tabLabels = computed(() => [t("aasEditor.tabs.structure"), t("aasEditor.tabs.presentation")]);
 
 const activeTabIndex = computed(() => {
   return route.query.tab === "presentation" ? 1 : 0;

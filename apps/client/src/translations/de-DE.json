@@ -581,6 +581,8 @@
     "askQuestion": "Stellen Sie Ihre Frage...",
     "answerPending": "Wird verarbeitet...",
     "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen.",
+    "loadPresentationConfigError": "Laden der Darstellungskonfiguration fehlgeschlagen.",
+    "updatePresentationConfigError": "Aktualisieren der Darstellungskonfiguration fehlgeschlagen.",
     "emailGreeting": "Vielen Dank",
     "repairRequest": {
       "addAiChatDialog": {

@@ -2,11 +2,7 @@ import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import {
-  KeyTypes,
-  PresentationComponentName,
-  PresentationReferenceType,
-} from "@open-dpp/dto";
+import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import { Environment } from "../../aas/domain/environment";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";

@@ -86,7 +86,8 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @Param("id") id: string,
   ): Promise<PresentationConfigurationDto> {
     const passport = await this.loadPassport(id);
-    const config = await this.presentationConfigurationService.getEffectiveForPassport(passport);
+    const config =
+      await this.presentationConfigurationService.getEffectiveForPassportReadOnly(passport);
     return PresentationConfigurationDtoSchema.parse(config.toPlain());
   }
 

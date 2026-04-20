@@ -274,5 +274,137 @@ describe("PresentationConfigurationService", () => {
 
       expect(result).toBe(passportConfig);
     });
+
+    // TODO: extend this into a true "passport wins on conflict" test once a
+    // second PresentationComponentName exists. With only BigNumber today the
+    // conflict case is not expressible at the type level.
+    it("template defaults bleed through when the passport has none", async () => {
+      const organizationId = randomUUID();
+      const templateId = randomUUID();
+      const passport = Passport.create({
+        organizationId,
+        templateId,
+        environment: Environment.create({}),
+      });
+      const templateConfig = PresentationConfiguration.create({
+        organizationId,
+        referenceId: templateId,
+        referenceType: PresentationReferenceType.Template,
+        defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
+      });
+      const passportConfig = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passport.id,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      mockRepository.findOrCreateByReference.mockResolvedValue(passportConfig);
+      mockRepository.findByReference.mockResolvedValue(templateConfig);
+
+      const result = await service.getEffectiveForPassport(passport);
+
+      expect(result.defaultComponents.get(KeyTypes.Property)).toBe(
+        PresentationComponentName.BigNumber,
+      );
+    });
+  });
+
+  describe("getEffectiveForPassportReadOnly", () => {
+    it("never calls findOrCreateByReference (no writes)", async () => {
+      const organizationId = randomUUID();
+      const passport = Passport.create({
+        organizationId,
+        environment: Environment.create({}),
+      });
+      mockRepository.findByReference.mockResolvedValue(undefined);
+
+      const result = await service.getEffectiveForPassportReadOnly(passport);
+
+      expect(mockRepository.findOrCreateByReference).not.toHaveBeenCalled();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+      expect(result.elementDesign.size).toBe(0);
+      expect(result.defaultComponents.size).toBe(0);
+    });
+
+    it("merges template config under an in-memory empty passport config when no rows exist", async () => {
+      const organizationId = randomUUID();
+      const templateId = randomUUID();
+      const passport = Passport.create({
+        organizationId,
+        templateId,
+        environment: Environment.create({}),
+      });
+      const templateConfig = PresentationConfiguration.create({
+        organizationId,
+        referenceId: templateId,
+        referenceType: PresentationReferenceType.Template,
+        elementDesign: { "sm.p": PresentationComponentName.BigNumber },
+      });
+      mockRepository.findByReference
+        .mockResolvedValueOnce(undefined) // passport config lookup — not present
+        .mockResolvedValueOnce(templateConfig); // template config lookup
+
+      const result = await service.getEffectiveForPassportReadOnly(passport);
+
+      expect(mockRepository.findOrCreateByReference).not.toHaveBeenCalled();
+      expect(result.elementDesign.get("sm.p")).toBe(PresentationComponentName.BigNumber);
+    });
+
+    it("returns a persisted passport config unchanged when the passport has no template", async () => {
+      const organizationId = randomUUID();
+      const passport = Passport.create({
+        organizationId,
+        environment: Environment.create({}),
+      });
+      const passportConfig = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passport.id,
+        referenceType: PresentationReferenceType.Passport,
+        elementDesign: { "sm.p": PresentationComponentName.BigNumber },
+      });
+      mockRepository.findByReference.mockResolvedValueOnce(passportConfig);
+
+      const result = await service.getEffectiveForPassportReadOnly(passport);
+
+      expect(mockRepository.findOrCreateByReference).not.toHaveBeenCalled();
+      expect(mockRepository.findByReference).toHaveBeenCalledTimes(1);
+      expect(result).toBe(passportConfig);
+    });
+
+    it("merges a persisted passport config with a persisted template config", async () => {
+      const organizationId = randomUUID();
+      const templateId = randomUUID();
+      const passport = Passport.create({
+        organizationId,
+        templateId,
+        environment: Environment.create({}),
+      });
+      const templateConfig = PresentationConfiguration.create({
+        organizationId,
+        referenceId: templateId,
+        referenceType: PresentationReferenceType.Template,
+        elementDesign: {
+          "template.only": PresentationComponentName.BigNumber,
+          "shared.path": PresentationComponentName.BigNumber,
+        },
+      });
+      const passportConfig = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passport.id,
+        referenceType: PresentationReferenceType.Passport,
+        elementDesign: { "passport.only": PresentationComponentName.BigNumber },
+      });
+      mockRepository.findByReference
+        .mockResolvedValueOnce(passportConfig)
+        .mockResolvedValueOnce(templateConfig);
+
+      const result = await service.getEffectiveForPassportReadOnly(passport);
+
+      expect(mockRepository.findOrCreateByReference).not.toHaveBeenCalled();
+      expect(Object.fromEntries(result.elementDesign)).toEqual({
+        "template.only": PresentationComponentName.BigNumber,
+        "shared.path": PresentationComponentName.BigNumber,
+        "passport.only": PresentationComponentName.BigNumber,
+      });
+    });
   });
 });

@@ -14,6 +14,7 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import {
   UniqueProductIdentifierDoc,
@@ -146,5 +147,33 @@ describe("uniqueProductIdentifierController", () => {
 
   it(`/GET submodel element value`, async () => {
     await ctx.asserts.getSubmodelElementValue(createPassportWithUniqueProductIdentifier);
+  });
+
+  it(`/GET presentation-configuration is publicly readable and never materializes a row`, async () => {
+    const upid = await createPassportWithUniqueProductIdentifier();
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    // Anonymous call (no Cookie header) must succeed because the route is @OptionalAuth.
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/unique-product-identifiers/${upid.id}/presentation-configuration`,
+    );
+
+    expect(response.status).toEqual(200);
+    expect(response.body.referenceType).toEqual("passport");
+    expect(response.body.referenceId).toEqual(upid.passport.id);
+    expect(response.body.elementDesign).toEqual({});
+    expect(response.body.defaultComponents).toEqual({});
+
+    // Invariant: the public (anonymous) read path must never insert a config
+    // row. Lazy materialization is reserved for authenticated endpoints; public
+    // endpoints go through getEffectiveForPassportReadOnly, which is strictly
+    // read-only.
+    const stored = await presentationConfigurationRepository.findByReference({
+      referenceType: "passport",
+      referenceId: upid.passport.id,
+    });
+    expect(stored).toBeUndefined();
   });
 });

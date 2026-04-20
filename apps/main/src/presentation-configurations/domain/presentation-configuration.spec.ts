@@ -1,10 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
-import {
-  KeyTypes,
-  PresentationComponentName,
-  PresentationReferenceType,
-} from "@open-dpp/dto";
+import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { ZodError } from "zod";
 import { PresentationConfiguration } from "./presentation-configuration";
@@ -94,35 +90,41 @@ describe("PresentationConfiguration", () => {
     });
   });
 
-  it("fromPlain rejects an unknown component name", () => {
-    expect(() =>
-      PresentationConfiguration.fromPlain({
-        id: randomUUID(),
-        organizationId: "org-1",
-        referenceId: randomUUID(),
-        referenceType: PresentationReferenceType.Template,
-        elementDesign: { "submodel-1.prop-1": "NotARealComponent" },
-        defaultComponents: {},
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }),
-    ).toThrow(ZodError);
+  it("fromPlain silently drops entries with unknown component names (backward-compatible load)", () => {
+    const restored = PresentationConfiguration.fromPlain({
+      id: randomUUID(),
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+      referenceType: PresentationReferenceType.Template,
+      elementDesign: {
+        "submodel-1.prop-1": "NotARealComponent",
+        "submodel-1.prop-2": PresentationComponentName.BigNumber,
+      },
+      defaultComponents: {
+        [KeyTypes.Property]: "AlsoGone",
+        [KeyTypes.File]: PresentationComponentName.BigNumber,
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    expect(restored.elementDesign.get("submodel-1.prop-1")).toBeUndefined();
+    expect(restored.elementDesign.get("submodel-1.prop-2")).toBe(
+      PresentationComponentName.BigNumber,
+    );
+    expect(restored.defaultComponents.get(KeyTypes.Property)).toBeUndefined();
+    expect(restored.defaultComponents.get(KeyTypes.File)).toBe(PresentationComponentName.BigNumber);
   });
 
   it("withElementDesign produces a new instance and bumps updatedAt", async () => {
     const config = PresentationConfiguration.create(baseInput());
     await new Promise((resolve) => setTimeout(resolve, 2));
 
-    const next = config.withElementDesign(
-      "submodel-1.prop-1",
-      PresentationComponentName.BigNumber,
-    );
+    const next = config.withElementDesign("submodel-1.prop-1", PresentationComponentName.BigNumber);
 
     expect(next).not.toBe(config);
     expect(config.elementDesign.size).toBe(0);
-    expect(next.elementDesign.get("submodel-1.prop-1")).toBe(
-      PresentationComponentName.BigNumber,
-    );
+    expect(next.elementDesign.get("submodel-1.prop-1")).toBe(PresentationComponentName.BigNumber);
     expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(config.updatedAt.getTime());
     expect(next.createdAt).toBe(config.createdAt);
   });
@@ -154,9 +156,7 @@ describe("PresentationConfiguration", () => {
     expect(config.defaultComponents.get(KeyTypes.Property)).toBe(
       PresentationComponentName.BigNumber,
     );
-    expect(config.defaultComponents.get(KeyTypes.File)).toBe(
-      PresentationComponentName.BigNumber,
-    );
+    expect(config.defaultComponents.get(KeyTypes.File)).toBe(PresentationComponentName.BigNumber);
   });
 
   it("withoutDefaultComponent is a no-op when the key is absent", () => {

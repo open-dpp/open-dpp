@@ -40,15 +40,24 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   // 2. Add a Submodel, then a numeric Property inside it. Backend rejects
   //    unknown idShorts, so we set them explicitly.
   await page.getByRole("button", { name: /Submodel hinzufügen|Add Submodel/i }).click();
-  await page.getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i }).first().fill(SUBMODEL_ID_SHORT);
+  await page
+    .getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i })
+    .first()
+    .fill(SUBMODEL_ID_SHORT);
   await page.getByRole("button", { name: /Speichern|Save/i }).click();
 
   // Expand the new submodel in the tree, then use its row add-action.
   const submodelRow = page.getByRole("row", { name: new RegExp(SUBMODEL_ID_SHORT, "i") }).first();
   await submodelRow.getByLabel(/Hinzufügen|Add/i).click();
   await page.getByRole("menuitem", { name: /Zahl|Number/i }).click();
-  await page.getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i }).first().fill(PROPERTY_ID_SHORT);
-  await page.getByRole("textbox", { name: /Wert|Value/i }).first().fill(PROPERTY_VALUE);
+  await page
+    .getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i })
+    .first()
+    .fill(PROPERTY_ID_SHORT);
+  await page
+    .getByRole("textbox", { name: /Wert|Value/i })
+    .first()
+    .fill(PROPERTY_VALUE);
   await page.getByRole("button", { name: /Speichern|Save/i }).click();
 
   // 3. Switch to the Presentation tab and assign BigNumber to the property.
@@ -58,11 +67,16 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   await select.selectOption("BigNumber");
 
   // 4. Verify persistence by reloading and confirming the select still reads "BigNumber".
-  await expect.poll(async () => {
-    await page.reload();
-    await page.getByRole("button", { name: /Darstellung|Presentation/i }).click();
-    return await page.locator(`[data-cy="presentation-select-${PROPERTY_PATH}"]`).inputValue();
-  }, { timeout: 10_000 }).toBe("BigNumber");
+  await expect
+    .poll(
+      async () => {
+        await page.reload();
+        await page.getByRole("button", { name: /Darstellung|Presentation/i }).click();
+        return await page.locator(`[data-cy="presentation-select-${PROPERTY_PATH}"]`).inputValue();
+      },
+      { timeout: 10_000 },
+    )
+    .toBe("BigNumber");
 
   // 5. Create a passport from the template.
   await page.getByRole("link", { name: /Pässe|Passports/i, exact: true }).click();

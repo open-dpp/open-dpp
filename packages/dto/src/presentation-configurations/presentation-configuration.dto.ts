@@ -17,29 +17,16 @@ export const PresentationComponentName = {
 export const PresentationComponentNameEnum = z.enum(PresentationComponentName);
 export type PresentationComponentNameType = z.infer<typeof PresentationComponentNameEnum>;
 
-export const PresentationConfigurationDtoSchema = z
-  .object({
-    id: z.uuid(),
-    organizationId: z.string().min(1),
-    referenceId: z.uuid(),
-    referenceType: PresentationReferenceTypeEnum,
-    elementDesign: z.record(z.string(), PresentationComponentNameEnum).default({}),
-    defaultComponents: z.partialRecord(KeyTypesEnum, PresentationComponentNameEnum).default({}),
-    createdAt: DateTimeSchema,
-    updatedAt: DateTimeSchema,
-  })
-  .meta({ id: "PresentationConfiguration" });
-
-export type PresentationConfigurationDto = z.infer<typeof PresentationConfigurationDtoSchema>;
-
-export const PresentationConfigurationInvariantsSchema = z.object({
-  organizationId: z.string().min(1),
-  referenceId: z.uuid(),
-  referenceType: PresentationReferenceTypeEnum,
-});
-
 const KEY_TYPES_SET: ReadonlySet<string> = new Set(Object.values(KeyTypes));
 
+// Silently discards entries whose value is not a currently-registered
+// PresentationComponentName (and, when `validKeys` is supplied, entries whose
+// key isn't in the allowed set). Used on the READ path — schema parse of
+// persisted configs and import bundles — so that rows written against an older
+// or extended component enum still load instead of failing the whole parse.
+// Intentional drop: the DTO package has no logger; callers that need
+// observability should diff sizes before/after parse. The WRITE path uses
+// `PresentationConfigurationPatchSchema` which is strict.
 function dropUnknownComponents(input: unknown, validKeys?: ReadonlySet<string>): unknown {
   if (input == null || typeof input !== "object") return input;
   const cleaned: Record<string, unknown> = {};
@@ -52,6 +39,37 @@ function dropUnknownComponents(input: unknown, validKeys?: ReadonlySet<string>):
   }
   return cleaned;
 }
+
+export const PresentationConfigurationDtoSchema = z
+  .object({
+    id: z.uuid(),
+    organizationId: z.string().min(1),
+    referenceId: z.uuid(),
+    referenceType: PresentationReferenceTypeEnum,
+    elementDesign: z
+      .preprocess(
+        (input) => dropUnknownComponents(input),
+        z.record(z.string(), PresentationComponentNameEnum),
+      )
+      .default({}),
+    defaultComponents: z
+      .preprocess(
+        (input) => dropUnknownComponents(input, KEY_TYPES_SET),
+        z.partialRecord(KeyTypesEnum, PresentationComponentNameEnum),
+      )
+      .default({}),
+    createdAt: DateTimeSchema,
+    updatedAt: DateTimeSchema,
+  })
+  .meta({ id: "PresentationConfiguration" });
+
+export type PresentationConfigurationDto = z.infer<typeof PresentationConfigurationDtoSchema>;
+
+export const PresentationConfigurationInvariantsSchema = z.object({
+  organizationId: z.string().min(1),
+  referenceId: z.uuid(),
+  referenceType: PresentationReferenceTypeEnum,
+});
 
 export const PresentationConfigurationExportSchema = z.object({
   elementDesign: z

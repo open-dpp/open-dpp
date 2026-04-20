@@ -4,14 +4,7 @@ import type {
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Get,
-  Param,
-  Patch,
-} from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Param, Patch } from "@nestjs/common";
 import {
   PresentationConfigurationDtoSchema,
   PresentationConfigurationPatchSchema,

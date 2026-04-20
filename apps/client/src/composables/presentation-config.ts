@@ -12,6 +12,7 @@ export interface UsePresentationConfigOptions {
   id: string;
   namespace: PresentationConfigurationNamespace;
   errorHandlingStore: IErrorHandlingStore;
+  translate: (key: string, ...args: unknown[]) => string;
 }
 
 export function usePresentationConfig(options: UsePresentationConfigOptions) {
@@ -25,7 +26,7 @@ export function usePresentationConfig(options: UsePresentationConfigOptions) {
       config.value = response.data;
     } catch (error) {
       options.errorHandlingStore.logErrorWithNotification(
-        "Failed to load presentation configuration",
+        options.translate("presentation.loadPresentationConfigError"),
         error,
       );
       config.value = null;
@@ -43,7 +44,7 @@ export function usePresentationConfig(options: UsePresentationConfigOptions) {
     } catch (error) {
       config.value = previous;
       options.errorHandlingStore.logErrorWithNotification(
-        "Failed to update presentation configuration",
+        options.translate("presentation.updatePresentationConfigError"),
         error,
       );
       throw error;

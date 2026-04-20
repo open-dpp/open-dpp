@@ -581,6 +581,8 @@
     "askQuestion": "Ask your question...",
     "answerPending": "Processing answer...",
     "loadPassportMediaError": "Failed to load product images.",
+    "loadPresentationConfigError": "Failed to load presentation configuration.",
+    "updatePresentationConfigError": "Failed to update presentation configuration.",
     "emailGreeting": "Thanks",
     "repairRequest": {
       "addAiChatDialog": {

@@ -50,6 +50,30 @@ export class PresentationConfigurationService {
 
   async getEffectiveForPassport(passport: Passport): Promise<PresentationConfiguration> {
     const passportConfig = await this.getOrCreateForPassport(passport);
+    return this.mergeWithTemplate(passport, passportConfig);
+  }
+
+  // Read-only variant used by public (anonymous) endpoints: never writes to the
+  // database. Falls back to an in-memory empty PresentationConfiguration when no
+  // rows exist for the passport yet, so unauthenticated reads cannot trigger
+  // lazy materialization of config rows.
+  async getEffectiveForPassportReadOnly(passport: Passport): Promise<PresentationConfiguration> {
+    const passportConfig =
+      (await this.presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      })) ??
+      PresentationConfiguration.createForPassport({
+        organizationId: passport.organizationId,
+        referenceId: passport.id,
+      });
+    return this.mergeWithTemplate(passport, passportConfig);
+  }
+
+  private async mergeWithTemplate(
+    passport: Passport,
+    passportConfig: PresentationConfiguration,
+  ): Promise<PresentationConfiguration> {
     if (!passport.templateId) return passportConfig;
 
     const templateConfig = await this.presentationConfigurationRepository.findByReference({
@@ -81,7 +105,8 @@ export class PresentationConfigurationService {
     let next = config;
     if (patch.elementDesign) {
       for (const [path, value] of Object.entries(patch.elementDesign)) {
-        next = value === null ? next.withoutElementDesign(path) : next.withElementDesign(path, value);
+        next =
+          value === null ? next.withoutElementDesign(path) : next.withElementDesign(path, value);
       }
     }
     if (patch.defaultComponents) {
@@ -90,7 +115,9 @@ export class PresentationConfigurationService {
         PresentationComponentNameType | null,
       ][]) {
         next =
-          value === null ? next.withoutDefaultComponent(type) : next.withDefaultComponent(type, value);
+          value === null
+            ? next.withoutDefaultComponent(type)
+            : next.withDefaultComponent(type, value);
       }
     }
     if (next === config) return config;

@@ -1,16 +1,20 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
 import apiClient from "../../lib/api-client.ts";
 import { useAnalyticsStore } from "../../stores/analytics.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePassportStore } from "../../stores/passport.ts";
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const passportStore = usePassportStore();
 const analyticsStore = useAnalyticsStore();
+const errorHandlingStore = useErrorHandlingStore();
 const passportAvailable = ref(false);
 
 async function loadPassport(id: string): Promise<boolean> {
@@ -40,7 +44,10 @@ async function loadPassport(id: string): Promise<boolean> {
       await apiClient.dpp.uniqueProductIdentifiers.getPresentationConfiguration(id);
     passportStore.presentationConfig = presentationConfig.data;
   } catch (error) {
-    console.error("Failed to load presentation configuration", error);
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadPresentationConfigError"),
+      error,
+    );
     passportStore.presentationConfig = null;
   }
 
