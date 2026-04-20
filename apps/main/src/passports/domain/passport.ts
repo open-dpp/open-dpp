@@ -100,6 +100,10 @@ export class Passport
     });
   }
 
+  getLastStatusChange(): DigitalProductDocumentStatusChange {
+    return this.lastStatusChange;
+  }
+
   publish() {
     this.lastStatusChange = publishDpp(this.lastStatusChange);
   }

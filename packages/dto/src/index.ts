@@ -52,7 +52,7 @@ export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
 export * from "./organizations/member.dto";
 export * from "./passports/passport.dto";
-export * from "./shared/dpp.schemas";
+export * from "./shared/digital-product-document.schemas";
 export * from "./shared/pagination.dto";
 export * from "./shared/populate.dto";
 export * from "./shared/table.dto";

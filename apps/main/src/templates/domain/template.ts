@@ -78,6 +78,9 @@ export class Template
       lastStatusChange: this.lastStatusChange.toPlain(),
     };
   }
+  getLastStatusChange() {
+    return this.lastStatusChange;
+  }
 
   getEnvironment(): Environment {
     return this.environment;
