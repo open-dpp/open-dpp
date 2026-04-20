@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
 
-import { AssetKind } from "@open-dpp/dto";
+import { AssetKind, PresentationReferenceType } from "@open-dpp/dto";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -23,6 +23,7 @@ import { MemberRole } from "../../identity/organizations/domain/member-role.enum
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -73,6 +74,49 @@ describe("templateController", () => {
 
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createTemplate);
+  });
+
+  it(`/GET shells lazily materializes a PresentationConfiguration for the template`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const template = await createTemplate(org.id);
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
+
+    const firstResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${template.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send();
+    expect(firstResponse.status).toEqual(200);
+
+    const created = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Template,
+      referenceId: template.id,
+    });
+    expect(created).toBeDefined();
+    expect(created!.organizationId).toBe(org.id);
+
+    const secondResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${template.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send();
+    expect(secondResponse.status).toEqual(200);
+
+    const reused = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Template,
+      referenceId: template.id,
+    });
+    expect(reused!.id).toBe(created!.id);
   });
 
   it(`/PATCH shell`, async () => {
