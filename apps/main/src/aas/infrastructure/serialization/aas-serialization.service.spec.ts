@@ -22,6 +22,7 @@ import {
   PresentationConfigurationDoc,
   PresentationConfigurationSchema,
 } from "../../../presentation-configurations/infrastructure/presentation-configuration.schema";
+import { Template } from "../../../templates/domain/template";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
 import { IdShortPath } from "../../domain/common/id-short-path";
@@ -33,7 +34,7 @@ import { PermissionPerObject } from "../../domain/security/permission-per-object
 import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { EnvironmentService } from "../../presentation/environment.service";
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, Logger } from "@nestjs/common";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import {
@@ -869,6 +870,8 @@ describe("aasSerializationService", () => {
       const saveSpy = jest
         .spyOn(presentationConfigurationRepository, "save")
         .mockRejectedValueOnce(new Error("boom"));
+      const serviceLogger = (aasSerializationService as unknown as { logger: Logger }).logger;
+      const logSpy = jest.spyOn(serviceLogger, "error").mockImplementation(() => {});
 
       let capturedPassport: Passport | undefined;
       try {
@@ -878,8 +881,18 @@ describe("aasSerializationService", () => {
             await passportRepository.save(p, options);
           }),
         ).rejects.toThrow("boom");
+
+        expect(logSpy).toHaveBeenCalledWith(
+          expect.stringContaining(orgId),
+          expect.anything(),
+        );
+        expect(logSpy).toHaveBeenCalledWith(
+          expect.stringContaining("passport"),
+          expect.anything(),
+        );
       } finally {
         saveSpy.mockRestore();
+        logSpy.mockRestore();
       }
 
       expect(capturedPassport).toBeDefined();
@@ -894,6 +907,63 @@ describe("aasSerializationService", () => {
         expect(await aasRepository.findOne(shellId)).toBeUndefined();
       }
       for (const submodelId of capturedPassport!.environment!.submodels) {
+        expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
+      }
+    });
+
+    it("rolls back the whole importTemplate when the PresentationConfiguration save fails", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: { "submodel-1.prop-1": "TextField" },
+        defaultComponents: { Property: "TextField" },
+      };
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      const aasRepository = module.get<AasRepository>(AasRepository);
+      const submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
+
+      const saveSpy = jest
+        .spyOn(presentationConfigurationRepository, "save")
+        .mockRejectedValueOnce(new Error("boom"));
+      const serviceLogger = (aasSerializationService as unknown as { logger: Logger }).logger;
+      const logSpy = jest.spyOn(serviceLogger, "error").mockImplementation(() => {});
+
+      let capturedTemplate: Template | undefined;
+      try {
+        await expect(
+          aasSerializationService.importTemplate(data, orgId, async (t, options) => {
+            capturedTemplate = t;
+            await templateRepository.save(t, options);
+          }),
+        ).rejects.toThrow("boom");
+
+        expect(logSpy).toHaveBeenCalledWith(
+          expect.stringContaining(orgId),
+          expect.anything(),
+        );
+        expect(logSpy).toHaveBeenCalledWith(
+          expect.stringContaining("template"),
+          expect.anything(),
+        );
+      } finally {
+        saveSpy.mockRestore();
+        logSpy.mockRestore();
+      }
+
+      expect(capturedTemplate).toBeDefined();
+      expect(await templateRepository.findOne(capturedTemplate!.id)).toBeUndefined();
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "template",
+          referenceId: capturedTemplate!.id,
+        }),
+      ).toBeUndefined();
+      for (const shellId of capturedTemplate!.environment!.assetAdministrationShells) {
+        expect(await aasRepository.findOne(shellId)).toBeUndefined();
+      }
+      for (const submodelId of capturedTemplate!.environment!.submodels) {
         expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
       }
     });
