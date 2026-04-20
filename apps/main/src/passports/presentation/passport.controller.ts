@@ -240,6 +240,11 @@ export class PassportController
           subject,
           organizationId,
         );
+        if (template.isArchived()) {
+          throw new BadRequestException(
+            `Template ${templateId} is archived and cannot be used to create a passport`,
+          );
+        }
         return {
           environment: await this.environmentService.copyEnvironment(template.environment),
           templateId,

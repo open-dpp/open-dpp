@@ -11,7 +11,6 @@ import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
-import { DbSessionOptions } from "../../../database/query-options";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 
 @Injectable()
