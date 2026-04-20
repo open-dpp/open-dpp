@@ -6,6 +6,8 @@ import {
   PresentationReferenceType,
   PresentationReferenceTypeType,
 } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
+import { z } from "zod/v4";
 import { IPersistable } from "../../aas/domain/persistable";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
@@ -36,11 +38,19 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     createdAt?: Date;
     updatedAt?: Date;
   }): PresentationConfiguration {
-    PresentationConfigurationInvariantsSchema.parse({
-      organizationId: data.organizationId,
-      referenceId: data.referenceId,
-      referenceType: data.referenceType,
-    });
+    try {
+      PresentationConfigurationInvariantsSchema.parse({
+        organizationId: data.organizationId,
+        referenceId: data.referenceId,
+        referenceType: data.referenceType,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+        throw new ValueError(`Invalid PresentationConfiguration: ${details.join("; ")}`);
+      }
+      throw error;
+    }
     const now = DateTime.now();
     return new PresentationConfiguration(
       data.id ?? randomUUID(),

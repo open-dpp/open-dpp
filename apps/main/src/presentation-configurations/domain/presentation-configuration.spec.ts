@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
-import { ZodError } from "zod";
+import { ValueError } from "@open-dpp/exception";
 import { PresentationConfiguration } from "./presentation-configuration";
 
 describe("PresentationConfiguration", () => {
@@ -11,31 +11,35 @@ describe("PresentationConfiguration", () => {
     referenceType: PresentationReferenceType.Template,
   });
 
-  it("rejects empty organizationId in create()", () => {
+  it("rejects empty organizationId in create() with ValueError", () => {
     expect(() =>
       PresentationConfiguration.create({
         ...baseInput(),
         organizationId: "",
       }),
-    ).toThrow(ZodError);
+    ).toThrow(ValueError);
   });
 
-  it("rejects non-uuid referenceId in create()", () => {
-    expect(() =>
+  it("rejects non-uuid referenceId in create() with ValueError carrying the field path", () => {
+    try {
       PresentationConfiguration.create({
         ...baseInput(),
         referenceId: "not-a-uuid",
-      }),
-    ).toThrow(ZodError);
+      });
+      throw new Error("expected create() to throw ValueError");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValueError);
+      expect((error as Error).message).toContain("referenceId");
+    }
   });
 
-  it("rejects invalid referenceType in create()", () => {
+  it("rejects invalid referenceType in create() with ValueError", () => {
     expect(() =>
       PresentationConfiguration.create({
         ...baseInput(),
         referenceType: "invalid" as never,
       }),
-    ).toThrow(ZodError);
+    ).toThrow(ValueError);
   });
 
   it("creates with empty maps by default", () => {
