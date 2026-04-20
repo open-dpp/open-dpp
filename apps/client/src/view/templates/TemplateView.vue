@@ -10,7 +10,7 @@ const id = computed(() => (route.params.templateId ? String(route.params.templat
 
 <template>
   <div v-if="id" class="flex flex-col gap-3 p-4">
-    <DigitalProductDocumentToolbar :id="id" :type="DigitalProductDocumentType.Template" />>
+    <DigitalProductDocumentToolbar :id="id" :type="DigitalProductDocumentType.Template" />
     <AASEditor :id="id" class="h-[calc(100vh-64px)]" :type="DigitalProductDocumentType.Template" />
   </div>
 </template>

@@ -35,11 +35,16 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
   }
 
   async function fetchById(id: string) {
+    const errorMessage = t(`${prefix}.errorFetch`);
     try {
       const response = await digitalProductDocNamespace.getById(id);
-      return response.data;
+      if (response.status === HTTPCode.OK) {
+        return response.data;
+      } else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
     } catch (e) {
-      errorHandlingStore.logErrorWithNotification(t(`${prefix}.errorFetch`), e);
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
       return undefined;
     }
   }

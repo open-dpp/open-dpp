@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import type { TemplateDto } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  type TemplateDto,
+  type TemplatePaginationDto,
+} from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
@@ -25,7 +29,7 @@ const { hasNext, nextPage } = usePagination({
 const { createPassport } = usePassports();
 
 const { t, locale } = useI18n();
-type TemplateOption = TemplateDto & { label: string };
+type TemplateOption = TemplateDto & { label: string; status: string };
 const templateList = ref<TemplateOption[]>([]);
 
 const visible = ref(false);
@@ -52,12 +56,7 @@ async function loadMoreTemplates() {
   if (hasNext.value) {
     await nextPage();
     if (templates.value) {
-      templateList.value.push(
-        ...templates.value.result.map((template) => ({
-          ...template,
-          label: getOptionLabel(template),
-        })),
-      );
+      templateList.value.push(...filterTemplates(templates.value));
     }
   }
 }
@@ -79,12 +78,7 @@ defineExpose({
 onMounted(async () => {
   await nextPage();
   if (templates.value) {
-    templateList.value.push(
-      ...templates.value.result.map((template) => ({
-        ...template,
-        label: getOptionLabel(template),
-      })),
-    );
+    templateList.value.push(...filterTemplates(templates.value));
   }
 });
 
@@ -92,6 +86,21 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   translate: t,
   selectedLanguage: convertLocaleToLanguage(locale.value),
 });
+
+function filterTemplates({ result }: TemplatePaginationDto) {
+  return result
+    .filter((t) => t.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived)
+    .map((template) => ({
+      ...template,
+      label: getOptionLabel(template),
+      status: getOptionStatus(template),
+    }));
+}
+
+function getOptionStatus(option: TemplateDto): string {
+  return t(`status.${option.lastStatusChange.currentStatus.toLowerCase()}`);
+}
+
 function getOptionLabel(option: TemplateDto): string {
   const displayName = parseDisplayNameFromEnvironment(option.environment);
   return displayName !== t("common.untitled") ? displayName : option.id;
@@ -126,7 +135,14 @@ function getOptionLabel(option: TemplateDto): string {
         }"
         :placeholder="t('passports.selectTemplate')"
         :disabled="loading || mode === 'blank'"
-      />
+      >
+        <template #option="slotProps">
+          <div class="flex items-center gap-2">
+            <div class="text-xl">{{ slotProps.option.label }}</div>
+            <Tag severity="secondary" :value="slotProps.option.status" />
+          </div>
+        </template>
+      </Select>
     </div>
     <div class="flex justify-end gap-2">
       <Button type="button" severity="secondary" @click="close">

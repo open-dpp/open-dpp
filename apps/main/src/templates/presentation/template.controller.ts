@@ -1,4 +1,4 @@
-import type {
+import {
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
   SubmodelElementListResponseDto,
@@ -10,10 +10,22 @@ import type {
   DigitalProductDocumentStatusModificationDto,
   ValueRequestDto,
   DigitalProductDocumentStatusDtoType,
+  PassportDto,
+  PassportDtoSchema,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+} from "@nestjs/common";
 
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -69,6 +81,7 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   PositionQueryParam,
+  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -97,6 +110,7 @@ import {
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
+import type express from "express";
 
 @Controller("/templates")
 export class TemplateController
@@ -726,6 +740,21 @@ export class TemplateController
       );
     }
     return TemplatePaginationDtoSchema.parse(pagingResult.toPlain());
+  }
+
+  @Get(":id")
+  async getTemplate(
+    @OrganizationId() organizationId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Param("id") id: string,
+  ): Promise<TemplateDto> {
+    const template = await this.templateService.loadTemplateAndCheckOwnership(
+      id,
+      SubjectAttributes.create({ userRole, memberRole }),
+      organizationId,
+    );
+    return TemplateDtoSchema.parse(template.toPlain());
   }
 
   private saveEnvironmentCallback(template: Template) {

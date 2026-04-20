@@ -13,7 +13,6 @@ import type {
   ValueRequestDto,
   DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
-import type express from "express";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -84,7 +83,6 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   PositionQueryParam,
-  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -161,12 +159,19 @@ export class PassportController
     return PassportPaginationDtoSchema.parse(pagingResult.toPlain());
   }
 
-  @Get(":passportId")
+  @Get(":id")
   async getPassport(
-    @RequestParam() req: express.Request,
-    @Param("passportId") id: string,
+    @OrganizationId() organizationId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Param("id") id: string,
   ): Promise<PassportDto> {
-    return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
+    const passport = await this.passportService.loadPassportAndCheckOwnership(
+      id,
+      SubjectAttributes.create({ userRole, memberRole }),
+      organizationId,
+    );
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   @Get(":id/unique-product-identifier")
