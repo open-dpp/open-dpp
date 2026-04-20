@@ -92,52 +92,19 @@ export class AasSerializationService {
     organizationId: string,
     savePassport: (passport: Passport, options: DbSessionOptions) => Promise<void>,
   ): Promise<Passport> {
-    try {
-      const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
-
-      const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
-        await this.nullifyForeignMedia(shells, submodels, organizationId);
-
-      const environment = Environment.create({
-        assetAdministrationShells: sanitizedShells.map((aas) => aas.id),
-        submodels: sanitizedSubmodels.map((s) => s.id),
-        conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
-      });
-
-      const passport = Passport.create({
-        organizationId,
-        environment,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const presentationConfiguration = buildImportedPresentationConfiguration({
-        schema,
-        organizationId,
-        referenceId: passport.id,
-        referenceType: PresentationReferenceType.Passport,
-      });
-
-      await this.environmentService.persistImportedEnvironment(
-        sanitizedShells,
-        sanitizedSubmodels,
-        conceptDescriptions,
-        async (options) => {
-          await savePassport(passport, options);
-          if (presentationConfiguration) {
-            await this.presentationConfigurationRepository.save(presentationConfiguration, options);
-          }
-        },
-      );
-
-      return passport;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-        throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
-      }
-      throw error;
-    }
+    return this.importEntity(
+      data,
+      organizationId,
+      (environment) =>
+        Passport.create({
+          organizationId,
+          environment,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      PresentationReferenceType.Passport,
+      savePassport,
+    );
   }
 
   async importTemplate(
@@ -145,6 +112,28 @@ export class AasSerializationService {
     organizationId: string,
     saveTemplate: (template: Template, options: DbSessionOptions) => Promise<void>,
   ): Promise<Template> {
+    return this.importEntity(
+      data,
+      organizationId,
+      (environment) =>
+        Template.create({
+          organizationId,
+          environment,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      PresentationReferenceType.Template,
+      saveTemplate,
+    );
+  }
+
+  private async importEntity<T extends { id: string }>(
+    data: unknown,
+    organizationId: string,
+    entityFactory: (environment: Environment) => T,
+    referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+    saveEntity: (entity: T, options: DbSessionOptions) => Promise<void>,
+  ): Promise<T> {
     try {
       const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
 
@@ -157,18 +146,13 @@ export class AasSerializationService {
         conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
       });
 
-      const template = Template.create({
-        organizationId,
-        environment,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const entity = entityFactory(environment);
 
       const presentationConfiguration = buildImportedPresentationConfiguration({
         schema,
         organizationId,
-        referenceId: template.id,
-        referenceType: PresentationReferenceType.Template,
+        referenceId: entity.id,
+        referenceType,
       });
 
       await this.environmentService.persistImportedEnvironment(
@@ -176,19 +160,23 @@ export class AasSerializationService {
         sanitizedSubmodels,
         conceptDescriptions,
         async (options) => {
-          await saveTemplate(template, options);
+          await saveEntity(entity, options);
           if (presentationConfiguration) {
             await this.presentationConfigurationRepository.save(presentationConfiguration, options);
           }
         },
       );
 
-      return template;
+      return entity;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
         throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
       }
+      this.logger.error(
+        `Failed to import ${referenceType} for organization ${organizationId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw error;
     }
   }
