@@ -21,6 +21,8 @@ import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorat
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
+import { PresentationReferenceType } from "@open-dpp/dto";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -311,6 +313,49 @@ describe("passportController", () => {
 
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createPassport);
+  });
+
+  it(`/GET shells lazily materializes a PresentationConfiguration for the passport`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const passport = await createPassport(org.id);
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
+
+    const firstResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set("x-open-dpp-organization-id", org.id)
+      .send();
+    expect(firstResponse.status).toEqual(200);
+
+    const created = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    expect(created).toBeDefined();
+    expect(created!.organizationId).toBe(org.id);
+
+    const secondResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set("x-open-dpp-organization-id", org.id)
+      .send();
+    expect(secondResponse.status).toEqual(200);
+
+    const reused = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    expect(reused!.id).toBe(created!.id);
   });
 
   it(`/PATCH shell`, async () => {

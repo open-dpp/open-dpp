@@ -98,4 +98,62 @@ describe("passportService", () => {
       },
     });
   });
+
+  it("materializes a PresentationConfiguration on first expansion when none pre-exists", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(passport);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
+
+    const exportable = await service.getExpandedProductPassport(passport.id);
+    const exported = exportable.toExportPlain(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+    );
+
+    const created = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    expect(created).toBeDefined();
+    expect(created?.organizationId).toBe(organizationId);
+    expect(exported).toMatchObject({
+      presentationConfiguration: {
+        elementDesign: {},
+        defaultComponents: {},
+      },
+    });
+  });
+
+  it("reuses the same PresentationConfiguration on subsequent expansions", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(passport);
+
+    await service.getExpandedProductPassport(passport.id);
+    const first = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    expect(first).toBeDefined();
+
+    await service.getExpandedProductPassport(passport.id);
+    const second = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+
+    expect(second?.id).toBe(first?.id);
+  });
 });

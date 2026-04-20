@@ -33,6 +33,7 @@ import { PermissionPerObject } from "../../domain/security/permission-per-object
 import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { EnvironmentService } from "../../presentation/environment.service";
+import { BadRequestException } from "@nestjs/common";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import {
@@ -850,6 +851,76 @@ describe("aasSerializationService", () => {
       expect(now).toBeDefined();
       expect(Object.fromEntries(now!.elementDesign)).toEqual({});
       expect(Object.fromEntries(now!.defaultComponents)).toEqual({});
+    });
+
+    it("rolls back the whole import when the PresentationConfiguration save fails", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: { "submodel-1.prop-1": "TextField" },
+        defaultComponents: { Property: "TextField" },
+      };
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      const aasRepository = module.get<AasRepository>(AasRepository);
+      const submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
+
+      const saveSpy = jest
+        .spyOn(presentationConfigurationRepository, "save")
+        .mockRejectedValueOnce(new Error("boom"));
+
+      let capturedPassport: Passport | undefined;
+      try {
+        await expect(
+          aasSerializationService.importPassport(data, orgId, async (p, options) => {
+            capturedPassport = p;
+            await passportRepository.save(p, options);
+          }),
+        ).rejects.toThrow("boom");
+      } finally {
+        saveSpy.mockRestore();
+      }
+
+      expect(capturedPassport).toBeDefined();
+      expect(await passportRepository.findOne(capturedPassport!.id)).toBeUndefined();
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: capturedPassport!.id,
+        }),
+      ).toBeUndefined();
+      for (const shellId of capturedPassport!.environment!.assetAdministrationShells) {
+        expect(await aasRepository.findOne(shellId)).toBeUndefined();
+      }
+      for (const submodelId of capturedPassport!.environment!.submodels) {
+        expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
+      }
+    });
+
+    it("rejects a malformed v3 presentationConfiguration with a precise validation path", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: 42,
+        defaultComponents: { Property: "TextField" },
+      };
+
+      let capturedPassport: Passport | undefined;
+      let capturedError: unknown;
+      try {
+        await aasSerializationService.importPassport(data, orgId, async (p, options) => {
+          capturedPassport = p;
+          await passportRepository.save(p, options);
+        });
+      } catch (error) {
+        capturedError = error;
+      }
+
+      expect(capturedError).toBeInstanceOf(BadRequestException);
+      const message = (capturedError as BadRequestException).message;
+      expect(message).toContain("Invalid import data format:");
+      expect(message).toContain("presentationConfiguration.elementDesign");
+      expect(capturedPassport).toBeUndefined();
     });
   });
 

@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
@@ -105,6 +105,92 @@ describe("presentationConfigurationRepository", () => {
     });
 
     expect(second.id).toBe(first.id);
+  });
+
+  it("findOrCreateByReference retries via findByReference when save hits a duplicate-key error", async () => {
+    const referenceId = randomUUID();
+    const organizationId = "org-retry";
+    const winner = PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    await repository.save(winner);
+
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(winner);
+    const saveSpy = jest
+      .spyOn(repository, "save")
+      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
+
+    try {
+      const result = await repository.findOrCreateByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId,
+        organizationId,
+      });
+
+      expect(result.id).toBe(winner.id);
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(2);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
+  });
+
+  it("findOrCreateByReference re-throws non-duplicate save errors", async () => {
+    const referenceId = randomUUID();
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined);
+    const saveSpy = jest
+      .spyOn(repository, "save")
+      .mockRejectedValueOnce(new Error("network fail"));
+
+    try {
+      await expect(
+        repository.findOrCreateByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId,
+          organizationId: "org-err",
+        }),
+      ).rejects.toThrow("network fail");
+
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(1);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
+  });
+
+  it("findOrCreateByReference surfaces the original error when duplicate-key retry finds nothing", async () => {
+    const referenceId = randomUUID();
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+    const saveSpy = jest
+      .spyOn(repository, "save")
+      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
+
+    try {
+      await expect(
+        repository.findOrCreateByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId,
+          organizationId: "org-ghost",
+        }),
+      ).rejects.toThrow("E11000 duplicate key");
+
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
   });
 
   it("findOrCreateByReference rolls back when the session transaction aborts", async () => {
