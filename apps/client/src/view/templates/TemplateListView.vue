@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import type {
-  DigitalProductDocumentStatusDtoType,
-  PagingParamsDto,
-  DigitalProductDocumentDto,
+import {
+  type DigitalProductDocumentStatusDtoType,
+  type PagingParamsDto,
+  type DigitalProductDocumentDto,
+  DigitalProductDocumentStatusDto,
 } from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -135,23 +136,32 @@ onMounted(async () => {
         @select="onTemplateFileSelect"
       />
     </template>
-    <template #actions="{ passport, editItem }">
+    <template #actions="{ item, goToItem }">
       <Button
+        v-if="status !== DigitalProductDocumentStatusDto.Archived"
         icon="pi pi-pencil"
         severity="primary"
         :aria-label="t('common.edit')"
         :title="t('common.edit')"
-        @click="editItem(passport)"
+        @click="goToItem(item)"
+      />
+      <Button
+        v-if="status === DigitalProductDocumentStatusDto.Archived"
+        icon="pi pi-eye"
+        severity="primary"
+        :aria-label="t('common.view')"
+        :title="t('common.view')"
+        @click="goToItem(item)"
       />
       <Button
         icon="pi pi-download"
         severity="secondary"
         :aria-label="t('common.exportTemplate')"
         :title="t('common.exportTemplate')"
-        @click="exportTemplate(passport.id)"
+        @click="exportTemplate(item.id)"
       />
       <DigitalProductDocumentStatusChangeMenu
-        :item="passport"
+        :item="item"
         @on-delete-clicked="onDeleteButtonClicked"
         @on-publish-clicked="onPublishButtonClicked"
         @on-archive-clicked="onArchiveButtonClicked"

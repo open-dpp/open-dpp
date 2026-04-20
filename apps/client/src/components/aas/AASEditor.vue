@@ -1,8 +1,13 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
-import { KeyTypes } from "@open-dpp/dto";
+import {
+  type DigitalProductDocumentDto,
+  DigitalProductDocumentStatusDto,
+  type DigitalProductDocumentStatusDtoType,
+  KeyTypes,
+} from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
@@ -17,8 +22,9 @@ import {
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
 
+const model = defineModel<DigitalProductDocumentDto>({ required: true });
+
 const props = defineProps<{
-  id: string;
   type: DigitalProductDocumentTypeType;
 }>();
 const route = useRoute();
@@ -49,8 +55,12 @@ const aasNamespace =
 
 const confirm = useConfirm();
 
+const status = computed(() => model.value.lastStatusChange.currentStatus);
+
+const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
+
 const aasEditor = useAasEditor({
-  id: props.id,
+  id: model.value.id,
   aasNamespace,
   initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
@@ -59,6 +69,7 @@ const aasEditor = useAasEditor({
   errorHandlingStore,
   translate: t,
   openConfirm: confirm.require,
+  status: status,
 });
 
 const {
@@ -84,12 +95,21 @@ const {
   previousPage,
   resetCursor,
   nextPage,
+  reloadCurrentPage,
   displayName,
   aasGalleryFiles,
   getAccessPermissionRules,
   modifyShell,
   deletePolicyBySubjectAndObject,
 } = aasEditor;
+
+watch(
+  () => status.value,
+  async (newStatus) => {
+    await reloadCurrentPage();
+  },
+  { immediate: true },
+);
 
 onMounted(async () => {
   await init();
@@ -145,7 +165,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                       {{ t("aasEditor.formLabels.id") }}
                     </dt>
                     <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                      {{ id }}
+                      {{ model.id }}
                     </dd>
                   </div>
                   <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -161,6 +181,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
             </div>
           </div>
           <Button
+            v-if="!isArchived"
             icon="pi pi-pencil"
             severity="primary"
             :aria-label="t('common.edit')"
@@ -186,7 +207,11 @@ const isFullPosition = computed(() => position.value === fullPosition);
           <template #header>
             <div class="flex flex-wrap items-center justify-between gap-2">
               <span class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</span>
-              <Button :label="t('aasEditor.addSubmodel')" @click="createSubmodel" />
+              <Button
+                v-if="!isArchived"
+                :label="t('aasEditor.addSubmodel')"
+                @click="createSubmodel"
+              />
             </div>
           </template>
           <Column field="label" header="Name" expander style="width: 34%" />
@@ -302,7 +327,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         :is="editorVNode.component"
         v-if="editorVNode"
         v-bind="editorVNode.props"
-        :id="props.id"
+        :id="model.id"
         ref="componentRef"
         :aas-namespace="aasNamespace"
         :open-drawer="aasEditor.openDrawer"
@@ -311,6 +336,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         :get-access-permission-rules="getAccessPermissionRules"
         :modify-shell="modifyShell"
         :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
+        :is-archived="isArchived"
       />
     </Drawer>
   </div>

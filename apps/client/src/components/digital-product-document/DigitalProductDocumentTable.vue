@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import type { DigitalProductDocumentStatusDtoType, DigitalProductDocumentDto } from "@open-dpp/dto";
+import {
+  type DigitalProductDocumentStatusDtoType,
+  type DigitalProductDocumentDto,
+  DigitalProductDocumentStatusDto,
+} from "@open-dpp/dto";
 import type { Page } from "../../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
@@ -43,7 +47,7 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   selectedLanguage: selectedLanguage.value,
 });
 
-async function editItem(item: DigitalProductDocumentDto) {
+async function goToItem(item: DigitalProductDocumentDto) {
   await router.push(`${route.path}/${item.id}`);
 }
 </script>
@@ -95,15 +99,7 @@ async function editItem(item: DigitalProductDocumentDto) {
     <Column>
       <template #body="{ data }">
         <div class="flex w-full justify-end gap-2">
-          <slot name="actions" :passport="data" :edit-item="editItem">
-            <Button
-              icon="pi pi-pencil"
-              severity="primary"
-              :aria-label="t('common.edit')"
-              :title="t('common.edit')"
-              @click="editItem(data)"
-            />
-          </slot>
+          <slot name="actions" :item="data" :goToItem="goToItem" />
         </div>
       </template>
     </Column>

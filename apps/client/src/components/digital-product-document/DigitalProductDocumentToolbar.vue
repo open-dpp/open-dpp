@@ -11,31 +11,20 @@ import { useRouterUtils } from "../../composables/router-utils.ts";
 
 const { t } = useI18n();
 
+const model = defineModel<DigitalProductDocumentDto>({ required: true });
+
 const props = defineProps<{
-  id: string;
   type: DigitalProductDocumentTypeType;
 }>();
 const { goToParent } = useRouterUtils();
-const item = ref<DigitalProductDocumentDto>();
 const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 
 async function fetchDPD(id: string) {
-  if (id) {
-    item.value = await fetchById(id);
+  const response = await fetchById(id);
+  if (response) {
+    model.value = response;
   }
 }
-
-watch(
-  () => props.id,
-  async (newValue) => {
-    if (newValue) {
-      await fetchDPD(newValue);
-    } else {
-      item.value = undefined;
-    }
-  },
-  { immediate: true },
-);
 
 const qrCodeDialogVisible = ref<boolean>(false);
 
@@ -60,12 +49,12 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await fetchDPD(item.id);
 }
 
-const status = computed(() => item.value?.lastStatusChange.currentStatus);
+const status = computed(() => model.value?.lastStatusChange.currentStatus);
 </script>
 
 <template>
   <div class="card">
-    <Toolbar v-if="status && item">
+    <Toolbar v-if="status && model">
       <template #start>
         <div class="flex gap-2">
           <Button
@@ -75,7 +64,7 @@ const status = computed(() => item.value?.lastStatusChange.currentStatus);
             text
             :aria-label="t('common.remove')"
             v-tooltip.bottom="t('common.remove')"
-            @click="onDeleteButtonClicked(item)"
+            @click="onDeleteButtonClicked(model)"
           />
           <Button
             v-if="
@@ -87,7 +76,7 @@ const status = computed(() => item.value?.lastStatusChange.currentStatus);
             text
             :aria-label="t('status.archive')"
             v-tooltip.bottom="t('status.archive')"
-            @click="onArchiveButtonClicked(item)"
+            @click="onArchiveButtonClicked(model)"
           />
           <Button
             v-if="status === DigitalProductDocumentStatusDto.Archived"
@@ -96,7 +85,7 @@ const status = computed(() => item.value?.lastStatusChange.currentStatus);
             text
             :aria-label="t('status.restore')"
             v-tooltip.bottom="t('status.restore')"
-            @click="onRestoreButtonClicked(item)"
+            @click="onRestoreButtonClicked(model)"
           />
           <Button
             v-if="status === DigitalProductDocumentStatusDto.Draft"
@@ -105,7 +94,7 @@ const status = computed(() => item.value?.lastStatusChange.currentStatus);
             severity="secondary"
             :aria-label="t('status.publish')"
             v-tooltip.bottom="t('status.publish')"
-            @click="onPublishButtonClicked(item)"
+            @click="onPublishButtonClicked(model)"
           />
         </div>
       </template>
@@ -131,9 +120,9 @@ const status = computed(() => item.value?.lastStatusChange.currentStatus);
     </Toolbar>
   </div>
   <PassportQrCodeDialog
-    v-if="type === DigitalProductDocumentType.Passport && item"
+    v-if="type === DigitalProductDocumentType.Passport && model"
     v-model:visible="qrCodeDialogVisible"
-    :passportId="item.id"
+    :passportId="model.id"
   />
 </template>
 

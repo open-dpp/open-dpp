@@ -3,6 +3,7 @@ import {
   type DigitalProductDocumentStatusDtoType,
   type PagingParamsDto,
   type DigitalProductDocumentDto,
+  DigitalProductDocumentStatusDto,
 } from "@open-dpp/dto";
 import { AxiosError } from "axios";
 import { useToast } from "primevue/usetoast";
@@ -183,37 +184,46 @@ onMounted(async () => {
         @select="onPassportFileSelect"
       />
     </template>
-    <template #actions="{ passport, editItem }">
+    <template #actions="{ item, goToItem }">
       <Button
         icon="pi pi-qrcode"
         severity="info"
         :aria-label="t('common.qrCode')"
         :title="t('common.qrCode')"
-        @click="showQrCode(passport)"
+        @click="showQrCode(item)"
       />
       <Button
+        v-if="status !== DigitalProductDocumentStatusDto.Archived"
         icon="pi pi-pencil"
         severity="primary"
         :aria-label="t('common.edit')"
         :title="t('common.edit')"
-        @click="editItem(passport)"
+        @click="goToItem(item)"
+      />
+      <Button
+        v-if="status === DigitalProductDocumentStatusDto.Archived"
+        icon="pi pi-eye"
+        severity="primary"
+        :aria-label="t('common.view')"
+        :title="t('common.view')"
+        @click="goToItem(item)"
       />
       <Button
         icon="pi pi-comments"
         severity="primary"
         :aria-label="t('dpp.openPresentationChat')"
         :title="t('dpp.openPresentationChat')"
-        @click="forwardToPresentationChat(passport)"
+        @click="forwardToPresentationChat(item)"
       />
       <Button
         icon="pi pi-download"
         severity="secondary"
         :aria-label="t('common.exportPassport')"
         :title="t('common.exportPassport')"
-        @click="exportPassport(passport.id)"
+        @click="exportPassport(item.id)"
       />
       <DigitalProductDocumentStatusChangeMenu
-        :item="passport"
+        :item="item"
         @on-delete-clicked="onDeleteButtonClicked"
         @on-publish-clicked="onPublishButtonClicked"
         @on-archive-clicked="onArchiveButtonClicked"
