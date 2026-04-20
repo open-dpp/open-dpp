@@ -65,6 +65,20 @@
     "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
+    "tabs": {
+      "structure": "Structure",
+      "presentation": "Presentation"
+    },
+    "presentationTab": {
+      "title": "Presentation",
+      "description": "Choose how numeric properties are displayed. BigNumber renders the value large and bold.",
+      "property": "Property",
+      "path": "Path",
+      "component": "Component",
+      "default": "Default",
+      "bigNumber": "BigNumber",
+      "emptyState": "No numeric properties found. Add a Property with a numeric valueType to configure BigNumber display."
+    },
     "security": {
       "missingPermission": "Missing permissions",
       "inheritedPermission": "Inherits permissions of parent node",

@@ -784,8 +784,8 @@ describe("aasSerializationService", () => {
     it("round-trips the PresentationConfiguration through v3 export/import", async () => {
       const data = buildExportData({ version: AasExportVersion.v3_0 });
       (data as any).presentationConfiguration = {
-        elementDesign: { "submodel-1.prop-1": "TextField" },
-        defaultComponents: { Property: "TextField", File: "FileDownload" },
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber", File: "BigNumber" },
       };
 
       const imported = await aasSerializationService.importPassport(
@@ -805,19 +805,19 @@ describe("aasSerializationService", () => {
       });
       expect(stored).toBeDefined();
       expect(Object.fromEntries(stored!.elementDesign)).toEqual({
-        "submodel-1.prop-1": "TextField",
+        "submodel-1.prop-1": "BigNumber",
       });
       expect(Object.fromEntries(stored!.defaultComponents)).toEqual({
-        Property: "TextField",
-        File: "FileDownload",
+        Property: "BigNumber",
+        File: "BigNumber",
       });
 
       const loadedPassport = await passportRepository.findOneOrFail(imported.id);
       const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const reExported = await aasSerializationService.exportPassport(loadedPassport, admin);
       expect(reExported.presentationConfiguration).toEqual({
-        elementDesign: { "submodel-1.prop-1": "TextField" },
-        defaultComponents: { Property: "TextField", File: "FileDownload" },
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber", File: "BigNumber" },
       });
     });
 
@@ -857,8 +857,8 @@ describe("aasSerializationService", () => {
     it("rolls back the whole import when the PresentationConfiguration save fails", async () => {
       const data = buildExportData({ version: AasExportVersion.v3_0 });
       (data as any).presentationConfiguration = {
-        elementDesign: { "submodel-1.prop-1": "TextField" },
-        defaultComponents: { Property: "TextField" },
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber" },
       };
 
       const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
@@ -908,8 +908,8 @@ describe("aasSerializationService", () => {
     it("rolls back the whole importTemplate when the PresentationConfiguration save fails", async () => {
       const data = buildExportData({ version: AasExportVersion.v3_0 });
       (data as any).presentationConfiguration = {
-        elementDesign: { "submodel-1.prop-1": "TextField" },
-        defaultComponents: { Property: "TextField" },
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber" },
       };
 
       const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
@@ -960,7 +960,7 @@ describe("aasSerializationService", () => {
       const data = buildExportData({ version: AasExportVersion.v3_0 });
       (data as any).presentationConfiguration = {
         elementDesign: 42,
-        defaultComponents: { Property: "TextField" },
+        defaultComponents: { Property: "BigNumber" },
       };
 
       let capturedPassport: Passport | undefined;

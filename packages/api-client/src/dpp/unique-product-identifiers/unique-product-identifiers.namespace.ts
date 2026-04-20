@@ -1,4 +1,4 @@
-import type { BrandingDto, PassportDto } from "@open-dpp/dto";
+import type { BrandingDto, PassportDto, PresentationConfigurationDto } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
 import type { UniqueProductIdentifierDto } from "./unique-product-identifiers.dtos";
 import { AasNamespace } from "../aas/aasNamespace";
@@ -23,6 +23,12 @@ export class UniqueProductIdentifiersNamespace {
   public async getBranding(uuid: string) {
     return await this.axiosInstance.get<BrandingDto>(
       `/unique-product-identifiers/${uuid}/branding`,
+    );
+  }
+
+  public async getPresentationConfiguration(uuid: string) {
+    return await this.axiosInstance.get<PresentationConfigurationDto>(
+      `/unique-product-identifiers/${uuid}/presentation-configuration`,
     );
   }
 }

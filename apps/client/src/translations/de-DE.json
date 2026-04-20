@@ -65,6 +65,20 @@
     }
   },
   "aasEditor": {
+    "tabs": {
+      "structure": "Struktur",
+      "presentation": "Darstellung"
+    },
+    "presentationTab": {
+      "title": "Darstellung",
+      "description": "Lege fest, wie numerische Eigenschaften angezeigt werden. BigNumber stellt den Wert groß und fett dar.",
+      "property": "Eigenschaft",
+      "path": "Pfad",
+      "component": "Komponente",
+      "default": "Standard",
+      "bigNumber": "BigNumber",
+      "emptyState": "Keine numerischen Eigenschaften gefunden. Lege eine Property mit numerischem valueType an, um BigNumber zu verwenden."
+    },
     "security": {
       "missingPermission": "Fehlende Rechte",
       "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",

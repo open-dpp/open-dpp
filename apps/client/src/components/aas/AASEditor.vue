@@ -3,7 +3,7 @@ import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
 import { KeyTypes } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
@@ -11,8 +11,10 @@ import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import TabsComponent from "../lists/Tabs.vue";
 import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 import TablePagination from "../pagination/TablePagination.vue";
+import PresentationTab from "./presentation/PresentationTab.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 
 const props = defineProps<{
@@ -44,6 +46,10 @@ const aasNamespace =
   props.editorMode === AasEditMode.Passport
     ? apiClient.dpp.passports.aas
     : apiClient.dpp.templates.aas;
+const presentationConfigurationNamespace =
+  props.editorMode === AasEditMode.Passport
+    ? apiClient.dpp.passports.presentationConfiguration
+    : apiClient.dpp.templates.presentationConfiguration;
 
 const confirm = useConfirm();
 
@@ -124,188 +130,221 @@ function onSubmit() {
 }
 
 const isFullPosition = computed(() => position.value === fullPosition);
+
+const tabLabels = computed(() => [
+  t("aasEditor.tabs.structure"),
+  t("aasEditor.tabs.presentation"),
+]);
+
+const activeTabIndex = computed(() => {
+  return route.query.tab === "presentation" ? 1 : 0;
+});
+
+function onTabChange(index: number) {
+  const tab = index === 1 ? "presentation" : undefined;
+  router.push({ query: { ...route.query, tab } });
+}
+
+watch(activeTabIndex, () => {
+  // When switching to Presentation, close the drawer.
+  if (activeTabIndex.value === 1 && drawerVisible.value) {
+    hideDrawer();
+  }
+});
 </script>
 
 <template>
   <div class="flex flex-col gap-1 p-4">
-    <div class="flex items-start justify-between gap-2">
-      <div class="flex gap-2">
-        <div style="width: 340px">
-          <ProductImageGalleria v-model="aasGalleryFiles" />
-        </div>
-        <div class="flex flex-col gap-2">
-          <div>
-            <dl class="divide-y divide-gray-100">
-              <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt class="text-sm font-medium text-gray-900">
-                  {{ t("aasEditor.formLabels.id") }}
-                </dt>
-                <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {{ id }}
-                </dd>
-              </div>
-              <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt class="text-sm font-medium text-gray-900">
-                  {{ t("aasEditor.formLabels.name") }}
-                </dt>
-                <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                  {{ displayName === "" ? t("common.untitled") : displayName }}
-                </dd>
-              </div>
-            </dl>
+    <TabsComponent :tabs="tabLabels" :value="activeTabIndex" @change="onTabChange" />
+
+    <div v-if="activeTabIndex === 0" class="flex flex-col gap-1">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex gap-2">
+          <div style="width: 340px">
+            <ProductImageGalleria v-model="aasGalleryFiles" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <div>
+              <dl class="divide-y divide-gray-100">
+                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt class="text-sm font-medium text-gray-900">
+                    {{ t("aasEditor.formLabels.id") }}
+                  </dt>
+                  <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    {{ id }}
+                  </dd>
+                </div>
+                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt class="text-sm font-medium text-gray-900">
+                    {{ t("aasEditor.formLabels.name") }}
+                  </dt>
+                  <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    {{ displayName === "" ? t("common.untitled") : displayName }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
           </div>
         </div>
+        <Button
+          icon="pi pi-pencil"
+          severity="primary"
+          :aria-label="t('common.edit')"
+          :label="t('common.edit')"
+          @click="openAssetAdministrationShellEditor"
+        />
       </div>
-      <Button
-        icon="pi pi-pencil"
-        severity="primary"
-        :aria-label="t('common.edit')"
-        :label="t('common.edit')"
-        @click="openAssetAdministrationShellEditor"
-      />
-    </div>
-    <Divider />
-    <div v-if="submodels">
-      <TreeTable
-        v-model:selection-keys="selectedKeys"
-        selection-mode="single"
-        :value="submodels"
-        table-style="min-width: 50rem"
-        :meta-key-selection="false"
-        paginator
-        :loading="loading"
-        :rows="10"
-        :rows-per-page-options="[10]"
-      >
-        <template #header>
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</span>
-            <Button :label="t('aasEditor.addSubmodel')" @click="createSubmodel" />
-          </div>
-        </template>
-        <Column field="label" header="Name" expander style="width: 34%" />
-        <Column field="type" :header="t('aasEditor.type')" style="width: 33%" />
-        <Column>
-          <template #body="{ node }">
-            <div class="flex w-full justify-end">
-              <div class="flex items-center gap-2 rounded-md">
+      <Divider />
+      <div v-if="submodels">
+        <TreeTable
+          v-model:selection-keys="selectedKeys"
+          selection-mode="single"
+          :value="submodels"
+          table-style="min-width: 50rem"
+          :meta-key-selection="false"
+          paginator
+          :loading="loading"
+          :rows="10"
+          :rows-per-page-options="[10]"
+        >
+          <template #header>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</span>
+              <Button :label="t('aasEditor.addSubmodel')" @click="createSubmodel" />
+            </div>
+          </template>
+          <Column field="label" header="Name" expander style="width: 34%" />
+          <Column field="type" :header="t('aasEditor.type')" style="width: 33%" />
+          <Column>
+            <template #body="{ node }">
+              <div class="flex w-full justify-end">
+                <div class="flex items-center gap-2 rounded-md">
+                  <Button
+                    v-if="node.data.actions.edit.visible"
+                    v-tooltip.top="node.data.actions.edit.tooltip"
+                    :aria-label="node.data.actions.edit.tooltip"
+                    icon="pi pi-pencil"
+                    severity="primary"
+                    @click="selectTreeNode(node.key)"
+                  />
+                  <Button
+                    v-else
+                    v-tooltip.top="node.data.actions.read.tooltip"
+                    :aria-label="node.data.actions.read.tooltip"
+                    :disabled="!node.data.actions.read.enabled"
+                    icon="pi pi-eye"
+                    severity="primary"
+                    @click="selectTreeNode(node.key)"
+                  />
+                  <Button
+                    v-if="node.data.actions.create.visible"
+                    v-tooltip.top="node.data.actions.create.tooltip"
+                    :aria-label="t('common.add')"
+                    icon="pi pi-plus"
+                    severity="secondary"
+                    :disabled="!node.data.actions.create.enabled"
+                    @click="addClicked($event, node)"
+                  />
+                  <Button
+                    v-if="node.data.actions.delete.visible"
+                    v-tooltip.top="node.data.actions.delete.tooltip"
+                    :aria-label="t('common.remove')"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    :disabled="!node.data.actions.delete.enabled"
+                    @click="deleteClicked(node)"
+                  />
+                </div>
+              </div>
+            </template>
+          </Column>
+          <template #paginatorcontainer>
+            <TablePagination
+              :current-page="currentPage"
+              :has-previous="hasPrevious"
+              :has-next="hasNext"
+              @reset-cursor="resetCursor"
+              @previous-page="previousPage"
+              @next-page="nextPage"
+            />
+          </template>
+        </TreeTable>
+        <ConfirmDialog />
+        <Menu
+          id="overlay_menu"
+          ref="popover"
+          :model="submodelElementsToAdd"
+          :popup="true"
+          position="right"
+        />
+        <Drawer
+          v-model:visible="drawerVisible"
+          :position="position"
+          :class="{
+            'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
+            'w-full!': isFullPosition,
+          }"
+          :pt="{
+            mask: { class: 'aas-editor-drawer-mask' },
+          }"
+          :auto-z-index="false"
+          @hide="onHideDrawer"
+        >
+          <template #header>
+            <div class="flex w-full flex-row items-center justify-between gap-1 pr-2">
+              <span class="text-xl font-bold">{{ drawerHeader }}</span>
+              <div class="flex gap-3">
                 <Button
-                  v-if="node.data.actions.edit.visible"
-                  v-tooltip.top="node.data.actions.edit.tooltip"
-                  :aria-label="node.data.actions.edit.tooltip"
-                  icon="pi pi-pencil"
-                  severity="primary"
-                  @click="selectTreeNode(node.key)"
+                  v-if="position === defaultPosition"
+                  severity="secondary"
+                  variant="text"
+                  icon="pi pi-window-maximize"
+                  @click="position = fullPosition"
                 />
                 <Button
                   v-else
-                  v-tooltip.top="node.data.actions.read.tooltip"
-                  :aria-label="node.data.actions.read.tooltip"
-                  :disabled="!node.data.actions.read.enabled"
-                  icon="pi pi-eye"
-                  severity="primary"
-                  @click="selectTreeNode(node.key)"
-                />
-                <Button
-                  v-if="node.data.actions.create.visible"
-                  v-tooltip.top="node.data.actions.create.tooltip"
-                  :aria-label="t('common.add')"
-                  icon="pi pi-plus"
                   severity="secondary"
-                  :disabled="!node.data.actions.create.enabled"
-                  @click="addClicked($event, node)"
+                  variant="text"
+                  icon="pi pi-window-minimize"
+                  @click="position = defaultPosition"
                 />
                 <Button
-                  v-if="node.data.actions.delete.visible"
-                  v-tooltip.top="node.data.actions.delete.tooltip"
-                  :aria-label="t('common.remove')"
-                  icon="pi pi-trash"
-                  severity="danger"
-                  :disabled="!node.data.actions.delete.enabled"
-                  @click="deleteClicked(node)"
+                  v-if="saveButtonIsVisible"
+                  :label="
+                    editorVNode?.component === SubmodelElementListCreateEditor
+                      ? t('aasEditor.table.saveAndAddEntries')
+                      : t('common.save')
+                  "
+                  @click="onSubmit"
                 />
               </div>
             </div>
           </template>
-        </Column>
-        <template #paginatorcontainer>
-          <TablePagination
-            :current-page="currentPage"
-            :has-previous="hasPrevious"
-            :has-next="hasNext"
-            @reset-cursor="resetCursor"
-            @previous-page="previousPage"
-            @next-page="nextPage"
+          <component
+            :is="editorVNode.component"
+            v-if="editorVNode"
+            v-bind="editorVNode.props"
+            :id="props.id"
+            ref="componentRef"
+            :aas-namespace="aasNamespace"
+            :open-drawer="aasEditor.openDrawer"
+            :error-handling-store="errorHandlingStore"
+            :translate="t"
+            :get-access-permission-rules="getAccessPermissionRules"
+            :modify-shell="modifyShell"
+            :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
           />
-        </template>
-      </TreeTable>
-      <ConfirmDialog />
-      <Menu
-        id="overlay_menu"
-        ref="popover"
-        :model="submodelElementsToAdd"
-        :popup="true"
-        position="right"
-      />
-      <Drawer
-        v-model:visible="drawerVisible"
-        :position="position"
-        :class="{
-          'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
-          'w-full!': isFullPosition,
-        }"
-        :pt="{
-          mask: { class: 'aas-editor-drawer-mask' },
-        }"
-        :auto-z-index="false"
-        @hide="onHideDrawer"
-      >
-        <template #header>
-          <div class="flex w-full flex-row items-center justify-between gap-1 pr-2">
-            <span class="text-xl font-bold">{{ drawerHeader }}</span>
-            <div class="flex gap-3">
-              <Button
-                v-if="position === defaultPosition"
-                severity="secondary"
-                variant="text"
-                icon="pi pi-window-maximize"
-                @click="position = fullPosition"
-              />
-              <Button
-                v-else
-                severity="secondary"
-                variant="text"
-                icon="pi pi-window-minimize"
-                @click="position = defaultPosition"
-              />
-              <Button
-                v-if="saveButtonIsVisible"
-                :label="
-                  editorVNode?.component === SubmodelElementListCreateEditor
-                    ? t('aasEditor.table.saveAndAddEntries')
-                    : t('common.save')
-                "
-                @click="onSubmit"
-              />
-            </div>
-          </div>
-        </template>
-        <component
-          :is="editorVNode.component"
-          v-if="editorVNode"
-          v-bind="editorVNode.props"
-          :id="props.id"
-          ref="componentRef"
-          :aas-namespace="aasNamespace"
-          :open-drawer="aasEditor.openDrawer"
-          :error-handling-store="errorHandlingStore"
-          :translate="t"
-          :get-access-permission-rules="getAccessPermissionRules"
-          :modify-shell="modifyShell"
-          :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
-        />
-      </Drawer>
+        </Drawer>
+      </div>
     </div>
+
+    <PresentationTab
+      v-else-if="activeTabIndex === 1"
+      :id="props.id"
+      :aas-namespace="aasNamespace"
+      :presentation-configuration-namespace="presentationConfigurationNamespace"
+      :submodels="submodels"
+    />
   </div>
 </template>
 

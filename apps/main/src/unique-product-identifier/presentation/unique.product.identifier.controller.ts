@@ -13,6 +13,8 @@ import {
   BrandingDto,
   BrandingDtoSchema,
   PassportDtoSchema,
+  PresentationConfigurationDto,
+  PresentationConfigurationDtoSchema,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
@@ -44,6 +46,7 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import { UniqueProductIdentifierListDtoSchema } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
@@ -56,6 +59,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     private readonly passportRepository: PassportRepository,
     private readonly environmentService: EnvironmentService,
     private readonly brandingRepository: BrandingRepository,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @OptionalAuth()
@@ -74,6 +78,16 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   @Get("/unique-product-identifiers/:id/passport")
   async getReferencedPassport(@Param("id") id: string) {
     return PassportDtoSchema.parse(await this.loadPassport(id));
+  }
+
+  @OptionalAuth()
+  @Get("/unique-product-identifiers/:id/presentation-configuration")
+  async getPresentationConfiguration(
+    @Param("id") id: string,
+  ): Promise<PresentationConfigurationDto> {
+    const passport = await this.loadPassport(id);
+    const config = await this.presentationConfigurationService.getEffectiveForPassport(passport);
+    return PresentationConfigurationDtoSchema.parse(config.toPlain());
   }
 
   @OptionalAuth()

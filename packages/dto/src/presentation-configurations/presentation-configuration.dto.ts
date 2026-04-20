@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { KeyTypesEnum } from "../aas/enums/key-types-enum";
+import { KeyTypes, KeyTypesEnum } from "../aas/enums/key-types-enum";
 import { DateTimeSchema } from "../shared/dpp.schemas";
 
 export const PresentationReferenceType = {
@@ -10,14 +10,21 @@ export const PresentationReferenceType = {
 export const PresentationReferenceTypeEnum = z.enum(PresentationReferenceType);
 export type PresentationReferenceTypeType = z.infer<typeof PresentationReferenceTypeEnum>;
 
+export const PresentationComponentName = {
+  BigNumber: "BigNumber",
+} as const;
+
+export const PresentationComponentNameEnum = z.enum(PresentationComponentName);
+export type PresentationComponentNameType = z.infer<typeof PresentationComponentNameEnum>;
+
 export const PresentationConfigurationDtoSchema = z
   .object({
     id: z.uuid(),
     organizationId: z.string().min(1),
     referenceId: z.uuid(),
     referenceType: PresentationReferenceTypeEnum,
-    elementDesign: z.record(z.string(), z.string()).default({}),
-    defaultComponents: z.partialRecord(KeyTypesEnum, z.string()).default({}),
+    elementDesign: z.record(z.string(), PresentationComponentNameEnum).default({}),
+    defaultComponents: z.partialRecord(KeyTypesEnum, PresentationComponentNameEnum).default({}),
     createdAt: DateTimeSchema,
     updatedAt: DateTimeSchema,
   })
@@ -31,11 +38,47 @@ export const PresentationConfigurationInvariantsSchema = z.object({
   referenceType: PresentationReferenceTypeEnum,
 });
 
+const KEY_TYPES_SET: ReadonlySet<string> = new Set(Object.values(KeyTypes));
+
+function dropUnknownComponents(input: unknown, validKeys?: ReadonlySet<string>): unknown {
+  if (input == null || typeof input !== "object") return input;
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (validKeys && !validKeys.has(key)) continue;
+    const parsed = PresentationComponentNameEnum.safeParse(value);
+    if (parsed.success) {
+      cleaned[key] = parsed.data;
+    }
+  }
+  return cleaned;
+}
+
 export const PresentationConfigurationExportSchema = z.object({
-  elementDesign: z.record(z.string(), z.string()).default({}),
-  defaultComponents: z.partialRecord(KeyTypesEnum, z.string()).default({}),
+  elementDesign: z
+    .preprocess(
+      (input) => dropUnknownComponents(input),
+      z.record(z.string(), PresentationComponentNameEnum),
+    )
+    .default({}),
+  defaultComponents: z
+    .preprocess(
+      (input) => dropUnknownComponents(input, KEY_TYPES_SET),
+      z.partialRecord(KeyTypesEnum, PresentationComponentNameEnum),
+    )
+    .default({}),
 });
 
 export type PresentationConfigurationExportDto = z.infer<
   typeof PresentationConfigurationExportSchema
+>;
+
+export const PresentationConfigurationPatchSchema = z.object({
+  elementDesign: z.record(z.string(), PresentationComponentNameEnum.nullable()).optional(),
+  defaultComponents: z
+    .partialRecord(KeyTypesEnum, PresentationComponentNameEnum.nullable())
+    .optional(),
+});
+
+export type PresentationConfigurationPatchDto = z.infer<
+  typeof PresentationConfigurationPatchSchema
 >;

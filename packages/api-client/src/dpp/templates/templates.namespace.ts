@@ -6,13 +6,19 @@ import type {
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
+import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 
 export class TemplatesNamespace {
   public aas!: AasNamespace;
+  public presentationConfiguration!: PresentationConfigurationNamespace;
   private readonly templatesEndpoint = "/templates";
 
   constructor(private readonly axiosInstance: AxiosInstance) {
     this.aas = new AasNamespace(this.axiosInstance, "templates");
+    this.presentationConfiguration = new PresentationConfigurationNamespace(
+      this.axiosInstance,
+      "templates",
+    );
   }
 
   public async getAll(params: PagingParamsDto) {

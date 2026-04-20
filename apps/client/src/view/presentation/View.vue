@@ -34,6 +34,16 @@ async function loadPassport(id: string): Promise<boolean> {
     return false;
   }
   passportStore.shells = aas.data.result || [];
+
+  try {
+    const presentationConfig =
+      await apiClient.dpp.uniqueProductIdentifiers.getPresentationConfiguration(id);
+    passportStore.presentationConfig = presentationConfig.data;
+  } catch (error) {
+    console.error("Failed to load presentation configuration", error);
+    passportStore.presentationConfig = null;
+  }
+
   await analyticsStore.addPageView();
 
   return true;

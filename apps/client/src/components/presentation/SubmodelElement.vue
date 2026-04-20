@@ -4,14 +4,19 @@ import { computed } from "vue";
 import { useDisplayName } from "../../composables/display-name";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
-const { element } = defineProps<{
+const { element, parentPath } = defineProps<{
   element: SubmodelElementResponseDto;
+  parentPath?: string;
 }>();
 
 const { description: elementName } = useDisplayName(element.displayName);
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),
+);
+
+const fullPath = computed(() =>
+  parentPath ? `${parentPath}.${element.idShort}` : element.idShort,
 );
 </script>
 
@@ -27,6 +32,6 @@ const isComplexType = computed(() =>
     <dt class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
     </dt>
-    <SubmodelElementValue :element="element" />
+    <SubmodelElementValue :element="element" :path="fullPath" />
   </div>
 </template>

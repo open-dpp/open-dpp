@@ -81,8 +81,8 @@ describe("passportService", () => {
         organizationId,
         referenceId: passport.id,
         referenceType: PresentationReferenceType.Passport,
-        elementDesign: { "submodel-1.prop-1": "TextField" },
-        defaultComponents: { [KeyTypes.Property]: "TextField" },
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { [KeyTypes.Property]: "BigNumber" },
       }),
     );
 
@@ -93,8 +93,8 @@ describe("passportService", () => {
 
     expect(exported).toMatchObject({
       presentationConfiguration: {
-        elementDesign: { "submodel-1.prop-1": "TextField" },
-        defaultComponents: { [KeyTypes.Property]: "TextField" },
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { [KeyTypes.Property]: "BigNumber" },
       },
     });
   });

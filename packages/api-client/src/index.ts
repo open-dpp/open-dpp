@@ -16,6 +16,8 @@ export type {
 export { PassportMetricNamespace } from "./analytics/passport-metric/passport-metric.namespace";
 export { AasNamespace } from "./dpp/aas/aasNamespace";
 export { BrandingNamespace } from "./dpp/branding/branding.namespace";
+export { PresentationConfigurationNamespace } from "./dpp/presentation-configurations/presentation-configuration.namespace";
+export type { PresentationConfigurationScope } from "./dpp/presentation-configurations/presentation-configuration.namespace";
 export { DataFieldType } from "./dpp/data-modelling/data-field.dto";
 export type { DataFieldDto } from "./dpp/data-modelling/data-field.dto";
 export { GranularityLevel } from "./dpp/data-modelling/granularity-level";

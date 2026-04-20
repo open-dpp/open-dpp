@@ -14,6 +14,7 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -28,7 +29,7 @@ describe("uniqueProductIdentifierController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [UniqueProductIdentifierModule],
+      imports: [UniqueProductIdentifierModule, PresentationConfigurationsModule],
       providers: [
         UniqueProductIdentifierService,
         PassportRepository,

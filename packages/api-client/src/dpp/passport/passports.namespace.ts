@@ -7,13 +7,19 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
+import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 
 export class PassportNamespace {
   public aas!: AasNamespace;
+  public presentationConfiguration!: PresentationConfigurationNamespace;
   private readonly passportEndpoint = "/passports";
 
   constructor(private readonly axiosInstance: AxiosInstance) {
     this.aas = new AasNamespace(this.axiosInstance, "passports");
+    this.presentationConfiguration = new PresentationConfigurationNamespace(
+      this.axiosInstance,
+      "passports",
+    );
   }
 
   public async getAll(params: PagingParamsDto) {

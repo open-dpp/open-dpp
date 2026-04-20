@@ -4,7 +4,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { Logger } from "@nestjs/common";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Connection } from "mongoose";
 
@@ -53,8 +53,8 @@ describe("presentationConfigurationRepository", () => {
       organizationId: "org-1",
       referenceId: randomUUID(),
       referenceType: PresentationReferenceType.Template,
-      elementDesign: { "submodel-1.prop-1": "TextField" },
-      defaultComponents: { [KeyTypes.Property]: "TextField" },
+      elementDesign: { "submodel-1.prop-1": PresentationComponentName.BigNumber },
+      defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
     });
 
     await repository.save(config);
@@ -62,10 +62,10 @@ describe("presentationConfigurationRepository", () => {
 
     expect(found.id).toBe(config.id);
     expect(Object.fromEntries(found.elementDesign)).toEqual({
-      "submodel-1.prop-1": "TextField",
+      "submodel-1.prop-1": PresentationComponentName.BigNumber,
     });
     expect(Object.fromEntries(found.defaultComponents)).toEqual({
-      [KeyTypes.Property]: "TextField",
+      [KeyTypes.Property]: PresentationComponentName.BigNumber,
     });
   });
 

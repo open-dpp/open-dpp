@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   KeyTypesType,
+  PresentationComponentNameType,
   PresentationConfigurationDtoSchema,
   PresentationConfigurationInvariantsSchema,
   PresentationReferenceType,
@@ -12,7 +13,7 @@ import { IPersistable } from "../../aas/domain/persistable";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 
-export type PresentationComponentName = string;
+export type PresentationComponentName = PresentationComponentNameType;
 
 export class PresentationConfiguration implements IPersistable, HasCreatedAt {
   private constructor(
@@ -31,10 +32,12 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     organizationId: string;
     referenceId: string;
     referenceType: PresentationReferenceTypeType;
-    elementDesign?: ReadonlyMap<string, PresentationComponentName> | Record<string, string>;
+    elementDesign?:
+      | ReadonlyMap<string, PresentationComponentName>
+      | Record<string, PresentationComponentName>;
     defaultComponents?:
       | ReadonlyMap<KeyTypesType, PresentationComponentName>
-      | Partial<Record<KeyTypesType, string>>;
+      | Partial<Record<KeyTypesType, PresentationComponentName>>;
     createdAt?: Date;
     updatedAt?: Date;
   }): PresentationConfiguration {
@@ -168,17 +171,23 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
 }
 
 function toStringMap(
-  input: ReadonlyMap<string, string> | Record<string, string> | undefined,
-): ReadonlyMap<string, string> {
+  input:
+    | ReadonlyMap<string, PresentationComponentName>
+    | Record<string, PresentationComponentName>
+    | undefined,
+): ReadonlyMap<string, PresentationComponentName> {
   if (!input) return new Map();
   if (input instanceof Map) return new Map(input);
   return new Map(Object.entries(input));
 }
 
 function toKeyTypesMap(
-  input: ReadonlyMap<KeyTypesType, string> | Partial<Record<KeyTypesType, string>> | undefined,
-): ReadonlyMap<KeyTypesType, string> {
+  input:
+    | ReadonlyMap<KeyTypesType, PresentationComponentName>
+    | Partial<Record<KeyTypesType, PresentationComponentName>>
+    | undefined,
+): ReadonlyMap<KeyTypesType, PresentationComponentName> {
   if (!input) return new Map();
   if (input instanceof Map) return new Map(input);
-  return new Map(Object.entries(input) as [KeyTypesType, string][]);
+  return new Map(Object.entries(input) as [KeyTypesType, PresentationComponentName][]);
 }
