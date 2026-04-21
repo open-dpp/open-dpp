@@ -55,34 +55,38 @@ onMounted(async () => {
   await config.fetch();
 });
 
-// Only direct children of a Submodel are listed. Nested Properties inside
-// SubmodelElementCollections are intentionally excluded: this tab stores paths
-// as `idShortPathIncludingSubmodel`, but the public viewer's path threading
-// resets at the submodel context when drilling into a SEC, so a BigNumber
-// assignment on a nested path wouldn't match at render time. Remove this
-// restriction once the viewer threads the full submodel-qualified path into
-// SubmodelElementCollection descendants — see follow-up linked in PR #520.
+// Walks the submodel tree and surfaces every numeric Property at any depth.
+// Path keys come from `data.path.idShortPathIncludingSubmodel` — see
+// `convertSubmodelElementsToTree` in composables/aas-editor.ts for the
+// dot-separated format (e.g. "Metrics.Dimensions.weight").
 const rows = computed<NumericPropertyRow[]>(() => {
   const out: NumericPropertyRow[] = [];
+
+  function visit(node: TreeNode, submodelLabel: string) {
+    const plain = node.data?.plain as
+      | (SubmodelElementSharedResponseDto & { valueType?: string })
+      | undefined;
+    if (
+      plain &&
+      plain.modelType === KeyTypes.Property &&
+      NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")
+    ) {
+      out.push({
+        path: node.data.path.idShortPathIncludingSubmodel,
+        label: node.data.label ?? plain.idShort,
+        submodelLabel,
+        valueType: plain.valueType ?? "",
+      });
+    }
+    for (const child of node.children ?? []) {
+      visit(child, submodelLabel);
+    }
+  }
 
   for (const submodelNode of submodels) {
     const submodelLabel = submodelNode.data?.label ?? "";
     for (const child of submodelNode.children ?? []) {
-      const plain = child.data?.plain as
-        | (SubmodelElementSharedResponseDto & { valueType?: string })
-        | undefined;
-      if (
-        plain &&
-        plain.modelType === KeyTypes.Property &&
-        NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")
-      ) {
-        out.push({
-          path: child.data.path.idShortPathIncludingSubmodel,
-          label: child.data.label ?? plain.idShort,
-          submodelLabel,
-          valueType: plain.valueType ?? "",
-        });
-      }
+      visit(child, submodelLabel);
     }
   }
 
@@ -116,13 +120,13 @@ async function onChange(path: string, event: Event) {
       {{ t("common.loading") }}
     </div>
 
-    <div
+    <p
       v-else-if="rows.length === 0"
       data-cy="presentation-tab-empty"
-      class="rounded-md border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500"
+      class="text-sm text-gray-600"
     >
       {{ t("aasEditor.presentationTab.emptyState") }}
-    </div>
+    </p>
 
     <div v-else class="border-surface-200 bg-surface-0 overflow-hidden rounded-xl border shadow-sm">
       <table class="w-full divide-y divide-gray-100 text-sm">

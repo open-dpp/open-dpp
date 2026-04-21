@@ -51,4 +51,21 @@ describe("resolveComponent", () => {
     const cfg = config({});
     expect(resolveComponent(cfg, { path: "sm.p", modelType: "File" })).toBeUndefined();
   });
+
+  it("matches a deeply nested path (SEC inside SEC inside Submodel)", () => {
+    const cfg = config({
+      elementDesign: {
+        "Metrics.Dimensions.weight": PresentationComponentName.BigNumber,
+      },
+    });
+
+    expect(
+      resolveComponent(cfg, { path: "Metrics.Dimensions.weight", modelType: "Property" }),
+    ).toBe(PresentationComponentName.BigNumber);
+
+    // A sibling path at the same depth with no override falls through to default.
+    expect(
+      resolveComponent(cfg, { path: "Metrics.Dimensions.height", modelType: "Property" }),
+    ).toBeUndefined();
+  });
 });

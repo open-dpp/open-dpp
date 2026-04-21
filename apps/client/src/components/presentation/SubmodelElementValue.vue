@@ -65,9 +65,11 @@ const isBigNumber = computed(
   <List
     v-else-if="element.modelType === 'SubmodelElementList'"
     :content="element.value as SubmodelElementCollectionResponseDto[]"
+    :path="path"
   />
   <SubmodelElementCollection
     v-else-if="element.modelType === 'SubmodelElementCollection'"
     :id-short="element.idShort"
+    :path="path"
   />
 </template>

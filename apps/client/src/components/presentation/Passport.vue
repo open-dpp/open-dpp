@@ -36,6 +36,15 @@ const submodels = computed(() => {
 
   return mapTreeElementsToSubmodels(selectedElement.children);
 });
+
+// When the viewer drills into a nested SEC, the containing SEC link sets
+// `?submodelPath=<fullyQualifiedPath>` so the resolver can still match
+// configured BigNumber keys like "Metrics.Dimensions.weight".
+const parentPathOverride = computed(() => {
+  const raw = route.query.submodelPath;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+});
 </script>
 
 <template>
@@ -58,6 +67,7 @@ const submodels = computed(() => {
           :id-short="submodel.id"
           :title="submodel.title"
           :submodel-elements="submodel.submodelElements"
+          :parent-path-override="parentPathOverride"
         />
       </div>
     </div>

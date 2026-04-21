@@ -71,13 +71,13 @@
     },
     "presentationTab": {
       "title": "Darstellung",
-      "description": "Lege fest, wie numerische Eigenschaften angezeigt werden. BigNumber stellt den Wert groß und fett dar.",
+      "description": "Lege fest, wie numerische Eigenschaften angezeigt werden.",
       "property": "Eigenschaft",
       "path": "Pfad",
       "component": "Komponente",
       "default": "Standard",
       "bigNumber": "BigNumber",
-      "emptyState": "Keine numerischen Eigenschaften gefunden. Lege eine Property mit numerischem valueType an, um BigNumber zu verwenden."
+      "emptyState": "Keine numerischen Eigenschaften gefunden. Lege eine an, um ihre Darstellung festzulegen."
     },
     "security": {
       "missingPermission": "Fehlende Rechte",

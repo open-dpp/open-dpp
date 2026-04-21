@@ -5,8 +5,9 @@ import { useI18n } from "vue-i18n";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 
-const { idShort } = defineProps<{
+const { idShort, path } = defineProps<{
   idShort: string;
+  path?: string;
 }>();
 
 const passportStore = usePassportStore();
@@ -19,12 +20,21 @@ const parentId = computed(() => {
   return parentId || idShort;
 });
 
+// Preserve the ancestor path across the "view details" navigation so the
+// presentation-config resolver can still match fully-qualified keys like
+// "Metrics.Dimensions.weight" after drilling in.
+const linkQuery = computed(() => {
+  const query: Record<string, string> = { submodelid: parentId.value };
+  if (path) query.submodelPath = path;
+  return query;
+});
+
 const { t } = useI18n();
 </script>
 
 <template>
   <router-link
-    :to="`?submodelid=${parentId}`"
+    :to="{ query: linkQuery }"
     :data-cy="parentId"
     class="text-primary-600 hover:text-primary-700 mt-1 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
   >

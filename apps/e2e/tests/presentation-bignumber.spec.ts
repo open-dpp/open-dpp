@@ -116,3 +116,102 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   await expect(bigNumber).toHaveText(PROPERTY_VALUE);
   await anonymous.close();
 });
+
+// Nested-property coverage for the follow-up that lifted the top-level-only
+// restriction. Walks through the same flow but places the numeric Property
+// inside a SubmodelElementCollection, and verifies the viewer resolves the
+// fully-qualified path across the SEC navigation step.
+const NESTED_TEMPLATE_NAME = `BigNumber-NestedTemplate-${uuid4().slice(0, 8)}`;
+const NESTED_PASSPORT_NAME = `BigNumber-NestedPassport-${uuid4().slice(0, 8)}`;
+const NESTED_SEC_ID_SHORT = "Dimensions";
+const NESTED_PROPERTY_PATH = `${SUBMODEL_ID_SHORT}.${NESTED_SEC_ID_SHORT}.${PROPERTY_ID_SHORT}`;
+
+test("BigNumber on a Property nested inside a SubmodelElementCollection", async ({
+  page,
+  context,
+}) => {
+  await page.goto(`${EnvConfig.OPEN_DPP_URL}`);
+  await page.getByRole("link", { name: "Passvorlagen", exact: true }).click();
+  await page.getByRole("button", { name: "Hinzufügen" }).click();
+  await page.getByRole("textbox", { name: "Name" }).fill(NESTED_TEMPLATE_NAME);
+  await page.getByRole("button", { name: "Erstellen" }).click();
+  await page.getByRole("cell", { name: NESTED_TEMPLATE_NAME }).click();
+
+  // Submodel
+  await page.getByRole("button", { name: /Submodel hinzufügen|Add Submodel/i }).click();
+  await page
+    .getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i })
+    .first()
+    .fill(SUBMODEL_ID_SHORT);
+  await page.getByRole("button", { name: /Speichern|Save/i }).click();
+
+  // Nested SubmodelElementCollection
+  const submodelRow = page.getByRole("row", { name: new RegExp(SUBMODEL_ID_SHORT, "i") }).first();
+  await submodelRow.getByLabel(/Hinzufügen|Add/i).click();
+  await page.getByRole("menuitem", { name: /Sammlung|Collection/i }).click();
+  await page
+    .getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i })
+    .first()
+    .fill(NESTED_SEC_ID_SHORT);
+  await page.getByRole("button", { name: /Speichern|Save/i }).click();
+
+  // Numeric Property inside the SEC
+  const secRow = page.getByRole("row", { name: new RegExp(NESTED_SEC_ID_SHORT, "i") }).first();
+  await secRow.getByLabel(/Hinzufügen|Add/i).click();
+  await page.getByRole("menuitem", { name: /Zahl|Number/i }).click();
+  await page
+    .getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i })
+    .first()
+    .fill(PROPERTY_ID_SHORT);
+  await page
+    .getByRole("textbox", { name: /Wert|Value/i })
+    .first()
+    .fill(PROPERTY_VALUE);
+  await page.getByRole("button", { name: /Speichern|Save/i }).click();
+
+  // Presentation tab: the nested path must now appear
+  await page.getByRole("button", { name: /Darstellung|Presentation/i }).click();
+  const select = page.locator(`[data-cy="presentation-select-${NESTED_PROPERTY_PATH}"]`);
+  await expect(select).toBeVisible();
+  await select.selectOption("BigNumber");
+
+  // Persist + passport
+  await page.getByRole("link", { name: /Pässe|Passports/i, exact: true }).click();
+  await page.getByRole("button", { name: "Hinzufügen" }).click();
+  await page.getByRole("textbox", { name: "Name" }).fill(NESTED_PASSPORT_NAME);
+  const templatePicker = page.getByRole("combobox", { name: /Vorlage|Template/i });
+  if (await templatePicker.count()) {
+    await templatePicker.click();
+    await page.getByRole("option", { name: NESTED_TEMPLATE_NAME }).click();
+  } else {
+    await page.getByText(NESTED_TEMPLATE_NAME).click();
+  }
+  await page.getByRole("button", { name: /Erstellen|Create/i }).click();
+
+  await page.getByRole("cell", { name: NESTED_PASSPORT_NAME }).click();
+  const uuidMatch = page.url().match(/\/passports\/([a-f0-9-]{36})/i);
+  expect(uuidMatch).not.toBeNull();
+  const passportId = uuidMatch![1];
+
+  const upiResponse = await page.request.get(
+    `${EnvConfig.OPEN_DPP_URL}/api/passports/${passportId}/unique-product-identifier`,
+  );
+  expect(upiResponse.status()).toBe(200);
+  const { uuid: upiUuid } = (await upiResponse.json()) as { uuid: string };
+
+  // Viewer: drill into the SEC, then assert BigNumber renders the nested value.
+  const anonymous = await context.browser()!.newContext();
+  const viewerPage = await anonymous.newPage();
+  await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/view/${upiUuid}`);
+
+  // The SEC renders a "view details" link; follow it. The link carries
+  // ?submodelPath=Metrics.Dimensions which the viewer threads into the
+  // resolver lookup.
+  await viewerPage.locator(`[data-cy="${NESTED_SEC_ID_SHORT}"]`).click();
+  await expect(viewerPage).toHaveURL(/submodelPath=/);
+
+  const bigNumber = viewerPage.locator('[data-cy="bignumber"]');
+  await expect(bigNumber).toBeVisible();
+  await expect(bigNumber).toHaveText(PROPERTY_VALUE);
+  await anonymous.close();
+});

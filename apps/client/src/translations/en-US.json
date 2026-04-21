@@ -71,13 +71,13 @@
     },
     "presentationTab": {
       "title": "Presentation",
-      "description": "Choose how numeric properties are displayed. BigNumber renders the value large and bold.",
+      "description": "Choose how numeric properties are displayed.",
       "property": "Property",
       "path": "Path",
       "component": "Component",
       "default": "Default",
       "bigNumber": "BigNumber",
-      "emptyState": "No numeric properties found. Add a Property with a numeric valueType to configure BigNumber display."
+      "emptyState": "No numeric properties found. Add one to configure how it's displayed."
     },
     "security": {
       "missingPermission": "Missing permissions",

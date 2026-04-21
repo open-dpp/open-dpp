@@ -1,0 +1,54 @@
+# Copilot Instructions
+
+## Design Context
+
+open-dpp is an open-source platform for managing Digital Product Passports (DPPs) under the EU Ecodesign for Sustainable Products Regulation (ESPR) and adjacent frameworks (EU Batteries Regulation, sector legislation). Product data flows through two distinct UI surfaces: an **authenticated operator UI** where organizations author templates, configure passports, and set presentation rules, and a **public passport viewer** reached by QR code or permalink where regulators, procurement teams, and end users read a product's lifecycle record.
+
+### Users
+
+Primary: **sustainability and compliance leads at brands and manufacturers.** They sit at a desk with a structured-data mindset, work under regulatory pressure, and care about audit trails. Their job is to maintain consistent lifecycle data (composition, provenance, emissions, repair, recyclability, traceability) in a format regulators and supply-chain partners will accept as authoritative. Secondary: internal engineers integrating open-dpp into manufacturing data flows — they're tolerant of whatever the compliance lead experience delivers, so they are not the default target.
+
+The public viewer audience spans regulators, procurement teams, and curious end users. They arrive via a scan or link and expect to read, not operate.
+
+### Brand Personality
+
+**Trustworthy, Rigorous, Calm** — in the voice of Stripe's docs or Linear's product UI, not of a marketing landing page. The brand does not perform sustainability; it serves it. Green is structural, never decorative. Generous whitespace and quiet confidence are the primary emotional signal; nothing in the interface should make a compliance reader stop and wonder whether the product takes itself seriously.
+
+### Aesthetic Direction
+
+**Theme: light mode only.** Compliance leads work at desks under office light; public-viewer readers scan passports during daytime product interactions. Light is the correct context. The existing config hard-codes `darkModeSelector: false`.
+
+**Typography** — current code uses system fonts. When introducing custom faces, pair a humanist grotesque for body/UI with a neutral monospace for identifiers (UUIDs, `idShortPath` strings, measurements that need character-level inspection). Recommended pairing: **Hanken Grotesk** (Google Fonts — humanist, technical rigor with subtle warmth, strong tabular figures) for body/UI, **Geist Mono** (Vercel — free, clean, intentional without being loud) for monospace needs. Explicitly reject Inter, IBM Plex, DM Sans, Fraunces, Newsreader, Space Grotesk, Crimson, Lora, Syne, Outfit, Plus Jakarta Sans — these are training-data defaults and create AI monoculture.
+
+**Color** — existing primary is `#6BAD87` / `#00965E` (PrimeVue Aura preset + Tailwind `--color-primary-500`). The open-dpp logo carries a supplementary palette of teal `#b4dedf` and cyan `#40afd7` alongside mint green `#80caaf`. Use OKLCH for any new tokens; tint neutral surfaces slightly toward the brand green for subconscious cohesion. Do not introduce arbitrary hues — the palette is narrow on purpose.
+
+**Anti-references** — the design must not look like:
+- A generic B2B admin dashboard (data tables repeated endlessly, blue primary buttons, stock icons, card-card-card layouts)
+- A marketing landing page (gradient heroes, illustrated product mockups, testimonial carousels, animated copy)
+- Sustainability / greenwash visual cliches (leaf icons, earth emoji, stock eco photography, plant silhouettes)
+- The 2024–2025 AI aesthetic (glassmorphism, cyan-on-dark, purple-to-blue gradients, gradient text, decorative sparklines, rounded-shadowed identical cards)
+
+### Design Principles
+
+1. **Regulatory trust over stylistic flair.** Every decorative choice must survive the question: "does this make the data more credible?" If not, remove it. Compliance readers spot and distrust anything that feels marketed-to-them.
+
+2. **Brand green marks structure, not mood.** Use `#00965E` / `#6BAD87` for active states, primary actions, and navigational anchors — never as a decorative flourish or background wash. The teal/cyan accents from the logo palette are secondary and should appear even more rarely. An accent works because it's rare; overuse kills its power.
+
+3. **Two surfaces, one voice.** The operator UI is denser and keyboard-forward; the public viewer is editorial and reading-focused. They share type, color, spacing rhythm, and component vocabulary so a regulator who inspects a passport trusts that the operator side produced it with the same discipline.
+
+4. **Tabular numbers are a first-class citizen.** Measurements, IDs, dates, and `idShortPath` strings appear throughout both surfaces. Use tabular figures (`font-feature-settings: "tnum"`) so columns align naturally. Reserve monospace for full identifiers (UUIDs, dotted paths) where character-level inspection matters — not as shorthand for "technical."
+
+5. **Silence beats show.** When in doubt, remove a border, reduce a padding, drop a decorative icon. The repo already has more visual structure than it needs; prune before adding. A light, confident composition reads as more authoritative than a dense, decorated one.
+
+### Project Constraints
+
+- **Stack**: Vue 3 + Pinia + PrimeVue (Aura preset, customized primary to open-dpp green) + Tailwind CSS v4, `darkModeSelector: false`.
+- **i18n**: German (`de-DE`) and English (`en-US`) — both locales must be checked for any copy change. Translations already distinguish operator and public-viewer namespaces.
+- **Multi-tenancy**: organizations can override the instance logo per org. Logo swap is structural, not a theming knob — the rest of the palette stays constant.
+- **Accessibility**: no stated WCAG level, but compliance/sustainability audiences are likely to include users with accessibility needs; meet WCAG 2.2 AA on contrast (≥ 4.5:1 for body text, ≥ 3:1 for large text and meaningful non-text) without being asked.
+
+### Out of Scope (decision log)
+
+- **No dark mode** — explicitly ruled out by the config and audience context.
+- **No custom fonts introduced yet** — existing UI runs on system fonts. Any font-loading change is a deliberate decision that must consider bundle size and German umlaut support.
+- **No decorative animations** — motion is reserved for state changes (entrance/exit, feedback). No ambient background effects, no parallax, no scroll-linked reveals on operator screens.
