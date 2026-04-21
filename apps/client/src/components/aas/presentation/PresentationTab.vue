@@ -168,7 +168,7 @@ const hasSubmodels = computed(() => submodels.length > 0);
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 p-6">
+  <div class="flex flex-col gap-6">
     <header class="flex max-w-[65ch] flex-col gap-1">
       <h2 class="text-xl font-semibold text-surface-900">
         {{ t("aasEditor.presentationTab.title") }}

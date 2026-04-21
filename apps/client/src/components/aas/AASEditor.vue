@@ -151,47 +151,36 @@ watch(activeTabIndex, () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 p-4">
+  <div class="flex flex-col gap-6 p-6">
     <TabsComponent :tabs="tabLabels" :value="activeTabIndex" @change="onTabChange" />
 
-    <div v-if="activeTabIndex === 0" class="flex flex-col gap-1">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex gap-2">
-          <div style="width: 340px">
-            <ProductImageGalleria v-model="aasGalleryFiles" />
-          </div>
-          <div class="flex flex-col gap-2">
-            <div>
-              <dl class="divide-y divide-gray-100">
-                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt class="text-sm font-medium text-gray-900">
-                    {{ t("aasEditor.formLabels.id") }}
-                  </dt>
-                  <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    {{ id }}
-                  </dd>
-                </div>
-                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt class="text-sm font-medium text-gray-900">
-                    {{ t("aasEditor.formLabels.name") }}
-                  </dt>
-                  <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    {{ displayName === "" ? t("common.untitled") : displayName }}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
+    <div v-if="activeTabIndex === 0" class="flex flex-col gap-8">
+      <header class="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+        <div class="sm:w-72 shrink-0">
+          <ProductImageGalleria v-model="aasGalleryFiles" />
         </div>
-        <Button
-          icon="pi pi-pencil"
-          severity="primary"
-          :aria-label="t('common.edit')"
-          :label="t('common.edit')"
-          @click="openAssetAdministrationShellEditor"
-        />
-      </div>
-      <Divider />
+        <div class="flex flex-1 items-start justify-between gap-4">
+          <div class="flex flex-col gap-2">
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">
+              {{ displayName === "" ? t("common.untitled") : displayName }}
+            </h2>
+            <dl class="flex items-baseline gap-2 text-xs">
+              <dt class="font-medium text-gray-500">
+                {{ t("aasEditor.formLabels.id") }}
+              </dt>
+              <dd class="font-mono text-gray-600">{{ id }}</dd>
+            </dl>
+          </div>
+          <Button
+            icon="pi pi-pencil"
+            severity="secondary"
+            variant="outlined"
+            :aria-label="t('common.edit')"
+            :label="t('common.edit')"
+            @click="openAssetAdministrationShellEditor"
+          />
+        </div>
+      </header>
       <div v-if="submodels">
         <TreeTable
           v-model:selection-keys="selectedKeys"
