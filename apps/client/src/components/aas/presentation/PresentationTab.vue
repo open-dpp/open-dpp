@@ -5,14 +5,15 @@ import type {
   SubmodelElementSharedResponseDto,
 } from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, provide } from "vue";
 import { useI18n } from "vue-i18n";
 import Column from "primevue/column";
 import Select from "primevue/select";
 import TreeTable from "primevue/treetable";
 import { DataTypeDef, KeyTypes, PresentationComponentName } from "@open-dpp/dto";
 import { usePresentationConfig } from "../../../composables/presentation-config.ts";
-import BigNumberValue from "../../presentation/components/BigNumberValue.vue";
+import { presentationConfigKey } from "../../presentation/presentation-config.ts";
+import SubmodelElementValue from "../../presentation/SubmodelElementValue.vue";
 import { useErrorHandlingStore } from "../../../stores/error.handling.ts";
 
 const { id, submodels, presentationConfigurationNamespace } = defineProps<{
@@ -73,6 +74,11 @@ const config = usePresentationConfig({
   translate: t,
 });
 
+// Share the live, in-progress config with any descendant that injects it.
+// `SubmodelElementValue` uses this to resolve which component to render for a
+// given element, so the Preview column always mirrors the real viewer.
+provide(presentationConfigKey, config.config);
+
 onMounted(async () => {
   await config.fetch();
 });
@@ -129,10 +135,33 @@ async function onChange(node: TreeNode, next: string) {
   }
 }
 
+function placeholderValueFor(
+  plain: SubmodelElementSharedResponseDto & { valueType?: string },
+): string {
+  const vt = plain.valueType;
+  if (typeof vt === "string" && NUMERIC_VALUE_TYPES.has(vt)) return PREVIEW_PLACEHOLDER_VALUE;
+  if (vt === DataTypeDef.Boolean) return "true";
+  if (vt === DataTypeDef.Date) return "2024-01-15";
+  if (vt === DataTypeDef.DateTime) return "2024-01-15T12:00:00Z";
+  return "Example";
+}
+
 function previewElementFor(node: TreeNode): SubmodelElementResponseDto {
-  const plain = node.data?.plain as SubmodelElementResponseDto;
+  const plain = node.data?.plain as SubmodelElementResponseDto & {
+    valueType?: string;
+  };
   if (plain.value !== null && plain.value !== undefined && plain.value !== "") return plain;
-  return { ...plain, value: PREVIEW_PLACEHOLDER_VALUE } as SubmodelElementResponseDto;
+  return { ...plain, value: placeholderValueFor(plain) } as SubmodelElementResponseDto;
+}
+
+// Only leaf elements whose viewer rendering is self-contained (no async media
+// fetch, no navigation link) produce a meaningful preview today. For v1 that
+// means Property elements — MultiLanguageProperty, File, and Reference previews
+// depend on real data/media and are left blank intentionally.
+function isPreviewable(node: TreeNode): boolean {
+  if (isContainer(node)) return false;
+  const plain = node.data?.plain as SubmodelElementSharedResponseDto | undefined;
+  return plain?.modelType === KeyTypes.Property;
 }
 
 const hasSubmodels = computed(() => submodels.length > 0);
@@ -186,12 +215,16 @@ const hasSubmodels = computed(() => submodels.length > 0);
       </Column>
       <Column :header="t('aasEditor.presentationTab.preview')" style="width: 18%">
         <template #body="{ node }">
-          <div
-            v-if="!isContainer(node) && selectedFor(node) === PresentationComponentName.BigNumber"
+          <dl
+            v-if="isPreviewable(node)"
             :data-cy="`presentation-preview-${pathFor(node)}`"
+            class="m-0"
           >
-            <BigNumberValue :element="previewElementFor(node)" />
-          </div>
+            <SubmodelElementValue
+              :element="previewElementFor(node)"
+              :path="pathFor(node)"
+            />
+          </dl>
         </template>
       </Column>
     </TreeTable>
