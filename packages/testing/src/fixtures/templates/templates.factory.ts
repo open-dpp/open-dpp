@@ -1,4 +1,4 @@
-import type { TemplateDtoSchema } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, TemplateDtoSchema } from "@open-dpp/dto";
 import type { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";
@@ -13,4 +13,8 @@ export const templatesPlainFactory = Factory.define<z.infer<typeof TemplateDtoSc
   },
   createdAt: new Date(Date.now()).toISOString(),
   updatedAt: new Date(Date.now()).toISOString(),
+  lastStatusChange: {
+    currentStatus: DigitalProductDocumentStatusDto.Draft,
+    previousStatus: null,
+  },
 }));

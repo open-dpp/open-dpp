@@ -7,7 +7,7 @@ import { User } from "../identity/users/domain/user";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
-import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
@@ -18,7 +18,7 @@ export class ChatService {
 
   private readonly mcpClientService: McpClientService;
   private readonly aiService: AiService;
-  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
+  private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
   private readonly aiConfigurationService: AiConfigurationService;
   private readonly policyService: PolicyService;
   private readonly passportRepository: PassportRepository;
@@ -26,14 +26,14 @@ export class ChatService {
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
-    uniqueProductIdentifierService: UniqueProductIdentifierService,
+    uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
     passportRepository: PassportRepository,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
-    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
+    this.uniqueProductIdentifierRepository = uniqueProductIdentifierRepository;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
     this.passportRepository = passportRepository;
@@ -48,7 +48,7 @@ export class ChatService {
     this.logger.log(
       `Resolve passport from UniqueProductIdentifier: ${uniqueProductIdentifierUuid}`,
     );
-    const uniqueProductIdentifier = await this.uniqueProductIdentifierService.findOneOrFail(
+    const uniqueProductIdentifier = await this.uniqueProductIdentifierRepository.findOneOrFail(
       uniqueProductIdentifierUuid,
     );
     const passport = await this.passportRepository.findOne(uniqueProductIdentifier.referenceId);

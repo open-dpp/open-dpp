@@ -63,7 +63,7 @@ describe("analyticsStore", () => {
     mocks.addPageView.mockResolvedValueOnce({ id: "metric1" });
     await analyticsStore.addPageView();
     expect(mocks.addPageView).toHaveBeenCalledWith({
-      uuid: passportUUID,
+      permalink: passportUUID,
       page,
     });
   });

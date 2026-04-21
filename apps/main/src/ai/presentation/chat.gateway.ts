@@ -11,7 +11,7 @@ import { Server, Socket } from "socket.io";
 import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/websocket-auth.guard";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ChatService } from "../chat.service";
 
 @UseGuards(WebsocketAuthGuard)
@@ -26,7 +26,7 @@ export class ChatGateway {
   constructor(
     private readonly chatService: ChatService,
     private readonly permalinkApplicationService: PermalinkApplicationService,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
   @OptionalAuth()
@@ -42,7 +42,7 @@ export class ChatGateway {
       const { passport } = await this.permalinkApplicationService.resolveToPassport(
         message.permalink,
       );
-      const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(passport.id);
+      const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(passport.id);
       if (!upi) {
         throw new Error(
           `No UniqueProductIdentifier found for passport ${passport.id} (permalink=${message.permalink})`,

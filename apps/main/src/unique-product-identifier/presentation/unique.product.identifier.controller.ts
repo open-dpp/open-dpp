@@ -13,7 +13,7 @@ import type { Request } from "express";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
-import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 
 /**
  * Legacy redirect surface. The public UPI endpoints moved to /p/:idOrSlug/*.
@@ -26,7 +26,7 @@ export class UniqueProductIdentifierController {
   private readonly logger = new Logger(UniqueProductIdentifierController.name);
 
   constructor(
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly permalinkRepository: PermalinkRepository,
   ) {}
@@ -71,7 +71,7 @@ export class UniqueProductIdentifierController {
   }
 
   private async resolvePermalinkId(upiUuid: string): Promise<string> {
-    const upi = await this.uniqueProductIdentifierService.findOne(upiUuid);
+    const upi = await this.uniqueProductIdentifierRepository.findOne(upiUuid);
     if (!upi) {
       throw new NotFoundException();
     }

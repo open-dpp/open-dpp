@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 import { UniqueProductIdentifierMetadataDtoSchema } from "./dto/unique-product-identifier-dto.schema";
 
 @Injectable()
 export class UniqueProductIdentifierApplicationService {
   constructor(
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportRepository: PassportRepository,
   ) {}
 
@@ -22,7 +22,7 @@ export class UniqueProductIdentifierApplicationService {
 
   async getMetadataByUniqueProductIdentifier(uniqueProductIdentifierId: string) {
     const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(uniqueProductIdentifierId);
+      await this.uniqueProductIdentifierRepository.findOneOrFail(uniqueProductIdentifierId);
     const passport = await this.passportRepository.findOne(uniqueProductIdentifier.referenceId);
 
     if (!passport) {

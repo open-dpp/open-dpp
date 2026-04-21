@@ -118,9 +118,7 @@ describe("PermalinkController", () => {
     const slug = `slug-${randomUUID().slice(0, 8)}`;
     const fixture = await createPassportWithPermalink({ slug });
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p/${slug}/passport`,
-    );
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${slug}/passport`);
 
     expect(response.status).toEqual(200);
     expect(response.body.id).toEqual(fixture.passport.id);

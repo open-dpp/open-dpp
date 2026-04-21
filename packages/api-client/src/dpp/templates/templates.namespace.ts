@@ -1,14 +1,17 @@
 import type {
-  PagingParamsDto,
+  DigitalProductDocumentStatusModificationDto,
+  GetAllParamsDto,
   TemplateCreateDto,
   TemplateDto,
   TemplatePaginationDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
+import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
+import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
 import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 
-export class TemplatesNamespace {
+export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
   public presentationConfiguration!: PresentationConfigurationNamespace;
   private readonly templatesEndpoint = "/templates";
@@ -21,13 +24,17 @@ export class TemplatesNamespace {
     );
   }
 
-  public async getAll(params: PagingParamsDto) {
+  public async getAll(params: GetAllParamsDto) {
     return await this.axiosInstance.get<TemplatePaginationDto>(this.templatesEndpoint, {
-      params,
+      params: parseGetAllParams(params),
       paramsSerializer: {
         indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
       },
     });
+  }
+
+  public async getById(id: string) {
+    return await this.axiosInstance.get<TemplateDto>(`${this.templatesEndpoint}/${id}`);
   }
 
   public async create(data: TemplateCreateDto): Promise<AxiosResponse<TemplateDto>> {
@@ -42,5 +49,19 @@ export class TemplatesNamespace {
 
   public async import(data: Record<string, unknown>): Promise<AxiosResponse<TemplateDto>> {
     return await this.axiosInstance.post<TemplateDto>(`${this.templatesEndpoint}/import`, data);
+  }
+
+  public async deleteById(id: string) {
+    return await this.axiosInstance.delete(`${this.templatesEndpoint}/${id}`);
+  }
+
+  public async modifyStatus(
+    id: string,
+    data: DigitalProductDocumentStatusModificationDto,
+  ): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.put<TemplateDto>(
+      `${this.templatesEndpoint}/${id}/status`,
+      data,
+    );
   }
 }

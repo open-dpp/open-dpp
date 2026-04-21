@@ -111,6 +111,15 @@ export class PermalinkRepository {
     return Permalink.fromPlain({ ...plain, id: plain._id });
   }
 
+  async deleteByPresentationConfigurationId(
+    presentationConfigurationId: string,
+    options?: DbSessionOptions,
+  ): Promise<void> {
+    await this.permalinkDoc
+      .deleteOne({ presentationConfigurationId })
+      .session(options?.session ?? null);
+  }
+
   async findOrCreateByPresentationConfigurationId(
     data: { presentationConfigurationId: string; slug?: string | null },
     options?: DbSessionOptions,

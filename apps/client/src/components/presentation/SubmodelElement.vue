@@ -40,10 +40,7 @@ const { selfCaptioning } = usePresentationDispatch(
         : 'flex items-baseline justify-between gap-4 py-4',
     ]"
   >
-    <dt
-      v-if="!selfCaptioning"
-      class="shrink-0 text-sm font-medium text-gray-500"
-    >
+    <dt v-if="!selfCaptioning" class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
     </dt>
     <SubmodelElementValue :element="element" :path="fullPath" />

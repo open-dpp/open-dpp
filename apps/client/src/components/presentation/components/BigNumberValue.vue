@@ -50,16 +50,12 @@ const formattedValue = computed(() => {
   -->
   <div
     data-cy="bignumber"
-    class="inline-block rounded-xl border border-surface-200 bg-surface-0 px-5 py-4 text-center shadow-sm"
+    class="border-surface-200 bg-surface-0 inline-block rounded-xl border px-5 py-4 text-center shadow-sm"
   >
-    <span
-      class="block text-4xl font-bold leading-none tracking-tight tabular-nums text-gray-900"
-    >
+    <span class="block text-4xl leading-none font-bold tracking-tight text-gray-900 tabular-nums">
       {{ formattedValue }}
     </span>
-    <span
-      class="mt-2 block text-xs font-semibold uppercase tracking-[0.08em] text-gray-500"
-    >
+    <span class="mt-2 block text-xs font-semibold tracking-[0.08em] text-gray-500 uppercase">
       {{ label }}
     </span>
   </div>

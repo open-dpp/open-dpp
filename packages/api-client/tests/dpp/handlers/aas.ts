@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   AssetAdministrationShellJsonSchema,
+  DigitalProductDocumentStatusDto,
   SubmodelBaseJsonSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
@@ -18,6 +19,7 @@ import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
+export const filterParams = { status: DigitalProductDocumentStatusDto.Archived };
 export const tableModificationParams = { position: 4 };
 
 export const aasWrapperId = randomUUID();

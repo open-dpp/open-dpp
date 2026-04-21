@@ -40,8 +40,7 @@ async function loadPassport(id: string): Promise<boolean> {
   passportStore.shells = aas.data.result || [];
 
   try {
-    const presentationConfig =
-      await apiClient.dpp.permalinks.getPresentationConfiguration(id);
+    const presentationConfig = await apiClient.dpp.permalinks.getPresentationConfiguration(id);
     passportStore.presentationConfig = presentationConfig.data;
   } catch (error) {
     errorHandlingStore.logErrorWithNotification(

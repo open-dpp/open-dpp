@@ -1,7 +1,4 @@
-import type {
-  PresentationComponentNameType,
-  SubmodelElementResponseDto,
-} from "@open-dpp/dto";
+import type { PresentationComponentNameType, SubmodelElementResponseDto } from "@open-dpp/dto";
 import type { Component } from "vue";
 import { PresentationComponentName } from "@open-dpp/dto";
 import BigNumberValue from "./BigNumberValue.vue";

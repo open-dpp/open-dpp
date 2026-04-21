@@ -1,5 +1,6 @@
 import type {
-  PagingParamsDto,
+  DigitalProductDocumentStatusModificationDto,
+  GetAllParamsDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -7,9 +8,11 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
+import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
+import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
 import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 
-export class PassportNamespace {
+export class PassportNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
   public presentationConfiguration!: PresentationConfigurationNamespace;
   private readonly passportEndpoint = "/passports";
@@ -22,9 +25,9 @@ export class PassportNamespace {
     );
   }
 
-  public async getAll(params: PagingParamsDto) {
+  public async getAll(params: GetAllParamsDto) {
     return await this.axiosInstance.get<PassportPaginationDto>(this.passportEndpoint, {
-      params,
+      params: parseGetAllParams(params),
       paramsSerializer: {
         indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
       },
@@ -43,5 +46,16 @@ export class PassportNamespace {
     return await this.axiosInstance.get<{ uuid: string }>(
       `${this.passportEndpoint}/${passportId}/unique-product-identifier`,
     );
+  }
+
+  public async deleteById(id: string) {
+    return await this.axiosInstance.delete<void>(`${this.passportEndpoint}/${id}`);
+  }
+
+  public async modifyStatus(
+    id: string,
+    data: DigitalProductDocumentStatusModificationDto,
+  ): Promise<AxiosResponse<PassportDto>> {
+    return await this.axiosInstance.put<PassportDto>(`${this.passportEndpoint}/${id}/status`, data);
   }
 }

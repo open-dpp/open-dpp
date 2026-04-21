@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 import type { AasNamespace, PresentationConfigurationNamespace } from "@open-dpp/api-client";
-import type {
-  SubmodelElementResponseDto,
-  SubmodelElementSharedResponseDto,
-} from "@open-dpp/dto";
+import type { SubmodelElementResponseDto, SubmodelElementSharedResponseDto } from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
 import { computed, onMounted, provide } from "vue";
 import { useI18n } from "vue-i18n";
@@ -103,10 +100,7 @@ function optionsFor(node: TreeNode): SelectOption[] {
     | (SubmodelElementSharedResponseDto & { valueType?: string })
     | undefined;
   const base: SelectOption[] = [defaultOption.value];
-  if (
-    plain?.modelType === KeyTypes.Property &&
-    NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")
-  ) {
+  if (plain?.modelType === KeyTypes.Property && NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")) {
     base.push(bigNumberOption.value);
   }
   return base;
@@ -170,7 +164,7 @@ const hasSubmodels = computed(() => submodels.length > 0);
 <template>
   <div class="flex flex-col gap-6">
     <header class="flex max-w-[65ch] flex-col gap-1">
-      <h2 class="text-xl font-semibold text-surface-900">
+      <h2 class="text-surface-900 text-xl font-semibold">
         {{ t("aasEditor.presentationTab.title") }}
       </h2>
       <p class="text-sm text-gray-600">
@@ -182,21 +176,17 @@ const hasSubmodels = computed(() => submodels.length > 0);
       {{ t("common.loading") }}
     </p>
 
-    <p
-      v-else-if="!hasSubmodels"
-      data-cy="presentation-tab-empty"
-      class="text-sm text-gray-600"
-    >
+    <p v-else-if="!hasSubmodels" data-cy="presentation-tab-empty" class="text-sm text-gray-600">
       {{ t("aasEditor.presentationTab.emptyState") }}
     </p>
 
-    <TreeTable
-      v-else
-      :value="submodels"
-      table-style="min-width: 50rem"
-      :meta-key-selection="false"
-    >
-      <Column field="label" :header="t('aasEditor.presentationTab.property')" expander style="width: 40%" />
+    <TreeTable v-else :value="submodels" table-style="min-width: 50rem" :meta-key-selection="false">
+      <Column
+        field="label"
+        :header="t('aasEditor.presentationTab.property')"
+        expander
+        style="width: 40%"
+      />
       <Column field="type" :header="t('aasEditor.type')" style="width: 20%" />
       <Column :header="t('aasEditor.presentationTab.component')" style="width: 22%">
         <template #body="{ node }">
@@ -220,10 +210,7 @@ const hasSubmodels = computed(() => submodels.length > 0);
             :data-cy="`presentation-preview-${pathFor(node)}`"
             class="m-0"
           >
-            <SubmodelElementValue
-              :element="previewElementFor(node)"
-              :path="pathFor(node)"
-            />
+            <SubmodelElementValue :element="previewElementFor(node)" :path="pathFor(node)" />
           </dl>
         </template>
       </Column>

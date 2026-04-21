@@ -87,14 +87,10 @@ describe("PermalinkRepository", () => {
 
   it("rejects a duplicate slug (unique index)", async () => {
     const slug = `dup-${randomUUID().slice(0, 8)}`;
-    await repository.save(
-      Permalink.create({ presentationConfigurationId: randomUUID(), slug }),
-    );
+    await repository.save(Permalink.create({ presentationConfigurationId: randomUUID(), slug }));
 
     await expect(
-      repository.save(
-        Permalink.create({ presentationConfigurationId: randomUUID(), slug }),
-      ),
+      repository.save(Permalink.create({ presentationConfigurationId: randomUUID(), slug })),
     ).rejects.toThrow();
   });
 
@@ -112,9 +108,7 @@ describe("PermalinkRepository", () => {
     const permalink = Permalink.create({ presentationConfigurationId });
     await repository.save(permalink);
 
-    const found = await repository.findByPresentationConfigurationId(
-      presentationConfigurationId,
-    );
+    const found = await repository.findByPresentationConfigurationId(presentationConfigurationId);
     expect(found?.id).toBe(permalink.id);
 
     const missing = await repository.findByPresentationConfigurationId(randomUUID());

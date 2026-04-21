@@ -72,6 +72,18 @@ export class PresentationConfigurationRepository {
     return PresentationConfiguration.fromPlain({ ...plain, id: plain._id });
   }
 
+  async deleteByReference(
+    ref: PresentationConfigurationReference,
+    options?: DbSessionOptions,
+  ): Promise<void> {
+    await this.presentationConfigurationDoc
+      .deleteOne({
+        referenceType: ref.referenceType,
+        referenceId: ref.referenceId,
+      })
+      .session(options?.session ?? null);
+  }
+
   async findOrCreateByReference(
     data: {
       referenceType: PresentationReferenceTypeType;

@@ -6,6 +6,7 @@ import { SubmodelRegistryInitializer } from "../aas/presentation/submodel-regist
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
+import { TemplateService } from "./application/template.service";
 import { TemplateRepository } from "./infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
 import { TemplateController } from "./presentation/template.controller";
@@ -24,7 +25,7 @@ import { TemplateController } from "./presentation/template.controller";
     PresentationConfigurationsModule,
   ],
   controllers: [TemplateController],
-  providers: [SubmodelRegistryInitializer, TemplateRepository],
-  exports: [TemplateRepository],
+  providers: [SubmodelRegistryInitializer, TemplateRepository, TemplateService],
+  exports: [TemplateRepository, TemplateService],
 })
 export class TemplatesModule {}

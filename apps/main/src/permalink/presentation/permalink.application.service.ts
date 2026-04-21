@@ -34,9 +34,7 @@ export class PermalinkApplicationService {
       permalink.presentationConfigurationId,
     );
     if (presentationConfiguration.referenceType !== "passport") {
-      throw new NotFoundException(
-        `Permalink ${permalink.id} does not target a passport`,
-      );
+      throw new NotFoundException(`Permalink ${permalink.id} does not target a passport`);
     }
     const passport = await this.passportRepository.findOneOrFail(
       presentationConfiguration.referenceId,

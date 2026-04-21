@@ -1,9 +1,5 @@
 import { randomUUID } from "node:crypto";
-import {
-  PermalinkDtoSchema,
-  PermalinkInvariantsSchema,
-  PermalinkSlugSchema,
-} from "@open-dpp/dto";
+import { PermalinkDtoSchema, PermalinkInvariantsSchema, PermalinkSlugSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { IPersistable } from "../../aas/domain/persistable";

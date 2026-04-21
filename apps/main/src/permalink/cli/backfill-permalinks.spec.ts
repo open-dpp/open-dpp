@@ -10,10 +10,7 @@ import { Environment } from "../../aas/domain/environment";
 import { generateMongoConfig } from "../../database/config";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import {
-  PassportDoc,
-  PassportSchema,
-} from "../../passports/infrastructure/passport.schema";
+import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import {
@@ -48,11 +45,7 @@ describe("runBackfill", () => {
           { name: PassportDoc.name, schema: PassportSchema },
         ]),
       ],
-      providers: [
-        PermalinkRepository,
-        PresentationConfigurationRepository,
-        PassportRepository,
-      ],
+      providers: [PermalinkRepository, PresentationConfigurationRepository, PassportRepository],
     }).compile();
 
     permalinkRepository = module.get(PermalinkRepository);

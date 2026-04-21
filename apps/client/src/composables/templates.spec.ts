@@ -1,8 +1,9 @@
-import type { LanguageTextDto, PagingParamsDto, TemplateDto } from "@open-dpp/dto";
-import { Populates } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, type LanguageTextDto, Populates } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
+import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useTemplates } from "./templates.ts";
 
@@ -33,16 +34,40 @@ vi.mock("vue-router", () => ({
   }),
 }));
 
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
 describe("templates", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     setActivePinia(createPinia());
   });
 
-  const changeQueryParams = vi.fn();
+  const mountedWrappers: Array<ReturnType<typeof mount>> = [];
+
+  function mountHarness() {
+    const Harness = defineComponent({
+      name: "use-templates-harness",
+      setup() {
+        const api = useTemplates();
+        return { api };
+      },
+      template: "<div></div>",
+    });
+
+    const wrapper = mount(Harness);
+    mountedWrappers.push(wrapper);
+    return {
+      wrapper,
+      ...(wrapper.vm.api as ReturnType<typeof useTemplates>),
+    };
+  }
 
   it("should create template", async () => {
-    const templatesStore = useTemplates({ changeQueryParams });
+    const templatesStore = mountHarness();
     const t1 = templatesPlainFactory.build();
 
     mocks.createTemplate.mockResolvedValueOnce({ data: t1, status: HTTPCode.CREATED });
@@ -62,51 +87,20 @@ describe("templates", () => {
     expect(mocks.routerPush).toHaveBeenCalledWith(`/templates/${t1.id}`);
   });
 
-  it("should init templates", async () => {
-    const { templates, init } = useTemplates({ changeQueryParams });
+  it("should fetch templates", async () => {
+    const { templates, fetchTemplates } = mountHarness();
     const t1 = templatesPlainFactory.build();
     const templatesResponse = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templatesResponse });
-    await init();
+    await fetchTemplates(
+      { limit: 10, cursor: undefined },
+      { status: DigitalProductDocumentStatusDto.Archived },
+    );
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: undefined,
+      pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
+      filter: { status: DigitalProductDocumentStatusDto.Archived },
     });
     expect(templates.value).toEqual(templatesResponse);
-  });
-
-  it("should fetch next or previous templates", async () => {
-    const { templates, init, nextPage, previousPage } = useTemplates({ changeQueryParams });
-    const templatesResponse: TemplateDto[] = [...Array.from({ length: 20 }).keys()].map((key) =>
-      templatesPlainFactory.build({ id: key.toFixed() }),
-    );
-    const firstBlock = {
-      paging_metadata: { cursor: templatesResponse[9]?.id },
-      result: templatesResponse.slice(0, 10),
-    };
-    const secondBlock = {
-      paging_metadata: { cursor: templatesResponse[19]?.id },
-      result: templatesResponse.slice(10, 20),
-    };
-
-    mocks.fetchTemplates.mockImplementation(({ cursor }: PagingParamsDto) =>
-      cursor === undefined ? { data: firstBlock } : { data: secondBlock },
-    );
-    await init();
-    await nextPage();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: templatesResponse[9]?.id,
-      populate: [Populates.assetAdministrationShells],
-    });
-    expect(templates.value).toEqual(secondBlock);
-    await previousPage();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({
-      limit: 10,
-      cursor: undefined,
-      populate: [Populates.assetAdministrationShells],
-    });
-    expect(templates.value).toEqual(firstBlock);
   });
 });

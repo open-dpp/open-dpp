@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DateTimeSchema } from "../shared/dpp.schemas";
+import { DateTimeSchema } from "../shared/digital-product-document.schemas";
 
 export const PermalinkSlugSchema = z
   .string()

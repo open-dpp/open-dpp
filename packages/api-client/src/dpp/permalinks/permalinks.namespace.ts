@@ -21,15 +21,11 @@ export class PermalinksNamespace {
   }
 
   public async getPassport(idOrSlug: string) {
-    return this.axiosInstance.get<PassportDto>(
-      `/p/${encodeURIComponent(idOrSlug)}/passport`,
-    );
+    return this.axiosInstance.get<PassportDto>(`/p/${encodeURIComponent(idOrSlug)}/passport`);
   }
 
   public async getBranding(idOrSlug: string) {
-    return this.axiosInstance.get<BrandingDto>(
-      `/p/${encodeURIComponent(idOrSlug)}/branding`,
-    );
+    return this.axiosInstance.get<BrandingDto>(`/p/${encodeURIComponent(idOrSlug)}/branding`);
   }
 
   public async getPresentationConfiguration(idOrSlug: string) {

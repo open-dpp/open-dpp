@@ -49,6 +49,7 @@ import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
 import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
+import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 
 const adminPlain = {
   subjectAttribute: [
@@ -635,6 +636,8 @@ describe("aasSerializationService", () => {
         },
       );
 
+      expect(passport.isDraft()).toEqual(true);
+
       const expandedEnv = await environmentService.loadExpandedEnvironment(passport.environment);
       const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
@@ -690,6 +693,26 @@ describe("aasSerializationService", () => {
 
       expect(expandedEnv.submodels[0].id).not.toEqual(originalSubmodelId);
     });
+  });
+
+  it("should import passport with status published as draft", async () => {
+    const data: any = {
+      ...buildExportData({ version: AasExportVersion.v3_0 }),
+      lastStatusChange: {
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      },
+    };
+
+    const passport = await aasSerializationService.importPassport(
+      data,
+      randomUUID(),
+      async (p, options) => {
+        await passportRepository.save(p, options);
+      },
+    );
+
+    expect(passport.isDraft()).toEqual(true);
   });
 
   describe("importTemplate - media ownership validation", () => {

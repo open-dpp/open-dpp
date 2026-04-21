@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { KeyTypes, KeyTypesEnum } from "../aas/enums/key-types-enum";
-import { DateTimeSchema } from "../shared/dpp.schemas";
+import { DateTimeSchema } from "../shared/digital-product-document.schemas";
 
 export const PresentationReferenceType = {
   Template: "template",

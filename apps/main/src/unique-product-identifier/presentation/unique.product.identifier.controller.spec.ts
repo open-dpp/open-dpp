@@ -24,11 +24,11 @@ import {
   PresentationConfigurationSchema,
 } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
+import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
 
@@ -39,7 +39,7 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
     {
       imports: [UniqueProductIdentifierModule, PresentationConfigurationsModule],
       providers: [
-        UniqueProductIdentifierService,
+        UniqueProductIdentifierRepository,
         PassportRepository,
         BrandingRepository,
         PermalinkRepository,
@@ -54,7 +54,7 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
       { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
-    UniqueProductIdentifierService,
+    UniqueProductIdentifierRepository,
     SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
   );
 
@@ -113,9 +113,7 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
       .redirects(0);
 
     expect(response.status).toEqual(301);
-    expect(response.headers.location).toEqual(
-      `/p/${permalink.id}/submodels/${submodelId}/$value`,
-    );
+    expect(response.headers.location).toEqual(`/p/${permalink.id}/submodels/${submodelId}/$value`);
   });
 
   it("returns 404 for unknown UPI uuid", async () => {

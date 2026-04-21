@@ -6,9 +6,11 @@ import {
   buildRichExportPayload,
 } from "../../../test/export-payload.fixtures";
 import { AasModule } from "../../aas/aas.module";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import {
   ConceptDescriptionDoc,
@@ -33,16 +35,21 @@ import { PresentationConfigurationsModule } from "../../presentation-configurati
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
 import { PassportsModule } from "../passports.module";
 import { PassportController } from "./passport.controller";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
+import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 
 describe("passportController", () => {
   const basePath = "/passports";
@@ -53,7 +60,7 @@ describe("passportController", () => {
       providers: [
         PassportRepository,
         TemplateRepository,
-        UniqueProductIdentifierService,
+        UniqueProductIdentifierRepository,
         AasSerializationService,
       ],
       controllers: [PassportController],
@@ -88,7 +95,7 @@ describe("passportController", () => {
     );
   }
 
-  async function savePassport(passport: Passport): Promise<Template> {
+  async function savePassport(passport: Passport): Promise<Passport> {
     return ctx.getRepositories().dppIdentifiableRepository.save(passport);
   }
 
@@ -129,6 +136,10 @@ describe("passportController", () => {
       }),
       createdAt: secondCreate,
       updatedAt: secondCreate,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Archived,
+        previousStatus: DigitalProductDocumentStatus.Draft,
+      }),
     });
 
     await passportRepository.save(firstPassport);
@@ -177,6 +188,23 @@ describe("passportController", () => {
         updatedAt: p.updatedAt.toISOString(),
       })),
     });
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}?status=Archived`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [secondPassport].map((p) => ({
+        ...p.toPlain(),
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
   });
 
   it(`/GET Get passport by id`, async () => {
@@ -207,6 +235,7 @@ describe("passportController", () => {
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
 
     expect(response.status).toEqual(200);
@@ -246,6 +275,10 @@ describe("passportController", () => {
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+        previousStatus: null,
+      },
     });
 
     const aasRepository = ctx.getModuleRef().get(AasRepository);
@@ -254,7 +287,7 @@ describe("passportController", () => {
     );
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
 
-    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
 
     const upids = await upidService.findAllByReferencedId(response.body.id);
     expect(upids).toHaveLength(1);
@@ -306,6 +339,10 @@ describe("passportController", () => {
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+        previousStatus: null,
+      },
     });
 
     expect(response.body.environment.assetAdministrationShells).toHaveLength(
@@ -313,7 +350,7 @@ describe("passportController", () => {
     );
     expect(response.body.environment.submodels).toHaveLength(template.environment.submodels.length);
 
-    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
 
     const upids = await upidService.findAllByReferencedId(response.body.id);
     expect(upids).toHaveLength(1);
@@ -497,7 +534,7 @@ describe("passportController", () => {
     expect(importResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(importResponse.body.environment.submodels).toHaveLength(2);
 
-    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
     const upids = await upidService.findAllByReferencedId(importResponse.body.id);
     expect(upids).toHaveLength(1);
   });
@@ -513,6 +550,102 @@ describe("passportController", () => {
       .send({ invalid: "data" });
 
     expect(response.status).toEqual(400);
+  });
+
+  it("/PUT passport status", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository, uniqueProductIdentifierRepository } = ctx.getRepositories();
+
+    const passport = Passport.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const upi = passport.createUniqueProductIdentifier();
+
+    await uniqueProductIdentifierRepository.save(upi);
+    await dppIdentifiableRepository.save(passport);
+
+    const response = await request(app.getHttpServer())
+      .put(`${basePath}/${passport.id}/status`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        method: DigitalProductDocumentStatusModificationMethodDto.Publish,
+      });
+    expect(response.status).toEqual(200);
+    const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
+    expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
+  it("/DELETE passport", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const aas = AssetAdministrationShell.create({});
+    const submodel = Submodel.create({ idShort: "testSubmodel" });
+    aas.addSubmodel(submodel);
+    const {
+      aasRepository,
+      dppIdentifiableRepository,
+      submodelRepository,
+      uniqueProductIdentifierRepository,
+    } = ctx.getRepositories();
+    await aasRepository.save(aas);
+    await submodelRepository.save(submodel);
+
+    const passport = Passport.create({
+      organizationId: org!.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: [submodel.id],
+        conceptDescriptions: [],
+      }),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const upi = passport.createUniqueProductIdentifier();
+
+    await uniqueProductIdentifierRepository.save(upi);
+    await dppIdentifiableRepository.save(passport);
+
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${passport.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(response.status).toEqual(204);
+    expect(await aasRepository.findOne(aas.id)).toBeUndefined();
+    expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
+    expect(await uniqueProductIdentifierRepository.findOne(upi.uuid)).toBeUndefined();
+    expect(await dppIdentifiableRepository.findOne(passport.id)).toBeUndefined();
+
+    const publishedPassport = Passport.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
+    });
+
+    await dppIdentifiableRepository.save(publishedPassport);
+
+    const responseForPublishedPassport = await request(app.getHttpServer())
+      .delete(`${basePath}/${publishedPassport.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(responseForPublishedPassport.status).toEqual(403);
+    expect(responseForPublishedPassport.body.message).toEqual(
+      'Only passports with the status "Draft" can be deleted',
+    );
   });
 
   it("/POST import and /GET export empty passport round-trip", async () => {
@@ -535,7 +668,7 @@ describe("passportController", () => {
     expect(importResponse.body.environment.submodels).toHaveLength(0);
     expect(importResponse.body.environment.conceptDescriptions).toHaveLength(0);
 
-    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
     const upids = await upidService.findAllByReferencedId(importResponse.body.id);
     expect(upids).toHaveLength(1);
 
@@ -572,7 +705,7 @@ describe("passportController", () => {
     expect(importResponse.body.environment.submodels).toHaveLength(1);
     expect(importResponse.body.environment.conceptDescriptions).toHaveLength(1);
 
-    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
     const upids = await upidService.findAllByReferencedId(importResponse.body.id);
     expect(upids).toHaveLength(1);
 
