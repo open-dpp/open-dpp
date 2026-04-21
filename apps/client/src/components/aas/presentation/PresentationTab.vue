@@ -4,6 +4,9 @@ import type { SubmodelElementSharedResponseDto } from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
 import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
+import Column from "primevue/column";
+import Select from "primevue/select";
+import TreeTable from "primevue/treetable";
 import { DataTypeDef, KeyTypes, PresentationComponentName } from "@open-dpp/dto";
 import { usePresentationConfig } from "../../../composables/presentation-config.ts";
 import { useErrorHandlingStore } from "../../../stores/error.handling.ts";
@@ -18,6 +21,7 @@ const { id, submodels, presentationConfigurationNamespace } = defineProps<{
 const errorHandlingStore = useErrorHandlingStore();
 const { t } = useI18n();
 
+// AAS numeric value types — only these Properties accept BigNumber today.
 const NUMERIC_VALUE_TYPES = new Set<string>([
   DataTypeDef.Decimal,
   DataTypeDef.Integer,
@@ -37,11 +41,19 @@ const NUMERIC_VALUE_TYPES = new Set<string>([
   DataTypeDef.UnsignedShort,
 ]);
 
-interface NumericPropertyRow {
-  path: string;
+// Container element types occupy a row in the tree but never carry a
+// presentation component themselves — only their leaf descendants do.
+const CONTAINER_MODEL_TYPES = new Set<string>([
+  KeyTypes.Submodel,
+  KeyTypes.SubmodelElementCollection,
+  KeyTypes.SubmodelElementList,
+]);
+
+const DEFAULT_VALUE = "default";
+
+interface SelectOption {
   label: string;
-  submodelLabel: string;
-  valueType: string;
+  value: string;
 }
 
 const config = usePresentationConfig({
@@ -55,116 +67,107 @@ onMounted(async () => {
   await config.fetch();
 });
 
-// Walks the submodel tree and surfaces every numeric Property at any depth.
-// Path keys come from `data.path.idShortPathIncludingSubmodel` — see
-// `convertSubmodelElementsToTree` in composables/aas-editor.ts for the
-// dot-separated format (e.g. "Metrics.Dimensions.weight").
-const rows = computed<NumericPropertyRow[]>(() => {
-  const out: NumericPropertyRow[] = [];
+const defaultOption = computed<SelectOption>(() => ({
+  label: t("aasEditor.presentationTab.default"),
+  value: DEFAULT_VALUE,
+}));
 
-  function visit(node: TreeNode, submodelLabel: string) {
-    const plain = node.data?.plain as
-      | (SubmodelElementSharedResponseDto & { valueType?: string })
-      | undefined;
-    if (
-      plain &&
-      plain.modelType === KeyTypes.Property &&
-      NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")
-    ) {
-      out.push({
-        path: node.data.path.idShortPathIncludingSubmodel,
-        label: node.data.label ?? plain.idShort,
-        submodelLabel,
-        valueType: plain.valueType ?? "",
-      });
-    }
-    for (const child of node.children ?? []) {
-      visit(child, submodelLabel);
-    }
-  }
+const bigNumberOption = computed<SelectOption>(() => ({
+  label: t("aasEditor.presentationTab.bigNumber"),
+  value: PresentationComponentName.BigNumber,
+}));
 
-  for (const submodelNode of submodels) {
-    const submodelLabel = submodelNode.data?.label ?? "";
-    for (const child of submodelNode.children ?? []) {
-      visit(child, submodelLabel);
-    }
-  }
-
-  return out;
-});
-
-function currentComponent(path: string): string {
-  return config.config.value?.elementDesign?.[path] ?? "";
+function isContainer(node: TreeNode): boolean {
+  const modelType = node.data?.modelType;
+  return typeof modelType === "string" && CONTAINER_MODEL_TYPES.has(modelType);
 }
 
-async function onChange(path: string, event: Event) {
-  const value = (event.target as HTMLSelectElement).value;
-  if (value === "" || value === "default") {
+function optionsFor(node: TreeNode): SelectOption[] {
+  const plain = node.data?.plain as
+    | (SubmodelElementSharedResponseDto & { valueType?: string })
+    | undefined;
+  const base: SelectOption[] = [defaultOption.value];
+  if (
+    plain?.modelType === KeyTypes.Property &&
+    NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")
+  ) {
+    base.push(bigNumberOption.value);
+  }
+  return base;
+}
+
+function pathFor(node: TreeNode): string | undefined {
+  const raw = node.data?.path?.idShortPathIncludingSubmodel;
+  return typeof raw === "string" && raw.length > 0 ? raw : undefined;
+}
+
+function selectedFor(node: TreeNode): string {
+  const path = pathFor(node);
+  if (!path) return DEFAULT_VALUE;
+  return config.config.value?.elementDesign?.[path] ?? DEFAULT_VALUE;
+}
+
+async function onChange(node: TreeNode, next: string) {
+  const path = pathFor(node);
+  if (!path) return;
+  if (next === DEFAULT_VALUE) {
     await config.removeElementDesign(path);
-  } else {
+    return;
+  }
+  if (next === PresentationComponentName.BigNumber) {
     await config.setElementDesign(path, PresentationComponentName.BigNumber);
   }
 }
+
+const hasSubmodels = computed(() => submodels.length > 0);
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-4">
-    <div class="flex flex-col gap-1">
-      <h2 class="text-xl font-bold">{{ t("aasEditor.presentationTab.title") }}</h2>
+  <div class="flex flex-col gap-6 p-6">
+    <header class="flex max-w-[65ch] flex-col gap-1">
+      <h2 class="text-xl font-semibold text-surface-900">
+        {{ t("aasEditor.presentationTab.title") }}
+      </h2>
       <p class="text-sm text-gray-600">
         {{ t("aasEditor.presentationTab.description") }}
       </p>
-    </div>
+    </header>
 
-    <div v-if="config.loading.value" class="text-sm text-gray-500">
+    <p v-if="config.loading.value" class="text-sm text-gray-500">
       {{ t("common.loading") }}
-    </div>
+    </p>
 
     <p
-      v-else-if="rows.length === 0"
+      v-else-if="!hasSubmodels"
       data-cy="presentation-tab-empty"
       class="text-sm text-gray-600"
     >
       {{ t("aasEditor.presentationTab.emptyState") }}
     </p>
 
-    <div v-else class="border-surface-200 bg-surface-0 overflow-hidden rounded-xl border shadow-sm">
-      <table class="w-full divide-y divide-gray-100 text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-3 text-left font-medium text-gray-700">
-              {{ t("aasEditor.presentationTab.property") }}
-            </th>
-            <th class="px-4 py-3 text-left font-medium text-gray-700">
-              {{ t("aasEditor.presentationTab.path") }}
-            </th>
-            <th class="px-4 py-3 text-left font-medium text-gray-700">
-              {{ t("aasEditor.presentationTab.component") }}
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 bg-white">
-          <tr v-for="row in rows" :key="row.path" :data-cy="`presentation-row-${row.path}`">
-            <td class="px-4 py-3 text-gray-900">{{ row.label }}</td>
-            <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ row.path }}</td>
-            <td class="px-4 py-3">
-              <select
-                :data-cy="`presentation-select-${row.path}`"
-                :value="currentComponent(row.path) || 'default'"
-                class="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
-                @change="onChange(row.path, $event)"
-              >
-                <option value="default">
-                  {{ t("aasEditor.presentationTab.default") }}
-                </option>
-                <option :value="PresentationComponentName.BigNumber">
-                  {{ t("aasEditor.presentationTab.bigNumber") }}
-                </option>
-              </select>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <TreeTable
+      v-else
+      :value="submodels"
+      table-style="min-width: 50rem"
+      :meta-key-selection="false"
+    >
+      <Column field="label" :header="t('aasEditor.presentationTab.property')" expander style="width: 45%" />
+      <Column field="type" :header="t('aasEditor.type')" style="width: 25%" />
+      <Column :header="t('aasEditor.presentationTab.component')" style="width: 30%">
+        <template #body="{ node }">
+          <Select
+            v-if="!isContainer(node)"
+            :data-cy="`presentation-select-${pathFor(node)}`"
+            :model-value="selectedFor(node)"
+            :options="optionsFor(node)"
+            option-label="label"
+            option-value="value"
+            class="w-full max-w-[16rem]"
+            @update:model-value="(value: string) => onChange(node, value)"
+          />
+          <span v-else aria-hidden="true" class="text-gray-400">—</span>
+        </template>
+      </Column>
+    </TreeTable>
   </div>
 </template>

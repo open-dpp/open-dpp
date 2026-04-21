@@ -72,12 +72,11 @@
     "presentationTab": {
       "title": "Presentation",
       "description": "Choose how numeric properties are displayed.",
-      "property": "Property",
-      "path": "Path",
+      "property": "Name",
       "component": "Component",
       "default": "Default",
       "bigNumber": "BigNumber",
-      "emptyState": "No numeric properties found. Add one to configure how it's displayed."
+      "emptyState": "No submodels yet. Add one in the Structure tab to configure how its fields are displayed."
     },
     "security": {
       "missingPermission": "Missing permissions",

@@ -72,12 +72,11 @@
     "presentationTab": {
       "title": "Darstellung",
       "description": "Lege fest, wie numerische Eigenschaften angezeigt werden.",
-      "property": "Eigenschaft",
-      "path": "Pfad",
+      "property": "Name",
       "component": "Komponente",
       "default": "Standard",
       "bigNumber": "BigNumber",
-      "emptyState": "Keine numerischen Eigenschaften gefunden. Lege eine an, um ihre Darstellung festzulegen."
+      "emptyState": "Noch keine Submodelle. Lege eines im Tab \"Struktur\" an, um die Darstellung seiner Felder festzulegen."
     },
     "security": {
       "missingPermission": "Fehlende Rechte",
