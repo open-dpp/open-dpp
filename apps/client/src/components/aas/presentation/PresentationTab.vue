@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import type { AasNamespace, PresentationConfigurationNamespace } from "@open-dpp/api-client";
-import type { SubmodelElementSharedResponseDto } from "@open-dpp/dto";
+import type {
+  SubmodelElementResponseDto,
+  SubmodelElementSharedResponseDto,
+} from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
 import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
@@ -9,6 +12,7 @@ import Select from "primevue/select";
 import TreeTable from "primevue/treetable";
 import { DataTypeDef, KeyTypes, PresentationComponentName } from "@open-dpp/dto";
 import { usePresentationConfig } from "../../../composables/presentation-config.ts";
+import BigNumberValue from "../../presentation/components/BigNumberValue.vue";
 import { useErrorHandlingStore } from "../../../stores/error.handling.ts";
 
 const { id, submodels, presentationConfigurationNamespace } = defineProps<{
@@ -50,6 +54,12 @@ const CONTAINER_MODEL_TYPES = new Set<string>([
 ]);
 
 const DEFAULT_VALUE = "default";
+
+// Placeholder used only when previewing a component on an element that doesn't
+// have a value yet (typical during template authoring). The actual viewer
+// always renders the element's real value — this just gives the preview
+// something meaningful to draw.
+const PREVIEW_PLACEHOLDER_VALUE = "42";
 
 interface SelectOption {
   label: string;
@@ -119,6 +129,12 @@ async function onChange(node: TreeNode, next: string) {
   }
 }
 
+function previewElementFor(node: TreeNode): SubmodelElementResponseDto {
+  const plain = node.data?.plain as SubmodelElementResponseDto;
+  if (plain.value !== null && plain.value !== undefined && plain.value !== "") return plain;
+  return { ...plain, value: PREVIEW_PLACEHOLDER_VALUE } as SubmodelElementResponseDto;
+}
+
 const hasSubmodels = computed(() => submodels.length > 0);
 </script>
 
@@ -151,9 +167,9 @@ const hasSubmodels = computed(() => submodels.length > 0);
       table-style="min-width: 50rem"
       :meta-key-selection="false"
     >
-      <Column field="label" :header="t('aasEditor.presentationTab.property')" expander style="width: 45%" />
-      <Column field="type" :header="t('aasEditor.type')" style="width: 25%" />
-      <Column :header="t('aasEditor.presentationTab.component')" style="width: 30%">
+      <Column field="label" :header="t('aasEditor.presentationTab.property')" expander style="width: 40%" />
+      <Column field="type" :header="t('aasEditor.type')" style="width: 20%" />
+      <Column :header="t('aasEditor.presentationTab.component')" style="width: 22%">
         <template #body="{ node }">
           <Select
             v-if="!isContainer(node)"
@@ -166,6 +182,16 @@ const hasSubmodels = computed(() => submodels.length > 0);
             @update:model-value="(value: string) => onChange(node, value)"
           />
           <span v-else aria-hidden="true" class="text-gray-400">—</span>
+        </template>
+      </Column>
+      <Column :header="t('aasEditor.presentationTab.preview')" style="width: 18%">
+        <template #body="{ node }">
+          <div
+            v-if="!isContainer(node) && selectedFor(node) === PresentationComponentName.BigNumber"
+            :data-cy="`presentation-preview-${pathFor(node)}`"
+          >
+            <BigNumberValue :element="previewElementFor(node)" />
+          </div>
         </template>
       </Column>
     </TreeTable>

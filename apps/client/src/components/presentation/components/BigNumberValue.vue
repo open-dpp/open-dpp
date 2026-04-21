@@ -7,10 +7,10 @@ defineProps<{
 </script>
 
 <template>
-  <dd
+  <span
     data-cy="bignumber"
-    class="mt-1 text-4xl font-bold tracking-tight text-gray-900 tabular-nums sm:mt-2"
+    class="block text-4xl font-bold tracking-tight text-gray-900 tabular-nums"
   >
     {{ element.value }}
-  </dd>
+  </span>
 </template>

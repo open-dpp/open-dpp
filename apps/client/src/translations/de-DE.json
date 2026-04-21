@@ -74,6 +74,7 @@
       "description": "Lege fest, wie numerische Eigenschaften angezeigt werden.",
       "property": "Name",
       "component": "Komponente",
+      "preview": "Vorschau",
       "default": "Standard",
       "bigNumber": "BigNumber",
       "emptyState": "Noch keine Submodelle. Lege eines im Tab \"Struktur\" an, um die Darstellung seiner Felder festzulegen."

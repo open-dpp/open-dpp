@@ -74,6 +74,7 @@
       "description": "Choose how numeric properties are displayed.",
       "property": "Name",
       "component": "Component",
+      "preview": "Preview",
       "default": "Default",
       "bigNumber": "BigNumber",
       "emptyState": "No submodels yet. Add one in the Structure tab to configure how its fields are displayed."

@@ -42,7 +42,9 @@ const isBigNumber = computed(
   <div v-if="!element.value" class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2">
     {{ t("presentation.missingValue") }}
   </div>
-  <BigNumberValue v-else-if="isBigNumber" :element="element" />
+  <dd v-else-if="isBigNumber" class="mt-1 sm:mt-2">
+    <BigNumberValue :element="element" />
+  </dd>
   <dd v-else-if="element.modelType === 'Property'" class="mt-1 text-sm/6 text-gray-700 sm:mt-2">
     <template v-if="element.valueType === 'Date'">
       {{ formatDateValueForDisplay(element.value as string, DataTypeDef.Date) }}
