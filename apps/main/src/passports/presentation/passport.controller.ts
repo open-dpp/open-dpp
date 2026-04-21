@@ -235,10 +235,13 @@ export class PassportController
     });
 
     const upid = passport.createUniqueProductIdentifier();
-    await this.uniqueProductIdentifierService.save(upid);
 
-    const saved = await this.passportRepository.save(passport);
-    await this.permalinkApplicationService.ensurePermalinkForPassport(saved);
+    const saved = await this.environmentService.withTransaction(async (options) => {
+      await this.uniqueProductIdentifierService.save(upid, options);
+      const persisted = await this.passportRepository.save(passport, options);
+      await this.permalinkApplicationService.ensurePermalinkForPassport(persisted, options);
+      return persisted;
+    });
 
     return PassportDtoSchema.parse(saved.toPlain());
   }
@@ -703,6 +706,9 @@ export class PassportController
         await this.passportRepository.save(p, options);
         const upid = p.createUniqueProductIdentifier();
         await this.uniqueProductIdentifierService.save(upid, options);
+      },
+      async (p, options) => {
+        await this.permalinkApplicationService.ensurePermalinkForPassport(p, options);
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());

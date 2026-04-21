@@ -571,6 +571,19 @@ export class EnvironmentService {
     }
   }
 
+  async withTransaction<T>(work: (options: DbSessionOptions) => Promise<T>): Promise<T> {
+    const session = await this.connection.startSession();
+    try {
+      let result!: T;
+      await session.withTransaction(async () => {
+        result = await work({ session });
+      });
+      return result;
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async populateEnvironmentForPagingResult(
     pagingResult: PagingResult<Passport | Template>,
     populateOptions: PopulateOptions,

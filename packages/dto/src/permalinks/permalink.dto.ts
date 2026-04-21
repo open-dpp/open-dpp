@@ -11,7 +11,7 @@ export type PermalinkSlug = z.infer<typeof PermalinkSlugSchema>;
 
 export const PermalinkInvariantsSchema = z.object({
   presentationConfigurationId: z.uuid(),
-  slug: PermalinkSlugSchema.nullable().optional(),
+  slug: PermalinkSlugSchema.nullable(),
 });
 
 export const PermalinkDtoSchema = z
@@ -31,7 +31,7 @@ export type PermalinkListDto = z.infer<typeof PermalinkListDtoSchema>;
 
 export const PermalinkMetadataDtoSchema = z.object({
   passportId: z.uuid(),
-  organizationId: z.string(),
+  organizationId: z.string().min(1),
   templateId: z.uuid().nullish(),
 });
 

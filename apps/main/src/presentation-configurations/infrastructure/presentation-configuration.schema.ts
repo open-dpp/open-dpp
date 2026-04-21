@@ -1,5 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import {
+  KeyTypes,
+  PresentationComponentName,
+  PresentationComponentNameType,
+  PresentationReferenceType,
+} from "@open-dpp/dto";
 import { Document } from "mongoose";
 
 export const PresentationConfigurationDocVersion = {
@@ -7,6 +12,24 @@ export const PresentationConfigurationDocVersion = {
 } as const;
 type PresentationConfigurationDocVersionType =
   (typeof PresentationConfigurationDocVersion)[keyof typeof PresentationConfigurationDocVersion];
+
+const KEY_TYPES_VALUES: ReadonlySet<string> = new Set(Object.values(KeyTypes));
+const PRESENTATION_COMPONENT_NAME_VALUES: ReadonlySet<string> = new Set(
+  Object.values(PresentationComponentName),
+);
+
+function validatePresentationComponentMap(
+  value: unknown,
+  opts: { constrainKeys: boolean },
+): boolean {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) return false;
+  for (const [key, componentName] of Object.entries(value as Record<string, unknown>)) {
+    if (opts.constrainKeys && !KEY_TYPES_VALUES.has(key)) return false;
+    if (typeof componentName !== "string") return false;
+    if (!PRESENTATION_COMPONENT_NAME_VALUES.has(componentName)) return false;
+  }
+  return true;
+}
 
 @Schema({ collection: "presentation_configurations" })
 export class PresentationConfigurationDoc extends Document<string> {
@@ -33,11 +56,29 @@ export class PresentationConfigurationDoc extends Document<string> {
   })
   referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
 
-  @Prop({ type: Object, required: true, default: {} })
-  elementDesign: Record<string, string>;
+  @Prop({
+    type: Object,
+    required: true,
+    default: {},
+    validate: {
+      validator: (v: unknown) => validatePresentationComponentMap(v, { constrainKeys: false }),
+      message:
+        "elementDesign must be a plain object whose values are registered PresentationComponentName entries.",
+    },
+  })
+  elementDesign: Record<string, PresentationComponentNameType>;
 
-  @Prop({ type: Object, required: true, default: {} })
-  defaultComponents: Record<string, string>;
+  @Prop({
+    type: Object,
+    required: true,
+    default: {},
+    validate: {
+      validator: (v: unknown) => validatePresentationComponentMap(v, { constrainKeys: true }),
+      message:
+        "defaultComponents keys must be KeyTypes and values must be registered PresentationComponentName entries.",
+    },
+  })
+  defaultComponents: Partial<Record<string, PresentationComponentNameType>>;
 
   @Prop({ required: true, immutable: true })
   createdAt: Date;

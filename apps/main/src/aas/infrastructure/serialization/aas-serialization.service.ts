@@ -91,6 +91,7 @@ export class AasSerializationService {
     data: any,
     organizationId: string,
     savePassport: (passport: Passport, options: DbSessionOptions) => Promise<void>,
+    afterPersist?: (passport: Passport, options: DbSessionOptions) => Promise<void>,
   ): Promise<Passport> {
     return this.importEntity(
       data,
@@ -104,6 +105,7 @@ export class AasSerializationService {
         }),
       PresentationReferenceType.Passport,
       savePassport,
+      afterPersist,
     );
   }
 
@@ -111,6 +113,7 @@ export class AasSerializationService {
     data: any,
     organizationId: string,
     saveTemplate: (template: Template, options: DbSessionOptions) => Promise<void>,
+    afterPersist?: (template: Template, options: DbSessionOptions) => Promise<void>,
   ): Promise<Template> {
     return this.importEntity(
       data,
@@ -124,6 +127,7 @@ export class AasSerializationService {
         }),
       PresentationReferenceType.Template,
       saveTemplate,
+      afterPersist,
     );
   }
 
@@ -133,6 +137,7 @@ export class AasSerializationService {
     entityFactory: (environment: Environment) => T,
     referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
     saveEntity: (entity: T, options: DbSessionOptions) => Promise<void>,
+    afterPersist?: (entity: T, options: DbSessionOptions) => Promise<void>,
   ): Promise<T> {
     try {
       const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
@@ -163,6 +168,9 @@ export class AasSerializationService {
           await saveEntity(entity, options);
           if (presentationConfiguration) {
             await this.presentationConfigurationRepository.save(presentationConfiguration, options);
+          }
+          if (afterPersist) {
+            await afterPersist(entity, options);
           }
         },
       );

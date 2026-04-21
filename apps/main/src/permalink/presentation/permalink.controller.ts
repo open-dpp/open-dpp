@@ -1,6 +1,6 @@
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
+import { BadRequestException, Controller, Get, NotFoundException, Query } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   BrandingDto,
@@ -15,6 +15,7 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { Branding } from "../../branding/domain/branding";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
@@ -84,9 +85,19 @@ export class PermalinkController implements IAasReadEndpoints {
   @Get("/p/:id/branding")
   async getPassportBranding(@IdOrSlugParam() id: string): Promise<BrandingDto> {
     const metadata = await this.permalinkApplicationService.getMetadataByPermalink(id);
-    return BrandingDtoSchema.parse(
-      (await this.brandingRepository.findOneByOrganizationId(metadata.organizationId)).toPlain(),
-    );
+    const branding = await this.loadBrandingOrDefault(metadata.organizationId);
+    return BrandingDtoSchema.parse(branding.toPlain());
+  }
+
+  private async loadBrandingOrDefault(organizationId: string): Promise<Branding> {
+    try {
+      return await this.brandingRepository.findOneByOrganizationId(organizationId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return Branding.create({});
+      }
+      throw error;
+    }
   }
 
   @OptionalAuth()

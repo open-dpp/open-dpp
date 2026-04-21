@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PermalinkMetadataDtoSchema } from "@open-dpp/dto";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { DbSessionOptions } from "../../database/query-options";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
@@ -52,15 +53,21 @@ export class PermalinkApplicationService {
     });
   }
 
-  async ensurePermalinkForPassport(passport: Passport): Promise<Permalink> {
-    const config =
-      await this.presentationConfigurationRepository.findOrCreateByReference({
+  async ensurePermalinkForPassport(
+    passport: Passport,
+    options?: DbSessionOptions,
+  ): Promise<Permalink> {
+    const config = await this.presentationConfigurationRepository.findOrCreateByReference(
+      {
         referenceType: "passport",
         referenceId: passport.id,
         organizationId: passport.organizationId,
-      });
-    return await this.permalinkRepository.findOrCreateByPresentationConfigurationId({
-      presentationConfigurationId: config.id,
-    });
+      },
+      options,
+    );
+    return await this.permalinkRepository.findOrCreateByPresentationConfigurationId(
+      { presentationConfigurationId: config.id },
+      options,
+    );
   }
 }

@@ -3,6 +3,7 @@ import type {
   PresentationComponentNameType,
   PresentationConfigurationDto,
 } from "@open-dpp/dto";
+import { KeyTypesEnum } from "@open-dpp/dto";
 import type { InjectionKey, Ref } from "vue";
 
 export const presentationConfigKey: InjectionKey<Ref<PresentationConfigurationDto | null>> =
@@ -15,8 +16,10 @@ export function resolveComponent(
   if (!config) return undefined;
   const byPath = config.elementDesign?.[element.path];
   if (byPath) return byPath;
+  const parsedModelType = KeyTypesEnum.safeParse(element.modelType);
+  if (!parsedModelType.success) return undefined;
   const defaults = config.defaultComponents as
     | Partial<Record<KeyTypesType, PresentationComponentNameType>>
     | undefined;
-  return defaults?.[element.modelType as KeyTypesType];
+  return defaults?.[parsedModelType.data];
 }
