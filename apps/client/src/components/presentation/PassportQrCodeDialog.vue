@@ -9,20 +9,15 @@ import { useClipboard, useWindowSize } from "@vueuse/core";
 import { useToast } from "primevue/usetoast";
 
 const model = defineModel<boolean>();
-const props = defineProps<{ passportId: string | undefined }>();
+const props = defineProps<{ passportId: string }>();
 const upids = ref<UniqueProductIdentifierDto[] | undefined>(undefined);
 const { t } = useI18n();
 
 watch(
   () => props.passportId,
   async (newValue) => {
-    if (newValue) {
-      const result = await apiClient.dpp.uniqueProductIdentifiers.getByReference(
-        String(props.passportId),
-      );
-
-      upids.value = result.data;
-    }
+    const result = await apiClient.dpp.uniqueProductIdentifiers.getByReference(newValue);
+    upids.value = result.data;
   },
   { immediate: true },
 );

@@ -69,7 +69,7 @@ function getOptionLabel(option: PassportDto): string {
   return displayName !== t("common.untitled") ? displayName : option.id;
 }
 
-function getOptionStatus(option: TemplateDto): string {
+function getOptionStatus(option: PassportDto): string {
   return t(`status.${option.lastStatusChange.currentStatus.toLowerCase()}`);
 }
 

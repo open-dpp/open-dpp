@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("vue-router", () => ({
-  useRoute: () => ({ query: mocks.query }),
+  useRoute: () => ({ query: mocks.query() }),
   useRouter: () => ({
     push: mocks.routerPush,
   }),

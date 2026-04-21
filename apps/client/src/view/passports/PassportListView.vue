@@ -45,7 +45,7 @@ const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
 const { status, changeStatus } = useDigitalProductDocumentFilter();
 
 function fetchCallback(pagingParams: PagingParamsDto) {
-  return fetchPassports(pagingParams, { status: status.value });
+  return fetchPassports(pagingParams, status.value ? { status: status.value } : undefined);
 }
 
 const {
@@ -233,5 +233,9 @@ onMounted(async () => {
   </DigitalProductDocumentTable>
   <PassportCreateDialog ref="createDialog" />
   <ConfirmDialog />
-  <PassportQrCodeDialog v-model="qrCodeDialogVisible" :passport-id="qrCodeDialogItem?.id" />
+  <PassportQrCodeDialog
+    v-if="qrCodeDialogItem"
+    v-model="qrCodeDialogVisible"
+    :passport-id="qrCodeDialogItem.id"
+  />
 </template>

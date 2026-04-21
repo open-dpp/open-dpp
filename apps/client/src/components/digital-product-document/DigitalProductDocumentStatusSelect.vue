@@ -19,7 +19,7 @@ const options = Object.entries(DigitalProductDocumentStatusDto).map(([key, value
     :options="options"
     option-label="value"
     option-value="key"
-    placeholder="Select a Status"
+    :placeholder="t('status.selectStatus')"
     class="w-42"
   />
 </template>

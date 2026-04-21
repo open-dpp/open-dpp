@@ -11,11 +11,16 @@ const id = computed(() => (route.params.passportId ? String(route.params.passpor
 const { fetchById } = useDigitalProductDocument(DigitalProductDocumentType.Passport);
 const item = ref<DigitalProductDocumentDto>();
 
+let fetchRequestId = 0;
 watch(
   () => id.value,
   async (newValue) => {
+    const requestId = ++fetchRequestId;
     if (newValue) {
-      item.value = await fetchById(newValue);
+      const response = await fetchById(newValue);
+      if (requestId === fetchRequestId) {
+        item.value = response;
+      }
     } else {
       item.value = undefined;
     }

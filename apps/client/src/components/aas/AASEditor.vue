@@ -105,10 +105,9 @@ const {
 
 watch(
   () => status.value,
-  async (newStatus) => {
+  async () => {
     await reloadCurrentPage();
   },
-  { immediate: true },
 );
 
 onMounted(async () => {
