@@ -1,246 +1,101 @@
-import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
-import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
-  BadRequestException,
   Controller,
   Get,
+  HttpStatus,
+  Logger,
   NotFoundException,
   Param,
   Query,
+  Redirect,
+  Req,
 } from "@nestjs/common";
-import {
-  AssetAdministrationShellPaginationResponseDto,
-  BrandingDto,
-  BrandingDtoSchema,
-  PassportDtoSchema,
-  PresentationConfigurationDto,
-  PresentationConfigurationDtoSchema,
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementResponseDto,
-  SubmodelPaginationResponseDto,
-  SubmodelResponseDto,
-  ValueResponseDto,
-} from "@open-dpp/dto";
-import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import {
-  ApiGetShells,
-  ApiGetSubmodelById,
-  ApiGetSubmodelElementById,
-  ApiGetSubmodelElements,
-  ApiGetSubmodelElementValue,
-  ApiGetSubmodels,
-  ApiGetSubmodelValue,
-  CursorQueryParam,
-  IdParam,
-  IdShortPathParam,
-  LimitQueryParam,
-  SubmodelIdParam,
-} from "../../aas/presentation/aas.decorators";
-import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
-import { EnvironmentService } from "../../aas/presentation/environment.service";
-import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
-import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
+import type { Request } from "express";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
-import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
-import { Pagination } from "../../pagination/pagination";
-import { Passport } from "../../passports/domain/passport";
-import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
-import { UniqueProductIdentifierListDtoSchema } from "./dto/unique-product-identifier-dto.schema";
-import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 
+/**
+ * Legacy redirect surface. The public UPI endpoints moved to /p/:idOrSlug/*.
+ * These routes 301 to the new permalink URLs for one release cycle so that
+ * already-printed QR codes and bookmarks keep working. Follow-up issue:
+ * remove after the deprecation window closes.
+ */
 @Controller()
-export class UniqueProductIdentifierController implements IAasReadEndpoints {
+export class UniqueProductIdentifierController {
+  private readonly logger = new Logger(UniqueProductIdentifierController.name);
+
   constructor(
-    private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly passportRepository: PassportRepository,
-    private readonly environmentService: EnvironmentService,
-    private readonly brandingRepository: BrandingRepository,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
+    private readonly permalinkRepository: PermalinkRepository,
   ) {}
 
   @OptionalAuth()
   @Get("/unique-product-identifiers")
-  async getUniqueProductIdentifierByReference(@Query("reference") reference: string) {
-    if (!reference || reference.length === 0) {
+  @Redirect()
+  async redirectByReference(@Query("reference") reference: string) {
+    if (!reference) {
       throw new NotFoundException();
     }
-
-    const upids = await this.uniqueProductIdentifierService.findAllByReferencedId(reference);
-
-    return UniqueProductIdentifierListDtoSchema.parse(upids);
+    return {
+      statusCode: HttpStatus.MOVED_PERMANENTLY,
+      url: `/p?passportId=${encodeURIComponent(reference)}`,
+    };
   }
 
   @OptionalAuth()
-  @Get("/unique-product-identifiers/:id/passport")
-  async getReferencedPassport(@Param("id") id: string) {
-    return PassportDtoSchema.parse(await this.loadPassport(id));
+  @Get("/unique-product-identifiers/:id")
+  @Redirect()
+  async redirectRoot(@Param("id") id: string) {
+    const permalinkId = await this.resolvePermalinkId(id);
+    return {
+      statusCode: HttpStatus.MOVED_PERMANENTLY,
+      url: `/p/${permalinkId}`,
+    };
   }
 
   @OptionalAuth()
-  @Get("/unique-product-identifiers/:id/presentation-configuration")
-  async getPresentationConfiguration(
-    @Param("id") id: string,
-  ): Promise<PresentationConfigurationDto> {
-    const passport = await this.loadPassport(id);
-    const config =
-      await this.presentationConfigurationService.getEffectiveForPassportReadOnly(passport);
-    return PresentationConfigurationDtoSchema.parse(config.toPlain());
+  @Get("/unique-product-identifiers/:id/*rest")
+  @Redirect()
+  async redirectCatchAll(@Param("id") id: string, @Req() req: Request) {
+    const permalinkId = await this.resolvePermalinkId(id);
+    const [prefix, suffix] = splitOnUpiSegment(req.originalUrl || req.url, id);
+    this.logger.debug(
+      `Redirecting legacy UPI URL prefix=${prefix} → permalink=${permalinkId} suffix=${suffix}`,
+    );
+    return {
+      statusCode: HttpStatus.MOVED_PERMANENTLY,
+      url: `/p/${permalinkId}${suffix}`,
+    };
   }
 
-  @OptionalAuth()
-  @Get("/unique-product-identifiers/:id/branding")
-  async getPassportBranding(@Param("id") id: string): Promise<BrandingDto> {
-    const upiMetadata =
-      await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(id);
-
-    if (!upiMetadata) {
-      throw new BadRequestException();
+  private async resolvePermalinkId(upiUuid: string): Promise<string> {
+    const upi = await this.uniqueProductIdentifierService.findOne(upiUuid);
+    if (!upi) {
+      throw new NotFoundException();
     }
-
-    return BrandingDtoSchema.parse(
-      (await this.brandingRepository.findOneByOrganizationId(upiMetadata.organizationId)).toPlain(),
-    );
+    const config = await this.presentationConfigurationRepository.findByReference({
+      referenceType: "passport",
+      referenceId: upi.referenceId,
+    });
+    if (!config) {
+      throw new NotFoundException();
+    }
+    const permalink = await this.permalinkRepository.findByPresentationConfigurationId(config.id);
+    if (!permalink) {
+      throw new NotFoundException();
+    }
+    return permalink.id;
   }
+}
 
-  @OptionalAuth()
-  @ApiGetShells("unique-product-identifiers")
-  async getShells(
-    @IdParam() id: string,
-    @LimitQueryParam() limit: number | undefined,
-    @CursorQueryParam() cursor: string | undefined,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<AssetAdministrationShellPaginationResponseDto> {
-    const passport = await this.loadPassport(id);
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-
-    const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(
-      passport.getEnvironment(),
-      pagination,
-      subject,
-    );
+function splitOnUpiSegment(path: string, upiId: string): [string, string] {
+  const marker = `/unique-product-identifiers/${upiId}`;
+  const idx = path.indexOf(marker);
+  if (idx === -1) {
+    return [path, ""];
   }
-
-  @OptionalAuth()
-  @ApiGetSubmodels("unique-product-identifiers")
-  async getSubmodels(
-    @IdParam() id: string,
-    @LimitQueryParam() limit: number | undefined,
-    @CursorQueryParam() cursor: string | undefined,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<SubmodelPaginationResponseDto> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassport(id);
-    const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(
-      passport.getEnvironment(),
-      pagination,
-      subject,
-    );
-  }
-
-  @OptionalAuth()
-  @ApiGetSubmodelById("unique-product-identifiers")
-  async getSubmodelById(
-    @IdParam() id: string,
-    @SubmodelIdParam() submodelId: string,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<SubmodelResponseDto> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-
-    const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelById(
-      passport.getEnvironment(),
-      submodelId,
-      subject,
-    );
-  }
-
-  @OptionalAuth()
-  @ApiGetSubmodelValue("unique-product-identifiers")
-  async getSubmodelValue(
-    @IdParam() id: string,
-    @SubmodelIdParam() submodelId: string,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<ValueResponseDto> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelValue(
-      passport.getEnvironment(),
-      submodelId,
-      subject,
-    );
-  }
-
-  @OptionalAuth()
-  @ApiGetSubmodelElements("unique-product-identifiers")
-  async getSubmodelElements(
-    @IdParam() id: string,
-    @SubmodelIdParam() submodelId: string,
-    @LimitQueryParam() limit: number | undefined,
-    @CursorQueryParam() cursor: string | undefined,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<SubmodelElementPaginationResponseDto> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassport(id);
-    const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(
-      passport.getEnvironment(),
-      submodelId,
-      pagination,
-      subject,
-    );
-  }
-
-  @OptionalAuth()
-  @ApiGetSubmodelElementById("unique-product-identifiers")
-  async getSubmodelElementById(
-    @IdParam() id: string,
-    @SubmodelIdParam() submodelId: string,
-    @IdShortPathParam() idShortPath: IdShortPath,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<SubmodelElementResponseDto> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementById(
-      passport.getEnvironment(),
-      submodelId,
-      idShortPath,
-      subject,
-    );
-  }
-
-  @OptionalAuth()
-  @ApiGetSubmodelElementValue("unique-product-identifiers")
-  async getSubmodelElementValue(
-    @IdParam() id: string,
-    @SubmodelIdParam() submodelId: string,
-    @IdShortPathParam() idShortPath: IdShortPath,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<ValueResponseDto> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementValue(
-      passport.getEnvironment(),
-      submodelId,
-      idShortPath,
-      subject,
-    );
-  }
-
-  private async loadPassport(id: string): Promise<Passport> {
-    const puid = await this.uniqueProductIdentifierService.findOneOrFail(id);
-    return await this.passportRepository.findOneOrFail(puid.referenceId);
-  }
+  const afterId = path.slice(idx + marker.length);
+  return [path.slice(0, idx + marker.length), afterId];
 }

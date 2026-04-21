@@ -22,11 +22,11 @@ export function usePresentationMenu() {
   });
 
   function navigateToPassportView() {
-    router.push(`/presentation/${permalink.value}`);
+    router.push(`/p/${permalink.value}`);
   }
 
   function navigateToAiChat() {
-    router.push(`/presentation/${permalink.value}/chat`);
+    router.push(`/p/${permalink.value}/chat`);
   }
 
   function backToApp() {

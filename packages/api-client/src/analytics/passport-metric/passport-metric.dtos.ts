@@ -27,7 +27,7 @@ export interface PassportMetricQueryDto {
 }
 
 export interface PageViewCreateDto {
-  uuid: string;
+  permalink: string;
   page: string;
 }
 

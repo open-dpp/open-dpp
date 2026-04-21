@@ -1,0 +1,66 @@
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PermalinkMetadataDtoSchema } from "@open-dpp/dto";
+import { z } from "zod";
+import { Passport } from "../../passports/domain/passport";
+import { PassportRepository } from "../../passports/infrastructure/passport.repository";
+import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { Permalink } from "../domain/permalink";
+import { PermalinkRepository } from "../infrastructure/permalink.repository";
+
+@Injectable()
+export class PermalinkApplicationService {
+  constructor(
+    private readonly permalinkRepository: PermalinkRepository,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
+    private readonly passportRepository: PassportRepository,
+  ) {}
+
+  async resolvePermalink(idOrSlug: string): Promise<Permalink> {
+    if (z.uuid().safeParse(idOrSlug).success) {
+      return await this.permalinkRepository.findOneOrFail(idOrSlug);
+    }
+    return await this.permalinkRepository.findBySlugOrFail(idOrSlug);
+  }
+
+  async resolveToPassport(idOrSlug: string): Promise<{
+    permalink: Permalink;
+    presentationConfiguration: PresentationConfiguration;
+    passport: Passport;
+  }> {
+    const permalink = await this.resolvePermalink(idOrSlug);
+    const presentationConfiguration = await this.presentationConfigurationRepository.findOneOrFail(
+      permalink.presentationConfigurationId,
+    );
+    if (presentationConfiguration.referenceType !== "passport") {
+      throw new NotFoundException(
+        `Permalink ${permalink.id} does not target a passport`,
+      );
+    }
+    const passport = await this.passportRepository.findOneOrFail(
+      presentationConfiguration.referenceId,
+    );
+    return { permalink, presentationConfiguration, passport };
+  }
+
+  async getMetadataByPermalink(idOrSlug: string) {
+    const { passport } = await this.resolveToPassport(idOrSlug);
+    return PermalinkMetadataDtoSchema.parse({
+      organizationId: passport.organizationId,
+      passportId: passport.id,
+      templateId: passport.templateId,
+    });
+  }
+
+  async ensurePermalinkForPassport(passport: Passport): Promise<Permalink> {
+    const config =
+      await this.presentationConfigurationRepository.findOrCreateByReference({
+        referenceType: "passport",
+        referenceId: passport.id,
+        organizationId: passport.organizationId,
+      });
+    return await this.permalinkRepository.findOrCreateByPresentationConfigurationId({
+      presentationConfigurationId: config.id,
+    });
+  }
+}

@@ -10,6 +10,7 @@ import PassportCreateDialog from "../../components/passport/PassportCreateDialog
 import { useExportImport } from "../../composables/export-import";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
+import apiClient from "../../lib/api-client";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 
@@ -81,17 +82,19 @@ function forwardToPresentationErrorMessage(e: unknown): string {
   return t("dpp.forwardToPresentationError");
 }
 
-async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
-  const { data } = await axiosIns.get<{ uuid: string }>(
-    `/passports/${item.id}/unique-product-identifier`,
-  );
-  return data.uuid;
+async function resolvePermalink(item: SharedDppDto): Promise<string> {
+  const { data } = await apiClient.dpp.permalinks.getByPassport(item.id);
+  const first = data[0];
+  if (!first) {
+    throw new Error(`No permalink found for passport ${item.id}`);
+  }
+  return first.slug ?? first.id;
 }
 
 async function forwardToPresentationChat(item: SharedDppDto) {
   try {
-    const uuid = await resolvePassportUuid(item);
-    await router.push(`/presentation/${uuid}/chat`);
+    const permalink = await resolvePermalink(item);
+    await router.push(`/p/${permalink}/chat`);
   } catch (e) {
     errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
   }

@@ -6,6 +6,7 @@ import { BrandingModule } from "../branding/branding.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { PassportsModule } from "../passports/passports.module";
+import { PermalinkModule } from "../permalink/permalink.module";
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import {
@@ -31,6 +32,7 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
     PassportsModule,
     BrandingModule,
     PresentationConfigurationsModule,
+    PermalinkModule,
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [UniqueProductIdentifierApplicationService, UniqueProductIdentifierService],

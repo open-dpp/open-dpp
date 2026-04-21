@@ -1,9 +1,10 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { PermalinkModule } from "../permalink/permalink.module";
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
@@ -37,6 +38,7 @@ import { PassportController } from "./presentation/passport.controller";
     AuthModule,
     OrganizationsModule,
     PresentationConfigurationsModule,
+    forwardRef(() => PermalinkModule),
   ],
   controllers: [PassportController],
   providers: [

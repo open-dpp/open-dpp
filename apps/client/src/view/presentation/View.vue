@@ -18,21 +18,21 @@ const errorHandlingStore = useErrorHandlingStore();
 const passportAvailable = ref(false);
 
 async function loadPassport(id: string): Promise<boolean> {
-  const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
+  const response = await apiClient.dpp.permalinks.getPassport(id);
   if (response.status === 404) {
     return false;
   }
 
   passportStore.productPassport = response.data;
 
-  const submodels = await apiClient.dpp.uniqueProductIdentifiers.aas.getSubmodels(id, {});
+  const submodels = await apiClient.dpp.permalinks.aas.getSubmodels(id, {});
   if (submodels.status !== 200) {
     console.error("Failed to load submodels");
     return false;
   }
   passportStore.submodels = submodels.data.result || [];
 
-  const aas = await apiClient.dpp.uniqueProductIdentifiers.aas.getShells(id, {});
+  const aas = await apiClient.dpp.permalinks.aas.getShells(id, {});
   if (aas.status !== 200) {
     console.error("Failed to load shells");
     return false;
@@ -41,7 +41,7 @@ async function loadPassport(id: string): Promise<boolean> {
 
   try {
     const presentationConfig =
-      await apiClient.dpp.uniqueProductIdentifiers.getPresentationConfiguration(id);
+      await apiClient.dpp.permalinks.getPresentationConfiguration(id);
     passportStore.presentationConfig = presentationConfig.data;
   } catch (error) {
     errorHandlingStore.logErrorWithNotification(

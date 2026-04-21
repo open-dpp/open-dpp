@@ -20,7 +20,9 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  forwardRef,
   Get,
+  Inject,
   NotFoundException,
   Param,
   Post,
@@ -98,6 +100,7 @@ import { DbSessionOptions } from "../../database/query-options";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
+import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
@@ -124,6 +127,8 @@ export class PassportController
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
     private readonly presentationConfigurationService: PresentationConfigurationService,
+    @Inject(forwardRef(() => PermalinkApplicationService))
+    private readonly permalinkApplicationService: PermalinkApplicationService,
   ) {}
 
   @Get()
@@ -232,7 +237,10 @@ export class PassportController
     const upid = passport.createUniqueProductIdentifier();
     await this.uniqueProductIdentifierService.save(upid);
 
-    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
+    const saved = await this.passportRepository.save(passport);
+    await this.permalinkApplicationService.ensurePermalinkForPassport(saved);
+
+    return PassportDtoSchema.parse(saved.toPlain());
   }
 
   @ApiGetShells()

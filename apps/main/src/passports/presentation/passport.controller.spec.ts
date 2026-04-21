@@ -22,6 +22,12 @@ import { MemberRole } from "../../identity/organizations/domain/member-role.enum
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { PresentationReferenceType } from "@open-dpp/dto";
+import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
+import { PermalinkModule } from "../../permalink/permalink.module";
+import {
+  PresentationConfigurationDoc,
+  PresentationConfigurationSchema,
+} from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../../templates/domain/template";
@@ -43,7 +49,7 @@ describe("passportController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [PassportsModule, AasModule, PresentationConfigurationsModule],
+      imports: [PassportsModule, AasModule, PresentationConfigurationsModule, PermalinkModule],
       providers: [
         PassportRepository,
         TemplateRepository,
@@ -59,6 +65,8 @@ describe("passportController", () => {
         schema: TemplateSchema,
       },
       { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
     PassportRepository,

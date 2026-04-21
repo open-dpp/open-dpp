@@ -49,6 +49,7 @@ export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
 export * from "./organizations/member.dto";
 export * from "./passports/passport.dto";
+export * from "./permalinks/permalink.dto";
 export * from "./presentation-configurations/presentation-configuration.dto";
 export * from "./shared/dpp.schemas";
 export * from "./shared/pagination.dto";

@@ -10,6 +10,8 @@ import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server, Socket } from "socket.io";
 import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/websocket-auth.guard";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
+import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { ChatService } from "../chat.service";
 
 @UseGuards(WebsocketAuthGuard)
@@ -21,25 +23,35 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-  private chatService: ChatService;
-
-  constructor(chatService: ChatService) {
-    this.chatService = chatService;
-  }
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+  ) {}
 
   @OptionalAuth()
   @SubscribeMessage("userMessage")
   async handleMessage(
-    @MessageBody() message: { msg: string; uniqueProductIdentifierUuid: string },
+    @MessageBody() message: { msg: string; permalink: string },
     @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
     this.logger.log("Start to process message:", message);
 
     try {
+      const { passport } = await this.permalinkApplicationService.resolveToPassport(
+        message.permalink,
+      );
+      const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(passport.id);
+      if (!upi) {
+        throw new Error(
+          `No UniqueProductIdentifier found for passport ${passport.id} (permalink=${message.permalink})`,
+        );
+      }
+
       const reply = await this.chatService.askAgent(
         message.msg,
-        message.uniqueProductIdentifierUuid,
+        upi.uuid,
         client.data.user,
         client.data.member,
       );

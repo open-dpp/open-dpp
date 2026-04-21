@@ -9,6 +9,7 @@
     "build": "nest build",
     "start": "nest start",
     "export-api-doc": "nest start -- --export-api-doc ../../docs/api-docs.json",
+    "cli:permalink-backfill": "nest start --entryFile permalink/cli/backfill-permalinks.entrypoint",
     "start:dev": "nest start --watch",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

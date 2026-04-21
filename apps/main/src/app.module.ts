@@ -22,6 +22,7 @@ import { InstanceSettingsModule } from "./instance-settings/instance-settings.mo
 import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
 import { PassportsModule } from "./passports/passports.module";
+import { PermalinkModule } from "./permalink/permalink.module";
 import { PolicyModule } from "./policy/policy.module";
 import { PolicyGuard } from "./policy/presentation/policy.guard";
 import { PresentationConfigurationsModule } from "./presentation-configurations/presentation-configurations.module";
@@ -66,6 +67,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     InstanceSettingsModule,
     PolicyModule,
     PresentationConfigurationsModule,
+    PermalinkModule,
     StatusModule,
   ],
   controllers: [],

@@ -43,11 +43,11 @@ export { OrganizationsNamespace } from "./dpp/organizations/organizations.namesp
 export { TemplatesNamespace } from "./dpp/templates/templates.namespace";
 
 export type {
-  UniqueProductIdentifierDto,
-  UniqueProductIdentifierMetadataDto,
-  UniqueProductIdentifierReferenceDto,
-} from "./dpp/unique-product-identifiers/unique-product-identifiers.dtos";
-export { UniqueProductIdentifiersNamespace } from "./dpp/unique-product-identifiers/unique-product-identifiers.namespace";
+  PermalinkDto,
+  PermalinkListDto,
+  PermalinkMetadataDto,
+} from "./dpp/permalinks/permalinks.dtos";
+export { PermalinksNamespace } from "./dpp/permalinks/permalinks.namespace";
 export type { CreateUserDto, UserDto } from "./dpp/users/user.dtos";
 export { UsersNamespace } from "./dpp/users/users.namespace";
 export type { MediaInfoDto } from "./media/media.dtos";

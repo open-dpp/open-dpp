@@ -3,7 +3,7 @@ import { Body, Controller, Get, Logger, Post, Query } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
-import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
+import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricQuerySchema } from "./dto/passport-metric-query.dto";
@@ -15,7 +15,7 @@ export class PassportMetricController {
 
   constructor(
     private passportMetricService: PassportMetricService,
-    private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    private permalinkApplicationService: PermalinkApplicationService,
   ) {}
 
   @AllowAnonymous()
@@ -24,10 +24,9 @@ export class PassportMetricController {
     @Body(new ZodValidationPipe(PassportPageViewSchema))
     passportPageViewDto: PassportPageViewDto,
   ) {
-    const passportMetadata =
-      await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOrFail(
-        passportPageViewDto.uuid,
-      );
+    const passportMetadata = await this.permalinkApplicationService.getMetadataByPermalink(
+      passportPageViewDto.permalink,
+    );
 
     const passportMetric = PassportMetric.createPageView({
       source: {

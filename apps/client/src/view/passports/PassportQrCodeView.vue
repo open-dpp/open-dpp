@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { UniqueProductIdentifierDto } from "@open-dpp/api-client";
+import type { PermalinkDto } from "@open-dpp/api-client";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
@@ -8,32 +8,34 @@ import { VIEW_ROOT_URL } from "../../const";
 import apiClient from "../../lib/api-client";
 
 const route = useRoute();
-const upids = ref<UniqueProductIdentifierDto[] | undefined>(undefined);
-const upidNotFound = ref(false);
+const permalinks = ref<PermalinkDto[] | undefined>(undefined);
+const permalinkNotFound = ref(false);
 const { t } = useI18n();
 
 onMounted(async () => {
-  const result = await apiClient.dpp.uniqueProductIdentifiers.getByReference(
+  const result = await apiClient.dpp.permalinks.getByPassport(
     String(route.params.passportId),
   );
 
-  upids.value = result.data;
+  permalinks.value = result.data;
 });
 
-const link = computed(() =>
-  upids.value && upids.value[0] ? `/presentation/${upids.value[0].uuid}` : undefined,
-);
+const link = computed(() => {
+  const first = permalinks.value?.[0];
+  if (!first) return undefined;
+  return `/p/${first.slug ?? first.id}`;
+});
 const content = computed(() => (link.value ? `${VIEW_ROOT_URL}${link.value}` : undefined));
 </script>
 
 <template>
-  <QrCode v-if="link && content && !upidNotFound" :link="link" :content="content" />
+  <QrCode v-if="link && content && !permalinkNotFound" :link="link" :content="content" />
   <div
-    v-if="!upids || !upids[0]"
+    v-if="!permalinks || !permalinks[0]"
     class="flex w-full flex-col items-center justify-center gap-5 p-10"
   >
     <span>
-      {{ t("uniqueproductidentifier.notfound") }}
+      {{ t("permalink.notfound") }}
     </span>
   </div>
 </template>

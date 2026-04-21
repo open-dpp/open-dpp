@@ -599,7 +599,7 @@
     "passportNotFound": "Productpass passport not found",
     "passportNotFoundLong": "Your digital product passport could not be found. Please validate your data or contact support."
   },
-  "uniqueproductidentifier": {
-    "notfound": "Could not find unique product identifier. Please contact your administrator."
+  "permalink": {
+    "notfound": "Could not find permalink. Please contact your administrator."
   }
 }
