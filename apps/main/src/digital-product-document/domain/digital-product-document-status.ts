@@ -36,7 +36,7 @@ export function publishDpp(lastStatusChange: DigitalProductDocumentStatusChange)
 
 export function archiveDpp(lastStatusChange: DigitalProductDocumentStatusChange) {
   if (lastStatusChange.currentStatus === DigitalProductDocumentStatus.Archived) {
-    throw new ValueError("A dpp can only archived once.");
+    throw new ValueError("A dpp can only be archived once.");
   }
   return DigitalProductDocumentStatusChange.create({
     previousStatus: lastStatusChange.currentStatus,

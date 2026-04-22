@@ -61,7 +61,7 @@ const presentationConfigurationNamespace =
 
 const confirm = useConfirm();
 
-const status = computed(() => model.value.lastStatusChange.currentStatus);
+const status = computed(() => model.value.lastStatusChange?.currentStatus);
 
 const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
 
@@ -111,10 +111,9 @@ const {
 
 watch(
   () => status.value,
-  async (newStatus) => {
+  async () => {
     await reloadCurrentPage();
   },
-  { immediate: true },
 );
 
 onMounted(async () => {

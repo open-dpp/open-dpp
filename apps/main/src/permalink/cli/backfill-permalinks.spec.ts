@@ -2,8 +2,9 @@ import type { INestApplicationContext } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import type { Connection } from "mongoose";
 import { PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
@@ -25,6 +26,7 @@ import { runBackfill } from "./backfill-permalinks";
 
 describe("runBackfill", () => {
   let module: TestingModule;
+  let connection: Connection;
   let permalinkRepository: PermalinkRepository;
   let presentationConfigurationRepository: PresentationConfigurationRepository;
   let passportRepository: PassportRepository;
@@ -52,6 +54,15 @@ describe("runBackfill", () => {
     permalinkRepository = module.get(PermalinkRepository);
     presentationConfigurationRepository = module.get(PresentationConfigurationRepository);
     passportRepository = module.get(PassportRepository);
+    connection = module.get<Connection>(getConnectionToken());
+  });
+
+  beforeEach(async () => {
+    await Promise.all([
+      connection.collection("permalinkdocs").deleteMany({}),
+      connection.collection("presentationconfigurationdocs").deleteMany({}),
+      connection.collection("passportdocs").deleteMany({}),
+    ]);
   });
 
   it("creates a config + permalink for every passport and preserves existing permalinks", async () => {

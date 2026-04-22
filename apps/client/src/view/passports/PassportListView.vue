@@ -162,7 +162,7 @@ onMounted(async () => {
 
 <template>
   <DigitalProductDocumentTable
-    key="templates-list"
+    key="passports-list"
     :has-previous="hasPrevious"
     :has-next="hasNext"
     :current-page="currentPage"

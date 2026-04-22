@@ -107,10 +107,13 @@ export const useAiAgentStore = defineStore("socket", () => {
   );
 
   const sendMessage = (msg: string) => {
+    const rawPermalink = route.params.permalink;
+    const permalink = Array.isArray(rawPermalink) ? rawPermalink[0] : rawPermalink;
+    if (typeof permalink !== "string" || permalink === "") return;
     if (socket.value && !isLastMessagePendingFromBot.value) {
       socket.value.emit("userMessage", {
         msg,
-        permalink: String(route.params.permalink),
+        permalink,
       });
       messages.value.push({
         id: Date.now(),

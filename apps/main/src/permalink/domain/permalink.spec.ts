@@ -77,18 +77,20 @@ describe("Permalink", () => {
     expect(restored.id).toBe(original.id);
     expect(restored.slug).toBe(original.slug);
     expect(restored.presentationConfigurationId).toBe(original.presentationConfigurationId);
+    expect(restored.createdAt.getTime()).toBe(original.createdAt.getTime());
+    expect(restored.updatedAt.getTime()).toBe(original.updatedAt.getTime());
   });
 
-  it("withSlug returns a new instance and bumps updatedAt", async () => {
+  it("withSlug returns a new instance and bumps updatedAt", () => {
     const permalink = Permalink.create(baseInput());
-    await new Promise((r) => setTimeout(r, 2));
+    const originalUpdatedAt = permalink.updatedAt.getTime();
 
     const next = permalink.withSlug("my-slug");
 
     expect(next).not.toBe(permalink);
     expect(next.slug).toBe("my-slug");
-    expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(permalink.updatedAt.getTime());
-    expect(next.createdAt).toBe(permalink.createdAt);
+    expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(originalUpdatedAt);
+    expect(next.createdAt.getTime()).toBe(permalink.createdAt.getTime());
   });
 
   it("withSlug(null) unsets the slug", () => {

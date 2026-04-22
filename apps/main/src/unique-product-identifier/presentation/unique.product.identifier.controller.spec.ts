@@ -120,6 +120,6 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
       `/unique-product-identifiers/${randomUUID()}/passport`,
     );
-    expect([404, 500]).toContain(response.status);
+    expect(response.status).toEqual(404);
   });
 });

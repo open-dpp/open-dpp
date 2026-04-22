@@ -22,6 +22,10 @@ async function loadPassport(id: string): Promise<boolean> {
   if (response.status === 404) {
     return false;
   }
+  if (response.status !== 200) {
+    console.error("Failed to load passport");
+    return false;
+  }
 
   passportStore.productPassport = response.data;
 

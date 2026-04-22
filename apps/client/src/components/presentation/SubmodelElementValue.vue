@@ -22,7 +22,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div v-if="!element.value" class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2">
+  <div v-if="element.value == null" class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2">
     {{ t("presentation.missingValue") }}
   </div>
   <PresentationComponentRenderer v-else :element="element" :path="path">

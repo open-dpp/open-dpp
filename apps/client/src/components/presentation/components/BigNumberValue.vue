@@ -31,6 +31,9 @@ const formattedValue = computed(() => {
   if (Number.isNaN(num)) return String(raw);
 
   const rawStr = String(raw);
+  if (/e[+-]?\d+$/i.test(rawStr)) {
+    return new Intl.NumberFormat(locale.value).format(num);
+  }
   const dotIndex = rawStr.indexOf(".");
   const fractionDigits = dotIndex >= 0 ? rawStr.length - dotIndex - 1 : 0;
 

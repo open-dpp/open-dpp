@@ -52,6 +52,13 @@ describe("PermalinkRepository", () => {
     await module.get(getModelToken(PermalinkDoc.name)).syncIndexes();
   });
 
+  afterEach(async () => {
+    await Promise.all([
+      connection.collection("permalinkdocs").deleteMany({}),
+      connection.collection("presentationconfigurationdocs").deleteMany({}),
+    ]);
+  });
+
   it("persists and loads a permalink", async () => {
     const permalink = Permalink.create({ presentationConfigurationId: randomUUID() });
 

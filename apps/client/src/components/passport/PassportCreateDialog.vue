@@ -89,7 +89,10 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
 
 function filterTemplates({ result }: TemplatePaginationDto) {
   return result
-    .filter((t) => t.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived)
+    .filter(
+      (template) =>
+        template.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived,
+    )
     .map((template) => ({
       ...template,
       label: getOptionLabel(template),
