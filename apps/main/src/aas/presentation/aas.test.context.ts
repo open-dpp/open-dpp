@@ -47,8 +47,13 @@ import { UsersService } from "../../identity/users/application/services/users.se
 
 import { UsersModule } from "../../identity/users/users.module";
 import { MediaModule } from "../../media/media.module";
-import { AasModule } from "../aas.module";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { IdShortPath } from "../domain/common/id-short-path";
@@ -87,6 +92,7 @@ export function createAasTestContext<T>(
   let submodelRepository: SubmodelRepository;
   let aasRepository: AasRepository;
   let moduleRef: TestingModule;
+  let uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
 
   const betterAuthHelper = new BetterAuthHelper();
   let aas: AssetAdministrationShell;
@@ -109,6 +115,10 @@ export function createAasTestContext<T>(
         MongooseModule.forFeature([
           { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
           { name: SubmodelDoc.name, schema: SubmodelSchema },
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
           ...mongooseModels,
         ]),
         AasModule,
@@ -122,6 +132,7 @@ export function createAasTestContext<T>(
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,
+        UniqueProductIdentifierRepository,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
@@ -144,6 +155,9 @@ export function createAasTestContext<T>(
     dppIdentifiableRepository = moduleRef.get<T>(EntityRepositoryClass);
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
+    uniqueProductIdentifierRepository = moduleRef.get<UniqueProductIdentifierRepository>(
+      UniqueProductIdentifierRepository,
+    );
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel1 = Submodel.fromPlain(
@@ -989,8 +1003,14 @@ export function createAasTestContext<T>(
       betterAuthHelper,
       organizationId: orga1?.id,
       userId: user1data.user.id,
+      getOrganizationAndUserWithCookie,
     }),
-    getRepositories: () => ({ dppIdentifiableRepository, aasRepository }),
+    getRepositories: () => ({
+      dppIdentifiableRepository,
+      aasRepository,
+      submodelRepository,
+      uniqueProductIdentifierService: uniqueProductIdentifierRepository,
+    }),
     getAasObjects: () => ({ aas, submodels }),
     getModuleRef: () => moduleRef,
     asserts: {

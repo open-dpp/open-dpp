@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { AssetAdministrationShellCreateDtoSchema } from "../aas/asset-administration-shell-json-schema";
-import { SharedDppDtoSchema } from "../shared/dpp.schemas";
+import { DigitalProductDocumentDtoSchema } from "../shared/digital-product-document.schemas";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
-export const PassportDtoSchema = SharedDppDtoSchema.extend({
+export const PassportDtoSchema = DigitalProductDocumentDtoSchema.extend({
   templateId: z.string().nullable(),
   /** UPI uuid for presentation/chat links; set when listing passports */
   uniqueProductIdentifierUuid: z.uuid().optional(),

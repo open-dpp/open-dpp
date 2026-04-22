@@ -1,4 +1,8 @@
-import type { AssetAdministrationShellResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import {
+  type AssetAdministrationShellResponseDto,
+  DigitalProductDocumentStatusDto,
+  type SubmodelResponseDto,
+} from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Component } from "vue";
@@ -200,6 +204,7 @@ describe("aasEditor composable", () => {
 
   const selectedLanguage = Language.en;
   const mockOpenConfirm = vi.fn();
+  const status = DigitalProductDocumentStatusDto.Draft;
 
   it("should return displayName", async () => {
     const submodelsResponse = {
@@ -230,6 +235,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
+      status,
     });
     await init();
     expect(mocks.getShells).toHaveBeenCalledWith(aasWrapperId, {
@@ -269,6 +275,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
+        status,
       });
     await init();
     openAssetAdministrationShellEditor();
@@ -329,6 +336,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
+      status,
     });
     await init();
 
@@ -559,6 +567,7 @@ describe("aasEditor composable", () => {
       selectedLanguage,
       openConfirm: mockOpenConfirm,
       translate,
+      status,
     });
     await init();
     selectTreeNode(keyToSelect);
@@ -610,6 +619,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
+        status,
       });
       await init();
       await createSubmodel();
@@ -714,6 +724,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
+        status,
       });
 
       const data = { idShort: "newProperty", valueType };
@@ -760,6 +771,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
+        status,
       });
 
       const data = { idShort: "newProperty" };
@@ -810,6 +822,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
+        status,
       });
 
       const expectedRequestBody = {
@@ -876,6 +889,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: mockOpenConfirm,
         translate,
+        status,
       });
 
       const data = {
@@ -924,6 +938,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         translate,
         openConfirm: mockOpenConfirm,
+        status,
       });
 
       const data = {
@@ -986,6 +1001,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: openAutoConfirm,
         translate,
+        status,
       });
       await init();
       mocks.deleteSubmodelById.mockResolvedValueOnce({
@@ -1019,6 +1035,7 @@ describe("aasEditor composable", () => {
         selectedLanguage,
         openConfirm: openAutoConfirm,
         translate,
+        status,
       });
       await init();
       mocks.deleteSubmodelElementById.mockResolvedValueOnce({

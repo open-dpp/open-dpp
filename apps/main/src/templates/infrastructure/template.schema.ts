@@ -4,9 +4,14 @@ import {
   EnvironmentDoc,
   EnvironmentSchema,
 } from "../../aas/infrastructure/schemas/environment.schema";
+import {
+  DigitalProductDocumentStatusChangeDbSchema,
+  DigitalProductDocumentStatusChangeDoc,
+} from "../../digital-product-document/infrastructure/digital-product-document-status-change-db.schema";
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",
+  v1_1_0: "1.1.0",
 } as const;
 type TemplateDocVersionType = (typeof TemplateDocVersion)[keyof typeof TemplateDocVersion];
 
@@ -33,6 +38,9 @@ export class TemplateDoc extends Document<string> {
 
   @Prop({ required: true })
   updatedAt: Date;
+
+  @Prop({ type: DigitalProductDocumentStatusChangeDbSchema, required: true })
+  lastStatusChange: DigitalProductDocumentStatusChangeDoc;
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);

@@ -3,13 +3,13 @@ import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { AasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
-import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/export-schemas/aas-export-v1.schema";
 import { ExpandedEnvironment } from "../expanded-environment";
 import { SubjectAttributes } from "../security/subject-attributes";
+import { DigitalProductDocumentStatusChange } from "../../../digital-product-document/domain/digital-product-document-status";
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
-  private readonly EXPORT_VERSION = AasExportVersion.v2_0;
+  private readonly EXPORT_VERSION = AasExportVersion.v3_0;
 
   private constructor(
     public readonly id: string,
@@ -18,6 +18,7 @@ export class AasExportable {
     public readonly environment: ExpandedEnvironment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public readonly lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -27,6 +28,7 @@ export class AasExportable {
     environment: ExpandedEnvironment;
     createdAt?: Date;
     updatedAt?: Date;
+    lastStatusChange?: DigitalProductDocumentStatusChange;
   }) {
     const now = DateTime.now();
 
@@ -37,6 +39,7 @@ export class AasExportable {
       data.environment,
       data.createdAt ?? now,
       data.updatedAt ?? now,
+      data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
     );
   }
 
@@ -48,6 +51,7 @@ export class AasExportable {
       environment: expandedEnvironment,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      lastStatusChange: data.getLastStatusChange(),
     });
   }
 
@@ -58,19 +62,8 @@ export class AasExportable {
       environment: expandedEnvironment,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      lastStatusChange: data.getLastStatusChange(),
     });
-  }
-
-  static fromPlain(data: unknown, organizationId: string, templateId: string | null = null) {
-    const parsed = aasExportSchemaJsonV1_0.parse(data);
-    return new AasExportable(
-      parsed.id,
-      organizationId,
-      templateId,
-      ExpandedEnvironment.fromPlain(parsed.environment),
-      parsed.createdAt,
-      parsed.updatedAt,
-    );
   }
 
   toExportPlain(subject: SubjectAttributes) {
@@ -86,6 +79,7 @@ export class AasExportable {
         ...envPlain,
         assetAdministrationShells: envPlain.assetAdministrationShells,
       },
+      lastStatusChange: this.lastStatusChange.toPlain(),
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       format: this.EXPORT_FORMAT,

@@ -5,6 +5,9 @@ export * from "./aas/common/basic-json-schema";
 export * from "./aas/common/key-json-schema";
 export * from "./aas/common/language-text-json-schema";
 
+export * from "./shared/get-all-params.dto";
+export * from "./shared/filter.dto";
+
 export * from "./aas/common/qualifier-json-schema";
 export * from "./aas/common/reference-json-schema";
 export * from "./aas/concept-description-json-schema";
@@ -49,7 +52,7 @@ export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
 export * from "./organizations/member.dto";
 export * from "./passports/passport.dto";
-export * from "./shared/dpp.schemas";
+export * from "./shared/digital-product-document.schemas";
 export * from "./shared/pagination.dto";
 export * from "./shared/populate.dto";
 export * from "./shared/table.dto";
