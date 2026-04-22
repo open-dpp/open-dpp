@@ -13,6 +13,7 @@ export const PopulateQueryParam = () =>
 
 export const StatusQueryParamSchema = z
   .union([DigitalProductDocumentStatusDtoEnum, DigitalProductDocumentStatusDtoEnum.array()])
+  .transform((val) => (Array.isArray(val) ? val : [val]))
   .optional()
   .meta({
     description: "Filters by the specified status entries",

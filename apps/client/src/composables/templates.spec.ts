@@ -99,7 +99,7 @@ describe("templates", () => {
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({
       pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
-      filter: { status: DigitalProductDocumentStatusDto.Archived },
+      filter: { status: [DigitalProductDocumentStatusDto.Archived] },
     });
     expect(templates.value).toEqual(templatesResponse);
   });
