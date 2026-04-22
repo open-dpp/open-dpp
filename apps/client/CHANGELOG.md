@@ -1,5 +1,15 @@
 # @open-dpp/client
 
+## 0.2.1
+
+### Patch Changes
+
+- [#529](https://github.com/open-dpp/open-dpp/pull/529) [`daa1f4e`](https://github.com/open-dpp/open-dpp/commit/daa1f4e9ff07ce4e6d826c1a0490af4dcc3843e1) Thanks [@florianBieck](https://github.com/florianBieck)! - Fixed trusted publishing
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.2.1
+  - @open-dpp/dto@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
