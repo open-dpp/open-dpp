@@ -1,6 +1,15 @@
 {
   "name": "@open-dpp/dto",
   "version": "0.2.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-dpp/open-dpp.git",
+    "directory": "packages/dto"
+  },
+  "homepage": "https://github.com/open-dpp/open-dpp#readme",
+  "bugs": {
+    "url": "https://github.com/open-dpp/open-dpp/issues"
+  },
   "description": "",
   "keywords": [],
   "license": "ISC",
