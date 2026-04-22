@@ -14,7 +14,6 @@ import {
 import {
   AssetAdministrationShellModificationSchema,
   DeletePolicyDtoSchema,
-  PopulateSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -244,15 +243,6 @@ export const PositionQueryParamSchema = z.coerce
     example: 1,
     param: { in: "query", name: "position" },
   });
-
-export const PopulateQueryParamSchema = PopulateSchema.meta({
-  description: "Populates specified environment property",
-  example: "environment.assetAdministrationShells",
-  param: { in: "query", name: "populate" },
-});
-
-export const PopulateQueryParam = () =>
-  Query("populate", new ZodValidationPipe(PopulateQueryParamSchema));
 
 export const PositionQueryParam = () =>
   Query("position", new ZodValidationPipe(PositionQueryParamSchema));

@@ -359,6 +359,11 @@
         "label": "Name der Organisation",
         "error": "Bitte geben Sie einen Namen ein."
       },
+      "color": {
+        "label": "Primärfarbe",
+        "palette": "Farbpalette",
+        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
+      },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
@@ -381,7 +386,8 @@
       "description": "Einladungen zu dieser Organisation"
     },
     "settings": {
-      "title": "Organisation anpassen"
+      "title": "Organisation anpassen",
+      "branding": "Branding"
     },
     "admin": {
       "title": "Administration",
@@ -454,13 +460,29 @@
     "select": "Produktpass auswählen",
     "label": "Produktpass | Produktpässe",
     "create": "Neuen Produktpass erstellen",
+    "delete": "Soll der Produktpass wirklich gelöscht werden? Damit ist dieser nicht mehr verfügbar.",
+    "errorDelete": "Löschen des Produktpasses fehlgeschlagen",
+    "errorModifyStatus": "Fehler beim Ändern des Status des Produktpasses",
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage",
     "selectTemplate": "Passvorlage auswählen"
   },
+  "status": {
+    "withStatus": "mit Status",
+    "selectStatus": "Status auswählen",
+    "draft": "Entwurf",
+    "published": "Veröffentlicht",
+    "archived": "Archiviert",
+    "publish": "Veröffentlichen",
+    "restore": "Wiederherstellen",
+    "archive": "Archivieren"
+  },
   "templates": {
-    "label": "Passvorlagen",
+    "label": "Passvorlage | Passvorlagen",
     "create": "Neue Passvorlage erstellen",
+    "delete": "Soll die Passvorlage wirklich gelöscht werden? Damit ist diese nicht mehr verfügbar.",
+    "errorDelete": "Löschen der Passvorlage fehlgeschlagen",
+    "errorModifyStatus": "Fehler beim Ändern des Status der Passvorlage",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
   },

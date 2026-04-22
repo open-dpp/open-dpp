@@ -1,4 +1,4 @@
-import type { PassportDtoSchema } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PassportDtoSchema } from "@open-dpp/dto";
 import type { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";
@@ -22,4 +22,8 @@ export const passportsPlainFactory = Factory.define<
   templateId: transientParams.templateId ?? null,
   createdAt: new Date(Date.now()).toISOString(),
   updatedAt: new Date(Date.now()).toISOString(),
+  lastStatusChange: {
+    currentStatus: DigitalProductDocumentStatusDto.Draft,
+    previousStatus: null,
+  },
 }));

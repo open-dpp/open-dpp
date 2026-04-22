@@ -98,4 +98,8 @@ export class AasRepository {
   async findByIds(ids: string[]): Promise<Map<string, AssetAdministrationShell>> {
     return await findByIds(ids, this.aasDoc, this.fromPlainWithMigration.bind(this));
   }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.aasDoc.findByIdAndDelete(id, options);
+  }
 }

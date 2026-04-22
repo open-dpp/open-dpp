@@ -53,28 +53,13 @@ watch(
 
 <template>
   <div id="product-details" class="flex flex-col gap-6">
-    <!-- Image gallery -->
-    <Galleria
+    <ProductImageGalleria
       v-if="hasImages"
-      :value="files"
-      :show-thumbnails="false"
       :auto-play="hasMultipleImages"
-      :show-item-navigators="hasMultipleImages"
-      :show-item-navigators-on-hover="hasMultipleImages"
-      :show-indicators="hasMultipleImages"
-      :transition-interval="4000"
-      :circular="true"
-      class="w-full overflow-hidden rounded-xl"
-    >
-      <template #item="{ item }">
-        <img
-          :src="item.url"
-          :alt="displayName ?? t('presentation.productDetails')"
-          class="aspect-[16/9] w-full object-cover sm:aspect-[21/9]"
-        />
-      </template>
-    </Galleria>
-
+      v-model="files"
+      :size="400"
+      :withBorder="true"
+    />
     <!-- General information card -->
     <div class="border-surface-200 bg-surface-0 rounded-xl border p-6 shadow-sm">
       <h3 class="text-surface-900 border-primary-500 mb-6 border-l-3 pl-4 text-lg font-semibold">

@@ -2,6 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import { OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { createDocument } from "zod-openapi";
 import { aasPaths } from "./aas.paths";
+import { brandingPaths } from "./branding.path";
 
 const document = createDocument({
   openapi: "3.1.0",
@@ -17,6 +18,28 @@ const document = createDocument({
   ],
   paths: {
     ...aasPaths,
+    ...brandingPaths,
+  },
+  components: {
+    parameters: {
+      OrganizationIdHeader: {
+        name: "x-open-dpp-organization-id",
+        in: "header",
+        required: true,
+        schema: {
+          type: "string",
+        },
+        description: "Organization identifier",
+      },
+    },
+    securitySchemes: {
+      apiKeyAuth: {
+        type: "apiKey",
+        in: "header",
+        name: "x-api-key",
+        description: "API Key passed in the x-api-key header",
+      },
+    },
   },
 });
 

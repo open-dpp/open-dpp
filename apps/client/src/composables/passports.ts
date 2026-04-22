@@ -1,11 +1,12 @@
-import type {
-  LanguageTextDto,
-  PagingParamsDto,
-  PassportPaginationDto,
-  PassportRequestCreateDto,
+import {
+  type FilterParamsDto,
+  type LanguageTextDto,
+  type PagingParamsDto,
+  type PassportPaginationDto,
+  type PassportRequestCreateDto,
+  Populates,
 } from "@open-dpp/dto";
 import type { PagingResult } from "./pagination.ts";
-import { Populates } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -18,11 +19,15 @@ export function usePassports() {
   const route = useRoute();
   const router = useRouter();
 
-  const fetchPassports = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
+  const fetchPassports = async (
+    pagingParams: PagingParamsDto,
+    filter: FilterParamsDto | undefined = undefined,
+  ): Promise<PagingResult> => {
     loading.value = true;
     const response = await apiClient.dpp.passports.getAll({
-      ...pagingParams,
+      pagination: pagingParams,
       populate: [Populates.assetAdministrationShells],
+      ...(filter && { filter }),
     });
     passports.value = response.data;
     loading.value = false;
@@ -49,5 +54,10 @@ export function usePassports() {
     return response.data;
   };
 
-  return { createPassport, fetchPassports, passports, loading };
+  return {
+    createPassport,
+    fetchPassports,
+    passports,
+    loading,
+  };
 }

@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import type { TemplateDto } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  type PagingParamsDto,
+  type TemplateDto,
+  type TemplatePaginationDto,
+} from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
@@ -7,20 +12,31 @@ import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassports } from "../../composables/passports";
 import { useTemplates } from "../../composables/templates";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { usePagination } from "../../composables/pagination.ts";
 
 const route = useRoute();
 
 function changeQueryParams(_: Record<string, string | undefined>) {}
 
-const { templates, loading, init, hasNext, nextPage } = useTemplates({
-  changeQueryParams,
+const { templates, loading, fetchTemplates } = useTemplates();
+
+function fetchCallback(pagingParams: PagingParamsDto) {
+  return fetchTemplates(pagingParams, {
+    status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
+  });
+}
+
+const { hasNext, nextPage } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  limit: 10,
+  fetchCallback,
+  changeQueryParams,
 });
 
 const { createPassport } = usePassports();
 
 const { t, locale } = useI18n();
-type TemplateOption = TemplateDto & { label: string };
+type TemplateOption = TemplateDto & { label: string; status: string };
 const templateList = ref<TemplateOption[]>([]);
 
 const visible = ref(false);
@@ -47,12 +63,7 @@ async function loadMoreTemplates() {
   if (hasNext.value) {
     await nextPage();
     if (templates.value) {
-      templateList.value.push(
-        ...templates.value.result.map((template) => ({
-          ...template,
-          label: getOptionLabel(template),
-        })),
-      );
+      templateList.value.push(...constructTemplateOptions(templates.value));
     }
   }
 }
@@ -72,14 +83,9 @@ defineExpose({
 });
 
 onMounted(async () => {
-  await init();
+  await nextPage();
   if (templates.value) {
-    templateList.value.push(
-      ...templates.value.result.map((template) => ({
-        ...template,
-        label: getOptionLabel(template),
-      })),
-    );
+    templateList.value.push(...constructTemplateOptions(templates.value));
   }
 });
 
@@ -87,6 +93,19 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   translate: t,
   selectedLanguage: convertLocaleToLanguage(locale.value),
 });
+
+function constructTemplateOptions({ result }: TemplatePaginationDto) {
+  return result.map((template) => ({
+    ...template,
+    label: getOptionLabel(template),
+    status: getOptionStatus(template),
+  }));
+}
+
+function getOptionStatus(option: TemplateDto): string {
+  return t(`status.${option.lastStatusChange.currentStatus.toLowerCase()}`);
+}
+
 function getOptionLabel(option: TemplateDto): string {
   const displayName = parseDisplayNameFromEnvironment(option.environment);
   return displayName !== t("common.untitled") ? displayName : option.id;
@@ -121,7 +140,14 @@ function getOptionLabel(option: TemplateDto): string {
         }"
         :placeholder="t('passports.selectTemplate')"
         :disabled="loading || mode === 'blank'"
-      />
+      >
+        <template #option="slotProps">
+          <div class="flex items-center gap-2">
+            <div class="text-xl">{{ slotProps.option.label }}</div>
+            <Tag severity="secondary" :value="slotProps.option.status" />
+          </div>
+        </template>
+      </Select>
     </div>
     <div class="flex justify-end gap-2">
       <Button type="button" severity="secondary" @click="close">

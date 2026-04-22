@@ -1,5 +1,13 @@
 # @open-dpp/exception
 
+## 0.3.0
+
+## 0.2.2
+
+## 0.2.1
+
+## 0.2.0
+
 ## 0.1.4
 
 ### Patch Changes

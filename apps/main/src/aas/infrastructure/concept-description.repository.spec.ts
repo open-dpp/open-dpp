@@ -51,6 +51,16 @@ describe("conceptDescriptionRepository", () => {
     expect(foundAas).toEqual(conceptDescription);
   });
 
+  it("should delete a concept description", async () => {
+    const conceptDescription = ConceptDescription.create({
+      id: randomUUID(),
+    });
+    await conceptDescriptionRepository.save(conceptDescription);
+    await conceptDescriptionRepository.deleteById(conceptDescription.id);
+    const foundAas = await conceptDescriptionRepository.findOne(conceptDescription.id);
+    expect(foundAas).toBeUndefined();
+  });
+
   afterAll(async () => {
     await module.close();
   });

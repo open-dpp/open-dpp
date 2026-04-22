@@ -1,10 +1,19 @@
 {
   "name": "@open-dpp/api-client",
-  "version": "0.1.4",
+  "version": "0.3.0",
   "description": "A client for my API",
   "keywords": [],
+  "homepage": "https://github.com/open-dpp/open-dpp#readme",
+  "bugs": {
+    "url": "https://github.com/open-dpp/open-dpp/issues"
+  },
   "license": "ISC",
   "author": "open-dpp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-dpp/open-dpp.git",
+    "directory": "packages/api-client"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
