@@ -8,15 +8,23 @@ const props = defineProps<{
 }>();
 const canvas = ref<HTMLCanvasElement>();
 watch(
-  () => [props.link, props.size] as const,
-  async () => {
-    if (!canvas.value) return;
-    canvas.value.width = props.size;
-    canvas.value.height = props.size;
-    await toCanvas(canvas.value, props.link, { width: props.size, margin: 1 });
+  [() => props.link, () => props.size],
+  async ([newLink, newSize]) => {
+    await generateQRCode(newLink, newSize);
   },
-  { immediate: true },
+  { immediate: false },
 );
+
+async function generateQRCode(newLink: string, newSize: number) {
+  if (!canvas.value) return;
+  canvas.value.width = newSize;
+  canvas.value.height = newSize;
+  await toCanvas(canvas.value, newLink, { width: newSize, margin: 1 });
+}
+
+onMounted(async () => {
+  await generateQRCode(props.link, props.size);
+});
 </script>
 
 <template>
