@@ -36,7 +36,7 @@ const size = props.size ?? 340;
           alt="Image"
           :pt="{
             image: {
-              style: `max-height: ${size}px; max-width:100%; object-fit; contain;`,
+              style: `max-height: ${size}px; max-width: 100%; object-fit: contain;`,
             },
           }"
         />
