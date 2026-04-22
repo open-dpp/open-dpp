@@ -28,7 +28,7 @@ const formSchema = z.object({
 const { locale } = useI18n();
 export type FormValues = z.infer<typeof formSchema>; // Override to allow null as initial value
 
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, errors, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)),
@@ -36,9 +36,7 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   },
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 async function submit() {
   await handleSubmit(async (data) => {

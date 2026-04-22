@@ -4,6 +4,9 @@
   },
   "common": {
     "reset": "Reset",
+    "noEntries": "No entries found",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",

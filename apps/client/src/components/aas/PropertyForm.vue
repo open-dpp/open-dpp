@@ -22,7 +22,6 @@ const { t } = useI18n();
   <SubmodelBaseForm
     :disabled="props.disabled"
     :show-errors="props.showErrors"
-    :errors="props.errors"
     :editor-mode="props.editorMode"
   />
   <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">

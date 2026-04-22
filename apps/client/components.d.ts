@@ -39,6 +39,7 @@ declare module 'vue' {
     DigitalProductDocumentTable: typeof import('./src/components/digital-product-document/DigitalProductDocumentTable.vue')['default']
     DigitalProductDocumentToolbar: typeof import('./src/components/digital-product-document/DigitalProductDocumentToolbar.vue')['default']
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
+    DisplayNameRow: typeof import('./src/components/aas/form/DisplayNameRow.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
     Dropdown: typeof import('./src/components/Dropdown.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
@@ -168,6 +169,7 @@ declare global {
   const DigitalProductDocumentTable: (typeof import("./src/components/digital-product-document/DigitalProductDocumentTable.vue"))["default"];
   const DigitalProductDocumentToolbar: (typeof import("./src/components/digital-product-document/DigitalProductDocumentToolbar.vue"))["default"];
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
+  const DisplayNameRow: (typeof import("./src/components/aas/form/DisplayNameRow.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
   const Dropdown: (typeof import("./src/components/Dropdown.vue"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
