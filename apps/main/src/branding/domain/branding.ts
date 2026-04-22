@@ -8,19 +8,15 @@ export class Branding {
   ) {}
 
   static create(data: { organizationId: string; logo?: string; primaryColor?: string }) {
-    return new Branding(
-      data.organizationId,
-      data.logo,
-      data.primaryColor,
-    );
+    return new Branding(data.organizationId, data.logo, data.primaryColor);
   }
 
   static getDefault() {
     return Branding.create({
-      organizationId : "instance",
-      logo : "/api/instance/logo",
-      primaryColor : "#6BAD87",
-    })
+      organizationId: "instance",
+      logo: "/api/instance/logo",
+      primaryColor: "#6BAD87",
+    });
   }
 
   static fromPlain(data: unknown, organizationId: string) {
