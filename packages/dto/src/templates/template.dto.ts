@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { AssetAdministrationShellCreateDtoSchema } from "../aas/asset-administration-shell-json-schema";
-import { SharedDppDtoSchema } from "../shared/dpp.schemas";
+import { DigitalProductDocumentDtoSchema } from "../shared/digital-product-document.schemas";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
-export const TemplateDtoSchema = SharedDppDtoSchema;
+export const TemplateDtoSchema = DigitalProductDocumentDtoSchema;
 
 export type TemplateDto = z.infer<typeof TemplateDtoSchema>;
 

@@ -22,11 +22,11 @@ import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import { PassportsModule } from "../../passports/passports.module";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { AnalyticsModule } from "../analytics.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
@@ -39,7 +39,7 @@ describe("passportMetricController", () => {
   let passportRepository: PassportRepository;
   let passportMetricService: PassportMetricService;
   let module: TestingModule;
-  let uniqueProductIdentifierService: UniqueProductIdentifierService;
+  let uniqueProductIdentifierService: UniqueProductIdentifierRepository;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -71,7 +71,7 @@ describe("passportMetricController", () => {
         UsersModule,
       ],
       providers: [
-        UniqueProductIdentifierService,
+        UniqueProductIdentifierRepository,
         UniqueProductIdentifierApplicationService,
         {
           provide: APP_GUARD,
@@ -88,8 +88,8 @@ describe("passportMetricController", () => {
 
     passportMetricService = module.get<PassportMetricService>(PassportMetricService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
-    uniqueProductIdentifierService = module.get<UniqueProductIdentifierService>(
-      UniqueProductIdentifierService,
+    uniqueProductIdentifierService = module.get<UniqueProductIdentifierRepository>(
+      UniqueProductIdentifierRepository,
     );
     betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 

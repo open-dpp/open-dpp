@@ -1,17 +1,26 @@
 <script lang="ts" setup>
-import type { SharedDppDto } from "@open-dpp/dto";
+import {
+  type DigitalProductDocumentStatusDtoType,
+  type PagingParamsDto,
+  type DigitalProductDocumentDto,
+  DigitalProductDocumentStatusDto,
+} from "@open-dpp/dto";
 import { AxiosError } from "axios";
 import { useToast } from "primevue/usetoast";
-import { onMounted, useTemplateRef } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import DppTable from "../../components/DppTable.vue";
+import DigitalProductDocumentTable from "../../components/digital-product-document/DigitalProductDocumentTable.vue";
 import PassportCreateDialog from "../../components/passport/PassportCreateDialog.vue";
 import { useExportImport } from "../../composables/export-import";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
+import { useDigitalProductDocumentFilter } from "../../composables/digital-product-document-filter.ts";
+import DigitalProductDocumentStatusChangeMenu from "../../components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue";
+import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
+import { DigitalProductDocumentType } from "../../lib/digital-product-document.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -29,10 +38,28 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const { passports, loading, fetchPassports } = usePassports();
 
-const { hasPrevious, hasNext, currentPage, previousPage, resetCursor, nextPage } = usePagination({
+const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
+  DigitalProductDocumentType.Passport,
+);
+
+const { status, changeStatus } = useDigitalProductDocumentFilter();
+
+function fetchCallback(pagingParams: PagingParamsDto) {
+  return fetchPassports(pagingParams, status.value ? { status: [status.value] } : undefined);
+}
+
+const {
+  hasPrevious,
+  hasNext,
+  currentPage,
+  previousPage,
+  resetCursor,
+  nextPage,
+  reloadCurrentPage,
+} = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
-  fetchCallback: fetchPassports,
+  fetchCallback,
   changeQueryParams,
 });
 
@@ -51,7 +78,7 @@ const {
   },
   importFn: async (json) => {
     await axiosIns.post("/passports/import", json);
-    resetCursor();
+    await resetCursor();
     toast.add({
       severity: "success",
       summary: t("notifications.success"),
@@ -68,8 +95,12 @@ function newPassport() {
   createDialog.value?.open();
 }
 
-async function routeToQrCode(id: string) {
-  await router.push(`${route.path}/${id}/qr-code`);
+const qrCodeDialogItem = ref<DigitalProductDocumentDto | null>(null);
+const qrCodeDialogVisible = ref(false);
+
+async function showQrCode(item: DigitalProductDocumentDto) {
+  qrCodeDialogItem.value = item;
+  qrCodeDialogVisible.value = true;
 }
 
 function forwardToPresentationErrorMessage(e: unknown): string {
@@ -81,14 +112,14 @@ function forwardToPresentationErrorMessage(e: unknown): string {
   return t("dpp.forwardToPresentationError");
 }
 
-async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
+async function resolvePassportUuid(item: DigitalProductDocumentDto): Promise<string> {
   const { data } = await axiosIns.get<{ uuid: string }>(
     `/passports/${item.id}/unique-product-identifier`,
   );
   return data.uuid;
 }
 
-async function forwardToPresentationChat(item: SharedDppDto) {
+async function forwardToPresentationChat(item: DigitalProductDocumentDto) {
   try {
     const uuid = await resolvePassportUuid(item);
     await router.push(`/presentation/${uuid}/chat`);
@@ -97,13 +128,37 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   }
 }
 
+async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
+  await deleteDPD(item.id, reloadCurrentPage);
+}
+
+async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
+  await publish(item.id);
+  await reloadCurrentPage();
+}
+
+async function onArchiveButtonClicked(item: DigitalProductDocumentDto) {
+  await archive(item.id);
+  await reloadCurrentPage();
+}
+
+async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
+  await restore(item.id);
+  await reloadCurrentPage();
+}
+
+async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
+  await changeStatus(newStatus);
+  await resetCursor();
+}
+
 onMounted(async () => {
   await nextPage();
 });
 </script>
 
 <template>
-  <DppTable
+  <DigitalProductDocumentTable
     key="templates-list"
     :has-previous="hasPrevious"
     :has-next="hasNext"
@@ -114,6 +169,8 @@ onMounted(async () => {
     @reset-cursor="resetCursor"
     @next-page="nextPage"
     @previous-page="previousPage"
+    :selected-status="status"
+    @update:selected-status="onSelectedStatusChange"
   >
     <template #headerActions>
       <Button :label="t('common.add')" @click="newPassport" />
@@ -127,36 +184,58 @@ onMounted(async () => {
         @select="onPassportFileSelect"
       />
     </template>
-    <template #actions="{ passport, editItem }">
+    <template #actions="{ item, goToItem }">
       <Button
         icon="pi pi-qrcode"
         severity="info"
         :aria-label="t('common.qrCode')"
         :title="t('common.qrCode')"
-        @click="routeToQrCode(passport.id)"
+        @click="showQrCode(item)"
       />
       <Button
+        v-if="status !== DigitalProductDocumentStatusDto.Archived"
         icon="pi pi-pencil"
         severity="primary"
         :aria-label="t('common.edit')"
         :title="t('common.edit')"
-        @click="editItem(passport)"
+        @click="goToItem(item)"
+      />
+      <Button
+        v-if="status === DigitalProductDocumentStatusDto.Archived"
+        icon="pi pi-eye"
+        severity="primary"
+        :aria-label="t('common.view')"
+        :title="t('common.view')"
+        @click="goToItem(item)"
       />
       <Button
         icon="pi pi-comments"
         severity="primary"
         :aria-label="t('dpp.openPresentationChat')"
         :title="t('dpp.openPresentationChat')"
-        @click="forwardToPresentationChat(passport)"
+        @click="forwardToPresentationChat(item)"
       />
       <Button
         icon="pi pi-download"
         severity="secondary"
         :aria-label="t('common.exportPassport')"
         :title="t('common.exportPassport')"
-        @click="exportPassport(passport.id)"
+        @click="exportPassport(item.id)"
+      />
+      <DigitalProductDocumentStatusChangeMenu
+        :item="item"
+        @on-delete-clicked="onDeleteButtonClicked"
+        @on-publish-clicked="onPublishButtonClicked"
+        @on-archive-clicked="onArchiveButtonClicked"
+        @on-restore-clicked="onRestoreButtonClicked"
       />
     </template>
-  </DppTable>
+  </DigitalProductDocumentTable>
   <PassportCreateDialog ref="createDialog" />
+  <ConfirmDialog />
+  <PassportQrCodeDialog
+    v-if="qrCodeDialogItem"
+    v-model="qrCodeDialogVisible"
+    :passport-id="qrCodeDialogItem.id"
+  />
 </template>

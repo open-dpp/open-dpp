@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { SubmodelElementSchema, UserRoleDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, SubmodelElementSchema, UserRoleDto } from "@open-dpp/dto";
 import {
   propertyModificationPlainFactory,
   subjectPlainFactory,
@@ -12,6 +12,7 @@ import {
   aasModification,
   aasResponse,
   aasWrapperId,
+  filterParams,
   paginationParams,
   propertyToAdd,
   submodelCarbonFootprintElement0,
@@ -48,7 +49,10 @@ describe("apiClient", () => {
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should get all templates", async () => {
-      const response = await sdk.dpp.templates.getAll(paginationParams);
+      const response = await sdk.dpp.templates.getAll({
+        pagination: paginationParams,
+        filter: filterParams,
+      });
       expect(response.data.result).toEqual([template1, template2]);
     });
 
@@ -60,6 +64,20 @@ describe("apiClient", () => {
       });
       expect(response.data).toEqual(template1);
     });
+
+    it("should delete template", async () => {
+      const response = await sdk.dpp.templates.deleteById(template1.id);
+      expect(response.status).toEqual(204);
+    });
+
+    it("should modify status of template", async () => {
+      const response = await sdk.dpp.templates.modifyStatus(template1.id, {
+        method: "Publish",
+      });
+      expect(response.data.lastStatusChange.currentStatus).toEqual(
+        DigitalProductDocumentStatusDto.Published,
+      );
+    });
   });
 
   describe("passports", () => {
@@ -68,7 +86,10 @@ describe("apiClient", () => {
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should get all passports", async () => {
-      const response = await sdk.dpp.passports.getAll(paginationParams);
+      const response = await sdk.dpp.passports.getAll({
+        pagination: paginationParams,
+        filter: filterParams,
+      });
       expect(response.data.result).toEqual([passport1, passport2]);
     });
 
@@ -83,6 +104,20 @@ describe("apiClient", () => {
       });
 
       expect(response.data).toEqual(passport1);
+    });
+
+    it("should delete passport", async () => {
+      const response = await sdk.dpp.passports.deleteById(passport1.id);
+      expect(response.status).toEqual(204);
+    });
+
+    it("should modify status of passport", async () => {
+      const response = await sdk.dpp.passports.modifyStatus(passport1.id, {
+        method: "Publish",
+      });
+      expect(response.data.lastStatusChange.currentStatus).toEqual(
+        DigitalProductDocumentStatusDto.Published,
+      );
     });
   });
 

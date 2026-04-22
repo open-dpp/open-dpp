@@ -1,5 +1,18 @@
 # @open-dpp/dto
 
+## 0.2.0
+
+### Minor Changes
+
+- [#503](https://github.com/open-dpp/open-dpp/pull/503) [`40c772c`](https://github.com/open-dpp/open-dpp/commit/40c772c5015aff47c0e91c443860ae25941bd44f) Thanks [@mr42](https://github.com/mr42)! - Templates and passports have a status (Draft, Published, Archived) now.
+
+  The following operations are possible:
+  - publish (Draft -> Published)
+  - archive (Draft -> Archived or Published -> Archived)
+  - restore (Archived -> Published or Archived -> Draft)
+
+  In addition, a user can delete templates/ passports with the status draft.
+
 ## 0.1.4
 
 ### Patch Changes

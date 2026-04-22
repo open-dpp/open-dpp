@@ -1,15 +1,21 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { IDigitalProductPassportIdentifiableRepository } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { DbSessionOptions } from "../../database/query-options";
-import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
-import { Pagination } from "../../pagination/pagination";
+import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
+import {
+  findAllByOrganizationId,
+  findOne,
+  findOneOrFail,
+  FindOptions,
+  save,
+} from "../../lib/repositories";
 import { Template } from "../domain/template";
 import { TemplateDoc, TemplateDocVersion } from "./template.schema";
+import { IDigitalProductDocumentRepository } from "../../digital-product-document/infrastructure/digital-product-document-repository.interface";
 
 @Injectable()
-export class TemplateRepository implements IDigitalProductPassportIdentifiableRepository {
+export class TemplateRepository implements IDigitalProductDocumentRepository<Template> {
   private templateDoc: MongooseModel<TemplateDoc>;
 
   constructor(
@@ -23,11 +29,29 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
     return Template.fromPlain(plain);
   }
 
+  migrate1_0_0To1_1_0(plain: any) {
+    return {
+      ...plain,
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+      },
+      _schemaVersion: TemplateDocVersion.v1_1_0,
+    };
+  }
+
+  async fromPlainWithMigration(plain: any): Promise<Template> {
+    let migratedVersion = plain;
+    if (migratedVersion._schemaVersion === TemplateDocVersion.v1_0_0) {
+      migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
+    }
+    return this.fromPlain(migratedVersion);
+  }
+
   async save(template: Template, options?: DbSessionOptions) {
     return await save(
       template,
       this.templateDoc,
-      TemplateDocVersion.v1_0_0,
+      TemplateDocVersion.v1_1_0,
       this.fromPlain.bind(this),
       undefined,
       options,
@@ -35,19 +59,23 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
   }
 
   async findOneOrFail(id: string) {
-    return await findOneOrFail(id, this.templateDoc, this.fromPlain.bind(this));
+    return await findOneOrFail(id, this.templateDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async findOne(id: string) {
-    return await findOne(id, this.templateDoc, this.fromPlain.bind(this));
+    return await findOne(id, this.templateDoc, this.fromPlainWithMigration.bind(this));
   }
 
-  async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {
+  async findAllByOrganizationId(organizationId: string, options?: FindOptions) {
     return await findAllByOrganizationId(
       this.templateDoc,
-      Template.fromPlain,
+      this.fromPlainWithMigration.bind(this),
       organizationId,
-      pagination,
+      options,
     );
+  }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.templateDoc.findByIdAndDelete(id, options);
   }
 }

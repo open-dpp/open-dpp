@@ -1,54 +1,53 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  AccessPermissionRuleResponseDto,
-  AssetAdministrationShellModificationDto,
-  AssetAdministrationShellResponseDto,
-  DataTypeDefType,
-  DeletePolicyDto,
-  FileRequestDto,
-  LanguageTextDto,
-  LanguageType,
-  PagingParamsDto,
-  PermissionType,
-  PropertyRequestDto,
-  ReferenceElementRequestDto,
-  SubmodelElementCollectionRequestDto,
-  SubmodelElementListRequestDto,
-  SubmodelElementModificationDto,
-  SubmodelElementSharedRequestDto,
-  SubmodelElementSharedResponseDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsEnum,
+  type AccessPermissionRuleResponseDto,
+  type AssetAdministrationShellModificationDto,
+  type AssetAdministrationShellResponseDto,
+  DataTypeDef,
+  type DataTypeDefType,
+  type DeletePolicyDto,
+  DigitalProductDocumentStatusDto,
+  type DigitalProductDocumentStatusDtoType,
+  type FileRequestDto,
+  KeyTypes,
+  type LanguageTextDto,
+  type LanguageType,
+  type PagingParamsDto,
+  Permissions,
+  type PermissionType,
+  PropertyJsonSchema,
+  type PropertyRequestDto,
+  type ReferenceElementRequestDto,
+  type SubmodelElementCollectionRequestDto,
+  type SubmodelElementListRequestDto,
+  type SubmodelElementModificationDto,
+  SubmodelElementSchema,
+  type SubmodelElementSharedRequestDto,
+  type SubmodelElementSharedResponseDto,
+  SubmodelElementSharedSchema,
+  SubmodelJsonSchema,
+  type SubmodelModificationDto,
+  type SubmodelRequestDto,
+  type SubmodelResponseDto,
 } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
-import type { Ref } from "vue";
+import { computed, type MaybeRefOrGetter, type Ref, ref, toRaw, toValue } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
+import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
-import {
-  AasSubmodelElements,
-  AasSubmodelElementsEnum,
-  DataTypeDef,
-  KeyTypes,
-  Permissions,
-  PropertyJsonSchema,
-  SubmodelElementSchema,
-  SubmodelElementSharedSchema,
-  SubmodelJsonSchema,
-} from "@open-dpp/dto";
+import { usePagination } from "./pagination.ts";
 import { omit } from "lodash";
-import { ref, toRaw } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasAbility } from "./aas-ability.ts";
-import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 import { useAasGallery } from "./aas-gallery.ts";
-import { usePagination } from "./pagination.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -60,6 +59,7 @@ export interface AasEditorProps {
   selectedLanguage: LanguageType;
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
+  status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
 }
 
 export interface IAasEditor extends IAasDrawer, IPagination {
@@ -92,12 +92,14 @@ export function useAasEditor({
   selectedLanguage,
   translate,
   openConfirm,
+  status,
 }: AasEditorProps): IAasEditor {
   const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
   const displayName = ref<string>("");
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
+  const isArchived = computed(() => toValue(status) === DigitalProductDocumentStatusDto.Archived);
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -110,7 +112,7 @@ export function useAasEditor({
 
   const { can } = useAasAbility({ getAccessPermissionRules });
 
-  const drawer = useAasDrawer({ onHideDrawer, can });
+  const drawer = useAasDrawer({ onHideDrawer, can, isArchived });
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
@@ -417,6 +419,9 @@ export function useAasEditor({
       [Permissions.Create]: "add",
     };
     const visible = (permission: PermissionType) => {
+      if (toValue(isArchived) && permission !== Permissions.Read) {
+        return false;
+      }
       if (permission === Permissions.Create) {
         return createVisible;
       }
@@ -432,7 +437,9 @@ export function useAasEditor({
       ) => {
         acc[permission.toLowerCase()] = {
           visible: visible(permission),
-          enabled: can(permission, idShortPathIncludingSubmodel),
+          enabled:
+            (!toValue(isArchived) || permission === Permissions.Read) &&
+            can(permission, idShortPathIncludingSubmodel),
           tooltip: can(permission, idShortPathIncludingSubmodel)
             ? translate(`common.${labels[permission]}`)
             : missingPermissionMsg,

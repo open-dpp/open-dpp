@@ -6,15 +6,7 @@ import type {
 } from "@open-dpp/dto";
 import type { AasEditorPath, EditorType, OpenDrawerCallback } from "../composables/aas-drawer.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
-import { z } from "zod";
 
-export const AasEditMode = {
-  Passport: "passport",
-  Template: "template",
-} as const;
-
-export const AasEditModeEnum = z.enum(AasEditMode);
-export type AasEditModeType = z.infer<typeof AasEditModeEnum>;
 export interface SharedEditorProps<Data, RequestDto> {
   path: AasEditorPath;
   data: Data;
@@ -27,4 +19,5 @@ export interface SharedEditorProps<Data, RequestDto> {
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
   deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
+  isArchived: boolean;
 }

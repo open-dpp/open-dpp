@@ -60,6 +60,8 @@ export default defineConfig({
           {
             text: "Guides",
             items: [
+              { text: "Passports", link: "/guides/passports" },
+              { text: "Templates", link: "/guides/templates" },
               { text: "Branding", link: "/guides/branding" },
               { text: "AI Integration", link: "/guides/ai" },
               { text: "Development", link: "/guides/development" },

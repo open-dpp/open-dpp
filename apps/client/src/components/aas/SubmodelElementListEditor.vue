@@ -55,15 +55,15 @@ const { can } = useAasAbility({
 const idShortPathList = computed(() => props.path.idShortPathIncludingSubmodel ?? "");
 
 const canCreateColumnsAndRows = computed(() => {
-  return can(Permissions.Create, idShortPathList.value);
+  return !props.isArchived && can(Permissions.Create, idShortPathList.value);
 });
 
 const canEdit = computed(() => {
-  return can(Permissions.Edit, idShortPathList.value);
+  return !props.isArchived && can(Permissions.Edit, idShortPathList.value);
 });
 
 const canDeleteColumnsAndRows = computed(() => {
-  return can(Permissions.Delete, idShortPathList.value);
+  return !props.isArchived && can(Permissions.Delete, idShortPathList.value);
 });
 
 const confirm = useConfirm();
