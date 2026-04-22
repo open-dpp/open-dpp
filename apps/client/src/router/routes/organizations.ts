@@ -7,13 +7,8 @@ import { ORGANIZATION_PASSPORTS_PARENT } from "./passports/passports.ts";
 import { ORGANIZATION_TEMPLATES_PARENT } from "./templates/templates.ts";
 
 export const ORGANIZATION_LIST: RouteRecordRaw = {
+  redirect: "/profile",
   path: "",
-  name: "Organizations",
-  component: () => import("../../view/organizations/SelectOrganizationView.vue"),
-  beforeEnter: (to: RouteLocationNormalizedGeneric) => {
-    const layoutStore = useLayoutStore();
-    layoutStore.breadcrumbs = organizationListBreadCrumbs(to);
-  },
 };
 
 function organizationListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
@@ -40,7 +35,17 @@ export const ORGANIZATION: RouteRecordRaw = {
   path: "",
   name: "Organization",
   props: true,
-  component: () => import("../../view/organizations/OrganizationView.vue"),
+  component: () => import("../../view/organizations/OrganizationSettingsView.vue"),
+  beforeEnter: (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = [
+      {
+        name: localizedBreadcrumb("organizations.settings.title"),
+        route: ORGANIZATION,
+        params: to.params,
+      },
+    ];
+  },
 };
 
 export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
@@ -58,29 +63,11 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
     ];
   },
 };
-
-export const ORGANIZATION_SETTINGS: RouteRecordRaw = {
-  path: "settings",
-  name: "OrganizationSettings",
-  component: () => import("../../view/organizations/OrganizationSettingsView.vue"),
-  beforeEnter: (to: RouteLocationNormalizedGeneric) => {
-    const layoutStore = useLayoutStore();
-    layoutStore.breadcrumbs = [
-      {
-        name: localizedBreadcrumb("organizations.settings.title"),
-        route: ORGANIZATION_SETTINGS,
-        params: to.params,
-      },
-    ];
-  },
-};
-
 export const ORGANIZATION_PARENT: RouteRecordRaw = {
   path: ":organizationId",
   children: [
     ORGANIZATION,
     ORGANIZATION_MEMBERS,
-    ORGANIZATION_SETTINGS,
     ORGANIZATION_TEMPLATES_PARENT,
     ORGANIZATION_PASSPORTS_PARENT,
     ORGANIZATION_INTEGRATIONS_PARENT,
