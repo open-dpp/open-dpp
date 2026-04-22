@@ -1,5 +1,17 @@
 # @open-dpp/client
 
+## 0.3.0
+
+### Minor Changes
+
+- [#530](https://github.com/open-dpp/open-dpp/pull/530) [`d0959ed`](https://github.com/open-dpp/open-dpp/commit/d0959edc7a592bc46b83acfd397a011ae7412d08) Thanks [@mr42](https://github.com/mr42)! - Fix product image gallery in the presentation view such that all images regardless of their size fit the view.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.3.0
+  - @open-dpp/dto@0.3.0
+
 ## 0.2.2
 
 ### Patch Changes
@@ -27,6 +39,7 @@
 - [#503](https://github.com/open-dpp/open-dpp/pull/503) [`40c772c`](https://github.com/open-dpp/open-dpp/commit/40c772c5015aff47c0e91c443860ae25941bd44f) Thanks [@mr42](https://github.com/mr42)! - Templates and passports have a status (Draft, Published, Archived) now.
 
   The following operations are possible:
+
   - publish (Draft -> Published)
   - archive (Draft -> Archived or Published -> Archived)
   - restore (Archived -> Published or Archived -> Draft)
