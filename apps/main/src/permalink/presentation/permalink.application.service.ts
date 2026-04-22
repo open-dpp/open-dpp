@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { PermalinkMetadataDtoSchema } from "@open-dpp/dto";
+import { PermalinkMetadataDtoSchema, PresentationReferenceType } from "@open-dpp/dto";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../database/query-options";
 import { Passport } from "../../passports/domain/passport";
@@ -33,7 +33,7 @@ export class PermalinkApplicationService {
     const presentationConfiguration = await this.presentationConfigurationRepository.findOneOrFail(
       permalink.presentationConfigurationId,
     );
-    if (presentationConfiguration.referenceType !== "passport") {
+    if (presentationConfiguration.referenceType !== PresentationReferenceType.Passport) {
       throw new NotFoundException(`Permalink ${permalink.id} does not target a passport`);
     }
     const passport = await this.passportRepository.findOneOrFail(
@@ -57,7 +57,7 @@ export class PermalinkApplicationService {
   ): Promise<Permalink> {
     const config = await this.presentationConfigurationRepository.findOrCreateByReference(
       {
-        referenceType: "passport",
+        referenceType: PresentationReferenceType.Passport,
         referenceId: passport.id,
         organizationId: passport.organizationId,
       },

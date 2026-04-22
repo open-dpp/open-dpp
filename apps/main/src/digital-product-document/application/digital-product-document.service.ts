@@ -1,4 +1,5 @@
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
+import { ForbiddenException } from "@nestjs/common";
+import { ValueError } from "@open-dpp/exception";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
@@ -377,7 +378,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
 
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {
     if (item.isArchived()) {
-      throw new BadRequestException("Archived passport/ template cannot be modified");
+      throw new ValueError("Cannot modify an archived digital product document");
     }
   }
 

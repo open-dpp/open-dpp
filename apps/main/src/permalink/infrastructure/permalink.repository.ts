@@ -1,14 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { PresentationReferenceType } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
+import { isDuplicateKeyError } from "../../lib/mongo-errors";
 import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { PresentationConfigurationDoc } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { Permalink } from "../domain/permalink";
 import { PermalinkDoc, PermalinkDocVersion } from "./permalink.schema";
-
-const MONGO_DUPLICATE_KEY_ERROR_CODE = 11000;
 
 @Injectable()
 export class PermalinkRepository {
@@ -98,7 +98,7 @@ export class PermalinkRepository {
         },
         {
           $match: {
-            "config.referenceType": "passport",
+            "config.referenceType": PresentationReferenceType.Passport,
             "config.referenceId": passportId,
           },
         },
@@ -157,22 +157,4 @@ export class PermalinkRepository {
       throw error;
     }
   }
-}
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return extractMongoErrorCode(error) === MONGO_DUPLICATE_KEY_ERROR_CODE;
-}
-
-function extractMongoErrorCode(error: unknown): number | undefined {
-  if (typeof error !== "object" || error === null) return undefined;
-  const asRecord = error as {
-    code?: unknown;
-    cause?: { code?: unknown };
-    writeErrors?: ReadonlyArray<{ code?: unknown }>;
-  };
-  if (typeof asRecord.code === "number") return asRecord.code;
-  if (typeof asRecord.cause?.code === "number") return asRecord.cause.code;
-  const writeErrorCode = asRecord.writeErrors?.[0]?.code;
-  if (typeof writeErrorCode === "number") return writeErrorCode;
-  return undefined;
 }

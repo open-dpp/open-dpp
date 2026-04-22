@@ -1,16 +1,19 @@
+import {
+  DigitalProductDocumentStatusChangeDtoSchema,
+  DigitalProductDocumentStatusDto,
+  DigitalProductDocumentStatusDtoEnum,
+  DigitalProductDocumentStatusDtoType,
+  DigitalProductDocumentStatusModificationDto,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { z } from "zod";
-import { BadRequestException } from "@nestjs/common";
-import { DigitalProductDocumentStatusModificationDto } from "@open-dpp/dto";
 
-export const DigitalProductDocumentStatus = {
-  Draft: "Draft",
-  Published: "Published",
-  Archived: "Archived",
-} as const;
-
-export const DigitalProductDocumentStatusEnum = z.enum(DigitalProductDocumentStatus);
-export type DigitalProductDocumentStatusType = z.infer<typeof DigitalProductDocumentStatusEnum>;
+// Re-exported from the DTO package to keep a single source of truth. Domain
+// callers used to import these names from this module; the aliases below
+// preserve those imports while the underlying values live in @open-dpp/dto.
+export const DigitalProductDocumentStatus = DigitalProductDocumentStatusDto;
+export const DigitalProductDocumentStatusEnum = DigitalProductDocumentStatusDtoEnum;
+export type DigitalProductDocumentStatusType = DigitalProductDocumentStatusDtoType;
+export const DigitalProductDocumentStatusChangeSchema = DigitalProductDocumentStatusChangeDtoSchema;
 
 export interface IDigitalProductDocumentStatusChangeable {
   publish: () => void;
@@ -20,11 +23,6 @@ export interface IDigitalProductDocumentStatusChangeable {
   isPublished: () => boolean;
   isArchived: () => boolean;
 }
-
-export const DigitalProductDocumentStatusChangeSchema = z.object({
-  previousStatus: DigitalProductDocumentStatusEnum.nullish(),
-  currentStatus: DigitalProductDocumentStatusEnum,
-});
 
 export function publishDpp(lastStatusChange: DigitalProductDocumentStatusChange) {
   if (lastStatusChange.currentStatus !== DigitalProductDocumentStatus.Draft) {
@@ -66,14 +64,20 @@ export function handleDppStatusChangeRequest(
   changeable: IDigitalProductDocumentStatusChangeable,
   body: DigitalProductDocumentStatusModificationDto,
 ) {
-  if (body.method === "Publish") {
-    changeable.publish();
-  } else if (body.method === "Archive") {
-    changeable.archive();
-  } else if (body.method === "Restore") {
-    changeable.restore();
-  } else {
-    throw new BadRequestException("Invalid method");
+  switch (body.method) {
+    case "Publish":
+      changeable.publish();
+      return;
+    case "Archive":
+      changeable.archive();
+      return;
+    case "Restore":
+      changeable.restore();
+      return;
+    default: {
+      const exhaustiveCheck: never = body.method;
+      throw new ValueError(`Invalid status modification method: ${String(exhaustiveCheck)}`);
+    }
   }
 }
 

@@ -44,11 +44,17 @@ describe("Permalink", () => {
     ["UPPER"],
     ["-leading-dash"],
     ["trailing-dash-"],
-    ["a"], // too short
+    ["a"],
     ["contains_underscore"],
     ["has space"],
     ["café"],
-    ["a".repeat(65)], // too long
+    ["a".repeat(65)],
+    [" leading-space"],
+    ["trailing-space "],
+    ["123"],
+    ["new"],
+    ["edit"],
+    ["bidi\u202etext"],
   ])("rejects invalid slug %p with ValueError", (bad) => {
     expect(() => Permalink.create({ ...baseInput(), slug: bad })).toThrow(ValueError);
   });

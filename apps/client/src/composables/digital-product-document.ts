@@ -1,7 +1,9 @@
 import {
+  type DigitalProductDocumentDto,
   type DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentStatusModificationMethodDto,
 } from "@open-dpp/dto";
+import { isAxiosError } from "axios";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useI18n } from "vue-i18n";
@@ -12,6 +14,13 @@ import {
   type DigitalProductDocumentTypeType,
 } from "../lib/digital-product-document.ts";
 import apiClient from "../lib/api-client.ts";
+
+export type FetchResult<T> =
+  | { status: "ok"; data: T }
+  | { status: "not-found" }
+  | { status: "error"; error: unknown };
+
+const HTTP_NOT_FOUND = 404;
 
 export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) {
   const digitalProductDocNamespace =
@@ -34,18 +43,21 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     }
   }
 
-  async function fetchById(id: string) {
+  async function fetchById(id: string): Promise<FetchResult<DigitalProductDocumentDto>> {
     const errorMessage = t(`${prefix}.errorFetch`);
     try {
       const response = await digitalProductDocNamespace.getById(id);
       if (response.status === HTTPCode.OK) {
-        return response.data;
-      } else {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
+        return { status: "ok", data: response.data };
       }
+      errorHandlingStore.logErrorWithNotification(errorMessage);
+      return { status: "error", error: new Error(`Unexpected status ${response.status}`) };
     } catch (e) {
+      if (isAxiosError(e) && e.response?.status === HTTP_NOT_FOUND) {
+        return { status: "not-found" };
+      }
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
-      return undefined;
+      return { status: "error", error: e };
     }
   }
 

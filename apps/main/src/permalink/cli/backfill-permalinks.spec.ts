@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { Environment } from "../../aas/domain/environment";
@@ -82,7 +83,7 @@ describe("runBackfill", () => {
     expect(result.failed).toBe(0);
     for (const passport of passports) {
       const config = await presentationConfigurationRepository.findByReference({
-        referenceType: "passport",
+        referenceType: PresentationReferenceType.Passport,
         referenceId: passport.id,
       });
       expect(config).toBeDefined();

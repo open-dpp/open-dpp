@@ -109,19 +109,19 @@ export class PassportService {
         await this.passportRepository.deleteById(passport.id, { session });
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
 
-        const config = await this.presentationConfigurationRepository.findByReference(
-          { referenceType: PresentationReferenceType.Passport, referenceId: passport.id },
-          { session },
-        );
-        if (config) {
-          await this.permalinkRepository.deleteByPresentationConfigurationId(config.id, {
-            session,
-          });
-          await this.presentationConfigurationRepository.deleteByReference(
-            { referenceType: PresentationReferenceType.Passport, referenceId: passport.id },
+        // Drop the permalink by joining through the passport reference so a
+        // previously-orphaned permalink (config missing) still gets cleaned up.
+        const permalink = await this.permalinkRepository.findByPassportId(passport.id, { session });
+        if (permalink) {
+          await this.permalinkRepository.deleteByPresentationConfigurationId(
+            permalink.presentationConfigurationId,
             { session },
           );
         }
+        await this.presentationConfigurationRepository.deleteByReference(
+          { referenceType: PresentationReferenceType.Passport, referenceId: passport.id },
+          { session },
+        );
       });
     } finally {
       await session.endSession();

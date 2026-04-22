@@ -62,7 +62,6 @@ describe("PresentationConfigurationService", () => {
         referenceId: template.id,
         organizationId: template.organizationId,
       });
-      // Swap sentinel: must NOT pass the Passport enum value.
       expect(mockRepository.findOrCreateByReference).not.toHaveBeenCalledWith(
         expect.objectContaining({ referenceType: PresentationReferenceType.Passport }),
       );
@@ -92,7 +91,6 @@ describe("PresentationConfigurationService", () => {
         referenceId: passport.id,
         organizationId: passport.organizationId,
       });
-      // Swap sentinel: must NOT pass the Template enum value.
       expect(mockRepository.findOrCreateByReference).not.toHaveBeenCalledWith(
         expect.objectContaining({ referenceType: PresentationReferenceType.Template }),
       );
@@ -275,9 +273,6 @@ describe("PresentationConfigurationService", () => {
       expect(result).toBe(passportConfig);
     });
 
-    // TODO: extend this into a true "passport wins on conflict" test once a
-    // second PresentationComponentName exists. With only BigNumber today the
-    // conflict case is not expressible at the type level.
     it("template defaults bleed through when the passport has none", async () => {
       const organizationId = randomUUID();
       const templateId = randomUUID();
@@ -340,8 +335,8 @@ describe("PresentationConfigurationService", () => {
         elementDesign: { "sm.p": PresentationComponentName.BigNumber },
       });
       mockRepository.findByReference
-        .mockResolvedValueOnce(undefined) // passport config lookup — not present
-        .mockResolvedValueOnce(templateConfig); // template config lookup
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(templateConfig);
 
       const result = await service.getEffectiveForPassportReadOnly(passport);
 

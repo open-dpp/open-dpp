@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { KeyTypes, PresentationComponentName } from "@open-dpp/dto";
+import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import type { PresentationConfigurationDto } from "@open-dpp/dto";
 import { resolveComponent } from "./presentation-config";
 
@@ -8,13 +8,13 @@ function config(partial: Partial<PresentationConfigurationDto> = {}): Presentati
     id: "00000000-0000-4000-8000-000000000000",
     organizationId: "org-1",
     referenceId: "00000000-0000-4000-8000-000000000001",
-    referenceType: "template",
+    referenceType: PresentationReferenceType.Template,
     elementDesign: {},
     defaultComponents: {},
     createdAt: new Date(),
     updatedAt: new Date(),
     ...partial,
-  } as PresentationConfigurationDto;
+  };
 }
 
 describe("resolveComponent", () => {

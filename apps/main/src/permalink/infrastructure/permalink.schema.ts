@@ -35,6 +35,9 @@ export class PermalinkDoc extends Document<string> {
 export const PermalinkSchema = SchemaFactory.createForClass(PermalinkDoc);
 
 PermalinkSchema.index({ presentationConfigurationId: 1 }, { unique: true });
+// Partial unique index: enforces uniqueness only on documents whose `slug` is
+// a string. Rows with `slug: null` are excluded, so multiple permalinks may
+// exist without a slug set — uniqueness applies once a slug is assigned.
 PermalinkSchema.index(
   { slug: 1 },
   {

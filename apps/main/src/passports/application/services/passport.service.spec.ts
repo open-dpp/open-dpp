@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { ForbiddenException } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
@@ -6,6 +7,11 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../../aas/aas.module";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../../digital-product-document/domain/digital-product-document-status";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
@@ -139,6 +145,64 @@ describe("passportService", () => {
         defaultComponents: {},
       },
     });
+  });
+
+  it("deletePassport rejects non-draft passports", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+
+    const published = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
+    });
+    await passportRepository.save(published);
+
+    await expect(service.deletePassport(published.id, organizationId, subject)).rejects.toThrow(
+      ForbiddenException,
+    );
+
+    const archived = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      }),
+    });
+    await passportRepository.save(archived);
+
+    await expect(service.deletePassport(archived.id, organizationId, subject)).rejects.toThrow(
+      ForbiddenException,
+    );
+
+    expect(await passportRepository.findOne(published.id)).toBeDefined();
+    expect(await passportRepository.findOne(archived.id)).toBeDefined();
+  });
+
+  it("deletePassport allows deletion when status is Draft", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const draft = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(draft);
+
+    await expect(
+      service.deletePassport(draft.id, organizationId, subject),
+    ).resolves.toBeUndefined();
+
+    expect(await passportRepository.findOne(draft.id)).toBeUndefined();
   });
 
   it("reuses the same PresentationConfiguration on subsequent expansions", async () => {

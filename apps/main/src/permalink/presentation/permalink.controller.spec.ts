@@ -124,23 +124,20 @@ describe("PermalinkController", () => {
     expect(response.body.id).toEqual(fixture.passport.id);
   });
 
-  it(`/GET returns error status for unknown permalink id`, async () => {
+  it(`/GET returns 404 for unknown permalink id`, async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
       `/p/${randomUUID()}/passport`,
     );
 
-    // Without the NotFoundInDatabaseExceptionFilter wired up in the test app,
-    // findOneOrFail surfaces as 500. In production main.ts registers the filter
-    // globally, yielding 404. Either is acceptable for "no such permalink".
-    expect([404, 500]).toContain(response.status);
+    expect(response.status).toEqual(404);
   });
 
-  it(`/GET returns error status for unknown slug`, async () => {
+  it(`/GET returns 404 for unknown slug`, async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
       `/p/nonexistent-slug/passport`,
     );
 
-    expect([404, 500]).toContain(response.status);
+    expect(response.status).toEqual(404);
   });
 
   it(`/GET permalink by passport id`, async () => {

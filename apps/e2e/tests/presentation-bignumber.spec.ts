@@ -3,15 +3,7 @@ import { v4 as uuid4 } from "uuid";
 import { EnvConfig } from "./config";
 
 /**
- * E2E coverage for issue open-dpp/open-dpp#494 — "Add Presentation Component
- * with example BigNumber". Exercises the full round-trip:
- *   1. Create a template with a Submodel and a numeric Property.
- *   2. Open the Presentation tab on the template's AAS Editor.
- *   3. Assign the BigNumber component to the numeric Property.
- *   4. Verify the patch persists (reload and re-check the select value).
- *   5. Create a passport from the template.
- *   6. Open the public passport viewer via its unique product identifier.
- *   7. Assert the BigNumber renders the Property's value.
+ * Full BigNumber round-trip: template → assign component → passport → public viewer.
  *
  * Prerequisites:
  *   - Docker test services running: `make test`
@@ -29,7 +21,6 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   page,
   context,
 }) => {
-  // 1. Create template from the templates list.
   await page.goto(`${EnvConfig.OPEN_DPP_URL}`);
   await page.getByRole("link", { name: "Passvorlagen", exact: true }).click();
   await page.getByRole("button", { name: "Hinzufügen" }).click();
@@ -37,8 +28,7 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   await page.getByRole("button", { name: "Erstellen" }).click();
   await page.getByRole("cell", { name: TEMPLATE_NAME }).click();
 
-  // 2. Add a Submodel, then a numeric Property inside it. Backend rejects
-  //    unknown idShorts, so we set them explicitly.
+  // Backend rejects unknown idShorts, so we set them explicitly.
   await page.getByRole("button", { name: /Submodel hinzufügen|Add Submodel/i }).click();
   await page
     .getByRole("textbox", { name: /idShort|id ?short|Kurz-ID/i })
@@ -60,13 +50,11 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
     .fill(PROPERTY_VALUE);
   await page.getByRole("button", { name: /Speichern|Save/i }).click();
 
-  // 3. Switch to the Presentation tab and assign BigNumber to the property.
   await page.getByRole("button", { name: /Darstellung|Presentation/i }).click();
   const select = page.locator(`[data-cy="presentation-select-${PROPERTY_PATH}"]`);
   await expect(select).toBeVisible();
   await select.selectOption("BigNumber");
 
-  // 4. Verify persistence by reloading and confirming the select still reads "BigNumber".
   await expect
     .poll(
       async () => {
@@ -78,7 +66,6 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
     )
     .toBe("BigNumber");
 
-  // 5. Create a passport from the template.
   await page.getByRole("link", { name: /Pässe|Passports/i, exact: true }).click();
   await page.getByRole("button", { name: "Hinzufügen" }).click();
   await page.getByRole("textbox", { name: "Name" }).fill(PASSPORT_NAME);
@@ -93,21 +80,19 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   }
   await page.getByRole("button", { name: /Erstellen|Create/i }).click();
 
-  // 6. Open the public viewer for the new passport via its UPI permalink.
   await page.getByRole("cell", { name: PASSPORT_NAME }).click();
   const uuidMatch = page.url().match(/\/passports\/([a-f0-9-]{36})/i);
   expect(uuidMatch, "passport uuid should appear in the editor URL").not.toBeNull();
   const passportId = uuidMatch![1];
 
-  // Request a unique product identifier for this passport (API exposes it at
-  // /passports/:id/unique-product-identifier behind auth).
+  // Authenticated `page.request` is required — the UPI endpoint is not public.
   const upiResponse = await page.request.get(
     `${EnvConfig.OPEN_DPP_URL}/api/passports/${passportId}/unique-product-identifier`,
   );
   expect(upiResponse.status(), "should be able to read a UPI for the passport").toBe(200);
   const { uuid: upiUuid } = (await upiResponse.json()) as { uuid: string };
 
-  // 7. Open the public viewer in a fresh (unauthenticated) context and confirm BigNumber rendered.
+  // Use a fresh unauthenticated context to confirm the public viewer works for anonymous users.
   const anonymous = await context.browser()!.newContext();
   const viewerPage = await anonymous.newPage();
   await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/view/${upiUuid}`);
@@ -117,9 +102,8 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   await anonymous.close();
 });
 
-// Nested-property coverage for the follow-up that lifted the top-level-only
-// restriction. Walks through the same flow but places the numeric Property
-// inside a SubmodelElementCollection, and verifies the viewer resolves the
+// Nested-property coverage: places the numeric Property inside a
+// SubmodelElementCollection and verifies the viewer resolves the
 // fully-qualified path across the SEC navigation step.
 const NESTED_TEMPLATE_NAME = `BigNumber-NestedTemplate-${uuid4().slice(0, 8)}`;
 const NESTED_PASSPORT_NAME = `BigNumber-NestedPassport-${uuid4().slice(0, 8)}`;

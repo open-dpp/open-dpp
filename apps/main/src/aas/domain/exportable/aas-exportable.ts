@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { PresentationReferenceType } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
@@ -55,6 +57,7 @@ export class AasExportable {
     expandedEnvironment: ExpandedEnvironment,
     presentationConfiguration: PresentationConfiguration | null = null,
   ) {
+    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Passport);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -72,6 +75,7 @@ export class AasExportable {
     expandedEnvironment: ExpandedEnvironment,
     presentationConfiguration: PresentationConfiguration | null = null,
   ) {
+    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Template);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -111,5 +115,16 @@ export class AasExportable {
           }
         : {}),
     };
+  }
+}
+
+function assertConfigMatches(
+  config: PresentationConfiguration | null,
+  expected: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+): void {
+  if (config && config.referenceType !== expected) {
+    throw new ValueError(
+      `PresentationConfiguration referenceType ${config.referenceType} does not match expected ${expected}`,
+    );
   }
 }
