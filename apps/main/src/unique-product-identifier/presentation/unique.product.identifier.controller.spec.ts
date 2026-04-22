@@ -14,14 +14,15 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
+import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
+import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
 
 describe("uniqueProductIdentifierController", () => {
   const basePath = "/unique-product-identifiers";
@@ -30,10 +31,9 @@ describe("uniqueProductIdentifierController", () => {
     {
       imports: [UniqueProductIdentifierModule],
       providers: [
-        UniqueProductIdentifierService,
+        UniqueProductIdentifierRepository,
         PassportRepository,
         BrandingRepository,
-        UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
       ],
       controllers: [UniqueProductIdentifierController],
@@ -44,12 +44,16 @@ describe("uniqueProductIdentifierController", () => {
         schema: PassportSchema,
       },
       {
+        name: BrandingDoc.name,
+        schema: BrandingSchema,
+      },
+      {
         name: UniqueProductIdentifierDoc.name,
         schema: UniqueProductIdentifierSchema,
       },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
-    UniqueProductIdentifierService,
+    UniqueProductIdentifierRepository,
     SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
   );
 

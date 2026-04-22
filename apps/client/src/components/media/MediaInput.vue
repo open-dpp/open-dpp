@@ -15,7 +15,7 @@ const openFileModal = ref(false);
 
 const { download, mediaInfo } = useMediaFile();
 
-const model = defineModel<string>();
+const model = defineModel<string | null>();
 const { t } = useI18n();
 
 function updateFileFromModal(files: MediaInfo[]) {
@@ -65,7 +65,7 @@ watch(
           <button
             v-if="model"
             class="shrink rounded-sm bg-red-200 p-2 hover:cursor-pointer"
-            @click.prevent="model = undefined"
+            @click.prevent="model = null"
           >
             <TrashIcon class="h-4 w-4" />
           </button>

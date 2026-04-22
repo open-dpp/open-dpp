@@ -1,6 +1,7 @@
 import type {
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
+  DigitalProductDocumentStatusModificationDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -10,20 +11,24 @@ import type {
   SubmodelModificationDto,
   SubmodelRequestDto,
   ValueRequestDto,
+  DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
-import type express from "express";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
-import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 
+import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
+  Put,
 } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -31,6 +36,7 @@ import {
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
+  DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -43,7 +49,6 @@ import { match, P } from "ts-pattern";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
@@ -76,9 +81,7 @@ import {
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
-  PopulateQueryParam,
   PositionQueryParam,
-  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -94,7 +97,6 @@ import {
   IAasReadEndpointsWithOrganizationId,
 } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
-import { DbSessionOptions } from "../../database/query-options";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
@@ -102,10 +104,14 @@ import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
+import {
+  PopulateQueryParam,
+  StatusQueryParam,
+} from "../../digital-product-document/presentation/digital-product-document-decorators";
 
 @Controller("/passports")
 export class PassportController
@@ -119,7 +125,7 @@ export class PassportController
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
   ) {}
@@ -129,6 +135,7 @@ export class PassportController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
+    @StatusQueryParam() status: DigitalProductDocumentStatusDtoType[] | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
@@ -137,9 +144,9 @@ export class PassportController
     const pagination = Pagination.create({ limit, cursor });
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(
       organizationId,
-      pagination,
+      { pagination, ...(status ? { filter: { status } } : {}) },
     );
-    if (populate.includes(Populates.assetAdministrationShells)) {
+    if (populate.includes(Populates.assetAdministrationShells) && pagingResult.items.length > 0) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
@@ -150,12 +157,20 @@ export class PassportController
     return PassportPaginationDtoSchema.parse(pagingResult.toPlain());
   }
 
-  @Get(":passportId")
+  @Get(":id")
   async getPassport(
-    @RequestParam() req: express.Request,
-    @Param("passportId") id: string,
+    @OrganizationId() organizationId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Param("id") id: string,
   ): Promise<PassportDto> {
-    return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        SubjectAttributes.create({ userRole, memberRole }),
+        organizationId,
+      );
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   @Get(":id/unique-product-identifier")
@@ -166,12 +181,42 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<{ uuid: string }> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
     const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(id);
     if (!upi) {
       throw new NotFoundException(`No UniqueProductIdentifier found for passport ${id}`);
     }
     return { uuid: upi.uuid };
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePassport(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<void> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    await this.passportService.deletePassport(id, organizationId, subject);
+  }
+
+  // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
+  @Put(":id/status")
+  async modifyPassportStatus(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Body(new ZodValidationPipe(DigitalProductDocumentStatusModificationDtoSchema))
+    body: DigitalProductDocumentStatusModificationDto,
+  ): Promise<PassportDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return this.passportService.modifyPassportStatus(id, organizationId, subject, body);
   }
 
   @Post()
@@ -195,6 +240,11 @@ export class PassportController
           subject,
           organizationId,
         );
+        if (template.isArchived()) {
+          throw new BadRequestException(
+            `Template ${templateId} is archived and cannot be used to create a passport`,
+          );
+        }
         return {
           environment: await this.environmentService.copyEnvironment(template.environment),
           templateId,
@@ -238,7 +288,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(
       passport.getEnvironment(),
@@ -258,9 +313,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyAasShell(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.modifyShell(
+      organizationId,
+      id,
       aasId,
       body,
       subject,
@@ -277,7 +332,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(
       passport.getEnvironment(),
@@ -295,11 +355,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelToEnvironment(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.createSubmodel(
+      organizationId,
+      id,
       body,
-      this.saveEnvironmentCallback(passport),
+      subject,
     );
   }
 
@@ -312,13 +372,10 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const administrator = SubjectAttributes.create({ userRole, memberRole });
-    const subject = SubjectAttributes.fromPlain(body.subject);
-    const object = IdShortPath.create({ path: body.object });
-    const passport = await this.loadPassportAndCheckOwnership(id, administrator, organizationId);
-    await this.environmentService.deletePolicyBySubjectAndObject(
-      passport.getEnvironment(),
-      object,
-      subject,
+    await this.passportService.digitalProductDocumentService.deletePolicyBySubjectAndObject(
+      organizationId,
+      id,
+      body,
       administrator,
     );
   }
@@ -332,11 +389,10 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelFromEnvironment(
-      passport.getEnvironment(),
+    await this.passportService.digitalProductDocumentService.deleteSubmodel(
+      organizationId,
+      id,
       submodelId,
-      this.saveEnvironmentCallback(passport),
       subject,
     );
   }
@@ -351,9 +407,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifySubmodel(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.modifySubmodel(
+      organizationId,
+      id,
       submodelId,
       body,
       subject,
@@ -369,7 +425,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelById(
       passport.getEnvironment(),
       submodelId,
@@ -386,7 +447,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelValue(
       passport.getEnvironment(),
       submodelId,
@@ -406,15 +472,14 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
-      column,
-      subject,
+      body,
       position,
+      subject,
     );
   }
 
@@ -430,9 +495,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyColumn(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
       idShortOfColumn,
@@ -452,9 +517,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteColumn(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
       idShortOfColumn,
@@ -473,13 +538,13 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addRow(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.addRowToSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
-      subject,
       position,
+      subject,
     );
   }
 
@@ -494,9 +559,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteRow(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
       idShortOfRow,
@@ -514,9 +579,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.createSubmodelElement(
+      organizationId,
+      id,
       submodelId,
       body,
       subject,
@@ -533,9 +598,9 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelElement(
-      passport.getEnvironment(),
+    await this.passportService.digitalProductDocumentService.deleteSubmodelElement(
+      organizationId,
+      id,
       submodelId,
       idShortPath,
       subject,
@@ -553,12 +618,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifySubmodelElement(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.modifySubmodelElement(
+      organizationId,
+      id,
       submodelId,
-      body,
       idShortPath,
+      body,
       subject,
     );
   }
@@ -574,12 +639,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyValueOfSubmodelElement(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.modifySubmodelElementValue(
+      organizationId,
+      id,
       submodelId,
-      body,
       idShortPath,
+      body,
       subject,
     );
   }
@@ -595,7 +660,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(
       passport.getEnvironment(),
@@ -615,7 +685,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelElementById(
       passport.getEnvironment(),
       submodelId,
@@ -635,13 +710,13 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(
-      passport.getEnvironment(),
+    return await this.passportService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
+      organizationId,
+      id,
       submodelId,
+      idShortPath,
       body,
       subject,
-      idShortPath,
     );
   }
 
@@ -655,7 +730,12 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.environmentService.getSubmodelElementValue(
       passport.getEnvironment(),
       submodelId,
@@ -672,7 +752,12 @@ export class PassportController
     @OrganizationId() organizationId: string,
   ): Promise<any> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
     return await this.aasSerializationService.exportPassport(passport, subject);
   }
 
@@ -693,18 +778,6 @@ export class PassportController
     return PassportDtoSchema.parse(passport.toPlain());
   }
 
-  private async loadPassportAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Passport> {
-    const passport = await this.passportRepository.findOneOrFail(id);
-    if (passport.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return passport;
-  }
-
   private async loadTemplateAndCheckOwnership(
     id: string,
     subject: SubjectAttributes,
@@ -715,11 +788,5 @@ export class PassportController
       throw new ForbiddenException();
     }
     return template;
-  }
-
-  private saveEnvironmentCallback(passport: Passport) {
-    return async (options: DbSessionOptions) => {
-      await this.passportRepository.save(passport, options);
-    };
   }
 }

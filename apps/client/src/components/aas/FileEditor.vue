@@ -26,7 +26,7 @@ const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
 });
 const disableEdit = computed(() => {
-  return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+  return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
 const permissionsFormRef = ref<{

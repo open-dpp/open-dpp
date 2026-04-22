@@ -12,6 +12,7 @@ permissions:
   contents: write
   pull-requests: write
   actions: write
+  id-token: write
 
 env:
   NODE_VERSION: 24
@@ -45,7 +46,6 @@ jobs:
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Push a repo-wide `v<version>` git tag so the release is reachable by
       # tag name in git. Every `@open-dpp/*` package is in the `fixed` group

@@ -1,35 +1,32 @@
 <script lang="ts" setup>
-import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/16/solid";
 import { toCanvas } from "qrcode";
-import { onMounted, ref } from "vue";
-import { useI18n } from "vue-i18n";
+import { onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
-  content: string;
   link: string;
+  size: number;
 }>();
-const { t } = useI18n();
 const canvas = ref<HTMLCanvasElement>();
+watch(
+  [() => props.link, () => props.size],
+  async ([newLink, newSize]) => {
+    await generateQRCode(newLink, newSize);
+  },
+  { immediate: false },
+);
+
+async function generateQRCode(newLink: string, newSize: number) {
+  if (!canvas.value) return;
+  canvas.value.width = newSize;
+  canvas.value.height = newSize;
+  await toCanvas(canvas.value, newLink, { width: newSize, margin: 1 });
+}
+
 onMounted(async () => {
-  toCanvas(canvas.value, props.content, () => {});
+  await generateQRCode(props.link, props.size);
 });
 </script>
 
 <template>
-  <section class="pt-5">
-    <div class="max-w-xl divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm">
-      <div class="px-4 py-5 sm:px-6">
-        {{ t("common.presentationMode") }}
-      </div>
-      <div class="px-4 py-5 sm:p-6">
-        <canvas ref="canvas" class="mx-auto h-12 w-12 text-gray-400" />
-      </div>
-      <div class="flex flex-row gap-1 px-4 py-4 text-blue-600 sm:px-6">
-        <router-link :to="props.link" class="mt-2 text-sm font-semibold">
-          {{ props.link }}
-        </router-link>
-        <ArrowTopRightOnSquareIcon class="mt-auto w-5" />
-      </div>
-    </div>
-  </section>
+  <canvas ref="canvas" class="block w-full text-gray-400" :aria-label="link" />
 </template>

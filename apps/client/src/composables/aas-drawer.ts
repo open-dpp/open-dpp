@@ -10,7 +10,7 @@ import type {
   SubmodelElementResponseDto,
   SubmodelResponseDto,
 } from "@open-dpp/dto";
-import type { Component, ComputedRef, Ref } from "vue";
+import { type Component, type ComputedRef, type MaybeRefOrGetter, type Ref, toValue } from "vue";
 import {
   KeyTypes as AasKeyTypes,
   AasSubmodelElements,
@@ -137,6 +137,7 @@ export type OpenDrawerCallback<K extends EditorType, M extends EditorModeType> =
 }) => void;
 interface AasDrawerProps {
   onHideDrawer: () => void;
+  isArchived?: MaybeRefOrGetter<boolean>;
   can: (action: PermissionType, object: string) => boolean;
 }
 
@@ -154,7 +155,7 @@ export interface IAasDrawer {
   saveButtonIsVisible: Ref<boolean>;
 }
 
-export function useAasDrawer({ onHideDrawer, can }: AasDrawerProps): IAasDrawer {
+export function useAasDrawer({ onHideDrawer, can, isArchived }: AasDrawerProps): IAasDrawer {
   const drawerHeader = ref<string>("");
   const drawerVisible = ref(false);
   const activeEditor = ref<EditorType | null>(null);
@@ -180,7 +181,9 @@ export function useAasDrawer({ onHideDrawer, can }: AasDrawerProps): IAasDrawer 
     drawerHeader.value = title;
     drawerVisible.value = true;
 
-    if (
+    if (toValue(isArchived)) {
+      saveButtonIsVisible.value = false;
+    } else if (
       activeEditor.value === AasKeyTypes.AssetAdministrationShell ||
       activeEditor.value === ColumnEditorKey
     ) {

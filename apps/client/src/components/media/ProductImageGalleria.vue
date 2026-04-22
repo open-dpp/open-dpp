@@ -5,13 +5,13 @@ import Image from "primevue/image";
 import { computed } from "vue";
 import emptyState from "../../assets/empty-state.png";
 
-const props = defineProps<{ autoPlay?: boolean; size?: number }>();
+const props = defineProps<{ autoPlay?: boolean; size?: number; withBorder?: boolean }>();
 const model = defineModel<MediaFileCollectionItem[]>();
 
 const productImagesExist = computed<boolean>(
   () => model.value !== undefined && model.value.length > 0,
 );
-const size = 340;
+const size = props.size ?? 340;
 </script>
 
 <template>
@@ -25,7 +25,7 @@ const size = 340;
     :transition-interval="2000"
     :circular="productImagesExist"
     class="w-full"
-    :container-style="`max-width: 100%; height: ${size + 60}px; border: none !important;`"
+    :container-style="`max-width: 100%; height: ${size + 60}px; ${withBorder ? 'padding: 5px;' : 'border: none !important;'}`"
     :show-item-navigators-on-hover="productImagesExist"
     :show-indicators="productImagesExist"
   >
@@ -36,7 +36,7 @@ const size = 340;
           alt="Image"
           :pt="{
             image: {
-              style: `max-height: ${size}px; max-width:100%; object-fit; contain;`,
+              style: `max-height: ${size}px; max-width: 100%; object-fit: contain;`,
             },
           }"
         />

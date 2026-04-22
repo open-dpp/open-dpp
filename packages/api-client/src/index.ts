@@ -33,6 +33,7 @@ export type {
   UpdateAasConnectionDto,
 } from "./dpp/integrations/aas-integration.dtos";
 export { AasIntegrationNamespace } from "./dpp/integrations/aas-integration.namespace";
+export * from "./dpp/digital-product-document/digital-product-document.namespace";
 
 export type { MemberDto } from "./dpp/organizations/member.dtos";
 export type { OrganizationCreateDto, OrganizationDto } from "./dpp/organizations/organization.dtos";

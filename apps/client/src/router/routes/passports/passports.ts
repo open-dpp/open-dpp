@@ -32,24 +32,6 @@ export const PASSPORT: RouteRecordRaw = {
   },
 };
 
-export const PASSPORT_QRCODE: RouteRecordRaw = {
-  path: "qr-code",
-  name: "passportQrCode",
-  component: () => import("../../../view/passports/PassportQrCodeView.vue"),
-  beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
-    const layoutStore = useLayoutStore();
-    layoutStore.breadcrumbs = await passportBreadcrumbs(to);
-    layoutStore.breadcrumbs = [
-      ...(await passportBreadcrumbs(to)),
-      {
-        name: localizedBreadcrumb("common.qrCode"),
-        route: PASSPORT_QRCODE,
-        params: to.params,
-      },
-    ];
-  },
-};
-
 export async function passportBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   const text = to.params.passportId ? String(to.params.passportId) : "Editor";
   return [
@@ -67,7 +49,7 @@ export async function passportBreadcrumbs(to: RouteLocationNormalizedGeneric) {
 
 const PASSPORT_PARENT: RouteRecordRaw = {
   path: ":passportId",
-  children: [PASSPORT, PASSPORT_QRCODE],
+  children: [PASSPORT],
 };
 
 export const ORGANIZATION_PASSPORTS_PARENT: RouteRecordRaw = {

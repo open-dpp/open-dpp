@@ -40,11 +40,14 @@ import {
   IdParamSchema,
   IdShortPathParamSchema,
   LimitQueryParamSchema,
-  PopulateQueryParamSchema,
   PositionQueryParamSchema,
   RowParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
+import {
+  PopulateQueryParamSchema,
+  StatusQueryParamSchema,
+} from "../digital-product-document/presentation/digital-product-document-decorators";
 
 const HTTPCode = {
   OK: 200,
@@ -449,6 +452,7 @@ function createTemplatePaths() {
           LimitQueryParamSchema,
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
+          StatusQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -488,6 +492,31 @@ function createTemplatePaths() {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}/{id}`]: {
+      delete: {
+        tags: [tag],
+        summary: `Delete template by specified id. Only templates with the status "draft" can be deleted.`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
+        },
+      },
+    },
+    [`/${tag}/{id}/status`]: {
+      put: {
+        tags: [tag],
+        summary: `Change status of template by specified id.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
             },
           },
         },
@@ -544,6 +573,7 @@ function createPassportPaths() {
           LimitQueryParamSchema,
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
+          StatusQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -583,6 +613,31 @@ function createPassportPaths() {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}/{id}`]: {
+      delete: {
+        tags: [tag],
+        summary: `Delete passport by specified id. Only passports with the status "draft" can be deleted.`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
+        },
+      },
+    },
+    [`/${tag}/{id}/status`]: {
+      put: {
+        tags: [tag],
+        summary: `Change status of passport by specified id.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
             },
           },
         },
