@@ -94,7 +94,7 @@ export class PermalinkController implements IAasReadEndpoints {
       return await this.brandingRepository.findOneByOrganizationId(organizationId);
     } catch (error) {
       if (error instanceof NotFoundException) {
-        return Branding.create({});
+        return Branding.getDefault();
       }
       throw error;
     }

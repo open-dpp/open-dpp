@@ -11,6 +11,7 @@ import {
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
+import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -46,6 +47,7 @@ describe("PermalinkController", () => {
     },
     [
       { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
       { name: PermalinkDoc.name, schema: PermalinkSchema },
       { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
