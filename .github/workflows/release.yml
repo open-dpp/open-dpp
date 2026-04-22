@@ -47,6 +47,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # When the changesets action opens or updates a release PR, it commits
+      # the raw output of `changeset version` without running the repo
+      # formatter. Re-format every CHANGELOG.md it touched and push a
+      # follow-up commit to the same PR branch so the PR matches repo style.
+      #
+      # Gated on `pullRequestNumber` so this is a no-op on publish runs
+      # (where no release PR exists). The GITHUB_TOKEN push does not trigger
+      # workflow re-runs, so there is no loop risk.
+      - name: Format generated CHANGELOGs
+        if: steps.changesets.outputs.pullRequestNumber != ''
+        run: |
+          set -euo pipefail
+          pnpm exec oxfmt --write "**/CHANGELOG.md"
+          if git diff --quiet; then
+            echo "CHANGELOGs already match oxfmt rules; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "**/CHANGELOG.md"
+          git commit -m "chore: format changelogs"
+          git push
+
       # Push a repo-wide `v<version>` git tag so the release is reachable by
       # tag name in git. Every `@open-dpp/*` package is in the `fixed` group
       # in `.changeset/config.json`, so the first published package carries
