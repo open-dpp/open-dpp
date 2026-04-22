@@ -1,7 +1,7 @@
 export default {
   testRegex: ".*\\.spec\\.ts$",
   transform: {
-    "^.+\\.(t|j)s$": [
+    "^.+\\.([tj]sx?|mjs)$": [
       "@swc/jest",
       {
         jsc: {
@@ -20,9 +20,7 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: [
-    "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|until-async|uuid))(?:/|$))",
-  ],
+  transformIgnorePatterns: ["node_modules/(?!.*(@open-dpp|until-async|uuid|rettime))"],
   moduleNameMapper: {
     "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src",
   },

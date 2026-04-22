@@ -144,13 +144,13 @@ describe("passportRepository", () => {
     const legacyDoc2 = await createLegacyDoc(date2);
     let foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DigitalProductDocumentStatus.Draft,
+        status: [DigitalProductDocumentStatus.Draft],
       },
     });
     expect(foundPassports.items.map((p) => p.id)).toEqual([legacyDoc2.id, legacyDoc1.id]);
     foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DigitalProductDocumentStatus.Published,
+        status: [DigitalProductDocumentStatus.Published],
       },
     });
     expect(foundPassports.items.map((p) => p.id)).toEqual([]);
@@ -235,7 +235,7 @@ describe("passportRepository", () => {
 
     foundPassports = await passportRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DigitalProductDocumentStatus.Archived,
+        status: [DigitalProductDocumentStatus.Archived],
       },
     });
 

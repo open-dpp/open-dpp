@@ -374,6 +374,11 @@
         "label": "Name of organization",
         "error": "Please enter a name."
       },
+      "color": {
+        "label": "Primary color",
+        "palette": "Color palette",
+        "description": "This color will be used as a base color to generate a color palette."
+      },
       "updateError": "Failed to update organization.",
       "updateSuccess": "Organization settings saved successfully."
     },
@@ -396,7 +401,8 @@
       "description": "Invitations to this organizations"
     },
     "settings": {
-      "title": "Configure organization"
+      "title": "Configure organization",
+      "branding": "Branding"
     },
     "admin": {
       "title": "Administration",

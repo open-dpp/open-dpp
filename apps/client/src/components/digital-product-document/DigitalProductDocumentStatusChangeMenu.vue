@@ -65,8 +65,8 @@ const toggle = (event: PointerEvent) => {
       icon="pi pi-ellipsis-v"
       @click="toggle"
       aria-haspopup="true"
-      aria-controls="overlay_menu"
+      :aria-controls="`select-status-menu-for-id-${item.id}`"
     />
-    <Menu ref="menu" id="overlay_menu" :model="items" :popup="true" />
+    <Menu ref="menu" :id="`select-status-menu-for-id-${item.id}`" :model="items" :popup="true" />
   </div>
 </template>

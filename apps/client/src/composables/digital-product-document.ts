@@ -93,15 +93,19 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
         severity: "danger",
       },
       accept: async () => {
+        let deleted = false;
         try {
           const response = await digitalProductDocNamespace.deleteById(id);
           if (response.status === HTTPCode.NO_CONTENT) {
-            await onDeleted();
+            deleted = true;
           } else {
             errorHandlingStore.logErrorWithNotification(errorMessage);
           }
         } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
+        }
+        if (deleted) {
+          await onDeleted();
         }
       },
     });

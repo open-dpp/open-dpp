@@ -141,6 +141,9 @@ describe("passports", () => {
       status: HTTPCode.OK,
     });
     await restore(p2.id);
+    expect(mocks.modifyStatus).toHaveBeenCalledWith(p2.id, {
+      method: DigitalProductDocumentStatusModificationMethodDto.Restore,
+    });
   });
 
   describe("fetchById", () => {

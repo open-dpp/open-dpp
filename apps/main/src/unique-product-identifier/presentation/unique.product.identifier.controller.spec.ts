@@ -31,6 +31,7 @@ import {
 } from "../infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
+import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
 
 describe("UniqueProductIdentifierController (legacy redirects)", () => {
   const basePath = "/unique-product-identifiers";
@@ -49,6 +50,7 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
     },
     [
       { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
       { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
       { name: PermalinkDoc.name, schema: PermalinkSchema },
       { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },

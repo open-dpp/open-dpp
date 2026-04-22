@@ -139,13 +139,13 @@ describe("templateRepository", () => {
     const legacyDoc2 = await createLegacyDoc(date2);
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DigitalProductDocumentStatus.Draft,
+        status: [DigitalProductDocumentStatus.Draft],
       },
     });
     expect(foundTemplates.items.map((p) => p.id)).toEqual([legacyDoc2.id, legacyDoc1.id]);
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DigitalProductDocumentStatus.Published,
+        status: [DigitalProductDocumentStatus.Published],
       },
     });
     expect(foundTemplates.items.map((p) => p.id)).toEqual([]);
@@ -195,6 +195,10 @@ describe("templateRepository", () => {
         assetAdministrationShells: [randomUUID()],
       }),
       createdAt: date4,
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
     });
     const t5 = Template.create({
       id: randomUUID(),
@@ -229,7 +233,7 @@ describe("templateRepository", () => {
 
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
       filter: {
-        status: DigitalProductDocumentStatus.Archived,
+        status: [DigitalProductDocumentStatus.Archived],
       },
     });
 
@@ -240,6 +244,22 @@ describe("templateRepository", () => {
           limit: 100,
         }),
         items: [t5],
+      }),
+    );
+
+    foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, {
+      filter: {
+        status: [DigitalProductDocumentStatus.Archived, DigitalProductDocumentStatus.Published],
+      },
+    });
+
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
+          limit: 100,
+        }),
+        items: [t5, t4],
       }),
     );
 

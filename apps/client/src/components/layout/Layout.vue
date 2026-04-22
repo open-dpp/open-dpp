@@ -107,7 +107,7 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
         },
         {
           name: t("organizations.settings.title"),
-          to: `/organizations/${indexStore.selectedOrganization}/settings`,
+          to: `/organizations/${indexStore.selectedOrganization}`,
           icon: Cog6ToothIcon,
           show: () => indexStore.selectedOrganization !== null,
         },

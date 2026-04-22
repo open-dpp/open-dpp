@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/env",
-  "version": "0.1.4",
+  "version": "0.4.0",
   "private": true,
   "description": "",
   "keywords": [],
@@ -26,17 +26,17 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.11",
-    "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.11",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.19",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.7",
+    "@swc/core": "^1.15.24",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
-    "@tsconfig/node-ts": "^23.6.2",
-    "jest": "^30.2.0",
+    "@tsconfig/node-ts": "^23.6.4",
+    "jest": "^30.3.0",
     "typescript": "^5.9.3"
   },
   "jest": {

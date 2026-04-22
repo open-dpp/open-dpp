@@ -24,6 +24,9 @@ export class Organization {
   public readonly id: string;
   public readonly name: string;
   public readonly slug: string;
+  /**
+   * @deprecated Use `Branding.logo` instead.
+   */
   public readonly logo: string | null;
   public readonly metadata: any;
   public readonly createdAt: Date;

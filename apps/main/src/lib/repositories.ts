@@ -92,10 +92,7 @@ export async function findByIds<T extends Document<string>, V>(
 
 export type FindOptions = {
   pagination?: Pagination;
-  filter?: {
-    status?: DigitalProductDocumentStatusType;
-    statuses?: ReadonlyArray<DigitalProductDocumentStatusType>;
-  };
+  filter?: { status?: ReadonlyArray<DigitalProductDocumentStatusType> };
 };
 
 function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusType>) {
@@ -119,8 +116,7 @@ export async function findAllByOrganizationId<
   options?: FindOptions,
 ) {
   const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
-  const statuses =
-    options?.filter?.statuses ?? (options?.filter?.status ? [options.filter.status] : undefined);
+  const statuses = options?.filter?.status;
   const docs = await docModel
     .find({
       organizationId,

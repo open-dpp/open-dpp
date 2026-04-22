@@ -21,7 +21,7 @@ export function passportsHandlers() {
     http.get(`${passportsEndpointUrl}`, async ({ request }) => {
       const errorResponse = checkQueryParameters(request, {
         limit: paginationParams.limit.toFixed(),
-        status: filterParams.status,
+        status: filterParams.status[0],
       });
 
       return (

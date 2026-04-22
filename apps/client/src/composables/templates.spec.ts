@@ -94,12 +94,12 @@ describe("templates", () => {
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templatesResponse });
     await fetchTemplates(
       { limit: 10, cursor: undefined },
-      { status: DigitalProductDocumentStatusDto.Archived },
+      { status: [DigitalProductDocumentStatusDto.Archived] },
     );
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({
       pagination: { limit: 10, cursor: undefined },
       populate: [Populates.assetAdministrationShells],
-      filter: { status: DigitalProductDocumentStatusDto.Archived },
+      filter: { status: [DigitalProductDocumentStatusDto.Archived] },
     });
     expect(templates.value).toEqual(templatesResponse);
   });

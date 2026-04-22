@@ -374,6 +374,11 @@
         "label": "Name der Organisation",
         "error": "Bitte geben Sie einen Namen ein."
       },
+      "color": {
+        "label": "Primärfarbe",
+        "palette": "Farbpalette",
+        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
+      },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
@@ -396,7 +401,8 @@
       "description": "Einladungen zu dieser Organisation"
     },
     "settings": {
-      "title": "Organisation anpassen"
+      "title": "Organisation anpassen",
+      "branding": "Branding"
     },
     "admin": {
       "title": "Administration",

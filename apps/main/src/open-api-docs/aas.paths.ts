@@ -44,7 +44,10 @@ import {
   RowParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
-import { PopulateQueryParamSchema } from "../digital-product-document/presentation/digital-product-document-decorators";
+import {
+  PopulateQueryParamSchema,
+  StatusQueryParamSchema,
+} from "../digital-product-document/presentation/digital-product-document-decorators";
 
 const HTTPCode = {
   OK: 200,
@@ -449,6 +452,7 @@ function createTemplatePaths() {
           LimitQueryParamSchema,
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
+          StatusQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {
@@ -569,6 +573,7 @@ function createPassportPaths() {
           LimitQueryParamSchema,
           CursorQueryParamSchema,
           PopulateQueryParamSchema,
+          StatusQueryParamSchema,
           orgaIdHeader,
         ],
         responses: {

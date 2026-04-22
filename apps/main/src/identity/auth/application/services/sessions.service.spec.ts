@@ -88,7 +88,7 @@ describe("SessionsService", () => {
       mockAuth.api.verifyApiKey.mockResolvedValue({
         valid: true,
         error: null,
-        key: { id: "key-1", userId: "user-456", name: "test-key" },
+        key: { id: "key-1", referenceId: "user-456", name: "test-key" },
       });
 
       const result = await service.verifyApiKey("valid-key");
