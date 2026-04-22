@@ -45,7 +45,7 @@ const { deleteDPD, publish, restore, archive } = useDigitalProductDocument(
 const { status, changeStatus } = useDigitalProductDocumentFilter();
 
 function fetchCallback(pagingParams: PagingParamsDto) {
-  return fetchPassports(pagingParams, status.value ? { status: status.value } : undefined);
+  return fetchPassports(pagingParams, status.value ? { status: [status.value] } : undefined);
 }
 
 const {

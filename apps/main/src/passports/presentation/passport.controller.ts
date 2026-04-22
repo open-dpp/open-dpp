@@ -135,7 +135,7 @@ export class PassportController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
-    @StatusQueryParam() status: DigitalProductDocumentStatusDtoType | undefined,
+    @StatusQueryParam() status: DigitalProductDocumentStatusDtoType[] | undefined,
     @OrganizationId() organizationId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,

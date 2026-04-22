@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   DigitalProductDocumentStatusDto,
+  type PagingParamsDto,
   type PassportDto,
   type PassportPaginationDto,
   type TemplateDto,
@@ -34,9 +35,15 @@ const passport = computed({
 
 const { passports, loading, fetchPassports } = usePassports();
 
+function fetchCallback(pagingParams: PagingParamsDto) {
+  return fetchPassports(pagingParams, {
+    status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
+  });
+}
+
 const { hasNext, nextPage } = usePagination({
   limit: startSize,
-  fetchCallback: fetchPassports,
+  fetchCallback,
   changeQueryParams: () => {},
 });
 
@@ -44,7 +51,7 @@ async function loadMorePassports() {
   if (hasNext.value) {
     await nextPage();
     if (passports.value) {
-      passportList.value.push(...filterTemplates(passports.value));
+      passportList.value.push(...constructPassports(passports.value));
     }
   }
 }
@@ -54,14 +61,12 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   selectedLanguage: convertLocaleToLanguage(locale.value),
 });
 
-function filterTemplates({ result }: PassportPaginationDto) {
-  return result
-    .filter((t) => t.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived)
-    .map((passport) => ({
-      ...passport,
-      label: getOptionLabel(passport),
-      status: getOptionStatus(passport),
-    }));
+function constructPassports({ result }: PassportPaginationDto) {
+  return result.map((passport) => ({
+    ...passport,
+    label: getOptionLabel(passport),
+    status: getOptionStatus(passport),
+  }));
 }
 
 function getOptionLabel(option: PassportDto): string {
@@ -82,7 +87,7 @@ async function onPassportLazyLoad(e: { last: number }) {
 onMounted(async () => {
   await nextPage();
   if (passports.value) {
-    passportList.value.push(...filterTemplates(passports.value));
+    passportList.value.push(...constructPassports(passports.value));
   }
 });
 </script>

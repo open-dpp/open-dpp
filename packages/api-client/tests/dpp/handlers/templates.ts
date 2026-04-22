@@ -22,7 +22,7 @@ export function templatesHandlers() {
     http.get(`${templatesEndpointUrl}`, async ({ request }) => {
       const errorResponse = checkQueryParameters(request, {
         limit: paginationParams.limit.toFixed(),
-        status: filterParams.status,
+        status: filterParams.status[0],
       });
 
       return (

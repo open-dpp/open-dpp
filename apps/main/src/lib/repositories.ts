@@ -92,7 +92,7 @@ export async function findByIds<T extends Document<string>, V>(
 
 export type FindOptions = {
   pagination?: Pagination;
-  filter?: { status: DigitalProductDocumentStatusType };
+  filter?: { status: DigitalProductDocumentStatusType[] };
 };
 
 export async function findAllByOrganizationId<
@@ -111,8 +111,10 @@ export async function findAllByOrganizationId<
       organizationId,
       ...(status && {
         $or: [
-          { "lastStatusChange.currentStatus": status },
-          ...(status === DigitalProductDocumentStatus.Draft ? [{ _schemaVersion: "1.0.0" }] : []),
+          { "lastStatusChange.currentStatus": { $in: status } },
+          ...(status.includes(DigitalProductDocumentStatus.Draft)
+            ? [{ _schemaVersion: "1.0.0" }]
+            : []),
         ],
       }),
       ...(tmpPagination.cursor && {

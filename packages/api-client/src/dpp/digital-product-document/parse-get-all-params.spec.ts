@@ -7,7 +7,7 @@ describe("parseGetAllParams", () => {
       pagination: { limit: 10, cursor: "cursor" },
       populate: ["environment.assetAdministrationsShells"],
       filter: {
-        status: DigitalProductDocumentStatusDto.Archived,
+        status: [DigitalProductDocumentStatusDto.Archived],
       },
     };
 
@@ -16,7 +16,7 @@ describe("parseGetAllParams", () => {
       limit: 10,
       cursor: "cursor",
       populate: ["environment.assetAdministrationsShells"],
-      status: DigitalProductDocumentStatusDto.Archived,
+      status: [DigitalProductDocumentStatusDto.Archived],
     });
   });
 });

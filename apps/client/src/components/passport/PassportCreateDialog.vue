@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {
   DigitalProductDocumentStatusDto,
+  type PagingParamsDto,
   type TemplateDto,
   type TemplatePaginationDto,
 } from "@open-dpp/dto";
@@ -19,10 +20,16 @@ function changeQueryParams(_: Record<string, string | undefined>) {}
 
 const { templates, loading, fetchTemplates } = useTemplates();
 
+function fetchCallback(pagingParams: PagingParamsDto) {
+  return fetchTemplates(pagingParams, {
+    status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
+  });
+}
+
 const { hasNext, nextPage } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
-  fetchCallback: (pagingParams) => fetchTemplates(pagingParams, undefined),
+  fetchCallback,
   changeQueryParams,
 });
 
@@ -56,7 +63,7 @@ async function loadMoreTemplates() {
   if (hasNext.value) {
     await nextPage();
     if (templates.value) {
-      templateList.value.push(...filterTemplates(templates.value));
+      templateList.value.push(...constructTemplateOptions(templates.value));
     }
   }
 }
@@ -78,7 +85,7 @@ defineExpose({
 onMounted(async () => {
   await nextPage();
   if (templates.value) {
-    templateList.value.push(...filterTemplates(templates.value));
+    templateList.value.push(...constructTemplateOptions(templates.value));
   }
 });
 
@@ -87,14 +94,12 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   selectedLanguage: convertLocaleToLanguage(locale.value),
 });
 
-function filterTemplates({ result }: TemplatePaginationDto) {
-  return result
-    .filter((t) => t.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived)
-    .map((template) => ({
-      ...template,
-      label: getOptionLabel(template),
-      status: getOptionStatus(template),
-    }));
+function constructTemplateOptions({ result }: TemplatePaginationDto) {
+  return result.map((template) => ({
+    ...template,
+    label: getOptionLabel(template),
+    status: getOptionStatus(template),
+  }));
 }
 
 function getOptionStatus(option: TemplateDto): string {
