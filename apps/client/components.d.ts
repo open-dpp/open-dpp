@@ -23,6 +23,7 @@ declare module 'vue' {
     Card: typeof import('primevue/card')['default']
     ChangeRoleDialog: typeof import('./src/components/admin/ChangeRoleDialog.vue')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
+    ColorPicker: typeof import('primevue/colorpicker')['default']
     Column: typeof import('primevue/column')['default']
     ColumnCreateEditor: typeof import('./src/components/aas/ColumnCreateEditor.vue')['default']
     ColumnEditor: typeof import('./src/components/aas/ColumnEditor.vue')['default']
@@ -151,6 +152,7 @@ declare global {
   const Card: (typeof import("primevue/card"))["default"];
   const ChangeRoleDialog: (typeof import("./src/components/admin/ChangeRoleDialog.vue"))["default"];
   const Checkbox: (typeof import("primevue/checkbox"))["default"];
+  const ColorPicker: (typeof import("primevue/colorpicker"))["default"];
   const Column: (typeof import("primevue/column"))["default"];
   const ColumnCreateEditor: (typeof import("./src/components/aas/ColumnCreateEditor.vue"))["default"];
   const ColumnEditor: (typeof import("./src/components/aas/ColumnEditor.vue"))["default"];

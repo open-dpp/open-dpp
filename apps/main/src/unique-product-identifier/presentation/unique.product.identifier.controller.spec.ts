@@ -22,6 +22,7 @@ import {
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
+import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
 
 describe("uniqueProductIdentifierController", () => {
   const basePath = "/unique-product-identifiers";
@@ -41,6 +42,10 @@ describe("uniqueProductIdentifierController", () => {
       {
         name: PassportDoc.name,
         schema: PassportSchema,
+      },
+      {
+        name: BrandingDoc.name,
+        schema: BrandingSchema,
       },
       {
         name: UniqueProductIdentifierDoc.name,

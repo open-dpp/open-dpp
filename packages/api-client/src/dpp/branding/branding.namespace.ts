@@ -9,4 +9,8 @@ export class BrandingNamespace {
   public async get() {
     return await this.axiosInstance.get<BrandingDto>(this.brandingEndpoint);
   }
+
+  public async set(branding: BrandingDto) {
+    return await this.axiosInstance.put<BrandingDto>(this.brandingEndpoint, branding);
+  }
 }
