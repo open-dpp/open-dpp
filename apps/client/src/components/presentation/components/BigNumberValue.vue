@@ -18,29 +18,50 @@ const label = computed(() =>
   resolveDisplayName(element.displayName ?? [], locale.value, element.idShort),
 );
 
-// Format per the active locale and preserve the raw value's precision — AAS
+// Format per the active locale and preserve the raw value's precision. AAS
 // stores decimals with a period regardless of locale, but a German compliance
 // reader expects "3,4" and "1.234.567,89" while an English reader expects
-// "3.4" and "1,234,567.89". Default Intl.NumberFormat caps fraction digits at
-// 3, which would silently truncate "3.14159"; we match the raw value's
-// fraction-digit count to avoid that.
+// "3.4" and "1,234,567.89". Values arrive as strings for numeric Property
+// types that include xs:long, xs:unsignedLong and xs:decimal — any of which
+// can exceed Number.MAX_SAFE_INTEGER (2^53-1) or carry more fractional digits
+// than a double can represent. Coercing through Number() would silently
+// collapse those digits, so we parse the string ourselves: format the integer
+// portion with BigInt (locale-aware grouping) and reattach the fractional
+// portion verbatim (preserves trailing zeros, which encode precision).
 const formattedValue = computed(() => {
   const raw = element.value;
   if (raw === null || raw === undefined || raw === "") return "";
-  const num = typeof raw === "number" ? raw : Number(raw);
-  if (Number.isNaN(num)) return String(raw);
 
-  const rawStr = String(raw);
-  if (/e[+-]?\d+$/i.test(rawStr)) {
-    return new Intl.NumberFormat(locale.value).format(num);
+  if (typeof raw === "number") {
+    if (Number.isNaN(raw)) return String(raw);
+    const rawStr = String(raw);
+    const dotIndex = rawStr.indexOf(".");
+    const fractionDigits = dotIndex >= 0 ? rawStr.length - dotIndex - 1 : 0;
+    return new Intl.NumberFormat(locale.value, {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    }).format(raw);
   }
-  const dotIndex = rawStr.indexOf(".");
-  const fractionDigits = dotIndex >= 0 ? rawStr.length - dotIndex - 1 : 0;
 
-  return new Intl.NumberFormat(locale.value, {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(num);
+  if (typeof raw !== "string") return String(raw);
+
+  const decimalMatch = raw.match(/^([+-]?)(\d+)(?:\.(\d+))?$/);
+  if (decimalMatch) {
+    const [, sign, intPart, fracPart] = decimalMatch;
+    const formattedInt = new Intl.NumberFormat(locale.value).format(
+      BigInt(`${sign}${intPart}`),
+    );
+    if (fracPart === undefined) return formattedInt;
+    const decimalSeparator =
+      new Intl.NumberFormat(locale.value)
+        .formatToParts(0.1)
+        .find((p) => p.type === "decimal")?.value ?? ".";
+    return `${formattedInt}${decimalSeparator}${fracPart}`;
+  }
+
+  const num = Number(raw);
+  if (Number.isNaN(num)) return raw;
+  return new Intl.NumberFormat(locale.value).format(num);
 });
 </script>
 

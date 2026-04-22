@@ -59,4 +59,19 @@ export const PRESENTATION_PARENT: RouteRecordRaw = {
   children: [PRESENTATION_404, PRESENTATION_VIEW, PRESENTATION_VIEW_CHAT],
 };
 
-export const PRESENTATION_ROUTES = [PRESENTATION_PARENT];
+// Legacy /presentation/* URLs predate the /p/ rename (commit 970ae00f) and are
+// already in the wild via v0.4.0 QR codes. The shim component bounces the
+// browser through the backend UPI redirect controller so old UUIDs resolve to
+// the correct permalink. Registered before PRESENTATION_PARENT so its prefix
+// can't be shadowed by any future /presentation* addition.
+export const PRESENTATION_LEGACY_REDIRECT: RouteRecordRaw = {
+  path: "/presentation/:legacyPath(.*)*",
+  name: "PRESENTATION_LEGACY_REDIRECT",
+  component: () => import("../../../view/presentation/LegacyPresentationRedirect.vue"),
+  meta: {
+    layout: "none",
+    public: true,
+  },
+};
+
+export const PRESENTATION_ROUTES = [PRESENTATION_LEGACY_REDIRECT, PRESENTATION_PARENT];
