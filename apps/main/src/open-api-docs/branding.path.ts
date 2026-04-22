@@ -28,7 +28,7 @@ export const brandingPaths = {
         },
       },
     },
-    post: {
+    put: {
       tags: [tag],
       summary: "Creates or updates branding configuration for the current organization",
       requestBody: {

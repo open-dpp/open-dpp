@@ -15,9 +15,6 @@ export class BrandingDoc extends Document<string> {
   })
   _schemaVersion: BrandingDocVersionType;
 
-  @Prop({ type: String, required: true })
-  declare _id: string;
-
   @Prop({ type: String, required: true, unique: true })
   organizationId: string;
 

@@ -1,6 +1,6 @@
 import type express from "express";
 import { readFile } from "node:fs/promises";
-import { Body, Controller, Get, Post, Res } from "@nestjs/common";
+import { Body, Controller, Get, Put, Res } from "@nestjs/common";
 import { type BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
@@ -20,7 +20,7 @@ export class BrandingController {
     return BrandingDtoSchema.parse(organizationBranding);
   }
 
-  @Post()
+  @Put()
   async setOrganizationBranding(
     @OrganizationId() organizationId: string,
     @Body(new ZodValidationPipe(BrandingDtoSchema)) branding: BrandingDto,

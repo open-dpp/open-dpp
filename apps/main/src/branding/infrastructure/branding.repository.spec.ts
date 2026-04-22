@@ -60,16 +60,22 @@ describe("brandingRepository", () => {
   it("should save the organization branding", async () => {
     const orgId = randomUUID();
     const branding = Branding.create({
-      id: randomUUID(),
       organizationId: orgId,
       logo: "my-logo",
     });
+    jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+      Organization.create({
+        name: "acme",
+        slug: `acme-${randomUUID()}`,
+      }),
+    );
+
     await brandingRepository.save(branding);
     const foundBranding = await brandingRepository.findOneByOrganizationId(orgId);
     expect(foundBranding).toEqual(branding);
   });
 
-  it("should migrate logo from organization to branding", async () => {
+  it("should return logo from organization to branding", async () => {
     const orgId = randomUUID();
     const logo = "logo-from-organization";
 
@@ -82,6 +88,31 @@ describe("brandingRepository", () => {
     );
 
     const migratedBranding = await brandingRepository.findOneByOrganizationId(orgId);
+    expect(organizationService.getOrganization).toHaveBeenCalledWith(orgId);
+    expect(migratedBranding.organizationId).toBe(orgId);
+    expect(migratedBranding.logo).toBe(logo);
+  });
+
+  it("should migrate logo from organization on save", async () => {
+    const orgId = randomUUID();
+    const logo = "logo-from-organization";
+
+    jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+      Organization.create({
+        name: "acme",
+        slug: `acme-${randomUUID()}`,
+        logo,
+      }),
+    );
+
+    const migratedBranding = await brandingRepository.save(
+      Branding.fromPlain(
+        {
+          primaryColor: "ffffff",
+        },
+        orgId,
+      ),
+    );
     expect(organizationService.getOrganization).toHaveBeenCalledWith(orgId);
     expect(migratedBranding.organizationId).toBe(orgId);
     expect(migratedBranding.logo).toBe(logo);

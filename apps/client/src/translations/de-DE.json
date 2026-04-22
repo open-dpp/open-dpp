@@ -361,8 +361,8 @@
       },
       "color": {
         "label": "Primärfarbe",
-        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette.",
-        "badContrast": "Schwacher Kontrast: Diese Farbe könnte zu schwer lesbarem Text führen"
+        "palette": "Farbpalette",
+        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
       },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."

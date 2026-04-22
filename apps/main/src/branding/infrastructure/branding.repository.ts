@@ -29,19 +29,13 @@ export class BrandingRepository {
         throw new NotFoundException("Organization not found");
       }
 
-      this.logger.debug("migrating branding from organization collection to branding collection");
-
-      return await this.save(
-        Branding.fromPlain(
-          {
-            logo: activeOrganization.logo,
-          },
-          organizationId,
-        ),
-      );
+      return Branding.create({
+        organizationId,
+        logo: activeOrganization.logo || undefined,
+      });
     }
 
-    return Branding.loadFromDb(brandingDoc.toObject());
+    return Branding.fromDb(brandingDoc.toObject());
   }
 
   getDefaultBranding(): Branding {
@@ -50,19 +44,31 @@ export class BrandingRepository {
 
   async save(branding: Branding): Promise<Branding> {
     let brandingDoc = await this.BrandingDoc.findOne({ organizationId: branding.organizationId });
+    let orgLogoFallback: string | undefined = undefined;
     if (!brandingDoc) {
-      brandingDoc = new this.BrandingDoc({
-        _schemaVersion: BrandingDocVersion.v1_0_0,
-        _id: branding.id,
-      });
+      const activeOrganization = await this.organizationsService.getOrganization(
+        branding.organizationId,
+      );
+
+      if (!activeOrganization) {
+        throw new NotFoundException("Organization not found");
+      }
+
+      brandingDoc = new this.BrandingDoc({ _schemaVersion: BrandingDocVersion.v1_0_0 });
+
+      if (activeOrganization.logo) {
+        this.logger.debug("migrating old to new logo");
+        orgLogoFallback = activeOrganization.logo;
+      }
     }
 
+    const plain = branding.toPlain();
     brandingDoc.set({
-      ...branding.toDb(),
-      _id: brandingDoc._id,
+      ...plain,
+      logo: plain.logo ?? orgLogoFallback,
     });
 
-    return Branding.loadFromDb((await brandingDoc.save()).toObject());
+    return Branding.fromDb((await brandingDoc.save()).toObject());
   }
 
   async getInstanceBrandingPath(): Promise<BrandingFile> {

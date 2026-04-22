@@ -80,6 +80,8 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
       if (response.status === HTTPCode.OK) {
         applyPrimaryColor(response.data.primaryColor);
         applyLogo(response.data.logo);
+      } else {
+        errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"));
       }
     } catch (error) {
       errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
