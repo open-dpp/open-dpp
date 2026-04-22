@@ -1,5 +1,18 @@
 # @open-dpp/main
 
+## 0.2.2
+
+### Patch Changes
+
+- [#514](https://github.com/open-dpp/open-dpp/pull/514) [`5f8a7ff`](https://github.com/open-dpp/open-dpp/commit/5f8a7ff23a611237652e9bc9e01a5be97ef445d1) Thanks [@Hentra](https://github.com/Hentra)! - Add an option to set the branding color for an organization
+
+- Updated dependencies [[`5f8a7ff`](https://github.com/open-dpp/open-dpp/commit/5f8a7ff23a611237652e9bc9e01a5be97ef445d1)]:
+  - @open-dpp/api-client@0.2.2
+  - @open-dpp/dto@0.2.2
+  - @open-dpp/env@0.2.2
+  - @open-dpp/exception@0.2.2
+  - @open-dpp/permission@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
