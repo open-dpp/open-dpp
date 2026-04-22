@@ -28,6 +28,6 @@ export class SessionsService {
     if (!result?.valid || !result?.key) {
       return null;
     }
-    return { userId: result.key.userId };
+    return { userId: result.key.referenceId };
   }
 }

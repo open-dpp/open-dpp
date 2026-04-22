@@ -14,7 +14,7 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
-    "vitepress-openapi": "^0.1.19"
+    "vitepress-openapi": "^0.1.20"
   },
   "devDependencies": {
     "vitepress": "2.0.0-alpha.16"
