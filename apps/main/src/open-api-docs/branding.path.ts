@@ -15,10 +15,13 @@ const ContentType = {
 
 const tag = "branding";
 
+const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };
+
 export const brandingPaths = {
   "/branding": {
     get: {
       tags: [tag],
+      parameters: [orgaIdHeader],
       summary: "Returns branding configuration for the current organization",
       responses: {
         [HTTPCode.OK]: {
@@ -30,6 +33,7 @@ export const brandingPaths = {
     },
     put: {
       tags: [tag],
+      parameters: [orgaIdHeader],
       summary: "Creates or updates branding configuration for the current organization",
       requestBody: {
         content: {
