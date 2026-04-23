@@ -41,7 +41,7 @@ describe("passportService", () => {
   let presentationConfigurationRepository: PresentationConfigurationRepository;
   let module: TestingModule;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),

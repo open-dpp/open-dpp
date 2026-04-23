@@ -164,9 +164,10 @@ function onTabChange(index: number) {
 }
 
 watch(activeTabIndex, () => {
-  // When switching to Presentation, close the drawer.
+  // When switching to Presentation, close the drawer and clear the edit query param
+  // so switching back doesn't re-seed initialSelectedKeys from the stale value.
   if (activeTabIndex.value === 1 && drawerVisible.value) {
-    hideDrawer();
+    onHideDrawer();
   }
 });
 </script>

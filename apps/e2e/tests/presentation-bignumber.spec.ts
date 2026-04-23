@@ -166,6 +166,19 @@ test("BigNumber on a Property nested inside a SubmodelElementCollection", async 
   await expect(select).toBeVisible();
   await select.selectOption("BigNumber");
 
+  await expect
+    .poll(
+      async () => {
+        await page.reload();
+        await page.getByRole("button", { name: /Darstellung|Presentation/i }).click();
+        return await page
+          .locator(`[data-cy="presentation-select-${NESTED_PROPERTY_PATH}"]`)
+          .inputValue();
+      },
+      { timeout: 10_000 },
+    )
+    .toBe("BigNumber");
+
   // Persist + passport
   await page.getByRole("link", { name: /Pässe|Passports/i, exact: true }).click();
   await page.getByRole("button", { name: "Hinzufügen" }).click();

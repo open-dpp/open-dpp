@@ -114,6 +114,7 @@ export class PermalinkRepository {
           },
         },
         { $limit: 1 },
+        { $project: { config: 0 } },
       ])
       .session(options?.session ?? null);
 

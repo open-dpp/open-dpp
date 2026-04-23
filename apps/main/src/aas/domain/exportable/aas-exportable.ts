@@ -57,7 +57,7 @@ export class AasExportable {
     expandedEnvironment: ExpandedEnvironment,
     presentationConfiguration: PresentationConfiguration | null = null,
   ) {
-    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Passport);
+    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Passport, data.id);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -75,7 +75,7 @@ export class AasExportable {
     expandedEnvironment: ExpandedEnvironment,
     presentationConfiguration: PresentationConfiguration | null = null,
   ) {
-    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Template);
+    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Template, data.id);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -120,11 +120,18 @@ export class AasExportable {
 
 function assertConfigMatches(
   config: PresentationConfiguration | null,
-  expected: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+  expectedType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+  expectedReferenceId: string,
 ): void {
-  if (config && config.referenceType !== expected) {
+  if (!config) return;
+  if (config.referenceType !== expectedType) {
     throw new ValueError(
-      `PresentationConfiguration referenceType ${config.referenceType} does not match expected ${expected}`,
+      `PresentationConfiguration referenceType ${config.referenceType} does not match expected ${expectedType}`,
+    );
+  }
+  if (config.referenceId !== expectedReferenceId) {
+    throw new ValueError(
+      `PresentationConfiguration referenceId ${config.referenceId} does not match expected ${expectedReferenceId}`,
     );
   }
 }

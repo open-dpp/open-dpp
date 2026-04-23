@@ -96,7 +96,7 @@ export class Template
       this.organizationId,
       this.environment,
       this.createdAt,
-      this.updatedAt,
+      DateTime.now(),
       newChange,
     );
   }

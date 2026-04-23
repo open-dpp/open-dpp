@@ -28,7 +28,6 @@ import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schema";
 import { PermalinkModule } from "../permalink.module";
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
-import { PermalinkController } from "./permalink.controller";
 
 describe("PermalinkController", () => {
   const basePath = "/p";
@@ -43,7 +42,6 @@ describe("PermalinkController", () => {
         BrandingRepository,
         PresentationConfigurationRepository,
       ],
-      controllers: [PermalinkController],
     },
     [
       { name: PassportDoc.name, schema: PassportSchema },

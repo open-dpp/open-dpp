@@ -16,7 +16,11 @@ const { fetchById } = useDigitalProductDocument(DigitalProductDocumentType.Templ
 const item = ref<DigitalProductDocumentDto>();
 const status = ref<ViewStatus>("loading");
 
-async function load(targetId: string | undefined, isStale: () => boolean) {
+let latestRequestId = 0;
+
+async function load(targetId: string | undefined) {
+  const requestId = ++latestRequestId;
+  const isStale = () => requestId !== latestRequestId;
   if (!targetId) {
     item.value = undefined;
     status.value = "loading";
@@ -34,20 +38,10 @@ async function load(targetId: string | undefined, isStale: () => boolean) {
   status.value = result.status === "not-found" ? "not-found" : "error";
 }
 
-watch(
-  () => id.value,
-  async (newValue, _old, onCleanup) => {
-    let cancelled = false;
-    onCleanup(() => {
-      cancelled = true;
-    });
-    await load(newValue, () => cancelled);
-  },
-  { immediate: true },
-);
+watch(() => id.value, load, { immediate: true });
 
 async function retry() {
-  await load(id.value, () => false);
+  await load(id.value);
 }
 </script>
 
