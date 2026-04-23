@@ -123,12 +123,17 @@ export class PermalinkRepository {
   async findOrCreateByPresentationConfigurationId(
     data: { presentationConfigurationId: string; slug?: string | null },
     options?: DbSessionOptions,
-  ): Promise<Permalink> {
+  ): Promise<{ permalink: Permalink; created: boolean }> {
+    // Capture up-front: MongoDB flips the session out of its transaction
+    // synchronously on E11000, so checking inside the catch would return
+    // false and we would re-enter the unsafe re-read path.
+    const inTransaction = options?.session?.inTransaction() ?? false;
+
     const existing = await this.findByPresentationConfigurationId(
       data.presentationConfigurationId,
       options,
     );
-    if (existing) return existing;
+    if (existing) return { permalink: existing, created: false };
 
     const fresh = Permalink.create({
       presentationConfigurationId: data.presentationConfigurationId,
@@ -140,18 +145,23 @@ export class PermalinkRepository {
     // loser sees E11000 and re-reads the winner's record. Any non-duplicate
     // error still surfaces.
     try {
-      return await this.save(fresh, options);
+      const saved = await this.save(fresh, options);
+      return { permalink: saved, created: true };
     } catch (error) {
+      // Inside a transaction, MongoDB aborts on E11000 and any follow-up
+      // read on the same session will fail. Surface the error so the caller
+      // can retry the whole transaction at a higher level.
+      if (inTransaction) throw error;
+
       if (isDuplicateKeyError(error)) {
         const retry = await this.findByPresentationConfigurationId(
           data.presentationConfigurationId,
-          options,
         );
         if (retry) {
           this.logger.warn(
             `findOrCreateByPresentationConfigurationId: race on ${data.presentationConfigurationId} recovered via re-read`,
           );
-          return retry;
+          return { permalink: retry, created: false };
         }
       }
       throw error;

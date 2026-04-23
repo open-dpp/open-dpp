@@ -10,7 +10,7 @@ import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server, Socket } from "socket.io";
 import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/websocket-auth.guard";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
-import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ChatService } from "../chat.service";
 
@@ -44,9 +44,10 @@ export class ChatGateway {
       );
       const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(passport.id);
       if (!upi) {
-        throw new Error(
+        this.logger.error(
           `No UniqueProductIdentifier found for passport ${passport.id} (permalink=${message.permalink})`,
         );
+        throw new Error("No product identifier found for the provided permalink");
       }
 
       const reply = await this.chatService.askAgent(

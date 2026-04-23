@@ -87,34 +87,34 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
     return { upi, passport, config, permalink };
   }
 
-  it("301-redirects the ?reference query to /p", async () => {
+  it("302-redirects the ?reference query to /p", async () => {
     const { passport } = await seedLegacyChain();
     const response = await request(ctx.globals().app.getHttpServer())
       .get(`/unique-product-identifiers?reference=${passport.id}`)
       .redirects(0);
 
-    expect(response.status).toEqual(301);
+    expect(response.status).toEqual(302);
     expect(response.headers.location).toEqual(`/p?passportId=${passport.id}`);
   });
 
-  it("301-redirects /passport to the permalink", async () => {
+  it("302-redirects /passport to the permalink", async () => {
     const { upi, permalink } = await seedLegacyChain();
     const response = await request(ctx.globals().app.getHttpServer())
       .get(`/unique-product-identifiers/${upi.uuid}/passport`)
       .redirects(0);
 
-    expect(response.status).toEqual(301);
+    expect(response.status).toEqual(302);
     expect(response.headers.location).toEqual(`/p/${permalink.id}/passport`);
   });
 
-  it("301-redirects nested submodel paths", async () => {
+  it("302-redirects nested submodel paths", async () => {
     const { upi, permalink } = await seedLegacyChain();
     const submodelId = "c3VibW9kZWwtMQ==";
     const response = await request(ctx.globals().app.getHttpServer())
       .get(`/unique-product-identifiers/${upi.uuid}/submodels/${submodelId}/$value`)
       .redirects(0);
 
-    expect(response.status).toEqual(301);
+    expect(response.status).toEqual(302);
     expect(response.headers.location).toEqual(`/p/${permalink.id}/submodels/${submodelId}/$value`);
   });
 

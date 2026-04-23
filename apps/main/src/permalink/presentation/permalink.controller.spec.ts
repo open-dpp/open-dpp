@@ -27,7 +27,7 @@ import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schema";
 import { PermalinkModule } from "../permalink.module";
-import { PermalinkApplicationService } from "./permalink.application.service";
+import { PermalinkApplicationService } from "../application/services/permalink.application.service";
 import { PermalinkController } from "./permalink.controller";
 
 describe("PermalinkController", () => {
@@ -216,6 +216,15 @@ describe("PermalinkController", () => {
       .getModuleRef()
       .get(PresentationConfigurationRepository);
 
+    const referenceFilter = {
+      referenceType: "passport" as const,
+      referenceId: fixture.passport.id,
+    };
+
+    const countBefore =
+      await presentationConfigurationRepository.countByReference(referenceFilter);
+    expect(countBefore).toEqual(1);
+
     const response = await request(ctx.globals().app.getHttpServer()).get(
       `/p/${fixture.id}/presentation-configuration`,
     );
@@ -224,12 +233,10 @@ describe("PermalinkController", () => {
     expect(response.body.referenceType).toEqual("passport");
     expect(response.body.referenceId).toEqual(fixture.passport.id);
 
-    // Anonymous read must NOT materialize a new row. The fixture already wrote one
-    // but we assert the existing row is returned — not a second one.
-    const stored = await presentationConfigurationRepository.findByReference({
-      referenceType: "passport",
-      referenceId: fixture.passport.id,
-    });
-    expect(stored?.id).toEqual(fixture.config.id);
+    // Anonymous read must NOT materialize a new row. The fixture already wrote one;
+    // the count must remain unchanged.
+    const countAfter =
+      await presentationConfigurationRepository.countByReference(referenceFilter);
+    expect(countAfter).toEqual(1);
   });
 });

@@ -102,7 +102,7 @@ import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
-import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";

@@ -1,13 +1,13 @@
-import type { PassportPageViewDto } from "./dto/passport-page-view.dto";
+import type { PassportPageViewDto } from "@open-dpp/dto";
 import { Body, Controller, Get, Logger, Post, Query } from "@nestjs/common";
+import { PassportPageViewSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
-import { PermalinkApplicationService } from "../../permalink/presentation/permalink.application.service";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricQuerySchema } from "./dto/passport-metric-query.dto";
-import { PassportPageViewSchema } from "./dto/passport-page-view.dto";
 
 @Controller()
 export class PassportMetricController {

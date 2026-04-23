@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PermalinkMetadataDtoSchema, PresentationReferenceType } from "@open-dpp/dto";
 import { z } from "zod/v4";
-import { DbSessionOptions } from "../../database/query-options";
-import { Passport } from "../../passports/domain/passport";
-import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
-import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
-import { Permalink } from "../domain/permalink";
-import { PermalinkRepository } from "../infrastructure/permalink.repository";
+import { DbSessionOptions } from "../../../database/query-options";
+import { Passport } from "../../../passports/domain/passport";
+import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { Permalink } from "../../domain/permalink";
+import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 
 @Injectable()
 export class PermalinkApplicationService {
@@ -63,9 +63,10 @@ export class PermalinkApplicationService {
       },
       options,
     );
-    return await this.permalinkRepository.findOrCreateByPresentationConfigurationId(
+    const { permalink } = await this.permalinkRepository.findOrCreateByPresentationConfigurationId(
       { presentationConfigurationId: config.id },
       options,
     );
+    return permalink;
   }
 }

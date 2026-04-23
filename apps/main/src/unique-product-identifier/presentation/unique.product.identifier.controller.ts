@@ -17,7 +17,7 @@ import { UniqueProductIdentifierRepository } from "../infrastructure/unique-prod
 
 /**
  * Legacy redirect surface. The public UPI endpoints moved to /p/:idOrSlug/*.
- * These routes 301 to the new permalink URLs for one release cycle so that
+ * These routes 302 to the new permalink URLs for one release cycle so that
  * already-printed QR codes and bookmarks keep working. Follow-up issue:
  * remove after the deprecation window closes.
  */
@@ -39,7 +39,7 @@ export class UniqueProductIdentifierController {
       throw new NotFoundException();
     }
     return {
-      statusCode: HttpStatus.MOVED_PERMANENTLY,
+      statusCode: HttpStatus.FOUND,
       url: `/p?passportId=${encodeURIComponent(reference)}`,
     };
   }
@@ -50,7 +50,7 @@ export class UniqueProductIdentifierController {
   async redirectRoot(@Param("id") id: string) {
     const permalinkId = await this.resolvePermalinkId(id);
     return {
-      statusCode: HttpStatus.MOVED_PERMANENTLY,
+      statusCode: HttpStatus.FOUND,
       url: `/p/${permalinkId}`,
     };
   }
@@ -65,7 +65,7 @@ export class UniqueProductIdentifierController {
       `Redirecting legacy UPI URL prefix=${prefix} → permalink=${permalinkId} suffix=${suffix}`,
     );
     return {
-      statusCode: HttpStatus.MOVED_PERMANENTLY,
+      statusCode: HttpStatus.FOUND,
       url: `/p/${permalinkId}${suffix}`,
     };
   }

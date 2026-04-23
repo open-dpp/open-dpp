@@ -125,7 +125,7 @@ describe("PresentationConfiguration", () => {
     expect(next).not.toBe(config);
     expect(config.elementDesign.size).toBe(0);
     expect(next.elementDesign.get("submodel-1.prop-1")).toBe(PresentationComponentName.BigNumber);
-    expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(config.updatedAt.getTime());
+    expect(next.updatedAt.getTime()).toBeGreaterThan(config.updatedAt.getTime());
     expect(next.createdAt).toBe(config.createdAt);
   });
 
@@ -133,6 +133,17 @@ describe("PresentationConfiguration", () => {
     const config = PresentationConfiguration.create(baseInput());
 
     expect(config.withoutElementDesign("missing")).toBe(config);
+  });
+
+  it("withElementDesign returns the same instance when the value is unchanged", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "submodel-1.prop-1": PresentationComponentName.BigNumber },
+    });
+
+    expect(
+      config.withElementDesign("submodel-1.prop-1", PresentationComponentName.BigNumber),
+    ).toBe(config);
   });
 
   it("withoutElementDesign returns a new instance when the key is present", () => {
@@ -163,5 +174,16 @@ describe("PresentationConfiguration", () => {
     const config = PresentationConfiguration.create(baseInput());
 
     expect(config.withoutDefaultComponent(KeyTypes.Property)).toBe(config);
+  });
+
+  it("withDefaultComponent returns the same instance when the value is unchanged", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
+    });
+
+    expect(
+      config.withDefaultComponent(KeyTypes.Property, PresentationComponentName.BigNumber),
+    ).toBe(config);
   });
 });

@@ -26,10 +26,9 @@ export interface PassportMetricQueryDto {
   period: string;
 }
 
-export interface PageViewCreateDto {
-  permalink: string;
-  page: string;
-}
+import type { PassportPageViewDto } from "@open-dpp/dto";
+
+export type PageViewCreateDto = PassportPageViewDto;
 
 export interface PageViewDto {
   id: string;

@@ -85,17 +85,25 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   expect(uuidMatch, "passport uuid should appear in the editor URL").not.toBeNull();
   const passportId = uuidMatch![1];
 
-  // Authenticated `page.request` is required — the UPI endpoint is not public.
-  const upiResponse = await page.request.get(
-    `${EnvConfig.OPEN_DPP_URL}/api/passports/${passportId}/unique-product-identifier`,
+  // Authenticated `page.request` is required — the permalink listing endpoint is not public.
+  const permalinkResponse = await page.request.get(
+    `${EnvConfig.OPEN_DPP_URL}/api/p?passportId=${passportId}`,
   );
-  expect(upiResponse.status(), "should be able to read a UPI for the passport").toBe(200);
-  const { uuid: upiUuid } = (await upiResponse.json()) as { uuid: string };
+  expect(
+    permalinkResponse.status(),
+    "should be able to read the permalink for the passport",
+  ).toBe(200);
+  const permalinks = (await permalinkResponse.json()) as Array<{
+    id: string;
+    slug: string | null;
+  }>;
+  expect(permalinks.length, "passport should have a permalink").toBeGreaterThan(0);
+  const { id: permalinkId, slug: permalinkSlug } = permalinks[0];
 
   // Use a fresh unauthenticated context to confirm the public viewer works for anonymous users.
   const anonymous = await context.browser()!.newContext();
   const viewerPage = await anonymous.newPage();
-  await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/view/${upiUuid}`);
+  await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/p/${permalinkSlug ?? permalinkId}`);
   const bigNumber = viewerPage.locator('[data-cy="bignumber"]');
   await expect(bigNumber).toBeVisible();
   await expect(bigNumber).toHaveText(PROPERTY_VALUE);
@@ -177,16 +185,21 @@ test("BigNumber on a Property nested inside a SubmodelElementCollection", async 
   expect(uuidMatch).not.toBeNull();
   const passportId = uuidMatch![1];
 
-  const upiResponse = await page.request.get(
-    `${EnvConfig.OPEN_DPP_URL}/api/passports/${passportId}/unique-product-identifier`,
+  const permalinkResponse = await page.request.get(
+    `${EnvConfig.OPEN_DPP_URL}/api/p?passportId=${passportId}`,
   );
-  expect(upiResponse.status()).toBe(200);
-  const { uuid: upiUuid } = (await upiResponse.json()) as { uuid: string };
+  expect(permalinkResponse.status()).toBe(200);
+  const permalinks = (await permalinkResponse.json()) as Array<{
+    id: string;
+    slug: string | null;
+  }>;
+  expect(permalinks.length).toBeGreaterThan(0);
+  const { id: permalinkId, slug: permalinkSlug } = permalinks[0];
 
   // Viewer: drill into the SEC, then assert BigNumber renders the nested value.
   const anonymous = await context.browser()!.newContext();
   const viewerPage = await anonymous.newPage();
-  await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/view/${upiUuid}`);
+  await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/p/${permalinkSlug ?? permalinkId}`);
 
   // The SEC renders a "view details" link; follow it. The link carries
   // ?submodelPath=Metrics.Dimensions which the viewer threads into the

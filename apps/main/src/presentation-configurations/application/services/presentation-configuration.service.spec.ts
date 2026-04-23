@@ -158,6 +158,27 @@ describe("PresentationConfigurationService", () => {
       expect(mockRepository.save).not.toHaveBeenCalled();
       expect(result).toBe(existing);
     });
+
+    it("does not call save when the patch sets values identical to the current ones", async () => {
+      const organizationId = randomUUID();
+      const template = Template.create({ organizationId });
+      const existing = PresentationConfiguration.create({
+        organizationId,
+        referenceId: template.id,
+        referenceType: PresentationReferenceType.Template,
+        elementDesign: { "a.b": PresentationComponentName.BigNumber },
+        defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
+      });
+      mockRepository.findOrCreateByReference.mockResolvedValue(existing);
+
+      const result = await service.applyPatchForTemplate(template, {
+        elementDesign: { "a.b": PresentationComponentName.BigNumber },
+        defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
+      });
+
+      expect(mockRepository.save).not.toHaveBeenCalled();
+      expect(result).toBe(existing);
+    });
   });
 
   describe("applyPatchForPassport", () => {

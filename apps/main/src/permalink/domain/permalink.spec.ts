@@ -35,6 +35,16 @@ describe("Permalink", () => {
     }
   });
 
+  it("rejects a non-uuid id with ValueError", () => {
+    try {
+      Permalink.create({ ...baseInput(), id: "not-a-uuid" });
+      throw new Error("expected create() to throw ValueError");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValueError);
+      expect((error as Error).cause).toBeInstanceOf(ZodError);
+    }
+  });
+
   it("accepts a valid slug", () => {
     const permalink = Permalink.create({ ...baseInput(), slug: "acme-widget-v1" });
     expect(permalink.slug).toBe("acme-widget-v1");
@@ -105,5 +115,16 @@ describe("Permalink", () => {
     const permalink = Permalink.create(baseInput());
 
     expect(() => permalink.withSlug("BAD SLUG")).toThrow(ValueError);
+  });
+
+  it("fromPlain wraps invalid input as ValueError", () => {
+    try {
+      Permalink.fromPlain({});
+      throw new Error("expected fromPlain() to throw ValueError");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValueError);
+      expect(error).not.toBeInstanceOf(ZodError);
+      expect((error as Error).cause).toBeInstanceOf(ZodError);
+    }
   });
 });

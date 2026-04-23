@@ -163,7 +163,9 @@ describe("PermalinkRepository", () => {
       presentationConfigurationId,
     });
 
-    expect(second.id).toBe(first.id);
+    expect(first.created).toBe(true);
+    expect(second.created).toBe(false);
+    expect(second.permalink.id).toBe(first.permalink.id);
   });
 
   it("findOrCreateByPresentationConfigurationId retries via find when save hits E11000", async () => {
@@ -184,7 +186,8 @@ describe("PermalinkRepository", () => {
         presentationConfigurationId,
       });
 
-      expect(result.id).toBe(winner.id);
+      expect(result.permalink.id).toBe(winner.id);
+      expect(result.created).toBe(false);
       expect(findSpy).toHaveBeenCalledTimes(2);
       expect(saveSpy).toHaveBeenCalledTimes(1);
     } finally {
@@ -257,6 +260,43 @@ describe("PermalinkRepository", () => {
 
     const found = await repository.findByPresentationConfigurationId(presentationConfigurationId);
     expect(found).toBeUndefined();
+  });
+
+  it("propagates E11000 inside a transaction without re-reading on the aborted session", async () => {
+    // Inside a transaction, MongoDB aborts on E11000 and the session can no
+    // longer be used for reads. The repository must surface the error and
+    // NOT attempt the race-recovery re-read — callers retry at the
+    // transaction boundary.
+    const presentationConfigurationId = randomUUID();
+
+    const findSpy = jest
+      .spyOn(repository, "findByPresentationConfigurationId")
+      .mockResolvedValueOnce(undefined);
+    const saveSpy = jest
+      .spyOn(repository, "save")
+      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
+
+    const session = await connection.startSession();
+    try {
+      session.startTransaction();
+      await expect(
+        repository.findOrCreateByPresentationConfigurationId(
+          { presentationConfigurationId },
+          { session },
+        ),
+      ).rejects.toThrow(/E11000/);
+
+      // Retry read must NOT have been attempted: findSpy called exactly once
+      // (the initial lookup), not twice (initial + race-recovery retry).
+      expect(findSpy).toHaveBeenCalledTimes(1);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+
+      await session.abortTransaction();
+    } finally {
+      await session.endSession();
+      findSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
   });
 
   afterAll(async () => {

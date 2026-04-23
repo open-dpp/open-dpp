@@ -91,6 +91,28 @@ describe("presentationConfigurationRepository", () => {
     expect(missing).toBeUndefined();
   });
 
+  it("counts presentation configurations by reference", async () => {
+    const referenceId = randomUUID();
+    const missingBefore = await repository.countByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(missingBefore).toBe(0);
+
+    const config = PresentationConfiguration.create({
+      organizationId: "org-count",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    await repository.save(config);
+
+    const count = await repository.countByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(count).toBe(1);
+  });
+
   it("findOrCreateByReference creates a fresh configuration and then reuses it", async () => {
     const referenceId = randomUUID();
     const first = await repository.findOrCreateByReference({
@@ -346,6 +368,47 @@ describe("presentationConfigurationRepository", () => {
       referenceId,
     });
     expect(found).toBeUndefined();
+  });
+
+  it("findOrCreateByReference propagates E11000 inside a transaction without re-reading on the aborted session", async () => {
+    // Inside a transaction, MongoDB aborts on E11000 and the session can no
+    // longer be used for reads. The repository must surface the error and
+    // NOT attempt the race-recovery re-read — callers retry at the
+    // transaction boundary.
+    const referenceId = randomUUID();
+
+    const findByReferenceSpy = jest
+      .spyOn(repository, "findByReference")
+      .mockResolvedValueOnce(undefined);
+    const saveSpy = jest
+      .spyOn(repository, "save")
+      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
+
+    const session = await connection.startSession();
+    try {
+      session.startTransaction();
+      await expect(
+        repository.findOrCreateByReference(
+          {
+            referenceType: PresentationReferenceType.Template,
+            referenceId,
+            organizationId: "org-tx-e11000",
+          },
+          { session },
+        ),
+      ).rejects.toThrow(/E11000/);
+
+      // Retry read must NOT have been attempted: findByReferenceSpy called
+      // exactly once (the initial lookup), not twice.
+      expect(findByReferenceSpy).toHaveBeenCalledTimes(1);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+
+      await session.abortTransaction();
+    } finally {
+      await session.endSession();
+      findByReferenceSpy.mockRestore();
+      saveSpy.mockRestore();
+    }
   });
 
   afterAll(async () => {

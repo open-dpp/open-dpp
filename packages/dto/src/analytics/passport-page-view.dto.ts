@@ -1,7 +1,8 @@
-import { z } from "zod/v4";
+import { z } from "zod";
+import { PermalinkSchema } from "../permalinks/permalink.dto";
 
 export const PassportPageViewSchema = z.object({
-  permalink: z.string(),
+  permalink: PermalinkSchema,
   page: z.string(),
 });
 

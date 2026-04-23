@@ -1,4 +1,5 @@
 export * from "./aas/administrative-information-json-schema";
+export * from "./analytics/passport-page-view.dto";
 export * from "./aas/asset-administration-shell-json-schema";
 export * from "./aas/asset-information-json-schema";
 export * from "./aas/common/basic-json-schema";

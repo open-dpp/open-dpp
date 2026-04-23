@@ -41,7 +41,7 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { Pagination } from "../../pagination/pagination";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
-import { PermalinkApplicationService } from "./permalink.application.service";
+import { PermalinkApplicationService } from "../application/services/permalink.application.service";
 
 @Controller()
 export class PermalinkController implements IAasReadEndpoints {

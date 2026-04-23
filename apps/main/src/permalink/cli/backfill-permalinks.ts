@@ -43,14 +43,13 @@ export async function runBackfill(context: INestApplicationContext): Promise<Bac
         organizationId: doc.organizationId,
       });
 
-      const existing = await permalinkRepository.findByPresentationConfigurationId(config.id);
-      if (existing) {
-        existingCount += 1;
-      } else {
-        await permalinkRepository.findOrCreateByPresentationConfigurationId({
-          presentationConfigurationId: config.id,
-        });
+      const result = await permalinkRepository.findOrCreateByPresentationConfigurationId({
+        presentationConfigurationId: config.id,
+      });
+      if (result.created) {
         created += 1;
+      } else {
+        existingCount += 1;
       }
     } catch (error) {
       failedIds.push(passportId);

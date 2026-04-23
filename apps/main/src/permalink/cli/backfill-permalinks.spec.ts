@@ -92,6 +92,8 @@ describe("runBackfill", () => {
     const result = await runBackfill(module as unknown as INestApplicationContext);
 
     expect(result.failed).toBe(0);
+    expect(result.created).toBe(2);
+    expect(result.existing).toBe(1);
     for (const passport of passports) {
       const config = await presentationConfigurationRepository.findByReference({
         referenceType: PresentationReferenceType.Passport,

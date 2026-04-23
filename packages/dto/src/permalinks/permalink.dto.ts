@@ -15,6 +15,8 @@ export const PermalinkSlugSchema = z
 
 export type PermalinkSlug = z.infer<typeof PermalinkSlugSchema>;
 
+export const PermalinkSchema = z.union([z.uuid(), PermalinkSlugSchema]);
+
 export const PermalinkInvariantsSchema = z.object({
   presentationConfigurationId: z.uuid(),
   slug: PermalinkSlugSchema.nullable(),

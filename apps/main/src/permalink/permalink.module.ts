@@ -12,7 +12,7 @@ import {
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema";
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
-import { PermalinkApplicationService } from "./presentation/permalink.application.service";
+import { PermalinkApplicationService } from "./application/services/permalink.application.service";
 import { PermalinkController } from "./presentation/permalink.controller";
 
 @Module({

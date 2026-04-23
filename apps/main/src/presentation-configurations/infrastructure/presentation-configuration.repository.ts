@@ -71,6 +71,18 @@ export class PresentationConfigurationRepository {
     return PresentationConfiguration.fromPlain({ ...plain, id: plain._id });
   }
 
+  async countByReference(
+    ref: PresentationConfigurationReference,
+    options?: DbSessionOptions,
+  ): Promise<number> {
+    return await this.presentationConfigurationDoc
+      .countDocuments({
+        referenceType: ref.referenceType,
+        referenceId: ref.referenceId,
+      })
+      .session(options?.session ?? null);
+  }
+
   async deleteByReference(
     ref: PresentationConfigurationReference,
     options?: DbSessionOptions,
@@ -91,6 +103,11 @@ export class PresentationConfigurationRepository {
     },
     options?: DbSessionOptions,
   ): Promise<PresentationConfiguration> {
+    // Capture up-front: MongoDB flips the session out of its transaction
+    // synchronously on E11000, so checking inside the catch would return
+    // false and we would re-enter the unsafe re-read path.
+    const inTransaction = options?.session?.inTransaction() ?? false;
+
     const ref = {
       referenceType: data.referenceType,
       referenceId: data.referenceId,
@@ -112,8 +129,13 @@ export class PresentationConfigurationRepository {
     try {
       return await this.save(fresh, options);
     } catch (error) {
+      // Inside a transaction, MongoDB aborts on E11000 and any follow-up
+      // read on the same session will fail. Surface the error so the caller
+      // can retry the whole transaction at a higher level.
+      if (inTransaction) throw error;
+
       if (isDuplicateKeyError(error)) {
-        const retry = await this.findByReference(ref, options);
+        const retry = await this.findByReference(ref);
         if (retry) {
           this.logger.warn(
             `findOrCreateByReference: race on (${data.referenceType}, ${data.referenceId}) recovered via re-read`,

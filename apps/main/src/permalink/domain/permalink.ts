@@ -27,6 +27,9 @@ export class Permalink implements IPersistable, HasCreatedAt {
         presentationConfigurationId: data.presentationConfigurationId,
         slug: data.slug ?? null,
       });
+      if (data.id !== undefined) {
+        z.uuid().parse(data.id);
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
@@ -45,7 +48,16 @@ export class Permalink implements IPersistable, HasCreatedAt {
   }
 
   static fromPlain(data: unknown): Permalink {
-    const parsed = PermalinkDtoSchema.parse(data);
+    let parsed;
+    try {
+      parsed = PermalinkDtoSchema.parse(data);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+        throw new ValueError(`Invalid Permalink: ${details.join("; ")}`, { cause: error });
+      }
+      throw error;
+    }
     return new Permalink(
       parsed.id,
       parsed.slug,

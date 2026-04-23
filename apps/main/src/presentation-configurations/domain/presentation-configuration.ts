@@ -121,6 +121,9 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
   }
 
   withElementDesign(path: string, component: PresentationComponentName): PresentationConfiguration {
+    if (this.elementDesign.get(path) === component) {
+      return this;
+    }
     const next = new Map(this.elementDesign);
     next.set(path, component);
     return this.copyWith({ elementDesign: next });
@@ -139,6 +142,9 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     type: KeyTypesType,
     component: PresentationComponentName,
   ): PresentationConfiguration {
+    if (this.defaultComponents.get(type) === component) {
+      return this;
+    }
     const next = new Map(this.defaultComponents);
     next.set(type, component);
     return this.copyWith({ defaultComponents: next });
