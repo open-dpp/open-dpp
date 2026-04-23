@@ -68,35 +68,14 @@ onMounted(async () => {
       <h2 class="text-lg font-semibold">
         {{ t("organizations.admin.instanceSettings.title") }}
       </h2>
-
-      <Card v-if="!loading">
-        <template #content>
-          <div class="flex flex-col gap-4">
-            <div class="flex items-center gap-3">
-              <ToggleSwitch
-                v-model="signupEnabled"
-                :disabled="isSignupLocked || isSaving"
-                @update:model-value="toggleSignup"
-              />
-              <div class="flex flex-col">
-                <span class="font-medium">
-                  {{ t("organizations.admin.instanceSettings.signupEnabled") }}
-                </span>
-                <span class="text-sm text-gray-500">
-                  {{ t("organizations.admin.instanceSettings.signupEnabledDescription") }}
-                </span>
-                <span
-                  v-if="isSignupLocked"
-                  class="mt-1 flex items-center gap-1 text-sm text-amber-600"
-                >
-                  <LockClosedIcon class="size-4" />
-                  {{ t("organizations.admin.instanceSettings.lockedByEnv") }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </template>
-      </Card>
+      <InstanceSettingToogle
+        v-model:model-value="signupEnabled"
+        @update:model-value="toggleSignup"
+        :loading="loading"
+        :isSaving="isSaving"
+        :isLocked="isSignupLocked"
+        translationKey="signupEnabled"
+      />
     </div>
   </section>
 </template>
