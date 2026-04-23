@@ -6,8 +6,8 @@ import { InstanceSettingsNamespace } from "./instance-settings/instance-settings
 import { AasIntegrationNamespace } from "./integrations/aas-integration.namespace";
 import { OrganizationsNamespace } from "./organizations/organizations.namespace";
 import { PassportNamespace } from "./passport/passports.namespace";
+import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
 import { TemplatesNamespace } from "./templates/templates.namespace";
-import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { UsersNamespace } from "./users/users.namespace";
 
 export class DppApiClient implements IApiClient {
@@ -16,7 +16,7 @@ export class DppApiClient implements IApiClient {
   public passports!: PassportNamespace;
   public branding!: BrandingNamespace;
 
-  public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace;
+  public permalinks!: PermalinksNamespace;
   public aasIntegration!: AasIntegrationNamespace;
   public users!: UsersNamespace;
   public instanceSettings!: InstanceSettingsNamespace;
@@ -47,7 +47,7 @@ export class DppApiClient implements IApiClient {
     this.branding = new BrandingNamespace(this.axiosInstance);
     this.aasIntegration = new AasIntegrationNamespace(this.axiosInstance);
 
-    this.uniqueProductIdentifiers = new UniqueProductIdentifiersNamespace(this.axiosInstance);
+    this.permalinks = new PermalinksNamespace(this.axiosInstance);
     this.users = new UsersNamespace(this.axiosInstance);
     this.instanceSettings = new InstanceSettingsNamespace(this.axiosInstance);
   }

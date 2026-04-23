@@ -66,7 +66,7 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     const permalink = String(route.params.permalink);
     const location = window.location;
     await apiClient.analytics.passportMetric.addPageView({
-      uuid: permalink,
+      permalink,
       page: location.href,
     });
   };

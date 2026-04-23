@@ -108,13 +108,13 @@ export function useBranding() {
   return { src, applyBranding };
 }
 
-export function useBrandingAnonymous(upi: Ref<string>) {
+export function useBrandingAnonymous(permalink: Ref<string>) {
   const { src, applyBranding } = useBrandingCommon(async () =>
-    apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value),
+    apiClient.dpp.permalinks.getBranding(permalink.value),
   );
 
   watch(
-    () => upi.value,
+    () => permalink.value,
     async (newValue) => {
       if (newValue) {
         await applyBranding();

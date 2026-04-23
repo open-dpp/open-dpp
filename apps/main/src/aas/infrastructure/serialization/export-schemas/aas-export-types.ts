@@ -11,5 +11,7 @@ export const AasExportSchemas = z.discriminatedUnion("version", [
 
 export type AasExport = z.infer<typeof AasExportSchemas>;
 
+// Must stay in lockstep with `EXPORT_VERSION` in
+// domain/exportable/aas-exportable.ts. When you add vN, update both pointers.
 export const aasExportSchemaJsonLatest = aasExportSchemaJsonV3_0;
 export type AasExportLatestVersion = z.infer<typeof aasExportSchemaJsonLatest>;

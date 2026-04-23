@@ -1,16 +1,19 @@
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed, provide, toRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 import NavigationTree from "./NavigationTree.vue";
 import PassportHeader from "./PassportHeader.vue";
+import { presentationConfigKey } from "./presentation-config";
 import Submodel from "./Submodel.vue";
 
 const { t } = useI18n();
 const passportStore = usePassportStore();
 const route = useRoute();
+
+provide(presentationConfigKey, toRef(passportStore, "presentationConfig"));
 
 const { submodelTree, submodelTreeDepth, mapTreeElementsToSubmodels, findTreeElementById } =
   useSubmodelTree(passportStore.submodels);
@@ -32,6 +35,15 @@ const submodels = computed(() => {
   }
 
   return mapTreeElementsToSubmodels(selectedElement.children);
+});
+
+// When the viewer drills into a nested SEC, the containing SEC link sets
+// `?submodelPath=<fullyQualifiedPath>` so the resolver can still match
+// configured BigNumber keys like "Metrics.Dimensions.weight".
+const parentPathOverride = computed(() => {
+  const raw = route.query.submodelPath;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === "string" && value.length > 0 ? value : undefined;
 });
 </script>
 
@@ -55,6 +67,7 @@ const submodels = computed(() => {
           :id-short="submodel.id"
           :title="submodel.title"
           :submodel-elements="submodel.submodelElements"
+          :parent-path-override="parentPathOverride"
         />
       </div>
     </div>

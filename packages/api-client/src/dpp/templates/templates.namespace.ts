@@ -7,15 +7,21 @@ import type {
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
-import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
 import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
+import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 
 export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
+  public presentationConfiguration!: PresentationConfigurationNamespace;
   private readonly templatesEndpoint = "/templates";
 
   constructor(private readonly axiosInstance: AxiosInstance) {
     this.aas = new AasNamespace(this.axiosInstance, "templates");
+    this.presentationConfiguration = new PresentationConfigurationNamespace(
+      this.axiosInstance,
+      "templates",
+    );
   }
 
   public async getAll(params: GetAllParamsDto) {

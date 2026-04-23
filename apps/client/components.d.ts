@@ -17,6 +17,7 @@ declare module 'vue' {
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
     BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
     BaseSectionHeader: typeof import('./src/components/BaseSectionHeader.vue')['default']
+    BigNumberValue: typeof import('./src/components/presentation/components/BigNumberValue.vue')['default']
     BrandingLogo: typeof import('./src/components/media/BrandingLogo.vue')['default']
     Breadcrumbs: typeof import('./src/components/Breadcrumbs.vue')['default']
     Button: typeof import('primevue/button')['default']
@@ -93,6 +94,8 @@ declare module 'vue' {
     PassportQrCodeDialog: typeof import('./src/components/presentation/PassportQrCodeDialog.vue')['default']
     Password: typeof import('primevue/password')['default']
     PermissionsForm: typeof import('./src/components/aas/PermissionsForm.vue')['default']
+    PresentationComponentRenderer: typeof import('./src/components/presentation/components/PresentationComponentRenderer.vue')['default']
+    PresentationTab: typeof import('./src/components/aas/presentation/PresentationTab.vue')['default']
     ProductImageGalleria: typeof import('./src/components/media/ProductImageGalleria.vue')['default']
     ProfileForm: typeof import('./src/components/ProfileForm.vue')['default']
     PropertyCreateEditor: typeof import('./src/components/aas/PropertyCreateEditor.vue')['default']
@@ -146,6 +149,7 @@ declare global {
   const AssetAdministrationShellEditor: (typeof import("./src/components/aas/AssetAdministrationShellEditor.vue"))["default"];
   const BaseButton: (typeof import("./src/components/basics/BaseButton.vue"))["default"];
   const BaseSectionHeader: (typeof import("./src/components/BaseSectionHeader.vue"))["default"];
+  const BigNumberValue: (typeof import("./src/components/presentation/components/BigNumberValue.vue"))["default"];
   const BrandingLogo: (typeof import("./src/components/media/BrandingLogo.vue"))["default"];
   const Breadcrumbs: (typeof import("./src/components/Breadcrumbs.vue"))["default"];
   const Button: (typeof import("primevue/button"))["default"];
@@ -222,6 +226,8 @@ declare global {
   const PassportQrCodeDialog: (typeof import("./src/components/presentation/PassportQrCodeDialog.vue"))["default"];
   const Password: (typeof import("primevue/password"))["default"];
   const PermissionsForm: (typeof import("./src/components/aas/PermissionsForm.vue"))["default"];
+  const PresentationComponentRenderer: (typeof import("./src/components/presentation/components/PresentationComponentRenderer.vue"))["default"];
+  const PresentationTab: (typeof import("./src/components/aas/presentation/PresentationTab.vue"))["default"];
   const ProductImageGalleria: (typeof import("./src/components/media/ProductImageGalleria.vue"))["default"];
   const ProfileForm: (typeof import("./src/components/ProfileForm.vue"))["default"];
   const PropertyCreateEditor: (typeof import("./src/components/aas/PropertyCreateEditor.vue"))["default"];

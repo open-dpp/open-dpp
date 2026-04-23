@@ -92,8 +92,19 @@ export async function findByIds<T extends Document<string>, V>(
 
 export type FindOptions = {
   pagination?: Pagination;
-  filter?: { status: DigitalProductDocumentStatusType[] };
+  filter?: { status?: ReadonlyArray<DigitalProductDocumentStatusType> };
 };
+
+function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusType>) {
+  const includesDraft = statuses.includes(DigitalProductDocumentStatus.Draft);
+  const currentStatusClause =
+    statuses.length === 1
+      ? { "lastStatusChange.currentStatus": statuses[0] }
+      : { "lastStatusChange.currentStatus": { $in: [...statuses] } };
+  return {
+    $or: [currentStatusClause, ...(includesDraft ? [{ _schemaVersion: "1.0.0" }] : [])],
+  };
+}
 
 export async function findAllByOrganizationId<
   T extends Document<string>,
@@ -105,18 +116,11 @@ export async function findAllByOrganizationId<
   options?: FindOptions,
 ) {
   const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
-  const status = options?.filter?.status;
+  const statuses = options?.filter?.status;
   const docs = await docModel
     .find({
       organizationId,
-      ...(status && {
-        $or: [
-          { "lastStatusChange.currentStatus": { $in: status } },
-          ...(status.includes(DigitalProductDocumentStatus.Draft)
-            ? [{ _schemaVersion: "1.0.0" }]
-            : []),
-        ],
-      }),
+      ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
       ...(tmpPagination.cursor && {
         $or: [
           { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },

@@ -28,7 +28,7 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { BadRequestException } from "@nestjs/common";
+import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { DigitalProductDocumentService } from "./digital-product-document.service";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
@@ -93,7 +93,7 @@ describe("DigitalProductDocumentService", () => {
       memberRole: MemberRole.MEMBER,
     });
     await passportRepository.save(passport);
-    const exception = new BadRequestException("Archived passport/ template cannot be modified");
+    const exception = new ValueError("Cannot modify an archived digital product document");
     await expect(
       service.modifyShell(passport.organizationId, passport.id, randomUUID(), {}, subject),
     ).rejects.toThrow(exception);
@@ -271,4 +271,44 @@ describe("DigitalProductDocumentService", () => {
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
+
+  it.each([
+    ["Draft", DigitalProductDocumentStatusChange.create({})],
+    [
+      "Published",
+      DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
+    ],
+  ])(
+    "archiveGuard permits %s passports (does not short-circuit on non-archived)",
+    async (_label, lastStatusChange) => {
+      const passport = Passport.create({
+        organizationId: "organizationId",
+        environment: Environment.create({}),
+        lastStatusChange,
+      });
+      const subject = SubjectAttributes.create({
+        userRole: UserRole.USER,
+        memberRole: MemberRole.MEMBER,
+      });
+      await passportRepository.save(passport);
+
+      // If archiveGuard wrongly blocked non-archived statuses it would throw a
+      // ValueError("Cannot modify..."). Any other failure (e.g. schema validation,
+      // missing submodel) proves the guard passed and execution reached the
+      // downstream layer.
+      const archiveError = new ValueError("Cannot modify an archived digital product document");
+      await expect(
+        service.modifySubmodel(
+          passport.organizationId,
+          passport.id,
+          randomUUID(),
+          { idShort: "demo" },
+          subject,
+        ),
+      ).rejects.not.toThrow(archiveError);
+    },
+  );
 });

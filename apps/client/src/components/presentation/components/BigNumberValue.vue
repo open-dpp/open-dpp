@@ -1,0 +1,83 @@
+<script lang="ts" setup>
+import type { SubmodelElementResponseDto } from "@open-dpp/dto";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { resolveDisplayName } from "../../../composables/display-name";
+
+const { element } = defineProps<{
+  element: SubmodelElementResponseDto;
+}>();
+
+const { locale } = useI18n();
+
+// Prefer the localized displayName; fall back to idShort (always present) so
+// the card is self-captioned even for elements that were authored without a
+// translated display name. The idShort keeps the card meaningful during
+// template authoring.
+const label = computed(() =>
+  resolveDisplayName(element.displayName ?? [], locale.value, element.idShort),
+);
+
+// Format per the active locale and preserve the raw value's precision. AAS
+// stores decimals with a period regardless of locale, but a German compliance
+// reader expects "3,4" and "1.234.567,89" while an English reader expects
+// "3.4" and "1,234,567.89". Values arrive as strings for numeric Property
+// types that include xs:long, xs:unsignedLong and xs:decimal — any of which
+// can exceed Number.MAX_SAFE_INTEGER (2^53-1) or carry more fractional digits
+// than a double can represent. Coercing through Number() would silently
+// collapse those digits, so we parse the string ourselves: format the integer
+// portion with BigInt (locale-aware grouping) and reattach the fractional
+// portion verbatim (preserves trailing zeros, which encode precision).
+const formattedValue = computed(() => {
+  const raw = element.value;
+  if (raw === null || raw === undefined || raw === "") return "";
+
+  if (typeof raw === "number") {
+    if (Number.isNaN(raw)) return String(raw);
+    const rawStr = String(raw);
+    const dotIndex = rawStr.indexOf(".");
+    const fractionDigits = dotIndex >= 0 ? rawStr.length - dotIndex - 1 : 0;
+    return new Intl.NumberFormat(locale.value, {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    }).format(raw);
+  }
+
+  if (typeof raw !== "string") return String(raw);
+
+  const decimalMatch = raw.match(/^([+-]?)(\d+)(?:\.(\d+))?$/);
+  if (decimalMatch) {
+    const [, sign, intPart, fracPart] = decimalMatch;
+    const formattedInt = new Intl.NumberFormat(locale.value).format(BigInt(`${sign}${intPart}`));
+    if (fracPart === undefined) return formattedInt;
+    const decimalSeparator =
+      new Intl.NumberFormat(locale.value).formatToParts(0.1).find((p) => p.type === "decimal")
+        ?.value ?? ".";
+    return `${formattedInt}${decimalSeparator}${fracPart}`;
+  }
+
+  const num = Number(raw);
+  if (Number.isNaN(num)) return raw;
+  return new Intl.NumberFormat(locale.value).format(num);
+});
+</script>
+
+<template>
+  <!--
+    Card treatment. Self-captioned: the big number reads first, with the
+    field's display name below as a small-caps caption. This makes the card
+    meaningful on its own (e.g. in the editor's Preview column, where there is
+    no surrounding `<dt>` label).
+  -->
+  <div
+    data-cy="bignumber"
+    class="border-surface-200 bg-surface-0 inline-block rounded-xl border px-5 py-4 text-center shadow-sm"
+  >
+    <span class="block text-4xl leading-none font-bold tracking-tight text-gray-900 tabular-nums">
+      {{ formattedValue }}
+    </span>
+    <span class="mt-2 block text-xs font-semibold tracking-[0.08em] text-gray-500 uppercase">
+      {{ label }}
+    </span>
+  </div>
+</template>

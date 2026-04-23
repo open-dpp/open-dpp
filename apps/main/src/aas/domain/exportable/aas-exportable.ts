@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { PresentationReferenceType } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { Template } from "../../../templates/domain/template";
 import { AasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
 import { ExpandedEnvironment } from "../expanded-environment";
@@ -9,6 +12,9 @@ import { DigitalProductDocumentStatusChange } from "../../../digital-product-doc
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
+  // Must stay in lockstep with `aasExportSchemaJsonLatest` in
+  // infrastructure/serialization/export-schemas/aas-export-types.ts. Bumping one
+  // without the other produces exports whose `version` field disagrees with their shape.
   private readonly EXPORT_VERSION = AasExportVersion.v3_0;
 
   private constructor(
@@ -19,6 +25,7 @@ export class AasExportable {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly lastStatusChange: DigitalProductDocumentStatusChange,
+    public readonly presentationConfiguration: PresentationConfiguration | null = null,
   ) {}
 
   static create(data: {
@@ -29,6 +36,7 @@ export class AasExportable {
     createdAt?: Date;
     updatedAt?: Date;
     lastStatusChange?: DigitalProductDocumentStatusChange;
+    presentationConfiguration?: PresentationConfiguration | null;
   }) {
     const now = DateTime.now();
 
@@ -40,10 +48,16 @@ export class AasExportable {
       data.createdAt ?? now,
       data.updatedAt ?? now,
       data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
+      data.presentationConfiguration ?? null,
     );
   }
 
-  static createFromPassport(data: Passport, expandedEnvironment: ExpandedEnvironment) {
+  static createFromPassport(
+    data: Passport,
+    expandedEnvironment: ExpandedEnvironment,
+    presentationConfiguration: PresentationConfiguration | null = null,
+  ) {
+    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Passport, data.id);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -52,10 +66,16 @@ export class AasExportable {
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
       lastStatusChange: data.getLastStatusChange(),
+      presentationConfiguration,
     });
   }
 
-  static createFromTemplate(data: Template, expandedEnvironment: ExpandedEnvironment) {
+  static createFromTemplate(
+    data: Template,
+    expandedEnvironment: ExpandedEnvironment,
+    presentationConfiguration: PresentationConfiguration | null = null,
+  ) {
+    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Template, data.id);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -63,6 +83,7 @@ export class AasExportable {
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
       lastStatusChange: data.getLastStatusChange(),
+      presentationConfiguration,
     });
   }
 
@@ -73,6 +94,7 @@ export class AasExportable {
         : undefined;
 
     const envPlain = this.environment.toPlain({ ability });
+    const presentationConfigurationPlain = this.presentationConfiguration?.toPlain();
     return {
       id: this.id,
       environment: {
@@ -84,6 +106,32 @@ export class AasExportable {
       updatedAt: this.updatedAt.toISOString(),
       format: this.EXPORT_FORMAT,
       version: this.EXPORT_VERSION,
+      ...(presentationConfigurationPlain
+        ? {
+            presentationConfiguration: {
+              elementDesign: presentationConfigurationPlain.elementDesign,
+              defaultComponents: presentationConfigurationPlain.defaultComponents,
+            },
+          }
+        : {}),
     };
+  }
+}
+
+function assertConfigMatches(
+  config: PresentationConfiguration | null,
+  expectedType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+  expectedReferenceId: string,
+): void {
+  if (!config) return;
+  if (config.referenceType !== expectedType) {
+    throw new ValueError(
+      `PresentationConfiguration referenceType ${config.referenceType} does not match expected ${expectedType}`,
+    );
+  }
+  if (config.referenceId !== expectedReferenceId) {
+    throw new ValueError(
+      `PresentationConfiguration referenceId ${config.referenceId} does not match expected ${expectedReferenceId}`,
+    );
   }
 }

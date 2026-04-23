@@ -20,9 +20,9 @@ const { goToParent } = useRouterUtils();
 const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 
 async function fetchDPD(id: string) {
-  const response = await fetchById(id);
-  if (response) {
-    model.value = response;
+  const result = await fetchById(id);
+  if (result.status === "ok") {
+    model.value = result.data;
   }
 }
 

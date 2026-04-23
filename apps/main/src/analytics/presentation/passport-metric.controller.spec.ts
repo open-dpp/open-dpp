@@ -22,6 +22,11 @@ import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import { PassportsModule } from "../../passports/passports.module";
+import { Permalink } from "../../permalink/domain/permalink";
+import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
+import { PermalinkModule } from "../../permalink/permalink.module";
+import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
@@ -39,7 +44,7 @@ describe("passportMetricController", () => {
   let passportRepository: PassportRepository;
   let passportMetricService: PassportMetricService;
   let module: TestingModule;
-  let uniqueProductIdentifierService: UniqueProductIdentifierRepository;
+  let uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -69,6 +74,7 @@ describe("passportMetricController", () => {
         AuthModule,
         OrganizationsModule,
         UsersModule,
+        PermalinkModule,
       ],
       providers: [
         UniqueProductIdentifierRepository,
@@ -88,7 +94,7 @@ describe("passportMetricController", () => {
 
     passportMetricService = module.get<PassportMetricService>(PassportMetricService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
-    uniqueProductIdentifierService = module.get<UniqueProductIdentifierRepository>(
+    uniqueProductIdentifierRepository = module.get<UniqueProductIdentifierRepository>(
       UniqueProductIdentifierRepository,
     );
     betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
@@ -120,8 +126,19 @@ describe("passportMetricController", () => {
       environment: Environment.create({}),
     });
     const uniqueProductIdentifier = passport.createUniqueProductIdentifier();
-    await uniqueProductIdentifierService.save(uniqueProductIdentifier);
+    await uniqueProductIdentifierRepository.save(uniqueProductIdentifier);
     await passportRepository.save(passport);
+
+    const presentationConfig = PresentationConfiguration.createForPassport({
+      organizationId: org.id,
+      referenceId: passport.id,
+    });
+    const presentationConfigurationRepository = module.get(PresentationConfigurationRepository);
+    await presentationConfigurationRepository.save(presentationConfig);
+
+    const permalink = Permalink.create({ presentationConfigurationId: presentationConfig.id });
+    const permalinkRepository = module.get(PermalinkRepository);
+    await permalinkRepository.save(permalink);
 
     const page = "http://example.com/page";
     const response: { status: number; body: { id: string } } = await request(getApp(app))
@@ -129,7 +146,7 @@ describe("passportMetricController", () => {
       .set("Cookie", userCookie)
       .send({
         page,
-        uuid: uniqueProductIdentifier.uuid,
+        permalink: permalink.id,
       });
     expect(response.status).toEqual(201);
     const passportMetric = await passportMetricService.findByIdOrFail(response.body.id);

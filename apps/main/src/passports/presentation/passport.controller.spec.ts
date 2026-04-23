@@ -23,6 +23,15 @@ import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorat
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
+import { PresentationReferenceType } from "@open-dpp/dto";
+import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
+import { PermalinkModule } from "../../permalink/permalink.module";
+import {
+  PresentationConfigurationDoc,
+  PresentationConfigurationSchema,
+} from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
@@ -47,7 +56,7 @@ describe("passportController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [PassportsModule, AasModule],
+      imports: [PassportsModule, AasModule, PresentationConfigurationsModule, PermalinkModule],
       providers: [
         PassportRepository,
         TemplateRepository,
@@ -63,6 +72,8 @@ describe("passportController", () => {
         schema: TemplateSchema,
       },
       { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
     PassportRepository,
@@ -349,6 +360,49 @@ describe("passportController", () => {
     await ctx.asserts.getShells(createPassport);
   });
 
+  it(`/GET shells lazily materializes a PresentationConfiguration for the passport`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const passport = await createPassport(org.id);
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
+
+    const firstResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set("x-open-dpp-organization-id", org.id)
+      .send();
+    expect(firstResponse.status).toEqual(200);
+
+    const created = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    expect(created).toBeDefined();
+    expect(created!.organizationId).toBe(org.id);
+
+    const secondResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set("x-open-dpp-organization-id", org.id)
+      .send();
+    expect(secondResponse.status).toEqual(200);
+
+    const reused = await presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    expect(reused!.id).toBe(created!.id);
+  });
+
   it(`/PATCH shell`, async () => {
     await ctx.asserts.modifyShell(createPassport, savePassport);
   });
@@ -502,7 +556,7 @@ describe("passportController", () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
 
-    const { dppIdentifiableRepository, uniqueProductIdentifierService } = ctx.getRepositories();
+    const { dppIdentifiableRepository, uniqueProductIdentifierRepository } = ctx.getRepositories();
 
     const passport = Passport.create({
       organizationId: org!.id,
@@ -513,7 +567,7 @@ describe("passportController", () => {
 
     const upi = passport.createUniqueProductIdentifier();
 
-    await uniqueProductIdentifierService.save(upi);
+    await uniqueProductIdentifierRepository.save(upi);
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
@@ -539,7 +593,7 @@ describe("passportController", () => {
       aasRepository,
       dppIdentifiableRepository,
       submodelRepository,
-      uniqueProductIdentifierService,
+      uniqueProductIdentifierRepository,
     } = ctx.getRepositories();
     await aasRepository.save(aas);
     await submodelRepository.save(submodel);
@@ -557,7 +611,7 @@ describe("passportController", () => {
 
     const upi = passport.createUniqueProductIdentifier();
 
-    await uniqueProductIdentifierService.save(upi);
+    await uniqueProductIdentifierRepository.save(upi);
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
@@ -568,7 +622,7 @@ describe("passportController", () => {
     expect(response.status).toEqual(204);
     expect(await aasRepository.findOne(aas.id)).toBeUndefined();
     expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
-    expect(await uniqueProductIdentifierService.findOne(upi.uuid)).toBeUndefined();
+    expect(await uniqueProductIdentifierRepository.findOne(upi.uuid)).toBeUndefined();
     expect(await dppIdentifiableRepository.findOne(passport.id)).toBeUndefined();
 
     const publishedPassport = Passport.create({

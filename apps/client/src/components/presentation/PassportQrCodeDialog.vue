@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { UniqueProductIdentifierDto } from "@open-dpp/api-client";
+import type { PermalinkDto } from "@open-dpp/api-client";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { VIEW_ROOT_URL } from "../../const";
@@ -9,26 +9,29 @@ import { useClipboard, useWindowSize } from "@vueuse/core";
 import { useToast } from "primevue/usetoast";
 
 const model = defineModel<boolean>();
-const props = defineProps<{ passportId: string }>();
-const upids = ref<UniqueProductIdentifierDto[] | undefined>(undefined);
+const props = defineProps<{ passportId: string | undefined }>();
+const permalinks = ref<PermalinkDto[] | undefined>(undefined);
 const { t } = useI18n();
 
 watch(
   () => props.passportId,
   async (newValue) => {
-    const result = await apiClient.dpp.uniqueProductIdentifiers.getByReference(newValue);
-    upids.value = result.data;
+    if (newValue) {
+      const result = await apiClient.dpp.permalinks.getByPassport(String(props.passportId));
+
+      permalinks.value = result.data;
+    }
   },
   { immediate: true },
 );
 
 const toast = useToast();
 
-const link = computed(() =>
-  upids.value && upids.value[0]
-    ? `${VIEW_ROOT_URL}/presentation/${upids.value[0].uuid}`
-    : undefined,
-);
+const link = computed(() => {
+  const first = permalinks.value?.[0];
+  if (!first) return undefined;
+  return `${VIEW_ROOT_URL}/p/${first.slug ?? first.id}`;
+});
 
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { copy } = useClipboard();
@@ -64,11 +67,11 @@ async function onCopy() {
         <ArrowTopRightOnSquareIcon class="mt-auto w-5" />
       </div>
       <div
-        v-if="!upids || !upids[0]"
+        v-if="!permalinks || !permalinks[0]"
         class="flex w-full flex-col items-center justify-center gap-5 p-10"
       >
         <span>
-          {{ t("uniqueproductidentifier.notfound") }}
+          {{ t("permalink.notfound") }}
         </span>
       </div>
     </div>

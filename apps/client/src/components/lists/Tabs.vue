@@ -17,7 +17,7 @@ const emits = defineEmits<{
       <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
       <select
         aria-label="Select a tab"
-        class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+        class="focus:outline-primary-600 col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2"
         @change="(event) => emits('change', (event.target as HTMLSelectElement).selectedIndex)"
       >
         <option v-for="(tab, index) in tabs" :key="index" :selected="index === value">
@@ -47,7 +47,7 @@ const emits = defineEmits<{
           <span>{{ tab }}</span>
           <span
             class="absolute inset-x-0 bottom-0 h-0.5"
-            :class="[index === value ? 'bg-indigo-500' : 'bg-transparent']"
+            :class="[index === value ? 'bg-primary-500' : 'bg-transparent']"
             aria-hidden="true"
           />
         </button>

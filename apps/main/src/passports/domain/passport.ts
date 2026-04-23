@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { z } from "zod";
+import { PassportDtoSchema } from "@open-dpp/dto";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
@@ -11,16 +11,9 @@ import {
   publishDpp,
   restoreDpp,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
-
-const PassportSchema = DigitalProductDocumentSchema.extend({
-  templateId: z.string().nullable(),
-  /** UPI uuid for presentation/chat links; set when listing passports */
-  uniqueProductIdentifierUuid: z.uuid().optional(),
-});
 
 export class Passport
   implements
@@ -36,7 +29,7 @@ export class Passport
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    private lastStatusChange: DigitalProductDocumentStatusChange,
+    private readonly lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -62,7 +55,7 @@ export class Passport
   }
 
   static fromPlain(data: unknown) {
-    const parsed = PassportSchema.parse(data);
+    const parsed = PassportDtoSchema.parse(data);
     return new Passport(
       parsed.id,
       parsed.organizationId,
@@ -104,16 +97,28 @@ export class Passport
     return this.lastStatusChange;
   }
 
-  publish() {
-    this.lastStatusChange = publishDpp(this.lastStatusChange);
+  private withLastStatusChange(newChange: DigitalProductDocumentStatusChange): Passport {
+    return new Passport(
+      this.id,
+      this.organizationId,
+      this.templateId,
+      this.environment,
+      this.createdAt,
+      this.updatedAt,
+      newChange,
+    );
   }
 
-  archive() {
-    this.lastStatusChange = archiveDpp(this.lastStatusChange);
+  publish(): this {
+    return this.withLastStatusChange(publishDpp(this.lastStatusChange)) as this;
   }
 
-  restore() {
-    this.lastStatusChange = restoreDpp(this.lastStatusChange);
+  archive(): this {
+    return this.withLastStatusChange(archiveDpp(this.lastStatusChange)) as this;
+  }
+
+  restore(): this {
+    return this.withLastStatusChange(restoreDpp(this.lastStatusChange)) as this;
   }
 
   isPublished(): boolean {
