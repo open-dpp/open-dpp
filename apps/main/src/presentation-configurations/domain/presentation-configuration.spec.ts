@@ -141,9 +141,9 @@ describe("PresentationConfiguration", () => {
       elementDesign: { "submodel-1.prop-1": PresentationComponentName.BigNumber },
     });
 
-    expect(
-      config.withElementDesign("submodel-1.prop-1", PresentationComponentName.BigNumber),
-    ).toBe(config);
+    expect(config.withElementDesign("submodel-1.prop-1", PresentationComponentName.BigNumber)).toBe(
+      config,
+    );
   });
 
   it("withoutElementDesign returns a new instance when the key is present", () => {

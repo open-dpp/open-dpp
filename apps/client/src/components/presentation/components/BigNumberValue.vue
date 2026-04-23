@@ -48,14 +48,11 @@ const formattedValue = computed(() => {
   const decimalMatch = raw.match(/^([+-]?)(\d+)(?:\.(\d+))?$/);
   if (decimalMatch) {
     const [, sign, intPart, fracPart] = decimalMatch;
-    const formattedInt = new Intl.NumberFormat(locale.value).format(
-      BigInt(`${sign}${intPart}`),
-    );
+    const formattedInt = new Intl.NumberFormat(locale.value).format(BigInt(`${sign}${intPart}`));
     if (fracPart === undefined) return formattedInt;
     const decimalSeparator =
-      new Intl.NumberFormat(locale.value)
-        .formatToParts(0.1)
-        .find((p) => p.type === "decimal")?.value ?? ".";
+      new Intl.NumberFormat(locale.value).formatToParts(0.1).find((p) => p.type === "decimal")
+        ?.value ?? ".";
     return `${formattedInt}${decimalSeparator}${fracPart}`;
   }
 

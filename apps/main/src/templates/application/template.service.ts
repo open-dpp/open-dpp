@@ -45,9 +45,7 @@ export class TemplateService {
         organizationId,
       );
     const updatedTemplate = handleDppStatusChangeRequest(template, body);
-    return TemplateDtoSchema.parse(
-      (await this.templateRepository.save(updatedTemplate)).toPlain(),
-    );
+    return TemplateDtoSchema.parse((await this.templateRepository.save(updatedTemplate)).toPlain());
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {

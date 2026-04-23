@@ -88,9 +88,7 @@ export class PassportService {
         organizationId,
       );
     const updatedPassport = handleDppStatusChangeRequest(passport, body);
-    return PassportDtoSchema.parse(
-      (await this.passportRepository.save(updatedPassport)).toPlain(),
-    );
+    return PassportDtoSchema.parse((await this.passportRepository.save(updatedPassport)).toPlain());
   }
 
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {

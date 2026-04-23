@@ -89,10 +89,9 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   const permalinkResponse = await page.request.get(
     `${EnvConfig.OPEN_DPP_URL}/api/p?passportId=${passportId}`,
   );
-  expect(
-    permalinkResponse.status(),
-    "should be able to read the permalink for the passport",
-  ).toBe(200);
+  expect(permalinkResponse.status(), "should be able to read the permalink for the passport").toBe(
+    200,
+  );
   const permalinks = (await permalinkResponse.json()) as Array<{
     id: string;
     slug: string | null;

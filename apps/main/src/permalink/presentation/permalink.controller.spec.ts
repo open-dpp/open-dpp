@@ -221,8 +221,7 @@ describe("PermalinkController", () => {
       referenceId: fixture.passport.id,
     };
 
-    const countBefore =
-      await presentationConfigurationRepository.countByReference(referenceFilter);
+    const countBefore = await presentationConfigurationRepository.countByReference(referenceFilter);
     expect(countBefore).toEqual(1);
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
@@ -235,8 +234,7 @@ describe("PermalinkController", () => {
 
     // Anonymous read must NOT materialize a new row. The fixture already wrote one;
     // the count must remain unchanged.
-    const countAfter =
-      await presentationConfigurationRepository.countByReference(referenceFilter);
+    const countAfter = await presentationConfigurationRepository.countByReference(referenceFilter);
     expect(countAfter).toEqual(1);
   });
 });

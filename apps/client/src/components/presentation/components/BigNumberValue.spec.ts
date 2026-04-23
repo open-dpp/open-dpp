@@ -52,15 +52,11 @@ describe("BigNumberValue", () => {
 
   describe("precision preservation", () => {
     it("preserves every digit of a big integer in en-US", () => {
-      expect(renderValue("12345678901234567890", "en-US")).toBe(
-        "12,345,678,901,234,567,890",
-      );
+      expect(renderValue("12345678901234567890", "en-US")).toBe("12,345,678,901,234,567,890");
     });
 
     it("preserves every digit of a big integer in de-DE", () => {
-      expect(renderValue("12345678901234567890", "de-DE")).toBe(
-        "12.345.678.901.234.567.890",
-      );
+      expect(renderValue("12345678901234567890", "de-DE")).toBe("12.345.678.901.234.567.890");
     });
 
     it("preserves every fractional digit beyond Number's precision limit", () => {
