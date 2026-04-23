@@ -29,7 +29,7 @@ export class Passport
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    private lastStatusChange: DigitalProductDocumentStatusChange,
+    private readonly lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -97,16 +97,28 @@ export class Passport
     return this.lastStatusChange;
   }
 
-  publish() {
-    this.lastStatusChange = publishDpp(this.lastStatusChange);
+  private withLastStatusChange(newChange: DigitalProductDocumentStatusChange): Passport {
+    return new Passport(
+      this.id,
+      this.organizationId,
+      this.templateId,
+      this.environment,
+      this.createdAt,
+      this.updatedAt,
+      newChange,
+    );
   }
 
-  archive() {
-    this.lastStatusChange = archiveDpp(this.lastStatusChange);
+  publish(): this {
+    return this.withLastStatusChange(publishDpp(this.lastStatusChange)) as this;
   }
 
-  restore() {
-    this.lastStatusChange = restoreDpp(this.lastStatusChange);
+  archive(): this {
+    return this.withLastStatusChange(archiveDpp(this.lastStatusChange)) as this;
+  }
+
+  restore(): this {
+    return this.withLastStatusChange(restoreDpp(this.lastStatusChange)) as this;
   }
 
   isPublished(): boolean {

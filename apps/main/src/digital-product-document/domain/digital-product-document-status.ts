@@ -16,9 +16,9 @@ export type DigitalProductDocumentStatusType = DigitalProductDocumentStatusDtoTy
 export const DigitalProductDocumentStatusChangeSchema = DigitalProductDocumentStatusChangeDtoSchema;
 
 export interface IDigitalProductDocumentStatusChangeable {
-  publish: () => void;
-  archive: () => void;
-  restore: () => void;
+  publish: () => this;
+  archive: () => this;
+  restore: () => this;
   isDraft: () => boolean;
   isPublished: () => boolean;
   isArchived: () => boolean;
@@ -60,20 +60,17 @@ export function restoreDpp(lastStatusChange: DigitalProductDocumentStatusChange)
   });
 }
 
-export function handleDppStatusChangeRequest(
-  changeable: IDigitalProductDocumentStatusChangeable,
+export function handleDppStatusChangeRequest<T extends IDigitalProductDocumentStatusChangeable>(
+  changeable: T,
   body: DigitalProductDocumentStatusModificationDto,
-) {
+): T {
   switch (body.method) {
     case "Publish":
-      changeable.publish();
-      return;
+      return changeable.publish();
     case "Archive":
-      changeable.archive();
-      return;
+      return changeable.archive();
     case "Restore":
-      changeable.restore();
-      return;
+      return changeable.restore();
     default: {
       const exhaustiveCheck: never = body.method;
       throw new ValueError(`Invalid status modification method: ${String(exhaustiveCheck)}`);
