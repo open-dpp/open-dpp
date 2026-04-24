@@ -137,7 +137,7 @@ router.beforeEach(async (to, from, next) => {
   const { organizations } = useOrganizationsStore();
   const indexStore = useIndexStore();
   const paramOrganizationId = to.params.organizationId;
-  if (paramOrganizationId) {
+  if (paramOrganizationId && paramOrganizationId !== indexStore.selectedOrganization) {
     const organization = organizations.find((o) => o.id === paramOrganizationId);
     if (!organization) {
       next("/organizations/create");
