@@ -424,10 +424,17 @@
       },
       "instanceSettings": {
         "title": "Instance Settings",
-        "signupEnabled": "Public signup enabled",
-        "signupEnabledDescription": "When disabled, only admins can add new users.",
+        "signupEnabled": {
+          "title": "Public signup enabled",
+          "description": "When disabled, only admins can add new users."
+        },
+        "organizationCreationEnabled": {
+          "title": "Public creation of organizations enabled",
+          "description": "When disabled, only admins can create new organizations."
+        },
         "saved": "Settings saved successfully",
         "error": "Error saving settings",
+        "errorLoading": "Error loading settings",
         "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
     }

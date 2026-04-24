@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Session } from "../../../auth/domain/session";
-import { UserRole } from "../../../users/domain/user-role.enum";
+import { UserRole, UserRoleType } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberRoleEnum, MemberRoleType } from "../../domain/member-role.enum";
 import {
@@ -18,6 +18,7 @@ import {
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
+import { InstanceSettingsService } from "../../../../instance-settings/application/services/instance-settings.service";
 
 @Injectable()
 export class OrganizationsService {
@@ -28,13 +29,20 @@ export class OrganizationsService {
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly invitationsRepository: InvitationsRepository,
+    private readonly instanceSettingsService: InstanceSettingsService,
   ) {}
 
   async createOrganization(
     data: OrganizationCreateProps,
     session: Session,
     headers: BetterAuthHeaders,
+    userRole: UserRoleType,
   ): Promise<Organization> {
+    const settings = await this.instanceSettingsService.getSettings();
+    if (!settings.organizationCreationEnabled.value && userRole !== UserRole.ADMIN) {
+      throw new ForbiddenException("Organization creation is not enabled for this instance.");
+    }
+
     const existsWithSlug = await this.organizationsRepository.findOneBySlug(data.slug);
     if (existsWithSlug) {
       throw new BadRequestException();

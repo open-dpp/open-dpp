@@ -17,6 +17,8 @@ import { OrganizationsService } from "../application/services/organizations.serv
 import { MemberWithUser } from "../domain/member";
 import { MemberRole } from "../domain/member-role.enum";
 import { Organization } from "../domain/organization";
+import { UserRoleDecorator } from "../../auth/presentation/decorators/user-role.decorator";
+import { type UserRoleType } from "../../users/domain/user-role.enum";
 
 @Controller("organizations")
 export class OrganizationsController {
@@ -32,6 +34,7 @@ export class OrganizationsController {
     @Body() body: { name: string; slug: string },
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
   ) {
     return this.organizationsService.createOrganization(
       {
@@ -41,6 +44,7 @@ export class OrganizationsController {
       },
       session,
       extractBetterAuthHeaders(headers),
+      userRole,
     );
   }
 

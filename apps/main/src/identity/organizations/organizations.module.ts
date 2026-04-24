@@ -17,6 +17,7 @@ import { Invitation, InvitationSchema } from "./infrastructure/schemas/invitatio
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
 import { Organization, OrganizationSchema } from "./infrastructure/schemas/organization.schema";
 import { OrganizationsController } from "./presentation/organizations.controller";
+import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
     EmailModule,
+    InstanceSettingsModule,
   ],
   controllers: [OrganizationsController],
   providers: [

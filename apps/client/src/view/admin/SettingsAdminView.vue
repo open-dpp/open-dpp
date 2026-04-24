@@ -1,17 +1,30 @@
 <script lang="ts" setup>
-import { LockClosedIcon } from "@heroicons/vue/24/outline";
-import { Card, ToggleSwitch, useToast } from "primevue";
+import { useToast } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import { type BooleanSettingsResponseDto } from "@open-dpp/dto";
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const toast = useToast();
+type InstanceSetting = {
+  key: "signupEnabled" | "organizationCreationEnabled";
+  setting: BooleanSettingsResponseDto;
+};
 
-const signupEnabled = ref(true);
-const isSignupLocked = ref(false);
+const instanceSettings = ref<InstanceSetting[]>([
+  {
+    key: "signupEnabled",
+    setting: { value: true },
+  },
+  {
+    key: "organizationCreationEnabled",
+    setting: { value: true },
+  },
+]);
+
 const isSaving = ref(false);
 const loading = ref(true);
 
@@ -19,8 +32,9 @@ async function fetchSettings() {
   try {
     loading.value = true;
     const res = await apiClient.dpp.instanceSettings.get();
-    signupEnabled.value = res.data.signupEnabled.value;
-    isSignupLocked.value = !!res.data.signupEnabled.locked;
+    for (const setting of instanceSettings.value) {
+      setting.setting = res.data[setting.key];
+    }
   } catch (error) {
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
@@ -31,23 +45,24 @@ async function fetchSettings() {
   }
 }
 
-async function toggleSignup() {
-  if (isSignupLocked.value || isSaving.value) {
+async function toggleInstanceSetting(settingKey: string) {
+  const setting = instanceSettings.value.find((s) => s.key === settingKey);
+  if (!setting || setting.setting.locked || isSaving.value) {
     return;
   }
   isSaving.value = true;
   try {
     const res = await apiClient.dpp.instanceSettings.update({
-      signupEnabled: signupEnabled.value,
+      [setting.key]: setting.setting.value,
     });
-    signupEnabled.value = res.data.signupEnabled.value;
+    setting.setting = res.data[setting.key];
     toast.add({
       severity: "success",
       summary: t("organizations.admin.instanceSettings.saved"),
       life: 3000,
     });
   } catch (error) {
-    signupEnabled.value = !signupEnabled.value;
+    setting.setting.value = !setting.setting.value;
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
       error,
@@ -69,12 +84,14 @@ onMounted(async () => {
         {{ t("organizations.admin.instanceSettings.title") }}
       </h2>
       <InstanceSettingToogle
-        v-model:model-value="signupEnabled"
-        @update:model-value="toggleSignup"
+        v-for="setting in instanceSettings"
+        v-model:model-value="setting.setting.value"
+        @update:model-value="toggleInstanceSetting(setting.key)"
+        :key="setting.key"
         :loading="loading"
         :isSaving="isSaving"
-        :isLocked="isSignupLocked"
-        translationKey="signupEnabled"
+        :isLocked="!!setting.setting.locked"
+        :translationKey="setting.key"
       />
     </div>
   </section>

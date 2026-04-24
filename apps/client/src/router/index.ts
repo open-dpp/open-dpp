@@ -133,9 +133,6 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
-  console.log(to);
-  console.log(isSignedIn);
-
   const organizationStore = useOrganizationsStore();
   const indexStore = useIndexStore();
   const paramOrganizationId = to.params.organizationId;

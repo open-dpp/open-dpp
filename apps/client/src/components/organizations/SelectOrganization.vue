@@ -8,16 +8,23 @@ import {
 } from "@headlessui/vue";
 import { ChevronUpDownIcon } from "@heroicons/vue/16/solid";
 import { CheckIcon, ListBulletIcon, PlusCircleIcon } from "@heroicons/vue/20/solid";
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations";
+import apiClient from "../../lib/api-client.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import { useUserStore } from "../../stores/user.ts";
+import { UserRoleDto } from "@open-dpp/dto";
 
 const organizationsStore = useOrganizationsStore();
 const indexStore = useIndexStore();
 const router = useRouter();
 const { t } = useI18n();
+const errorHandlingStore = useErrorHandlingStore();
+const organizationCreationEnabled = ref<boolean>(false);
+const { user } = useUserStore();
 
 const nameOfSelectedOrganization = computed(() => {
   if (indexStore.selectedOrganization) {
@@ -26,6 +33,18 @@ const nameOfSelectedOrganization = computed(() => {
     )?.name;
   }
   return "Auswählen";
+});
+
+onMounted(async () => {
+  try {
+    const res = await apiClient.dpp.instanceSettings.getPublic();
+    organizationCreationEnabled.value = res.data.organizationCreationEnabled ?? false;
+  } catch {
+    organizationCreationEnabled.value = false;
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.admin.instanceSettings.errorLoading"),
+    );
+  }
 });
 
 function setOrganization(organizationId: string) {
@@ -97,6 +116,7 @@ function setOrganization(organizationId: string) {
       </div>
       <router-link to="/organizations/create">
         <button
+          v-if="organizationCreationEnabled || user.role === UserRoleDto.ADMIN"
           type="button"
           class="bg-primary-500 hover:bg-primary-600 mt-2 flex items-center rounded-sm p-2 text-white"
         >
