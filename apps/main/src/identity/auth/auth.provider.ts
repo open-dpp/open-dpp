@@ -161,7 +161,7 @@ export const AuthProvider: Provider = {
                 return {
                   data: {
                     ...session,
-                    activeOrganizationId: organizationId,
+                    activeOrganizationId: organizationId.toString(), // Convert ObjectId to string since it otherwise is transferred to the frontend as Buffer which causes issues
                   },
                 };
               } catch (error) {
