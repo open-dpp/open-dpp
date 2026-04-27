@@ -330,6 +330,10 @@
     "details": "Details und User der Organisation.",
     "create": " Erstellen Sie eine neue Organisation.",
     "createError": "Fehler beim Erstellen der Organisation.",
+    "organizationCreationDisabled": {
+      "title": "Erstellung von Organisationen deaktiviert",
+      "description": "Die Erstellung von Organisationen ist von Ihrer Administrator*in deaktiviert worden. Bitte lassen Sie sich von Ihrer Adminstrator*in oder Kolleg*in zu einer Organisation einladen."
+    },
     "fetchError": "Fehler beim Laden der Organisationen.",
     "fetchCurrentError": "Fehler beim Laden der aktuellen Organisation.",
     "assignedOrganizations": "Alle zugewiesenen Organisationen",
@@ -375,7 +379,8 @@
       "cancel": "Einladung zurücknehmen",
       "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
       "acceptError": "Fehler bei der Akzeptanz der Einladung.",
-      "acceptTitle": "Du wurdest zu einer Organisation eingeladen."
+      "acceptTitle": "Du wurdest zu einer Organisation eingeladen.",
+      "errorLoading": "Fehler beim Laden der Einladungen"
     },
     "userInvitations": {
       "title": "Einladungen",

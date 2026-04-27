@@ -330,6 +330,10 @@
     "details": "Organization details and users.",
     "create": "Create a new organization.",
     "createError": "Error creating organization.",
+    "organizationCreationDisabled": {
+      "title": "Creating organizations is disabled",
+      "description": "Your administrator has disabled the ability to create organizations. Please ask your administrator or a colleague to invite you to an organization."
+    },
     "fetchError": "Error fetching organizations.",
     "fetchCurrentError": "Error fetching current organization.",
     "assignedOrganizations": "All assigned organizations",
@@ -375,7 +379,8 @@
       "cancel": "Cancel invitation",
       "acceptSuccess": "Successfully accepted invitation.",
       "acceptError": "Error on accepting invitation.",
-      "acceptTitle": "You have been invited to join an organization"
+      "acceptTitle": "You have been invited to join an organization",
+      "errorLoading": "Failed to load invitations"
     },
     "userInvitations": {
       "title": "Invitations",
