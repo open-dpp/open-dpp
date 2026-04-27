@@ -1,15 +1,27 @@
-import type { CreateUserDto, SetUserRoleDto } from "@open-dpp/dto";
-import { Body, Controller, Get, NotFoundException, Param, Patch, Post } from "@nestjs/common";
-import { CreateUserDtoSchema, SetUserRoleDtoSchema } from "@open-dpp/dto";
+import {
+  type CreateUserDto,
+  CreateUserDtoSchema,
+  type InvitationResponseDto,
+  InvitationResponseSchema,
+  type SetUserRoleDto,
+  SetUserRoleDtoSchema,
+} from "@open-dpp/dto";
+import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { UserHasRole } from "../../auth/presentation/decorators/user-has-role.decorator";
 import { UsersService } from "../application/services/users.service";
 import { User } from "../domain/user";
 import { UserRole, UserRoleEnum } from "../domain/user-role.enum";
+import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
+import { InvitationsRepository } from "../../organizations/infrastructure/adapters/invitations.repository";
+import { Invitation } from "../../organizations/domain/invitation";
 
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly invitationsRepository: InvitationsRepository,
+  ) {}
 
   @Post()
   @UserHasRole([UserRole.ADMIN])
@@ -28,12 +40,11 @@ export class UsersController {
     return this.usersService.setUserRole(id, UserRoleEnum.parse(body.role));
   }
 
-  @Get(":id")
-  async getUser(@Param("id") id: string): Promise<User> {
-    const user = await this.usersService.findOne(id);
-    if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
-    }
-    return user;
+  @Get("me/invitations")
+  async getInvitations(@UserEmailDecorator() email: string): Promise<InvitationResponseDto[]> {
+    const invitations = await this.invitationsRepository.findByEmail(email);
+    return InvitationResponseSchema.array().parse(
+      invitations.map((i: Invitation) => ({ id: i.id, expiresAt: i.expiresAt.toISOString() })),
+    );
   }
 }

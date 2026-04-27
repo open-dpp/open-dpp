@@ -25,6 +25,11 @@ export class InvitationsRepository {
     return InvitationMapper.toDomain(document);
   }
 
+  async findByEmail(email: string): Promise<Invitation[]> {
+    const documents = await this.invitationModel.find({ email });
+    return documents.map(InvitationMapper.toDomain);
+  }
+
   async findOneUnexpiredByEmailAndOrganization(
     email: string,
     organizationId: string,
@@ -53,14 +58,16 @@ export class InvitationsRepository {
     });
   }
 
-  async save(invitation: Invitation, headers?: BetterAuthHeaders): Promise<void> {
-    await (this.auth.api as any).createInvitation({
-      headers,
-      body: {
-        email: invitation.email,
-        role: invitation.role,
-        organizationId: invitation.organizationId,
-      },
-    });
+  async save(invitation: Invitation, headers?: BetterAuthHeaders): Promise<string> {
+    return (
+      await (this.auth.api as any).createInvitation({
+        headers,
+        body: {
+          email: invitation.email,
+          role: invitation.role,
+          organizationId: invitation.organizationId,
+        },
+      })
+    ).id;
   }
 }
