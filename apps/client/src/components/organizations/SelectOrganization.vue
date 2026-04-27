@@ -17,14 +17,14 @@ import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { useUserStore } from "../../stores/user.ts";
 import { UserRoleDto } from "@open-dpp/dto";
+import { useInstanceSettings } from "../../composables/instance.settings.ts";
 
 const organizationsStore = useOrganizationsStore();
 const indexStore = useIndexStore();
 const router = useRouter();
 const { t } = useI18n();
-const errorHandlingStore = useErrorHandlingStore();
-const organizationCreationEnabled = ref<boolean>(false);
-const { user } = useUserStore();
+
+const { canCreateOrganization, fetchInstanceSettings } = useInstanceSettings();
 
 const nameOfSelectedOrganization = computed(() => {
   if (indexStore.selectedOrganization) {
@@ -36,15 +36,7 @@ const nameOfSelectedOrganization = computed(() => {
 });
 
 onMounted(async () => {
-  try {
-    const res = await apiClient.dpp.instanceSettings.getPublic();
-    organizationCreationEnabled.value = res.data.organizationCreationEnabled ?? false;
-  } catch {
-    organizationCreationEnabled.value = false;
-    errorHandlingStore.logErrorWithNotification(
-      t("organizations.admin.instanceSettings.errorLoading"),
-    );
-  }
+  await fetchInstanceSettings();
 });
 
 function setOrganization(organizationId: string) {
@@ -116,7 +108,7 @@ function setOrganization(organizationId: string) {
       </div>
       <router-link to="/organizations/create">
         <button
-          v-if="organizationCreationEnabled || user.role === UserRoleDto.ADMIN"
+          v-if="canCreateOrganization"
           type="button"
           class="bg-primary-500 hover:bg-primary-600 mt-2 flex items-center rounded-sm p-2 text-white"
         >
