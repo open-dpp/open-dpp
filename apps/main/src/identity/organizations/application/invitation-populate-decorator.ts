@@ -42,7 +42,9 @@ export class InvitationPopulateDecorator {
             },
           }
         : {}),
+      status: this.invitation.status,
       expiresAt: this.invitation.expiresAt.toISOString(),
+      organizationId: this.invitation.organizationId,
     };
   }
 }

@@ -3,6 +3,7 @@ import {
   CreateUserDtoSchema,
   type InvitationResponseDto,
   InvitationResponseSchema,
+  type InvitationStatusDtoType,
   type SetUserRoleDto,
   SetUserRoleDtoSchema,
 } from "@open-dpp/dto";
@@ -17,6 +18,7 @@ import { InvitationsRepository } from "../../organizations/infrastructure/adapte
 import { Invitation } from "../../organizations/domain/invitation";
 import { OrganizationsRepository } from "../../organizations/infrastructure/adapters/organizations.repository";
 import { InvitationPopulateDecorator } from "../../organizations/application/invitation-populate-decorator";
+import { InvitationStatusQueryParam } from "./users.decorators";
 
 @Controller("users")
 export class UsersController {
@@ -44,10 +46,16 @@ export class UsersController {
   }
 
   @Get("me/invitations")
-  async getInvitations(@UserEmailDecorator() email: string): Promise<InvitationResponseDto[]> {
+  async getInvitations(
+    @UserEmailDecorator() email: string,
+    @InvitationStatusQueryParam() status: InvitationStatusDtoType | undefined,
+  ): Promise<InvitationResponseDto[]> {
     const invitations = await this.invitationsRepository.findByEmail(email);
+    const filteredInvitations = status
+      ? invitations.filter((i) => i.status === status)
+      : invitations;
     const populatedInvitations = await Promise.all(
-      invitations.map(async (i: Invitation) => {
+      filteredInvitations.map(async (i: Invitation) => {
         const decorator = new InvitationPopulateDecorator(
           i,
           this.organizationRepository,

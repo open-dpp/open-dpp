@@ -5,10 +5,12 @@ import { aasIntegrationHandlers } from "./handlers/aas-integration";
 import { passportsHandlers } from "./handlers/passports";
 import { templatesHandlers } from "./handlers/templates";
 import { uniqueProductIdentifierHandlers } from "./handlers/unique-product-identifiers";
+import { userHandlers } from "./handlers/users";
 
 const handlers = [
   ...uniqueProductIdentifierHandlers,
   ...organizationHandlers,
+  ...userHandlers,
   ...aasIntegrationHandlers,
   ...aasHandlers("templates"),
   ...aasHandlers("passports"),

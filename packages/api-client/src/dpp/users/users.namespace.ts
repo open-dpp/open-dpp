@@ -1,4 +1,9 @@
-import type { CreateUserDto, InvitationResponseDto, SetUserRoleDto } from "@open-dpp/dto";
+import type {
+  CreateUserDto,
+  InvitationResponseDto,
+  InvitationStatusDtoType,
+  SetUserRoleDto,
+} from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
 
 export class UsersNamespace {
@@ -12,7 +17,7 @@ export class UsersNamespace {
     return this.axiosInstance.patch<void>(`/users/${id}/role`, data);
   }
 
-  public async getInvitations() {
-    return this.axiosInstance.get<InvitationResponseDto[]>("/users/me/invitations");
+  public async getInvitations(params?: { status: InvitationStatusDtoType }) {
+    return this.axiosInstance.get<InvitationResponseDto[]>("/users/me/invitations", { params });
   }
 }

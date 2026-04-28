@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { DigitalProductDocumentStatusDto, SubmodelElementSchema, UserRoleDto } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  InvitationStatusDto,
+  SubmodelElementSchema,
+  UserRoleDto,
+} from "@open-dpp/dto";
 import {
   propertyModificationPlainFactory,
   subjectPlainFactory,
@@ -7,7 +12,7 @@ import {
   submodelModificationPlainFactory,
 } from "@open-dpp/testing";
 import { AssetAdministrationShellType, OpenDppClient } from "../../src";
-import { activeOrganization, invitation, organizations } from "./handlers/organization";
+import { activeOrganization, orgaInvitation, organizations } from "./handlers/organization";
 import {
   aasModification,
   aasResponse,
@@ -26,6 +31,7 @@ import { passport1, passport2 } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
+import { userInvitation } from "./handlers/users";
 
 describe("apiClient", () => {
   beforeAll(() => server.listen());
@@ -46,8 +52,18 @@ describe("apiClient", () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
       });
-      const response = await sdk.dpp.organizations.getInvitation(invitation.id);
-      expect(response.data).toEqual(invitation);
+      const response = await sdk.dpp.organizations.getInvitation(orgaInvitation.id);
+      expect(response.data).toEqual(orgaInvitation);
+    });
+  });
+
+  describe("users", () => {
+    it("should return invitations of user", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.getInvitations({ status: InvitationStatusDto.PENDING });
+      expect(response.data).toEqual([userInvitation]);
     });
   });
 

@@ -1,7 +1,7 @@
 import type { AxiosInstance } from "axios";
 import type { MemberDto } from "./member.dtos";
 import type { OrganizationCreateDto, OrganizationDto } from "./organization.dtos";
-import { InvitationResponseDto } from "@open-dpp/dto";
+import type { InvitationResponseDto } from "@open-dpp/dto";
 
 export class OrganizationsNamespace {
   constructor(private readonly axiosInstance: AxiosInstance) {}

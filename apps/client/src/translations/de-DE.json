@@ -377,10 +377,12 @@
       "accept": "Akzeptieren",
       "decline": "Ablehnen",
       "cancel": "Einladung zurücknehmen",
+      "expiresAt": "Ablaufdatum",
+      "expired": "Abgelaufen",
       "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
       "acceptError": "Fehler bei der Akzeptanz der Einladung.",
       "acceptTitle": "Du wurdest zu einer Organisation eingeladen.",
-      "errorLoading": "Fehler beim Laden der Einladungen",
+      "errorLoading": "Fehler beim Laden der Einladung | Fehler beim Laden der Einladungen",
       "invitedBy": "Eingeladen von",
       "invitedToOrganization": "Eingeladen zu der Organisation"
     },

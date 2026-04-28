@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import {
-  type DigitalProductDocumentStatusDtoType,
   type DigitalProductDocumentDto,
-  DigitalProductDocumentStatusDto,
+  type DigitalProductDocumentStatusDtoType,
 } from "@open-dpp/dto";
 import type { Page } from "../../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../../composables/aas-utils.ts";

@@ -2,16 +2,11 @@
 import { useI18n } from "vue-i18n";
 import CreateOrganizationForm from "../../components/organizations/CreateOrganizationForm.vue";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
-import { useInvitations } from "../../composables/invitation.ts";
-import { onMounted } from "vue";
-import { useRouter } from "vue-router";
 import { useInstanceSettings } from "../../composables/instance.settings.ts";
+import InvitationsTable from "./InvitationsTable.vue";
+
 const { t } = useI18n();
 const { canCreateOrganization } = useInstanceSettings();
-const { invitations, fetchInvitations } = useInvitations();
-onMounted(async () => {
-  await fetchInvitations();
-});
 </script>
 
 <template>
@@ -36,36 +31,7 @@ onMounted(async () => {
         </template>
       </Card>
       <Card>
-        <template #content>
-          <DataTable :value="invitations" tableStyle="min-width: 50rem">
-            <template #header>
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <span class="text-xl font-bold">{{
-                  t("organizations.userInvitations.title")
-                }}</span>
-              </div>
-            </template>
-            <Column field="id" header="Id"></Column>
-            <Column
-              field="organization.name"
-              :header="t('organizations.invitation.invitedToOrganization')"
-            />
-            <Column field="inviter.name" :header="t('organizations.invitation.invitedBy')" />
-            <Column>
-              <template #body="{ data }">
-                <div class="flex w-full justify-end">
-                  <div class="flex items-center gap-2 rounded-md">
-                    <Button asChild v-slot="slotProps">
-                      <RouterLink :to="`/accept-invitation/${data.id}`" :class="slotProps.class">{{
-                        t("organizations.invitation.accept")
-                      }}</RouterLink>
-                    </Button>
-                  </div>
-                </div>
-              </template>
-            </Column>
-          </DataTable>
-        </template>
+        <template #content><InvitationsTable /></template>
       </Card>
     </div>
   </ContentViewWrapper>

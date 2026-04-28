@@ -23,6 +23,8 @@ import type { Auth } from "better-auth";
 import { AUTH } from "../../auth/auth.provider";
 import { InvitationSchema } from "../../organizations/infrastructure/schemas/invitation.schema";
 import { EmailService } from "../../../email/email.service";
+import { InvitationStatus } from "../../organizations/domain/invitation-status.enum";
+import { Types } from "mongoose";
 
 describe("UsersController", () => {
   let app: INestApplication;
@@ -106,6 +108,15 @@ describe("UsersController", () => {
       organizationId: organization.id,
       role: MemberRole.MEMBER,
       inviterId: user.user.id,
+      status: InvitationStatus.PENDING,
+    });
+
+    const invitation2 = Invitation.create({
+      email: emailToInvite,
+      organizationId: new Types.ObjectId().toHexString(),
+      role: MemberRole.MEMBER,
+      inviterId: user.user.id,
+      status: InvitationStatus.DECLINED,
     });
 
     const invitedUser = await betterAuthHelper.createUser({
@@ -115,10 +126,10 @@ describe("UsersController", () => {
     const { userCookie: cookieOfInvitedUser } = await betterAuthHelper.getUserWithCookie(
       invitedUser.user.id,
     );
-    mockInvitationRepository.findByEmail.mockResolvedValue([invitation]);
+    mockInvitationRepository.findByEmail.mockResolvedValue([invitation, invitation2]);
     mockService.findOne.mockResolvedValue(user.user);
     const response = await request(app.getHttpServer())
-      .get("/users/me/invitations")
+      .get("/users/me/invitations?status=pending")
       .set("Cookie", cookieOfInvitedUser)
       .send();
     expect(response.status).toEqual(200);
@@ -129,6 +140,7 @@ describe("UsersController", () => {
         expiresAt: invitation.expiresAt.toISOString(),
         organization: { name: "My Organization" },
         inviter: { name: "First Last" },
+        status: InvitationStatus.PENDING,
       },
     ]);
   });

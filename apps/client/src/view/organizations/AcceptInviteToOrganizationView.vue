@@ -5,7 +5,9 @@ import { authClient } from "../../auth-client.ts";
 import { useNotificationStore } from "../../stores/notification.ts";
 import { onMounted, ref } from "vue";
 import type { InvitationResponseDto } from "@open-dpp/dto";
-import apiClient from "../../lib/api-client.ts";
+import { useInvitations } from "../../composables/invitation.ts";
+import { useIndexStore } from "../../stores";
+import { useOrganizationsStore } from "../../stores/organizations.ts";
 
 const props = defineProps<{
   id: string;
@@ -15,10 +17,12 @@ const router = useRouter();
 const notificationStore = useNotificationStore();
 const { t } = useI18n();
 const invitation = ref<InvitationResponseDto>();
+const { fetchInvitation } = useInvitations();
+const indexStore = useIndexStore();
+const organizationStore = useOrganizationsStore();
 
 onMounted(async () => {
-  const response = await apiClient.dpp.organizations.getInvitation(props.id);
-  invitation.value = response.data;
+  invitation.value = await fetchInvitation(props.id);
 });
 
 async function acceptInvite() {
@@ -27,7 +31,9 @@ async function acceptInvite() {
       invitationId: props.id,
     });
     notificationStore.addSuccessNotification(t("organizations.invitation.acceptSuccess"));
-    await router.push("/organizations");
+    await organizationStore.fetchOrganizations();
+    indexStore.selectOrganization(invitation.value?.organizationId ?? null);
+    await router.push("/");
   } catch {
     notificationStore.addErrorNotification(t("organizations.invitation.acceptError"));
   }

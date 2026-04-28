@@ -377,10 +377,12 @@
       "accept": "Accept",
       "decline": "Decline",
       "cancel": "Cancel invitation",
+      "expiresAt": "Expires at",
+      "expired": "Expired",
       "acceptSuccess": "Successfully accepted invitation.",
       "acceptError": "Error on accepting invitation.",
       "acceptTitle": "You have been invited to join an organization",
-      "errorLoading": "Failed to load invitations",
+      "errorLoading": "Failed to load invitation | Failed to load invitations",
       "invitedBy": "Invited by",
       "invitedToOrganization": "Invited to the organization"
     },

@@ -32,7 +32,6 @@ describe("OrganizationsController", () => {
   let moduleRef: TestingModule;
   const betterAuthHelper = new BetterAuthHelper();
   let invitationModel: Model<InvitationSchema>;
-  let invitationsRepository: InvitationsRepository;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -63,7 +62,6 @@ describe("OrganizationsController", () => {
       .compile();
 
     betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
-    invitationsRepository = moduleRef.get<InvitationsRepository>(InvitationsRepository);
     invitationModel = moduleRef.get<Model<InvitationSchema>>(getModelToken(InvitationDoc.name));
 
     app = moduleRef.createNestApplication();
@@ -144,10 +142,6 @@ describe("OrganizationsController", () => {
       createdAt: new Date(),
       expiresAt,
     });
-
-    const foundInvite = await invitationsRepository.findOneById(
-      new Types.ObjectId("69ef7a360765bccea49f238b").toHexString(),
-    );
 
     const response = await request(app.getHttpServer())
       .get(`/organizations/invitations/${invitationId}`)
