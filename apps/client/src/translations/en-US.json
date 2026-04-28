@@ -380,7 +380,9 @@
       "acceptSuccess": "Successfully accepted invitation.",
       "acceptError": "Error on accepting invitation.",
       "acceptTitle": "You have been invited to join an organization",
-      "errorLoading": "Failed to load invitations"
+      "errorLoading": "Failed to load invitations",
+      "invitedBy": "Invited by",
+      "invitedToOrganization": "Invited to the organization"
     },
     "userInvitations": {
       "title": "Invitations",

@@ -19,6 +19,12 @@ import { MemberRole } from "../domain/member-role.enum";
 import { Organization } from "../domain/organization";
 import { UserRoleDecorator } from "../../auth/presentation/decorators/user-role.decorator";
 import { type UserRoleType } from "../../users/domain/user-role.enum";
+import { InvitationResponseDto, InvitationResponseSchema } from "@open-dpp/dto";
+import { InvitationsRepository } from "../infrastructure/adapters/invitations.repository";
+import { UsersService } from "../../users/application/services/users.service";
+import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
+import { InvitationPopulateDecorator } from "../application/invitation-populate-decorator";
+import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
 
 @Controller("organizations")
 export class OrganizationsController {
@@ -26,7 +32,10 @@ export class OrganizationsController {
 
   constructor(
     private readonly organizationsService: OrganizationsService,
+    private readonly organizationsRepository: OrganizationsRepository,
     private readonly membersService: MembersService,
+    private readonly invitationsRepository: InvitationsRepository,
+    private readonly usersService: UsersService,
   ) {}
 
   @Post()
@@ -106,6 +115,23 @@ export class OrganizationsController {
       session,
       extractBetterAuthHeaders(headers),
     );
+  }
+
+  @Get("invitations/:id")
+  async getInvitation(
+    @Param("id") invitationId: string,
+    @UserEmailDecorator() email: string,
+  ): Promise<InvitationResponseDto> {
+    const foundInvitation = await this.invitationsRepository.findOneByIdOrFail(invitationId);
+    if (foundInvitation.email !== email) {
+      throw new ForbiddenException("You are not authorized to view this invitation");
+    }
+    const decorator = new InvitationPopulateDecorator(
+      foundInvitation,
+      this.organizationsRepository,
+      this.usersService,
+    );
+    return InvitationResponseSchema.parse((await decorator.populate()).toPlain());
   }
 
   @Get(":id/members")

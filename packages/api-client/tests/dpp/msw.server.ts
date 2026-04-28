@@ -1,5 +1,5 @@
 import { setupServer } from "msw/node";
-import { organizationHandlers } from "../organization";
+import { organizationHandlers } from "./handlers/organization";
 import { aasHandlers } from "./handlers/aas";
 import { aasIntegrationHandlers } from "./handlers/aas-integration";
 import { passportsHandlers } from "./handlers/passports";

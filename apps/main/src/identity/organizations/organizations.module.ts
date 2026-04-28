@@ -12,7 +12,7 @@ import { OrganizationsRepository } from "./infrastructure/adapters/organizations
 import { InvitationMapper } from "./infrastructure/mappers/invitation.mapper";
 import { MemberMapper } from "./infrastructure/mappers/member.mapper";
 import { OrganizationMapper } from "./infrastructure/mappers/organization.mapper";
-import { Invitation, InvitationSchema } from "./infrastructure/schemas/invitation.schema";
+import { InvitationDoc, InvitationSchema } from "./infrastructure/schemas/invitation.schema";
 
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
 import { Organization, OrganizationSchema } from "./infrastructure/schemas/organization.schema";
@@ -24,7 +24,7 @@ import { InstanceSettingsModule } from "../../instance-settings/instance-setting
     MongooseModule.forFeature([
       { name: Organization.name, schema: OrganizationSchema },
       { name: Member.name, schema: MemberSchema },
-      { name: Invitation.name, schema: InvitationSchema },
+      { name: InvitationDoc.name, schema: InvitationSchema },
     ]),
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),

@@ -9,20 +9,29 @@ import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRoleEnum } from "../../domain/member-role.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";
-import { Invitation as InvitationSchema } from "../schemas/invitation.schema";
+import { InvitationDoc } from "../schemas/invitation.schema";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 
 @Injectable()
 export class InvitationsRepository {
   constructor(
-    @InjectModel(InvitationSchema.name)
-    private readonly invitationModel: Model<InvitationSchema>,
+    @InjectModel(InvitationDoc.name)
+    private readonly invitationModel: Model<InvitationDoc>,
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
   async findOneById(id: string): Promise<Invitation | null> {
-    const document = await this.invitationModel.findById(id);
+    const document = await this.invitationModel.findOne({ _id: new ObjectId(id) });
     if (!document) return null;
     return InvitationMapper.toDomain(document);
+  }
+
+  async findOneByIdOrFail(id: string): Promise<Invitation> {
+    const invitation = await this.findOneById(id);
+    if (!invitation) {
+      throw new NotFoundInDatabaseException(Invitation.name);
+    }
+    return invitation;
   }
 
   async findByEmail(email: string): Promise<Invitation[]> {

@@ -116,7 +116,7 @@ describe("UsersController", () => {
       invitedUser.user.id,
     );
     mockInvitationRepository.findByEmail.mockResolvedValue([invitation]);
-
+    mockService.findOne.mockResolvedValue(user.user);
     const response = await request(app.getHttpServer())
       .get("/users/me/invitations")
       .set("Cookie", cookieOfInvitedUser)
@@ -124,7 +124,12 @@ describe("UsersController", () => {
     expect(response.status).toEqual(200);
 
     expect(response.body).toEqual([
-      { id: invitation.id, expiresAt: invitation.expiresAt.toISOString() },
+      {
+        id: invitation.id,
+        expiresAt: invitation.expiresAt.toISOString(),
+        organization: { name: "My Organization" },
+        inviter: { name: "First Last" },
+      },
     ]);
   });
 

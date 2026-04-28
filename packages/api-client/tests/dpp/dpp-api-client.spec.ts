@@ -7,7 +7,7 @@ import {
   submodelModificationPlainFactory,
 } from "@open-dpp/testing";
 import { AssetAdministrationShellType, OpenDppClient } from "../../src";
-import { activeOrganization, organizations } from "../organization";
+import { activeOrganization, invitation, organizations } from "./handlers/organization";
 import {
   aasModification,
   aasResponse,
@@ -40,6 +40,14 @@ describe("apiClient", () => {
       });
       const response = await sdk.dpp.organizations.getAll();
       expect(response.data).toEqual(organizations);
+    });
+
+    it("should return invitation", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.organizations.getInvitation(invitation.id);
+      expect(response.data).toEqual(invitation);
     });
   });
 

@@ -15,11 +15,14 @@ import { UserRole, UserRoleEnum } from "../domain/user-role.enum";
 import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
 import { InvitationsRepository } from "../../organizations/infrastructure/adapters/invitations.repository";
 import { Invitation } from "../../organizations/domain/invitation";
+import { OrganizationsRepository } from "../../organizations/infrastructure/adapters/organizations.repository";
+import { InvitationPopulateDecorator } from "../../organizations/application/invitation-populate-decorator";
 
 @Controller("users")
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly organizationRepository: OrganizationsRepository,
     private readonly invitationsRepository: InvitationsRepository,
   ) {}
 
@@ -43,8 +46,17 @@ export class UsersController {
   @Get("me/invitations")
   async getInvitations(@UserEmailDecorator() email: string): Promise<InvitationResponseDto[]> {
     const invitations = await this.invitationsRepository.findByEmail(email);
-    return InvitationResponseSchema.array().parse(
-      invitations.map((i: Invitation) => ({ id: i.id, expiresAt: i.expiresAt.toISOString() })),
+    const populatedInvitations = await Promise.all(
+      invitations.map(async (i: Invitation) => {
+        const decorator = new InvitationPopulateDecorator(
+          i,
+          this.organizationRepository,
+          this.usersService,
+        );
+
+        return (await decorator.populate()).toPlain();
+      }),
     );
+    return InvitationResponseSchema.array().parse(populatedInvitations);
   }
 }

@@ -1,6 +1,7 @@
 import type { AxiosInstance } from "axios";
 import type { MemberDto } from "./member.dtos";
 import type { OrganizationCreateDto, OrganizationDto } from "./organization.dtos";
+import { InvitationResponseDto } from "@open-dpp/dto";
 
 export class OrganizationsNamespace {
   constructor(private readonly axiosInstance: AxiosInstance) {}
@@ -25,6 +26,10 @@ export class OrganizationsNamespace {
     return this.axiosInstance.post<OrganizationDto>(`/organizations/${organizationId}/invite`, {
       email,
     });
+  }
+
+  public async getInvitation(id: string) {
+    return this.axiosInstance.get<InvitationResponseDto>(`/organizations/invitations/${id}`);
   }
 
   public async getMembers(organizationId: string) {

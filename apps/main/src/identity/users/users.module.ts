@@ -8,20 +8,32 @@ import { User, UserSchema } from "./infrastructure/schemas/user.schema";
 import { UsersController } from "./presentation/users.controller";
 import { InvitationsRepository } from "../organizations/infrastructure/adapters/invitations.repository";
 import {
-  Invitation,
+  InvitationDoc,
   InvitationSchema,
 } from "../organizations/infrastructure/schemas/invitation.schema";
+import {
+  Organization,
+  OrganizationSchema,
+} from "../organizations/infrastructure/schemas/organization.schema";
+import { OrganizationsRepository } from "../organizations/infrastructure/adapters/organizations.repository";
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
-      { name: Invitation.name, schema: InvitationSchema },
+      { name: InvitationDoc.name, schema: InvitationSchema },
+      { name: Organization.name, schema: OrganizationSchema },
     ]),
     forwardRef(() => AuthModule),
   ],
   controllers: [UsersController],
-  providers: [UsersService, UserMapper, UsersRepository, InvitationsRepository],
+  providers: [
+    UsersService,
+    UserMapper,
+    UsersRepository,
+    InvitationsRepository,
+    OrganizationsRepository,
+  ],
   exports: [UsersService, UsersRepository],
 })
 export class UsersModule {}

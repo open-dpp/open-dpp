@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Model, Types } from "mongoose";
@@ -9,7 +9,8 @@ import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
 import {
-  Invitation as InvitationSchema,
+  InvitationDoc,
+  InvitationDoc as InvitationSchema,
   InvitationSchema as InvitationSchemaDefinition,
 } from "../schemas/invitation.schema";
 import { InvitationsRepository } from "./invitations.repository";
@@ -54,7 +55,7 @@ describe("InvitationsRepository", () => {
     }).compile();
 
     repository = module.get<InvitationsRepository>(InvitationsRepository);
-    invitationModel = module.get<Model<InvitationSchema>>(`${InvitationSchema.name}Model`);
+    invitationModel = module.get<Model<InvitationSchema>>(getModelToken(InvitationDoc.name));
   });
 
   afterAll(async () => {

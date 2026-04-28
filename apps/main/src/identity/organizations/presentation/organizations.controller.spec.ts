@@ -3,7 +3,7 @@ import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import request from "supertest";
@@ -19,11 +19,20 @@ import { InvitationsRepository } from "../infrastructure/adapters/invitations.re
 import { MembersRepository } from "../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
 import { OrganizationsModule } from "../organizations.module";
+import { Model, Types } from "mongoose";
+import { MemberRole } from "../domain/member-role.enum";
+import { InvitationStatus } from "../domain/invitation-status.enum";
+import {
+  InvitationDoc,
+  InvitationDoc as InvitationSchema,
+} from "../infrastructure/schemas/invitation.schema";
 
 describe("OrganizationsController", () => {
   let app: INestApplication;
   let moduleRef: TestingModule;
   const betterAuthHelper = new BetterAuthHelper();
+  let invitationModel: Model<InvitationSchema>;
+  let invitationsRepository: InvitationsRepository;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -54,6 +63,8 @@ describe("OrganizationsController", () => {
       .compile();
 
     betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
+    invitationsRepository = moduleRef.get<InvitationsRepository>(InvitationsRepository);
+    invitationModel = moduleRef.get<Model<InvitationSchema>>(getModelToken(InvitationDoc.name));
 
     app = moduleRef.createNestApplication();
     await app.init();
@@ -109,6 +120,57 @@ describe("OrganizationsController", () => {
     const organizationsRepository = moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
     const updatedOrg = await organizationsRepository.findOneById(org.id);
     expect(updatedOrg!.name).toEqual("Updated Organization");
+  });
+
+  it("should return invitation by id", async () => {
+    const { user } = await betterAuthHelper.createUser({
+      email: `invite-${randomUUID()}@example.com`,
+    });
+    const { userCookie } = await betterAuthHelper.getUserWithCookie(user.id);
+    const {
+      userCookie: cookieInviter,
+      org: orgInviter,
+      user: inviter,
+    } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const invitationId = new Types.ObjectId().toHexString();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await invitationModel.create({
+      _id: invitationId,
+      email: user.email,
+      organizationId: orgInviter.id,
+      inviterId: inviter.id,
+      role: MemberRole.MEMBER,
+      status: InvitationStatus.PENDING,
+      createdAt: new Date(),
+      expiresAt,
+    });
+
+    const foundInvite = await invitationsRepository.findOneById(
+      new Types.ObjectId("69ef7a360765bccea49f238b").toHexString(),
+    );
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/invitations/${invitationId}`)
+      .set("Cookie", userCookie)
+      .send();
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      expiresAt: expiresAt.toISOString(),
+      id: invitationId,
+      inviter: {
+        name: "First Last",
+      },
+      organization: {
+        name: "My Organization",
+      },
+    });
+
+    const failedResponse = await request(app.getHttpServer())
+      .get(`/organizations/invitations/${invitationId}`)
+      .set("Cookie", cookieInviter)
+      .send();
+    expect(failedResponse.status).toEqual(403);
   });
 
   it("should return 403 when updating organization without rights", async () => {

@@ -46,6 +46,11 @@ onMounted(async () => {
               </div>
             </template>
             <Column field="id" header="Id"></Column>
+            <Column
+              field="organization.name"
+              :header="t('organizations.invitation.invitedToOrganization')"
+            />
+            <Column field="inviter.name" :header="t('organizations.invitation.invitedBy')" />
             <Column>
               <template #body="{ data }">
                 <div class="flex w-full justify-end">
