@@ -3,7 +3,6 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { useI18n } from "vue-i18n";
-import { useInstanceSettings } from "../../composables/instance.settings.ts";
 import { useInvitations } from "../../composables/invitation.ts";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 

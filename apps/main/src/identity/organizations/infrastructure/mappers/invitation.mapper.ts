@@ -1,10 +1,6 @@
 import { Invitation, InvitationDbProps } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
-import {
-  InvitationDocument,
-  InvitationDoc as InvitationSchema,
-} from "../schemas/invitation.schema";
-import { ObjectId } from "mongodb";
+import { InvitationDocument } from "../schemas/invitation.schema";
 
 export class InvitationMapper {
   static toDomain(document: InvitationDocument): Invitation {
@@ -19,18 +15,5 @@ export class InvitationMapper {
       expiresAt: document.expiresAt,
     };
     return Invitation.loadFromDb(props);
-  }
-
-  static toPersistence(entity: Invitation): InvitationSchema {
-    return {
-      _id: new ObjectId(entity.id),
-      email: entity.email,
-      organizationId: entity.organizationId,
-      inviterId: entity.inviterId,
-      role: entity.role,
-      status: entity.status,
-      createdAt: entity.createdAt,
-      expiresAt: entity.expiresAt,
-    } as InvitationSchema;
   }
 }

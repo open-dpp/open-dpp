@@ -158,6 +158,8 @@ describe("OrganizationsController", () => {
       organization: {
         name: "My Organization",
       },
+      organizationId: orgInviter.id,
+      status: InvitationStatus.PENDING,
     });
 
     const failedResponse = await request(app.getHttpServer())

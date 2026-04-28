@@ -106,7 +106,7 @@ function setOrganization(organizationId: string) {
           </ListboxOptions>
         </transition>
       </div>
-      <router-link to="/organizations/create">
+      <router-link to="/organizations/create?hideInvitations=true">
         <button
           v-if="canCreateOrganization"
           type="button"

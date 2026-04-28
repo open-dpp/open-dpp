@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { type BooleanSettingsResponseDto } from "@open-dpp/dto";
+import { authClient } from "../../auth-client.ts";
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();

@@ -141,6 +141,7 @@ describe("UsersController", () => {
         organization: { name: "My Organization" },
         inviter: { name: "First Last" },
         status: InvitationStatus.PENDING,
+        organizationId: organization.id,
       },
     ]);
   });
