@@ -6,7 +6,7 @@ import { IdParamSchema } from "../aas/presentation/aas.decorators";
 const tag = "organizations";
 
 export const organizationsPaths = {
-  "/organizations/invitations/:id": {
+  "/organizations/invitations/{id}": {
     get: {
       tags: [tag],
       parameters: [IdParamSchema],

@@ -31,11 +31,16 @@ async function acceptInvite() {
       invitationId: props.id,
     });
     notificationStore.addSuccessNotification(t("organizations.invitation.acceptSuccess"));
-    await organizationStore.fetchOrganizations();
-    indexStore.selectOrganization(invitation.value?.organizationId ?? null);
-    await router.push("/");
   } catch {
     notificationStore.addErrorNotification(t("organizations.invitation.acceptError"));
+    return;
+  }
+
+  try {
+    await organizationStore.fetchOrganizations();
+    indexStore.selectOrganization(invitation.value?.organizationId ?? null);
+  } finally {
+    await router.push("/");
   }
 }
 </script>
