@@ -3,6 +3,8 @@ import { OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { createDocument } from "zod-openapi";
 import { aasPaths } from "./aas.paths";
 import { brandingPaths } from "./branding.path";
+import { userPaths } from "./user.paths";
+import { organizationsPaths } from "./organization.paths";
 
 const document = createDocument({
   openapi: "3.1.0",
@@ -19,6 +21,8 @@ const document = createDocument({
   paths: {
     ...aasPaths,
     ...brandingPaths,
+    ...userPaths,
+    ...organizationsPaths,
   },
   components: {
     parameters: {
