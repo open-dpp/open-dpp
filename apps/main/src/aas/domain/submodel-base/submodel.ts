@@ -42,7 +42,7 @@ import {
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private auditLogEvents: Array<IAuditEvent> = [];
+  private _auditEvents: Array<IAuditEvent> = [];
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -134,9 +134,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.accept(new ModifierVisitor(options), { data });
   }
 
-  pullAuditLogEvents(): Array<IAuditEvent> {
-    const events = [...this.auditLogEvents];
-    this.auditLogEvents = [];
+  get auditEvents(): Array<IAuditEvent> {
+    return this._auditEvents;
+  }
+
+  pullAuditEvents(): Array<IAuditEvent> {
+    const events = [...this._auditEvents];
+    this._auditEvents = [];
     return events;
   }
 
@@ -144,12 +148,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
 
     submodelElement.accept(new ModifierVisitor(options), { data });
-    this.auditLogEvents.push(
+    this._auditEvents.push(
       SubmodelElementModificationEvent.create({
         submodelId: this.id,
         payload: SubmodelElementModificationEventPayload.create({
           fullIdShortPath: submodelElement.getIdShortPath(),
         }),
+        userId: options.ability.userId ?? undefined,
       }),
     );
     return submodelElement;

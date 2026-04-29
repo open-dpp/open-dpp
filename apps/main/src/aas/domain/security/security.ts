@@ -127,7 +127,7 @@ export class Security {
     this.addDefaultPolicyForObjectIfNoExists(IdShortPath.create({ path: submodel.idShort }));
   }
 
-  defineAbilityForSubject(subject: SubjectAttributes): AasAbility {
-    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject });
+  defineAbilityForSubject(subject: SubjectAttributes, userId?: string): AasAbility {
+    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject, userId });
   }
 }

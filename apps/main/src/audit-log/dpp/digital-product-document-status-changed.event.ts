@@ -1,11 +1,16 @@
 import { DigitalProductDocumentStatusChange } from "../../digital-product-document/domain/digital-product-document-status";
-import { IAuditEvent, AuditEventHeader } from "../audit-event";
+import {
+  IAuditEvent,
+  AuditEventHeader,
+  auditEventToDatabase,
+  AuditEventSchema,
+} from "../audit-event";
 
 export const DigitalProductDocumentStatusChangedEventVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
-export class DigitalProductDocumentStatusChangedEvent implements IAuditEvent<DigitalProductDocumentStatusChange> {
+export class DigitalProductDocumentStatusChangedEvent implements IAuditEvent {
   public static readonly Type = "DigitalProductDocumentStatusChanged";
 
   private constructor(
@@ -26,16 +31,14 @@ export class DigitalProductDocumentStatusChangedEvent implements IAuditEvent<Dig
   }
 
   static fromPlain(data: unknown) {
+    const parsed = AuditEventSchema.parse(data);
     return new DigitalProductDocumentStatusChangedEvent(
-      AuditEventHeader.fromPlain(data),
-      DigitalProductDocumentStatusChange.fromPlain(data),
+      AuditEventHeader.fromPlain(parsed.header),
+      DigitalProductDocumentStatusChange.fromPlain(parsed.payload),
     );
   }
 
-  toPlain(): Record<string, unknown> {
-    return {
-      header: this.header.toPlain(),
-      payload: this.payload.toPlain(),
-    };
+  toDatabase(): Record<string, unknown> {
+    return auditEventToDatabase(this);
   }
 }

@@ -1,11 +1,12 @@
-import type { Model as MongooseModel } from "mongoose";
+import type { ClientSession, Connection, Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
+import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDbSchema } from "./schemas/submodel-base/submodel-db-schema";
 import { SubmodelDoc, SubmodelDocSchemaVersion } from "./schemas/submodel.schema";
+import { AuditEventRepository } from "../../audit-log/infrastructure/audit-event.repository";
 
 @Injectable()
 export class SubmodelRepository {
@@ -14,6 +15,8 @@ export class SubmodelRepository {
   constructor(
     @InjectModel(SubmodelDoc.name)
     submodelDoc: MongooseModel<SubmodelDoc>,
+    private readonly auditEventRepository: AuditEventRepository,
+    @InjectConnection() private connection: Connection,
   ) {
     this.submodelDoc = submodelDoc;
   }
@@ -22,7 +25,9 @@ export class SubmodelRepository {
     return Submodel.fromPlain(SubmodelDbSchema.encode(plain));
   }
 
-  async save(submodel: Submodel, options?: DbSessionOptions) {
+  async saveWithSession(submodel: Submodel, options?: DbSessionOptions) {
+    const events = submodel.pullAuditEvents();
+    await this.auditEventRepository.createMany(events, options);
     return await save(
       submodel,
       this.submodelDoc,
@@ -31,6 +36,21 @@ export class SubmodelRepository {
       SubmodelDbSchema,
       options,
     );
+  }
+
+  async save(submodel: Submodel, options?: DbSessionOptions) {
+    if (options?.session) {
+      await this.saveWithSession(submodel, options);
+    } else {
+      const session = await this.connection.startSession();
+      try {
+        await session.withTransaction(async () => {
+          await this.saveWithSession(submodel, { ...options, session });
+        });
+      } finally {
+        await session.endSession();
+      }
+    }
   }
 
   async findOneOrFail(id: string): Promise<Submodel> {

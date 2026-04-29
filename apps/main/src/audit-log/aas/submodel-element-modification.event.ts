@@ -1,8 +1,13 @@
-import { IAuditEvent, AuditEventSchema, auditEventToPlain, IEventPayload } from "../audit-event";
+import {
+  AuditEventHeader,
+  AuditEventSchema,
+  auditEventToDatabase,
+  IAuditEvent,
+  IEventPayload,
+} from "../audit-event";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { z } from "zod";
 import { AuditEventTypes } from "../audit-event-types";
-import { randomUUID } from "node:crypto";
 
 export const SubmodelElementModificationEventVersion = {
   v1_0_0: "1.0.0",
@@ -10,13 +15,7 @@ export const SubmodelElementModificationEventVersion = {
 
 export class SubmodelElementModificationEvent implements IAuditEvent {
   private constructor(
-    public id: string,
-    public aggregateId: string,
-    public correlationId: string,
-    public timestamp: Date,
-    public type: string,
-    public userId: string | null,
-    public version: string,
+    public header: AuditEventHeader,
     readonly payload: SubmodelElementModificationEventPayload,
   ) {}
   static create(data: {
@@ -24,57 +23,47 @@ export class SubmodelElementModificationEvent implements IAuditEvent {
     payload: SubmodelElementModificationEventPayload;
     userId?: string;
   }): SubmodelElementModificationEvent {
-    return new SubmodelElementModificationEvent(
-      randomUUID(),
-      data.submodelId,
-      randomUUID(),
-      new Date(),
-      AuditEventTypes.SubmodelElementModificationEvent,
-      data.userId ?? null,
-      SubmodelElementModificationEventVersion.v1_0_0,
-      data.payload,
-    );
+    const header = AuditEventHeader.create({
+      type: AuditEventTypes.SubmodelElementModificationEvent,
+      version: SubmodelElementModificationEventVersion.v1_0_0,
+      aggregateId: data.submodelId,
+      userId: data.userId,
+    });
+    return new SubmodelElementModificationEvent(header, data.payload);
   }
 
   static fromPlain(data: unknown) {
     const parsed = AuditEventSchema.parse(data);
 
     return new SubmodelElementModificationEvent(
-      parsed.id,
-      parsed.aggregateId,
-      parsed.correlationId,
-      parsed.timestamp,
-      parsed.type,
-      parsed.userId,
-      parsed.version,
+      AuditEventHeader.fromPlain(parsed.header),
       SubmodelElementModificationEventPayload.fromPlain(parsed.payload),
     );
   }
 
-  toPlain(): Record<string, unknown> {
-    const plain = auditEventToPlain(this);
-    return plain;
+  toDatabase(): Record<string, unknown> {
+    return auditEventToDatabase(this);
   }
 }
 
 const SubmodelElementModificationEventPayloadSchema = z.object({
-  idShortPath: z.string(),
+  fullIdShortPath: z.string(),
 });
 
 export class SubmodelElementModificationEventPayload implements IEventPayload {
-  private constructor(public readonly idShortPath: IdShortPath) {}
+  private constructor(public readonly fullIdShortPath: IdShortPath) {}
   static create(data: { fullIdShortPath: IdShortPath }) {
     return new SubmodelElementModificationEventPayload(data.fullIdShortPath);
   }
   static fromPlain(data: unknown) {
     const parsed = SubmodelElementModificationEventPayloadSchema.parse(data);
     return new SubmodelElementModificationEventPayload(
-      IdShortPath.create({ path: parsed.idShortPath }),
+      IdShortPath.create({ path: parsed.fullIdShortPath }),
     );
   }
   toPlain() {
     return {
-      idShortPath: this.idShortPath.toString(),
+      fullIdShortPath: this.fullIdShortPath.toString(),
     };
   }
 }

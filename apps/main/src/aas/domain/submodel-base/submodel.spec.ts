@@ -729,7 +729,7 @@ describe("submodel", () => {
         ability,
       },
     );
-    const events = submodel.pullAuditLogEvents();
+    const events = submodel.pullAuditEvents();
     expect(events.map((e) => e.payload)).toEqual([
       SubmodelElementModificationEventPayload.create({
         fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),

@@ -48,16 +48,25 @@ describe("auditEventRepository", () => {
 
   it("should save a audit event", async () => {
     const submodelId = randomUUID();
-    const event = SubmodelElementModificationEvent.create({
+    const event1 = SubmodelElementModificationEvent.create({
       submodelId,
       payload: SubmodelElementModificationEventPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
       }),
     });
-    await auditEventRepository.save(event);
-    const foundEvent = await auditEventRepository.findOneOrFail(event.id);
-    expect(foundEvent).toEqual(event);
+    const event2 = SubmodelElementModificationEvent.create({
+      submodelId,
+      payload: SubmodelElementModificationEventPayload.create({
+        fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
+      }),
+    });
+    await auditEventRepository.createMany([event1, event2]);
+    const foundEvent = await auditEventRepository.findOneOrFail(event1.header.id);
+    expect(foundEvent).toEqual(event1);
     expect(foundEvent).toBeInstanceOf(SubmodelElementModificationEvent);
+
+    const foundEvents = await auditEventRepository.findByAggregateId(event1.header.aggregateId);
+    expect(foundEvents).toEqual([event1, event2]);
   });
 
   afterAll(async () => {

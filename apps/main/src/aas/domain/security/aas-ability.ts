@@ -8,10 +8,19 @@ export class AasAbility {
   private constructor(
     private rules: AccessPermissionRule[],
     private readonly subject: SubjectAttributes,
+    private readonly _userId: string | null,
   ) {}
 
-  static create(data: { rules: AccessPermissionRule[]; subject: SubjectAttributes }): AasAbility {
-    return new AasAbility(data.rules, data.subject);
+  static create(data: {
+    rules: AccessPermissionRule[];
+    subject: SubjectAttributes;
+    userId?: string;
+  }): AasAbility {
+    return new AasAbility(data.rules, data.subject, data.userId ?? null);
+  }
+
+  get userId(): string | null {
+    return this._userId;
   }
 
   getSubject(): SubjectAttributes {

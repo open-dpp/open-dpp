@@ -79,6 +79,7 @@ import {
 } from "../infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
+import { AuditLogModule } from "../../audit-log/audit-log.module";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -121,6 +122,7 @@ export function createAasTestContext<T>(
           },
           ...mongooseModels,
         ]),
+        AuditLogModule,
         AasModule,
         AuthModule,
         OrganizationsModule,

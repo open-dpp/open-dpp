@@ -17,6 +17,7 @@ import { AasSerializationService } from "./infrastructure/serialization/aas-seri
 import { SubmodelRepository } from "./infrastructure/submodel.repository";
 import { EnvironmentService } from "./presentation/environment.service";
 import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-initializer";
+import { AuditLogModule } from "../audit-log/audit-log.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
     ]),
     OrganizationsModule,
     MediaModule,
+    AuditLogModule,
   ],
   providers: [
     SubmodelRegistryInitializer,
