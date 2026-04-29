@@ -22,6 +22,7 @@ import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
+import { SubmodelElementModificationEventPayload } from "../../../audit-log/aas/submodel-element-modification.event";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -579,14 +580,14 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop1, { ability });
     submodel.addSubmodelElement(prop2, { ability });
 
-    expect(submodel.copy({ ability }).submodelElements).toEqual([prop1]);
+    expect(submodel.copy({ ability })!.submodelElements).toEqual([prop1]);
     ability = security.defineAbilityForSubject(anonymous);
     expect(submodel.copy({ ability })).toEqual(undefined);
     security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
     ]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability }).submodelElements).toEqual([prop2]);
+    expect(submodel.copy({ ability })!.submodelElements).toEqual([prop2]);
   });
 
   it("should get value representation for bill of material", () => {
@@ -700,9 +701,40 @@ describe("submodel", () => {
     const copy = submodel.copy();
     expect(copy).toEqual(
       Submodel.fromPlain(
-        submodelDesignOfProductPlainFactory.build({ id: copy.id }, { transient: { iriDomain } }),
+        submodelDesignOfProductPlainFactory.build({ id: copy!.id }, { transient: { iriDomain } }),
       ),
     );
+  });
+
+  it("should modify submodel element a copy", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+
+    const submodel = Submodel.create({ idShort: "section1" });
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+    const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(prop1, { ability });
+    submodel.modifySubmodelElement(
+      { idShort: prop1.idShort, value: "20" },
+      IdShortPath.create({ path: "prop1" }),
+      {
+        ability,
+      },
+    );
+    const events = submodel.pullAuditLogEvents();
+    expect(events.map((e) => e.payload)).toEqual([
+      SubmodelElementModificationEventPayload.create({
+        fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
+      }),
+    ]);
   });
 
   it("should be modified", () => {

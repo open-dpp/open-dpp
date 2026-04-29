@@ -33,10 +33,16 @@ import {
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
+import { IAuditEvent } from "../../../audit-log/audit-event";
+import {
+  SubmodelElementModificationEvent,
+  SubmodelElementModificationEventPayload,
+} from "../../../audit-log/aas/submodel-element-modification.event";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private auditLogEvents: Array<IAuditEvent> = [];
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -128,10 +134,24 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.accept(new ModifierVisitor(options), { data });
   }
 
+  pullAuditLogEvents(): Array<IAuditEvent> {
+    const events = [...this.auditLogEvents];
+    this.auditLogEvents = [];
+    return events;
+  }
+
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
 
     submodelElement.accept(new ModifierVisitor(options), { data });
+    this.auditLogEvents.push(
+      SubmodelElementModificationEvent.create({
+        submodelId: this.id,
+        payload: SubmodelElementModificationEventPayload.create({
+          fullIdShortPath: submodelElement.getIdShortPath(),
+        }),
+      }),
+    );
     return submodelElement;
   }
 
