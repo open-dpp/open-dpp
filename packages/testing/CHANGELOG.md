@@ -1,5 +1,13 @@
 # @open-dpp/testing
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@0.4.1
+  - @open-dpp/env@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @open-dpp/client
 
+## 0.4.1
+
+### Patch Changes
+
+- [#548](https://github.com/open-dpp/open-dpp/pull/548) [`2126c6a`](https://github.com/open-dpp/open-dpp/commit/2126c6adf8aa330233dd3b6dd9dd8b82878b88ad) Thanks [@Hentra](https://github.com/Hentra)! - Set the analytics y axis to never show below zero
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.1
+  - @open-dpp/dto@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes
