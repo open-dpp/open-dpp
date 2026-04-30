@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
-import { NotFoundError, NotFoundInDatabaseException } from "@open-dpp/exception";
+import { EnvService } from "@open-dpp/env";
+import { Language } from "@open-dpp/dto";
+import { NotFoundError, NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -11,6 +13,7 @@ describe("UsersService", () => {
   let service: UsersService;
   let mockRepo: any;
   let mockAuth: any;
+  let mockEnv: any;
 
   beforeEach(async () => {
     mockRepo = {
@@ -25,7 +28,15 @@ describe("UsersService", () => {
     mockAuth = {
       api: {
         requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        changeEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
+    };
+
+    mockEnv = {
+      get: jest.fn((key: string) => {
+        if (key === "OPEN_DPP_URL") return "https://open-dpp.test";
+        return undefined;
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -33,6 +44,7 @@ describe("UsersService", () => {
         UsersService,
         { provide: UsersRepository, useValue: mockRepo },
         { provide: AUTH, useValue: mockAuth },
+        { provide: EnvService, useValue: mockEnv },
       ],
     }).compile();
 
@@ -143,5 +155,214 @@ describe("UsersService", () => {
     await expect(service.setUserEmailVerified("test@example.com", true)).rejects.toThrow(
       NotFoundError,
     );
+  });
+
+  describe("getMe", () => {
+    it("delegates to the repository's findOneOrFail", async () => {
+      const user = User.create({ email: "me@example.com", firstName: "Me", lastName: "Self" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.getMe(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(result).toBe(user);
+    });
+
+    it("propagates NotFoundInDatabaseException when the user is missing", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.getMe("unknown")).rejects.toThrow(NotFoundInDatabaseException);
+    });
+  });
+
+  describe("updateProfile", () => {
+    const loadUser = () =>
+      User.create({
+        email: "user@example.com",
+        firstName: "Old",
+        lastName: "Name",
+        preferredLanguage: Language.en,
+      });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.updateProfile("nonexistent", { firstName: "Anything" })).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
+
+    it("updates firstName while preserving lastName", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { firstName: "New" });
+
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      expect(mockRepo.update.mock.calls[0][0].firstName).toBe("New");
+      expect(mockRepo.update.mock.calls[0][0].lastName).toBe("Name");
+      expect(result.firstName).toBe("New");
+    });
+
+    it("updates lastName while preserving firstName", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { lastName: "Changed" });
+
+      expect(mockRepo.update.mock.calls[0][0].firstName).toBe("Old");
+      expect(mockRepo.update.mock.calls[0][0].lastName).toBe("Changed");
+      expect(result.lastName).toBe("Changed");
+    });
+
+    it("updates preferredLanguage", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { preferredLanguage: Language.de });
+
+      expect(mockRepo.update.mock.calls[0][0].preferredLanguage).toBe(Language.de);
+      expect(result.preferredLanguage).toBe(Language.de);
+    });
+
+    it("composes multiple changes into a single update call", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      await service.updateProfile(user.id, {
+        firstName: "Jane",
+        lastName: "Roe",
+        preferredLanguage: Language.de,
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      const persisted = mockRepo.update.mock.calls[0][0] as User;
+      expect(persisted.firstName).toBe("Jane");
+      expect(persisted.lastName).toBe("Roe");
+      expect(persisted.preferredLanguage).toBe(Language.de);
+    });
+
+    it("short-circuits when the patch is empty", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.updateProfile(user.id, {});
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it("short-circuits when the patch values match the current user (no DB write)", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.updateProfile(user.id, {
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
+        preferredLanguage: user.preferredLanguage,
+      });
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it("throws NotFoundError when the repository update returns null", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockResolvedValue(null);
+
+      await expect(service.updateProfile(user.id, { firstName: "Jane" })).rejects.toThrow(
+        NotFoundError,
+      );
+    });
+  });
+
+  describe("requestEmailChange", () => {
+    const loadUser = () =>
+      User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      });
+
+    it("calls auth.api.changeEmail with newEmail, headers, and a callbackURL derived from env", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.findOneByEmail.mockResolvedValue(null);
+      const headers = { cookie: "better-auth.session=abc" };
+
+      await service.requestEmailChange(user.id, "new@example.com", headers);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockRepo.findOneByEmail).toHaveBeenCalledWith("new@example.com");
+      expect(mockAuth.api.changeEmail).toHaveBeenCalledWith({
+        body: {
+          newEmail: "new@example.com",
+          callbackURL: "https://open-dpp.test/profile",
+        },
+        headers,
+      });
+    });
+
+    it("rejects requests where the new email matches the current email", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      await expect(
+        service.requestEmailChange(user.id, user.email, { cookie: "x" }),
+      ).rejects.toThrow(ValueError);
+      expect(mockRepo.findOneByEmail).not.toHaveBeenCalled();
+      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+    });
+
+    it("rejects requests where the new email is already taken by another user", async () => {
+      const user = loadUser();
+      const other = User.create({
+        email: "taken@example.com",
+        firstName: "Other",
+        lastName: "User",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.findOneByEmail.mockResolvedValue(other);
+
+      await expect(
+        service.requestEmailChange(user.id, "taken@example.com", { cookie: "x" }),
+      ).rejects.toThrow(ValueError);
+      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+    });
+
+    it("propagates errors from Better Auth", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.findOneByEmail.mockResolvedValue(null);
+      mockAuth.api.changeEmail.mockRejectedValue(new Error("better auth blew up"));
+
+      await expect(
+        service.requestEmailChange(user.id, "fresh@example.com", { cookie: "x" }),
+      ).rejects.toThrow("better auth blew up");
+    });
+
+    it("propagates not-found errors when the user is missing", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(
+        service.requestEmailChange("nonexistent", "new@example.com", { cookie: "x" }),
+      ).rejects.toThrow(NotFoundInDatabaseException);
+      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+    });
+
+    it("does not invoke repository.update", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.findOneByEmail.mockResolvedValue(null);
+
+      await service.requestEmailChange(user.id, "new@example.com", { cookie: "x" });
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+    });
   });
 });

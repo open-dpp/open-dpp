@@ -508,7 +508,14 @@
     "displaySettings": "Anzeigeeinstellungen",
     "email": "E-Mail-Adresse",
     "password": "Passwort",
-    "passwordRepeat": "Passwort wiederholen"
+    "passwordRepeat": "Passwort wiederholen",
+    "save": "Änderungen speichern",
+    "profileSaved": "Profil aktualisiert",
+    "profileSaveFailed": "Dein Profil konnte nicht gespeichert werden",
+    "profileLoadFailed": "Dein Profil konnte nicht geladen werden. Bitte lade die Seite neu.",
+    "emailChangeRequested": "Bestätigungs-E-Mail an deine neue Adresse gesendet",
+    "emailChangeHint": "Du erhältst eine Bestätigungs-E-Mail an deine neue Adresse. Die Änderung wird erst nach Klick auf den Link wirksam.",
+    "emailChangeFailed": "E-Mail-Änderung konnte nicht angefordert werden"
   },
   "notifications": {
     "success": "Erfolg",

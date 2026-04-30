@@ -487,7 +487,14 @@
     "displaySettings": "Display settings",
     "email": "Email address",
     "password": "Password",
-    "passwordRepeat": "Repeat password"
+    "passwordRepeat": "Repeat password",
+    "save": "Save changes",
+    "profileSaved": "Profile updated",
+    "profileSaveFailed": "Could not save your profile",
+    "profileLoadFailed": "Could not load your profile. Please refresh the page.",
+    "emailChangeRequested": "Verification email sent to your new address",
+    "emailChangeHint": "You'll receive a verification email at your new address. The change takes effect once you click the link.",
+    "emailChangeFailed": "Could not request the email change"
   },
   "notifications": {
     "success": "Success",

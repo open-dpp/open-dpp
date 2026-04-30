@@ -102,6 +102,44 @@ export const AuthProvider: Provider = {
             required: false,
             input: true,
           },
+          preferredLanguage: {
+            type: "string",
+            required: false,
+            input: true,
+            defaultValue: "en",
+          },
+        },
+        changeEmail: {
+          enabled: true,
+          sendChangeEmailVerification: async ({
+            user,
+            newEmail,
+            url,
+          }: {
+            user: { firstName?: string };
+            newEmail: string;
+            url: string;
+            token: string;
+          }) => {
+            try {
+              const firstName = user.firstName ?? "User";
+              if (!user.firstName) {
+                logger.warn(
+                  `sendChangeEmailVerification invoked without firstName on user payload (newEmail=${newEmail})`,
+                );
+              }
+              await emailService.send(
+                VerifyEmailMail.create({
+                  to: newEmail,
+                  subject: "Confirm your new email address",
+                  templateProperties: { link: url, firstName },
+                }),
+              );
+            } catch (error) {
+              logger.error("Failed to send email change verification", error);
+              throw error;
+            }
+          },
         },
       },
       emailAndPassword: {

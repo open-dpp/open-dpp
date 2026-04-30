@@ -1,6 +1,9 @@
 import type { Auth } from "better-auth";
+import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { NotFoundError } from "@open-dpp/exception";
+import { EnvService } from "@open-dpp/env";
+import { UpdateProfileDto } from "@open-dpp/dto";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole, UserRoleType } from "../../domain/user-role.enum";
@@ -13,6 +16,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     @Inject(AUTH) private readonly auth: Auth,
+    private readonly envService: EnvService,
   ) {}
 
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
@@ -33,7 +37,10 @@ export class UsersService {
         body: { email, redirectTo: "/password-reset" },
       });
     } catch (error) {
-      this.logger.error("Failed to send password reset email", error);
+      this.logger.error(
+        `User ${saved.id} (${saved.email}) was created but the password-reset email failed to send. The user cannot log in until an admin re-triggers the reset email.`,
+        error,
+      );
     }
     return saved;
   }
@@ -75,5 +82,53 @@ export class UsersService {
       throw new NotFoundError(User.name, id);
     }
     return saved;
+  }
+
+  async getMe(userId: string): Promise<User> {
+    return this.usersRepository.findOneOrFail(userId);
+  }
+
+  async updateProfile(userId: string, patch: UpdateProfileDto): Promise<User> {
+    const user = await this.usersRepository.findOneOrFail(userId);
+    let next = user;
+    if (patch.firstName !== undefined || patch.lastName !== undefined) {
+      next = next.withName(
+        patch.firstName ?? user.firstName,
+        patch.lastName ?? user.lastName,
+      );
+    }
+    if (patch.preferredLanguage !== undefined) {
+      next = next.withPreferredLanguage(patch.preferredLanguage);
+    }
+    if (next === user) {
+      return user;
+    }
+    const saved = await this.usersRepository.update(next);
+    if (!saved) {
+      throw new NotFoundError(User.name, userId);
+    }
+    return saved;
+  }
+
+  async requestEmailChange(
+    userId: string,
+    newEmail: string,
+    headers: BetterAuthHeaders,
+  ): Promise<void> {
+    const user = await this.usersRepository.findOneOrFail(userId);
+    if (user.email === newEmail) {
+      throw new ValueError("New email must differ from the current email");
+    }
+    const existing = await this.usersRepository.findOneByEmail(newEmail);
+    if (existing) {
+      throw new ValueError("Email is already in use");
+    }
+    await this.auth.api.changeEmail({
+      body: {
+        newEmail,
+        callbackURL: `${this.envService.get("OPEN_DPP_URL")}/profile`,
+      },
+      headers,
+    });
   }
 }

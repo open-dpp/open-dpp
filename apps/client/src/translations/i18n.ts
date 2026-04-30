@@ -37,3 +37,12 @@ export function convertLocaleToLanguage(locale: string): LanguageType {
       return Language.en;
   }
 }
+
+export function convertLanguageToLocale(language: LanguageType): "en-US" | "de-DE" {
+  switch (language) {
+    case Language.de:
+      return "de-DE";
+    default:
+      return "en-US";
+  }
+}

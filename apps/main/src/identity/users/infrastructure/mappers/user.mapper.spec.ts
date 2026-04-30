@@ -1,4 +1,6 @@
-import { expect } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
+import { Language } from "@open-dpp/dto";
 import { ObjectId } from "mongodb";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -22,6 +24,7 @@ describe("userMapper", () => {
     banned: true,
     banReason: "Violation of terms",
     banExpires: now,
+    preferredLanguage: Language.de,
   });
 
   const validUserDocument = {
@@ -37,6 +40,7 @@ describe("userMapper", () => {
     banned: true,
     banReason: "Violation of terms",
     banExpires: now,
+    preferredLanguage: "de",
   } as unknown as UserDocument;
 
   it("should map from domain to persistence", () => {
@@ -56,6 +60,7 @@ describe("userMapper", () => {
       banned: validDomainUser.banned,
       banReason: validDomainUser.banReason,
       banExpires: validDomainUser.banExpires,
+      preferredLanguage: validDomainUser.preferredLanguage,
     });
   });
 
@@ -76,5 +81,107 @@ describe("userMapper", () => {
 
     expect(domain).toBeInstanceOf(User);
     expect(domain.role).toEqual(UserRole.USER);
+  });
+
+  it("maps preferredLanguage from persistence to domain", () => {
+    const domain = UserMapper.toDomain(validUserDocument);
+    expect(domain.preferredLanguage).toBe(Language.de);
+  });
+
+  it("defaults missing preferredLanguage in persistence to 'en'", () => {
+    const domain = UserMapper.toDomain({
+      ...validUserDocument,
+      preferredLanguage: undefined,
+    } as any);
+    expect(domain.preferredLanguage).toBe(Language.en);
+  });
+
+  describe("toDto", () => {
+    it("maps a domain User to a UserDto, stripping admin-only fields", () => {
+      const dto = UserMapper.toDto(validDomainUser);
+
+      expect(dto).toEqual({
+        id: validDomainUser.id,
+        email: validDomainUser.email,
+        firstName: validDomainUser.firstName,
+        lastName: validDomainUser.lastName,
+        name: validDomainUser.name,
+        image: validDomainUser.image,
+        emailVerified: validDomainUser.emailVerified,
+        preferredLanguage: validDomainUser.preferredLanguage,
+        createdAt: validDomainUser.createdAt,
+        updatedAt: validDomainUser.updatedAt,
+      });
+      expect(dto).not.toHaveProperty("role");
+      expect(dto).not.toHaveProperty("banned");
+      expect(dto).not.toHaveProperty("banReason");
+      expect(dto).not.toHaveProperty("banExpires");
+    });
+
+    it("preserves null firstName/lastName/name without coercing to undefined", () => {
+      const userWithoutNames = User.loadFromDb({
+        id: new ObjectId().toString(),
+        email: "anon@example.com",
+        firstName: null,
+        lastName: null,
+        emailVerified: false,
+        role: UserRole.USER,
+        createdAt: now,
+        updatedAt: now,
+        banned: false,
+        banReason: null,
+        banExpires: null,
+        preferredLanguage: Language.en,
+      });
+
+      const dto = UserMapper.toDto(userWithoutNames);
+
+      expect(dto.firstName).toBeNull();
+      expect(dto.lastName).toBeNull();
+      expect(dto.name).toBeNull();
+    });
+  });
+
+  describe("preferredLanguage fallback logging", () => {
+    let warnSpy: jest.SpiedFunction<(message: any) => void>;
+
+    beforeEach(() => {
+      warnSpy = jest.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it("falls back to 'en' and warns when an unsupported value is persisted", () => {
+      const domain = UserMapper.toDomain({
+        ...validUserDocument,
+        preferredLanguage: "fr",
+      } as any);
+
+      expect(domain.preferredLanguage).toBe(Language.en);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const message = warnSpy.mock.calls[0]![0] as string;
+      expect(message).toContain("fr");
+      expect(message).toContain(validUserDocument._id.toString());
+    });
+
+    it("does NOT warn when preferredLanguage is undefined (legitimately missing)", () => {
+      UserMapper.toDomain({
+        ...validUserDocument,
+        preferredLanguage: undefined,
+      } as any);
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it("does NOT warn when preferredLanguage is null (legitimately missing)", () => {
+      UserMapper.toDomain({
+        ...validUserDocument,
+        preferredLanguage: null,
+      } as any);
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
   });
 });

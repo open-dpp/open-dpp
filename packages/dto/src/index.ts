@@ -59,5 +59,7 @@ export * from "./shared/table.dto";
 export * from "./status/status.dto";
 export * from "./templates/template.dto";
 export * from "./users/create-user.dto";
+export * from "./users/request-email-change.dto";
 export * from "./users/set-user-role.dto";
+export * from "./users/update-profile.dto";
 export * from "./users/user.dto";

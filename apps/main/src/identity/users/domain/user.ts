@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { Language, LanguageType } from "@open-dpp/dto";
 import { UserRole, UserRoleType } from "./user-role.enum";
 
 export interface UserCreateProps {
@@ -12,6 +13,7 @@ export interface UserCreateProps {
   banned?: boolean;
   banReason?: string | null;
   banExpires?: Date | null;
+  preferredLanguage?: LanguageType;
 }
 
 export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
@@ -21,6 +23,7 @@ export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
   createdAt: Date;
   updatedAt: Date;
   role: UserRoleType;
+  preferredLanguage: LanguageType;
 };
 
 export class User {
@@ -37,6 +40,7 @@ export class User {
   public readonly banned: boolean;
   public readonly banReason: string | null;
   public readonly banExpires: Date | null;
+  public readonly preferredLanguage: LanguageType;
 
   private constructor(
     id: string,
@@ -51,6 +55,7 @@ export class User {
     banned: boolean,
     banReason: string | null,
     banExpires: Date | null,
+    preferredLanguage: LanguageType,
   ) {
     this.id = id;
     this.email = email;
@@ -66,6 +71,7 @@ export class User {
     this.banned = banned;
     this.banReason = banReason;
     this.banExpires = banExpires;
+    this.preferredLanguage = preferredLanguage;
   }
 
   public static create(data: UserCreateProps) {
@@ -83,6 +89,7 @@ export class User {
       !!data.banned,
       data.banReason ?? null,
       data.banExpires ?? null,
+      data.preferredLanguage ?? Language.en,
     );
   }
 
@@ -100,6 +107,7 @@ export class User {
       overrides.banned ?? this.banned,
       overrides.banReason !== undefined ? overrides.banReason : this.banReason,
       overrides.banExpires !== undefined ? overrides.banExpires : this.banExpires,
+      overrides.preferredLanguage ?? this.preferredLanguage,
     );
   }
 
@@ -109,6 +117,20 @@ export class User {
 
   public withEmailVerified(emailVerified: boolean): User {
     return this.copyWith({ emailVerified });
+  }
+
+  public withName(firstName: string | null, lastName: string | null): User {
+    if (firstName === this.firstName && lastName === this.lastName) {
+      return this;
+    }
+    return this.copyWith({ firstName, lastName });
+  }
+
+  public withPreferredLanguage(preferredLanguage: LanguageType): User {
+    if (preferredLanguage === this.preferredLanguage) {
+      return this;
+    }
+    return this.copyWith({ preferredLanguage });
   }
 
   public static loadFromDb(data: UserDbProps) {
@@ -125,6 +147,7 @@ export class User {
       data.banned ?? false,
       data.banReason ?? null,
       data.banExpires ?? null,
+      data.preferredLanguage ?? Language.en,
     );
   }
 }
