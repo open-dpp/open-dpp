@@ -1,5 +1,17 @@
 # @open-dpp/client
 
+## 0.4.2
+
+### Patch Changes
+
+- [#546](https://github.com/open-dpp/open-dpp/pull/546) [`924af38`](https://github.com/open-dpp/open-dpp/commit/924af38588c3c8b891b3ab3d19b87edf9548b0cf) Thanks [@Hentra](https://github.com/Hentra)! - Refactor sidebar to reduce duplication
+
+- [#551](https://github.com/open-dpp/open-dpp/pull/551) [`ad33c39`](https://github.com/open-dpp/open-dpp/commit/ad33c39da5d7cc1bb6327e885e905a81d06d52cf) Thanks [@Hentra](https://github.com/Hentra)! - Set default language to be loaded from browser settings
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.2
+  - @open-dpp/dto@0.4.2
+
 ## 0.4.1
 
 ### Patch Changes
