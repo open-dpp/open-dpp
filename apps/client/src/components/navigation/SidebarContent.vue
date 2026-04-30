@@ -16,6 +16,7 @@ import { computed, onMounted, type FunctionalComponent } from "vue";
 import { authClient } from "../../auth-client";
 import { useStatusStore } from "../../stores/status";
 import { useLayoutStore } from "../../stores/layout";
+import { useOrganizationsStore } from "../../stores/organizations";
 
 const { src } = useBranding();
 const route = useRoute();
@@ -42,7 +43,7 @@ const role = computed<string>(() => {
   return userSession.user.role ?? "user";
 });
 
-const layoutStore = useLayoutStore();
+const organizationsStore = useOrganizationsStore();
 
 const statusStore = useStatusStore();
 onMounted(() => statusStore.fetchStatus());
@@ -187,7 +188,7 @@ const { t } = useI18n();
           </ul>
         </li>
         <li class="mt-auto">
-          <SelectOrganization />
+          <SelectOrganization v-if="organizationsStore.organizations.length > 1" />
           <p v-if="statusStore.version" class="mt-2 text-center text-xs text-gray-500">
             v{{ statusStore.version }}
           </p>
