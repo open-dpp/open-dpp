@@ -186,33 +186,6 @@ const { t } = useI18n();
             </li>
           </ul>
         </li>
-        <li v-if="layoutStore.quickAccessItems.length > 0">
-          <div class="text-xs leading-6 font-semibold text-gray-400">Schnellzugriff</div>
-          <ul class="-mx-2 mt-2 space-y-1" role="list">
-            <li v-for="item in layoutStore.quickAccessItems" :key="item.name">
-              <router-link
-                class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
-                :class="[
-                  item.path === route.path
-                    ? 'bg-gray-50 text-black'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-black',
-                ]"
-                :to="item.path"
-              >
-                <span
-                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium"
-                  :class="[
-                    item.path === route.path
-                      ? 'border-black text-black'
-                      : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
-                  ]"
-                  >{{ item.name }}</span
-                >
-                <span class="truncate">{{ item.name }}</span>
-              </router-link>
-            </li>
-          </ul>
-        </li>
         <li class="mt-auto">
           <SelectOrganization />
           <p v-if="statusStore.version" class="mt-2 text-center text-xs text-gray-500">

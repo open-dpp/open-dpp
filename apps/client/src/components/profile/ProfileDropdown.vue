@@ -34,7 +34,7 @@ const menu = useTemplateRef("menu");
 <template>
   <Button aria-haspopup="true" aria-controls="profile_menu" v-slot="slotProps" asChild>
     <button
-      @click="menu?.toggle"
+      @click="menu?.toggle($event)"
       v-bind="slotProps.a11yAttrs"
       class="hover:bg-primary-600 bg-primary-500 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-sm font-medium text-white"
     >
