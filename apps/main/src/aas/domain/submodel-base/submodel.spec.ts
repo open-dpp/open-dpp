@@ -22,7 +22,7 @@ import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
-import { SubmodelElementModificationEventPayload } from "../../../audit-log/aas/submodel-element-modification.event";
+import { SubmodelElementModificationActivityPayload } from "../../../activity-history/aas/submodel-element-modification.activity";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -706,7 +706,7 @@ describe("submodel", () => {
     );
   });
 
-  it("should modify submodel element a copy", () => {
+  it("should modify submodel element and track activiy", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -722,16 +722,18 @@ describe("submodel", () => {
     const ability = security.defineAbilityForSubject(member);
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     submodel.addSubmodelElement(prop1, { ability });
+    const digitalProductDocumentId = "12345";
     submodel.modifySubmodelElement(
       { idShort: prop1.idShort, value: "20" },
       IdShortPath.create({ path: "prop1" }),
       {
         ability,
+        digitalProductDocumentId,
       },
     );
     const events = submodel.pullAuditEvents();
     expect(events.map((e) => e.payload)).toEqual([
-      SubmodelElementModificationEventPayload.create({
+      SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
       }),
     ]);

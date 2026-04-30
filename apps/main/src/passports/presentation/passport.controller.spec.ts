@@ -41,6 +41,7 @@ import {
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 
 describe("passportController", () => {
   const basePath = "/passports";
@@ -431,6 +432,10 @@ describe("passportController", () => {
 
   it(`/GET submodel element value`, async () => {
     await ctx.asserts.getSubmodelElementValue(createPassport);
+  });
+
+  it(`/GET activities`, async () => {
+    await ctx.asserts.getActivities(createPassport, savePassport);
   });
 
   it("/GET export passport", async () => {

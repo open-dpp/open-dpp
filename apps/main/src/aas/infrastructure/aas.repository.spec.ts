@@ -28,7 +28,7 @@ import {
 } from "./schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
 import { SubmodelRepository } from "./submodel.repository";
-import { AuditLogModule } from "../../audit-log/audit-log.module";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 
 describe("aasRepository", () => {
   let aasRepository: AasRepository;
@@ -62,7 +62,7 @@ describe("aasRepository", () => {
             schema: PassportSchema,
           },
         ]),
-        AuditLogModule,
+        ActivityHistoryModule,
       ],
       providers: [PassportRepository, AasRepository, SubmodelRepository],
     })

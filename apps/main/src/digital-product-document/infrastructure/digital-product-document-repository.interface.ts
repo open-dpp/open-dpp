@@ -1,11 +1,11 @@
 import { IPersistable } from "../../aas/domain/persistable";
-import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../domain/digital-product-document";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { DbSessionOptions } from "../../database/query-options";
 
 export type DigitalProductDocumentEntity = IPersistable &
-  IDigitalProductPassportIdentifiable &
+  IDigitalProductDocument &
   HasCreatedAt &
   IDigitalProductDocumentStatusChangeable;
 

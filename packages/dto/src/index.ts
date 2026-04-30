@@ -61,3 +61,5 @@ export * from "./templates/template.dto";
 export * from "./users/create-user.dto";
 export * from "./users/set-user-role.dto";
 export * from "./users/user.dto";
+
+export * from "./activity-history/activity-history.dto";

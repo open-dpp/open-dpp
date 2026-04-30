@@ -46,6 +46,7 @@ import { IVisitor } from "./visitor";
 export interface ModifierVisitorOptions {
   subject?: SubjectAttributes;
   ability: AasAbility;
+  digitalProductDocumentId?: string;
 }
 export interface ModifierVisitorContextType {
   data: unknown;

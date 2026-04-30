@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
 import { ExpandedEnvironmentPlain } from "../../aas/domain/expanded-environment";
 import { IPersistable } from "../../aas/domain/persistable";
@@ -24,7 +24,7 @@ const TemplateSchema = DigitalProductDocumentSchema;
 export class Template
   implements
     IPersistable,
-    IDigitalProductPassportIdentifiable,
+    IDigitalProductDocument,
     HasCreatedAt,
     IDigitalProductDocumentStatusChangeable
 {

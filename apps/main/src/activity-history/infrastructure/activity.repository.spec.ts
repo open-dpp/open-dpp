@@ -7,19 +7,19 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { generateMongoConfig } from "../../database/config";
-import { AuditEventRepository } from "./audit-event.repository";
-import { AuditEventDbSchema, AuditEventDoc } from "./audit-event.schema";
+import { ActivityRepository } from "./activity.repository";
+import { ActivityDbSchema, ActivityDoc } from "./activity.schema";
 import {
-  SubmodelElementModificationEvent,
-  SubmodelElementModificationEventPayload,
-} from "../aas/submodel-element-modification.event";
+  SubmodelElementModificationActivity,
+  SubmodelElementModificationActivityPayload,
+} from "../aas/submodel-element-modification.activity";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { AuditEventRegistryInitializer } from "../presentation/audit-event-registry-initializer";
+import { ActivityRegistryInitializer } from "../presentation/activity-registry-initializer";
 import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 
-describe("auditEventRepository", () => {
-  let auditEventRepository: AuditEventRepository;
+describe("activityRepository", () => {
+  let activityRepository: ActivityRepository;
   let module: TestingModule;
 
   beforeAll(async () => {
@@ -35,43 +35,43 @@ describe("auditEventRepository", () => {
         }),
         MongooseModule.forFeature([
           {
-            name: AuditEventDoc.name,
-            schema: AuditEventDbSchema,
+            name: ActivityDoc.name,
+            schema: ActivityDbSchema,
           },
         ]),
       ],
-      providers: [AuditEventRegistryInitializer, AuditEventRepository],
+      providers: [ActivityRegistryInitializer, ActivityRepository],
     }).compile();
 
     await module.init();
 
-    auditEventRepository = module.get<AuditEventRepository>(AuditEventRepository);
+    activityRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
-  it("should save a audit events", async () => {
+  it("should save a activities", async () => {
     const submodelId = randomUUID();
-    const event1 = SubmodelElementModificationEvent.create({
-      submodelId,
-      payload: SubmodelElementModificationEventPayload.create({
+    const event1 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: submodelId,
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
       }),
     });
-    const event2 = SubmodelElementModificationEvent.create({
-      submodelId,
-      payload: SubmodelElementModificationEventPayload.create({
+    const event2 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: submodelId,
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
       }),
     });
-    await auditEventRepository.createMany([event1, event2]);
-    const foundEvent = await auditEventRepository.findOneOrFail(event1.header.id);
+    await activityRepository.createMany([event1, event2]);
+    const foundEvent = await activityRepository.findOneOrFail(event1.header.id);
     expect(foundEvent).toEqual(event1);
-    expect(foundEvent).toBeInstanceOf(SubmodelElementModificationEvent);
+    expect(foundEvent).toBeInstanceOf(SubmodelElementModificationActivity);
 
-    const foundEvents = await auditEventRepository.findByAggregateId(event1.header.aggregateId);
+    const foundEvents = await activityRepository.findByAggregateId(event1.header.aggregateId);
     expect(foundEvents.items).toEqual([event1, event2]);
   });
 
-  it("should find a audit event using pagination", async () => {
+  it("should find activities using pagination", async () => {
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
     const date3 = new Date("2022-03-01T00:00:00.000Z");
@@ -79,44 +79,44 @@ describe("auditEventRepository", () => {
     const date5 = new Date("2022-03-03T00:00:00.000Z");
     const submodelId = randomUUID();
 
-    const event1 = SubmodelElementModificationEvent.create({
-      submodelId,
-      payload: SubmodelElementModificationEventPayload.create({
+    const event1 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: submodelId,
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop1` }),
       }),
       createdAt: date1,
     });
 
-    const event2 = SubmodelElementModificationEvent.create({
-      submodelId,
-      payload: SubmodelElementModificationEventPayload.create({
+    const event2 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: submodelId,
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop2` }),
       }),
       createdAt: date2,
     });
-    const event3 = SubmodelElementModificationEvent.create({
-      submodelId,
-      payload: SubmodelElementModificationEventPayload.create({
+    const event3 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: submodelId,
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop3` }),
       }),
       createdAt: date3,
     });
-    const eventOfOtherAggregate = SubmodelElementModificationEvent.create({
-      submodelId: randomUUID(),
-      payload: SubmodelElementModificationEventPayload.create({
+    const eventOfOtherAggregate = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: randomUUID(),
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
       }),
       createdAt: date4,
     });
-    const event4 = SubmodelElementModificationEvent.create({
-      submodelId,
-      payload: SubmodelElementModificationEventPayload.create({
+    const event4 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: submodelId,
+      payload: SubmodelElementModificationActivityPayload.create({
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
       }),
       createdAt: date5,
     });
-    await auditEventRepository.createMany([event1, event2, event3, eventOfOtherAggregate, event4]);
-    let foundEvents = await auditEventRepository.findByAggregateId(submodelId);
+    await activityRepository.createMany([event1, event2, event3, eventOfOtherAggregate, event4]);
+    let foundEvents = await activityRepository.findByAggregateId(submodelId);
     expect(foundEvents).toEqual(
       PagingResult.create({
         pagination: Pagination.create({
@@ -130,7 +130,7 @@ describe("auditEventRepository", () => {
     let pagination = Pagination.create({
       cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
     });
-    foundEvents = await auditEventRepository.findByAggregateId(submodelId, {
+    foundEvents = await activityRepository.findByAggregateId(submodelId, {
       pagination,
     });
     expect(foundEvents).toEqual(
@@ -146,7 +146,7 @@ describe("auditEventRepository", () => {
       cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
       limit: 1,
     });
-    foundEvents = await auditEventRepository.findByAggregateId(submodelId, {
+    foundEvents = await activityRepository.findByAggregateId(submodelId, {
       pagination,
     });
     expect(foundEvents).toEqual(

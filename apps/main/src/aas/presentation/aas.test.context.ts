@@ -60,7 +60,7 @@ import { IdShortPath } from "../domain/common/id-short-path";
 import { Key } from "../domain/common/key";
 import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
-import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { IPersistable } from "../domain/persistable";
 import { AasAbility } from "../domain/security/aas-ability";
 import { Permission } from "../domain/security/permission";
@@ -79,7 +79,8 @@ import {
 } from "../infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
-import { AuditLogModule } from "../../audit-log/audit-log.module";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { DigitalProductDocumentActivityService } from "../../digital-product-document/application/digital-product-document-activity.service";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -122,7 +123,7 @@ export function createAasTestContext<T>(
           },
           ...mongooseModels,
         ]),
-        AuditLogModule,
+        ActivityHistoryModule,
         AasModule,
         AuthModule,
         OrganizationsModule,
@@ -131,6 +132,7 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
+        DigitalProductDocumentActivityService,
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,
@@ -208,10 +210,8 @@ export function createAasTestContext<T>(
     }
   });
 
-  type CreateEntity = (
-    orgaId?: string,
-  ) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
-  type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
+  type CreateEntity = (orgaId?: string) => Promise<IPersistable & IDigitalProductDocument>;
+  type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductDocument>;
 
   async function getOrganizationAndUserWithCookie() {
     return orga1
@@ -675,6 +675,40 @@ export function createAasTestContext<T>(
     }).toEqual(modificationBody);
   }
 
+  async function assertGetActivities(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(property, { ability });
+    const modificationBody = {
+      idShort: property.idShort,
+      displayName: [{ language: "en", text: "Bill of Materials" }],
+      description: [{ language: "en", text: "A list of all products in the factory" }],
+    };
+
+    submodel.modifySubmodelElement(modificationBody, IdShortPath.create({ path: "Property01" }), {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${entity.id}/activities`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual(modificationBody);
+  }
+
   async function assertModifySubmodelElementValue(
     createEntity: CreateEntity,
     saveEntity: SaveEntity,
@@ -1038,6 +1072,7 @@ export function createAasTestContext<T>(
       postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
       getSubmodelElementById: assertGetSubmodelElementById,
       getSubmodelElementValue: assertGetSubmodelElementValue,
+      getActivities: assertGetActivities,
     },
   };
 }

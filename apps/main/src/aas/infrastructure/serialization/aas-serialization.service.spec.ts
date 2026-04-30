@@ -42,7 +42,7 @@ import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
 import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
-import { AuditLogModule } from "../../../audit-log/audit-log.module";
+import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 
 const adminPlain = {
   subjectAttribute: [
@@ -307,7 +307,7 @@ describe("aasSerializationService", () => {
             schema: ConceptDescriptionSchema,
           },
         ]),
-        AuditLogModule,
+        ActivityHistoryModule,
         UsersModule,
         OrganizationsModule,
       ],

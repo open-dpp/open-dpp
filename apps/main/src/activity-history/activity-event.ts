@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
-import { AuditEventTypesEnum } from "./audit-event-types";
-import { getAuditEventClass } from "./audit-event-registry";
+import { ActivityTypesEnum } from "./activity-types";
+import { getActivityClass } from "./activity-registry";
 import { randomUUID } from "node:crypto";
 
-export const AuditEventHeaderSchema = z.object({
+export const ActivityHeaderSchema = z.object({
   id: z.string(),
   aggregateId: z.string(),
   correlationId: z.string(),
@@ -14,12 +14,12 @@ export const AuditEventHeaderSchema = z.object({
   version: z.string(),
 });
 
-export const AuditEventSchema = z.object({
-  header: AuditEventHeaderSchema,
+export const ActivitySchema = z.object({
+  header: ActivityHeaderSchema,
   payload: z.any(),
 });
 
-export class AuditEventHeader {
+export class ActivityHeader {
   private constructor(
     public readonly id: string,
     public readonly aggregateId: string,
@@ -39,7 +39,7 @@ export class AuditEventHeader {
     userId?: string;
     version: string;
   }) {
-    return new AuditEventHeader(
+    return new ActivityHeader(
       data.id ?? randomUUID(),
       data.aggregateId,
       data.correlationId ?? randomUUID(),
@@ -50,9 +50,9 @@ export class AuditEventHeader {
     );
   }
 
-  static fromPlain(data: unknown): AuditEventHeader {
-    const parsed = AuditEventHeaderSchema.parse(data);
-    return new AuditEventHeader(
+  static fromPlain(data: unknown): ActivityHeader {
+    const parsed = ActivityHeaderSchema.parse(data);
+    return new ActivityHeader(
       parsed.id,
       parsed.aggregateId,
       parsed.correlationId,
@@ -76,9 +76,9 @@ export class AuditEventHeader {
   }
 }
 
-export interface IEventPayload extends IConvertableToPlain {}
+export interface IActivityPayload extends IConvertableToPlain {}
 
-export function auditEventToDatabase(event: IAuditEvent) {
+export function activityToDatabase(event: IActivity) {
   return {
     ...event.header.toPlain(),
     _id: event.header.id,
@@ -86,21 +86,21 @@ export function auditEventToDatabase(event: IAuditEvent) {
   };
 }
 
-export function auditEventToPlain(event: IAuditEvent) {
+export function activityEventToPlain(event: IActivity) {
   return {
     header: event.header.toPlain(),
     payload: event.payload.toPlain(),
   };
 }
 
-export interface IAuditEvent extends IConvertableToPlain {
-  header: AuditEventHeader;
-  payload: IEventPayload;
+export interface IActivity extends IConvertableToPlain {
+  header: ActivityHeader;
+  payload: IActivityPayload;
   toDatabase: () => Record<string, any>;
 }
 
-export function parseAuditEvent(auditEvent: any): IAuditEvent {
-  const schema = z.object({ header: z.object({ type: AuditEventTypesEnum }) });
-  const AuditEventClass = getAuditEventClass(schema.parse(auditEvent).header.type);
-  return AuditEventClass.fromPlain(auditEvent);
+export function parseActivity(activity: any): IActivity {
+  const schema = z.object({ header: z.object({ type: ActivityTypesEnum }) });
+  const ActivityClass = getActivityClass(schema.parse(activity).header.type);
+  return ActivityClass.fromPlain(activity);
 }

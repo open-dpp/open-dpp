@@ -1,19 +1,19 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
 
-export const AuditEventDocVersion = {
+export const ActivityDocVersion = {
   v1_0_0: "1.0.0",
 } as const;
-type AuditEventDocVersionType = (typeof AuditEventDocVersion)[keyof typeof AuditEventDocVersion];
+type ActivityDocVersionType = (typeof ActivityDocVersion)[keyof typeof ActivityDocVersion];
 
-@Schema({ collection: "audit_events" })
-export class AuditEventDoc extends Document<string> {
+@Schema({ collection: "activities" })
+export class ActivityDoc extends Document<string> {
   @Prop({
-    default: AuditEventDocVersion.v1_0_0,
-    enum: Object.values(AuditEventDocVersion),
+    default: ActivityDocVersion.v1_0_0,
+    enum: Object.values(ActivityDocVersion),
     type: String,
   })
-  _schemaVersion: AuditEventDocVersionType;
+  _schemaVersion: ActivityDocVersionType;
 
   @Prop({ type: String, required: true })
   declare _id: string;
@@ -39,7 +39,7 @@ export class AuditEventDoc extends Document<string> {
   payload: unknown;
 }
 
-export const AuditEventDbSchema = SchemaFactory.createForClass(AuditEventDoc);
-AuditEventDbSchema.index({ aggregateId: 1, createdAt: 1 }, { background: true });
+export const ActivityDbSchema = SchemaFactory.createForClass(ActivityDoc);
+ActivityDbSchema.index({ aggregateId: 1, createdAt: 1 }, { background: true });
 
-AuditEventDbSchema.index({ type: 1, createdAt: 1 }, { background: true });
+ActivityDbSchema.index({ type: 1, createdAt: 1 }, { background: true });

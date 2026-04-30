@@ -12,6 +12,7 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
   DigitalProductDocumentStatusDtoType,
+  ActivityPaginationDto,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 
@@ -108,10 +109,12 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
+  ApiGetActivities,
   LimitQueryParam,
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
+import { DigitalProductDocumentActivityService } from "../../digital-product-document/application/digital-product-document-activity.service";
 
 @Controller("/passports")
 export class PassportController
@@ -128,6 +131,7 @@ export class PassportController
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
+    private readonly digitalProductDocumentActivityService: DigitalProductDocumentActivityService,
   ) {}
 
   @Get()
@@ -742,6 +746,25 @@ export class PassportController
       idShortPath,
       subject,
     );
+  }
+
+  @ApiGetActivities()
+  async getActivities(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<ActivityPaginationDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const passport =
+      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
+    return await this.digitalProductDocumentActivityService.getActivities(passport, limit, cursor);
   }
 
   @Get("/:id/export")

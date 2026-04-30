@@ -33,16 +33,16 @@ import {
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
-import { IAuditEvent } from "../../../audit-log/audit-event";
+import { IActivity } from "../../../activity-history/activity-event";
 import {
-  SubmodelElementModificationEvent,
-  SubmodelElementModificationEventPayload,
-} from "../../../audit-log/aas/submodel-element-modification.event";
+  SubmodelElementModificationActivity,
+  SubmodelElementModificationActivityPayload,
+} from "../../../activity-history/aas/submodel-element-modification.activity";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _auditEvents: Array<IAuditEvent> = [];
+  private _auditEvents: Array<IActivity> = [];
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -134,11 +134,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.accept(new ModifierVisitor(options), { data });
   }
 
-  get auditEvents(): Array<IAuditEvent> {
+  get auditEvents(): Array<IActivity> {
     return this._auditEvents;
   }
 
-  pullAuditEvents(): Array<IAuditEvent> {
+  pullAuditEvents(): Array<IActivity> {
     const events = [...this._auditEvents];
     this._auditEvents = [];
     return events;
@@ -149,9 +149,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
     submodelElement.accept(new ModifierVisitor(options), { data });
     this._auditEvents.push(
-      SubmodelElementModificationEvent.create({
-        submodelId: this.id,
-        payload: SubmodelElementModificationEventPayload.create({
+      SubmodelElementModificationActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
+        payload: SubmodelElementModificationActivityPayload.create({
           fullIdShortPath: submodelElement.getIdShortPath(),
         }),
         userId: options.ability.userId ?? undefined,

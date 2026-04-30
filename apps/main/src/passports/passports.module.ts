@@ -15,6 +15,8 @@ import { PassportService } from "./application/services/passport.service";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
 import { PassportController } from "./presentation/passport.controller";
+import { DigitalProductDocumentActivityService } from "../digital-product-document/application/digital-product-document-activity.service";
+import { ActivityHistoryModule } from "../activity-history/activity-history.module";
 
 @Module({
   imports: [
@@ -33,11 +35,13 @@ import { PassportController } from "./presentation/passport.controller";
       },
     ]),
     AasModule,
+    ActivityHistoryModule,
     AuthModule,
     OrganizationsModule,
   ],
   controllers: [PassportController],
   providers: [
+    DigitalProductDocumentActivityService,
     TemplateRepository,
     UniqueProductIdentifierRepository,
     PassportRepository,

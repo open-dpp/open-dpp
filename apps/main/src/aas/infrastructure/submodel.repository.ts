@@ -6,7 +6,7 @@ import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories"
 import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDbSchema } from "./schemas/submodel-base/submodel-db-schema";
 import { SubmodelDoc, SubmodelDocSchemaVersion } from "./schemas/submodel.schema";
-import { AuditEventRepository } from "../../audit-log/infrastructure/audit-event.repository";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 @Injectable()
 export class SubmodelRepository {
@@ -15,7 +15,7 @@ export class SubmodelRepository {
   constructor(
     @InjectModel(SubmodelDoc.name)
     submodelDoc: MongooseModel<SubmodelDoc>,
-    private readonly auditEventRepository: AuditEventRepository,
+    private readonly auditEventRepository: ActivityRepository,
     @InjectConnection() private connection: Connection,
   ) {
     this.submodelDoc = submodelDoc;

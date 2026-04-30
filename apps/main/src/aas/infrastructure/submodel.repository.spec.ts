@@ -21,12 +21,12 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { IdShortPath } from "../domain/common/id-short-path";
 import { Permission } from "../domain/security/permission";
-import { AuditLogModule } from "../../audit-log/audit-log.module";
-import { AuditEventRepository } from "../../audit-log/infrastructure/audit-event.repository";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 describe("submodelRepository", () => {
   let submodelRepository: SubmodelRepository;
-  let auditEventRepository: AuditEventRepository;
+  let auditEventRepository: ActivityRepository;
   let module: TestingModule;
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -45,13 +45,13 @@ describe("submodelRepository", () => {
             schema: SubmodelSchema,
           },
         ]),
-        AuditLogModule,
+        ActivityHistoryModule,
       ],
       providers: [SubmodelRegistryInitializer, SubmodelRepository],
     }).compile();
     await module.init();
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
-    auditEventRepository = module.get<AuditEventRepository>(AuditEventRepository);
+    auditEventRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
   it("should save a submodel", async () => {
@@ -119,16 +119,19 @@ describe("submodelRepository", () => {
     const ability = security.defineAbilityForSubject(member, "userId");
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     submodel.addSubmodelElement(prop1, { ability });
+    const digitalProductDocumentId = randomUUID();
+
     submodel.modifySubmodelElement(
       { idShort: prop1.idShort, value: "20" },
       IdShortPath.create({ path: "prop1" }),
       {
         ability,
+        digitalProductDocumentId,
       },
     );
     const expected = [...submodel.auditEvents];
     await submodelRepository.save(submodel);
-    const foundEvents = await auditEventRepository.findByAggregateId(submodel.id);
+    const foundEvents = await auditEventRepository.findByAggregateId(digitalProductDocumentId);
     expect(foundEvents.items).toEqual(expected);
     expect(foundEvents.items.every((event) => event.header.userId === ability.userId)).toBeTruthy();
     expect(submodel.auditEvents).toEqual([]);

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import {
@@ -25,7 +25,7 @@ const PassportSchema = DigitalProductDocumentSchema.extend({
 export class Passport
   implements
     IPersistable,
-    IDigitalProductPassportIdentifiable,
+    IDigitalProductDocument,
     HasCreatedAt,
     IDigitalProductDocumentStatusChangeable
 {
