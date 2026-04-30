@@ -40,6 +40,11 @@ const data = computed(() => {
 const options = ref({
   responsive: true,
   maintainAspectRatio: false,
+  scales: {
+    y: {
+      min: 0,
+    }
+  }
 });
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
