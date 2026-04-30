@@ -43,8 +43,8 @@ const options = ref({
   scales: {
     y: {
       min: 0,
-    }
-  }
+    },
+  },
 });
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
