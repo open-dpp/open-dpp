@@ -213,17 +213,6 @@ export const RowParam = () => Param("idShortOfRow", new ZodValidationPipe(RowPar
 
 export const RequestParam = () => Req();
 
-export const LimitQueryParamSchema = z.coerce
-  .number()
-  .optional()
-  .meta({
-    description: "The maximum number of elements in the response array",
-    example: 10,
-    param: { in: "query", name: "limit" },
-  });
-
-export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(LimitQueryParamSchema));
-
 export const CursorQueryParamSchema = z
   .string()
   .optional()

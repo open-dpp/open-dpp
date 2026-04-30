@@ -76,7 +76,6 @@ import {
   DeletePolicyRequestBody,
   IdParam,
   IdShortPathParam,
-  LimitQueryParam,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -102,6 +101,7 @@ import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
+  LimitQueryParam,
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";

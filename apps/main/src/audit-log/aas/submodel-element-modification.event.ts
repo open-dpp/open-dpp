@@ -2,6 +2,7 @@ import {
   AuditEventHeader,
   AuditEventSchema,
   auditEventToDatabase,
+  auditEventToPlain,
   IAuditEvent,
   IEventPayload,
 } from "../audit-event";
@@ -22,12 +23,14 @@ export class SubmodelElementModificationEvent implements IAuditEvent {
     submodelId: string;
     payload: SubmodelElementModificationEventPayload;
     userId?: string;
+    createdAt?: Date;
   }): SubmodelElementModificationEvent {
     const header = AuditEventHeader.create({
       type: AuditEventTypes.SubmodelElementModificationEvent,
       version: SubmodelElementModificationEventVersion.v1_0_0,
       aggregateId: data.submodelId,
       userId: data.userId,
+      createdAt: data.createdAt,
     });
     return new SubmodelElementModificationEvent(header, data.payload);
   }
@@ -43,6 +46,10 @@ export class SubmodelElementModificationEvent implements IAuditEvent {
 
   toDatabase(): Record<string, unknown> {
     return auditEventToDatabase(this);
+  }
+
+  toPlain() {
+    return auditEventToPlain(this);
   }
 }
 

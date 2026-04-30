@@ -8,7 +8,7 @@ export const AuditEventHeaderSchema = z.object({
   id: z.string(),
   aggregateId: z.string(),
   correlationId: z.string(),
-  timestamp: z.date(),
+  createdAt: z.date(),
   type: z.string(),
   userId: z.string().nullable(),
   version: z.string(),
@@ -24,7 +24,7 @@ export class AuditEventHeader {
     public readonly id: string,
     public readonly aggregateId: string,
     public readonly correlationId: string,
-    public readonly timestamp: Date,
+    public readonly createdAt: Date,
     public readonly type: string,
     public readonly userId: string | null,
     public readonly version: string,
@@ -34,7 +34,7 @@ export class AuditEventHeader {
     id?: string;
     aggregateId: string;
     correlationId?: string;
-    timestamp?: Date;
+    createdAt?: Date;
     type: string;
     userId?: string;
     version: string;
@@ -43,7 +43,7 @@ export class AuditEventHeader {
       data.id ?? randomUUID(),
       data.aggregateId,
       data.correlationId ?? randomUUID(),
-      data.timestamp ?? new Date(),
+      data.createdAt ?? new Date(),
       data.type,
       data.userId ?? null,
       data.version,
@@ -56,7 +56,7 @@ export class AuditEventHeader {
       parsed.id,
       parsed.aggregateId,
       parsed.correlationId,
-      parsed.timestamp,
+      parsed.createdAt,
       parsed.type,
       parsed.userId,
       parsed.version,
@@ -68,7 +68,7 @@ export class AuditEventHeader {
       id: this.id,
       aggregateId: this.aggregateId,
       correlationId: this.correlationId,
-      timestamp: this.timestamp,
+      createdAt: this.createdAt,
       type: this.type,
       userId: this.userId,
       version: this.version,
@@ -86,7 +86,14 @@ export function auditEventToDatabase(event: IAuditEvent) {
   };
 }
 
-export interface IAuditEvent {
+export function auditEventToPlain(event: IAuditEvent) {
+  return {
+    header: event.header.toPlain(),
+    payload: event.payload.toPlain(),
+  };
+}
+
+export interface IAuditEvent extends IConvertableToPlain {
   header: AuditEventHeader;
   payload: IEventPayload;
   toDatabase: () => Record<string, any>;

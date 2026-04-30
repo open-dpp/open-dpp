@@ -32,7 +32,6 @@ import {
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
-  LimitQueryParam,
   SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
@@ -47,6 +46,7 @@ import { PassportRepository } from "../../passports/infrastructure/passport.repo
 import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 import { UniqueProductIdentifierListDtoSchema } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
+import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
 
 @Controller()
 export class UniqueProductIdentifierController implements IAasReadEndpoints {

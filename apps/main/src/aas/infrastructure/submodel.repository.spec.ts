@@ -129,8 +129,8 @@ describe("submodelRepository", () => {
     const expected = [...submodel.auditEvents];
     await submodelRepository.save(submodel);
     const foundEvents = await auditEventRepository.findByAggregateId(submodel.id);
-    expect(foundEvents).toEqual(expected);
-    expect(foundEvents.every((event) => event.header.userId === ability.userId)).toBeTruthy();
+    expect(foundEvents.items).toEqual(expected);
+    expect(foundEvents.items.every((event) => event.header.userId === ability.userId)).toBeTruthy();
     expect(submodel.auditEvents).toEqual([]);
   });
 

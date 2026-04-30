@@ -23,3 +23,13 @@ export const StatusQueryParamSchema = z
 
 export const StatusQueryParam = () =>
   Query("status", new ZodValidationPipe(StatusQueryParamSchema));
+
+export const LimitQueryParamSchema = z.coerce
+  .number()
+  .optional()
+  .meta({
+    description: "The maximum number of elements in the response array",
+    example: 10,
+    param: { in: "query", name: "limit" },
+  });
+export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(LimitQueryParamSchema));

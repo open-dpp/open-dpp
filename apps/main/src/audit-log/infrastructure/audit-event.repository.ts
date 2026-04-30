@@ -6,6 +6,8 @@ import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail } from "../../lib/repositories";
 import { AuditEventDoc, AuditEventDocVersion } from "./audit-event.schema";
 import { AuditEventHeaderSchema, IAuditEvent, parseAuditEvent } from "../audit-event";
+import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 
 @Injectable()
 export class AuditEventRepository {
@@ -35,9 +37,36 @@ export class AuditEventRepository {
     );
   }
 
-  async findByAggregateId(aggregateId: string, options?: DbSessionOptions): Promise<IAuditEvent[]> {
-    const documents: IAuditEvent[] = await this.auditEventDoc.find({ aggregateId }, options);
-    return await Promise.all(documents.map(this.fromPlain.bind(this)));
+  async findByAggregateId(
+    aggregateId: string,
+    options?: { pagination?: Pagination },
+  ): Promise<PagingResult<IAuditEvent>> {
+    const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
+
+    const documents = await this.auditEventDoc
+      .find({
+        aggregateId,
+        ...(tmpPagination.cursor && {
+          $or: [
+            { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
+            {
+              createdAt: decodeCursor(tmpPagination.cursor).createdAt,
+              id: { $lt: decodeCursor(tmpPagination.cursor).id },
+            },
+          ],
+        }),
+      })
+      .sort({ createdAt: -1, id: -1 })
+      .limit(tmpPagination.limit ?? 100)
+      .exec();
+    const domainObjects = await Promise.all(documents.map(this.fromPlain.bind(this)));
+    if (domainObjects.length > 0) {
+      const lastObject = domainObjects[domainObjects.length - 1];
+      tmpPagination.setCursor(
+        encodeCursor(lastObject.header.createdAt.toISOString(), lastObject.header.id),
+      );
+    }
+    return PagingResult.create<IAuditEvent>({ pagination: tmpPagination, items: domainObjects });
   }
 
   async findOneOrFail(id: string): Promise<IAuditEvent> {

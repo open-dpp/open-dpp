@@ -80,7 +80,6 @@ import {
   DeletePolicyRequestBody,
   IdParam,
   IdShortPathParam,
-  LimitQueryParam,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -109,6 +108,7 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
+  LimitQueryParam,
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";

@@ -25,7 +25,7 @@ export class AuditEventDoc extends Document<string> {
   correlationId: string;
 
   @Prop({ required: true, immutable: true })
-  timestamp: Date;
+  createdAt: Date;
 
   @Prop({ type: String, required: false })
   type: string;
@@ -40,6 +40,6 @@ export class AuditEventDoc extends Document<string> {
 }
 
 export const AuditEventDbSchema = SchemaFactory.createForClass(AuditEventDoc);
-AuditEventDbSchema.index({ aggregateId: 1, timestamp: 1 }, { background: true });
+AuditEventDbSchema.index({ aggregateId: 1, createdAt: 1 }, { background: true });
 
-AuditEventDbSchema.index({ type: 1, timestamp: 1 }, { background: true });
+AuditEventDbSchema.index({ type: 1, createdAt: 1 }, { background: true });

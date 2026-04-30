@@ -39,12 +39,12 @@ import {
   CursorQueryParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
-  LimitQueryParamSchema,
   PositionQueryParamSchema,
   RowParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
 import {
+  LimitQueryParamSchema,
   PopulateQueryParamSchema,
   StatusQueryParamSchema,
 } from "../digital-product-document/presentation/digital-product-document-decorators";
