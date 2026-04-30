@@ -8,7 +8,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import apiClient from "../../lib/api-client.ts";
-import RingLoader from "../RingLoader.vue";
+import RingLoader from "../navigation/RingLoader.vue";
 
 const emit = defineEmits<{
   (e: "close"): void;
