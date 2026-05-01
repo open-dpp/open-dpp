@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { v4 as uuid4 } from "uuid";
 import PropertyValueField from "./PropertyValueField.vue";
+import { onMounted } from "vue";
 
 const props = defineProps<{
   id: string;
@@ -15,11 +16,25 @@ const model = defineModel<string | undefined | null>();
 function generateIdShort() {
   model.value = uuid4();
 }
+
+onMounted(() => {
+  if (!model.value) {
+    generateIdShort();
+  }
+})
 </script>
 
 <template>
-  <PropertyValueField v-model="model" v-bind="props" label="Id" :disabled="props.disabled">
-    <template #addon-right>
+  <div class="flex flex-col gap-2">
+    <h3 class="text-xl font-bold">{{ props.label }}</h3>
+    <InputGroup>
+      <InputText
+        :id="props.id"
+        v-model="model"
+        :disabled="props.disabled"
+        :aria-describedby="label"
+        :aria-invalid="showError ? 'true' : undefined"
+      />
       <InputGroupAddon>
         <Button
           v-tooltip.top="'Generate Id'"
@@ -30,6 +45,9 @@ function generateIdShort() {
           @click="generateIdShort"
         />
       </InputGroupAddon>
-    </template>
-  </PropertyValueField>
+    </InputGroup>
+    <Message v-if="showError" :id="error" size="small" severity="error" variant="simple">
+      {{ props.error }}
+    </Message>
+  </div>
 </template>

@@ -39,7 +39,7 @@ const showError = computed(() => textMeta.touched || props.submitAttempted);
        positioned error Message from TextFieldWithValidation, so the desktop
        row height stays stable when an error appears. Below lg: the grid is
        a single column and the error flows inline — no extra padding needed. -->
-  <div class="grid gap-4 pt-2 lg:grid-cols-3 lg:pb-6">
+  <div class="grid gap-4 lg:grid-cols-3 lg:pb-7">
     <LanguageSelect
       v-model="language"
       :disabled="props.disabled"

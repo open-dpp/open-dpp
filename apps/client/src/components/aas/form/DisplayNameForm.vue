@@ -39,44 +39,36 @@ function ignoreOptions(language: LanguageType): LanguageType[] {
 </script>
 
 <template>
-  <DataView :value="displayName">
-    <template #header>
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h3 class="text-xl font-bold">{{ t("aasEditor.formLabels.name") }}</h3>
-        <Button
-          data-cy="add-display-name"
-          :aria-label="t('common.add')"
-          icon="pi pi-plus"
-          rounded
-          raised
-          :disabled="remainingLanguages.length === 0 || props.disabled"
-          @click="
-            pushDisplayName({
-              text: '',
-              language: nextLanguage(),
-            })
-          "
-        />
-      </div>
-    </template>
-    <template #empty>
-      <div class="text-muted-color px-4 py-6 text-sm">{{ t("common.noEntries") }}</div>
-    </template>
-    <template #list="slotProps">
-      <div>
-        <DisplayNameRow
-          v-for="(field, index) in slotProps.items"
-          :key="field.key"
-          :index="Number(index)"
-          :field-key="field.key"
-          :submit-attempted="props.submitAttempted"
-          :ignore-language-options="ignoreOptions(field.value.language)"
-          :disabled="props.disabled"
-          @remove="removeDisplayName(Number(index))"
-        />
-      </div>
-    </template>
-  </DataView>
+  <div>
+    <h3 class="pb-2 text-xl font-bold">{{ t("aasEditor.formLabels.name") }}</h3>
+    <DisplayNameRow
+      v-if="displayName.length > 0"
+      v-for="(field, index) in displayName"
+      :key="field.key"
+      :index="Number(index)"
+      :field-key="field.key"
+      :submit-attempted="props.submitAttempted"
+      :ignore-language-options="ignoreOptions(field.value.language)"
+      :disabled="props.disabled"
+      @remove="removeDisplayName(Number(index))"
+    />
+    <div>
+      <Button
+        severity="secondary"
+        data-cy="add-display-name"
+        :aria-label="t('common.add')"
+        icon="pi pi-plus"
+        label="Sprache hinzufügen"
+        :disabled="remainingLanguages.length === 0 || props.disabled"
+        @click="
+          pushDisplayName({
+            text: '',
+            language: nextLanguage(),
+          })
+        "
+      ></Button>
+    </div>
+  </div>
 </template>
 
 <style scoped></style>

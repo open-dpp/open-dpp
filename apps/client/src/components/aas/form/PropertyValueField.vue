@@ -34,21 +34,18 @@ const describedBy = computed(() => (isErrorVisible.value ? errorMessageId.value 
 
 <template>
   <div class="flex flex-col gap-2">
-    <h3 class="text-xl font-bold">{{ t("aasEditor.formLabels.value") }}</h3>
+    <h3 class="text-xl font-bold">{{ props.label }}</h3>
     <InputGroup>
-      <FloatLabel variant="on">
-        <PropertyValue
-          :id="props.id"
-          :model-value="props.modelValue"
-          :invalid="isErrorVisible"
-          :value-type="props.valueType"
-          :disabled="props.disabled"
-          :aria-describedby="describedBy"
-          :aria-invalid="isErrorVisible ? 'true' : undefined"
-          @update:model-value="emit('update:modelValue', $event)"
-        />
-        <label :for="props.id">{{ props.label }}</label>
-      </FloatLabel>
+      <PropertyValue
+        :id="props.id"
+        :model-value="props.modelValue"
+        :invalid="isErrorVisible"
+        :value-type="props.valueType"
+        :disabled="props.disabled"
+        :aria-describedby="describedBy"
+        :aria-invalid="isErrorVisible ? 'true' : undefined"
+        @update:model-value="emit('update:modelValue', $event)"
+      />
       <slot name="addon-right" />
     </InputGroup>
     <small v-if="isDateOrDateTime" class="text-muted-color" data-testid="property-value-timezone">

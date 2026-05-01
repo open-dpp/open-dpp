@@ -34,7 +34,7 @@ const showIdShortError = computed(() => idShortMeta.dirty || props.showErrors);
       v-model="idShort"
       class="col-span-3"
       :disabled="isEditMode"
-      label="Id"
+      label="ID"
       :show-error="showIdShortError"
       :error="errorMessage"
     />

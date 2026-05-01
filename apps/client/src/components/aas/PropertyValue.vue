@@ -113,7 +113,7 @@ const textValue = computed({
     icon-display="input"
     fluid
   />
-  <InputText
+  <Textarea
     v-else
     :id="props.id"
     v-model="textValue"
@@ -121,6 +121,7 @@ const textValue = computed({
     :invalid="props.invalid"
     :aria-describedby="props.ariaDescribedby"
     :aria-invalid="props.ariaInvalid"
+    fluid
   />
 </template>
 
