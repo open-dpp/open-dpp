@@ -27,7 +27,11 @@ export class UsersNamespace {
   }
 
   public async requestEmailChange(data: RequestEmailChangeDto) {
-    return this.axiosInstance.post<void>("/users/me/email-change", data);
+    return this.axiosInstance.post<UserDto>("/users/me/email-change", data);
+  }
+
+  public async cancelEmailChange() {
+    return this.axiosInstance.delete<UserDto>("/users/me/email-change");
   }
 
   public async setRole(id: string, data: SetUserRoleDto) {

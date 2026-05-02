@@ -214,7 +214,7 @@ describe("UsersController (integration /users/me)", () => {
       expect(response.status).toBe(403);
     });
 
-    it("triggers a verification email and keeps the current email unchanged", async () => {
+    it("triggers a verification email, persists pendingEmail, keeps the current email unchanged", async () => {
       const { user } = await betterAuthHelper.createUser();
       const userCookie = await betterAuthHelper.signAsUser(user.id);
       emailSendMock.mockClear();
@@ -227,9 +227,35 @@ describe("UsersController (integration /users/me)", () => {
 
       expect(response.status).toBe(202);
       expect(emailSendMock).toHaveBeenCalled();
+      expect(response.body.pendingEmail).toBe(newEmail);
+      expect(response.body.pendingEmailRequestedAt).toBeDefined();
+      expect(response.body).not.toHaveProperty("role");
 
       const persisted = await usersRepository.findOneById(user.id);
       expect(persisted!.email).toBe(user.email);
+      expect(persisted!.pendingEmail).toBe(newEmail);
+      expect(persisted!.pendingEmailRequestedAt).toBeInstanceOf(Date);
+    });
+
+    it("rejects a second request while one is already pending", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const firstNewEmail = `${randomUUID()}@test.test`;
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: firstNewEmail });
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: `${randomUUID()}@test.test` });
+
+      expect(response.status).toBe(400);
+      expect(emailSendMock).not.toHaveBeenCalled();
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.pendingEmail).toBe(firstNewEmail);
     });
 
     it("rejects a malformed email with 400", async () => {
@@ -295,6 +321,68 @@ describe("UsersController (integration /users/me)", () => {
       expect(response.status).toBe(202);
       const after = await usersRepository.findOneById(user.id);
       expect(after!.emailVerified).toBe(before!.emailVerified);
+    });
+  });
+
+  describe("DELETE /users/me/email-change", () => {
+    it("returns 401 when no session is present", async () => {
+      const response = await request(app.getHttpServer()).delete("/users/me/email-change");
+      expect(response.status).toBe(403);
+    });
+
+    it("clears the pending email change", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail });
+
+      const response = await request(app.getHttpServer())
+        .delete("/users/me/email-change")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body.pendingEmail).toBeNull();
+      expect(response.body.pendingEmailRequestedAt).toBeNull();
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.pendingEmail).toBeNull();
+      expect(persisted!.pendingEmailRequestedAt).toBeNull();
+    });
+
+    it("rejects with 400 when no email change is pending", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .delete("/users/me/email-change")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(400);
+    });
+
+    it("allows the user to request a new change after cancelling", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const firstNewEmail = `${randomUUID()}@test.test`;
+      const secondNewEmail = `${randomUUID()}@test.test`;
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: firstNewEmail });
+      await request(app.getHttpServer()).delete("/users/me/email-change").set("Cookie", userCookie);
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: secondNewEmail });
+
+      expect(response.status).toBe(202);
+      expect(emailSendMock).toHaveBeenCalled();
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.pendingEmail).toBe(secondNewEmail);
     });
   });
 });

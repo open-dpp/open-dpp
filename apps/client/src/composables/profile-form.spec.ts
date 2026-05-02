@@ -5,6 +5,7 @@ import {
   computeProfileDiff,
   mapUserToFormValues,
   mergeUpdatedUserIntoOriginal,
+  shouldSubmitEmailChange,
   type ProfileFormValues,
 } from "./profile-form.ts";
 
@@ -17,6 +18,8 @@ const baseUser: UserDto = {
   image: null,
   emailVerified: true,
   preferredLanguage: Language.en,
+  pendingEmail: null,
+  pendingEmailRequestedAt: null,
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
 };
@@ -112,10 +115,7 @@ describe("computeProfileDiff", () => {
   });
 
   it("accepts undefined firstName/lastName/preferredLanguage from vee-validate's loose form values", () => {
-    const diff = computeProfileDiff(
-      { email: baseFormValues.email },
-      baseFormValues,
-    );
+    const diff = computeProfileDiff({ email: baseFormValues.email }, baseFormValues);
     expect(diff).toEqual({});
   });
 });
@@ -154,5 +154,31 @@ describe("mergeUpdatedUserIntoOriginal", () => {
     const result = mergeUpdatedUserIntoOriginal(updated, baseFormValues);
 
     expect(result.email).toBe(baseFormValues.email);
+  });
+});
+
+describe("shouldSubmitEmailChange", () => {
+  it("rejects an empty candidate", () => {
+    expect(shouldSubmitEmailChange("", "user@example.com", null)).toBe(false);
+  });
+
+  it("rejects a candidate equal to the current email", () => {
+    expect(shouldSubmitEmailChange("user@example.com", "user@example.com", null)).toBe(false);
+  });
+
+  it("rejects a candidate that already matches a pending change", () => {
+    expect(shouldSubmitEmailChange("new@example.com", "user@example.com", "new@example.com")).toBe(
+      false,
+    );
+  });
+
+  it("accepts a different candidate when nothing is pending", () => {
+    expect(shouldSubmitEmailChange("new@example.com", "user@example.com", null)).toBe(true);
+  });
+
+  it("accepts a candidate different from both current and pending (caller decides whether server will reject)", () => {
+    expect(
+      shouldSubmitEmailChange("third@example.com", "user@example.com", "new@example.com"),
+    ).toBe(true);
   });
 });

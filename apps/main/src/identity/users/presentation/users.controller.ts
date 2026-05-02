@@ -8,6 +8,7 @@ import type {
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -66,12 +67,19 @@ export class UsersController {
     @AuthSession() session: SessionDomainEntity,
     @Headers() headers: Record<string, string>,
     @Body(new ZodValidationPipe(RequestEmailChangeDtoSchema)) body: RequestEmailChangeDto,
-  ): Promise<void> {
-    await this.usersService.requestEmailChange(
+  ): Promise<UserDto> {
+    const user = await this.usersService.requestEmailChange(
       session.userId,
       body.newEmail,
       extractBetterAuthHeaders(headers),
     );
+    return UserMapper.toDto(user);
+  }
+
+  @Delete("me/email-change")
+  async cancelEmailChange(@AuthSession() session: SessionDomainEntity): Promise<UserDto> {
+    const user = await this.usersService.cancelEmailChange(session.userId);
+    return UserMapper.toDto(user);
   }
 
   @Patch(":id/role")

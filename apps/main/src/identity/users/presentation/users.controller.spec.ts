@@ -19,6 +19,7 @@ describe("UsersController", () => {
       getMe: jest.fn(),
       updateProfile: jest.fn(),
       requestEmailChange: jest.fn(),
+      cancelEmailChange: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -133,20 +134,48 @@ describe("UsersController", () => {
   });
 
   describe("requestEmailChange", () => {
-    it("extracts auth-relevant headers and forwards the user id and new email to the service", async () => {
-      const session = { userId: "user-123" } as unknown as Session;
+    it("extracts auth-relevant headers, forwards to service, and returns the updated UserDto", async () => {
+      const user = User.create({
+        email: "me@example.com",
+        firstName: "Me",
+        lastName: "Self",
+      }).withPendingEmail("fresh@example.com", new Date("2026-04-30T12:00:00Z"));
+      mockService.requestEmailChange.mockResolvedValue(user);
+      const session = { userId: user.id } as unknown as Session;
       const headers: Record<string, string> = {
         cookie: "better-auth.session=abc",
         "x-api-key": "key-1",
         "user-agent": "jest",
       };
 
-      await controller.requestEmailChange(session, headers, { newEmail: "fresh@example.com" });
+      const result = await controller.requestEmailChange(session, headers, {
+        newEmail: "fresh@example.com",
+      });
 
-      expect(mockService.requestEmailChange).toHaveBeenCalledWith("user-123", "fresh@example.com", {
+      expect(mockService.requestEmailChange).toHaveBeenCalledWith(user.id, "fresh@example.com", {
         cookie: "better-auth.session=abc",
         "x-api-key": "key-1",
       });
+      expect(result.pendingEmail).toBe("fresh@example.com");
+      expect(result).not.toHaveProperty("role");
+    });
+  });
+
+  describe("cancelEmailChange", () => {
+    it("forwards the user id to the service and returns the updated UserDto", async () => {
+      const user = User.create({
+        email: "me@example.com",
+        firstName: "Me",
+        lastName: "Self",
+      });
+      mockService.cancelEmailChange.mockResolvedValue(user);
+      const session = { userId: user.id } as unknown as Session;
+
+      const result = await controller.cancelEmailChange(session);
+
+      expect(mockService.cancelEmailChange).toHaveBeenCalledWith(user.id);
+      expect(result.pendingEmail).toBeNull();
+      expect(result).not.toHaveProperty("role");
     });
   });
 });

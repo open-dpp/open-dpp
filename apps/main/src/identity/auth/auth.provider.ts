@@ -211,6 +211,32 @@ export const AuthProvider: Provider = {
             },
           },
         },
+        user: {
+          update: {
+            after: async (user) => {
+              // When better-auth completes a verified email change, user.email is set to the
+              // address the user just confirmed. If our shadow `pendingEmail` field still holds
+              // that same address, the change is now complete and we clear it. Other user
+              // updates (name, language, role) leave pendingEmail untouched.
+              try {
+                const pending = (user as { pendingEmail?: string | null }).pendingEmail;
+                if (pending && pending === user.email) {
+                  const userIdQuery = Types.ObjectId.isValid(user.id)
+                    ? new Types.ObjectId(user.id)
+                    : user.id;
+                  await db
+                    .collection("user")
+                    .updateOne(
+                      { _id: userIdQuery },
+                      { $set: { pendingEmail: null, pendingEmailRequestedAt: null } },
+                    );
+                }
+              } catch (error) {
+                logger.error("Failed to clear pendingEmail after user update", error);
+              }
+            },
+          },
+        },
       },
       hooks: {},
       plugins: [

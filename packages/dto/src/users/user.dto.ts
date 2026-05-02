@@ -10,6 +10,8 @@ export const UserDtoSchema = z.object({
   image: z.string().nullable(),
   emailVerified: z.boolean(),
   preferredLanguage: LanguageEnum,
+  pendingEmail: z.string().nullable(),
+  pendingEmailRequestedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

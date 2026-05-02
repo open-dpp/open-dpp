@@ -254,4 +254,71 @@ describe("user", () => {
       expect(result.updatedAt).toBe(user.updatedAt);
     });
   });
+
+  describe("withPendingEmail / withoutPendingEmail", () => {
+    const newUser = () =>
+      User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      });
+
+    it("starts with no pending email", () => {
+      const user = newUser();
+      expect(user.pendingEmail).toBeNull();
+      expect(user.pendingEmailRequestedAt).toBeNull();
+    });
+
+    it("withPendingEmail returns a new user with the pair set", () => {
+      const user = newUser();
+      const requestedAt = new Date("2026-04-30T12:00:00Z");
+
+      const next = user.withPendingEmail("new@example.com", requestedAt);
+
+      expect(next).not.toBe(user);
+      expect(next.pendingEmail).toBe("new@example.com");
+      expect(next.pendingEmailRequestedAt).toBe(requestedAt);
+      expect(user.pendingEmail).toBeNull();
+    });
+
+    it("withPendingEmail short-circuits when both values match (no spurious DB writes)", () => {
+      const user = newUser();
+      const requestedAt = new Date("2026-04-30T12:00:00Z");
+      const first = user.withPendingEmail("new@example.com", requestedAt);
+
+      const second = first.withPendingEmail("new@example.com", new Date(requestedAt.getTime()));
+
+      expect(second).toBe(first);
+    });
+
+    it("withPendingEmail returns a new instance when the email differs", () => {
+      const user = newUser();
+      const requestedAt = new Date("2026-04-30T12:00:00Z");
+      const first = user.withPendingEmail("new@example.com", requestedAt);
+
+      const second = first.withPendingEmail("other@example.com", requestedAt);
+
+      expect(second).not.toBe(first);
+      expect(second.pendingEmail).toBe("other@example.com");
+    });
+
+    it("withoutPendingEmail clears both fields", () => {
+      const user = newUser();
+      const pending = user.withPendingEmail("new@example.com", new Date());
+
+      const cleared = pending.withoutPendingEmail();
+
+      expect(cleared).not.toBe(pending);
+      expect(cleared.pendingEmail).toBeNull();
+      expect(cleared.pendingEmailRequestedAt).toBeNull();
+    });
+
+    it("withoutPendingEmail short-circuits when already clear", () => {
+      const user = newUser();
+
+      const result = user.withoutPendingEmail();
+
+      expect(result).toBe(user);
+    });
+  });
 });

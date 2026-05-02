@@ -92,10 +92,7 @@ export class UsersService {
     const user = await this.usersRepository.findOneOrFail(userId);
     let next = user;
     if (patch.firstName !== undefined || patch.lastName !== undefined) {
-      next = next.withName(
-        patch.firstName ?? user.firstName,
-        patch.lastName ?? user.lastName,
-      );
+      next = next.withName(patch.firstName ?? user.firstName, patch.lastName ?? user.lastName);
     }
     if (patch.preferredLanguage !== undefined) {
       next = next.withPreferredLanguage(patch.preferredLanguage);
@@ -114,10 +111,13 @@ export class UsersService {
     userId: string,
     newEmail: string,
     headers: BetterAuthHeaders,
-  ): Promise<void> {
+  ): Promise<User> {
     const user = await this.usersRepository.findOneOrFail(userId);
     if (user.email === newEmail) {
       throw new ValueError("New email must differ from the current email");
+    }
+    if (user.pendingEmail !== null) {
+      throw new ValueError("An email change is already pending. Cancel it first.");
     }
     const existing = await this.usersRepository.findOneByEmail(newEmail);
     if (existing) {
@@ -130,5 +130,33 @@ export class UsersService {
       },
       headers,
     });
+    const next = user.withPendingEmail(newEmail, new Date());
+    const saved = await this.usersRepository.update(next);
+    if (!saved) {
+      throw new NotFoundError(User.name, userId);
+    }
+    return saved;
+  }
+
+  async cancelEmailChange(userId: string): Promise<User> {
+    const user = await this.usersRepository.findOneOrFail(userId);
+    if (user.pendingEmail === null) {
+      throw new ValueError("No pending email change to cancel");
+    }
+    const next = user.withoutPendingEmail();
+    const saved = await this.usersRepository.update(next);
+    if (!saved) {
+      throw new NotFoundError(User.name, userId);
+    }
+    return saved;
+  }
+
+  async clearPendingEmailFor(userId: string): Promise<void> {
+    const user = await this.usersRepository.findOneById(userId);
+    if (!user || user.pendingEmail === null) {
+      return;
+    }
+    const next = user.withoutPendingEmail();
+    await this.usersRepository.update(next);
   }
 }

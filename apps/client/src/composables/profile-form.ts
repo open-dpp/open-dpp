@@ -15,7 +15,7 @@ export interface ProfileFormValues {
 export interface ProfileFormInput {
   firstName?: string;
   lastName?: string;
-  email: string;
+  email?: string;
   preferredLanguage?: LanguageType;
 }
 
@@ -39,10 +39,7 @@ export function computeProfileDiff(
   if (formValues.lastName && formValues.lastName !== original.lastName) {
     diff.lastName = formValues.lastName;
   }
-  if (
-    formValues.preferredLanguage &&
-    formValues.preferredLanguage !== original.preferredLanguage
-  ) {
+  if (formValues.preferredLanguage && formValues.preferredLanguage !== original.preferredLanguage) {
     diff.preferredLanguage = formValues.preferredLanguage;
   }
   return diff;
@@ -58,4 +55,24 @@ export function mergeUpdatedUserIntoOriginal(
     lastName: updatedUser.lastName ?? original.lastName,
     preferredLanguage: updatedUser.preferredLanguage ?? original.preferredLanguage,
   };
+}
+
+/**
+ * Decide whether the form's new-email value is submittable as a change request.
+ *
+ * Rules:
+ *   - Must be non-empty.
+ *   - Must differ from the user's current email.
+ *   - Must differ from any pending email already in flight (the backend will reject otherwise,
+ *     but we surface the constraint at the boundary so the button stays disabled).
+ */
+export function shouldSubmitEmailChange(
+  candidate: string,
+  currentEmail: string,
+  pendingEmail: string | null,
+): boolean {
+  if (!candidate) return false;
+  if (candidate === currentEmail) return false;
+  if (pendingEmail !== null && candidate === pendingEmail) return false;
+  return true;
 }

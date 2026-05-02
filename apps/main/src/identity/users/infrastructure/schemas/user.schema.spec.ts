@@ -103,4 +103,48 @@ describe("userSchema", () => {
 
     expect(savedUser.preferredLanguage).toBe("en");
   });
+
+  it("defaults pendingEmail and pendingEmailRequestedAt to null", async () => {
+    const userData = {
+      _id: new ObjectId(),
+      email: "default-pending@example.com",
+      emailVerified: true,
+      firstName: "Default",
+      lastName: "Pending",
+      name: "Default Pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      role: UserRole.USER,
+    };
+
+    const user = new UserModel(userData);
+    const savedUser = await user.save();
+
+    expect(savedUser.pendingEmail).toBeNull();
+    expect(savedUser.pendingEmailRequestedAt).toBeNull();
+  });
+
+  it("stores and retrieves pendingEmail and pendingEmailRequestedAt", async () => {
+    const requestedAt = new Date("2026-04-30T12:00:00Z");
+    const userData = {
+      _id: new ObjectId(),
+      email: "pending@example.com",
+      emailVerified: true,
+      firstName: "Pending",
+      lastName: "User",
+      name: "Pending User",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      role: UserRole.USER,
+      pendingEmail: "new@example.com",
+      pendingEmailRequestedAt: requestedAt,
+    };
+
+    const user = new UserModel(userData);
+    const savedUser = await user.save();
+    const refetched = await UserModel.findById(savedUser._id).lean();
+
+    expect(refetched!.pendingEmail).toBe("new@example.com");
+    expect(refetched!.pendingEmailRequestedAt).toEqual(requestedAt);
+  });
 });

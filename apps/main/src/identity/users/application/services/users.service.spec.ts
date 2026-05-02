@@ -289,13 +289,14 @@ describe("UsersService", () => {
         lastName: "Rent",
       });
 
-    it("calls auth.api.changeEmail with newEmail, headers, and a callbackURL derived from env", async () => {
+    it("calls auth.api.changeEmail and persists pendingEmail on the user", async () => {
       const user = loadUser();
       mockRepo.findOneOrFail.mockResolvedValue(user);
       mockRepo.findOneByEmail.mockResolvedValue(null);
+      mockRepo.update.mockImplementation(async (u: User) => u);
       const headers = { cookie: "better-auth.session=abc" };
 
-      await service.requestEmailChange(user.id, "new@example.com", headers);
+      const result = await service.requestEmailChange(user.id, "new@example.com", headers);
 
       expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
       expect(mockRepo.findOneByEmail).toHaveBeenCalledWith("new@example.com");
@@ -306,6 +307,11 @@ describe("UsersService", () => {
         },
         headers,
       });
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      const persisted = mockRepo.update.mock.calls[0][0] as User;
+      expect(persisted.pendingEmail).toBe("new@example.com");
+      expect(persisted.pendingEmailRequestedAt).toBeInstanceOf(Date);
+      expect(result.pendingEmail).toBe("new@example.com");
     });
 
     it("rejects requests where the new email matches the current email", async () => {
@@ -315,6 +321,17 @@ describe("UsersService", () => {
       await expect(
         service.requestEmailChange(user.id, user.email, { cookie: "x" }),
       ).rejects.toThrow(ValueError);
+      expect(mockRepo.findOneByEmail).not.toHaveBeenCalled();
+      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+    });
+
+    it("rejects requests when an email change is already pending", async () => {
+      const user = loadUser().withPendingEmail("first@example.com", new Date());
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      await expect(
+        service.requestEmailChange(user.id, "second@example.com", { cookie: "x" }),
+      ).rejects.toThrow(/already pending/i);
       expect(mockRepo.findOneByEmail).not.toHaveBeenCalled();
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
     });
@@ -333,9 +350,10 @@ describe("UsersService", () => {
         service.requestEmailChange(user.id, "taken@example.com", { cookie: "x" }),
       ).rejects.toThrow(ValueError);
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+      expect(mockRepo.update).not.toHaveBeenCalled();
     });
 
-    it("propagates errors from Better Auth", async () => {
+    it("propagates errors from Better Auth and does not persist pending", async () => {
       const user = loadUser();
       mockRepo.findOneOrFail.mockResolvedValue(user);
       mockRepo.findOneByEmail.mockResolvedValue(null);
@@ -344,6 +362,7 @@ describe("UsersService", () => {
       await expect(
         service.requestEmailChange(user.id, "fresh@example.com", { cookie: "x" }),
       ).rejects.toThrow("better auth blew up");
+      expect(mockRepo.update).not.toHaveBeenCalled();
     });
 
     it("propagates not-found errors when the user is missing", async () => {
@@ -355,12 +374,102 @@ describe("UsersService", () => {
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
     });
 
-    it("does not invoke repository.update", async () => {
+    it("throws NotFoundError when the repository update returns null after persisting pending", async () => {
       const user = loadUser();
       mockRepo.findOneOrFail.mockResolvedValue(user);
       mockRepo.findOneByEmail.mockResolvedValue(null);
+      mockRepo.update.mockResolvedValue(null);
 
-      await service.requestEmailChange(user.id, "new@example.com", { cookie: "x" });
+      await expect(
+        service.requestEmailChange(user.id, "new@example.com", { cookie: "x" }),
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe("cancelEmailChange", () => {
+    it("clears the pending pair and returns the updated user", async () => {
+      const user = User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      }).withPendingEmail("new@example.com", new Date());
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.cancelEmailChange(user.id);
+
+      const persisted = mockRepo.update.mock.calls[0][0] as User;
+      expect(persisted.pendingEmail).toBeNull();
+      expect(persisted.pendingEmailRequestedAt).toBeNull();
+      expect(result.pendingEmail).toBeNull();
+    });
+
+    it("rejects when nothing is pending", async () => {
+      const user = User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      await expect(service.cancelEmailChange(user.id)).rejects.toThrow(ValueError);
+      expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+
+    it("propagates not-found from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.cancelEmailChange("nonexistent")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
+
+    it("throws NotFoundError when the update returns null", async () => {
+      const user = User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      }).withPendingEmail("new@example.com", new Date());
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockResolvedValue(null);
+
+      await expect(service.cancelEmailChange(user.id)).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe("clearPendingEmailFor", () => {
+    it("clears pending when set", async () => {
+      const user = User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      }).withPendingEmail("new@example.com", new Date());
+      mockRepo.findOneById.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      await service.clearPendingEmailFor(user.id);
+
+      const persisted = mockRepo.update.mock.calls[0][0] as User;
+      expect(persisted.pendingEmail).toBeNull();
+    });
+
+    it("is a no-op when nothing is pending", async () => {
+      const user = User.create({
+        email: "current@example.com",
+        firstName: "Cur",
+        lastName: "Rent",
+      });
+      mockRepo.findOneById.mockResolvedValue(user);
+
+      await service.clearPendingEmailFor(user.id);
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+
+    it("is a no-op when the user is not found", async () => {
+      mockRepo.findOneById.mockResolvedValue(null);
+
+      await service.clearPendingEmailFor("nonexistent");
 
       expect(mockRepo.update).not.toHaveBeenCalled();
     });
