@@ -49,12 +49,6 @@ export class User {
 
   @Prop({ default: "en" })
   preferredLanguage: string;
-
-  @Prop({ default: null, type: String })
-  pendingEmail: string | null;
-
-  @Prop({ default: null, type: Date })
-  pendingEmailRequestedAt: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

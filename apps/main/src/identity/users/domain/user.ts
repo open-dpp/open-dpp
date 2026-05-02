@@ -14,11 +14,11 @@ export interface UserCreateProps {
   banReason?: string | null;
   banExpires?: Date | null;
   preferredLanguage?: LanguageType;
-  pendingEmail?: string | null;
-  pendingEmailRequestedAt?: Date | null;
 }
 
 export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
+  // firstName/lastName may be null for accounts created before names became required
+  // at signup. New writes always populate them; nullable here exists purely for legacy reads.
   firstName: string | null;
   lastName: string | null;
   id: string;
@@ -43,8 +43,6 @@ export class User {
   public readonly banReason: string | null;
   public readonly banExpires: Date | null;
   public readonly preferredLanguage: LanguageType;
-  public readonly pendingEmail: string | null;
-  public readonly pendingEmailRequestedAt: Date | null;
 
   private constructor(
     id: string,
@@ -60,8 +58,6 @@ export class User {
     banReason: string | null,
     banExpires: Date | null,
     preferredLanguage: LanguageType,
-    pendingEmail: string | null,
-    pendingEmailRequestedAt: Date | null,
   ) {
     this.id = id;
     this.email = email;
@@ -78,17 +74,15 @@ export class User {
     this.banReason = banReason;
     this.banExpires = banExpires;
     this.preferredLanguage = preferredLanguage;
-    this.pendingEmail = pendingEmail;
-    this.pendingEmailRequestedAt = pendingEmailRequestedAt;
   }
 
-  public static create(data: UserCreateProps) {
+  public static create(data: UserCreateProps): User {
     const now = new Date();
     return new User(
       randomUUID(),
       data.email,
-      data.firstName ?? null,
-      data.lastName ?? null,
+      data.firstName,
+      data.lastName,
       data.image ?? null,
       data.emailVerified ?? false,
       now,
@@ -98,8 +92,6 @@ export class User {
       data.banReason ?? null,
       data.banExpires ?? null,
       data.preferredLanguage ?? Language.en,
-      data.pendingEmail ?? null,
-      data.pendingEmailRequestedAt ?? null,
     );
   }
 
@@ -118,10 +110,6 @@ export class User {
       overrides.banReason !== undefined ? overrides.banReason : this.banReason,
       overrides.banExpires !== undefined ? overrides.banExpires : this.banExpires,
       overrides.preferredLanguage ?? this.preferredLanguage,
-      overrides.pendingEmail !== undefined ? overrides.pendingEmail : this.pendingEmail,
-      overrides.pendingEmailRequestedAt !== undefined
-        ? overrides.pendingEmailRequestedAt
-        : this.pendingEmailRequestedAt,
     );
   }
 
@@ -147,29 +135,12 @@ export class User {
     return this.copyWith({ preferredLanguage });
   }
 
-  public withPendingEmail(pendingEmail: string, pendingEmailRequestedAt: Date): User {
-    if (
-      pendingEmail === this.pendingEmail &&
-      pendingEmailRequestedAt.getTime() === this.pendingEmailRequestedAt?.getTime()
-    ) {
-      return this;
-    }
-    return this.copyWith({ pendingEmail, pendingEmailRequestedAt });
-  }
-
-  public withoutPendingEmail(): User {
-    if (this.pendingEmail === null && this.pendingEmailRequestedAt === null) {
-      return this;
-    }
-    return this.copyWith({ pendingEmail: null, pendingEmailRequestedAt: null });
-  }
-
-  public static loadFromDb(data: UserDbProps) {
+  public static loadFromDb(data: UserDbProps): User {
     return new User(
       data.id,
       data.email,
-      data.firstName ?? null,
-      data.lastName ?? null,
+      data.firstName,
+      data.lastName,
       data.image ?? null,
       data.emailVerified ?? false,
       data.createdAt,
@@ -179,8 +150,6 @@ export class User {
       data.banReason ?? null,
       data.banExpires ?? null,
       data.preferredLanguage ?? Language.en,
-      data.pendingEmail ?? null,
-      data.pendingEmailRequestedAt ?? null,
     );
   }
 }

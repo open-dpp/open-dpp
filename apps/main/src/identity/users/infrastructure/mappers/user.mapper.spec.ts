@@ -25,8 +25,6 @@ describe("userMapper", () => {
     banReason: "Violation of terms",
     banExpires: now,
     preferredLanguage: Language.de,
-    pendingEmail: null,
-    pendingEmailRequestedAt: null,
   });
 
   const validUserDocument = {
@@ -43,8 +41,6 @@ describe("userMapper", () => {
     banReason: "Violation of terms",
     banExpires: now,
     preferredLanguage: "de",
-    pendingEmail: null,
-    pendingEmailRequestedAt: null,
   } as unknown as UserDocument;
 
   it("should map from domain to persistence", () => {
@@ -65,8 +61,6 @@ describe("userMapper", () => {
       banReason: validDomainUser.banReason,
       banExpires: validDomainUser.banExpires,
       preferredLanguage: validDomainUser.preferredLanguage,
-      pendingEmail: null,
-      pendingEmailRequestedAt: null,
     });
   });
 
@@ -138,8 +132,6 @@ describe("userMapper", () => {
         banReason: null,
         banExpires: null,
         preferredLanguage: Language.en,
-        pendingEmail: null,
-        pendingEmailRequestedAt: null,
       });
 
       const dto = UserMapper.toDto(userWithoutNames);
@@ -193,38 +185,4 @@ describe("userMapper", () => {
     });
   });
 
-  describe("pendingEmail round-trip", () => {
-    const requestedAt = new Date("2026-04-30T12:00:00Z");
-
-    it("toPersistence carries the pending pair through", () => {
-      const userWithPending = validDomainUser.withPendingEmail("new@example.com", requestedAt);
-
-      const persistence = UserMapper.toPersistence(userWithPending);
-
-      expect(persistence.pendingEmail).toBe("new@example.com");
-      expect(persistence.pendingEmailRequestedAt).toEqual(requestedAt);
-    });
-
-    it("toDomain reads the pending pair from persistence", () => {
-      const domain = UserMapper.toDomain({
-        ...validUserDocument,
-        pendingEmail: "new@example.com",
-        pendingEmailRequestedAt: requestedAt,
-      } as unknown as UserDocument);
-
-      expect(domain.pendingEmail).toBe("new@example.com");
-      expect(domain.pendingEmailRequestedAt).toEqual(requestedAt);
-    });
-
-    it("toDomain treats missing pending fields as null (legacy docs)", () => {
-      const domain = UserMapper.toDomain({
-        ...validUserDocument,
-        pendingEmail: undefined,
-        pendingEmailRequestedAt: undefined,
-      } as unknown as UserDocument);
-
-      expect(domain.pendingEmail).toBeNull();
-      expect(domain.pendingEmailRequestedAt).toBeNull();
-    });
-  });
 });

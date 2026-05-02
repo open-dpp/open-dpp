@@ -41,8 +41,6 @@ export class UserMapper {
         document.preferredLanguage,
         document._id.toString(),
       ),
-      pendingEmail: document.pendingEmail ?? null,
-      pendingEmailRequestedAt: document.pendingEmailRequestedAt ?? null,
     };
     return User.loadFromDb(props);
   }
@@ -63,8 +61,6 @@ export class UserMapper {
       banReason: entity.banReason ?? null,
       banExpires: entity.banExpires ?? null,
       preferredLanguage: entity.preferredLanguage,
-      pendingEmail: entity.pendingEmail ?? null,
-      pendingEmailRequestedAt: entity.pendingEmailRequestedAt ?? null,
     } as UserSchema;
   }
 
