@@ -1,6 +1,6 @@
 import type {
   CreateUserDto,
-  RequestEmailChangeDto,
+  MeDto,
   SetUserRoleDto,
   UpdateProfileDto,
   UserDto,
@@ -15,7 +15,7 @@ export class UsersNamespace {
   }
 
   public async getMe() {
-    return this.axiosInstance.get<UserDto>("/users/me");
+    return this.axiosInstance.get<MeDto>("/users/me");
   }
 
   public async create(data: CreateUserDto) {
@@ -23,15 +23,15 @@ export class UsersNamespace {
   }
 
   public async updateProfile(data: UpdateProfileDto) {
-    return this.axiosInstance.patch<UserDto>("/users/me", data);
+    return this.axiosInstance.patch<MeDto>("/users/me", data);
   }
 
-  public async requestEmailChange(data: RequestEmailChangeDto) {
-    return this.axiosInstance.post<UserDto>("/users/me/email-change", data);
+  public async requestEmailChange(data: { newEmail: string; currentPassword: string }) {
+    return this.axiosInstance.post<MeDto>("/users/me/email-change", data);
   }
 
   public async cancelEmailChange() {
-    return this.axiosInstance.delete<UserDto>("/users/me/email-change");
+    return this.axiosInstance.delete<MeDto>("/users/me/email-change");
   }
 
   public async setRole(id: string, data: SetUserRoleDto) {

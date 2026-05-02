@@ -533,7 +533,14 @@
     "emailChangeCancelled": "E-Mail-Änderungsanfrage abgebrochen",
     "emailChangeCancelFailed": "Die E-Mail-Änderungsanfrage konnte nicht abgebrochen werden",
     "emailPendingRequestedAt": "Angefordert { time }",
-    "profileSavedAt": "Gespeichert um { time }"
+    "profileSavedAt": "Gespeichert um { time }",
+    "emailChangeConfirmTitle": "Ausstehende E-Mail-Änderung abbrechen?",
+    "emailChangeConfirmMessage": "Du musst von vorne beginnen und die neue Adresse über eine neue E-Mail bestätigen.",
+    "emailChangeConfirmYes": "Änderung abbrechen",
+    "emailChangeConfirmNo": "Ausstehend lassen",
+    "emailChangeCurrentPassword": "Aktuelles Passwort",
+    "emailChangeCurrentPasswordRequired": "Erforderlich, um diese Änderung zu bestätigen.",
+    "emailChangeRateLimited": "Zu viele Versuche zur E-Mail-Änderung. Bitte versuche es in einer Stunde erneut."
   },
   "notifications": {
     "success": "Erfolg",

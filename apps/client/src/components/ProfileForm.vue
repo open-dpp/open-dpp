@@ -1,11 +1,13 @@
 <script lang="ts" setup>
-import type { UserDto } from "@open-dpp/dto";
+import type { MeDto, UserDto } from "@open-dpp/dto";
 import { Language, UpdateProfileDtoSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
 import SelectButton from "primevue/selectbutton";
+import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, nextTick, onMounted, ref, watch, type ComponentPublicInstance } from "vue";
 import { useI18n } from "vue-i18n";
@@ -23,8 +25,8 @@ import { convertLanguageToLocale } from "../translations/i18n.ts";
 
 const { t, locale } = useI18n();
 const notificationStore = useNotificationStore();
+const confirm = useConfirm();
 
-const CANCEL_ARM_TIMEOUT_MS = 5000;
 const SAVED_CHIP_DURATION_MS = 3000;
 
 const profileSchema = UpdateProfileDtoSchema;
@@ -49,15 +51,16 @@ const [preferredLanguage] = defineField("preferredLanguage");
 const loaded = ref(false);
 const hydrationFailed = ref(false);
 const user = ref<UserDto | null>(null);
+const pendingEmailChange = ref<{ newEmail: string; requestedAt: Date } | null>(null);
 const original = ref<ProfileFormValues | null>(null);
 
 const emailPanelOpen = ref(false);
 const newEmail = ref("");
 const newEmailError = ref<string | null>(null);
+const currentPassword = ref("");
+const currentPasswordError = ref<string | null>(null);
 const emailSubmitting = ref(false);
 const cancelSubmitting = ref(false);
-const cancelArmed = ref(false);
-let cancelArmTimer: ReturnType<typeof setTimeout> | null = null;
 const changeEmailButtonRef = ref<ComponentPublicInstance | null>(null);
 const cancelPendingButtonRef = ref<ComponentPublicInstance | null>(null);
 
@@ -85,12 +88,8 @@ const languageOptions = computed(() => [
   { value: Language.de, label: t("languages.german") },
 ]);
 
-const pendingEmail = computed(() => user.value?.pendingEmail ?? null);
-const pendingEmailRequestedAt = computed(() => {
-  const raw = user.value?.pendingEmailRequestedAt;
-  if (!raw) return null;
-  return raw instanceof Date ? raw : new Date(raw);
-});
+const pendingEmail = computed(() => pendingEmailChange.value?.newEmail ?? null);
+const pendingEmailRequestedAt = computed(() => pendingEmailChange.value?.requestedAt ?? null);
 const pendingRequestedLabel = computed(() => {
   const at = pendingEmailRequestedAt.value;
   if (!at || Number.isNaN(at.getTime())) return null;
@@ -103,23 +102,32 @@ const pendingRequestedLabel = computed(() => {
 const currentEmail = computed(() => user.value?.email ?? "");
 
 const canSendVerification = computed(() =>
-  shouldSubmitEmailChange(newEmail.value.trim(), currentEmail.value, pendingEmail.value),
+  shouldSubmitEmailChange(newEmail.value.trim(), currentEmail.value),
 );
 
 async function hydrate() {
   hydrationFailed.value = false;
   const response = await apiClient.dpp.users.getMe();
-  applyUser(response.data);
+  applyMe(response.data);
   loaded.value = true;
 }
 
-function applyUser(next: UserDto) {
-  user.value = next;
-  const formValues = mapUserToFormValues(next);
+function applyMe(next: MeDto) {
+  user.value = next.user;
+  pendingEmailChange.value = next.pendingEmailChange
+    ? {
+        newEmail: next.pendingEmailChange.newEmail,
+        requestedAt:
+          next.pendingEmailChange.requestedAt instanceof Date
+            ? next.pendingEmailChange.requestedAt
+            : new Date(next.pendingEmailChange.requestedAt),
+      }
+    : null;
+  const formValues = mapUserToFormValues(next.user);
   original.value = formValues;
   setValues(formValues);
-  if (next.preferredLanguage) {
-    locale.value = convertLanguageToLocale(next.preferredLanguage);
+  if (next.user.preferredLanguage) {
+    locale.value = convertLanguageToLocale(next.user.preferredLanguage);
   }
 }
 
@@ -160,14 +168,14 @@ const submitProfile = handleSubmit(async (formValues) => {
 
   try {
     const updated = await apiClient.dpp.users.updateProfile(diff);
-    applyUser(updated.data);
-    if (updated.data.preferredLanguage) {
-      locale.value = convertLanguageToLocale(updated.data.preferredLanguage);
+    applyMe(updated.data);
+    if (updated.data.user.preferredLanguage) {
+      locale.value = convertLanguageToLocale(updated.data.user.preferredLanguage);
     }
     if (original.value) {
-      original.value = mergeUpdatedUserIntoOriginal(updated.data, original.value);
+      original.value = mergeUpdatedUserIntoOriginal(updated.data.user, original.value);
     }
-    resetForm({ values: mapUserToFormValues(updated.data) });
+    resetForm({ values: mapUserToFormValues(updated.data.user) });
     lastSavedAt.value = new Date();
     showSavedChip();
     notificationStore.addSuccessNotification(t("user.profileSaved"));
@@ -194,6 +202,8 @@ function discard() {
 function openEmailPanel() {
   newEmail.value = "";
   newEmailError.value = null;
+  currentPassword.value = "";
+  currentPasswordError.value = null;
   emailPanelOpen.value = true;
 }
 
@@ -201,11 +211,17 @@ function closeEmailPanel() {
   emailPanelOpen.value = false;
   newEmail.value = "";
   newEmailError.value = null;
+  currentPassword.value = "";
+  currentPasswordError.value = null;
   focusEmailRowAction();
 }
 
 watch(newEmail, () => {
   newEmailError.value = null;
+});
+
+watch(currentPassword, () => {
+  currentPasswordError.value = null;
 });
 
 async function sendVerification() {
@@ -215,45 +231,56 @@ async function sendVerification() {
     newEmailError.value = t("common.form.email.invalid");
     return;
   }
+  if (!currentPassword.value) {
+    currentPasswordError.value = t("user.emailChangeCurrentPasswordRequired");
+    return;
+  }
   if (!canSendVerification.value) return;
 
   emailSubmitting.value = true;
   try {
-    const updated = await apiClient.dpp.users.requestEmailChange({ newEmail: candidate });
-    applyUser(updated.data);
+    const updated = await apiClient.dpp.users.requestEmailChange({
+      newEmail: candidate,
+      currentPassword: currentPassword.value,
+    });
+    applyMe(updated.data);
     notificationStore.addInfoNotification(t("user.emailChangeRequested"));
     closeEmailPanel();
   } catch (error) {
     console.error("Email change request failed", error);
-    newEmailError.value = extractServerMessage(error, "user.emailChangeFailed");
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 429) {
+      newEmailError.value = t("user.emailChangeRateLimited");
+    } else {
+      const serverMessage = extractServerMessage(error, "user.emailChangeFailed");
+      if (serverMessage.toLowerCase().includes("password")) {
+        currentPasswordError.value = serverMessage;
+      } else {
+        newEmailError.value = serverMessage;
+      }
+    }
   } finally {
     emailSubmitting.value = false;
   }
 }
 
-function disarmCancel() {
-  cancelArmed.value = false;
-  if (cancelArmTimer) {
-    clearTimeout(cancelArmTimer);
-    cancelArmTimer = null;
-  }
+function confirmCancelPending() {
+  if (!pendingEmail.value || cancelSubmitting.value) return;
+  confirm.require({
+    header: t("user.emailChangeConfirmTitle"),
+    message: t("user.emailChangeConfirmMessage"),
+    acceptLabel: t("user.emailChangeConfirmYes"),
+    rejectLabel: t("user.emailChangeConfirmNo"),
+    acceptClass: "p-button-danger",
+    accept: () => void cancelPending(),
+  });
 }
 
 async function cancelPending() {
-  if (!pendingEmail.value || cancelSubmitting.value) return;
-  if (!cancelArmed.value) {
-    cancelArmed.value = true;
-    if (cancelArmTimer) clearTimeout(cancelArmTimer);
-    // Auto-disarm after the timeout so a user who walks away cannot accidentally
-    // cancel by returning and clicking the button on muscle memory.
-    cancelArmTimer = setTimeout(disarmCancel, CANCEL_ARM_TIMEOUT_MS);
-    return;
-  }
-  disarmCancel();
   cancelSubmitting.value = true;
   try {
     const updated = await apiClient.dpp.users.cancelEmailChange();
-    applyUser(updated.data);
+    applyMe(updated.data);
     notificationStore.addInfoNotification(t("user.emailChangeCancelled"));
   } catch (error) {
     console.error("Email change cancellation failed", error);
@@ -264,14 +291,6 @@ async function cancelPending() {
     cancelSubmitting.value = false;
   }
 }
-
-// When the pending state goes away (cancelled or verified), reset the arm flag
-// so a freshly-initiated change starts from a clean state.
-watch(pendingEmail, (next) => {
-  if (next === null) {
-    disarmCancel();
-  }
-});
 
 function handleEmailKeydown(event: KeyboardEvent) {
   if (event.key === "Escape") {
@@ -288,6 +307,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
 
 <template>
   <form class="profile-form" :aria-busy="isSubmitting" @submit.prevent="submitProfile">
+    <ConfirmDialog />
     <header class="profile-form__header">
       <h1 class="profile-form__title">{{ t("user.profile") }}</h1>
       <p class="profile-form__subtitle">{{ t("user.profileSubtitle") }}</p>
@@ -412,26 +432,17 @@ function handleEmailKeydown(event: KeyboardEvent) {
           </span>
         </div>
         <div class="profile-form__email-actions">
-          <div v-if="pendingEmail" class="profile-form__cancel-stack">
-            <Button
-              ref="cancelPendingButtonRef"
-              type="button"
-              :severity="cancelArmed ? 'danger' : 'secondary'"
-              size="small"
-              :label="cancelArmed ? t('user.cancelEmailChangeArmed') : t('user.cancelEmailChange')"
-              :loading="cancelSubmitting"
-              :disabled="cancelSubmitting"
-              :aria-describedby="cancelArmed ? 'profile-cancel-confirm' : undefined"
-              @click="cancelPending"
-              @blur="disarmCancel"
-            />
-            <div
-              v-if="cancelArmed"
-              class="profile-form__cancel-countdown"
-              :style="{ animationDuration: `${CANCEL_ARM_TIMEOUT_MS}ms` }"
-              aria-hidden="true"
-            />
-          </div>
+          <Button
+            v-if="pendingEmail"
+            ref="cancelPendingButtonRef"
+            type="button"
+            severity="secondary"
+            size="small"
+            :label="t('user.cancelEmailChange')"
+            :loading="cancelSubmitting"
+            :disabled="cancelSubmitting"
+            @click="confirmCancelPending"
+          />
           <Button
             v-else-if="!emailPanelOpen"
             ref="changeEmailButtonRef"
@@ -444,17 +455,6 @@ function handleEmailKeydown(event: KeyboardEvent) {
             @click="openEmailPanel"
           />
         </div>
-        <p
-          v-if="cancelArmed && pendingEmail"
-          id="profile-cancel-confirm"
-          class="profile-form__email-confirm"
-          role="alert"
-        >
-          {{ t("user.cancelEmailChangeConfirm", { email: pendingEmail }) }}
-        </p>
-        <span class="profile-form__sr-only" aria-live="polite">
-          {{ cancelArmed ? t("user.cancelEmailChangeAnnouncement") : "" }}
-        </span>
       </div>
 
       <Transition name="profile-form__panel">
@@ -492,6 +492,29 @@ function handleEmailKeydown(event: KeyboardEvent) {
           >
             {{ newEmailError }}
           </Message>
+          <div class="profile-form__field">
+            <label class="profile-form__label" for="profile-current-password">
+              {{ t("user.emailChangeCurrentPassword") }}
+            </label>
+            <InputText
+              id="profile-current-password"
+              v-model="currentPassword"
+              type="password"
+              autocomplete="current-password"
+              class="profile-form__input"
+              :invalid="!!currentPasswordError"
+              :disabled="emailSubmitting"
+              @keydown="handleEmailKeydown"
+            />
+            <Message
+              v-if="currentPasswordError"
+              severity="error"
+              variant="simple"
+              size="small"
+            >
+              {{ currentPasswordError }}
+            </Message>
+          </div>
           <div class="profile-form__panel-actions">
             <Button
               type="button"
@@ -714,14 +737,6 @@ function handleEmailKeydown(event: KeyboardEvent) {
   line-height: 1.5;
 }
 
-.profile-form__email-confirm {
-  flex: 1 1 100%;
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--status-danger);
-  line-height: 1.5;
-}
-
 .profile-form__chip {
   display: inline-flex;
   align-items: center;
@@ -748,53 +763,6 @@ function handleEmailKeydown(event: KeyboardEvent) {
   background: color-mix(in srgb, var(--status-success) 12%, var(--surface));
   color: var(--status-success);
   border-color: color-mix(in srgb, var(--status-success) 22%, var(--surface));
-}
-
-.profile-form__cancel-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: stretch;
-}
-
-.profile-form__cancel-countdown {
-  height: 2px;
-  background: var(--status-danger);
-  transform-origin: left center;
-  animation-name: profile-form__cancel-countdown-shrink;
-  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
-  animation-fill-mode: forwards;
-  animation-iteration-count: 1;
-  border-radius: 9999px;
-}
-
-@keyframes profile-form__cancel-countdown-shrink {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-form__cancel-countdown {
-    animation: none;
-    transform: scaleX(1);
-    opacity: 0.6;
-  }
-}
-
-.profile-form__sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .profile-form__saved-indicator {

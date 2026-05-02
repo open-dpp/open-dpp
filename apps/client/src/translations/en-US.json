@@ -512,7 +512,14 @@
     "emailChangeCancelled": "Email change request cancelled",
     "emailChangeCancelFailed": "Could not cancel the email change request",
     "emailPendingRequestedAt": "Requested { time }",
-    "profileSavedAt": "Saved at { time }"
+    "profileSavedAt": "Saved at { time }",
+    "emailChangeConfirmTitle": "Cancel pending email change?",
+    "emailChangeConfirmMessage": "You'll need to start over and verify the new address from a fresh email.",
+    "emailChangeConfirmYes": "Cancel change",
+    "emailChangeConfirmNo": "Keep pending",
+    "emailChangeCurrentPassword": "Current password",
+    "emailChangeCurrentPasswordRequired": "Required to confirm this change.",
+    "emailChangeRateLimited": "Too many email-change attempts. Please try again in an hour."
   },
   "notifications": {
     "success": "Success",
