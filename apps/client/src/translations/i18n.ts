@@ -15,9 +15,11 @@ export type MessageSchema = typeof deDE;
 
 const storedLocale = localStorage.getItem(LAST_SELECTED_LANGUAGE);
 
+const initialLocale = storedLocale ?? navigator.language;
+
 export const i18n = createI18n<[MessageSchema], "en-US" | "de-DE">({
   legacy: false,
-  locale: storedLocale ?? undefined,
+  locale: initialLocale ?? undefined,
   fallbackLocale: "en-US",
   messages: {
     "en-US": { ...enUS, ...enZod },

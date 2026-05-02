@@ -18,10 +18,10 @@ import {
   mergeUpdatedUserIntoOriginal,
   shouldSubmitEmailChange,
   type ProfileFormValues,
-} from "../composables/profile-form.ts";
-import apiClient from "../lib/api-client.ts";
-import { useNotificationStore } from "../stores/notification.ts";
-import { convertLanguageToLocale } from "../translations/i18n.ts";
+} from "../../composables/profile-form.ts";
+import apiClient from "../../lib/api-client.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
+import { convertLanguageToLocale } from "../../translations/i18n.ts";
 
 const { t, locale } = useI18n();
 const notificationStore = useNotificationStore();

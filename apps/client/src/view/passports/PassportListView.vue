@@ -232,7 +232,6 @@ onMounted(async () => {
     </template>
   </DigitalProductDocumentTable>
   <PassportCreateDialog ref="createDialog" />
-  <ConfirmDialog />
   <PassportQrCodeDialog
     v-if="qrCodeDialogItem"
     v-model="qrCodeDialogVisible"

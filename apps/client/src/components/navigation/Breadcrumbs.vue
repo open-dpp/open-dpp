@@ -4,7 +4,7 @@ import { HomeIcon } from "@heroicons/vue/20/solid";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import { useLayoutStore } from "../stores/layout";
+import { useLayoutStore } from "../../stores/layout";
 
 const { t } = useI18n();
 const layoutStore = useLayoutStore();

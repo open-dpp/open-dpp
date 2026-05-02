@@ -4,14 +4,14 @@ import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
-import apiClient from "../lib/api-client.ts";
+import apiClient from "../../lib/api-client.ts";
 import ProfileForm from "./ProfileForm.vue";
 
 const confirmMocks = vi.hoisted(() => ({
   require: vi.fn(),
 }));
 
-vi.mock("../lib/api-client.ts", () => ({
+vi.mock("../../lib/api-client.ts", () => ({
   default: {
     dpp: {
       users: {
@@ -24,12 +24,12 @@ vi.mock("../lib/api-client.ts", () => ({
   },
 }));
 
-vi.mock("../translations/i18n.ts", () => ({
+vi.mock("../../translations/i18n.ts", () => ({
   convertLanguageToLocale: (language: string) => (language === "de" ? "de-DE" : "en-US"),
   convertLocaleToLanguage: (locale: string) => (locale === "de-DE" ? "de" : "en"),
 }));
 
-vi.mock("../const.ts", () => ({
+vi.mock("../../const.ts", () => ({
   API_URL: "http://localhost:3000/api",
   MARKETPLACE_URL: "http://localhost:3000/api",
   VIEW_ROOT_URL: "http://localhost:3000",
