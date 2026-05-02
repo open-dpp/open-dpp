@@ -10,6 +10,7 @@ import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
 import { EmailService } from "../../email/email.service";
+import { EMAIL_CHANGE_REQUEST_COLLECTION } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 
 export const AUTH = "auth";
 
@@ -214,25 +215,17 @@ export const AuthProvider: Provider = {
         user: {
           update: {
             after: async (user) => {
-              // When better-auth completes a verified email change, user.email is set to the
-              // address the user just confirmed. If our shadow `pendingEmail` field still holds
-              // that same address, the change is now complete and we clear it. Other user
-              // updates (name, language, role) leave pendingEmail untouched.
+              // When better-auth completes a verified email change, user.email is now the new
+              // address. Best-effort: delete the matching EmailChangeRequest row. The
+              // newEmail filter ensures we only act on completion (other user updates leave
+              // user.email unchanged, so no row matches).
               try {
-                const pending = (user as { pendingEmail?: string | null }).pendingEmail;
-                if (pending && pending === user.email) {
-                  const userIdQuery = Types.ObjectId.isValid(user.id)
-                    ? new Types.ObjectId(user.id)
-                    : user.id;
-                  await db
-                    .collection("user")
-                    .updateOne(
-                      { _id: userIdQuery },
-                      { $set: { pendingEmail: null, pendingEmailRequestedAt: null } },
-                    );
-                }
+                await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).deleteOne({
+                  userId: user.id,
+                  newEmail: user.email,
+                });
               } catch (error) {
-                logger.error("Failed to clear pendingEmail after user update", error);
+                logger.error("Failed to clear EmailChangeRequest after user.email update", error);
               }
             },
           },
