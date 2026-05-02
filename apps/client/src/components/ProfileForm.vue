@@ -320,6 +320,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
         severity="secondary"
         size="small"
         class="profile-form__retry-button"
+        data-testid="retry"
         @click="retryHydrate"
       />
     </Message>
@@ -441,6 +442,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             :label="t('user.cancelEmailChange')"
             :loading="cancelSubmitting"
             :disabled="cancelSubmitting"
+            data-testid="cancel-pending"
             @click="confirmCancelPending"
           />
           <Button
@@ -452,6 +454,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             :label="t('user.changeEmail')"
             aria-controls="profile-email-panel"
             :aria-expanded="emailPanelOpen"
+            data-testid="change-email"
             @click="openEmailPanel"
           />
         </div>
@@ -478,6 +481,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             :invalid="!!newEmailError"
             :disabled="emailSubmitting"
             :aria-describedby="newEmailError ? 'profile-new-email-error' : 'profile-new-email-hint'"
+            data-testid="new-email"
             autofocus
           />
           <p id="profile-new-email-hint" class="profile-form__helper">
@@ -504,6 +508,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
               class="profile-form__input"
               :invalid="!!currentPasswordError"
               :disabled="emailSubmitting"
+              data-testid="current-password"
               @keydown="handleEmailKeydown"
             />
             <Message
@@ -528,6 +533,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
               :label="t('user.sendVerification')"
               :loading="emailSubmitting"
               :disabled="!canSendVerification || emailSubmitting"
+              data-testid="send-verification"
               @click="sendVerification"
             />
           </div>
