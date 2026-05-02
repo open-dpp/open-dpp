@@ -115,8 +115,6 @@ describe("userMapper", () => {
         image: validDomainUser.image,
         emailVerified: validDomainUser.emailVerified,
         preferredLanguage: validDomainUser.preferredLanguage,
-        pendingEmail: null,
-        pendingEmailRequestedAt: null,
         createdAt: validDomainUser.createdAt,
         updatedAt: validDomainUser.updatedAt,
       });
@@ -227,15 +225,6 @@ describe("userMapper", () => {
 
       expect(domain.pendingEmail).toBeNull();
       expect(domain.pendingEmailRequestedAt).toBeNull();
-    });
-
-    it("toDto exposes the pending pair", () => {
-      const userWithPending = validDomainUser.withPendingEmail("new@example.com", requestedAt);
-
-      const dto = UserMapper.toDto(userWithPending);
-
-      expect(dto.pendingEmail).toBe("new@example.com");
-      expect(dto.pendingEmailRequestedAt).toEqual(requestedAt);
     });
   });
 });

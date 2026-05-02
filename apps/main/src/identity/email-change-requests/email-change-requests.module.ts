@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../../email/email.module";
@@ -18,7 +18,7 @@ import { RevokeEmailChangeController } from "./presentation/revoke-email-change.
       { name: EmailChangeRequestSchemaClass.name, schema: EmailChangeRequestSchema },
     ]),
     EnvModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
     EmailModule,
   ],
   providers: [EmailChangeRequestsService, EmailChangeRequestsRepository, BetterAuthTokenCleaner],

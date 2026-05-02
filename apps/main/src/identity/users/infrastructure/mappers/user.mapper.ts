@@ -17,8 +17,6 @@ export class UserMapper {
       image: entity.image,
       emailVerified: entity.emailVerified,
       preferredLanguage: entity.preferredLanguage,
-      pendingEmail: entity.pendingEmail,
-      pendingEmailRequestedAt: entity.pendingEmailRequestedAt,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
