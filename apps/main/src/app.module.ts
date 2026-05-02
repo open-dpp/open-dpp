@@ -4,6 +4,7 @@ import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "./aas/aas.module";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
@@ -40,6 +41,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
       }),
       inject: [EnvService],
     }),
+    ThrottlerModule.forRoot([{ name: "default", ttl: 3600_000, limit: 3 }]),
     AasModule,
     UniqueProductIdentifierModule,
     BrandingModule,
@@ -78,6 +80,10 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     {
       provide: APP_GUARD,
       useClass: PolicyGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
