@@ -159,26 +159,14 @@ describe("mergeUpdatedUserIntoOriginal", () => {
 
 describe("shouldSubmitEmailChange", () => {
   it("rejects an empty candidate", () => {
-    expect(shouldSubmitEmailChange("", "user@example.com", null)).toBe(false);
+    expect(shouldSubmitEmailChange("", "user@example.com")).toBe(false);
   });
 
   it("rejects a candidate equal to the current email", () => {
-    expect(shouldSubmitEmailChange("user@example.com", "user@example.com", null)).toBe(false);
+    expect(shouldSubmitEmailChange("user@example.com", "user@example.com")).toBe(false);
   });
 
-  it("rejects a candidate that already matches a pending change", () => {
-    expect(shouldSubmitEmailChange("new@example.com", "user@example.com", "new@example.com")).toBe(
-      false,
-    );
-  });
-
-  it("accepts a different candidate when nothing is pending", () => {
-    expect(shouldSubmitEmailChange("new@example.com", "user@example.com", null)).toBe(true);
-  });
-
-  it("accepts a candidate different from both current and pending (caller decides whether server will reject)", () => {
-    expect(
-      shouldSubmitEmailChange("third@example.com", "user@example.com", "new@example.com"),
-    ).toBe(true);
+  it("accepts a candidate different from the current email", () => {
+    expect(shouldSubmitEmailChange("new@example.com", "user@example.com")).toBe(true);
   });
 });

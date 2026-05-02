@@ -63,16 +63,12 @@ export function mergeUpdatedUserIntoOriginal(
  * Rules:
  *   - Must be non-empty.
  *   - Must differ from the user's current email.
- *   - Must differ from any pending email already in flight (the backend will reject otherwise,
- *     but we surface the constraint at the boundary so the button stays disabled).
+ *
+ * The backend handles atomic cancel-and-replace when a pending change already exists,
+ * so the frontend no longer needs to compare against the pending email.
  */
-export function shouldSubmitEmailChange(
-  candidate: string,
-  currentEmail: string,
-  pendingEmail: string | null,
-): boolean {
+export function shouldSubmitEmailChange(candidate: string, currentEmail: string): boolean {
   if (!candidate) return false;
   if (candidate === currentEmail) return false;
-  if (pendingEmail !== null && candidate === pendingEmail) return false;
   return true;
 }
