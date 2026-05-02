@@ -2,8 +2,8 @@ import { z } from "zod";
 import { LanguageEnum } from "../aas/enums/language-enum";
 
 export const UpdateProfileDtoSchema = z.object({
-  firstName: z.string().min(1).max(100).optional(),
-  lastName: z.string().min(1).max(100).optional(),
+  firstName: z.string().trim().min(1).max(100).optional(),
+  lastName: z.string().trim().min(1).max(100).optional(),
   preferredLanguage: LanguageEnum.optional(),
 });
 

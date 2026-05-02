@@ -55,4 +55,22 @@ describe("updateProfileDto", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it("rejects whitespace-only firstName", () => {
+    expect(() => UpdateProfileDtoSchema.parse({ firstName: "   " })).toThrow();
+  });
+
+  it("trims surrounding whitespace from firstName", () => {
+    const parsed = UpdateProfileDtoSchema.parse({ firstName: "  Florian  " });
+    expect(parsed.firstName).toBe("Florian");
+  });
+
+  it("rejects whitespace-only lastName", () => {
+    expect(() => UpdateProfileDtoSchema.parse({ lastName: "   " })).toThrow();
+  });
+
+  it("trims surrounding whitespace from lastName", () => {
+    const parsed = UpdateProfileDtoSchema.parse({ lastName: "  Bieck  " });
+    expect(parsed.lastName).toBe("Bieck");
+  });
 });

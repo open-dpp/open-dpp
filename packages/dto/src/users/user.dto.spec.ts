@@ -10,8 +10,6 @@ const validBase = {
   image: null,
   emailVerified: true,
   preferredLanguage: "en",
-  pendingEmail: null,
-  pendingEmailRequestedAt: null,
   createdAt: new Date("2026-01-01T00:00:00Z"),
   updatedAt: new Date("2026-01-02T00:00:00Z"),
 };
@@ -63,32 +61,5 @@ describe("userDto", () => {
       expect(result.data.createdAt).toBeInstanceOf(Date);
       expect(result.data.updatedAt).toBeInstanceOf(Date);
     }
-  });
-
-  it("accepts a pending email change (string + ISO date)", () => {
-    const result = UserDtoSchema.safeParse({
-      ...validBase,
-      pendingEmail: "new@example.com",
-      pendingEmailRequestedAt: "2026-04-30T12:00:00Z",
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.pendingEmail).toBe("new@example.com");
-      expect(result.data.pendingEmailRequestedAt).toBeInstanceOf(Date);
-    }
-  });
-
-  it("rejects undefined pendingEmail (must always be present, may be null)", () => {
-    const { pendingEmail, ...rest } = validBase;
-    void pendingEmail;
-    const result = UserDtoSchema.safeParse(rest);
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects undefined pendingEmailRequestedAt (must always be present, may be null)", () => {
-    const { pendingEmailRequestedAt, ...rest } = validBase;
-    void pendingEmailRequestedAt;
-    const result = UserDtoSchema.safeParse(rest);
-    expect(result.success).toBe(false);
   });
 });
