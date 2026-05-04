@@ -171,6 +171,10 @@ describe("templateController", () => {
     await ctx.asserts.getSubmodelElementValue(createTemplate);
   });
 
+  it(`/GET activities`, async () => {
+    await ctx.asserts.getActivities(createTemplate, saveTemplate);
+  });
+
   it("/GET all templates", async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();

@@ -114,7 +114,7 @@ import {
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
-import { DigitalProductDocumentActivityService } from "../../digital-product-document/application/digital-product-document-activity.service";
+import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 
 @Controller("/passports")
 export class PassportController
@@ -131,7 +131,6 @@ export class PassportController
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
-    private readonly digitalProductDocumentActivityService: DigitalProductDocumentActivityService,
   ) {}
 
   @Get()
@@ -620,6 +619,7 @@ export class PassportController
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodelElement(
@@ -628,7 +628,7 @@ export class PassportController
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -758,13 +758,13 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    return await this.digitalProductDocumentActivityService.getActivities(passport, limit, cursor);
+    return await this.passportService.digitalProductDocumentService.getActivities(
+      organizationId,
+      id,
+      subject,
+      limit,
+      cursor,
+    );
   }
 
   @Get("/:id/export")

@@ -9,6 +9,7 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 import { DigitalProductDocumentStatusModificationDto, TemplateDtoSchema } from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 @Injectable()
 export class TemplateService {
@@ -18,11 +19,13 @@ export class TemplateService {
   constructor(
     private readonly templateRepository: TemplateRepository,
     private readonly environmentService: EnvironmentService,
+    private readonly activityRepository: ActivityRepository,
     @InjectConnection() private connection: Connection,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
       this.templateRepository,
+      this.activityRepository,
     );
   }
 

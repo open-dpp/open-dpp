@@ -3,8 +3,5 @@ import { SubmodelElementModificationActivity } from "./aas/submodel-element-modi
 import { registerActivity } from "./activity-registry";
 
 export function registerActivityEventClasses(): void {
-  registerActivity(
-    ActivityTypes.SubmodelElementModificationEvent,
-    SubmodelElementModificationActivity,
-  );
+  registerActivity(ActivityTypes.SubmodelElementModification, SubmodelElementModificationActivity);
 }

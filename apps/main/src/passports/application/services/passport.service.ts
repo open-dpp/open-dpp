@@ -12,6 +12,7 @@ import { PassportRepository } from "../../infrastructure/passport.repository";
 import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
+import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
 
 @Injectable()
 export class PassportService {
@@ -19,6 +20,7 @@ export class PassportService {
   public readonly digitalProductDocumentService: DigitalProductDocumentService<Passport>;
   constructor(
     private readonly passportRepository: PassportRepository,
+    private readonly activityRepository: ActivityRepository,
     private readonly environmentService: EnvironmentService,
     @InjectConnection() private connection: Connection,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
@@ -26,6 +28,7 @@ export class PassportService {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
       this.passportRepository,
+      this.activityRepository,
     );
   }
 

@@ -9,6 +9,7 @@ import { TemplateService } from "./application/template.service";
 import { TemplateRepository } from "./infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
 import { TemplateController } from "./presentation/template.controller";
+import { ActivityHistoryModule } from "../activity-history/activity-history.module";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TemplateController } from "./presentation/template.controller";
         schema: TemplateSchema,
       },
     ]),
+    ActivityHistoryModule,
     AasModule,
     AuthModule,
     OrganizationsModule,

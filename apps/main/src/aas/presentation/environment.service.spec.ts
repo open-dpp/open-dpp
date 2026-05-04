@@ -51,6 +51,7 @@ import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { EnvironmentService } from "./environment.service";
+import { randomUUID } from "node:crypto";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -494,7 +495,7 @@ describe("environmentService", () => {
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));
   });
 
-  it("should modify submodel elemement", async () => {
+  it("should modify submodel element", async () => {
     const { environment, admin, member, submodel1, submodelElementCollection1, property1 } =
       await createDefaultEnvironment();
     const modification = {
@@ -504,21 +505,25 @@ describe("environmentService", () => {
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
+    const userId = randomUUID();
+    const digitalProductDocumentId = randomUUID();
     await environmentService.modifySubmodelElement(
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       modification,
       idShortPathToProperty1,
-      admin,
+      { subject: admin, userId },
     );
     //
     await expect(
       environmentService.modifySubmodelElement(
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         modification,
         idShortPathToProperty1,
-        member,
+        { subject: member, userId: randomUUID() },
       ),
     ).rejects.toThrow(
       new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),

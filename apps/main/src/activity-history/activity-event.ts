@@ -86,7 +86,7 @@ export function activityToDatabase(event: IActivity) {
   };
 }
 
-export function activityEventToPlain(event: IActivity) {
+export function activityToPlain(event: IActivity) {
   return {
     header: event.header.toPlain(),
     payload: event.payload.toPlain(),

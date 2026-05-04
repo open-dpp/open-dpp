@@ -80,7 +80,8 @@ import {
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { DigitalProductDocumentActivityService } from "../../digital-product-document/application/digital-product-document-activity.service";
+import { SubmodelElementModificationActivityVersion } from "../../activity-history/aas/submodel-element-modification.activity";
+import { ActivityTypes } from "../../activity-history/activity-types";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -132,7 +133,6 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
-        DigitalProductDocumentActivityService,
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,
@@ -196,7 +196,7 @@ export function createAasTestContext<T>(
       ]);
     });
 
-    ability = security.defineAbilityForSubject(subject);
+    ability = security.defineAbilityForSubject(subject, user1data.user.id);
 
     // { userRole: user, memberRole: owner }
     aas = AssetAdministrationShell.fromPlain(
@@ -676,7 +676,7 @@ export function createAasTestContext<T>(
   }
 
   async function assertGetActivities(createEntity: CreateEntity, saveEntity: SaveEntity) {
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const { org, userCookie, user } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
@@ -706,7 +706,22 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual(modificationBody);
+    expect(response.body.result).toEqual([
+      {
+        header: {
+          correlationId: expect.any(String),
+          createdAt: expect.any(String),
+          id: expect.any(String),
+          type: ActivityTypes.SubmodelElementModification,
+          version: SubmodelElementModificationActivityVersion.v1_0_0,
+          aggregateId: entity.id,
+          userId: user.id,
+        },
+        payload: {
+          fullIdShortPath: `${submodel.idShort}.Property01`,
+        },
+      },
+    ]);
   }
 
   async function assertModifySubmodelElementValue(

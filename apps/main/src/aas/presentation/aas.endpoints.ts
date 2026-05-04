@@ -202,6 +202,7 @@ export interface IAasModifyEndpoints {
     body: SubmodelElementModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   modifySubmodelElementValue: (
     organizationId: string,

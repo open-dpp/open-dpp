@@ -1,4 +1,5 @@
 import type {
+  ActivityPaginationDto,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
@@ -101,10 +102,12 @@ import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
+  ApiGetActivities,
   LimitQueryParam,
   PopulateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
+import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 
 @Controller("/templates")
 export class TemplateController
@@ -485,6 +488,7 @@ export class TemplateController
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodelElement(
@@ -493,7 +497,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -599,6 +603,25 @@ export class TemplateController
   ): Promise<TemplateDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return this.templateService.modifyTemplateStatus(id, organizationId, subject, body);
+  }
+
+  @ApiGetActivities()
+  async getActivities(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<ActivityPaginationDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.getActivities(
+      organizationId,
+      id,
+      subject,
+      limit,
+      cursor,
+    );
   }
 
   @Delete(":id")

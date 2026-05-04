@@ -63,6 +63,11 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   }
 }
 
+export type UserContext = {
+  subject: SubjectAttributes;
+  userId: string;
+};
+
 @Injectable()
 export class EnvironmentService {
   private readonly logger = new Logger(EnvironmentService.name);
@@ -84,9 +89,9 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
-  async loadAbility(environment: Environment, subjet: SubjectAttributes) {
+  async loadAbility(environment: Environment, subject: SubjectAttributes, userId?: string) {
     const security = await this.loadSecurity(environment);
-    return security.defineAbilityForSubject(subjet);
+    return security.defineAbilityForSubject(subject, userId);
   }
 
   private async loadSecurity(environment: Environment): Promise<Security> {
@@ -360,15 +365,19 @@ export class EnvironmentService {
   }
 
   async modifySubmodelElement(
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     modification: SubmodelElementModificationDto,
     idShortPath: IdShortPath,
-    subject: SubjectAttributes,
+    { subject, userId }: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, { ability });
+    const ability = await this.loadAbility(environment, subject, userId);
+    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, {
+      ability,
+      digitalProductDocumentId,
+    });
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
   }

@@ -1,8 +1,9 @@
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
-import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import {
+  ActivityPaginationDtoSchema,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
@@ -22,11 +23,14 @@ import {
   IDigitalProductDocumentRepository,
 } from "../infrastructure/digital-product-document-repository.interface";
 import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import { Pagination } from "../../pagination/pagination";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly digitalProductDocRepository: IDigitalProductDocumentRepository<T>,
+    private readonly activityRepository: ActivityRepository,
   ) {}
 
   async createSubmodel(
@@ -214,20 +218,21 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     idShortPath: IdShortPath,
     body: SubmodelElementModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.modifySubmodelElement(
+      id,
       item.getEnvironment(),
       submodelId,
       body,
       idShortPath,
-      subject,
+      userContext,
     );
   }
 
@@ -373,6 +378,28 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       throw new ForbiddenException();
     }
     return item;
+  }
+
+  async getActivities(
+    organizationId: string,
+    id: string,
+    subject: SubjectAttributes,
+    limit: number = 10,
+    cursor: string | undefined,
+  ) {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const pagination = Pagination.create({ limit, cursor });
+    return ActivityPaginationDtoSchema.parse(
+      (
+        await this.activityRepository.findByAggregateId(item.id, {
+          pagination,
+        })
+      ).toPlain(),
+    );
   }
 
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {

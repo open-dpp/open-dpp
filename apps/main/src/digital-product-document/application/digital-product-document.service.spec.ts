@@ -38,6 +38,7 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { KeyTypes } from "@open-dpp/dto";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -76,10 +77,16 @@ describe("DigitalProductDocumentService", () => {
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
-    service = new DigitalProductDocumentService(environmentService, passportRepository);
+    const activityRepository = module.get<ActivityRepository>(ActivityRepository);
+    service = new DigitalProductDocumentService(
+      environmentService,
+      passportRepository,
+      activityRepository,
+    );
   });
 
   it("should fail on modifications of archived passports", async () => {
+    const userId = randomUUID();
     const passport = Passport.create({
       organizationId: "organizationId",
       environment: Environment.create({}),
@@ -127,7 +134,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         IdShortPath.create({ path: "col1" }),
         { idShort: "col1" },
-        subject,
+        { subject, userId },
       ),
     ).rejects.toThrow(exception);
 

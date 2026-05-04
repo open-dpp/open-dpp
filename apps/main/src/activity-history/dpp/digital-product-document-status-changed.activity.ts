@@ -1,5 +1,11 @@
 import { DigitalProductDocumentStatusChange } from "../../digital-product-document/domain/digital-product-document-status";
-import { IActivity, ActivityHeader, activityToDatabase, ActivitySchema } from "../activity-event";
+import {
+  IActivity,
+  ActivityHeader,
+  activityToDatabase,
+  ActivitySchema,
+  activityToPlain,
+} from "../activity-event";
 
 export const DigitalProductDocumentStatusChangedEventVersion = {
   v1_0_0: "1.0.0",
@@ -35,5 +41,9 @@ export class DigitalProductDocumentStatusChangedActivity implements IActivity {
 
   toDatabase(): Record<string, unknown> {
     return activityToDatabase(this);
+  }
+
+  toPlain() {
+    return activityToPlain(this);
   }
 }

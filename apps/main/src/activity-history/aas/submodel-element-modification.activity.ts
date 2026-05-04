@@ -2,7 +2,7 @@ import {
   ActivityHeader,
   ActivitySchema,
   activityToDatabase,
-  activityEventToPlain,
+  activityToPlain,
   IActivity,
   IActivityPayload,
 } from "../activity-event";
@@ -10,7 +10,7 @@ import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { z } from "zod";
 import { ActivityTypes } from "../activity-types";
 
-export const SubmodelElementModificationEventVersion = {
+export const SubmodelElementModificationActivityVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
@@ -26,8 +26,8 @@ export class SubmodelElementModificationActivity implements IActivity {
     createdAt?: Date;
   }): SubmodelElementModificationActivity {
     const header = ActivityHeader.create({
-      type: ActivityTypes.SubmodelElementModificationEvent,
-      version: SubmodelElementModificationEventVersion.v1_0_0,
+      type: ActivityTypes.SubmodelElementModification,
+      version: SubmodelElementModificationActivityVersion.v1_0_0,
       aggregateId: data.digitalProductDocumentId,
       userId: data.userId,
       createdAt: data.createdAt,
@@ -49,7 +49,7 @@ export class SubmodelElementModificationActivity implements IActivity {
   }
 
   toPlain() {
-    return activityEventToPlain(this);
+    return activityToPlain(this);
   }
 }
 
