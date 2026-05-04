@@ -114,7 +114,7 @@ export class PresentationConfigurationRepository {
     options?: DbSessionOptions,
   ): Promise<void> {
     await this.presentationConfigurationDoc
-      .deleteOne({
+      .deleteMany({
         referenceType: ref.referenceType,
         referenceId: ref.referenceId,
       })

@@ -206,6 +206,50 @@ describe("passportService", () => {
     expect(await passportRepository.findOne(draft.id)).toBeUndefined();
   });
 
+  it("deletePassport removes all presentation configs when a passport has multiple configs", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const draft = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(draft);
+
+    await presentationConfigurationRepository.save(
+      PresentationConfiguration.create({
+        organizationId,
+        referenceId: draft.id,
+        referenceType: PresentationReferenceType.Passport,
+        label: null,
+      }),
+    );
+    await presentationConfigurationRepository.save(
+      PresentationConfiguration.create({
+        organizationId,
+        referenceId: draft.id,
+        referenceType: PresentationReferenceType.Passport,
+        label: "Variant A",
+      }),
+    );
+
+    const before = await presentationConfigurationRepository.findManyByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: draft.id,
+    });
+    expect(before).toHaveLength(2);
+
+    await service.deletePassport(draft.id, organizationId, subject);
+
+    const after = await presentationConfigurationRepository.findManyByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: draft.id,
+    });
+    expect(after).toEqual([]);
+  });
+
   it("seeds exactly one PresentationConfiguration row across multiple expansions", async () => {
     const organizationId = randomUUID();
     const passport = Passport.create({

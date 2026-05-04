@@ -170,6 +170,37 @@ describe("presentationConfigurationRepository", () => {
     });
   });
 
+  describe("deleteByReference", () => {
+    it("removes all configs for a reference, not just one", async () => {
+      const referenceId = randomUUID();
+      const a = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: null,
+      });
+      const b = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: "Variant A",
+      });
+      await repository.save(a);
+      await repository.save(b);
+
+      await repository.deleteByReference({
+        referenceType: "passport",
+        referenceId,
+      });
+
+      const remaining = await repository.findManyByReference({
+        referenceType: "passport",
+        referenceId,
+      });
+      expect(remaining).toEqual([]);
+    });
+  });
+
   describe("deleteById", () => {
     it("removes the config and returns true", async () => {
       const c = PresentationConfiguration.createForPassport({
