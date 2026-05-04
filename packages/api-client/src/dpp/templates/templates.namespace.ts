@@ -1,4 +1,5 @@
 import type {
+  ActivityPaginationDto,
   DigitalProductDocumentStatusModificationDto,
   GetAllParamsDto,
   TemplateCreateDto,
@@ -8,7 +9,10 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
 import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
-import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
+import type {
+  ActivityParams,
+  IDigitalProductDocumentNamespace,
+} from "../digital-product-document/digital-product-document.namespace";
 
 export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
@@ -56,6 +60,18 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
     return await this.axiosInstance.put<TemplateDto>(
       `${this.templatesEndpoint}/${id}/status`,
       data,
+    );
+  }
+
+  async getActivities(
+    id: string,
+    params: ActivityParams,
+  ): Promise<AxiosResponse<ActivityPaginationDto>> {
+    return this.axiosInstance.get<ActivityPaginationDto>(
+      `${this.templatesEndpoint}/${id}/activities`,
+      {
+        params: { ...params.pagination },
+      },
     );
   }
 }

@@ -7,10 +7,14 @@ import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
+import { activitiesPlainFactory } from "@open-dpp/testing";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const template1 = templatesPlainFactory.build({ organizationId: activeOrganization.id });
 export const template2 = templatesPlainFactory.build({ organizationId: activeOrganization.id });
+
+export const templateActivity1 = activitiesPlainFactory.build();
+export const templateActivity2 = activitiesPlainFactory.build();
 
 export function templatesHandlers() {
   const templatesEndpointUrl = `${baseURL}/templates`;
@@ -53,6 +57,26 @@ export function templatesHandlers() {
           },
         },
         { status: 200 },
+      );
+    }),
+    http.get(`${templatesEndpointUrl}/${template1.id}/activities`, async ({ request }) => {
+      const errorResponse = checkQueryParameters(request, {
+        limit: paginationParams.limit.toFixed(),
+      });
+
+      return (
+        errorResponse ||
+        HttpResponse.json(
+          {
+            paging_metadata: {
+              cursor: templateActivity2.header.id,
+            },
+            result: [templateActivity1, templateActivity2],
+          },
+          {
+            status: 200,
+          },
+        )
       );
     }),
   ];

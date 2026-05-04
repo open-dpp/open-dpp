@@ -6,10 +6,14 @@ import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
+import { activitiesPlainFactory } from "@open-dpp/testing";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const passport1 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
 export const passport2 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
+
+export const passportActivity1 = activitiesPlainFactory.build();
+export const passportActivity2 = activitiesPlainFactory.build();
 
 export function passportsHandlers() {
   const passportsEndpointUrl = `${baseURL}/passports`;
@@ -52,6 +56,26 @@ export function passportsHandlers() {
           },
         },
         { status: 200 },
+      );
+    }),
+    http.get(`${passportsEndpointUrl}/${passport1.id}/activities`, async ({ request }) => {
+      const errorResponse = checkQueryParameters(request, {
+        limit: paginationParams.limit.toFixed(),
+      });
+
+      return (
+        errorResponse ||
+        HttpResponse.json(
+          {
+            paging_metadata: {
+              cursor: passportActivity2.header.id,
+            },
+            result: [passportActivity1, passportActivity2],
+          },
+          {
+            status: 200,
+          },
+        )
       );
     }),
   ];

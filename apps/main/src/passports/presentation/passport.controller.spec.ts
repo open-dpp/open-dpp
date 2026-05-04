@@ -41,7 +41,6 @@ import {
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
-import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 
 describe("passportController", () => {
   const basePath = "/passports";

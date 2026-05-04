@@ -6,3 +6,4 @@ export * from "./fixtures/aas/submodel.factory";
 export * from "./fixtures/aas/submodel.modification.factory";
 export * from "./fixtures/passports/passports.factory";
 export * from "./fixtures/templates/templates.factory";
+export * from "./fixtures/activity-history/activity.factory";

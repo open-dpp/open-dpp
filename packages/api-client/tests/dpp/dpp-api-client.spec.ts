@@ -22,8 +22,8 @@ import {
   submodelValueResponse,
 } from "./handlers/aas";
 import { aasPropertiesWithParent, connection, connectionList } from "./handlers/aas-integration";
-import { passport1, passport2 } from "./handlers/passports";
-import { template1, template2 } from "./handlers/templates";
+import { passport1, passport2, passportActivity1, passportActivity2 } from "./handlers/passports";
+import { template1, template2, templateActivity1, templateActivity2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
 
@@ -78,6 +78,18 @@ describe("apiClient", () => {
         DigitalProductDocumentStatusDto.Published,
       );
     });
+
+    it("should get activities", async () => {
+      const response = await sdk.dpp.templates.getActivities(template1.id, {
+        pagination: paginationParams,
+      });
+      expect(response.data.result).toEqual(
+        [templateActivity1, templateActivity2].map((a) => ({
+          ...a,
+          header: { ...a.header, createdAt: a.header.createdAt.toISOString() },
+        })),
+      );
+    });
   });
 
   describe("passports", () => {
@@ -117,6 +129,18 @@ describe("apiClient", () => {
       });
       expect(response.data.lastStatusChange.currentStatus).toEqual(
         DigitalProductDocumentStatusDto.Published,
+      );
+    });
+
+    it("should get activities", async () => {
+      const response = await sdk.dpp.passports.getActivities(passport1.id, {
+        pagination: paginationParams,
+      });
+      expect(response.data.result).toEqual(
+        [passportActivity1, passportActivity2].map((a) => ({
+          ...a,
+          header: { ...a.header, createdAt: a.header.createdAt.toISOString() },
+        })),
       );
     });
   });

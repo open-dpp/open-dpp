@@ -1,8 +1,12 @@
 import type {
-  DigitalProductDocumentStatusModificationDto,
+  ActivityPaginationDto,
   DigitalProductDocumentDto,
+  DigitalProductDocumentStatusModificationDto,
+  PagingParamsDto,
 } from "@open-dpp/dto";
 import type { AxiosResponse } from "axios";
+
+export type ActivityParams = { pagination: PagingParamsDto };
 
 export interface IDigitalProductDocumentNamespace {
   getById(id: string): Promise<AxiosResponse<DigitalProductDocumentDto>>;
@@ -11,4 +15,5 @@ export interface IDigitalProductDocumentNamespace {
     id: string,
     data: DigitalProductDocumentStatusModificationDto,
   ): Promise<AxiosResponse<DigitalProductDocumentDto>>;
+  getActivities(id: string, params: ActivityParams): Promise<AxiosResponse<ActivityPaginationDto>>;
 }
