@@ -1,5 +1,27 @@
 # @open-dpp/main
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.2
+  - @open-dpp/dto@0.4.2
+  - @open-dpp/env@0.4.2
+  - @open-dpp/exception@0.4.2
+  - @open-dpp/permission@0.4.2
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.1
+  - @open-dpp/dto@0.4.1
+  - @open-dpp/env@0.4.1
+  - @open-dpp/exception@0.4.1
+  - @open-dpp/permission@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes

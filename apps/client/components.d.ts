@@ -16,9 +16,8 @@ declare module 'vue' {
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
     BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
-    BaseSectionHeader: typeof import('./src/components/BaseSectionHeader.vue')['default']
     BrandingLogo: typeof import('./src/components/media/BrandingLogo.vue')['default']
-    Breadcrumbs: typeof import('./src/components/Breadcrumbs.vue')['default']
+    Breadcrumbs: typeof import('./src/components/navigation/Breadcrumbs.vue')['default']
     Button: typeof import('primevue/button')['default']
     Card: typeof import('primevue/card')['default']
     ChangeRoleDialog: typeof import('./src/components/admin/ChangeRoleDialog.vue')['default']
@@ -27,7 +26,6 @@ declare module 'vue' {
     Column: typeof import('primevue/column')['default']
     ColumnCreateEditor: typeof import('./src/components/aas/ColumnCreateEditor.vue')['default']
     ColumnEditor: typeof import('./src/components/aas/ColumnEditor.vue')['default']
-    Combobox: typeof import('./src/components/basics/Combobox.vue')['default']
     ConfirmDialog: typeof import('primevue/confirmdialog')['default']
     CreateOrganizationForm: typeof import('./src/components/organizations/CreateOrganizationForm.vue')['default']
     DataTable: typeof import('primevue/datatable')['default']
@@ -40,7 +38,6 @@ declare module 'vue' {
     DigitalProductDocumentToolbar: typeof import('./src/components/digital-product-document/DigitalProductDocumentToolbar.vue')['default']
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
-    Dropdown: typeof import('./src/components/Dropdown.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
     FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
@@ -61,9 +58,6 @@ declare module 'vue' {
     InviteToOrganizationDialog: typeof import('./src/components/admin/InviteToOrganizationDialog.vue')['default']
     InviteUserDialog: typeof import('./src/components/admin/InviteUserDialog.vue')['default']
     LanguageSelect: typeof import('./src/components/basics/LanguageSelect.vue')['default']
-    Layout: typeof import('./src/components/layout/Layout.vue')['default']
-    LayoutNone: typeof import('./src/components/layout/LayoutNone.vue')['default']
-    LayoutPresentation: typeof import('./src/components/layout/LayoutPresentation.vue')['default']
     LazyPassportSelect: typeof import('./src/components/passport/LazyPassportSelect.vue')['default']
     LinkCellField: typeof import('./src/components/aas/LinkCellField.vue')['default']
     List: typeof import('./src/components/presentation/List.vue')['default']
@@ -79,8 +73,7 @@ declare module 'vue' {
     Menubar: typeof import('primevue/menubar')['default']
     Message: typeof import('primevue/message')['default']
     MetricQuery: typeof import('./src/components/analytics/MetricQuery.vue')['default']
-    ModalDialog: typeof import('./src/components/ModalDialog.vue')['default']
-    Navbar: typeof import('./src/components/layout/Navbar.vue')['default']
+    Navbar: typeof import('./src/components/presentation/Navbar.vue')['default']
     NavigationDrawer: typeof import('./src/components/presentation/NavigationDrawer.vue')['default']
     NavigationTree: typeof import('./src/components/presentation/NavigationTree.vue')['default']
     NotificationHandler: typeof import('./src/components/notifications/NotificationHandler.vue')['default']
@@ -95,7 +88,8 @@ declare module 'vue' {
     Password: typeof import('primevue/password')['default']
     PermissionsForm: typeof import('./src/components/aas/PermissionsForm.vue')['default']
     ProductImageGalleria: typeof import('./src/components/media/ProductImageGalleria.vue')['default']
-    ProfileForm: typeof import('./src/components/ProfileForm.vue')['default']
+    ProfileDropdown: typeof import('./src/components/profile/ProfileDropdown.vue')['default']
+    ProfileForm: typeof import('./src/components/profile/ProfileForm.vue')['default']
     PropertyCreateEditor: typeof import('./src/components/aas/PropertyCreateEditor.vue')['default']
     PropertyEditor: typeof import('./src/components/aas/PropertyEditor.vue')['default']
     PropertyForm: typeof import('./src/components/aas/PropertyForm.vue')['default']
@@ -107,11 +101,12 @@ declare module 'vue' {
     ReferenceElementCreateEditor: typeof import('./src/components/aas/ReferenceElementCreateEditor.vue')['default']
     ReferenceElementEditor: typeof import('./src/components/aas/ReferenceElementEditor.vue')['default']
     ReferenceElementForm: typeof import('./src/components/aas/ReferenceElementForm.vue')['default']
-    RingLoader: typeof import('./src/components/RingLoader.vue')['default']
+    RingLoader: typeof import('./src/components/navigation/RingLoader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Select: typeof import('primevue/select')['default']
     SelectOrganization: typeof import('./src/components/organizations/SelectOrganization.vue')['default']
+    SidebarContent: typeof import('./src/components/navigation/SidebarContent.vue')['default']
     SimpleTable: typeof import('./src/components/lists/SimpleTable.vue')['default']
     Submodel: typeof import('./src/components/presentation/Submodel.vue')['default']
     SubmodelBaseForm: typeof import('./src/components/aas/SubmodelBaseForm.vue')['default']
@@ -134,6 +129,7 @@ declare module 'vue' {
     Tree: typeof import('primevue/tree')['default']
     TreeTable: typeof import('primevue/treetable')['default']
     UserInvitationsList: typeof import('./src/components/organizations/UserInvitationsList.vue')['default']
+    Username: typeof import('./src/components/profile/Username.vue')['default']
   }
   export interface GlobalDirectives {
     Tooltip: typeof import('primevue/tooltip')['default']
@@ -146,9 +142,8 @@ declare global {
   const AdminUsersList: (typeof import("./src/components/admin/AdminUsersList.vue"))["default"];
   const AssetAdministrationShellEditor: (typeof import("./src/components/aas/AssetAdministrationShellEditor.vue"))["default"];
   const BaseButton: (typeof import("./src/components/basics/BaseButton.vue"))["default"];
-  const BaseSectionHeader: (typeof import("./src/components/BaseSectionHeader.vue"))["default"];
   const BrandingLogo: (typeof import("./src/components/media/BrandingLogo.vue"))["default"];
-  const Breadcrumbs: (typeof import("./src/components/Breadcrumbs.vue"))["default"];
+  const Breadcrumbs: (typeof import("./src/components/navigation/Breadcrumbs.vue"))["default"];
   const Button: (typeof import("primevue/button"))["default"];
   const Card: (typeof import("primevue/card"))["default"];
   const ChangeRoleDialog: (typeof import("./src/components/admin/ChangeRoleDialog.vue"))["default"];
@@ -157,7 +152,6 @@ declare global {
   const Column: (typeof import("primevue/column"))["default"];
   const ColumnCreateEditor: (typeof import("./src/components/aas/ColumnCreateEditor.vue"))["default"];
   const ColumnEditor: (typeof import("./src/components/aas/ColumnEditor.vue"))["default"];
-  const Combobox: (typeof import("./src/components/basics/Combobox.vue"))["default"];
   const ConfirmDialog: (typeof import("primevue/confirmdialog"))["default"];
   const CreateOrganizationForm: (typeof import("./src/components/organizations/CreateOrganizationForm.vue"))["default"];
   const DataTable: (typeof import("primevue/datatable"))["default"];
@@ -170,7 +164,6 @@ declare global {
   const DigitalProductDocumentToolbar: (typeof import("./src/components/digital-product-document/DigitalProductDocumentToolbar.vue"))["default"];
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
-  const Dropdown: (typeof import("./src/components/Dropdown.vue"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
   const FileCreateEditor: (typeof import("./src/components/aas/FileCreateEditor.vue"))["default"];
   const FileEditor: (typeof import("./src/components/aas/FileEditor.vue"))["default"];
@@ -191,9 +184,6 @@ declare global {
   const InviteToOrganizationDialog: (typeof import("./src/components/admin/InviteToOrganizationDialog.vue"))["default"];
   const InviteUserDialog: (typeof import("./src/components/admin/InviteUserDialog.vue"))["default"];
   const LanguageSelect: (typeof import("./src/components/basics/LanguageSelect.vue"))["default"];
-  const Layout: (typeof import("./src/components/layout/Layout.vue"))["default"];
-  const LayoutNone: (typeof import("./src/components/layout/LayoutNone.vue"))["default"];
-  const LayoutPresentation: (typeof import("./src/components/layout/LayoutPresentation.vue"))["default"];
   const LazyPassportSelect: (typeof import("./src/components/passport/LazyPassportSelect.vue"))["default"];
   const LinkCellField: (typeof import("./src/components/aas/LinkCellField.vue"))["default"];
   const List: (typeof import("./src/components/presentation/List.vue"))["default"];
@@ -209,8 +199,7 @@ declare global {
   const Menubar: (typeof import("primevue/menubar"))["default"];
   const Message: (typeof import("primevue/message"))["default"];
   const MetricQuery: (typeof import("./src/components/analytics/MetricQuery.vue"))["default"];
-  const ModalDialog: (typeof import("./src/components/ModalDialog.vue"))["default"];
-  const Navbar: (typeof import("./src/components/layout/Navbar.vue"))["default"];
+  const Navbar: (typeof import("./src/components/presentation/Navbar.vue"))["default"];
   const NavigationDrawer: (typeof import("./src/components/presentation/NavigationDrawer.vue"))["default"];
   const NavigationTree: (typeof import("./src/components/presentation/NavigationTree.vue"))["default"];
   const NotificationHandler: (typeof import("./src/components/notifications/NotificationHandler.vue"))["default"];
@@ -225,7 +214,8 @@ declare global {
   const Password: (typeof import("primevue/password"))["default"];
   const PermissionsForm: (typeof import("./src/components/aas/PermissionsForm.vue"))["default"];
   const ProductImageGalleria: (typeof import("./src/components/media/ProductImageGalleria.vue"))["default"];
-  const ProfileForm: (typeof import("./src/components/ProfileForm.vue"))["default"];
+  const ProfileDropdown: (typeof import("./src/components/profile/ProfileDropdown.vue"))["default"];
+  const ProfileForm: (typeof import("./src/components/profile/ProfileForm.vue"))["default"];
   const PropertyCreateEditor: (typeof import("./src/components/aas/PropertyCreateEditor.vue"))["default"];
   const PropertyEditor: (typeof import("./src/components/aas/PropertyEditor.vue"))["default"];
   const PropertyForm: (typeof import("./src/components/aas/PropertyForm.vue"))["default"];
@@ -237,11 +227,12 @@ declare global {
   const ReferenceElementCreateEditor: (typeof import("./src/components/aas/ReferenceElementCreateEditor.vue"))["default"];
   const ReferenceElementEditor: (typeof import("./src/components/aas/ReferenceElementEditor.vue"))["default"];
   const ReferenceElementForm: (typeof import("./src/components/aas/ReferenceElementForm.vue"))["default"];
-  const RingLoader: (typeof import("./src/components/RingLoader.vue"))["default"];
+  const RingLoader: (typeof import("./src/components/navigation/RingLoader.vue"))["default"];
   const RouterLink: (typeof import("vue-router"))["RouterLink"];
   const RouterView: (typeof import("vue-router"))["RouterView"];
   const Select: (typeof import("primevue/select"))["default"];
   const SelectOrganization: (typeof import("./src/components/organizations/SelectOrganization.vue"))["default"];
+  const SidebarContent: (typeof import("./src/components/navigation/SidebarContent.vue"))["default"];
   const SimpleTable: (typeof import("./src/components/lists/SimpleTable.vue"))["default"];
   const Submodel: (typeof import("./src/components/presentation/Submodel.vue"))["default"];
   const SubmodelBaseForm: (typeof import("./src/components/aas/SubmodelBaseForm.vue"))["default"];
@@ -264,4 +255,5 @@ declare global {
   const Tree: (typeof import("primevue/tree"))["default"];
   const TreeTable: (typeof import("primevue/treetable"))["default"];
   const UserInvitationsList: (typeof import("./src/components/organizations/UserInvitationsList.vue"))["default"];
+  const Username: (typeof import("./src/components/profile/Username.vue"))["default"];
 }

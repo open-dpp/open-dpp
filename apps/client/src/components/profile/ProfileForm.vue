@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { authClient } from "../auth-client.ts";
-import { LAST_SELECTED_LANGUAGE } from "../const";
+import { authClient } from "../../auth-client.ts";
+import { LAST_SELECTED_LANGUAGE } from "../../const.ts";
 
 const { t, locale } = useI18n();
 
