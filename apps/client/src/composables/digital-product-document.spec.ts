@@ -147,7 +147,7 @@ describe("passports", () => {
   });
 
   describe("fetchById", () => {
-    it("returns ok result on 200 response", async () => {
+    it("returns data on 200 response", async () => {
       const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
       const passport = passportsPlainFactory.build();
       mocks.getById.mockResolvedValueOnce({ status: HTTPCode.OK, data: passport });
@@ -155,10 +155,10 @@ describe("passports", () => {
       const result = await fetchById(passport.id);
 
       expect(mocks.getById).toHaveBeenCalledWith(passport.id);
-      expect(result).toEqual({ status: "ok", data: passport });
+      expect(result).toEqual(passport);
     });
 
-    it("returns not-found result on 404 AxiosError without toasting", async () => {
+    it("returns null on 404 AxiosError without toasting", async () => {
       const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
       const error = new AxiosError("Not found");
       error.response = { status: 404 } as AxiosResponse;
@@ -166,30 +166,23 @@ describe("passports", () => {
 
       const result = await fetchById("missing-id");
 
-      expect(result).toEqual({ status: "not-found" });
+      expect(result).toBeNull();
     });
 
-    it("returns error result on non-404 AxiosError", async () => {
+    it("rethrows on non-404 AxiosError", async () => {
       const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
       const error = new AxiosError("Boom");
       error.response = { status: 500 } as AxiosResponse;
       mocks.getById.mockRejectedValueOnce(error);
 
-      const result = await fetchById("any-id");
-
-      expect(result.status).toBe("error");
-      if (result.status === "error") {
-        expect(result.error).toBe(error);
-      }
+      await expect(fetchById("any-id")).rejects.toBe(error);
     });
 
-    it("returns error result on unexpected non-ok status", async () => {
+    it("throws on unexpected non-ok status", async () => {
       const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
       mocks.getById.mockResolvedValueOnce({ status: HTTPCode.NO_CONTENT, data: null });
 
-      const result = await fetchById("any-id");
-
-      expect(result.status).toBe("error");
+      await expect(fetchById("any-id")).rejects.toThrow("Unexpected status 204");
     });
   });
 

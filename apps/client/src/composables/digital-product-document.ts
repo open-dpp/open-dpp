@@ -15,13 +15,6 @@ import {
 } from "../lib/digital-product-document.ts";
 import apiClient from "../lib/api-client.ts";
 
-export type FetchResult<T> =
-  | { status: "ok"; data: T }
-  | { status: "not-found" }
-  | { status: "error"; error: unknown };
-
-const HTTP_NOT_FOUND = 404;
-
 export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) {
   const digitalProductDocNamespace =
     type === DigitalProductDocumentType.Passport
@@ -43,21 +36,20 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     }
   }
 
-  async function fetchById(id: string): Promise<FetchResult<DigitalProductDocumentDto>> {
+  async function fetchById(id: string): Promise<DigitalProductDocumentDto | null> {
     const errorMessage = t(`${prefix}.errorFetch`);
     try {
       const response = await digitalProductDocNamespace.getById(id);
-      if (response.status === HTTPCode.OK) {
-        return { status: "ok", data: response.data };
+      if (response.status !== HTTPCode.OK) {
+        throw new Error(`Unexpected status ${response.status}`);
       }
-      errorHandlingStore.logErrorWithNotification(errorMessage);
-      return { status: "error", error: new Error(`Unexpected status ${response.status}`) };
+      return response.data;
     } catch (e) {
-      if (isAxiosError(e) && e.response?.status === HTTP_NOT_FOUND) {
-        return { status: "not-found" };
+      if (isAxiosError(e) && e.response?.status === 404) {
+        return null;
       }
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
-      return { status: "error", error: e };
+      throw e;
     }
   }
 

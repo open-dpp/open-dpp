@@ -113,7 +113,7 @@ describe("passportService", () => {
     });
   });
 
-  it("materializes a PresentationConfiguration on first expansion when none pre-exists", async () => {
+  it("returns an in-memory default PresentationConfiguration without writing when none exists", async () => {
     const organizationId = randomUUID();
     const passport = Passport.create({
       organizationId,
@@ -133,12 +133,13 @@ describe("passportService", () => {
       SubjectAttributes.create({ userRole: UserRole.ADMIN }),
     );
 
-    const created = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
-    expect(created).toBeDefined();
-    expect(created?.organizationId).toBe(organizationId);
+    // GET must not lazy-create a row.
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
     expect(exported).toMatchObject({
       presentationConfiguration: {
         elementDesign: {},
@@ -205,7 +206,7 @@ describe("passportService", () => {
     expect(await passportRepository.findOne(draft.id)).toBeUndefined();
   });
 
-  it("reuses the same PresentationConfiguration on subsequent expansions", async () => {
+  it("does not write a PresentationConfiguration row across multiple expansions", async () => {
     const organizationId = randomUUID();
     const passport = Passport.create({
       organizationId,
@@ -214,18 +215,13 @@ describe("passportService", () => {
     await passportRepository.save(passport);
 
     await service.getExpandedProductPassport(passport.id);
-    const first = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
-    expect(first).toBeDefined();
-
     await service.getExpandedProductPassport(passport.id);
-    const second = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
 
-    expect(second?.id).toBe(first?.id);
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
   });
 });

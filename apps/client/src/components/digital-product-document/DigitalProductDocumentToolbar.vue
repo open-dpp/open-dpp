@@ -20,9 +20,13 @@ const { goToParent } = useRouterUtils();
 const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 
 async function fetchDPD(id: string) {
-  const result = await fetchById(id);
-  if (result.status === "ok") {
-    model.value = result.data;
+  try {
+    const data = await fetchById(id);
+    if (data) {
+      model.value = data;
+    }
+  } catch {
+    // toast already shown by composable; toolbar refresh failure is non-fatal
   }
 }
 

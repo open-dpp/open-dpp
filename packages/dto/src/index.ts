@@ -14,6 +14,7 @@ export * from "./aas/common/reference-json-schema";
 export * from "./aas/concept-description-json-schema";
 export * from "./aas/concept-description-json-schema";
 export * from "./aas/dto/value-response.dto";
+export * from "./aas/element-classifications";
 export * from "./aas/embedded-data-specification-json-schema";
 export * from "./aas/enums/aas-submodel-elements";
 export * from "./aas/enums/asset-kind-enum";

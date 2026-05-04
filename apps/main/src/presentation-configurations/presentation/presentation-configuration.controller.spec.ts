@@ -17,8 +17,9 @@ import { PresentationConfigurationController } from "./presentation-configuratio
 describe("PresentationConfigurationController", () => {
   let controller: PresentationConfigurationController;
   let service: {
-    getOrCreateForTemplate: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    getOrCreateForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
+    findOrInstantiateForTemplate: jest.Mock<
+      (...args: never[]) => Promise<PresentationConfiguration>
+    >;
     getEffectiveForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
     applyPatchForTemplate: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
     applyPatchForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
@@ -32,8 +33,7 @@ describe("PresentationConfigurationController", () => {
 
   beforeEach(async () => {
     service = {
-      getOrCreateForTemplate: jest.fn(),
-      getOrCreateForPassport: jest.fn(),
+      findOrInstantiateForTemplate: jest.fn(),
       getEffectiveForPassport: jest.fn(),
       applyPatchForTemplate: jest.fn(),
       applyPatchForPassport: jest.fn(),
@@ -70,7 +70,7 @@ describe("PresentationConfigurationController", () => {
         elementDesign: { "sm.p": PresentationComponentName.BigNumber },
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.getOrCreateForTemplate.mockResolvedValue(config);
+      service.findOrInstantiateForTemplate.mockResolvedValue(config);
 
       const result = await controller.getForTemplate(
         organizationId,
@@ -90,7 +90,7 @@ describe("PresentationConfigurationController", () => {
       await expect(
         controller.getForTemplate("intruder-org", template.id, UserRole.USER, MemberRole.OWNER),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.getOrCreateForTemplate).not.toHaveBeenCalled();
+      expect(service.findOrInstantiateForTemplate).not.toHaveBeenCalled();
     });
 
     it("throws ForbiddenException when memberRole is missing", async () => {

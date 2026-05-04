@@ -46,10 +46,6 @@ const rows = computed(() => {
   return result;
 });
 
-// SubmodelElementList rows share a schema, so all rows with the same leaf
-// idShort resolve to the same component. Index-addressed per-row overrides are
-// out of scope for v1 — the backend's IdShortPath uses dot-notation without
-// indices.
 function cellPath(field: string): string | undefined {
   return path ? `${path}.${field}` : undefined;
 }

@@ -1,7 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
-import { Logger } from "@nestjs/common";
+import { describe, expect, it } from "@jest/globals";
 import { getConnectionToken, getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { PresentationReferenceType } from "@open-dpp/dto";
@@ -153,106 +152,12 @@ describe("PermalinkRepository", () => {
     expect(found).toBeUndefined();
   });
 
-  it("findOrCreateByPresentationConfigurationId creates once then reuses", async () => {
-    const presentationConfigurationId = randomUUID();
-
-    const first = await repository.findOrCreateByPresentationConfigurationId({
-      presentationConfigurationId,
-    });
-    const second = await repository.findOrCreateByPresentationConfigurationId({
-      presentationConfigurationId,
-    });
-
-    expect(first.created).toBe(true);
-    expect(second.created).toBe(false);
-    expect(second.permalink.id).toBe(first.permalink.id);
-  });
-
-  it("findOrCreateByPresentationConfigurationId retries via find when save hits E11000", async () => {
-    const presentationConfigurationId = randomUUID();
-    const winner = Permalink.create({ presentationConfigurationId });
-    await repository.save(winner);
-
-    const findSpy = jest
-      .spyOn(repository, "findByPresentationConfigurationId")
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(winner);
-    const saveSpy = jest
-      .spyOn(repository, "save")
-      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
-
-    try {
-      const result = await repository.findOrCreateByPresentationConfigurationId({
-        presentationConfigurationId,
-      });
-
-      expect(result.permalink.id).toBe(winner.id);
-      expect(result.created).toBe(false);
-      expect(findSpy).toHaveBeenCalledTimes(2);
-      expect(saveSpy).toHaveBeenCalledTimes(1);
-    } finally {
-      findSpy.mockRestore();
-      saveSpy.mockRestore();
-    }
-  });
-
-  it("findOrCreateByPresentationConfigurationId re-throws non-duplicate save errors", async () => {
-    const findSpy = jest
-      .spyOn(repository, "findByPresentationConfigurationId")
-      .mockResolvedValueOnce(undefined);
-    const saveSpy = jest.spyOn(repository, "save").mockRejectedValueOnce(new Error("network fail"));
-
-    try {
-      await expect(
-        repository.findOrCreateByPresentationConfigurationId({
-          presentationConfigurationId: randomUUID(),
-        }),
-      ).rejects.toThrow("network fail");
-
-      expect(findSpy).toHaveBeenCalledTimes(1);
-      expect(saveSpy).toHaveBeenCalledTimes(1);
-    } finally {
-      findSpy.mockRestore();
-      saveSpy.mockRestore();
-    }
-  });
-
-  it("findOrCreateByPresentationConfigurationId logs a warning on race recovery", async () => {
-    const presentationConfigurationId = randomUUID();
-    const winner = Permalink.create({ presentationConfigurationId });
-
-    const findSpy = jest
-      .spyOn(repository, "findByPresentationConfigurationId")
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(winner);
-    const saveSpy = jest
-      .spyOn(repository, "save")
-      .mockRejectedValueOnce(Object.assign(new Error("dup"), { code: 11000 }));
-
-    const repoLogger = (repository as unknown as { logger: Logger }).logger;
-    const warnSpy = jest.spyOn(repoLogger, "warn").mockImplementation(() => {});
-
-    try {
-      await repository.findOrCreateByPresentationConfigurationId({
-        presentationConfigurationId,
-      });
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(presentationConfigurationId));
-    } finally {
-      findSpy.mockRestore();
-      saveSpy.mockRestore();
-      warnSpy.mockRestore();
-    }
-  });
-
   it("rolls back session transactions", async () => {
     const presentationConfigurationId = randomUUID();
     const session = await connection.startSession();
     try {
       session.startTransaction();
-      await repository.findOrCreateByPresentationConfigurationId(
-        { presentationConfigurationId },
-        { session },
-      );
+      await repository.save(Permalink.create({ presentationConfigurationId }), { session });
       await session.abortTransaction();
     } finally {
       await session.endSession();
@@ -260,43 +165,6 @@ describe("PermalinkRepository", () => {
 
     const found = await repository.findByPresentationConfigurationId(presentationConfigurationId);
     expect(found).toBeUndefined();
-  });
-
-  it("propagates E11000 inside a transaction without re-reading on the aborted session", async () => {
-    // Inside a transaction, MongoDB aborts on E11000 and the session can no
-    // longer be used for reads. The repository must surface the error and
-    // NOT attempt the race-recovery re-read — callers retry at the
-    // transaction boundary.
-    const presentationConfigurationId = randomUUID();
-
-    const findSpy = jest
-      .spyOn(repository, "findByPresentationConfigurationId")
-      .mockResolvedValueOnce(undefined);
-    const saveSpy = jest
-      .spyOn(repository, "save")
-      .mockRejectedValueOnce(Object.assign(new Error("E11000 duplicate key"), { code: 11000 }));
-
-    const session = await connection.startSession();
-    try {
-      session.startTransaction();
-      await expect(
-        repository.findOrCreateByPresentationConfigurationId(
-          { presentationConfigurationId },
-          { session },
-        ),
-      ).rejects.toThrow(/E11000/);
-
-      // Retry read must NOT have been attempted: findSpy called exactly once
-      // (the initial lookup), not twice (initial + race-recovery retry).
-      expect(findSpy).toHaveBeenCalledTimes(1);
-      expect(saveSpy).toHaveBeenCalledTimes(1);
-
-      await session.abortTransaction();
-    } finally {
-      await session.endSession();
-      findSpy.mockRestore();
-      saveSpy.mockRestore();
-    }
   });
 
   afterAll(async () => {

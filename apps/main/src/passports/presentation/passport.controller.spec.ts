@@ -360,7 +360,7 @@ describe("passportController", () => {
     await ctx.asserts.getShells(createPassport);
   });
 
-  it(`/GET shells lazily materializes a PresentationConfiguration for the passport`, async () => {
+  it(`/GET shells does not write a PresentationConfiguration row for an uncustomized passport`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const passport = await createPassport(org.id);
@@ -368,12 +368,13 @@ describe("passportController", () => {
       .getModuleRef()
       .get(PresentationConfigurationRepository);
 
-    expect(
-      await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
-        referenceId: passport.id,
-      }),
-    ).toBeUndefined();
+    // createPassport (= POST /passports) eagerly creates a config row + permalink
+    // for newly-created passports. Delete that row to simulate a legacy passport
+    // that never had a config row.
+    await presentationConfigurationRepository.deleteByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
 
     const firstResponse = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/shells?limit=1`)
@@ -382,12 +383,12 @@ describe("passportController", () => {
       .send();
     expect(firstResponse.status).toEqual(200);
 
-    const created = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
-    expect(created).toBeDefined();
-    expect(created!.organizationId).toBe(org.id);
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
 
     const secondResponse = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/shells?limit=1`)
@@ -396,11 +397,12 @@ describe("passportController", () => {
       .send();
     expect(secondResponse.status).toEqual(200);
 
-    const reused = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
-    expect(reused!.id).toBe(created!.id);
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
   });
 
   it(`/PATCH shell`, async () => {

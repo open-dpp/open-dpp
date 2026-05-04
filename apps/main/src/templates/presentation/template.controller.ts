@@ -98,7 +98,6 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -120,7 +119,6 @@ export class TemplateController
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @ApiGetShells()
@@ -139,7 +137,6 @@ export class TemplateController
         subject,
         organizationId,
       );
-    await this.presentationConfigurationService.getOrCreateForTemplate(template);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(
       template.getEnvironment(),
@@ -696,7 +693,6 @@ export class TemplateController
         subject,
         organizationId,
       );
-    await this.presentationConfigurationService.getOrCreateForTemplate(template);
     return TemplateDtoSchema.parse(template.toPlain());
   }
 }

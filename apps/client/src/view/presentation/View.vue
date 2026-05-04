@@ -23,7 +23,10 @@ async function loadPassport(id: string): Promise<boolean> {
     return false;
   }
   if (response.status !== 200) {
-    console.error("Failed to load passport");
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadPassportError"),
+      new Error(`Unexpected status ${response.status} while loading passport`),
+    );
     return false;
   }
 
@@ -31,14 +34,20 @@ async function loadPassport(id: string): Promise<boolean> {
 
   const submodels = await apiClient.dpp.permalinks.aas.getSubmodels(id, {});
   if (submodels.status !== 200) {
-    console.error("Failed to load submodels");
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadSubmodelsError"),
+      new Error(`Unexpected status ${submodels.status} while loading submodels`),
+    );
     return false;
   }
   passportStore.submodels = submodels.data.result || [];
 
   const aas = await apiClient.dpp.permalinks.aas.getShells(id, {});
   if (aas.status !== 200) {
-    console.error("Failed to load shells");
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadShellsError"),
+      new Error(`Unexpected status ${aas.status} while loading shells`),
+    );
     return false;
   }
   passportStore.shells = aas.data.result || [];
@@ -79,8 +88,8 @@ watch(
     passportAvailable.value = false;
     try {
       passportAvailable.value = await loadPassport(permalink);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportError"), error);
     }
 
     if (!cancelled && !passportAvailable.value) {

@@ -5,8 +5,10 @@ import {
   PresentationConfigurationPatchDto,
   PresentationReferenceType,
 } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
+import { isDuplicateKeyError } from "../../../lib/mongo-errors";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
 
@@ -16,57 +18,52 @@ export class PresentationConfigurationService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
   ) {}
 
-  async getOrCreateForTemplate(template: Template): Promise<PresentationConfiguration> {
-    return await this.presentationConfigurationRepository.findOrCreateByReference({
+  async findOrInstantiateForTemplate(template: Template): Promise<PresentationConfiguration> {
+    const existing = await this.presentationConfigurationRepository.findByReference({
       referenceType: PresentationReferenceType.Template,
       referenceId: template.id,
-      organizationId: template.organizationId,
     });
+    return (
+      existing ??
+      PresentationConfiguration.createForTemplate({
+        organizationId: template.organizationId,
+        referenceId: template.id,
+      })
+    );
   }
 
-  async getOrCreateForPassport(passport: Passport): Promise<PresentationConfiguration> {
-    return await this.presentationConfigurationRepository.findOrCreateByReference({
+  async findOrInstantiateForPassport(passport: Passport): Promise<PresentationConfiguration> {
+    const existing = await this.presentationConfigurationRepository.findByReference({
       referenceType: PresentationReferenceType.Passport,
       referenceId: passport.id,
-      organizationId: passport.organizationId,
     });
+    return (
+      existing ??
+      PresentationConfiguration.createForPassport({
+        organizationId: passport.organizationId,
+        referenceId: passport.id,
+      })
+    );
   }
 
   async applyPatchForTemplate(
     template: Template,
     patch: PresentationConfigurationPatchDto,
   ): Promise<PresentationConfiguration> {
-    const config = await this.getOrCreateForTemplate(template);
-    return await this.applyPatch(config, patch);
+    const config = await this.findOrInstantiateForTemplate(template);
+    return await this.persistPatch(config, patch);
   }
 
   async applyPatchForPassport(
     passport: Passport,
     patch: PresentationConfigurationPatchDto,
   ): Promise<PresentationConfiguration> {
-    const config = await this.getOrCreateForPassport(passport);
-    return await this.applyPatch(config, patch);
+    const config = await this.findOrInstantiateForPassport(passport);
+    return await this.persistPatch(config, patch);
   }
 
   async getEffectiveForPassport(passport: Passport): Promise<PresentationConfiguration> {
-    const passportConfig = await this.getOrCreateForPassport(passport);
-    return this.mergeWithTemplate(passport, passportConfig);
-  }
-
-  // Read-only variant used by public (anonymous) endpoints: never writes to the
-  // database. Falls back to an in-memory empty PresentationConfiguration when no
-  // rows exist for the passport yet, so unauthenticated reads cannot trigger
-  // lazy materialization of config rows.
-  async getEffectiveForPassportReadOnly(passport: Passport): Promise<PresentationConfiguration> {
-    const passportConfig =
-      (await this.presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
-        referenceId: passport.id,
-      })) ??
-      PresentationConfiguration.createForPassport({
-        organizationId: passport.organizationId,
-        referenceId: passport.id,
-      });
+    const passportConfig = await this.findOrInstantiateForPassport(passport);
     return this.mergeWithTemplate(passport, passportConfig);
   }
 
@@ -98,7 +95,7 @@ export class PresentationConfigurationService {
     });
   }
 
-  private async applyPatch(
+  private async persistPatch(
     config: PresentationConfiguration,
     patch: PresentationConfigurationPatchDto,
   ): Promise<PresentationConfiguration> {
@@ -121,6 +118,16 @@ export class PresentationConfigurationService {
       }
     }
     if (next === config) return config;
-    return await this.presentationConfigurationRepository.save(next);
+    try {
+      return await this.presentationConfigurationRepository.save(next);
+    } catch (error) {
+      if (isDuplicateKeyError(error)) {
+        throw new ValueError(
+          `PresentationConfiguration for ${config.referenceType} ${config.referenceId} was created concurrently. Retry the request.`,
+          { cause: error as Error },
+        );
+      }
+      throw error;
+    }
   }
 }

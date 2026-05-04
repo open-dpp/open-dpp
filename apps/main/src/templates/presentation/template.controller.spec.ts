@@ -93,7 +93,7 @@ describe("templateController", () => {
     await ctx.asserts.getShells(createTemplate);
   });
 
-  it(`/GET shells lazily materializes a PresentationConfiguration for the template`, async () => {
+  it(`/GET shells does not write a PresentationConfiguration row for an uncustomized template`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const template = await createTemplate(org.id);
@@ -115,12 +115,12 @@ describe("templateController", () => {
       .send();
     expect(firstResponse.status).toEqual(200);
 
-    const created = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Template,
-      referenceId: template.id,
-    });
-    expect(created).toBeDefined();
-    expect(created!.organizationId).toBe(org.id);
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
 
     const secondResponse = await request(app.getHttpServer())
       .get(`${basePath}/${template.id}/shells?limit=1`)
@@ -129,11 +129,12 @@ describe("templateController", () => {
       .send();
     expect(secondResponse.status).toEqual(200);
 
-    const reused = await presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Template,
-      referenceId: template.id,
-    });
-    expect(reused!.id).toBe(created!.id);
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
   });
 
   it(`/PATCH shell`, async () => {

@@ -103,7 +103,6 @@ import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../../templates/domain/template";
@@ -132,7 +131,6 @@ export class PassportController
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
     @Inject(forwardRef(() => PermalinkApplicationService))
     private readonly permalinkApplicationService: PermalinkApplicationService,
   ) {}
@@ -178,10 +176,6 @@ export class PassportController
         subject,
         organizationId,
       );
-    // Lazy-init: passports created before the presentation-configuration feature have no
-    // row. Materialize a default on first read instead of backfilling via migration.
-    // The duplicate-key retry inside findOrCreateByReference makes this safe under load.
-    await this.presentationConfigurationService.getOrCreateForPassport(passport);
     return PassportDtoSchema.parse(passport.toPlain());
   }
 
@@ -312,7 +306,6 @@ export class PassportController
         subject,
         organizationId,
       );
-    await this.presentationConfigurationService.getOrCreateForPassport(passport);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(
       passport.getEnvironment(),
@@ -809,7 +802,6 @@ export class PassportController
     if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
       throw new ForbiddenException();
     }
-    await this.presentationConfigurationService.getOrCreateForTemplate(template);
     return template;
   }
 }

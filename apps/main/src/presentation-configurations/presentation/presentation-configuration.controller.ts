@@ -38,7 +38,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const config = await this.presentationConfigurationService.getOrCreateForTemplate(template);
+    const config =
+      await this.presentationConfigurationService.findOrInstantiateForTemplate(template);
     return this.toDto(config);
   }
 

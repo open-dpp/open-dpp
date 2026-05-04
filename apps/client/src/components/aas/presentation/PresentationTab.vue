@@ -1,15 +1,20 @@
 <script lang="ts" setup>
 import type { AasNamespace, PresentationConfigurationNamespace } from "@open-dpp/api-client";
-import type { SubmodelElementResponseDto, SubmodelElementSharedResponseDto } from "@open-dpp/dto";
+import type {
+  PresentationComponentNameType,
+  SubmodelElementResponseDto,
+  SubmodelElementSharedResponseDto,
+} from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
 import { computed, onMounted, provide } from "vue";
 import { useI18n } from "vue-i18n";
 import Column from "primevue/column";
 import Select from "primevue/select";
 import TreeTable from "primevue/treetable";
-import { DataTypeDef, KeyTypes, PresentationComponentName } from "@open-dpp/dto";
+import { DataTypeDef, isNumericDataType, KeyTypes } from "@open-dpp/dto";
 import { usePresentationConfig } from "../../../composables/presentation-config.ts";
 import { presentationConfigKey } from "../../presentation/presentation-config.ts";
+import { PRESENTATION_COMPONENTS } from "../../presentation/components/presentation-components.ts";
 import SubmodelElementValue from "../../presentation/SubmodelElementValue.vue";
 import { useErrorHandlingStore } from "../../../stores/error.handling.ts";
 
@@ -23,46 +28,14 @@ const { id, submodels, presentationConfigurationNamespace } = defineProps<{
 const errorHandlingStore = useErrorHandlingStore();
 const { t } = useI18n();
 
-// AAS numeric value types — only these Properties accept BigNumber today.
-const NUMERIC_VALUE_TYPES = new Set<string>([
-  DataTypeDef.Decimal,
-  DataTypeDef.Integer,
-  DataTypeDef.Double,
-  DataTypeDef.Float,
-  DataTypeDef.Long,
-  DataTypeDef.Int,
-  DataTypeDef.Short,
-  DataTypeDef.Byte,
-  DataTypeDef.NegativeInteger,
-  DataTypeDef.NonNegativeInteger,
-  DataTypeDef.NonPositiveInteger,
-  DataTypeDef.PositiveInteger,
-  DataTypeDef.UnsignedByte,
-  DataTypeDef.UnsignedInt,
-  DataTypeDef.UnsignedLong,
-  DataTypeDef.UnsignedShort,
-]);
-
-// Container element types occupy a row in the tree but never carry a
-// presentation component themselves — only their leaf descendants do.
-const CONTAINER_MODEL_TYPES = new Set<string>([
-  KeyTypes.Submodel,
-  KeyTypes.SubmodelElementCollection,
-  KeyTypes.SubmodelElementList,
-]);
-
 const DEFAULT_VALUE = "default";
-
-// Placeholder used only when previewing a component on an element that doesn't
-// have a value yet (typical during template authoring). The actual viewer
-// always renders the element's real value — this just gives the preview
-// something meaningful to draw.
-const PREVIEW_PLACEHOLDER_VALUE = "42";
 
 interface SelectOption {
   label: string;
   value: string;
 }
+
+type LeafElement = SubmodelElementSharedResponseDto & { valueType?: string };
 
 const config = usePresentationConfig({
   id,
@@ -71,9 +44,6 @@ const config = usePresentationConfig({
   translate: t,
 });
 
-// Share the live, in-progress config with any descendant that injects it.
-// `SubmodelElementValue` uses this to resolve which component to render for a
-// given element, so the Preview column always mirrors the real viewer.
 provide(presentationConfigKey, config.config);
 
 onMounted(async () => {
@@ -85,25 +55,36 @@ const defaultOption = computed<SelectOption>(() => ({
   value: DEFAULT_VALUE,
 }));
 
-const bigNumberOption = computed<SelectOption>(() => ({
-  label: t("aasEditor.presentationTab.bigNumber"),
-  value: PresentationComponentName.BigNumber,
-}));
-
+// Container element types occupy a row in the tree but never carry a
+// presentation component themselves — only their leaf descendants do.
 function isContainer(node: TreeNode): boolean {
   const modelType = node.data?.modelType;
-  return typeof modelType === "string" && CONTAINER_MODEL_TYPES.has(modelType);
+  return (
+    modelType === KeyTypes.Submodel ||
+    modelType === KeyTypes.SubmodelElementCollection ||
+    modelType === KeyTypes.SubmodelElementList
+  );
+}
+
+function leafFor(node: TreeNode): LeafElement | undefined {
+  const plain = node.data?.plain as LeafElement | undefined;
+  if (!plain || !plain.modelType) return undefined;
+  return plain;
 }
 
 function optionsFor(node: TreeNode): SelectOption[] {
-  const plain = node.data?.plain as
-    | (SubmodelElementSharedResponseDto & { valueType?: string })
-    | undefined;
-  const base: SelectOption[] = [defaultOption.value];
-  if (plain?.modelType === KeyTypes.Property && NUMERIC_VALUE_TYPES.has(plain.valueType ?? "")) {
-    base.push(bigNumberOption.value);
+  const plain = leafFor(node);
+  const options: SelectOption[] = [defaultOption.value];
+  if (!plain) return options;
+  for (const [name, entry] of Object.entries(PRESENTATION_COMPONENTS) as [
+    PresentationComponentNameType,
+    (typeof PRESENTATION_COMPONENTS)[PresentationComponentNameType],
+  ][]) {
+    if (entry.appliesTo(plain as LeafElement & { modelType: typeof KeyTypes.Property })) {
+      options.push({ label: t(entry.i18nKey), value: name });
+    }
   }
-  return base;
+  return options;
 }
 
 function pathFor(node: TreeNode): string | undefined {
@@ -124,28 +105,21 @@ async function onChange(node: TreeNode, next: string) {
     await config.removeElementDesign(path);
     return;
   }
-  if (next === PresentationComponentName.BigNumber) {
-    await config.setElementDesign(path, PresentationComponentName.BigNumber);
-  }
+  await config.setElementDesign(path, next as PresentationComponentNameType);
 }
 
-function placeholderValueFor(
-  plain: SubmodelElementSharedResponseDto & { valueType?: string },
-): string {
-  const vt = plain.valueType;
-  if (typeof vt === "string" && NUMERIC_VALUE_TYPES.has(vt)) return PREVIEW_PLACEHOLDER_VALUE;
-  if (vt === DataTypeDef.Boolean) return "true";
-  if (vt === DataTypeDef.Date) return "2024-01-15";
-  if (vt === DataTypeDef.DateTime) return "2024-01-15T12:00:00Z";
+function previewValueFor(valueType: string | undefined | null): string {
+  if (isNumericDataType(valueType ?? undefined)) return "42";
+  if (valueType === DataTypeDef.Boolean) return "true";
+  if (valueType === DataTypeDef.Date) return "2024-01-15";
+  if (valueType === DataTypeDef.DateTime) return "2024-01-15T12:00:00Z";
   return "Example";
 }
 
 function previewElementFor(node: TreeNode): SubmodelElementResponseDto {
-  const plain = node.data?.plain as SubmodelElementResponseDto & {
-    valueType?: string;
-  };
+  const plain = node.data?.plain as SubmodelElementResponseDto & { valueType?: string };
   if (plain.value !== null && plain.value !== undefined && plain.value !== "") return plain;
-  return { ...plain, value: placeholderValueFor(plain) } as SubmodelElementResponseDto;
+  return { ...plain, value: previewValueFor(plain.valueType) } as SubmodelElementResponseDto;
 }
 
 // Only leaf elements whose viewer rendering is self-contained (no async media
@@ -154,7 +128,7 @@ function previewElementFor(node: TreeNode): SubmodelElementResponseDto {
 // depend on real data/media and are left blank intentionally.
 function isPreviewable(node: TreeNode): boolean {
   if (isContainer(node)) return false;
-  const plain = node.data?.plain as SubmodelElementSharedResponseDto | undefined;
+  const plain = leafFor(node);
   return plain?.modelType === KeyTypes.Property;
 }
 

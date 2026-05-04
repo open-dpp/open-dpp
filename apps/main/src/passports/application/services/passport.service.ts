@@ -45,7 +45,7 @@ export class PassportService {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
     const presentationConfiguration =
-      await this.presentationConfigurationService.getOrCreateForPassport(passport);
+      await this.presentationConfigurationService.findOrInstantiateForPassport(passport);
 
     if (!passport.environment) {
       this.logger.warn(

@@ -770,7 +770,7 @@ describe("aasSerializationService", () => {
   describe("presentation configuration", () => {
     const orgId = "org-1";
 
-    it("lazily creates a PresentationConfiguration when exporting a passport", async () => {
+    it("does not write a PresentationConfiguration row when exporting a passport with none", async () => {
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: orgId,
@@ -801,7 +801,7 @@ describe("aasSerializationService", () => {
           referenceType: "passport",
           referenceId: passport.id,
         }),
-      ).toBeDefined();
+      ).toBeUndefined();
     });
 
     it("round-trips the PresentationConfiguration through v3 export/import", async () => {
@@ -844,7 +844,7 @@ describe("aasSerializationService", () => {
       });
     });
 
-    it("omits presentationConfiguration on v1/v2 import and lazily creates an empty one", async () => {
+    it("omits presentationConfiguration on v1/v2 import and does not write one on subsequent export", async () => {
       const data = buildExportData({ version: AasExportVersion.v2_0 });
 
       const imported = await aasSerializationService.importPassport(
@@ -866,15 +866,21 @@ describe("aasSerializationService", () => {
       ).toBeUndefined();
 
       const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
-      await aasSerializationService.exportPassport(imported, admin);
+      const reExported = await aasSerializationService.exportPassport(imported, admin);
 
-      const now = await presentationConfigurationRepository.findByReference({
-        referenceType: "passport",
-        referenceId: imported.id,
+      // Export must not write a row for an uncustomized passport. The exported
+      // payload still contains an empty config (in-memory default) so the round
+      // trip remains stable.
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: imported.id,
+        }),
+      ).toBeUndefined();
+      expect(reExported.presentationConfiguration).toEqual({
+        elementDesign: {},
+        defaultComponents: {},
       });
-      expect(now).toBeDefined();
-      expect(Object.fromEntries(now!.elementDesign)).toEqual({});
-      expect(Object.fromEntries(now!.defaultComponents)).toEqual({});
     });
 
     it("rolls back the whole import when the PresentationConfiguration save fails", async () => {

@@ -1,9 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { PresentationReferenceTypeType } from "@open-dpp/dto";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
-import { isDuplicateKeyError } from "../../lib/mongo-errors";
 import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { PresentationConfiguration } from "../domain/presentation-configuration";
 import {
@@ -18,7 +17,6 @@ export interface PresentationConfigurationReference {
 
 @Injectable()
 export class PresentationConfigurationRepository {
-  private readonly logger = new Logger(PresentationConfigurationRepository.name);
   private readonly presentationConfigurationDoc: MongooseModel<PresentationConfigurationDoc>;
 
   constructor(
@@ -93,57 +91,5 @@ export class PresentationConfigurationRepository {
         referenceId: ref.referenceId,
       })
       .session(options?.session ?? null);
-  }
-
-  async findOrCreateByReference(
-    data: {
-      referenceType: PresentationReferenceTypeType;
-      referenceId: string;
-      organizationId: string;
-    },
-    options?: DbSessionOptions,
-  ): Promise<PresentationConfiguration> {
-    // Capture up-front: MongoDB flips the session out of its transaction
-    // synchronously on E11000, so checking inside the catch would return
-    // false and we would re-enter the unsafe re-read path.
-    const inTransaction = options?.session?.inTransaction() ?? false;
-
-    const ref = {
-      referenceType: data.referenceType,
-      referenceId: data.referenceId,
-    };
-    const existing = await this.findByReference(ref, options);
-    if (existing) {
-      return existing;
-    }
-
-    const fresh = PresentationConfiguration.create({
-      organizationId: data.organizationId,
-      referenceId: data.referenceId,
-      referenceType: data.referenceType,
-    });
-
-    // Concurrent callers can both pass the findByReference check above and race to save.
-    // The unique index on (referenceType, referenceId) serializes them: the loser sees
-    // E11000 and re-reads the winner's record. Any non-duplicate error still surfaces.
-    try {
-      return await this.save(fresh, options);
-    } catch (error) {
-      // Inside a transaction, MongoDB aborts on E11000 and any follow-up
-      // read on the same session will fail. Surface the error so the caller
-      // can retry the whole transaction at a higher level.
-      if (inTransaction) throw error;
-
-      if (isDuplicateKeyError(error)) {
-        const retry = await this.findByReference(ref);
-        if (retry) {
-          this.logger.warn(
-            `findOrCreateByReference: race on (${data.referenceType}, ${data.referenceId}) recovered via re-read`,
-          );
-          return retry;
-        }
-      }
-      throw error;
-    }
   }
 }

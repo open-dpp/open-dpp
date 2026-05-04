@@ -27,15 +27,21 @@ async function load(targetId: string | undefined) {
     return;
   }
   status.value = "loading";
-  const result = await fetchById(targetId);
-  if (isStale()) return;
-  if (result.status === "ok") {
-    item.value = result.data;
+  try {
+    const data = await fetchById(targetId);
+    if (isStale()) return;
+    if (data === null) {
+      item.value = undefined;
+      status.value = "not-found";
+      return;
+    }
+    item.value = data;
     status.value = "ready";
-    return;
+  } catch {
+    if (isStale()) return;
+    item.value = undefined;
+    status.value = "error";
   }
-  item.value = undefined;
-  status.value = result.status === "not-found" ? "not-found" : "error";
 }
 
 watch(() => id.value, load, { immediate: true });

@@ -76,8 +76,7 @@ export class PermalinkController implements IAasReadEndpoints {
     @IdOrSlugParam() id: string,
   ): Promise<PresentationConfigurationDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id);
-    const config =
-      await this.presentationConfigurationService.getEffectiveForPassportReadOnly(passport);
+    const config = await this.presentationConfigurationService.getEffectiveForPassport(passport);
     return PresentationConfigurationDtoSchema.parse(config.toPlain());
   }
 

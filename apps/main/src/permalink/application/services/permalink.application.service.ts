@@ -55,18 +55,30 @@ export class PermalinkApplicationService {
     passport: Passport,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    const config = await this.presentationConfigurationRepository.findOrCreateByReference(
+    // Two callers reach this path with different starting state:
+    //   - Passport create: no config row yet, we create one.
+    //   - Passport import: the importer pre-saved a config row carrying the
+    //     imported elementDesign/defaultComponents — reuse it instead of
+    //     overwriting.
+    // Server-generated passport ids prevent two creators from racing on the
+    // same referenceId, so this needs no retry.
+    const existingConfig = await this.presentationConfigurationRepository.findByReference(
       {
         referenceType: PresentationReferenceType.Passport,
         referenceId: passport.id,
-        organizationId: passport.organizationId,
       },
       options,
     );
-    const { permalink } = await this.permalinkRepository.findOrCreateByPresentationConfigurationId(
-      { presentationConfigurationId: config.id },
-      options,
-    );
-    return permalink;
+    const config =
+      existingConfig ??
+      (await this.presentationConfigurationRepository.save(
+        PresentationConfiguration.createForPassport({
+          organizationId: passport.organizationId,
+          referenceId: passport.id,
+        }),
+        options,
+      ));
+    const permalink = Permalink.create({ presentationConfigurationId: config.id });
+    return await this.permalinkRepository.save(permalink, options);
   }
 }
