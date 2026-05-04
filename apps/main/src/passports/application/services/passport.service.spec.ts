@@ -113,7 +113,7 @@ describe("passportService", () => {
     });
   });
 
-  it("returns an in-memory default PresentationConfiguration without writing when none exists", async () => {
+  it("seeds a default PresentationConfiguration row on first access when none exists", async () => {
     const organizationId = randomUUID();
     const passport = Passport.create({
       organizationId,
@@ -133,13 +133,13 @@ describe("passportService", () => {
       SubjectAttributes.create({ userRole: UserRole.ADMIN }),
     );
 
-    // GET must not lazy-create a row.
+    // getEffectiveForPassport seeds a default row on first access.
     expect(
       await presentationConfigurationRepository.findByReference({
         referenceType: PresentationReferenceType.Passport,
         referenceId: passport.id,
       }),
-    ).toBeUndefined();
+    ).toBeDefined();
     expect(exported).toMatchObject({
       presentationConfiguration: {
         elementDesign: {},
@@ -206,7 +206,7 @@ describe("passportService", () => {
     expect(await passportRepository.findOne(draft.id)).toBeUndefined();
   });
 
-  it("does not write a PresentationConfiguration row across multiple expansions", async () => {
+  it("seeds exactly one PresentationConfiguration row across multiple expansions", async () => {
     const organizationId = randomUUID();
     const passport = Passport.create({
       organizationId,
@@ -217,11 +217,12 @@ describe("passportService", () => {
     await service.getExpandedProductPassport(passport.id);
     await service.getExpandedProductPassport(passport.id);
 
+    // getEffectiveForPassport seeds a row on first access; subsequent calls reuse it.
     expect(
       await presentationConfigurationRepository.findByReference({
         referenceType: PresentationReferenceType.Passport,
         referenceId: passport.id,
       }),
-    ).toBeUndefined();
+    ).toBeDefined();
   });
 });

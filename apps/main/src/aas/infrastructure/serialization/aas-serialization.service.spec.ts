@@ -770,7 +770,7 @@ describe("aasSerializationService", () => {
   describe("presentation configuration", () => {
     const orgId = "org-1";
 
-    it("does not write a PresentationConfiguration row when exporting a passport with none", async () => {
+    it("seeds a default PresentationConfiguration row when exporting a passport with none", async () => {
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: orgId,
@@ -796,12 +796,13 @@ describe("aasSerializationService", () => {
       const exportResult = await aasSerializationService.exportPassport(passport, subject);
 
       expect(exportResult.version).toBe(AasExportVersion.v3_0);
+      // getEffectiveForPassport seeds a default row on first access.
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",
           referenceId: passport.id,
         }),
-      ).toBeUndefined();
+      ).toBeDefined();
     });
 
     it("round-trips the PresentationConfiguration through v3 export/import", async () => {
@@ -844,7 +845,7 @@ describe("aasSerializationService", () => {
       });
     });
 
-    it("omits presentationConfiguration on v1/v2 import and does not write one on subsequent export", async () => {
+    it("omits presentationConfiguration on v1/v2 import and seeds a default on subsequent export", async () => {
       const data = buildExportData({ version: AasExportVersion.v2_0 });
 
       const imported = await aasSerializationService.importPassport(
@@ -868,15 +869,14 @@ describe("aasSerializationService", () => {
       const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const reExported = await aasSerializationService.exportPassport(imported, admin);
 
-      // Export must not write a row for an uncustomized passport. The exported
-      // payload still contains an empty config (in-memory default) so the round
-      // trip remains stable.
+      // getEffectiveForPassport seeds a default row on first access; the exported
+      // payload contains an empty config so the round trip remains stable.
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",
           referenceId: imported.id,
         }),
-      ).toBeUndefined();
+      ).toBeDefined();
       expect(reExported.presentationConfiguration).toEqual({
         elementDesign: {},
         defaultComponents: {},

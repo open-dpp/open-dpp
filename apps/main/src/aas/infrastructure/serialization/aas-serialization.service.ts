@@ -61,7 +61,7 @@ export class AasSerializationService {
       passport.environment,
     );
     const presentationConfiguration =
-      await this.presentationConfigurationService.findOrInstantiateForPassport(passport);
+      await this.presentationConfigurationService.getEffectiveForPassport(passport);
     const aasExportable = AasExportable.createFromPassport(
       passport,
       expandedEnvironment,
@@ -78,7 +78,7 @@ export class AasSerializationService {
       template.environment,
     );
     const presentationConfiguration =
-      await this.presentationConfigurationService.findOrInstantiateForTemplate(template);
+      await this.presentationConfigurationService.getEffectiveForTemplate(template);
     const aasExportable = AasExportable.createFromTemplate(
       template,
       expandedEnvironment,

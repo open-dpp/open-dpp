@@ -61,6 +61,7 @@ export class PresentationConfigurationRepository {
         referenceType: ref.referenceType,
         referenceId: ref.referenceId,
       })
+      .sort({ createdAt: 1, _id: 1 })
       .session(options?.session ?? null);
     if (!doc) {
       return undefined;

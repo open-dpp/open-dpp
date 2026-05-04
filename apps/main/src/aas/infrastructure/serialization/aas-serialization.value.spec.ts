@@ -51,7 +51,7 @@ describe("export submodel value", () => {
         {
           provide: PresentationConfigurationService,
           useValue: {
-            findOrInstantiateForPassport: jest
+            getEffectiveForPassport: jest
               .fn<(passport: Passport) => Promise<PresentationConfiguration>>()
               .mockImplementation(async (passport: Passport) =>
                 PresentationConfiguration.create({
