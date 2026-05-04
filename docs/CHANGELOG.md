@@ -1,5 +1,15 @@
 # @open-dpp/docs
 
+## 0.4.2
+
+## 0.4.1
+
+## 0.4.0
+
+### Minor Changes
+
+- [#513](https://github.com/open-dpp/open-dpp/pull/513) [`ca55ba0`](https://github.com/open-dpp/open-dpp/commit/ca55ba0529752cdd852ba41fcc357dfc1b27bacb) Thanks [@florianBieck](https://github.com/florianBieck)! - Updated dependencies to minor and patch versions
+
 ## 0.3.0
 
 ## 0.2.2
@@ -17,6 +27,7 @@
 - [#503](https://github.com/open-dpp/open-dpp/pull/503) [`40c772c`](https://github.com/open-dpp/open-dpp/commit/40c772c5015aff47c0e91c443860ae25941bd44f) Thanks [@mr42](https://github.com/mr42)! - Templates and passports have a status (Draft, Published, Archived) now.
 
   The following operations are possible:
+
   - publish (Draft -> Published)
   - archive (Draft -> Archived or Published -> Archived)
   - restore (Archived -> Published or Archived -> Draft)

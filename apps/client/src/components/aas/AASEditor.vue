@@ -269,7 +269,6 @@ const isFullPosition = computed(() => position.value === fullPosition);
             />
           </template>
         </TreeTable>
-        <ConfirmDialog />
         <Menu
           id="overlay_menu"
           ref="popover"

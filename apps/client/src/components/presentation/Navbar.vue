@@ -52,5 +52,4 @@ const { src } = useBrandingAnonymous(permalink);
       </div>
     </template>
   </Menubar>
-  <ConfirmDialog />
 </template>

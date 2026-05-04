@@ -1,5 +1,42 @@
 # @open-dpp/main
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.2
+  - @open-dpp/dto@0.4.2
+  - @open-dpp/env@0.4.2
+  - @open-dpp/exception@0.4.2
+  - @open-dpp/permission@0.4.2
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.1
+  - @open-dpp/dto@0.4.1
+  - @open-dpp/env@0.4.1
+  - @open-dpp/exception@0.4.1
+  - @open-dpp/permission@0.4.1
+
+## 0.4.0
+
+### Minor Changes
+
+- [#513](https://github.com/open-dpp/open-dpp/pull/513) [`ca55ba0`](https://github.com/open-dpp/open-dpp/commit/ca55ba0529752cdd852ba41fcc357dfc1b27bacb) Thanks [@florianBieck](https://github.com/florianBieck)! - Updated dependencies to minor and patch versions
+
+### Patch Changes
+
+- Updated dependencies [[`ca55ba0`](https://github.com/open-dpp/open-dpp/commit/ca55ba0529752cdd852ba41fcc357dfc1b27bacb)]:
+  - @open-dpp/api-client@0.4.0
+  - @open-dpp/permission@0.4.0
+  - @open-dpp/exception@0.4.0
+  - @open-dpp/dto@0.4.0
+  - @open-dpp/env@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes
@@ -42,6 +79,7 @@
 - [#503](https://github.com/open-dpp/open-dpp/pull/503) [`40c772c`](https://github.com/open-dpp/open-dpp/commit/40c772c5015aff47c0e91c443860ae25941bd44f) Thanks [@mr42](https://github.com/mr42)! - Templates and passports have a status (Draft, Published, Archived) now.
 
   The following operations are possible:
+
   - publish (Draft -> Published)
   - archive (Draft -> Archived or Published -> Archived)
   - restore (Archived -> Published or Archived -> Draft)

@@ -1,5 +1,39 @@
 # @open-dpp/client
 
+## 0.4.2
+
+### Patch Changes
+
+- [#546](https://github.com/open-dpp/open-dpp/pull/546) [`924af38`](https://github.com/open-dpp/open-dpp/commit/924af38588c3c8b891b3ab3d19b87edf9548b0cf) Thanks [@Hentra](https://github.com/Hentra)! - Refactor sidebar to reduce duplication
+
+- [#551](https://github.com/open-dpp/open-dpp/pull/551) [`ad33c39`](https://github.com/open-dpp/open-dpp/commit/ad33c39da5d7cc1bb6327e885e905a81d06d52cf) Thanks [@Hentra](https://github.com/Hentra)! - Set default language to be loaded from browser settings
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.2
+  - @open-dpp/dto@0.4.2
+
+## 0.4.1
+
+### Patch Changes
+
+- [#548](https://github.com/open-dpp/open-dpp/pull/548) [`2126c6a`](https://github.com/open-dpp/open-dpp/commit/2126c6adf8aa330233dd3b6dd9dd8b82878b88ad) Thanks [@Hentra](https://github.com/Hentra)! - Set the analytics y axis to never show below zero
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.1
+  - @open-dpp/dto@0.4.1
+
+## 0.4.0
+
+### Minor Changes
+
+- [#513](https://github.com/open-dpp/open-dpp/pull/513) [`ca55ba0`](https://github.com/open-dpp/open-dpp/commit/ca55ba0529752cdd852ba41fcc357dfc1b27bacb) Thanks [@florianBieck](https://github.com/florianBieck)! - Updated dependencies to minor and patch versions
+
+### Patch Changes
+
+- Updated dependencies [[`ca55ba0`](https://github.com/open-dpp/open-dpp/commit/ca55ba0529752cdd852ba41fcc357dfc1b27bacb)]:
+  - @open-dpp/api-client@0.4.0
+  - @open-dpp/dto@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes
@@ -39,6 +73,7 @@
 - [#503](https://github.com/open-dpp/open-dpp/pull/503) [`40c772c`](https://github.com/open-dpp/open-dpp/commit/40c772c5015aff47c0e91c443860ae25941bd44f) Thanks [@mr42](https://github.com/mr42)! - Templates and passports have a status (Draft, Published, Archived) now.
 
   The following operations are possible:
+
   - publish (Draft -> Published)
   - archive (Draft -> Archived or Published -> Archived)
   - restore (Archived -> Published or Archived -> Draft)
