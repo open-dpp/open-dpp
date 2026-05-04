@@ -66,10 +66,6 @@
     "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
-    "tabs": {
-      "structure": "Structure",
-      "presentation": "Presentation"
-    },
     "drawerTabs": {
       "data": "Data",
       "presentation": "Presentation"
@@ -82,7 +78,12 @@
       "preview": "Preview",
       "default": "Default",
       "bigNumber": "BigNumber",
-      "emptyState": "No submodels yet. Add one in the Structure tab to configure how its fields are displayed."
+      "emptyState": "No submodels yet. Add one in the Structure tab to configure how its fields are displayed.",
+      "empty": "No alternative presentation components available for this field type yet.",
+      "configPicker": {
+        "label": "Presentation configuration",
+        "untitled": "Untitled"
+      }
     },
     "security": {
       "missingPermission": "Missing permissions",

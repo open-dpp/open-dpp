@@ -66,10 +66,6 @@
     }
   },
   "aasEditor": {
-    "tabs": {
-      "structure": "Struktur",
-      "presentation": "Darstellung"
-    },
     "drawerTabs": {
       "data": "Daten",
       "presentation": "Darstellung"
@@ -82,7 +78,12 @@
       "preview": "Vorschau",
       "default": "Standard",
       "bigNumber": "BigNumber",
-      "emptyState": "Noch keine Submodelle. Lege eines im Tab \"Struktur\" an, um die Darstellung seiner Felder festzulegen."
+      "emptyState": "Noch keine Submodelle. Lege eines im Tab \"Struktur\" an, um die Darstellung seiner Felder festzulegen.",
+      "empty": "Für diesen Feldtyp sind noch keine alternativen Darstellungskomponenten verfügbar.",
+      "configPicker": {
+        "label": "Darstellungskonfiguration",
+        "untitled": "Unbenannt"
+      }
     },
     "security": {
       "missingPermission": "Fehlende Rechte",
