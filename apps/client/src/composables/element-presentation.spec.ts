@@ -1,14 +1,30 @@
 import { describe, expect, it } from "vitest";
+import { KeyTypes, DataTypeDef } from "@open-dpp/dto";
 import { applicableComponentOptions, defaultOption, isLeafElement } from "./element-presentation";
 
+type FirstParam = Parameters<typeof applicableComponentOptions>[0];
+
 const numericProperty = {
-  modelType: "Property" as const,
-  valueType: "Double" as const,
-};
+  modelType: KeyTypes.Property,
+  valueType: DataTypeDef.Double,
+  idShort: "numericProp",
+  displayName: [],
+  description: [],
+  supplementalSemanticIds: [],
+  qualifiers: [],
+  embeddedDataSpecifications: [],
+} satisfies FirstParam;
+
 const stringProperty = {
-  modelType: "Property" as const,
-  valueType: "String" as const,
-};
+  modelType: KeyTypes.Property,
+  valueType: DataTypeDef.String,
+  idShort: "stringProp",
+  displayName: [],
+  description: [],
+  supplementalSemanticIds: [],
+  qualifiers: [],
+  embeddedDataSpecifications: [],
+} satisfies FirstParam;
 
 describe("element-presentation", () => {
   it("returns just the default option for elements with no applicable components", () => {

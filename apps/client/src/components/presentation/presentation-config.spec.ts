@@ -9,6 +9,7 @@ function config(partial: Partial<PresentationConfigurationDto> = {}): Presentati
     organizationId: "org-1",
     referenceId: "00000000-0000-4000-8000-000000000001",
     referenceType: PresentationReferenceType.Template,
+    label: null,
     elementDesign: {},
     defaultComponents: {},
     createdAt: new Date(),
