@@ -207,16 +207,30 @@ describe("PresentationConfiguration label", () => {
     expect(c.label).toBe("Variant A");
   });
 
-  it("withLabel returns a new instance with updated label and updatedAt", () => {
+  it("withLabel returns a new instance with updated label and updatedAt", async () => {
     const c = PresentationConfiguration.createForPassport({
       organizationId: "org-1",
       referenceId: randomUUID(),
     });
+    await new Promise((resolve) => setTimeout(resolve, 2));
     const renamed = c.withLabel("Variant A");
     expect(renamed).not.toBe(c);
     expect(renamed.label).toBe("Variant A");
     expect(renamed.id).toBe(c.id);
-    expect(renamed.updatedAt.getTime()).toBeGreaterThanOrEqual(c.updatedAt.getTime());
+    expect(renamed.updatedAt.getTime()).toBeGreaterThan(c.updatedAt.getTime());
+  });
+
+  it("withLabel(null) clears an existing label and returns a new instance", () => {
+    const c = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+      referenceType: "passport",
+      label: "Variant A",
+    });
+    const cleared = c.withLabel(null);
+    expect(cleared).not.toBe(c);
+    expect(cleared.label).toBeNull();
+    expect(cleared.id).toBe(c.id);
   });
 
   it("withLabel returns the same instance when label is unchanged", () => {
