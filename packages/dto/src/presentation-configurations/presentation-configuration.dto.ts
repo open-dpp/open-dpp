@@ -46,6 +46,7 @@ export const PresentationConfigurationDtoSchema = z
     organizationId: z.string().min(1),
     referenceId: z.uuid(),
     referenceType: PresentationReferenceTypeEnum,
+    label: z.string().min(1).nullable(),
     elementDesign: z
       .preprocess(
         (input) => dropUnknownComponents(input),
@@ -69,6 +70,7 @@ export const PresentationConfigurationInvariantsSchema = z.object({
   organizationId: z.string().min(1),
   referenceId: z.uuid(),
   referenceType: PresentationReferenceTypeEnum,
+  label: z.string().min(1).nullable(),
 });
 
 export const PresentationConfigurationExportSchema = z.object({
@@ -88,6 +90,20 @@ export const PresentationConfigurationExportSchema = z.object({
 
 export type PresentationConfigurationExportDto = z.infer<
   typeof PresentationConfigurationExportSchema
+>;
+
+export const PresentationConfigurationCreateRequestSchema = z.object({
+  label: z.string().min(1).nullable(),
+});
+export type PresentationConfigurationCreateRequestDto = z.infer<
+  typeof PresentationConfigurationCreateRequestSchema
+>;
+
+export const PresentationConfigurationListResponseSchema = z.array(
+  PresentationConfigurationDtoSchema,
+);
+export type PresentationConfigurationListResponseDto = z.infer<
+  typeof PresentationConfigurationListResponseSchema
 >;
 
 export const PresentationConfigurationPatchSchema = z.object({

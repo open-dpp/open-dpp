@@ -14,6 +14,7 @@ const validBase = () => ({
   organizationId: "org-1",
   referenceId: randomUUID(),
   referenceType: PresentationReferenceType.Template,
+  label: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });
@@ -119,5 +120,54 @@ describe("PresentationConfigurationPatchSchema (strict write)", () => {
     const result = PresentationConfigurationPatchSchema.safeParse({});
     expect(result.success).toBe(true);
     expect(result.data).toEqual({});
+  });
+});
+
+import {
+  PresentationConfigurationCreateRequestSchema,
+} from "./presentation-configuration.dto";
+
+describe("PresentationConfigurationDtoSchema label", () => {
+  it("accepts null label", () => {
+    const parsed = PresentationConfigurationDtoSchema.parse({
+      id: crypto.randomUUID(),
+      organizationId: "org-1",
+      referenceId: crypto.randomUUID(),
+      referenceType: "passport",
+      label: null,
+      elementDesign: {},
+      defaultComponents: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    expect(parsed.label).toBeNull();
+  });
+
+  it("accepts non-empty string label", () => {
+    const parsed = PresentationConfigurationDtoSchema.parse({
+      id: crypto.randomUUID(),
+      organizationId: "org-1",
+      referenceId: crypto.randomUUID(),
+      referenceType: "passport",
+      label: "Variant A",
+      elementDesign: {},
+      defaultComponents: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    expect(parsed.label).toBe("Variant A");
+  });
+});
+
+describe("PresentationConfigurationCreateRequestSchema", () => {
+  it("accepts a null label", () => {
+    expect(
+      PresentationConfigurationCreateRequestSchema.parse({ label: null }).label,
+    ).toBeNull();
+  });
+  it("accepts a string label", () => {
+    expect(
+      PresentationConfigurationCreateRequestSchema.parse({ label: "v1" }).label,
+    ).toBe("v1");
   });
 });
