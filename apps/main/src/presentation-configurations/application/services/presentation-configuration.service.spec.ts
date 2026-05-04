@@ -1,17 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { ValueError } from "@open-dpp/exception";
 import type { Connection } from "mongoose";
 
 import { Environment } from "../../../aas/domain/environment";
 import { generateMongoConfig } from "../../../database/config";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
-import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
 import {
   PresentationConfigurationDoc,
@@ -21,7 +19,6 @@ import { PresentationConfigurationService } from "./presentation-configuration.s
 
 describe("PresentationConfigurationService", () => {
   let service: PresentationConfigurationService;
-  let repository: PresentationConfigurationRepository;
   let connection: Connection;
   let module: TestingModule;
 
@@ -44,7 +41,6 @@ describe("PresentationConfigurationService", () => {
     }).compile();
 
     service = module.get(PresentationConfigurationService);
-    repository = module.get(PresentationConfigurationRepository);
     connection = module.get<Connection>(getConnectionToken());
   });
 
@@ -71,104 +67,104 @@ describe("PresentationConfigurationService", () => {
     });
   }
 
-  describe("findOrInstantiateForPassport", () => {
-    it("returns an in-memory default when no row exists, without writing", async () => {
+  describe("listForPassport", () => {
+    it("lazy-creates a default config when none exist", async () => {
       const passport = makePassport();
+      const list = await service.listForPassport(passport);
+      expect(list).toHaveLength(1);
+      expect(list[0].label).toBeNull();
 
-      const config = await service.findOrInstantiateForPassport(passport);
-
-      expect(config.referenceId).toBe(passport.id);
-      expect(config.referenceType).toBe(PresentationReferenceType.Passport);
-      expect(Object.fromEntries(config.elementDesign)).toEqual({});
-
-      expect(
-        await repository.findByReference({
-          referenceType: PresentationReferenceType.Passport,
-          referenceId: passport.id,
-        }),
-      ).toBeUndefined();
+      // Subsequent call returns the persisted one (no duplicates)
+      const again = await service.listForPassport(passport);
+      expect(again).toHaveLength(1);
+      expect(again[0].id).toBe(list[0].id);
     });
 
-    it("returns the persisted row when one exists", async () => {
+    it("returns existing configs sorted by createdAt", async () => {
       const passport = makePassport();
-      const persisted = await repository.save(
-        PresentationConfiguration.create({
-          organizationId: passport.organizationId,
-          referenceId: passport.id,
-          referenceType: PresentationReferenceType.Passport,
-          elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
-        }),
+      await service.listForPassport(passport); // seed default
+      await service.createForPassport(passport, { label: "Variant A" });
+      const list = await service.listForPassport(passport);
+      expect(list).toHaveLength(2);
+      expect(list[0].label).toBeNull();
+      expect(list[1].label).toBe("Variant A");
+    });
+  });
+
+  describe("createForPassport", () => {
+    it("creates a new config with the given label", async () => {
+      const passport = makePassport();
+      const created = await service.createForPassport(passport, { label: "v1" });
+      expect(created.label).toBe("v1");
+      expect(created.referenceId).toBe(passport.id);
+      expect(created.referenceType).toBe("passport");
+    });
+  });
+
+  describe("deleteByConfigIdForPassport", () => {
+    it("removes a config by id", async () => {
+      const passport = makePassport();
+      const created = await service.createForPassport(passport, { label: "v1" });
+      await service.deleteByConfigIdForPassport(passport, created.id);
+      const list = await service.listForPassport(passport);
+      expect(list.find((c) => c.id === created.id)).toBeUndefined();
+    });
+  });
+
+  describe("getEffectiveForPassport (no merge)", () => {
+    it("returns the passport's first config without merging template", async () => {
+      const template = makeTemplate();
+      await service.createForTemplate(template, { label: "TemplateOnly" });
+      await service.applyPatchByConfigIdForTemplate(
+        template,
+        (await service.listForTemplate(template))[0].id,
+        { elementDesign: { "submodel.foo": PresentationComponentName.BigNumber } },
       );
 
-      const config = await service.findOrInstantiateForPassport(passport);
+      const passport = makePassport({ templateId: template.id });
+      const list = await service.listForPassport(passport); // lazy-creates default
+      expect(list[0].elementDesign.size).toBe(0);
 
-      expect(config.id).toBe(persisted.id);
-      expect(Object.fromEntries(config.elementDesign)).toEqual({
-        "submodel-1.prop": PresentationComponentName.BigNumber,
-      });
+      const effective = await service.getEffectiveForPassport(passport);
+      expect(effective.id).toBe(list[0].id);
+      expect(effective.elementDesign.size).toBe(0); // NO template merge
     });
   });
 
-  describe("findOrInstantiateForTemplate", () => {
-    it("returns an in-memory default when no row exists, without writing", async () => {
-      const template = makeTemplate();
-
-      const config = await service.findOrInstantiateForTemplate(template);
-
-      expect(config.referenceId).toBe(template.id);
-      expect(config.referenceType).toBe(PresentationReferenceType.Template);
-
-      expect(
-        await repository.findByReference({
-          referenceType: PresentationReferenceType.Template,
-          referenceId: template.id,
-        }),
-      ).toBeUndefined();
-    });
-  });
-
-  describe("applyPatchForPassport", () => {
-    it("persists a row on first PATCH that adds an elementDesign entry", async () => {
+  describe("applyPatchByConfigIdForPassport", () => {
+    it("persists a patch that adds an elementDesign entry", async () => {
       const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
 
-      const result = await service.applyPatchForPassport(passport, {
+      const result = await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
         elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
       });
 
       expect(Object.fromEntries(result.elementDesign)).toEqual({
         "submodel-1.prop": PresentationComponentName.BigNumber,
       });
-
-      const persisted = await repository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
-        referenceId: passport.id,
-      });
-      expect(persisted?.id).toBe(result.id);
     });
 
     it("is a no-op when the patch makes no observable change", async () => {
       const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
 
-      const result = await service.applyPatchForPassport(passport, { elementDesign: {} });
+      const result = await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+        elementDesign: {},
+      });
 
       expect(Object.fromEntries(result.elementDesign)).toEqual({});
-
-      // No row should be persisted on a no-op patch.
-      expect(
-        await repository.findByReference({
-          referenceType: PresentationReferenceType.Passport,
-          referenceId: passport.id,
-        }),
-      ).toBeUndefined();
     });
 
     it("merges defaultComponents and elementDesign across multiple patches", async () => {
       const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
 
-      await service.applyPatchForPassport(passport, {
+      await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
         defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
       });
-      const second = await service.applyPatchForPassport(passport, {
+      const [refreshed] = await service.listForPassport(passport);
+      const second = await service.applyPatchByConfigIdForPassport(passport, refreshed.id, {
         elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
       });
 
@@ -182,135 +178,58 @@ describe("PresentationConfigurationService", () => {
 
     it("removes a key when the patch value is null", async () => {
       const passport = makePassport();
-      await service.applyPatchForPassport(passport, {
+      const [defaultConfig] = await service.listForPassport(passport);
+
+      await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
         elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
       });
-
-      const cleared = await service.applyPatchForPassport(passport, {
+      const [refreshed] = await service.listForPassport(passport);
+      const cleared = await service.applyPatchByConfigIdForPassport(passport, refreshed.id, {
         elementDesign: { "submodel-1.prop": null },
       });
 
       expect(Object.fromEntries(cleared.elementDesign)).toEqual({});
     });
-
-    it("translates a duplicate-key race into ValueError", async () => {
-      const passport = makePassport();
-
-      // Simulate the race window: another caller already inserted a row for
-      // (Passport, passport.id) between our findByReference and our save.
-      // Pre-create the row, then make findByReference return undefined so
-      // the service builds a *new* in-memory instance with a fresh id and
-      // tries to save — the unique index on (referenceType, referenceId)
-      // surfaces E11000, which the service translates to ValueError.
-      await repository.save(
-        PresentationConfiguration.create({
-          organizationId: passport.organizationId,
-          referenceId: passport.id,
-          referenceType: PresentationReferenceType.Passport,
-        }),
-      );
-      const findSpy = jest.spyOn(repository, "findByReference").mockResolvedValueOnce(undefined);
-
-      try {
-        await expect(
-          service.applyPatchForPassport(passport, {
-            elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
-          }),
-        ).rejects.toBeInstanceOf(ValueError);
-      } finally {
-        findSpy.mockRestore();
-      }
-    });
   });
 
-  describe("applyPatchForTemplate", () => {
-    it("persists a row on first PATCH", async () => {
+  describe("applyPatchByConfigIdForTemplate", () => {
+    it("persists a patch for a template config", async () => {
       const template = makeTemplate();
+      const [defaultConfig] = await service.listForTemplate(template);
 
-      const result = await service.applyPatchForTemplate(template, {
+      const result = await service.applyPatchByConfigIdForTemplate(template, defaultConfig.id, {
         defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
       });
 
-      const persisted = await repository.findByReference({
-        referenceType: PresentationReferenceType.Template,
-        referenceId: template.id,
-      });
-      expect(persisted?.id).toBe(result.id);
-    });
-  });
-
-  describe("getEffectiveForPassport", () => {
-    it("returns an empty in-memory config when neither passport nor template have rows", async () => {
-      const passport = makePassport();
-
-      const effective = await service.getEffectiveForPassport(passport);
-
-      expect(Object.fromEntries(effective.elementDesign)).toEqual({});
-      expect(Object.fromEntries(effective.defaultComponents)).toEqual({});
-    });
-
-    it("merges template defaults under passport-specific entries (passport wins)", async () => {
-      const templateId = randomUUID();
-      const passport = makePassport({ templateId });
-
-      await repository.save(
-        PresentationConfiguration.create({
-          organizationId: passport.organizationId,
-          referenceId: templateId,
-          referenceType: PresentationReferenceType.Template,
-          elementDesign: { "submodel-1.shared": PresentationComponentName.BigNumber },
-          defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
-        }),
-      );
-      await repository.save(
-        PresentationConfiguration.create({
-          organizationId: passport.organizationId,
-          referenceId: passport.id,
-          referenceType: PresentationReferenceType.Passport,
-          elementDesign: { "submodel-1.shared": PresentationComponentName.BigNumber },
-        }),
-      );
-
-      const effective = await service.getEffectiveForPassport(passport);
-
-      expect(Object.fromEntries(effective.elementDesign)).toEqual({
-        "submodel-1.shared": PresentationComponentName.BigNumber,
-      });
-      expect(Object.fromEntries(effective.defaultComponents)).toEqual({
+      expect(Object.fromEntries(result.defaultComponents)).toEqual({
         [KeyTypes.Property]: PresentationComponentName.BigNumber,
       });
     });
+  });
 
-    it("returns the passport row alone when the passport has no templateId", async () => {
-      const passport = makePassport();
-      await repository.save(
-        PresentationConfiguration.create({
-          organizationId: passport.organizationId,
-          referenceId: passport.id,
-          referenceType: PresentationReferenceType.Passport,
-          elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
-        }),
-      );
+  describe("snapshotTemplateConfigsToPassport", () => {
+    it("copies template configs to the passport with the same elementDesign and label", async () => {
+      const template = makeTemplate();
+      const [defaultConfig] = await service.listForTemplate(template);
+      await service.applyPatchByConfigIdForTemplate(template, defaultConfig.id, {
+        elementDesign: { "sm.p": PresentationComponentName.BigNumber },
+      });
 
-      const effective = await service.getEffectiveForPassport(passport);
+      const passport = makePassport({ templateId: template.id });
+      const snapshots = await service.snapshotTemplateConfigsToPassport(passport);
 
-      expect(Object.fromEntries(effective.elementDesign)).toEqual({
-        "submodel-1.prop": PresentationComponentName.BigNumber,
+      expect(snapshots).toHaveLength(1);
+      expect(snapshots[0].referenceId).toBe(passport.id);
+      expect(snapshots[0].referenceType).toBe(PresentationReferenceType.Passport);
+      expect(Object.fromEntries(snapshots[0].elementDesign)).toEqual({
+        "sm.p": PresentationComponentName.BigNumber,
       });
     });
 
-    it("does not write a row for an uncustomized passport on read", async () => {
+    it("returns empty array when passport has no templateId", async () => {
       const passport = makePassport();
-
-      await service.getEffectiveForPassport(passport);
-      await service.getEffectiveForPassport(passport);
-
-      expect(
-        await repository.findByReference({
-          referenceType: PresentationReferenceType.Passport,
-          referenceId: passport.id,
-        }),
-      ).toBeUndefined();
+      const snapshots = await service.snapshotTemplateConfigsToPassport(passport);
+      expect(snapshots).toHaveLength(0);
     });
   });
 });

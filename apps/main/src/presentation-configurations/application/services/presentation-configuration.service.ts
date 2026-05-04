@@ -4,11 +4,12 @@ import {
   PresentationComponentNameType,
   PresentationConfigurationPatchDto,
   PresentationReferenceType,
+  PresentationReferenceTypeType,
 } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
-import { isDuplicateKeyError } from "../../../lib/mongo-errors";
+import type { DbSessionOptions } from "../../../database/query-options";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
 
@@ -18,81 +19,163 @@ export class PresentationConfigurationService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
   ) {}
 
-  async findOrInstantiateForTemplate(template: Template): Promise<PresentationConfiguration> {
-    const existing = await this.presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Template,
-      referenceId: template.id,
+  async listForPassport(passport: Passport): Promise<PresentationConfiguration[]> {
+    return this.listOrSeed({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+      organizationId: passport.organizationId,
     });
-    return (
-      existing ??
-      PresentationConfiguration.createForTemplate({
-        organizationId: template.organizationId,
-        referenceId: template.id,
-      })
-    );
   }
 
-  async findOrInstantiateForPassport(passport: Passport): Promise<PresentationConfiguration> {
-    const existing = await this.presentationConfigurationRepository.findByReference({
+  async listForTemplate(template: Template): Promise<PresentationConfiguration[]> {
+    return this.listOrSeed({
+      referenceType: PresentationReferenceType.Template,
+      referenceId: template.id,
+      organizationId: template.organizationId,
+    });
+  }
+
+  private async listOrSeed(input: {
+    referenceType: PresentationReferenceTypeType;
+    referenceId: string;
+    organizationId: string;
+  }): Promise<PresentationConfiguration[]> {
+    const existing = await this.presentationConfigurationRepository.findManyByReference({
+      referenceType: input.referenceType,
+      referenceId: input.referenceId,
+    });
+    if (existing.length > 0) return existing;
+    const seeded = PresentationConfiguration.create({
+      organizationId: input.organizationId,
+      referenceId: input.referenceId,
+      referenceType: input.referenceType,
+      label: null,
+    });
+    const saved = await this.presentationConfigurationRepository.save(seeded);
+    return [saved];
+  }
+
+  async getByIdForPassport(
+    passport: Passport,
+    configId: string,
+  ): Promise<PresentationConfiguration> {
+    return this.requireOwned(configId, {
       referenceType: PresentationReferenceType.Passport,
       referenceId: passport.id,
     });
-    return (
-      existing ??
-      PresentationConfiguration.createForPassport({
-        organizationId: passport.organizationId,
-        referenceId: passport.id,
-      })
-    );
   }
 
-  async applyPatchForTemplate(
+  async getByIdForTemplate(
     template: Template,
-    patch: PresentationConfigurationPatchDto,
+    configId: string,
   ): Promise<PresentationConfiguration> {
-    const config = await this.findOrInstantiateForTemplate(template);
-    return await this.persistPatch(config, patch);
+    return this.requireOwned(configId, {
+      referenceType: PresentationReferenceType.Template,
+      referenceId: template.id,
+    });
   }
 
-  async applyPatchForPassport(
+  private async requireOwned(
+    configId: string,
+    ref: { referenceType: PresentationReferenceTypeType; referenceId: string },
+  ): Promise<PresentationConfiguration> {
+    const config = await this.presentationConfigurationRepository.findOneOrFail(configId);
+    if (config.referenceType !== ref.referenceType || config.referenceId !== ref.referenceId) {
+      throw new NotFoundError(`PresentationConfiguration ${configId} not found for reference`);
+    }
+    return config;
+  }
+
+  async createForPassport(
     passport: Passport,
+    body: { label: string | null },
+  ): Promise<PresentationConfiguration> {
+    const config = PresentationConfiguration.create({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+      referenceType: PresentationReferenceType.Passport,
+      label: body.label,
+    });
+    return await this.presentationConfigurationRepository.save(config);
+  }
+
+  async createForTemplate(
+    template: Template,
+    body: { label: string | null },
+  ): Promise<PresentationConfiguration> {
+    const config = PresentationConfiguration.create({
+      organizationId: template.organizationId,
+      referenceId: template.id,
+      referenceType: PresentationReferenceType.Template,
+      label: body.label,
+    });
+    return await this.presentationConfigurationRepository.save(config);
+  }
+
+  async applyPatchByConfigIdForPassport(
+    passport: Passport,
+    configId: string,
     patch: PresentationConfigurationPatchDto,
   ): Promise<PresentationConfiguration> {
-    const config = await this.findOrInstantiateForPassport(passport);
-    return await this.persistPatch(config, patch);
+    const config = await this.getByIdForPassport(passport, configId);
+    return this.persistPatch(config, patch);
+  }
+
+  async applyPatchByConfigIdForTemplate(
+    template: Template,
+    configId: string,
+    patch: PresentationConfigurationPatchDto,
+  ): Promise<PresentationConfiguration> {
+    const config = await this.getByIdForTemplate(template, configId);
+    return this.persistPatch(config, patch);
+  }
+
+  async deleteByConfigIdForPassport(passport: Passport, configId: string): Promise<void> {
+    await this.getByIdForPassport(passport, configId);
+    await this.presentationConfigurationRepository.deleteById(configId);
+  }
+
+  async deleteByConfigIdForTemplate(template: Template, configId: string): Promise<void> {
+    await this.getByIdForTemplate(template, configId);
+    await this.presentationConfigurationRepository.deleteById(configId);
   }
 
   async getEffectiveForPassport(passport: Passport): Promise<PresentationConfiguration> {
-    const passportConfig = await this.findOrInstantiateForPassport(passport);
-    return this.mergeWithTemplate(passport, passportConfig);
+    const [first] = await this.listForPassport(passport);
+    return first;
   }
 
-  private async mergeWithTemplate(
+  async getEffectiveForTemplate(template: Template): Promise<PresentationConfiguration> {
+    const [first] = await this.listForTemplate(template);
+    return first;
+  }
+
+  async snapshotTemplateConfigsToPassport(
     passport: Passport,
-    passportConfig: PresentationConfiguration,
-  ): Promise<PresentationConfiguration> {
-    if (!passport.templateId) return passportConfig;
-
-    const templateConfig = await this.presentationConfigurationRepository.findByReference({
-      referenceType: PresentationReferenceType.Template,
-      referenceId: passport.templateId,
-    });
-    if (!templateConfig) return passportConfig;
-
-    const mergedElementDesign = new Map<string, PresentationComponentNameType>([
-      ...templateConfig.elementDesign,
-      ...passportConfig.elementDesign,
-    ]);
-    const mergedDefaults = new Map<KeyTypesType, PresentationComponentNameType>([
-      ...templateConfig.defaultComponents,
-      ...passportConfig.defaultComponents,
-    ]);
-
-    return PresentationConfiguration.fromPlain({
-      ...passportConfig.toPlain(),
-      elementDesign: Object.fromEntries(mergedElementDesign),
-      defaultComponents: Object.fromEntries(mergedDefaults),
-    });
+    options?: DbSessionOptions,
+  ): Promise<PresentationConfiguration[]> {
+    if (!passport.templateId) return [];
+    const templateConfigs = await this.presentationConfigurationRepository.findManyByReference(
+      {
+        referenceType: PresentationReferenceType.Template,
+        referenceId: passport.templateId,
+      },
+      options,
+    );
+    if (templateConfigs.length === 0) return [];
+    const created: PresentationConfiguration[] = [];
+    for (const tc of templateConfigs) {
+      const snapshot = PresentationConfiguration.create({
+        organizationId: passport.organizationId,
+        referenceId: passport.id,
+        referenceType: PresentationReferenceType.Passport,
+        label: tc.label,
+        elementDesign: tc.elementDesign,
+        defaultComponents: tc.defaultComponents,
+      });
+      created.push(await this.presentationConfigurationRepository.save(snapshot, options));
+    }
+    return created;
   }
 
   private async persistPatch(
@@ -118,16 +201,6 @@ export class PresentationConfigurationService {
       }
     }
     if (next === config) return config;
-    try {
-      return await this.presentationConfigurationRepository.save(next);
-    } catch (error) {
-      if (isDuplicateKeyError(error)) {
-        throw new ValueError(
-          `PresentationConfiguration for ${config.referenceType} ${config.referenceId} was created concurrently. Retry the request.`,
-          { cause: error as Error },
-        );
-      }
-      throw error;
-    }
+    return await this.presentationConfigurationRepository.save(next);
   }
 }
