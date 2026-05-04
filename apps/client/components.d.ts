@@ -58,6 +58,7 @@ declare module 'vue' {
     InviteToOrganizationDialog: typeof import('./src/components/admin/InviteToOrganizationDialog.vue')['default']
     InviteUserDialog: typeof import('./src/components/admin/InviteUserDialog.vue')['default']
     LanguageSelect: typeof import('./src/components/basics/LanguageSelect.vue')['default']
+    Layout: typeof import('./src/components/layout/Layout.vue')['default']
     LazyPassportSelect: typeof import('./src/components/passport/LazyPassportSelect.vue')['default']
     LinkCellField: typeof import('./src/components/aas/LinkCellField.vue')['default']
     List: typeof import('./src/components/presentation/List.vue')['default']
@@ -184,6 +185,7 @@ declare global {
   const InviteToOrganizationDialog: (typeof import("./src/components/admin/InviteToOrganizationDialog.vue"))["default"];
   const InviteUserDialog: (typeof import("./src/components/admin/InviteUserDialog.vue"))["default"];
   const LanguageSelect: (typeof import("./src/components/basics/LanguageSelect.vue"))["default"];
+  const Layout: (typeof import("./src/components/layout/Layout.vue"))["default"];
   const LazyPassportSelect: (typeof import("./src/components/passport/LazyPassportSelect.vue"))["default"];
   const LinkCellField: (typeof import("./src/components/aas/LinkCellField.vue"))["default"];
   const List: (typeof import("./src/components/presentation/List.vue"))["default"];

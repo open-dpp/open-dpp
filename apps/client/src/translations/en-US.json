@@ -338,7 +338,7 @@
     "fetchCurrentError": "Error fetching current organization.",
     "assignedOrganizations": "All assigned organizations",
     "pick": "Select organization",
-    "new": "Create new organization",
+    "new": "Create organization",
     "invite": "Invite",
     "inviteUser": "Invite user",
     "inviteUserSuccess": "The user has been successfully invited.",

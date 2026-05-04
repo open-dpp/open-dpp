@@ -338,7 +338,7 @@
     "fetchCurrentError": "Fehler beim Laden der aktuellen Organisation.",
     "assignedOrganizations": "Alle zugewiesenen Organisationen",
     "pick": "Organisation auswählen",
-    "new": "Neue Organisation erstellen",
+    "new": "Organisation erstellen",
     "invite": "Einladen",
     "inviteUser": "Benutzer einladen",
     "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
