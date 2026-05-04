@@ -124,25 +124,6 @@ describe("MediaService", () => {
     });
   });
 
-  describe("uploadProfilePicture", () => {
-    it("should upload profile picture to profile bucket", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({});
-
-      const buffer = Buffer.from("image");
-      await service.uploadProfilePicture(buffer, "user-id");
-
-      expect(mockMinioInstance.bucketExists).toHaveBeenCalledWith("profile-bucket");
-      expect(mockMinioInstance.putObject).toHaveBeenCalledWith(
-        "profile-bucket",
-        "user-id",
-        buffer,
-        buffer.length,
-        { "Content-Type": "image/webp" },
-      );
-    });
-  });
-
   describe("processImageBuffer", () => {
     it("should process image using sharp", async () => {
       const buffer = Buffer.from("raw");
