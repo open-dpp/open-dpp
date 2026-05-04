@@ -1,6 +1,7 @@
 import {
   type DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentStatusModificationMethodDto,
+  type PagingParamsDto,
 } from "@open-dpp/dto";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
@@ -12,6 +13,7 @@ import {
   type DigitalProductDocumentTypeType,
 } from "../lib/digital-product-document.ts";
 import apiClient from "../lib/api-client.ts";
+import type { PagingResult } from "./pagination.ts";
 
 export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) {
   const digitalProductDocNamespace =
@@ -61,6 +63,24 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     await modifyStatus(id, { method: DigitalProductDocumentStatusModificationMethodDto.Restore });
   }
 
+  async function getActivities(
+    id: string,
+    pagination: PagingParamsDto = { limit: 10, cursor: undefined },
+  ): Promise<PagingResult> {
+    const errorMessage = t(`digitalProductDocument.errorLoadingActivityHistory`);
+    try {
+      const response = await digitalProductDocNamespace.getActivities(id, { pagination });
+      if (response.status === HTTPCode.OK) {
+        return response.data;
+      } else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    } catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+    return { paging_metadata: { cursor: null }, result: [] };
+  }
+
   async function deleteDPD(id: string, onDeleted: () => Promise<void>) {
     const errorMessage = t(`${prefix}.errorDelete`);
     const removeLabel = t("common.remove");
@@ -100,6 +120,7 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
   }
 
   return {
+    getActivities,
     fetchById,
     publish,
     archive,

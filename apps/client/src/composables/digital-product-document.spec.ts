@@ -3,7 +3,7 @@ import {
   DigitalProductDocumentStatusDto,
   DigitalProductDocumentStatusModificationMethodDto,
 } from "@open-dpp/dto";
-import { passportsPlainFactory } from "@open-dpp/testing";
+import { activitiesPlainFactory, passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,6 +15,7 @@ import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
 } from "../lib/digital-product-document.ts";
+import { v4 as uuid4 } from "uuid";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -24,6 +25,7 @@ const mocks = vi.hoisted(() => {
     routerPush: vi.fn(),
     confirm: vi.fn(),
     modifyStatus: vi.fn(),
+    getActivities: vi.fn(),
   };
 });
 
@@ -36,6 +38,7 @@ vi.mock("../lib/api-client", () => ({
         getAll: mocks.fetchPassports,
         deleteById: mocks.deleteById,
         modifyStatus: mocks.modifyStatus,
+        getActivities: mocks.getActivities,
       },
     },
   },
@@ -141,6 +144,28 @@ describe("passports", () => {
     expect(mocks.modifyStatus).toHaveBeenCalledWith(p2.id, {
       method: DigitalProductDocumentStatusModificationMethodDto.Restore,
     });
+  });
+
+  it("should get activities", async () => {
+    const { getActivities } = mountHarness(DigitalProductDocumentType.Passport);
+    const id = uuid4();
+    const passportActivity1 = activitiesPlainFactory.build({ header: { aggregateId: id } });
+    const passportActivity2 = activitiesPlainFactory.build({ header: { aggregateId: id } });
+    mocks.getActivities.mockResolvedValueOnce({
+      data: {
+        paging_metadata: {
+          cursor: passportActivity2.header.id,
+        },
+        result: [passportActivity1, passportActivity2],
+      },
+      status: HTTPCode.OK,
+    });
+    const { result } = await getActivities(id);
+
+    expect(mocks.getActivities).toHaveBeenCalledWith(id, {
+      pagination: { limit: 10, cursor: undefined },
+    });
+    expect(result).toEqual([passportActivity1, passportActivity2]);
   });
 
   it("should delete passport", async () => {

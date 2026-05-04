@@ -456,6 +456,9 @@
     "media": "Medien",
     "preview": "Vorschau"
   },
+  "digitalProductDocument": {
+    "errorLoadingActivityHistory": "Fehler beim Laden des Aktivitätsverlaufs"
+  },
   "passports": {
     "select": "Produktpass auswählen",
     "label": "Produktpass | Produktpässe",
