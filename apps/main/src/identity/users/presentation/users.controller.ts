@@ -89,7 +89,7 @@ export class UsersController {
 
   @Post("me/email-change")
   @HttpCode(HttpStatus.ACCEPTED)
-  @Throttle({ "email-change": { limit: 3, ttl: 3600_000 } })
+  @Throttle({ default: { limit: 3, ttl: 3600_000 } })
   async requestEmailChange(
     @AuthSession() session: SessionDomainEntity,
     @Headers() headers: Record<string, string>,

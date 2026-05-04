@@ -41,10 +41,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
       }),
       inject: [EnvService],
     }),
-    ThrottlerModule.forRoot([
-      { name: "default", ttl: 60_000, limit: 1000 },
-      { name: "email-change", ttl: 3600_000, limit: 3 },
-    ]),
+    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 1000 }]),
     AasModule,
     UniqueProductIdentifierModule,
     BrandingModule,
