@@ -174,5 +174,4 @@ onMounted(async () => {
     v-model="createDialogVisible"
     :create-template="createTemplate"
   />
-  <ConfirmDialog />
 </template>

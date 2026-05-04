@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
-import NavigationDrawer from "../presentation/NavigationDrawer.vue";
-import Navbar from "./Navbar.vue";
+import NavigationDrawer from "../components/presentation/NavigationDrawer.vue";
+import Navbar from "../components/presentation/Navbar.vue";
 
 const drawerVisible = ref(false);
 </script>
