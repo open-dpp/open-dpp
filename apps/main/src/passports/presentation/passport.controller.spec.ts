@@ -809,6 +809,74 @@ describe("passportController", () => {
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
   });
 
+  it(`/POST Create passport from template snapshots presentation configs`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const authHeaders = {
+      Cookie: userCookie,
+      "X-OPEN-DPP-ORGANIZATION-ID": org.id,
+    };
+
+    const templateRepository = ctx.getModuleRef().get(TemplateRepository);
+    const templateId = randomUUID().toString();
+    const { aas, submodels } = ctx.getAasObjects();
+    const template = Template.create({
+      id: templateId,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map((s) => s.id),
+        conceptDescriptions: [],
+      }),
+    });
+    await templateRepository.save(template);
+
+    // Seed + retrieve the default config (null label) via GET
+    const listResponse = await request(app.getHttpServer())
+      .get(`/templates/${templateId}/presentation-configurations`)
+      .set(authHeaders)
+      .send();
+    expect(listResponse.status).toEqual(200);
+    const defaultConfigId = listResponse.body[0].id;
+
+    // Patch the default config with an elementDesign override
+    const patchResponse = await request(app.getHttpServer())
+      .patch(`/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
+      .set(authHeaders)
+      .send({ elementDesign: { "submodel.numericField": "BigNumber" } });
+    expect(patchResponse.status).toEqual(200);
+
+    // Create a second variant config on the template
+    const createVariantResponse = await request(app.getHttpServer())
+      .post(`/templates/${templateId}/presentation-configurations`)
+      .set(authHeaders)
+      .send({ label: "Variant A" });
+    expect(createVariantResponse.status).toEqual(201);
+
+    // Create a passport from this template
+    const createPassportResponse = await request(app.getHttpServer())
+      .post(basePath)
+      .set(authHeaders)
+      .send({ templateId });
+    expect(createPassportResponse.status).toEqual(201);
+    const passportId = createPassportResponse.body.id;
+
+    // The passport should have 2 snapshot configs (not 1 auto-seeded default)
+    const passportConfigsResponse = await request(app.getHttpServer())
+      .get(`/passports/${passportId}/presentation-configurations`)
+      .set(authHeaders)
+      .send();
+    expect(passportConfigsResponse.status).toEqual(200);
+    expect(passportConfigsResponse.body).toHaveLength(2);
+    expect(passportConfigsResponse.body.map((c: any) => c.label).sort()).toEqual(
+      [null, "Variant A"].sort(),
+    );
+
+    // The default config snapshot should carry the elementDesign override
+    const passportDefault = passportConfigsResponse.body.find((c: any) => c.label === null);
+    expect(passportDefault.elementDesign["submodel.numericField"]).toBe("BigNumber");
+  });
+
   describe("api key authentication", () => {
     it("/GET List passports with API key", async () => {
       const { betterAuthHelper, app } = ctx.globals();

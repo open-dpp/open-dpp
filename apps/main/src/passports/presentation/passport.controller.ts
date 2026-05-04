@@ -105,6 +105,7 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
@@ -133,6 +134,7 @@ export class PassportController
     private readonly aasSerializationService: AasSerializationService,
     @Inject(forwardRef(() => PermalinkApplicationService))
     private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @Get()
@@ -283,6 +285,10 @@ export class PassportController
     const saved = await this.environmentService.withTransaction(async (options) => {
       await this.uniqueProductIdentifierRepository.save(upid, options);
       const persisted = await this.passportRepository.save(passport, options);
+      await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
+        persisted,
+        options,
+      );
       await this.permalinkApplicationService.ensurePermalinkForPassport(persisted, options);
       return persisted;
     });
