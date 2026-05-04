@@ -1,5 +1,7 @@
 import type {
+  PresentationConfigurationCreateRequestDto,
   PresentationConfigurationDto,
+  PresentationConfigurationListResponseDto,
   PresentationConfigurationPatchDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
@@ -16,16 +18,47 @@ export class PresentationConfigurationNamespace {
     this.basePath = `/${scope}`;
   }
 
+  // Singular — kept for the public viewer.
   public async get(id: string) {
     return await this.axiosInstance.get<PresentationConfigurationDto>(
       `${this.basePath}/${id}/presentation-configuration`,
     );
   }
 
-  public async patch(id: string, data: PresentationConfigurationPatchDto) {
+  // Plural — editor surface.
+  public async list(id: string) {
+    return await this.axiosInstance.get<PresentationConfigurationListResponseDto>(
+      `${this.basePath}/${id}/presentation-configurations`,
+    );
+  }
+
+  public async create(id: string, body: PresentationConfigurationCreateRequestDto) {
+    return await this.axiosInstance.post<PresentationConfigurationDto>(
+      `${this.basePath}/${id}/presentation-configurations`,
+      body,
+    );
+  }
+
+  public async getById(id: string, configId: string) {
+    return await this.axiosInstance.get<PresentationConfigurationDto>(
+      `${this.basePath}/${id}/presentation-configurations/${configId}`,
+    );
+  }
+
+  public async patchById(
+    id: string,
+    configId: string,
+    body: PresentationConfigurationPatchDto,
+  ) {
     return await this.axiosInstance.patch<PresentationConfigurationDto>(
-      `${this.basePath}/${id}/presentation-configuration`,
-      data,
+      `${this.basePath}/${id}/presentation-configurations/${configId}`,
+      body,
+    );
+  }
+
+  public async deleteById(id: string, configId: string) {
+    return await this.axiosInstance.delete<void>(
+      `${this.basePath}/${id}/presentation-configurations/${configId}`,
     );
   }
 }
