@@ -143,7 +143,7 @@ export class MediaController {
   }
 
   @Delete(":id")
-  async deleteFile(@Param("id") id: string): Promise<void> {
+  async deleteFile(@Param("id") id: string) {
     return await this.filesService.deleteFileById(id);
   }
 

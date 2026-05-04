@@ -461,7 +461,9 @@
     "deleteDialog": {
       "header": "Löschen bestätigen",
       "message": "Falls diese Datei in Produktpässen angezeigt wird kann wird sie daraus entfernt. Trotzdem löschen?"
-    }
+    },
+    "deleteSuccess": "Datei wurde erfolgreich gelöscht",
+    "deleteFailure": "Fehler beim Löschen der Datei"
   },
   "passports": {
     "select": "Produktpass auswählen",

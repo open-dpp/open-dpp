@@ -31,10 +31,14 @@ const deleteFile = async () => {
     },
     accept: async () => {
       if (media) {
-        await deleteMedia(media.id);
-        await fetchMediaByOrganizationId();
-        notificationStore.addSuccessNotification(t("media.deleteSuccess"));
-        open.value = false;
+        try {
+          await deleteMedia(media.id);
+          await fetchMediaByOrganizationId();
+          notificationStore.addSuccessNotification(t("media.deleteSuccess"));
+          open.value = false;
+        } catch {
+          notificationStore.addErrorNotification(t("media.deleteFailure"));
+        }
       }
     },
   });

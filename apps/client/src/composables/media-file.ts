@@ -92,7 +92,7 @@ export function useMediaFileCollection({
       } else {
         errorHandlingStore.logErrorWithNotification(errorMsg);
       }
-    } catch (_error) {
+    } catch {
       files.value.push({
         blob: null,
         mediaInfo: {

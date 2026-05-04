@@ -81,7 +81,11 @@ export class MediaService {
   async deleteFileById(id: string) {
     const object = await this.findOneOrFail(id);
 
-    await this.client.removeObject(object.bucket, object.objectName);
+    try {
+      await this.client.removeObject(object.bucket, object.objectName);
+    } catch {
+      return new Error("failed to delete media object");
+    }
 
     return this.removeById(id);
   }

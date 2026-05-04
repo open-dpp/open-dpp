@@ -512,7 +512,9 @@
     "deleteDialog": {
       "header": "Confirm Delete",
       "message": "If this file appears in product passports, it will be removed from them. Still delete?"
-    }
+    },
+    "deleteSuccess": "Successfully deleted file",
+    "deleteFailure": "Failed to delete file"
   },
   "file": {
     "type": "File type",
