@@ -136,6 +136,57 @@ describe("presentationConfigurationRepository", () => {
     expect(list).toHaveLength(2);
   });
 
+  describe("findManyByReference", () => {
+    it("returns configs ordered by createdAt asc", async () => {
+      const referenceId = randomUUID();
+      const first = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: null,
+      });
+      await repository.save(first);
+      const second = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: "Later",
+      });
+      await repository.save(second);
+
+      const list = await repository.findManyByReference({
+        referenceType: "passport",
+        referenceId,
+      });
+      expect(list.map((c) => c.id)).toEqual([first.id, second.id]);
+    });
+
+    it("returns empty array when no configs exist", async () => {
+      const list = await repository.findManyByReference({
+        referenceType: "passport",
+        referenceId: randomUUID(),
+      });
+      expect(list).toEqual([]);
+    });
+  });
+
+  describe("deleteById", () => {
+    it("removes the config and returns true", async () => {
+      const c = PresentationConfiguration.createForPassport({
+        organizationId: "org-1",
+        referenceId: randomUUID(),
+      });
+      await repository.save(c);
+      const removed = await repository.deleteById(c.id);
+      expect(removed).toBe(true);
+      expect(await repository.findOne(c.id)).toBeUndefined();
+    });
+
+    it("returns false when nothing was deleted", async () => {
+      expect(await repository.deleteById(randomUUID())).toBe(false);
+    });
+  });
+
   it("rolls back save inside an aborted session transaction", async () => {
     const referenceId = randomUUID();
     const session = await connection.startSession();

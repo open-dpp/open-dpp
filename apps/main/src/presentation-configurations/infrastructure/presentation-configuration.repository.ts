@@ -81,6 +81,33 @@ export class PresentationConfigurationRepository {
       .session(options?.session ?? null);
   }
 
+  async findManyByReference(
+    ref: PresentationConfigurationReference,
+    options?: DbSessionOptions,
+  ): Promise<PresentationConfiguration[]> {
+    const docs = await this.presentationConfigurationDoc
+      .find({
+        referenceType: ref.referenceType,
+        referenceId: ref.referenceId,
+      })
+      .sort({ createdAt: 1, _id: 1 })
+      .session(options?.session ?? null);
+    return docs.map((doc) => {
+      const plain = doc.toObject();
+      return PresentationConfiguration.fromPlain({ ...plain, id: plain._id });
+    });
+  }
+
+  async deleteById(
+    id: string,
+    options?: DbSessionOptions,
+  ): Promise<boolean> {
+    const result = await this.presentationConfigurationDoc
+      .deleteOne({ _id: id })
+      .session(options?.session ?? null);
+    return result.deletedCount === 1;
+  }
+
   async deleteByReference(
     ref: PresentationConfigurationReference,
     options?: DbSessionOptions,
