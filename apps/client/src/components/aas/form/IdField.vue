@@ -21,7 +21,7 @@ onMounted(() => {
   if (!model.value) {
     generateIdShort();
   }
-})
+});
 </script>
 
 <template>
