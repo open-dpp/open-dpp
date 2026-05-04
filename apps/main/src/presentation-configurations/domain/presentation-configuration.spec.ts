@@ -187,3 +187,45 @@ describe("PresentationConfiguration", () => {
     ).toBe(config);
   });
 });
+
+describe("PresentationConfiguration label", () => {
+  it("defaults label to null when not provided", () => {
+    const c = PresentationConfiguration.createForPassport({
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+    });
+    expect(c.label).toBeNull();
+  });
+
+  it("preserves an explicit label", () => {
+    const c = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+      referenceType: "passport",
+      label: "Variant A",
+    });
+    expect(c.label).toBe("Variant A");
+  });
+
+  it("withLabel returns a new instance with updated label and updatedAt", () => {
+    const c = PresentationConfiguration.createForPassport({
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+    });
+    const renamed = c.withLabel("Variant A");
+    expect(renamed).not.toBe(c);
+    expect(renamed.label).toBe("Variant A");
+    expect(renamed.id).toBe(c.id);
+    expect(renamed.updatedAt.getTime()).toBeGreaterThanOrEqual(c.updatedAt.getTime());
+  });
+
+  it("withLabel returns the same instance when label is unchanged", () => {
+    const c = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+      referenceType: "passport",
+      label: "Variant A",
+    });
+    expect(c.withLabel("Variant A")).toBe(c);
+  });
+});

@@ -46,7 +46,7 @@ export const PresentationConfigurationDtoSchema = z
     organizationId: z.string().min(1),
     referenceId: z.uuid(),
     referenceType: PresentationReferenceTypeEnum,
-    label: z.string().min(1).nullable(),
+    label: z.string().min(1).nullable().default(null),
     elementDesign: z
       .preprocess(
         (input) => dropUnknownComponents(input),

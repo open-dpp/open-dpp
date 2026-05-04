@@ -21,6 +21,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     public readonly organizationId: string,
     public readonly referenceId: string,
     public readonly referenceType: PresentationReferenceTypeType,
+    public readonly label: string | null,
     public readonly elementDesign: ReadonlyMap<string, PresentationComponentName>,
     public readonly defaultComponents: ReadonlyMap<KeyTypesType, PresentationComponentName>,
     public readonly createdAt: Date,
@@ -32,6 +33,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     organizationId: string;
     referenceId: string;
     referenceType: PresentationReferenceTypeType;
+    label?: string | null;
     elementDesign?:
       | ReadonlyMap<string, PresentationComponentName>
       | Record<string, PresentationComponentName>;
@@ -41,11 +43,13 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     createdAt?: Date;
     updatedAt?: Date;
   }): PresentationConfiguration {
+    const label = data.label ?? null;
     try {
       PresentationConfigurationInvariantsSchema.parse({
         organizationId: data.organizationId,
         referenceId: data.referenceId,
         referenceType: data.referenceType,
+        label,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -62,6 +66,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
       data.organizationId,
       data.referenceId,
       data.referenceType,
+      label,
       toStringMap(data.elementDesign),
       toKeyTypesMap(data.defaultComponents),
       data.createdAt ?? now,
@@ -98,6 +103,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
       parsed.organizationId,
       parsed.referenceId,
       parsed.referenceType,
+      parsed.label,
       toStringMap(parsed.elementDesign),
       toKeyTypesMap(parsed.defaultComponents),
       new Date(parsed.createdAt),
@@ -111,6 +117,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
       organizationId: this.organizationId,
       referenceId: this.referenceId,
       referenceType: this.referenceType,
+      label: this.label,
       elementDesign: Object.fromEntries(this.elementDesign),
       defaultComponents: Object.fromEntries(this.defaultComponents) as Partial<
         Record<KeyTypesType, string>
@@ -159,7 +166,13 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     return this.copyWith({ defaultComponents: next });
   }
 
+  withLabel(label: string | null): PresentationConfiguration {
+    if (this.label === label) return this;
+    return this.copyWith({ label });
+  }
+
   private copyWith(changes: {
+    label?: string | null;
     elementDesign?: ReadonlyMap<string, PresentationComponentName>;
     defaultComponents?: ReadonlyMap<KeyTypesType, PresentationComponentName>;
   }): PresentationConfiguration {
@@ -168,6 +181,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
       this.organizationId,
       this.referenceId,
       this.referenceType,
+      changes.label !== undefined ? changes.label : this.label,
       changes.elementDesign ?? this.elementDesign,
       changes.defaultComponents ?? this.defaultComponents,
       this.createdAt,
