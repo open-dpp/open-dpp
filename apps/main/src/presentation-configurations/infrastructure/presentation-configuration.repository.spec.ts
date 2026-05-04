@@ -112,25 +112,28 @@ describe("presentationConfigurationRepository", () => {
     expect(count).toBe(1);
   });
 
-  it("rejects a duplicate (referenceType, referenceId) save (unique index)", async () => {
+  it("allows multiple configs for the same reference", async () => {
     const referenceId = randomUUID();
-    await repository.save(
-      PresentationConfiguration.create({
-        organizationId: "org-dup",
-        referenceId,
-        referenceType: PresentationReferenceType.Passport,
-      }),
-    );
+    const a = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+      label: null,
+    });
+    const b = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+      label: "Variant A",
+    });
+    await repository.save(a);
+    await repository.save(b);
 
-    await expect(
-      repository.save(
-        PresentationConfiguration.create({
-          organizationId: "org-dup",
-          referenceId,
-          referenceType: PresentationReferenceType.Passport,
-        }),
-      ),
-    ).rejects.toThrow();
+    const list = await repository.findManyByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(list).toHaveLength(2);
   });
 
   it("rolls back save inside an aborted session transaction", async () => {

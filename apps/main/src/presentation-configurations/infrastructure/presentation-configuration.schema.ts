@@ -56,6 +56,9 @@ export class PresentationConfigurationDoc extends Document<string> {
   })
   referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
 
+  @Prop({ type: String, default: null })
+  label: string | null;
+
   @Prop({
     type: Object,
     required: true,
@@ -91,5 +94,5 @@ export const PresentationConfigurationSchema = SchemaFactory.createForClass(
   PresentationConfigurationDoc,
 );
 
-PresentationConfigurationSchema.index({ referenceType: 1, referenceId: 1 }, { unique: true });
+PresentationConfigurationSchema.index({ referenceType: 1, referenceId: 1, createdAt: 1 });
 PresentationConfigurationSchema.index({ organizationId: 1, createdAt: -1, _id: -1 });
