@@ -214,6 +214,27 @@ export const AuthProvider: Provider = {
         },
         user: {
           update: {
+            before: async (data) => {
+              // Better-auth's change-email flow is JWT-based: the verification link in the
+              // user's new inbox is a stateless, signed token that is not stored in the
+              // database, so it cannot be invalidated by deleting any row. To make `revoke`
+              // effective, we gate the actual email mutation on the EmailChangeRequest
+              // shadow table. `hardCancel` deletes that row, so a revoked link will fail
+              // here even if the JWT is still cryptographically valid.
+              const newEmail = (data as { email?: unknown } | null | undefined)?.email;
+              if (typeof newEmail !== "string") {
+                return;
+              }
+              const pending = await db
+                .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
+                .findOne({ newEmail });
+              if (!pending) {
+                logger.warn(
+                  `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest (revoked or unknown)`,
+                );
+                return false;
+              }
+            },
             after: async (user) => {
               // When better-auth completes a verified email change, user.email is now the new
               // address. Best-effort: delete the matching EmailChangeRequest row. The

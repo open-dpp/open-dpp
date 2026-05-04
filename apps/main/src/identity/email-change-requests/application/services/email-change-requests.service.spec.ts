@@ -4,14 +4,12 @@ import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { EmailChangeRequest } from "../../domain/email-change-request";
-import { BetterAuthTokenCleaner } from "../../infrastructure/better-auth-token.cleaner";
 import { EmailChangeRequestsRepository } from "../../infrastructure/adapters/email-change-requests.repository";
 import { EmailChangeRequestsService } from "./email-change-requests.service";
 
 describe("EmailChangeRequestsService", () => {
   let service: EmailChangeRequestsService;
   let mockRepo: any;
-  let mockCleaner: any;
   let mockAuth: any;
   let mockEnv: any;
 
@@ -20,9 +18,6 @@ describe("EmailChangeRequestsService", () => {
       save: jest.fn(),
       findByUserId: jest.fn(),
       deleteByUserId: jest.fn(),
-    };
-    mockCleaner = {
-      invalidateChangeEmailTokens: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
     mockAuth = {
       api: {
@@ -41,7 +36,6 @@ describe("EmailChangeRequestsService", () => {
       providers: [
         EmailChangeRequestsService,
         { provide: EmailChangeRequestsRepository, useValue: mockRepo },
-        { provide: BetterAuthTokenCleaner, useValue: mockCleaner },
         { provide: AUTH, useValue: mockAuth },
         { provide: EnvService, useValue: mockEnv },
       ],
@@ -65,7 +59,7 @@ describe("EmailChangeRequestsService", () => {
   });
 
   describe("hardCancel", () => {
-    it("deletes the row and invalidates tokens", async () => {
+    it("deletes the shadow row", async () => {
       mockRepo.findByUserId.mockResolvedValue(
         EmailChangeRequest.create({ userId: "user-1", newEmail: "new@x.com" }),
       );
@@ -73,7 +67,6 @@ describe("EmailChangeRequestsService", () => {
       await service.hardCancel("user-1");
 
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
-      expect(mockCleaner.invalidateChangeEmailTokens).toHaveBeenCalledWith("user-1");
     });
 
     it("is tolerant of missing rows (no-op when no pending request)", async () => {
@@ -81,17 +74,6 @@ describe("EmailChangeRequestsService", () => {
 
       await expect(service.hardCancel("user-1")).resolves.not.toThrow();
 
-      expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
-      expect(mockCleaner.invalidateChangeEmailTokens).toHaveBeenCalledWith("user-1");
-    });
-
-    it("is tolerant of cleaner failure (logs and continues)", async () => {
-      mockRepo.findByUserId.mockResolvedValue(
-        EmailChangeRequest.create({ userId: "user-1", newEmail: "new@x.com" }),
-      );
-      mockCleaner.invalidateChangeEmailTokens.mockRejectedValue(new Error("verif boom"));
-
-      await expect(service.hardCancel("user-1")).resolves.not.toThrow();
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
     });
   });
@@ -149,7 +131,6 @@ describe("EmailChangeRequestsService", () => {
       );
 
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
-      expect(mockCleaner.invalidateChangeEmailTokens).toHaveBeenCalledWith("user-1");
       expect(result.newEmail).toBe("new@x.com");
     });
 

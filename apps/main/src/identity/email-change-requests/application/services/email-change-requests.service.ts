@@ -5,7 +5,6 @@ import { ValueError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { EmailChangeRequest } from "../../domain/email-change-request";
-import { BetterAuthTokenCleaner } from "../../infrastructure/better-auth-token.cleaner";
 import { EmailChangeRequestsRepository } from "../../infrastructure/adapters/email-change-requests.repository";
 
 @Injectable()
@@ -14,7 +13,6 @@ export class EmailChangeRequestsService {
 
   constructor(
     private readonly repository: EmailChangeRequestsRepository,
-    private readonly tokenCleaner: BetterAuthTokenCleaner,
     @Inject(AUTH) private readonly auth: Auth,
     private readonly envService: EnvService,
   ) {}
@@ -24,15 +22,12 @@ export class EmailChangeRequestsService {
   }
 
   async hardCancel(userId: string): Promise<void> {
+    // Deleting the shadow row is sufficient: better-auth's change-email JWT is
+    // stateless, so we cannot invalidate it directly. The user.update.before
+    // hook in auth.provider.ts gates the actual email mutation on the presence
+    // of this row, so a deleted row reliably blocks completion of a revoked
+    // change.
     await this.repository.deleteByUserId(userId);
-    try {
-      await this.tokenCleaner.invalidateChangeEmailTokens(userId);
-    } catch (error) {
-      this.logger.error(
-        `hardCancel: token cleanup failed for ${userId}; row already deleted`,
-        error,
-      );
-    }
   }
 
   async request(

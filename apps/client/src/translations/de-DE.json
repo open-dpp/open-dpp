@@ -588,6 +588,13 @@
       "button": "Neues Passwort setzen",
       "rememberLogin": "Logindaten wieder eingefallen?",
       "ctaSignIn": "Jetzt anmelden"
+    },
+    "emailChangeRevoked": {
+      "successTitle": "E-Mail-Änderung abgebrochen",
+      "successBody": "Die ausstehende E-Mail-Änderung wurde widerrufen. Deine Konto-E-Mail-Adresse wurde nicht geändert.",
+      "invalidTitle": "Dieser Link ist nicht mehr gültig",
+      "invalidBody": "Der Widerruf-Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Wenn du die Änderung nicht angefordert hast, melde dich an und überprüfe dein Konto.",
+      "ctaSignIn": "Zur Anmeldung"
     }
   },
   "api": {

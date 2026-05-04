@@ -5,7 +5,6 @@ import { EmailModule } from "../../email/email.module";
 import { AuthModule } from "../auth/auth.module";
 import { EmailChangeRequestsService } from "./application/services/email-change-requests.service";
 import { EmailChangeRequestsRepository } from "./infrastructure/adapters/email-change-requests.repository";
-import { BetterAuthTokenCleaner } from "./infrastructure/better-auth-token.cleaner";
 import {
   EmailChangeRequest as EmailChangeRequestSchemaClass,
   EmailChangeRequestSchema,
@@ -21,7 +20,7 @@ import { RevokeEmailChangeController } from "./presentation/revoke-email-change.
     forwardRef(() => AuthModule),
     EmailModule,
   ],
-  providers: [EmailChangeRequestsService, EmailChangeRequestsRepository, BetterAuthTokenCleaner],
+  providers: [EmailChangeRequestsService, EmailChangeRequestsRepository],
   controllers: [RevokeEmailChangeController],
   exports: [EmailChangeRequestsService],
 })

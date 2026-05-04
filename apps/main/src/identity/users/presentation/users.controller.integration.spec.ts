@@ -353,5 +353,54 @@ describe("UsersController (integration /users/me)", () => {
       expect(emailSendMock).toHaveBeenCalled();
       expect(response.body.pendingEmailChange?.newEmail).toBe(secondNewEmail);
     });
+
+    it("blocks completion of a verification link after the change has been revoked", async () => {
+      // After the user clicks the revoke link sent to their old inbox, the verification
+      // JWT in the new inbox must no longer be able to mutate user.email. Better Auth's
+      // change-email JWT is stateless, so the gate lives in the user.update before-hook
+      // that requires a matching EmailChangeRequest row to exist.
+      const auth = moduleRef.get<Auth>(AUTH);
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      const verifyEmailCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      expect(verifyEmailCall).toBeDefined();
+      const verifyLink = (verifyEmailCall![0] as { templateProperties: { link: string } })
+        .templateProperties.link;
+      const token = new URL(verifyLink).searchParams.get("token");
+      expect(typeof token).toBe("string");
+
+      // User clicks the revoke link from the old inbox.
+      const revokeResponse = await request(app.getHttpServer())
+        .delete("/users/me/email-change")
+        .set("Cookie", userCookie);
+      expect(revokeResponse.status).toBe(200);
+
+      // Now hit the verification endpoint as if the user clicked the new-inbox link.
+      // Better Auth may surface the vetoed update as either an error or a no-op
+      // success; the only invariant we care about is that the email did NOT change.
+      try {
+        await (auth.api as any).verifyEmail({
+          query: { token, callbackURL: "/" },
+          asResponse: true,
+        });
+      } catch {
+        // Hook veto can surface as an error from parseUserOutput on null — expected.
+      }
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.email).toBe(user.email);
+    });
   });
 });

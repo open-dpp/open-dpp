@@ -588,6 +588,13 @@
       "button": "Set new password",
       "rememberLogin": "Remember your login?",
       "ctaSignIn": "Sign in now"
+    },
+    "emailChangeRevoked": {
+      "successTitle": "Email change cancelled",
+      "successBody": "The pending email change has been revoked. Your account email has not been changed.",
+      "invalidTitle": "This link is no longer valid",
+      "invalidBody": "The revoke link may have expired or already been used. If you didn't request the change, sign in and review your account.",
+      "ctaSignIn": "Go to sign in"
     }
   },
   "api": {

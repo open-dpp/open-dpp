@@ -7,6 +7,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
 import SelectButton from "primevue/selectbutton";
+import Skeleton from "primevue/skeleton";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, nextTick, onMounted, ref, watch, type ComponentPublicInstance } from "vue";
@@ -306,46 +307,53 @@ function handleEmailKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <form class="profile-form" :aria-busy="isSubmitting" @submit.prevent="submitProfile">
+  <form
+    class="flex w-full max-w-[40rem] flex-col"
+    :aria-busy="isSubmitting"
+    @submit.prevent="submitProfile"
+  >
     <ConfirmDialog />
-    <header class="profile-form__header">
-      <h1 class="profile-form__title">{{ t("user.profile") }}</h1>
-      <p class="profile-form__subtitle">{{ t("user.profileSubtitle") }}</p>
+    <header class="mb-6">
+      <h1 class="m-0 mb-1 text-3xl font-semibold leading-tight tracking-tight text-ink">
+        {{ t("user.profile") }}
+      </h1>
+      <p class="m-0 text-sm text-ink-muted">{{ t("user.profileSubtitle") }}</p>
     </header>
 
-    <Message v-if="hydrationFailed" severity="error" class="profile-form__retry" :closable="false">
-      <span>{{ t("user.profileLoadFailed") }}</span>
-      <Button
-        :label="t('user.profileLoadRetry')"
-        severity="secondary"
-        size="small"
-        class="profile-form__retry-button"
-        data-testid="retry"
-        @click="retryHydrate"
-      />
+    <Message v-if="hydrationFailed" severity="error" class="mb-6" :closable="false">
+      <div class="flex w-full items-center gap-3">
+        <span>{{ t("user.profileLoadFailed") }}</span>
+        <Button
+          :label="t('user.profileLoadRetry')"
+          severity="secondary"
+          size="small"
+          class="ml-auto"
+          data-testid="retry"
+          @click="retryHydrate"
+        />
+      </div>
     </Message>
 
-    <section class="profile-form__section" aria-labelledby="profile-form-name-heading">
-      <h2 id="profile-form-name-heading" class="profile-form__section-title">
+    <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-name-heading">
+      <h2
+        id="profile-form-name-heading"
+        class="m-0 text-xl font-semibold leading-snug tracking-tight text-ink"
+      >
         {{ t("user.personalInformation") }}
       </h2>
-      <p class="profile-form__helper">{{ t("user.nameHelper") }}</p>
-      <div class="profile-form__row profile-form__row--two">
-        <div class="profile-form__field">
-          <label class="profile-form__label" for="profile-first-name">{{
-            t("user.firstName")
-          }}</label>
-          <div
-            v-if="!loaded && !hydrationFailed"
-            class="profile-form__skeleton"
-            aria-hidden="true"
-          />
+      <p class="m-0 text-xs text-ink-muted">{{ t("user.nameHelper") }}</p>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium leading-snug text-ink" for="profile-first-name">
+            {{ t("user.firstName") }}
+          </label>
+          <Skeleton v-if="!loaded && !hydrationFailed" height="2.375rem" />
           <InputText
             v-else
             id="profile-first-name"
             v-model="firstName"
             autocomplete="given-name"
-            class="profile-form__input"
+            class="w-full"
             :invalid="showErrors && !!errors.firstName"
             :disabled="isSubmitting"
             :aria-describedby="
@@ -363,21 +371,17 @@ function handleEmailKeydown(event: KeyboardEvent) {
           </Message>
         </div>
 
-        <div class="profile-form__field">
-          <label class="profile-form__label" for="profile-last-name">{{
-            t("user.lastName")
-          }}</label>
-          <div
-            v-if="!loaded && !hydrationFailed"
-            class="profile-form__skeleton"
-            aria-hidden="true"
-          />
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium leading-snug text-ink" for="profile-last-name">
+            {{ t("user.lastName") }}
+          </label>
+          <Skeleton v-if="!loaded && !hydrationFailed" height="2.375rem" />
           <InputText
             v-else
             id="profile-last-name"
             v-model="lastName"
             autocomplete="family-name"
-            class="profile-form__input"
+            class="w-full"
             :invalid="showErrors && !!errors.lastName"
             :disabled="isSubmitting"
             :aria-describedby="
@@ -397,42 +401,46 @@ function handleEmailKeydown(event: KeyboardEvent) {
       </div>
     </section>
 
-    <hr class="profile-form__rule" />
+    <hr class="m-0 border-0 border-t border-rule" />
 
-    <section class="profile-form__section" aria-labelledby="profile-form-email-heading">
-      <h2 id="profile-form-email-heading" class="profile-form__section-title">
+    <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-email-heading">
+      <h2
+        id="profile-form-email-heading"
+        class="m-0 text-xl font-semibold leading-snug tracking-tight text-ink"
+      >
         {{ t("user.email") }}
       </h2>
 
       <div
         v-if="!loaded && !hydrationFailed"
-        class="profile-form__email-row profile-form__email-row--skeleton"
+        class="flex flex-wrap items-start justify-between gap-4 rounded-md border border-rule bg-surface-recessed px-4 py-3"
         aria-hidden="true"
       >
-        <div class="profile-form__email-current">
-          <span class="profile-form__skeleton profile-form__skeleton--text" />
-          <span class="profile-form__skeleton profile-form__skeleton--meta" />
+        <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
+          <Skeleton width="70%" height="1.125rem" />
+          <Skeleton width="50%" height="0.875rem" />
         </div>
-        <div class="profile-form__email-actions">
-          <span class="profile-form__skeleton profile-form__skeleton--button" />
-        </div>
+        <Skeleton width="7.5rem" height="2rem" />
       </div>
-      <div v-else-if="loaded" class="profile-form__email-row">
-        <div class="profile-form__email-current">
-          <span class="profile-form__email-value">{{ currentEmail }}</span>
+      <div
+        v-else-if="loaded"
+        class="flex flex-wrap items-start justify-between gap-4 rounded-md border border-rule bg-surface-recessed px-4 py-3"
+      >
+        <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
+          <span class="max-w-full break-words text-sm text-ink">{{ currentEmail }}</span>
           <span
             v-if="pendingEmail"
-            class="profile-form__chip profile-form__chip--pending"
+            class="inline-flex max-w-full items-center gap-1 break-words rounded-full border border-status-warning/20 bg-status-warning/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-status-warning"
             role="status"
             aria-live="polite"
           >
             {{ t("user.emailPending", { email: pendingEmail }) }}
           </span>
-          <span v-if="pendingRequestedLabel" class="profile-form__email-meta">
+          <span v-if="pendingRequestedLabel" class="text-xs leading-normal text-ink-muted">
             {{ pendingRequestedLabel }}
           </span>
         </div>
-        <div class="profile-form__email-actions">
+        <div class="flex shrink-0 gap-2">
           <Button
             v-if="pendingEmail"
             ref="cancelPendingButtonRef"
@@ -460,31 +468,38 @@ function handleEmailKeydown(event: KeyboardEvent) {
         </div>
       </div>
 
-      <Transition name="profile-form__panel">
+      <Transition
+        enter-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-out"
+        enter-from-class="-translate-y-1 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="-translate-y-1 opacity-0"
+      >
         <div
           v-if="emailPanelOpen && !pendingEmail"
           id="profile-email-panel"
-          class="profile-form__panel"
+          class="mt-3 flex flex-col gap-2 rounded-lg border border-rule bg-surface p-4"
           role="region"
           :aria-label="t('user.changeEmail')"
           @keydown="handleEmailKeydown"
         >
-          <label class="profile-form__label" for="profile-new-email">{{
-            t("user.newEmail")
-          }}</label>
+          <label class="text-sm font-medium leading-snug text-ink" for="profile-new-email">
+            {{ t("user.newEmail") }}
+          </label>
           <InputText
             id="profile-new-email"
             v-model="newEmail"
             type="email"
             autocomplete="email"
-            class="profile-form__input"
+            class="w-full"
             :invalid="!!newEmailError"
             :disabled="emailSubmitting"
             :aria-describedby="newEmailError ? 'profile-new-email-error' : 'profile-new-email-hint'"
             data-testid="new-email"
             autofocus
           />
-          <p id="profile-new-email-hint" class="profile-form__helper">
+          <p id="profile-new-email-hint" class="m-0 text-xs text-ink-muted">
             {{ t("user.emailChangeHint") }}
           </p>
           <Message
@@ -496,8 +511,8 @@ function handleEmailKeydown(event: KeyboardEvent) {
           >
             {{ newEmailError }}
           </Message>
-          <div class="profile-form__field">
-            <label class="profile-form__label" for="profile-current-password">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium leading-snug text-ink" for="profile-current-password">
               {{ t("user.emailChangeCurrentPassword") }}
             </label>
             <InputText
@@ -505,22 +520,17 @@ function handleEmailKeydown(event: KeyboardEvent) {
               v-model="currentPassword"
               type="password"
               autocomplete="current-password"
-              class="profile-form__input"
+              class="w-full"
               :invalid="!!currentPasswordError"
               :disabled="emailSubmitting"
               data-testid="current-password"
               @keydown="handleEmailKeydown"
             />
-            <Message
-              v-if="currentPasswordError"
-              severity="error"
-              variant="simple"
-              size="small"
-            >
+            <Message v-if="currentPasswordError" severity="error" variant="simple" size="small">
               {{ currentPasswordError }}
             </Message>
           </div>
-          <div class="profile-form__panel-actions">
+          <div class="mt-2 flex justify-end gap-2">
             <Button
               type="button"
               severity="secondary"
@@ -541,13 +551,16 @@ function handleEmailKeydown(event: KeyboardEvent) {
       </Transition>
     </section>
 
-    <hr class="profile-form__rule" />
+    <hr class="m-0 border-0 border-t border-rule" />
 
-    <section class="profile-form__section" aria-labelledby="profile-form-language-heading">
-      <h2 id="profile-form-language-heading" class="profile-form__section-title">
+    <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-language-heading">
+      <h2
+        id="profile-form-language-heading"
+        class="m-0 text-xl font-semibold leading-snug tracking-tight text-ink"
+      >
         {{ t("user.language") }}
       </h2>
-      <p class="profile-form__helper">{{ t("user.languageHelper") }}</p>
+      <p class="m-0 text-xs text-ink-muted">{{ t("user.languageHelper") }}</p>
       <SelectButton
         v-model="preferredLanguage"
         :options="languageOptions"
@@ -556,16 +569,29 @@ function handleEmailKeydown(event: KeyboardEvent) {
         :allow-empty="false"
         :disabled="!loaded || isSubmitting"
         aria-labelledby="profile-form-language-heading"
-        class="profile-form__segmented"
+        class="self-start"
       />
     </section>
 
-    <hr class="profile-form__rule" />
+    <hr class="m-0 border-0 border-t border-rule" />
 
-    <div class="profile-form__actions">
-      <div class="profile-form__saved-indicator" aria-live="polite">
-        <Transition name="profile-form__saved-chip">
-          <span v-if="savedChipVisible" class="profile-form__chip profile-form__chip--success">
+    <div class="flex justify-end gap-2 pt-6">
+      <div
+        class="mr-auto flex min-h-6 items-center gap-2 text-xs leading-normal text-ink-muted"
+        aria-live="polite"
+      >
+        <Transition
+          enter-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-out"
+          enter-from-class="scale-95 opacity-0"
+          enter-to-class="scale-100 opacity-100"
+          leave-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-in"
+          leave-from-class="scale-100 opacity-100"
+          leave-to-class="scale-95 opacity-0"
+        >
+          <span
+            v-if="savedChipVisible"
+            class="inline-flex items-center gap-1 rounded-full border border-status-success/20 bg-status-success/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-status-success"
+          >
             <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
               <path
                 d="M3.5 8.5L6.5 11.5L12.5 5"
@@ -579,7 +605,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             {{ t("user.profileSaved") }}
           </span>
         </Transition>
-        <span v-if="lastSavedLabel" class="profile-form__saved-time">{{ lastSavedLabel }}</span>
+        <span v-if="lastSavedLabel" class="tabular-nums">{{ lastSavedLabel }}</span>
       </div>
       <Button
         v-if="meta.dirty"
@@ -598,313 +624,3 @@ function handleEmailKeydown(event: KeyboardEvent) {
     </div>
   </form>
 </template>
-
-<style scoped>
-.profile-form {
-  width: 100%;
-  max-width: 40rem; /* ~640px, keeps body line lengths between 65-75ch */
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.profile-form__header {
-  margin-bottom: 24px;
-}
-
-.profile-form__title {
-  font-size: 1.75rem; /* DESIGN.md Display tier */
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  margin: 0 0 4px 0;
-}
-
-.profile-form__subtitle {
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--ink-muted);
-  margin: 0;
-}
-
-.profile-form__retry {
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.profile-form__retry-button {
-  margin-left: auto;
-}
-
-.profile-form__section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 24px 0;
-}
-
-.profile-form__section-title {
-  font-size: 1.25rem; /* DESIGN.md Headline tier */
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: -0.005em;
-  color: var(--ink);
-  margin: 0;
-}
-
-.profile-form__helper {
-  font-size: 0.75rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--ink-muted);
-  margin: 0;
-}
-
-.profile-form__row {
-  display: grid;
-  gap: 16px;
-}
-
-.profile-form__row--two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 640px) {
-  .profile-form__row--two {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.profile-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px; /* DESIGN.md spacing.sm */
-}
-
-.profile-form__label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-.profile-form__input {
-  width: 100%;
-}
-
-.profile-form__rule {
-  border: 0;
-  border-top: 1px solid var(--rule);
-  margin: 0;
-}
-
-.profile-form__email-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 12px 16px;
-  background: var(--surface-recessed);
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-}
-
-.profile-form__email-current {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  flex: 1 1 240px;
-  min-width: 0;
-}
-
-.profile-form__email-value {
-  font-size: 0.875rem;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  max-width: 100%;
-}
-
-.profile-form__email-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.profile-form__email-meta {
-  font-size: 0.75rem;
-  color: var(--ink-muted);
-  line-height: 1.5;
-}
-
-.profile-form__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  border: 1px solid transparent;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: 0.04em;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.profile-form__chip--pending {
-  background: color-mix(in srgb, var(--status-warning) 12%, var(--surface));
-  color: var(--status-warning);
-  border-color: color-mix(in srgb, var(--status-warning) 22%, var(--surface));
-}
-
-.profile-form__chip--success {
-  background: color-mix(in srgb, var(--status-success) 12%, var(--surface));
-  color: var(--status-success);
-  border-color: color-mix(in srgb, var(--status-success) 22%, var(--surface));
-}
-
-.profile-form__saved-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: auto;
-  font-size: 0.75rem;
-  color: var(--ink-muted);
-  line-height: 1.5;
-  min-height: 24px;
-}
-
-.profile-form__saved-time {
-  font-variant-numeric: tabular-nums;
-}
-
-.profile-form__saved-chip-enter-active,
-.profile-form__saved-chip-leave-active {
-  transition:
-    opacity 200ms cubic-bezier(0.25, 1, 0.5, 1),
-    transform 200ms cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.profile-form__saved-chip-enter-from,
-.profile-form__saved-chip-leave-to {
-  opacity: 0;
-  transform: scale(0.96);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-form__saved-chip-enter-active,
-  .profile-form__saved-chip-leave-active {
-    transition: none;
-  }
-}
-
-.profile-form__skeleton {
-  height: 38px; /* matches PrimeVue InputText default */
-  border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--rule) 60%, var(--surface)),
-    color-mix(in srgb, var(--rule) 100%, var(--surface)),
-    color-mix(in srgb, var(--rule) 60%, var(--surface))
-  );
-  background-size: 200% 100%;
-  animation: profile-form__skeleton-shimmer 1400ms ease-in-out infinite;
-  display: block;
-}
-
-.profile-form__skeleton--text {
-  height: 18px;
-  width: min(280px, 70%);
-  border-radius: 4px;
-}
-
-.profile-form__skeleton--meta {
-  height: 14px;
-  width: min(180px, 50%);
-  border-radius: 4px;
-  margin-top: 4px;
-}
-
-.profile-form__skeleton--button {
-  height: 32px;
-  width: 120px;
-  border-radius: 6px;
-}
-
-.profile-form__email-row--skeleton {
-  background: var(--surface-recessed);
-}
-
-@keyframes profile-form__skeleton-shimmer {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -100% 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-form__skeleton {
-    animation: none;
-    background: color-mix(in srgb, var(--rule) 80%, var(--surface));
-  }
-}
-
-.profile-form__panel {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: 10px; /* DESIGN.md rounded.lg */
-}
-
-.profile-form__panel-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.profile-form__panel-enter-active,
-.profile-form__panel-leave-active {
-  transition:
-    opacity 200ms cubic-bezier(0.25, 1, 0.5, 1),
-    transform 200ms cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.profile-form__panel-enter-from,
-.profile-form__panel-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-form__panel-enter-active,
-  .profile-form__panel-leave-active {
-    transition: none;
-  }
-}
-
-.profile-form__segmented {
-  align-self: flex-start;
-}
-
-.profile-form__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 24px;
-}
-</style>
