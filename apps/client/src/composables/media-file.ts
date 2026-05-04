@@ -1,16 +1,13 @@
 import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import { onUnmounted, ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useMediaStore } from "../stores/media.ts";
 
 export function useMediaFile() {
   const mediaInfo = ref<MediaInfo | null>(null);
   const fileUrl = ref<string | null>(null);
   const mediaStore = useMediaStore();
-  const errorHandlingStore = useErrorHandlingStore();
-  const { t } = useI18n();
+  const notFound = ref(false);
 
   async function download(mediaId: string) {
     try {
@@ -23,10 +20,10 @@ export function useMediaFile() {
         fileUrl.value = URL.createObjectURL(blob);
       }
       mediaInfo.value = fetchedMediaInfo;
-    } catch (error) {
-      errorHandlingStore.logErrorWithNotification(t("file.downloadError"), error);
+    } catch {
       fileUrl.value = null;
       mediaInfo.value = null;
+      notFound.value = true;
     }
   }
 
@@ -35,13 +32,14 @@ export function useMediaFile() {
       URL.revokeObjectURL(fileUrl.value);
     }
   });
-  return { download, mediaInfo, fileUrl };
+  return { download, mediaInfo, fileUrl, notFound };
 }
 
 export interface MediaFileCollectionItem {
   blob: Blob | null;
   mediaInfo: MediaInfo;
   url: string;
+  deleted: boolean;
 }
 
 export interface MediaFileCollectionProps {
@@ -69,7 +67,7 @@ export function useMediaFileCollection({
 
   async function add(mediaId: string, position?: number) {
     const errorMsg = translate("file.couldNotBeLoaded");
-    if (files.value.some((file) => file.mediaInfo.id === mediaId)) {
+    if (files.value.some((file) => file.mediaInfo && file.mediaInfo.id === mediaId)) {
       return false;
     }
     try {
@@ -79,6 +77,7 @@ export function useMediaFileCollection({
           blob,
           mediaInfo: fetchedMediaInfo,
           url: URL.createObjectURL(blob),
+          deleted: false,
         };
 
         if (position !== undefined && position >= 0 && position < files.value.length) {
@@ -93,14 +92,26 @@ export function useMediaFileCollection({
       } else {
         errorHandlingStore.logErrorWithNotification(errorMsg);
       }
-    } catch (error) {
-      errorHandlingStore.logErrorWithNotification(errorMsg, error);
+    } catch (_error) {
+      files.value.push({
+        blob: null,
+        mediaInfo: {
+          id: mediaId,
+          mimeType: "NaN",
+          size: 0,
+          title: "deleted file",
+        },
+        deleted: true,
+        url: "",
+      });
     }
     return false;
   }
 
   function remove(mediaId: string) {
-    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === mediaId);
+    const foundIndex = files.value.findIndex(
+      (file) => file.mediaInfo && file.mediaInfo.id === mediaId,
+    );
     if (foundIndex !== -1) {
       if (files.value[foundIndex]) {
         URL.revokeObjectURL(files.value[foundIndex].url);
@@ -110,7 +121,9 @@ export function useMediaFileCollection({
   }
 
   function move(mediaId: string, newIndex: number) {
-    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === mediaId);
+    const foundIndex = files.value.findIndex(
+      (file) => file.mediaInfo && file.mediaInfo.id === mediaId,
+    );
     if (foundIndex !== -1) {
       const media = files.value.splice(foundIndex, 1)[0];
       if (media) {
@@ -120,7 +133,9 @@ export function useMediaFileCollection({
   }
 
   async function modify(oldMediaId: string, newMediaId: string) {
-    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === oldMediaId);
+    const foundIndex = files.value.findIndex(
+      (file) => file.mediaInfo && file.mediaInfo.id === oldMediaId,
+    );
     if (foundIndex === -1) {
       return;
     }

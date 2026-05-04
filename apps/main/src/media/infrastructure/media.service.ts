@@ -78,16 +78,12 @@ export class MediaService {
     };
   }
 
-  async uploadProfilePicture(buffer: Buffer, userId: string) {
-    // TODO: set profile picture for user
-    await this.uploadFile(
-      this.bucketNameProfilePictures,
-      buffer,
-      userId,
-      [],
-      buffer.length,
-      "image/webp",
-    );
+  async deleteFileById(id: string) {
+    const object = await this.findOneOrFail(id);
+
+    await this.client.removeObject(object.bucket, object.objectName);
+
+    return this.removeById(id);
   }
 
   async processImageBuffer(buffer: Buffer) {

@@ -507,12 +507,19 @@
   "media": {
     "title": "Title",
     "media": "Media",
-    "preview": "Preview"
+    "preview": "Preview",
+    "deletedFile": "Deleted File",
+    "deleteDialog": {
+      "header": "Confirm Delete",
+      "message": "If this file appears in product passports, it will be removed from them. Still delete?"
+    }
   },
   "file": {
     "type": "File type",
     "size": "File size",
     "upload": "Upload file",
+    "delete": "Delete File",
+    "actions": "Actions",
     "uploadSuccess": "File uploaded successfully.",
     "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
     "change": "Change file",

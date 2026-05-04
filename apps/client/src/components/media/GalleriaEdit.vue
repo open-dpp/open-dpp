@@ -3,6 +3,7 @@ import type { MediaInfo } from "./MediaInfo.interface.ts";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaModal from "./MediaModal.vue";
+import type { MediaFileCollectionItem } from "../../composables/media-file.ts";
 
 const props = defineProps<{ title?: string }>();
 const emits = defineEmits<{
@@ -12,7 +13,7 @@ const emits = defineEmits<{
   (e: "modifyImage", image: MediaInfo, newMediaInfo: MediaInfo): void;
 }>();
 const { t } = useI18n();
-const images = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
+const images = defineModel<MediaFileCollectionItem[]>();
 const openMediaModal = ref(false);
 const imageToModify = ref<MediaInfo | null>(null);
 
@@ -77,7 +78,12 @@ function onMoveImageDown(image: MediaInfo) {
           />
         </div>
       </template>
-      <Column field="mediaInfo.title" :header="t('media.title')" />
+      <Column field="mediaInfo.title" :header="t('media.title')">
+        <template #body="{ data, index }">
+          <span v-if="!data.deleted">{{ data.mediaInfo.title }}</span>
+          <span class="text-red-600" v-else>{{ t("media.deletedFile") }}</span>
+        </template>
+      </Column>
       <Column :header="t('media.preview')">
         <template #body="slotProps">
           <Image :src="slotProps.data.url" preview width="100px" />

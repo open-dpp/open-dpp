@@ -2,6 +2,7 @@ import type express from "express";
 import type { Media } from "../domain/media";
 import {
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
@@ -29,33 +30,6 @@ export class MediaController {
 
   constructor(filesService: MediaService) {
     this.filesService = filesService;
-  }
-
-  @Post("profileImage")
-  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
-  @UseInterceptors(
-    FileInterceptor("file", {
-      storage: memoryStorage(),
-    }),
-  )
-  async uploadProfileImage(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 10 * 1024 * 1024 /* max 10MB */,
-          }),
-          new FileTypeValidator({
-            fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
-          }),
-          new VirusScanFileValidator({ storageType: "memory" }),
-        ],
-      }),
-    )
-    file: Express.Multer.File,
-    @AuthSession() session: Session,
-  ): Promise<void> {
-    await this.filesService.uploadProfilePicture(file.buffer, session.userId);
   }
 
   @Post("dpp/:upi/:dataFieldId")
@@ -166,6 +140,11 @@ export class MediaController {
   @AllowAnonymous()
   async getMediaInfo(@Param("id") id: string): Promise<Media> {
     return await this.filesService.findOneOrFail(id);
+  }
+
+  @Delete(":id")
+  async deleteFile(@Param("id") id: string): Promise<void> {
+    return await this.filesService.deleteFileById(id);
   }
 
   @Post("upload")
