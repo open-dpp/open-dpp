@@ -70,6 +70,10 @@
       "structure": "Structure",
       "presentation": "Presentation"
     },
+    "drawerTabs": {
+      "data": "Data",
+      "presentation": "Presentation"
+    },
     "presentationTab": {
       "title": "Presentation",
       "description": "Choose how numeric properties are displayed.",
