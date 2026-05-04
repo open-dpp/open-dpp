@@ -4,6 +4,7 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { NotFoundError } from "@open-dpp/exception";
 import type { Connection } from "mongoose";
 
 import { Environment } from "../../../aas/domain/environment";
@@ -109,6 +110,20 @@ describe("PresentationConfigurationService", () => {
       const list = await service.listForPassport(passport);
       expect(list.find((c) => c.id === created.id)).toBeUndefined();
     });
+
+    it("rejects deletion of a config belonging to another reference", async () => {
+      const passportA = makePassport();
+      const passportB = makePassport();
+      const configForB = await service.createForPassport(passportB, { label: "B-config" });
+
+      await expect(
+        service.deleteByConfigIdForPassport(passportA, configForB.id),
+      ).rejects.toThrow(NotFoundError);
+
+      // Confirm the config still exists on passport B
+      const stillThere = await service.getByIdForPassport(passportB, configForB.id);
+      expect(stillThere.id).toBe(configForB.id);
+    });
   });
 
   describe("getEffectiveForPassport (no merge)", () => {
@@ -128,6 +143,20 @@ describe("PresentationConfigurationService", () => {
       const effective = await service.getEffectiveForPassport(passport);
       expect(effective.id).toBe(list[0].id);
       expect(effective.elementDesign.size).toBe(0); // NO template merge
+    });
+  });
+
+  describe("getEffectiveForTemplate", () => {
+    it("returns the template's first config (lazy-creating a default when empty)", async () => {
+      const template = makeTemplate();
+      const effective = await service.getEffectiveForTemplate(template);
+      expect(effective.label).toBeNull();
+      expect(effective.referenceId).toBe(template.id);
+      expect(effective.referenceType).toBe("template");
+
+      const list = await service.listForTemplate(template);
+      expect(list).toHaveLength(1);
+      expect(list[0].id).toBe(effective.id);
     });
   });
 
