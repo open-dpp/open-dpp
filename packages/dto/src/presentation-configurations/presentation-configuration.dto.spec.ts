@@ -3,6 +3,7 @@ import { describe, expect, it } from "@jest/globals";
 import { KeyTypes } from "../aas/enums/key-types-enum";
 import {
   PresentationComponentName,
+  PresentationConfigurationCreateRequestSchema,
   PresentationConfigurationDtoSchema,
   PresentationConfigurationExportSchema,
   PresentationConfigurationPatchSchema,
@@ -123,39 +124,29 @@ describe("PresentationConfigurationPatchSchema (strict write)", () => {
   });
 });
 
-import {
-  PresentationConfigurationCreateRequestSchema,
-} from "./presentation-configuration.dto";
-
 describe("PresentationConfigurationDtoSchema label", () => {
   it("accepts null label", () => {
     const parsed = PresentationConfigurationDtoSchema.parse({
-      id: crypto.randomUUID(),
-      organizationId: "org-1",
-      referenceId: crypto.randomUUID(),
-      referenceType: "passport",
+      ...validBase(),
       label: null,
-      elementDesign: {},
-      defaultComponents: {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });
     expect(parsed.label).toBeNull();
   });
 
   it("accepts non-empty string label", () => {
     const parsed = PresentationConfigurationDtoSchema.parse({
-      id: crypto.randomUUID(),
-      organizationId: "org-1",
-      referenceId: crypto.randomUUID(),
-      referenceType: "passport",
+      ...validBase(),
       label: "Variant A",
-      elementDesign: {},
-      defaultComponents: {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });
     expect(parsed.label).toBe("Variant A");
+  });
+
+  it("rejects an empty string label", () => {
+    const result = PresentationConfigurationDtoSchema.safeParse({
+      ...validBase(),
+      label: "",
+    });
+    expect(result.success).toBe(false);
   });
 });
 
@@ -169,5 +160,10 @@ describe("PresentationConfigurationCreateRequestSchema", () => {
     expect(
       PresentationConfigurationCreateRequestSchema.parse({ label: "v1" }).label,
     ).toBe("v1");
+  });
+  it("rejects an empty string label", () => {
+    expect(
+      PresentationConfigurationCreateRequestSchema.safeParse({ label: "" }).success,
+    ).toBe(false);
   });
 });
