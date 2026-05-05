@@ -67,7 +67,7 @@ export function useMediaFileCollection({
 
   async function add(mediaId: string, position?: number) {
     const errorMsg = translate("file.couldNotBeLoaded");
-    if (files.value.some((file) => file.mediaInfo && file.mediaInfo.id === mediaId)) {
+    if (files.value.some((file) => file.mediaInfo.id === mediaId)) {
       return false;
     }
     try {
@@ -109,9 +109,7 @@ export function useMediaFileCollection({
   }
 
   function remove(mediaId: string) {
-    const foundIndex = files.value.findIndex(
-      (file) => file.mediaInfo && file.mediaInfo.id === mediaId,
-    );
+    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === mediaId);
     if (foundIndex !== -1) {
       if (files.value[foundIndex]) {
         URL.revokeObjectURL(files.value[foundIndex].url);
@@ -121,9 +119,7 @@ export function useMediaFileCollection({
   }
 
   function move(mediaId: string, newIndex: number) {
-    const foundIndex = files.value.findIndex(
-      (file) => file.mediaInfo && file.mediaInfo.id === mediaId,
-    );
+    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === mediaId);
     if (foundIndex !== -1) {
       const media = files.value.splice(foundIndex, 1)[0];
       if (media) {
@@ -133,9 +129,7 @@ export function useMediaFileCollection({
   }
 
   async function modify(oldMediaId: string, newMediaId: string) {
-    const foundIndex = files.value.findIndex(
-      (file) => file.mediaInfo && file.mediaInfo.id === oldMediaId,
-    );
+    const foundIndex = files.value.findIndex((file) => file.mediaInfo.id === oldMediaId);
     if (foundIndex === -1) {
       return;
     }

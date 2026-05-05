@@ -83,7 +83,8 @@ export class MediaService {
 
     try {
       await this.client.removeObject(object.bucket, object.objectName);
-    } catch {
+    } catch (error) {
+      console.error(error);
       return new Error("failed to delete media object");
     }
 
