@@ -30,9 +30,6 @@ const sampleResult = computed(() => {
   }
   return { element: props.element, usedSample: false };
 });
-
-const previewElement = computed(() => sampleResult.value.element);
-const usedSample = computed(() => sampleResult.value.usedSample);
 </script>
 
 <template>
@@ -45,7 +42,7 @@ const usedSample = computed(() => sampleResult.value.usedSample);
         {{ t("aasEditor.presentationTab.preview") }}
       </h3>
       <span
-        v-if="usedSample"
+        v-if="sampleResult.usedSample"
         data-cy="presentation-preview-sample-badge"
         class="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
       >
@@ -53,7 +50,11 @@ const usedSample = computed(() => sampleResult.value.usedSample);
       </span>
     </div>
     <div data-cy="presentation-preview-content">
-      <SubmodelElementValue :element="previewElement" :path="path" :config="store.activeConfig" />
+      <SubmodelElementValue
+        :element="sampleResult.element"
+        :path="path"
+        :config="store.activeConfig"
+      />
     </div>
   </div>
 </template>
