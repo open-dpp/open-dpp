@@ -10,6 +10,7 @@ import { v4 as uuid4 } from "uuid";
 import { generateMongoConfig } from "../../database/config";
 import { TraceabilityEventsModule } from "../../traceability-events/traceability-events.module";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
+import { ExternalIdentifierType } from "../presentation/dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierRepository } from "./unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
@@ -108,6 +109,38 @@ describe("uniqueProductIdentifierRepository", () => {
     expect(
       await uniqueProductIdentifierRepository.findOneByReferencedId(referenceId),
     ).toBeUndefined();
+  });
+
+  it("defaults type to OPEN_DPP_UUID when create() omits it", async () => {
+    const upi = UniqueProductIdentifier.create({ referenceId: uuid4() });
+    expect(upi.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    const saved = await uniqueProductIdentifierRepository.save(upi);
+    expect(saved.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+  });
+
+  it("persists and returns the explicit type discriminator", async () => {
+    const upi = UniqueProductIdentifier.create({
+      referenceId: uuid4(),
+      type: ExternalIdentifierType.GS1,
+    });
+    const saved = await uniqueProductIdentifierRepository.save(upi);
+    expect(saved.type).toBe(ExternalIdentifierType.GS1);
+    const refetched = await uniqueProductIdentifierRepository.findOneOrFail(saved.uuid);
+    expect(refetched.type).toBe(ExternalIdentifierType.GS1);
+  });
+
+  it("loads legacy rows missing the type field with the OPEN_DPP_UUID default", async () => {
+    // Simulate a pre-1.1.0 row written without a `type` field by inserting
+    // directly with $unset after a normal save.
+    const upi = UniqueProductIdentifier.create({ referenceId: uuid4() });
+    await uniqueProductIdentifierRepository.save(upi);
+    await uniqueProductIdentifierDoc.updateOne(
+      { _id: upi.uuid },
+      { $unset: { type: 1 } },
+    );
+
+    const refetched = await uniqueProductIdentifierRepository.findOneOrFail(upi.uuid);
+    expect(refetched.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
   });
 
   afterAll(async () => {

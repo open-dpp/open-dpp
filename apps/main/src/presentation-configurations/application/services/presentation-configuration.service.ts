@@ -178,6 +178,44 @@ export class PresentationConfigurationService {
     return created;
   }
 
+  // Idempotent: returns the existing default config for the passport, or
+  // creates one if none exists. Used by the scratch-passport creation path
+  // (no template to snapshot from) and by the legacy UPI redirect to
+  // backfill missing rows on the fly.
+  async ensureDefaultForPassport(
+    passport: Passport,
+    options?: DbSessionOptions,
+  ): Promise<PresentationConfiguration> {
+    const existing = await this.presentationConfigurationRepository.findByReference(
+      {
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      },
+      options,
+    );
+    if (existing) return existing;
+    return await this.presentationConfigurationRepository.save(
+      PresentationConfiguration.createForPassport({
+        organizationId: passport.organizationId,
+        referenceId: passport.id,
+      }),
+      options,
+    );
+  }
+
+  async listForPassportWithSession(
+    passport: Passport,
+    options?: DbSessionOptions,
+  ): Promise<PresentationConfiguration[]> {
+    return await this.presentationConfigurationRepository.findManyByReference(
+      {
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      },
+      options,
+    );
+  }
+
   private async persistPatch(
     config: PresentationConfiguration,
     patch: PresentationConfigurationPatchDto,

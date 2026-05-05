@@ -109,15 +109,9 @@ export class PassportService {
         await this.passportRepository.deleteById(passport.id, { session });
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
 
-        // Drop the permalink by joining through the passport reference so a
-        // previously-orphaned permalink (config missing) still gets cleaned up.
-        const permalink = await this.permalinkRepository.findByPassportId(passport.id, { session });
-        if (permalink) {
-          await this.permalinkRepository.deleteByPresentationConfigurationId(
-            permalink.presentationConfigurationId,
-            { session },
-          );
-        }
+        // Drop every permalink for the passport before deleting its configs —
+        // multi-config passports can have multiple permalinks (one per config).
+        await this.permalinkRepository.deleteAllByPassportId(passport.id, { session });
         await this.presentationConfigurationRepository.deleteByReference(
           { referenceType: PresentationReferenceType.Passport, referenceId: passport.id },
           { session },

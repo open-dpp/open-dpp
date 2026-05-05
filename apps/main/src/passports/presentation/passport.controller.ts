@@ -285,11 +285,21 @@ export class PassportController
     const saved = await this.environmentService.withTransaction(async (options) => {
       await this.uniqueProductIdentifierRepository.save(upid, options);
       const persisted = await this.passportRepository.save(passport, options);
-      await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
-        persisted,
-        options,
-      );
-      await this.permalinkApplicationService.ensurePermalinkForPassport(persisted, options);
+      const snapshotConfigs =
+        await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
+          persisted,
+          options,
+        );
+      const configs =
+        snapshotConfigs.length > 0
+          ? snapshotConfigs
+          : [
+              await this.presentationConfigurationService.ensureDefaultForPassport(
+                persisted,
+                options,
+              ),
+            ];
+      await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
       return persisted;
     });
 
@@ -793,7 +803,15 @@ export class PassportController
         await this.uniqueProductIdentifierRepository.save(upid, options);
       },
       async (p, options) => {
-        await this.permalinkApplicationService.ensurePermalinkForPassport(p, options);
+        const importedConfigs =
+          await this.presentationConfigurationService.listForPassportWithSession(p, options);
+        const configs =
+          importedConfigs.length > 0
+            ? importedConfigs
+            : [
+                await this.presentationConfigurationService.ensureDefaultForPassport(p, options),
+              ];
+        await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());

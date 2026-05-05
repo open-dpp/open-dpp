@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { DataTypeDef, KeyTypes, PresentationComponentName } from "@open-dpp/dto";
-import type { PropertyResponseDto, SubmodelElementResponseDto } from "@open-dpp/dto";
-import { PRESENTATION_COMPONENTS } from "./presentation-components";
+import {
+  DataTypeDef,
+  KeyTypes,
+  PresentationComponentName,
+  type PresentationComponentNameType,
+  type PropertyResponseDto,
+  type SubmodelElementResponseDto,
+} from "@open-dpp/dto";
+import { PRESENTATION_COMPONENTS, type PresentationComponentEntry } from "./presentation-components";
+import { type LeafElement, resolveI18nKey } from "./presentation-element-helpers";
 
-function makeProperty(
-  overrides: Partial<PropertyResponseDto> = {},
-): SubmodelElementResponseDto {
+type TestElement = SubmodelElementResponseDto & LeafElement;
+
+function makeProperty(overrides: Partial<PropertyResponseDto> = {}): TestElement {
   const property: PropertyResponseDto = {
     idShort: "Revenue",
     valueType: DataTypeDef.Decimal,
@@ -18,8 +25,71 @@ function makeProperty(
     embeddedDataSpecifications: [],
     ...overrides,
   };
-  return { ...property, modelType: KeyTypes.Property } as unknown as SubmodelElementResponseDto;
+  return { ...property, modelType: KeyTypes.Property } as unknown as TestElement;
 }
+
+function makeUnrelatedContainer(): TestElement {
+  return {
+    modelType: KeyTypes.SubmodelElementCollection,
+    idShort: "Container",
+    displayName: [],
+    description: [],
+    supplementalSemanticIds: [],
+    qualifiers: [],
+    embeddedDataSpecifications: [],
+    value: [],
+  } as unknown as TestElement;
+}
+
+const entries = Object.entries(PRESENTATION_COMPONENTS) as [
+  PresentationComponentNameType,
+  PresentationComponentEntry,
+][];
+
+describe.each(entries)("registry invariants: %s", (name, entry) => {
+  it("appliesTo returns a boolean", () => {
+    expect(typeof entry.appliesTo(makeProperty())).toBe("boolean");
+  });
+
+  it("appliesTo is false for an unrelated container element", () => {
+    expect(entry.appliesTo(makeUnrelatedContainer())).toBe(false);
+  });
+
+  it("sampleElement passes through unchanged when appliesTo is false", () => {
+    const container = makeUnrelatedContainer();
+    const result = entry.sampleElement(container);
+    expect(result.usedSample).toBe(false);
+    expect(result.element).toBe(container);
+  });
+
+  it("sampleElement does not mutate the input element", () => {
+    const property = makeProperty({ value: null, valueType: DataTypeDef.Long });
+    const snapshot = JSON.parse(JSON.stringify(property));
+    entry.sampleElement(property);
+    expect(JSON.parse(JSON.stringify(property))).toEqual(snapshot);
+  });
+
+  it("resolveI18nKey returns a non-empty string under aasEditor.presentationTab", () => {
+    const key = resolveI18nKey(name, entry);
+    expect(key).toMatch(/^aasEditor\.presentationTab\..+/);
+  });
+});
+
+describe("resolveI18nKey", () => {
+  it("derives a camelCase default key from the component name", () => {
+    expect(resolveI18nKey("BigNumber" as PresentationComponentNameType, {})).toBe(
+      "aasEditor.presentationTab.bigNumber",
+    );
+  });
+
+  it("uses the explicit i18nKey when set", () => {
+    expect(
+      resolveI18nKey("BigNumber" as PresentationComponentNameType, {
+        i18nKey: "custom.translation.key",
+      }),
+    ).toBe("custom.translation.key");
+  });
+});
 
 const bigNumber = PRESENTATION_COMPONENTS[PresentationComponentName.BigNumber];
 
@@ -115,26 +185,6 @@ describe("BigNumber.sampleElement", () => {
       expect(sampled.idShort).toBe("MyField");
       expect(sampled.displayName).toEqual([{ language: "en", text: "My Custom Label" }]);
       expect(sampled.value).toBe("1234567.89");
-    });
-
-    it("does not mutate the original element", () => {
-      const original = makeProperty({ value: null, valueType: DataTypeDef.Long });
-      const beforeValue = (original as unknown as PropertyResponseDto).value;
-      bigNumber.sampleElement(original);
-      expect((original as unknown as PropertyResponseDto).value).toBe(beforeValue);
-    });
-  });
-
-  describe("non-Property elements pass through", () => {
-    it("returns unchanged for File modelType", () => {
-      const file = {
-        modelType: KeyTypes.File,
-        idShort: "doc",
-        value: null,
-      } as unknown as SubmodelElementResponseDto;
-      const result = bigNumber.sampleElement(file);
-      expect(result.usedSample).toBe(false);
-      expect(result.element).toBe(file);
     });
   });
 });

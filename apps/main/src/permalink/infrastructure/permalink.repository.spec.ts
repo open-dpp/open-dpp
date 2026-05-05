@@ -121,24 +121,38 @@ describe("PermalinkRepository", () => {
     expect(missing).toBeUndefined();
   });
 
-  it("finds a permalink by passport id via presentation configuration join", async () => {
+  it("findAllByPassportId returns every permalink for the passport via presentation configuration join", async () => {
     const passportId = randomUUID();
     const organizationId = `org-${randomUUID().slice(0, 8)}`;
-    const config = PresentationConfiguration.create({
+    const configA = PresentationConfiguration.create({
       organizationId,
       referenceId: passportId,
       referenceType: PresentationReferenceType.Passport,
     });
-    await presentationConfigurationRepository.save(config);
+    const configB = PresentationConfiguration.create({
+      organizationId,
+      referenceId: passportId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    await presentationConfigurationRepository.save(configA);
+    await presentationConfigurationRepository.save(configB);
 
-    const permalink = Permalink.create({ presentationConfigurationId: config.id });
-    await repository.save(permalink);
+    const permalinkA = Permalink.create({ presentationConfigurationId: configA.id });
+    const permalinkB = Permalink.create({ presentationConfigurationId: configB.id });
+    await repository.save(permalinkA);
+    await repository.save(permalinkB);
 
-    const found = await repository.findByPassportId(passportId);
-    expect(found?.id).toBe(permalink.id);
+    const found = await repository.findAllByPassportId(passportId);
+    expect(found).toHaveLength(2);
+    expect(found.map((p) => p.id).sort()).toEqual([permalinkA.id, permalinkB.id].sort());
   });
 
-  it("findByPassportId ignores template-type configurations", async () => {
+  it("findAllByPassportId returns empty array when none exist", async () => {
+    const found = await repository.findAllByPassportId(randomUUID());
+    expect(found).toEqual([]);
+  });
+
+  it("findAllByPassportId ignores template-type configurations", async () => {
     const templateId = randomUUID();
     const config = PresentationConfiguration.create({
       organizationId: "org-template",
@@ -148,8 +162,39 @@ describe("PermalinkRepository", () => {
     await presentationConfigurationRepository.save(config);
     await repository.save(Permalink.create({ presentationConfigurationId: config.id }));
 
-    const found = await repository.findByPassportId(templateId);
-    expect(found).toBeUndefined();
+    const found = await repository.findAllByPassportId(templateId);
+    expect(found).toEqual([]);
+  });
+
+  it("deleteAllByPassportId removes every permalink belonging to the passport's configs", async () => {
+    const passportId = randomUUID();
+    const organizationId = `org-${randomUUID().slice(0, 8)}`;
+    const configs = await Promise.all(
+      [0, 1].map(async () => {
+        const config = PresentationConfiguration.create({
+          organizationId,
+          referenceId: passportId,
+          referenceType: PresentationReferenceType.Passport,
+        });
+        await presentationConfigurationRepository.save(config);
+        await repository.save(Permalink.create({ presentationConfigurationId: config.id }));
+        return config;
+      }),
+    );
+
+    const deleted = await repository.deleteAllByPassportId(passportId);
+    expect(deleted).toBe(2);
+
+    for (const config of configs) {
+      expect(
+        await repository.findByPresentationConfigurationId(config.id),
+      ).toBeUndefined();
+    }
+  });
+
+  it("deleteAllByPassportId returns 0 when no configs exist for the passport", async () => {
+    const deleted = await repository.deleteAllByPassportId(randomUUID());
+    expect(deleted).toBe(0);
   });
 
   it("rolls back session transactions", async () => {

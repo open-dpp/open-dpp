@@ -12,6 +12,9 @@ import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
+import { DigitalProductDocumentStatus, DigitalProductDocumentStatusChange } from "../../digital-product-document/domain/digital-product-document-status";
+import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -51,10 +54,15 @@ describe("PermalinkController", () => {
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
     PermalinkRepository,
-    SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+    // Use OWNER so the test context provisions an org for member-role tests
+    // (PATCH /p/:id/slug); anonymous-readable GET tests still work because
+    // their endpoints carry @OptionalAuth.
+    SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
-  async function createPassportWithPermalink(options: { slug?: string | null } = {}) {
+  async function createPassportWithPermalink(
+    options: { slug?: string | null; published?: boolean } = {},
+  ) {
     const { aas, submodels } = ctx.getAasObjects();
 
     const environment = Environment.create({
@@ -64,10 +72,20 @@ describe("PermalinkController", () => {
     });
 
     const organizationId = randomUUID();
+    // Default to Published so the existing GET tests resolve via the public
+    // anonymous path. Tests for draft visibility opt in with published: false.
+    const lastStatusChange =
+      options.published === false
+        ? DigitalProductDocumentStatusChange.create({})
+        : DigitalProductDocumentStatusChange.create({
+            previousStatus: DigitalProductDocumentStatus.Draft,
+            currentStatus: DigitalProductDocumentStatus.Published,
+          });
     const passport = Passport.create({
       id: randomUUID(),
       organizationId,
       environment,
+      lastStatusChange,
     });
 
     const config = PresentationConfiguration.createForPassport({
@@ -206,6 +224,236 @@ describe("PermalinkController", () => {
 
   it(`/GET submodel element value`, async () => {
     await ctx.asserts.getSubmodelElementValue(createPassportWithPermalink);
+  });
+
+  describe("draft passports — privacy gate", () => {
+    it("returns 404 to anonymous when the passport is in draft", async () => {
+      const fixture = await createPassportWithPermalink({ published: false });
+
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/p/${fixture.id}/passport`,
+      );
+
+      expect(response.status).toEqual(404);
+    });
+
+    it("returns 200 to a member of the owning org for a draft passport", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: org.id,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p/${permalink.id}/passport`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      expect(response.body.id).toEqual(passport.id);
+    });
+
+    it("returns 404 to a member of a different org for a draft passport", async () => {
+      const { org: ownerOrg } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: ownerOrg.id,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: ownerOrg.id,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p/${permalink.id}/passport`)
+        .set("Cookie", outsider.userCookie)
+        .set(ORGANIZATION_ID_HEADER, outsider.org.id);
+
+      expect(response.status).toEqual(404);
+    });
+  });
+
+  describe("PATCH /p/:id/slug", () => {
+    async function createPassportWithPermalinkInOrg(orgId: string, slug: string | null = null) {
+      // PATCH tests publish the passport so the draft 404 gate doesn't shadow
+      // the org-ownership check we want to exercise. Owner-of-draft is
+      // exercised separately in the "draft passports" describe block.
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Published,
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: orgId,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({
+        presentationConfigurationId: config.id,
+        slug,
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+      return { passport, config, permalink };
+    }
+
+    it("assigns a slug as a member of the owning org", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+      const slug = `slug-${randomUUID().slice(0, 8)}`;
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}/slug`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.id).toEqual(permalink.id);
+      expect(response.body.slug).toEqual(slug);
+
+      const refetched = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(permalink.id);
+      expect(refetched.slug).toEqual(slug);
+    });
+
+    it("clears a slug when the body sends slug: null", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const initialSlug = `slug-${randomUUID().slice(0, 8)}`;
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id, initialSlug);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}/slug`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug: null });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.slug).toBeNull();
+    });
+
+    it("rejects an invalid slug with 400", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}/slug`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug: "BAD SLUG" });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("rejects a reserved slug with 400", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}/slug`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug: "new" });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("returns 409 on a duplicate slug", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const taken = `slug-${randomUUID().slice(0, 8)}`;
+      await createPassportWithPermalinkInOrg(org.id, taken);
+      const { permalink: target } = await createPassportWithPermalinkInOrg(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${target.id}/slug`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug: taken });
+
+      expect(response.status).toEqual(409);
+    });
+
+    it("returns 403 when the requester's org does not own the passport", async () => {
+      const { org: ownerOrg } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(ownerOrg.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}/slug`)
+        .set("Cookie", outsider.userCookie)
+        .set(ORGANIZATION_ID_HEADER, outsider.org.id)
+        .send({ slug: "trespass" });
+
+      expect(response.status).toEqual(403);
+    });
+
+    it("returns 401 / 403 when the request is anonymous", async () => {
+      const { org } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}/slug`)
+        .send({ slug: "anon" });
+
+      expect([401, 403]).toContain(response.status);
+    });
+
+    it("returns 404 when the permalink does not exist", async () => {
+      const { org, userCookie } =
+        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${randomUUID()}/slug`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug: "ghost" });
+
+      expect(response.status).toEqual(404);
+    });
   });
 
   it(`/GET presentation-configuration is anonymous readable and never materializes a row`, async () => {

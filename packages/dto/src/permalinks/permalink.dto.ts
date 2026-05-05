@@ -1,9 +1,16 @@
 import { z } from "zod";
 import { DateTimeSchema } from "../shared/digital-product-document.schemas";
 
-// Reserved because the short-link router already uses these path segments; a
-// slug of `new` or `edit` would collide with the app's own routes.
-const RESERVED_SLUGS = new Set(["new", "edit"]);
+// Slugs that would collide with literal path segments under the public `/p`
+// namespace. Whenever a new literal child route is added to PRESENTATION_PARENT
+// in apps/client/src/router/routes/presentation/presentation.ts, add it here.
+// A frontend unit test asserts the two stay in sync — see the router spec.
+//
+// Note: numeric-only slugs (e.g. "404") are already rejected by a separate
+// refine, so they don't need to appear here.
+export const PERMALINK_RESERVED_SLUGS: readonly string[] = ["new", "edit"];
+
+const reservedSlugSet = new Set<string>(PERMALINK_RESERVED_SLUGS);
 
 export const PermalinkSlugSchema = z
   .string()
@@ -11,7 +18,7 @@ export const PermalinkSlugSchema = z
   .max(64)
   .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/)
   .refine((slug) => !/^\d+$/.test(slug), { error: "Slug cannot be numeric-only" })
-  .refine((slug) => !RESERVED_SLUGS.has(slug), { error: "Slug is reserved" });
+  .refine((slug) => !reservedSlugSet.has(slug), { error: "Slug is reserved" });
 
 export type PermalinkSlug = z.infer<typeof PermalinkSlugSchema>;
 
@@ -44,3 +51,10 @@ export const PermalinkMetadataDtoSchema = z.object({
 });
 
 export type PermalinkMetadataDto = z.infer<typeof PermalinkMetadataDtoSchema>;
+
+// Request body for PATCH /p/:id/slug — `slug: null` clears an existing slug.
+export const PermalinkSlugUpdateRequestSchema = z
+  .object({ slug: PermalinkSlugSchema.nullable() })
+  .meta({ id: "PermalinkSlugUpdateRequest" });
+
+export type PermalinkSlugUpdateRequest = z.infer<typeof PermalinkSlugUpdateRequestSchema>;

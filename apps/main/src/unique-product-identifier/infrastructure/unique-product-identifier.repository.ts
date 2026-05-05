@@ -24,6 +24,9 @@ export class UniqueProductIdentifierRepository {
     return UniqueProductIdentifier.loadFromDb({
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
+      // Older rows may not have a `type` field — loadFromDb supplies the
+      // OPEN_DPP_UUID default so deserialisation never fails.
+      type: uniqueProductIdentifierDoc.type ?? null,
     });
   }
 
@@ -31,8 +34,9 @@ export class UniqueProductIdentifierRepository {
     const doc = await this.uniqueProductIdentifierDoc.findOneAndUpdate(
       { _id: uniqueProductIdentifier.uuid },
       {
-        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
+        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_1_0,
         referenceId: uniqueProductIdentifier.referenceId,
+        type: uniqueProductIdentifier.type,
       },
       {
         new: true, // Return the updated document

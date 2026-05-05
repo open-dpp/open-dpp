@@ -11,6 +11,10 @@ import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { getApp } from "../../../test/utils.for.test";
 import { Environment } from "../../aas/domain/environment";
 import { generateMongoConfig } from "../../database/config";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
@@ -120,10 +124,16 @@ describe("passportMetricController", () => {
 
   it("/POST should create page view metric", async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    // Page-view metrics fire from the public viewer; publish the passport so
+    // the permalink resolver doesn't 404 the anonymous resolution path.
     const passport = Passport.create({
       templateId: randomUUID(),
       organizationId: org.id,
       environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
     });
     const uniqueProductIdentifier = passport.createUniqueProductIdentifier();
     await uniqueProductIdentifierRepository.save(uniqueProductIdentifier);

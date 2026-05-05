@@ -1,10 +1,9 @@
-import {
-  KeyTypes,
-  type KeyTypesType,
-  type PresentationComponentNameType,
-  type SubmodelElementSharedResponseDto,
-} from "@open-dpp/dto";
+import { KeyTypes, type KeyTypesType, type PresentationComponentNameType } from "@open-dpp/dto";
 import { PRESENTATION_COMPONENTS } from "../components/presentation/components/presentation-components";
+import {
+  type LeafElement,
+  resolveI18nKey,
+} from "../components/presentation/components/presentation-element-helpers";
 
 export const DEFAULT_VALUE = "default";
 
@@ -12,11 +11,6 @@ export interface SelectOption {
   label: string;
   value: string;
 }
-
-type LeafElement = SubmodelElementSharedResponseDto & {
-  modelType: KeyTypesType;
-  valueType?: string;
-};
 
 export function defaultOption(translate: (key: string) => string): SelectOption {
   return { label: translate("aasEditor.presentationTab.default"), value: DEFAULT_VALUE };
@@ -32,7 +26,7 @@ export function applicableComponentOptions(
     (typeof PRESENTATION_COMPONENTS)[PresentationComponentNameType],
   ][]) {
     if (entry.appliesTo(element)) {
-      options.push({ label: translate(entry.i18nKey), value: name });
+      options.push({ label: translate(resolveI18nKey(name, entry)), value: name });
     }
   }
   return options;

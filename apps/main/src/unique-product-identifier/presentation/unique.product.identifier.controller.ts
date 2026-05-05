@@ -9,9 +9,14 @@ import {
   Redirect,
   Req,
 } from "@nestjs/common";
+import { PresentationReferenceType } from "@open-dpp/dto";
 import type { Request } from "express";
+import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
+import { PassportRepository } from "../../passports/infrastructure/passport.repository";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 
@@ -20,6 +25,10 @@ import { UniqueProductIdentifierRepository } from "../infrastructure/unique-prod
  * These routes 302 to the new permalink URLs for one release cycle so that
  * already-printed QR codes and bookmarks keep working. Follow-up issue:
  * remove after the deprecation window closes.
+ *
+ * Pre-refactor passports might lack a PresentationConfiguration / Permalink
+ * row, so the redirect path lazily synthesises whichever rows are missing
+ * (idempotent, transactional) before issuing the redirect.
  */
 @Controller()
 export class UniqueProductIdentifierController {
@@ -29,6 +38,10 @@ export class UniqueProductIdentifierController {
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly permalinkRepository: PermalinkRepository,
+    private readonly passportRepository: PassportRepository,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly environmentService: EnvironmentService,
   ) {}
 
   @OptionalAuth()
@@ -75,18 +88,43 @@ export class UniqueProductIdentifierController {
     if (!upi) {
       throw new NotFoundException();
     }
-    const config = await this.presentationConfigurationRepository.findByReference({
-      referenceType: "passport",
-      referenceId: upi.referenceId,
+    const passport = await this.passportRepository.findOne(upi.referenceId);
+    if (!passport) {
+      // UPI is dangling — the passport it pointed at is gone. Old QR codes
+      // for deleted passports cannot be resurrected.
+      throw new NotFoundException();
+    }
+
+    // Fast path: if both rows already exist, return without taking a write
+    // transaction. The vast majority of redirects after this branch ships
+    // hit this path; the lazy-create branch is only for pre-refactor data.
+    const existingConfig = await this.presentationConfigurationRepository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
     });
-    if (!config) {
-      throw new NotFoundException();
+    if (existingConfig) {
+      const existingPermalink = await this.permalinkRepository.findByPresentationConfigurationId(
+        existingConfig.id,
+      );
+      if (existingPermalink) {
+        return existingPermalink.id;
+      }
     }
-    const permalink = await this.permalinkRepository.findByPresentationConfigurationId(config.id);
-    if (!permalink) {
-      throw new NotFoundException();
-    }
-    return permalink.id;
+
+    return await this.environmentService.withTransaction(async (options) => {
+      const config = await this.presentationConfigurationService.ensureDefaultForPassport(
+        passport,
+        options,
+      );
+      const [permalink] = await this.permalinkApplicationService.createPermalinksForConfigs(
+        [config],
+        options,
+      );
+      this.logger.debug(
+        `Lazy-backfilled permalink for legacy UPI ${upiUuid} → passport ${passport.id} → permalink ${permalink.id}`,
+      );
+      return permalink.id;
+    });
   }
 }
 

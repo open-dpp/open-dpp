@@ -87,14 +87,16 @@ export class PermalinkRepository {
     return Permalink.fromPlain({ ...plain, id: plain._id });
   }
 
-  async findByPassportId(
+  async findAllByPassportId(
     passportId: string,
     options?: DbSessionOptions,
-  ): Promise<Permalink | undefined> {
+  ): Promise<Permalink[]> {
     // Join through presentation_configurations to avoid pulling the
     // PresentationConfigurationRepository as a dependency (would create a cycle:
     // PermalinkModule imports PresentationConfigurationsModule; reverse would
     // force PresentationConfigurationsModule to know about PermalinkModule).
+    // Sorted by createdAt so the first element is the canonical default
+    // permalink for the passport (mirrors PresentationConfigurationRepository.findByReference).
     const results = await this.permalinkDoc
       .aggregate([
         {
@@ -111,14 +113,12 @@ export class PermalinkRepository {
             "config.referenceId": passportId,
           },
         },
-        { $limit: 1 },
+        { $sort: { createdAt: 1, _id: 1 } },
         { $project: { config: 0 } },
       ])
       .session(options?.session ?? null);
 
-    if (results.length === 0) return undefined;
-    const plain = results[0];
-    return Permalink.fromPlain({ ...plain, id: plain._id });
+    return results.map((plain) => Permalink.fromPlain({ ...plain, id: plain._id }));
   }
 
   async deleteByPresentationConfigurationId(
@@ -128,5 +128,27 @@ export class PermalinkRepository {
     await this.permalinkDoc
       .deleteOne({ presentationConfigurationId })
       .session(options?.session ?? null);
+  }
+
+  // Cascade-delete all permalinks for a passport — used during passport
+  // deletion so multi-config passports do not leave orphan permalinks.
+  // Resolves config ids first (within the same session) so the actual delete
+  // is a simple multi-id match.
+  async deleteAllByPassportId(
+    passportId: string,
+    options?: DbSessionOptions,
+  ): Promise<number> {
+    const configDocs = await this.presentationConfigurationDoc
+      .find({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passportId,
+      })
+      .session(options?.session ?? null);
+    const configIds = configDocs.map((doc) => doc._id);
+    if (configIds.length === 0) return 0;
+    const result = await this.permalinkDoc
+      .deleteMany({ presentationConfigurationId: { $in: configIds } })
+      .session(options?.session ?? null);
+    return result.deletedCount ?? 0;
   }
 }
