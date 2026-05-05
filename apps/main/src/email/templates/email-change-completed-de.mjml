@@ -33,11 +33,13 @@
           ><strong>Hallo {{ firstName }},</strong></mj-text
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >deine Konto-E-Mail-Adresse wurde von <strong>{{ previousEmail }}</strong> auf <strong>{{ currentEmail }}</strong> ge&auml;ndert.<br />
+          >deine Konto-E-Mail-Adresse wurde von <strong>{{ previousEmail }}</strong> auf
+          <strong>{{ currentEmail }}</strong> ge&auml;ndert.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Falls du das nicht warst, kontaktiere bitte sofort den Support. Deine vorherige E-Mail-Adresse k&ouml;nnte kompromittiert sein.</mj-text
+          >Falls du das nicht warst, kontaktiere bitte sofort den Support. Deine vorherige
+          E-Mail-Adresse k&ouml;nnte kompromittiert sein.</mj-text
         >
         <mj-text
           align="center"

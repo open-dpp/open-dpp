@@ -33,9 +33,7 @@ describe("EmailChangeRequest", () => {
   });
 
   it("rejects empty userId", () => {
-    expect(() =>
-      EmailChangeRequest.create({ userId: "", newEmail: "new@example.com" }),
-    ).toThrow();
+    expect(() => EmailChangeRequest.create({ userId: "", newEmail: "new@example.com" })).toThrow();
   });
 
   it("rejects empty newEmail", () => {

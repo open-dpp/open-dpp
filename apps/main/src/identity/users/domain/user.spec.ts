@@ -254,5 +254,4 @@ describe("user", () => {
       expect(result.updatedAt).toBe(user.updatedAt);
     });
   });
-
 });

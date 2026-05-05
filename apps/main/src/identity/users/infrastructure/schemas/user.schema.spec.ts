@@ -103,5 +103,4 @@ describe("userSchema", () => {
 
     expect(savedUser.preferredLanguage).toBe("en");
   });
-
 });

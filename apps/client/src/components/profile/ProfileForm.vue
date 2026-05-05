@@ -314,10 +314,10 @@ function handleEmailKeydown(event: KeyboardEvent) {
   >
     <ConfirmDialog />
     <header class="mb-6">
-      <h1 class="m-0 mb-1 text-3xl font-semibold leading-tight tracking-tight text-ink">
+      <h1 class="text-ink m-0 mb-1 text-3xl leading-tight font-semibold tracking-tight">
         {{ t("user.profile") }}
       </h1>
-      <p class="m-0 text-sm text-ink-muted">{{ t("user.profileSubtitle") }}</p>
+      <p class="text-ink-muted m-0 text-sm">{{ t("user.profileSubtitle") }}</p>
     </header>
 
     <Message v-if="hydrationFailed" severity="error" class="mb-6" :closable="false">
@@ -337,14 +337,14 @@ function handleEmailKeydown(event: KeyboardEvent) {
     <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-name-heading">
       <h2
         id="profile-form-name-heading"
-        class="m-0 text-xl font-semibold leading-snug tracking-tight text-ink"
+        class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
       >
         {{ t("user.personalInformation") }}
       </h2>
-      <p class="m-0 text-xs text-ink-muted">{{ t("user.nameHelper") }}</p>
+      <p class="text-ink-muted m-0 text-xs">{{ t("user.nameHelper") }}</p>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium leading-snug text-ink" for="profile-first-name">
+          <label class="text-ink text-sm leading-snug font-medium" for="profile-first-name">
             {{ t("user.firstName") }}
           </label>
           <Skeleton v-if="!loaded && !hydrationFailed" height="2.375rem" />
@@ -372,7 +372,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium leading-snug text-ink" for="profile-last-name">
+          <label class="text-ink text-sm leading-snug font-medium" for="profile-last-name">
             {{ t("user.lastName") }}
           </label>
           <Skeleton v-if="!loaded && !hydrationFailed" height="2.375rem" />
@@ -401,19 +401,19 @@ function handleEmailKeydown(event: KeyboardEvent) {
       </div>
     </section>
 
-    <hr class="m-0 border-0 border-t border-rule" />
+    <hr class="border-rule m-0 border-0 border-t" />
 
     <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-email-heading">
       <h2
         id="profile-form-email-heading"
-        class="m-0 text-xl font-semibold leading-snug tracking-tight text-ink"
+        class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
       >
         {{ t("user.email") }}
       </h2>
 
       <div
         v-if="!loaded && !hydrationFailed"
-        class="flex flex-wrap items-start justify-between gap-4 rounded-md border border-rule bg-surface-recessed px-4 py-3"
+        class="border-rule bg-surface-recessed flex flex-wrap items-start justify-between gap-4 rounded-md border px-4 py-3"
         aria-hidden="true"
       >
         <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
@@ -424,19 +424,19 @@ function handleEmailKeydown(event: KeyboardEvent) {
       </div>
       <div
         v-else-if="loaded"
-        class="flex flex-wrap items-start justify-between gap-4 rounded-md border border-rule bg-surface-recessed px-4 py-3"
+        class="border-rule bg-surface-recessed flex flex-wrap items-start justify-between gap-4 rounded-md border px-4 py-3"
       >
         <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
-          <span class="max-w-full break-words text-sm text-ink">{{ currentEmail }}</span>
+          <span class="text-ink max-w-full text-sm break-words">{{ currentEmail }}</span>
           <span
             v-if="pendingEmail"
-            class="inline-flex max-w-full items-center gap-1 break-words rounded-full border border-status-warning/20 bg-status-warning/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-status-warning"
+            class="border-status-warning/20 bg-status-warning/10 text-status-warning inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider break-words"
             role="status"
             aria-live="polite"
           >
             {{ t("user.emailPending", { email: pendingEmail }) }}
           </span>
-          <span v-if="pendingRequestedLabel" class="text-xs leading-normal text-ink-muted">
+          <span v-if="pendingRequestedLabel" class="text-ink-muted text-xs leading-normal">
             {{ pendingRequestedLabel }}
           </span>
         </div>
@@ -479,12 +479,12 @@ function handleEmailKeydown(event: KeyboardEvent) {
         <div
           v-if="emailPanelOpen && !pendingEmail"
           id="profile-email-panel"
-          class="mt-3 flex flex-col gap-2 rounded-lg border border-rule bg-surface p-4"
+          class="border-rule bg-surface mt-3 flex flex-col gap-2 rounded-lg border p-4"
           role="region"
           :aria-label="t('user.changeEmail')"
           @keydown="handleEmailKeydown"
         >
-          <label class="text-sm font-medium leading-snug text-ink" for="profile-new-email">
+          <label class="text-ink text-sm leading-snug font-medium" for="profile-new-email">
             {{ t("user.newEmail") }}
           </label>
           <InputText
@@ -499,7 +499,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             data-testid="new-email"
             autofocus
           />
-          <p id="profile-new-email-hint" class="m-0 text-xs text-ink-muted">
+          <p id="profile-new-email-hint" class="text-ink-muted m-0 text-xs">
             {{ t("user.emailChangeHint") }}
           </p>
           <Message
@@ -512,7 +512,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             {{ newEmailError }}
           </Message>
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium leading-snug text-ink" for="profile-current-password">
+            <label class="text-ink text-sm leading-snug font-medium" for="profile-current-password">
               {{ t("user.emailChangeCurrentPassword") }}
             </label>
             <InputText
@@ -551,16 +551,16 @@ function handleEmailKeydown(event: KeyboardEvent) {
       </Transition>
     </section>
 
-    <hr class="m-0 border-0 border-t border-rule" />
+    <hr class="border-rule m-0 border-0 border-t" />
 
     <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-language-heading">
       <h2
         id="profile-form-language-heading"
-        class="m-0 text-xl font-semibold leading-snug tracking-tight text-ink"
+        class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
       >
         {{ t("user.language") }}
       </h2>
-      <p class="m-0 text-xs text-ink-muted">{{ t("user.languageHelper") }}</p>
+      <p class="text-ink-muted m-0 text-xs">{{ t("user.languageHelper") }}</p>
       <SelectButton
         v-model="preferredLanguage"
         :options="languageOptions"
@@ -573,11 +573,11 @@ function handleEmailKeydown(event: KeyboardEvent) {
       />
     </section>
 
-    <hr class="m-0 border-0 border-t border-rule" />
+    <hr class="border-rule m-0 border-0 border-t" />
 
     <div class="flex justify-end gap-2 pt-6">
       <div
-        class="mr-auto flex min-h-6 items-center gap-2 text-xs leading-normal text-ink-muted"
+        class="text-ink-muted mr-auto flex min-h-6 items-center gap-2 text-xs leading-normal"
         aria-live="polite"
       >
         <Transition
@@ -590,7 +590,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
         >
           <span
             v-if="savedChipVisible"
-            class="inline-flex items-center gap-1 rounded-full border border-status-success/20 bg-status-success/10 px-2.5 py-0.5 text-xs font-semibold tracking-wider text-status-success"
+            class="border-status-success/20 bg-status-success/10 text-status-success inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider"
           >
             <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
               <path

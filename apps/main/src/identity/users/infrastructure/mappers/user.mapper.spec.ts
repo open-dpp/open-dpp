@@ -184,5 +184,4 @@ describe("userMapper", () => {
       expect(warnSpy).not.toHaveBeenCalled();
     });
   });
-
 });

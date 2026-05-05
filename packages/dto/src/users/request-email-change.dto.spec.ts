@@ -12,9 +12,7 @@ describe("RequestEmailChangeDtoSchema", () => {
   });
 
   it("rejects missing currentPassword", () => {
-    expect(() =>
-      RequestEmailChangeDtoSchema.parse({ newEmail: "new@example.com" }),
-    ).toThrow();
+    expect(() => RequestEmailChangeDtoSchema.parse({ newEmail: "new@example.com" })).toThrow();
   });
 
   it("rejects empty currentPassword", () => {

@@ -28,9 +28,7 @@ describe("revoke token", () => {
       JSON.stringify({ userId: "attacker", requestId: "req-1", exp: Date.now() + 60_000 }),
     ).toString("base64url")}.${sig}`;
 
-    expect(() =>
-      verifyRevokeToken(tampered, SECRET, new Date("2026-05-02T10:00:30Z")),
-    ).toThrow();
+    expect(() => verifyRevokeToken(tampered, SECRET, new Date("2026-05-02T10:00:30Z"))).toThrow();
   });
 
   it("rejects an expired token", () => {
@@ -40,9 +38,7 @@ describe("revoke token", () => {
       60_000,
       new Date("2026-05-02T10:00:00Z"),
     );
-    expect(() =>
-      verifyRevokeToken(token, SECRET, new Date("2026-05-02T11:00:00Z")),
-    ).toThrow();
+    expect(() => verifyRevokeToken(token, SECRET, new Date("2026-05-02T11:00:00Z"))).toThrow();
   });
 
   it("rejects a malformed token", () => {

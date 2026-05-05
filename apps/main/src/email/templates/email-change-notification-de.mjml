@@ -33,15 +33,19 @@
           ><strong>Hallo {{ firstName }},</strong></mj-text
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >wir haben eine Anfrage erhalten, deine Konto-E-Mail-Adresse von <strong>{{ currentEmail }}</strong> auf <strong>{{ newEmail }}</strong> zu &auml;ndern.<br />
+          >wir haben eine Anfrage erhalten, deine Konto-E-Mail-Adresse von
+          <strong>{{ currentEmail }}</strong> auf <strong>{{ newEmail }}</strong> zu &auml;ndern.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Wenn du das warst, brauchst du nichts weiter zu tun &mdash; schlie&szlig;e die &Auml;nderung ab, indem du den Best&auml;tigungslink anklickst, den wir an <strong>{{ newEmail }}</strong> gesendet haben.<br />
+          >Wenn du das warst, brauchst du nichts weiter zu tun &mdash; schlie&szlig;e die
+          &Auml;nderung ab, indem du den Best&auml;tigungslink anklickst, den wir an
+          <strong>{{ newEmail }}</strong> gesendet haben.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Falls du diese &Auml;nderung NICHT angefordert hast, klicke auf den Button unten, um sie sofort abzubrechen und dein Konto zu sichern.</mj-text
+          >Falls du diese &Auml;nderung NICHT angefordert hast, klicke auf den Button unten, um sie
+          sofort abzubrechen und dein Konto zu sichern.</mj-text
         >
         <mj-button
           background-color="#6BAD87"

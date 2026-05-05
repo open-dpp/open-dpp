@@ -41,7 +41,11 @@ describe("RevokeEmailChangeController", () => {
   it("redirects to ?status=ok when token is valid and a matching request exists, then hard-cancels", async () => {
     const existing = EmailChangeRequest.create({ userId: "user-1", newEmail: "new@x.com" });
     mockService.findByUserId.mockResolvedValue(existing);
-    const token = signRevokeToken({ userId: existing.userId, requestId: existing.id }, SECRET, 60_000);
+    const token = signRevokeToken(
+      { userId: existing.userId, requestId: existing.id },
+      SECRET,
+      60_000,
+    );
 
     const result = await controller.revoke(token);
 

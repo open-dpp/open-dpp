@@ -33,11 +33,14 @@
           ><strong>Hi {{ firstName }},</strong></mj-text
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Your account email was changed from <strong>{{ previousEmail }}</strong> to <strong>{{ currentEmail }}</strong>.<br />
+          >Your account email was changed from <strong>{{ previousEmail }}</strong> to
+          <strong>{{ currentEmail }}</strong
+          >.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >If this wasn&rsquo;t you, contact support immediately. Your previous email may be compromised.</mj-text
+          >If this wasn&rsquo;t you, contact support immediately. Your previous email may be
+          compromised.</mj-text
         >
         <mj-text
           align="center"
