@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type {
+  PresentationConfigurationDto,
   ReferenceValue,
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
@@ -13,9 +14,10 @@ import List from "./List.vue";
 import Reference from "./Reference.vue";
 import SubmodelElementCollection from "./SubmodelElementCollection.vue";
 
-const { element, path } = defineProps<{
+const { element, path, config } = defineProps<{
   element: SubmodelElementResponseDto;
   path?: string;
+  config?: PresentationConfigurationDto | null;
 }>();
 
 const { t } = useI18n();
@@ -25,7 +27,7 @@ const { t } = useI18n();
   <div v-if="element.value == null" class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2">
     {{ t("presentation.missingValue") }}
   </div>
-  <PresentationComponentRenderer v-else :element="element" :path="path">
+  <PresentationComponentRenderer v-else :element="element" :path="path" :config="config">
     <!-- Default rendering when no presentation component is configured. -->
     <dd v-if="element.modelType === 'Property'" class="mt-1 text-sm/6 text-gray-700 sm:mt-2">
       <template v-if="element.valueType === 'Date'">

@@ -11,6 +11,7 @@ import {
   DEFAULT_VALUE,
 } from "../../../composables/element-presentation";
 import { usePresentationConfigurationStore } from "../../../stores/presentation-configuration";
+import PresentationPreviewFrame from "./PresentationPreviewFrame.vue";
 
 const props = defineProps<{
   element: SubmodelElementSharedResponseDto & { modelType: string; valueType?: string };
@@ -71,25 +72,25 @@ function onConfigChange(id: string) {
       />
     </div>
 
-    <div
-      v-if="hasApplicableComponents"
-      class="flex flex-col gap-1"
-      data-cy="presentation-component-select"
-    >
-      <label class="text-sm font-medium text-gray-700">
-        {{ t("aasEditor.presentationTab.component") }}
-      </label>
-      <Select
-        :data-cy="`presentation-select-${props.path}`"
-        :model-value="selectedComponent"
-        :options="componentOptions"
-        option-label="label"
-        option-value="value"
-        :disabled="disabled"
-        class="w-full max-w-[20rem]"
-        @update:model-value="onComponentChange"
-      />
-    </div>
+    <template v-if="hasApplicableComponents">
+      <div class="flex flex-col gap-1" data-cy="presentation-component-select">
+        <label class="text-sm font-medium text-gray-700">
+          {{ t("aasEditor.presentationTab.component") }}
+        </label>
+        <Select
+          :data-cy="`presentation-select-${props.path}`"
+          :model-value="selectedComponent"
+          :options="componentOptions"
+          option-label="label"
+          option-value="value"
+          :disabled="disabled"
+          class="w-full max-w-[20rem]"
+          @update:model-value="onComponentChange"
+        />
+      </div>
+
+      <PresentationPreviewFrame :element="props.element" :path="props.path" />
+    </template>
 
     <p v-else data-cy="presentation-empty-state" class="text-sm text-gray-600">
       {{ t("aasEditor.presentationTab.empty") }}

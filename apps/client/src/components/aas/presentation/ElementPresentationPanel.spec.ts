@@ -3,8 +3,23 @@ import { createPinia, getActivePinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createI18n } from "vue-i18n";
 import PrimeVue from "primevue/config";
+import { defineComponent, h } from "vue";
 import ElementPresentationPanel from "./ElementPresentationPanel.vue";
 import { usePresentationConfigurationStore } from "../../../stores/presentation-configuration";
+
+vi.mock("./PresentationPreviewFrame.vue", () => ({
+  default: defineComponent({
+    name: "PresentationPreviewFrameStub",
+    props: { element: { type: Object, required: true }, path: { type: String, required: true } },
+    setup(props) {
+      return () =>
+        h("div", {
+          "data-cy": "presentation-preview-frame",
+          "data-path": props.path,
+        });
+    },
+  }),
+}));
 
 // PrimeVue's Select calls window.matchMedia in its mounted hook — polyfill it for jsdom.
 Object.defineProperty(window, "matchMedia", {
@@ -128,5 +143,24 @@ describe("ElementPresentationPanel", () => {
     const wrapper = mountPanel();
     (wrapper.vm as any).onConfigChange("c2");
     expect(setActiveSpy).toHaveBeenCalledWith("c2");
+  });
+
+  it("renders the preview frame when applicable components exist", () => {
+    const store = usePresentationConfigurationStore();
+    store.configs = [{ id: "c1", label: null, elementDesign: {} } as any];
+    const wrapper = mountPanel();
+    const frame = wrapper.find('[data-cy="presentation-preview-frame"]');
+    expect(frame.exists()).toBe(true);
+    expect(frame.attributes("data-path")).toBe("submodel.numericField");
+  });
+
+  it("does not render the preview frame when no applicable components exist", () => {
+    const store = usePresentationConfigurationStore();
+    store.configs = [{ id: "c1", label: null, elementDesign: {} } as any];
+    const wrapper = mountPanel({
+      element: { modelType: "Property", valueType: "String", idShort: "title" },
+      path: "submodel.title",
+    });
+    expect(wrapper.find('[data-cy="presentation-preview-frame"]').exists()).toBe(false);
   });
 });

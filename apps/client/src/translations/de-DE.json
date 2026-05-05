@@ -76,6 +76,7 @@
       "property": "Name",
       "component": "Komponente",
       "preview": "Vorschau",
+      "previewSampleBadge": "Beispielwert",
       "default": "Standard",
       "bigNumber": "BigNumber",
       "emptyState": "Noch keine Submodelle. Lege eines im Tab \"Struktur\" an, um die Darstellung seiner Felder festzulegen.",

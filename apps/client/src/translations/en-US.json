@@ -76,6 +76,7 @@
       "property": "Name",
       "component": "Component",
       "preview": "Preview",
+      "previewSampleBadge": "Using sample value",
       "default": "Default",
       "bigNumber": "BigNumber",
       "emptyState": "No submodels yet. Add one in the Structure tab to configure how its fields are displayed.",
