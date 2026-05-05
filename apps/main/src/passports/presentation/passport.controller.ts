@@ -803,8 +803,10 @@ export class PassportController
         await this.uniqueProductIdentifierRepository.save(upid, options);
       },
       async (p, options) => {
-        const importedConfigs =
-          await this.presentationConfigurationService.findExistingForPassport(p, options);
+        const importedConfigs = await this.presentationConfigurationService.findExistingForPassport(
+          p,
+          options,
+        );
         const configs =
           importedConfigs.length > 0
             ? importedConfigs
