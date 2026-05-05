@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { http, HttpResponse } from "msw";
-import { activeOrganization } from "../../organization";
+import { activeOrganization } from "./organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";

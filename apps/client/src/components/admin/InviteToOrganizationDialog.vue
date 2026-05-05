@@ -8,7 +8,7 @@ import Select from "primevue/select";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
-import RingLoader from "../RingLoader.vue";
+import RingLoader from "../navigation/RingLoader.vue";
 
 const props = defineProps<{
   userEmail: string;

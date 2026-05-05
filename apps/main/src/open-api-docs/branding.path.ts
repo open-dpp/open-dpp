@@ -1,17 +1,6 @@
 import { BrandingDtoSchema } from "@open-dpp/dto";
-
-const HTTPCode = {
-  OK: 200,
-} as const;
-
-const ContentType = {
-  JSON: "application/json",
-  PNG: "image/png",
-  JPEG: "image/jpeg",
-  WEBP: "image/webp",
-  GIF: "image/gif",
-  SVG: "image/svg+xml",
-} as const;
+import { HTTPCode } from "./http.codes";
+import { ContentType } from "./content.types";
 
 const tag = "branding";
 

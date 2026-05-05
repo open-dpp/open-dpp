@@ -7,3 +7,4 @@ export * from "./fixtures/aas/submodel.modification.factory";
 export * from "./fixtures/passports/passports.factory";
 export * from "./fixtures/permalinks/permalinks.factory";
 export * from "./fixtures/templates/templates.factory";
+export * from "./fixtures/organizations/invitations.factory";

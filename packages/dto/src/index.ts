@@ -9,6 +9,9 @@ export * from "./aas/common/language-text-json-schema";
 export * from "./shared/get-all-params.dto";
 export * from "./shared/filter.dto";
 
+export * from "./organizations/invitation.dto";
+
+export * from "./instance-settings/instance-settings.dto";
 export * from "./aas/common/qualifier-json-schema";
 export * from "./aas/common/reference-json-schema";
 export * from "./aas/concept-description-json-schema";

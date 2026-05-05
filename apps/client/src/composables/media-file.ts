@@ -1,16 +1,13 @@
 import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import { onUnmounted, ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useMediaStore } from "../stores/media.ts";
 
 export function useMediaFile() {
   const mediaInfo = ref<MediaInfo | null>(null);
   const fileUrl = ref<string | null>(null);
   const mediaStore = useMediaStore();
-  const errorHandlingStore = useErrorHandlingStore();
-  const { t } = useI18n();
+  const notFound = ref(false);
 
   async function download(mediaId: string) {
     try {
@@ -23,10 +20,10 @@ export function useMediaFile() {
         fileUrl.value = URL.createObjectURL(blob);
       }
       mediaInfo.value = fetchedMediaInfo;
-    } catch (error) {
-      errorHandlingStore.logErrorWithNotification(t("file.downloadError"), error);
+    } catch {
       fileUrl.value = null;
       mediaInfo.value = null;
+      notFound.value = true;
     }
   }
 
@@ -35,13 +32,14 @@ export function useMediaFile() {
       URL.revokeObjectURL(fileUrl.value);
     }
   });
-  return { download, mediaInfo, fileUrl };
+  return { download, mediaInfo, fileUrl, notFound };
 }
 
 export interface MediaFileCollectionItem {
   blob: Blob | null;
   mediaInfo: MediaInfo;
   url: string;
+  deleted: boolean;
 }
 
 export interface MediaFileCollectionProps {
@@ -79,6 +77,7 @@ export function useMediaFileCollection({
           blob,
           mediaInfo: fetchedMediaInfo,
           url: URL.createObjectURL(blob),
+          deleted: false,
         };
 
         if (position !== undefined && position >= 0 && position < files.value.length) {
@@ -93,8 +92,18 @@ export function useMediaFileCollection({
       } else {
         errorHandlingStore.logErrorWithNotification(errorMsg);
       }
-    } catch (error) {
-      errorHandlingStore.logErrorWithNotification(errorMsg, error);
+    } catch {
+      files.value.push({
+        blob: null,
+        mediaInfo: {
+          id: mediaId,
+          mimeType: "NaN",
+          size: 0,
+          title: "deleted file",
+        },
+        deleted: true,
+        url: "",
+      });
     }
     return false;
   }

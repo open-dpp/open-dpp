@@ -9,7 +9,7 @@ import {
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
-import RingLoader from "../RingLoader.vue";
+import RingLoader from "../navigation/RingLoader.vue";
 
 const props = withDefaults(
   defineProps<{

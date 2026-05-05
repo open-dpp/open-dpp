@@ -23,10 +23,6 @@ const { members } = defineProps<{
   members: Array<MemberDto>;
 }>();
 
-const emit = defineEmits<{
-  (e: "invitedUser"): void;
-}>();
-
 const { t } = useI18n();
 const layoutStore = useLayoutStore();
 
@@ -36,14 +32,9 @@ const rows = computed(() =>
   [...members, ...invitations.value].sort((a, b) => a.role.localeCompare(b.role)),
 );
 async function loadInvitations() {
-  invitations.value = [];
   const { data } = await authClient.organization.listInvitations();
   if (data) {
-    for (const invitation of data) {
-      if (invitation.status === "pending") {
-        invitations.value.push(invitation);
-      }
-    }
+    invitations.value = data.filter((inv) => inv.status === "pending");
   }
 }
 
@@ -72,7 +63,7 @@ onMounted(async () => {
     v-if="layoutStore.modalOpen === ModalType.INVITE_MEMBER_MODAL"
     :organization-id="organizationId"
     @close="layoutStore.closeModal()"
-    @invited-user="emit('invitedUser')"
+    @invited-user="loadInvitations"
   />
   <DataTable :value="rows">
     <template #header>

@@ -1,5 +1,53 @@
 # @open-dpp/client
 
+## 0.4.4
+
+### Patch Changes
+
+- [#544](https://github.com/open-dpp/open-dpp/pull/544) [`19bce7c`](https://github.com/open-dpp/open-dpp/commit/19bce7c2e336f8d4ec53eab6de48315188aaa04f) Thanks [@mr42](https://github.com/mr42)! - Add instance setting OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED. If it is disabled only administrators are allowed to add new organizations. In addition the list of pending invitations are shown for new registered users and also within the profile view. Furthermore, the routing flow for users without organization has been corrected.
+
+- [#564](https://github.com/open-dpp/open-dpp/pull/564) [`8b0e301`](https://github.com/open-dpp/open-dpp/commit/8b0e30179a1d874e927b94be0877212985a97b69) Thanks [@Hentra](https://github.com/Hentra)! - Change Id and id to ID in frontend
+
+- Updated dependencies [[`19bce7c`](https://github.com/open-dpp/open-dpp/commit/19bce7c2e336f8d4ec53eab6de48315188aaa04f), [`8b0e301`](https://github.com/open-dpp/open-dpp/commit/8b0e30179a1d874e927b94be0877212985a97b69)]:
+  - @open-dpp/api-client@0.4.4
+  - @open-dpp/dto@0.4.4
+
+## 0.4.3
+
+### Patch Changes
+
+- [#519](https://github.com/open-dpp/open-dpp/pull/519) [`76dcc6b`](https://github.com/open-dpp/open-dpp/commit/76dcc6bd5961f93df2bf902543a2f2cf4d05963b) Thanks [@florianBieck](https://github.com/florianBieck)! - UX Improvements for the AAS Editor
+
+- [#556](https://github.com/open-dpp/open-dpp/pull/556) [`d5c6ddf`](https://github.com/open-dpp/open-dpp/commit/d5c6ddf976cf87947cacc2b59aaaf2666501d5b1) Thanks [@Hentra](https://github.com/Hentra)! - Allow deletion of media files
+
+- [#553](https://github.com/open-dpp/open-dpp/pull/553) [`6cc122c`](https://github.com/open-dpp/open-dpp/commit/6cc122cf3f1cc5f1964dba211a7e2b4aad08a185) Thanks [@Hentra](https://github.com/Hentra)! - Switch id and name in AAS Table and remove chat button
+
+- Updated dependencies [[`d5c6ddf`](https://github.com/open-dpp/open-dpp/commit/d5c6ddf976cf87947cacc2b59aaaf2666501d5b1)]:
+  - @open-dpp/api-client@0.4.3
+  - @open-dpp/dto@0.4.3
+
+## 0.4.2
+
+### Patch Changes
+
+- [#546](https://github.com/open-dpp/open-dpp/pull/546) [`924af38`](https://github.com/open-dpp/open-dpp/commit/924af38588c3c8b891b3ab3d19b87edf9548b0cf) Thanks [@Hentra](https://github.com/Hentra)! - Refactor sidebar to reduce duplication
+
+- [#551](https://github.com/open-dpp/open-dpp/pull/551) [`ad33c39`](https://github.com/open-dpp/open-dpp/commit/ad33c39da5d7cc1bb6327e885e905a81d06d52cf) Thanks [@Hentra](https://github.com/Hentra)! - Set default language to be loaded from browser settings
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.2
+  - @open-dpp/dto@0.4.2
+
+## 0.4.1
+
+### Patch Changes
+
+- [#548](https://github.com/open-dpp/open-dpp/pull/548) [`2126c6a`](https://github.com/open-dpp/open-dpp/commit/2126c6adf8aa330233dd3b6dd9dd8b82878b88ad) Thanks [@Hentra](https://github.com/Hentra)! - Set the analytics y axis to never show below zero
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.4.1
+  - @open-dpp/dto@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes

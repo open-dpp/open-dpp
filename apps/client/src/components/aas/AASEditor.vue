@@ -298,7 +298,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         >
           <template #header>
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</span>
+              <h3 class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</h3>
               <Button
                 v-if="!isArchived"
                 :label="t('aasEditor.addSubmodel')"
@@ -362,7 +362,6 @@ const isFullPosition = computed(() => position.value === fullPosition);
             />
           </template>
         </TreeTable>
-        <ConfirmDialog />
         <Menu
           id="overlay_menu"
           ref="popover"
@@ -387,7 +386,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
     >
       <template #header>
         <div class="flex w-full flex-row items-center justify-between gap-1 pr-2">
-          <span class="text-xl font-bold">{{ drawerHeader }}</span>
+          <h2 class="text-xl font-bold">{{ drawerHeader }}</h2>
           <div class="flex gap-3">
             <Button
               v-if="position === defaultPosition"

@@ -2,16 +2,13 @@
 import Toast from "primevue/toast";
 import { computed, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
-import ModalDialog from "./components/ModalDialog.vue";
 import SafelistTailwindCss from "./SafelistTailwindCss.vue";
 
 const route = useRoute();
 
-const LayoutDefault = defineAsyncComponent(() => import("./components/layout/Layout.vue"));
-const LayoutPresentation = defineAsyncComponent(
-  () => import("./components/layout/LayoutPresentation.vue"),
-);
-const LayoutNone = defineAsyncComponent(() => import("./components/layout/LayoutNone.vue"));
+const LayoutDefault = defineAsyncComponent(() => import("./layout/Main.vue"));
+const LayoutPresentation = defineAsyncComponent(() => import("./layout/Presentation.vue"));
+const LayoutNone = defineAsyncComponent(() => import("./layout/None.vue"));
 
 const layout = computed(() => {
   if (route.meta.layout === "presentation") return LayoutPresentation;
@@ -23,6 +20,6 @@ const layout = computed(() => {
 <template>
   <SafelistTailwindCss key="safelist" />
   <component :is="layout" key="layout" />
-  <ModalDialog key="model-dialog" />
   <Toast />
+  <ConfirmDialog />
 </template>
