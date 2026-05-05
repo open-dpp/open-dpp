@@ -12,7 +12,10 @@ import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
-import { DigitalProductDocumentStatus, DigitalProductDocumentStatusChange } from "../../digital-product-document/domain/digital-product-document-status";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../digital-product-document/domain/digital-product-document-status";
 import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
@@ -238,8 +241,9 @@ describe("PermalinkController", () => {
     });
 
     it("returns 200 to a member of the owning org for a draft passport", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: org.id,
@@ -268,10 +272,10 @@ describe("PermalinkController", () => {
     });
 
     it("returns 404 to a member of a different org for a draft passport", async () => {
-      const { org: ownerOrg } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const outsider =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org: ownerOrg } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: ownerOrg.id,
@@ -332,8 +336,9 @@ describe("PermalinkController", () => {
     }
 
     it("assigns a slug as a member of the owning org", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
@@ -355,8 +360,9 @@ describe("PermalinkController", () => {
     });
 
     it("clears a slug when the body sends slug: null", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
       const initialSlug = `slug-${randomUUID().slice(0, 8)}`;
       const { permalink } = await createPassportWithPermalinkInOrg(org.id, initialSlug);
 
@@ -371,8 +377,9 @@ describe("PermalinkController", () => {
     });
 
     it("rejects an invalid slug with 400", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
@@ -385,8 +392,9 @@ describe("PermalinkController", () => {
     });
 
     it("rejects a reserved slug with 400", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
@@ -399,8 +407,9 @@ describe("PermalinkController", () => {
     });
 
     it("returns 409 on a duplicate slug", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
       const taken = `slug-${randomUUID().slice(0, 8)}`;
       await createPassportWithPermalinkInOrg(org.id, taken);
       const { permalink: target } = await createPassportWithPermalinkInOrg(org.id);
@@ -415,10 +424,10 @@ describe("PermalinkController", () => {
     });
 
     it("returns 403 when the requester's org does not own the passport", async () => {
-      const { org: ownerOrg } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const outsider =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org: ownerOrg } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
       const { permalink } = await createPassportWithPermalinkInOrg(ownerOrg.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
@@ -431,8 +440,7 @@ describe("PermalinkController", () => {
     });
 
     it("returns 401 / 403 when the request is anonymous", async () => {
-      const { org } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org } = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
@@ -443,8 +451,9 @@ describe("PermalinkController", () => {
     });
 
     it("returns 404 when the permalink does not exist", async () => {
-      const { org, userCookie } =
-        await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
         .patch(`/p/${randomUUID()}/slug`)

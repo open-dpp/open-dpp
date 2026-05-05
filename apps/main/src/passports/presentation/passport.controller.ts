@@ -808,9 +808,7 @@ export class PassportController
         const configs =
           importedConfigs.length > 0
             ? importedConfigs
-            : [
-                await this.presentationConfigurationService.ensureDefaultForPassport(p, options),
-              ];
+            : [await this.presentationConfigurationService.ensureDefaultForPassport(p, options)];
         await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
       },
     );

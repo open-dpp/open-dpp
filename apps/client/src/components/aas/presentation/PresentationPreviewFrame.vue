@@ -53,11 +53,7 @@ const usedSample = computed(() => sampleResult.value.usedSample);
       </span>
     </div>
     <div data-cy="presentation-preview-content">
-      <SubmodelElementValue
-        :element="previewElement"
-        :path="path"
-        :config="store.activeConfig"
-      />
+      <SubmodelElementValue :element="previewElement" :path="path" :config="store.activeConfig" />
     </div>
   </div>
 </template>

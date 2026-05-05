@@ -7,7 +7,10 @@ import {
   type PropertyResponseDto,
   type SubmodelElementResponseDto,
 } from "@open-dpp/dto";
-import { PRESENTATION_COMPONENTS, type PresentationComponentEntry } from "./presentation-components";
+import {
+  PRESENTATION_COMPONENTS,
+  type PresentationComponentEntry,
+} from "./presentation-components";
 import { type LeafElement, resolveI18nKey } from "./presentation-element-helpers";
 
 type TestElement = SubmodelElementResponseDto & LeafElement;

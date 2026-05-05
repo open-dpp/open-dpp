@@ -87,10 +87,7 @@ export class PermalinkRepository {
     return Permalink.fromPlain({ ...plain, id: plain._id });
   }
 
-  async findAllByPassportId(
-    passportId: string,
-    options?: DbSessionOptions,
-  ): Promise<Permalink[]> {
+  async findAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<Permalink[]> {
     // Join through presentation_configurations to avoid pulling the
     // PresentationConfigurationRepository as a dependency (would create a cycle:
     // PermalinkModule imports PresentationConfigurationsModule; reverse would
@@ -134,10 +131,7 @@ export class PermalinkRepository {
   // deletion so multi-config passports do not leave orphan permalinks.
   // Resolves config ids first (within the same session) so the actual delete
   // is a simple multi-id match.
-  async deleteAllByPassportId(
-    passportId: string,
-    options?: DbSessionOptions,
-  ): Promise<number> {
+  async deleteAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<number> {
     const configDocs = await this.presentationConfigurationDoc
       .find({
         referenceType: PresentationReferenceType.Passport,

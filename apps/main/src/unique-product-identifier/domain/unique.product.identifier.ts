@@ -13,11 +13,7 @@ export class UniqueProductIdentifier {
   // ExternalIdentifierType for the full set.
   public readonly type: ExternalIdentifierTypeValue;
 
-  private constructor(
-    uuid: string,
-    referenceId: string,
-    type: ExternalIdentifierTypeValue,
-  ) {
+  private constructor(uuid: string, referenceId: string, type: ExternalIdentifierTypeValue) {
     this.uuid = uuid;
     this.referenceId = referenceId;
     this.type = type;

@@ -186,9 +186,7 @@ describe("PermalinkRepository", () => {
     expect(deleted).toBe(2);
 
     for (const config of configs) {
-      expect(
-        await repository.findByPresentationConfigurationId(config.id),
-      ).toBeUndefined();
+      expect(await repository.findByPresentationConfigurationId(config.id)).toBeUndefined();
     }
   });
 

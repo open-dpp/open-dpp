@@ -134,10 +134,7 @@ describe("uniqueProductIdentifierRepository", () => {
     // directly with $unset after a normal save.
     const upi = UniqueProductIdentifier.create({ referenceId: uuid4() });
     await uniqueProductIdentifierRepository.save(upi);
-    await uniqueProductIdentifierDoc.updateOne(
-      { _id: upi.uuid },
-      { $unset: { type: 1 } },
-    );
+    await uniqueProductIdentifierDoc.updateOne({ _id: upi.uuid }, { $unset: { type: 1 } });
 
     const refetched = await uniqueProductIdentifierRepository.findOneOrFail(upi.uuid);
     expect(refetched.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);

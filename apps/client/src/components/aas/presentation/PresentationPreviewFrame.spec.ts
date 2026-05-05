@@ -46,9 +46,7 @@ const i18n = createI18n({
   },
 });
 
-function makeProperty(
-  overrides: Partial<PropertyResponseDto> = {},
-): SubmodelElementResponseDto {
+function makeProperty(overrides: Partial<PropertyResponseDto> = {}): SubmodelElementResponseDto {
   const property: PropertyResponseDto = {
     idShort: "Revenue",
     valueType: DataTypeDef.Decimal,
