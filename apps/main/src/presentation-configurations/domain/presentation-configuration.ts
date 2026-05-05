@@ -74,17 +74,6 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     );
   }
 
-  static createForTemplate(data: {
-    organizationId: string;
-    referenceId: string;
-  }): PresentationConfiguration {
-    return PresentationConfiguration.create({
-      organizationId: data.organizationId,
-      referenceId: data.referenceId,
-      referenceType: PresentationReferenceType.Template,
-    });
-  }
-
   static createForPassport(data: {
     organizationId: string;
     referenceId: string;
