@@ -55,11 +55,16 @@ export class PermalinkApplicationService {
     passport: Passport,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    // Two callers reach this path with different starting state:
-    //   - Passport create: no config row yet, we create one.
+    // Three callers reach this path:
+    //   - Passport create from a template: the template's configs were
+    //     snapshotted into the new passport just before this call, so
+    //     findByReference returns the first snapshot config.
+    //   - Passport create without a template: no config row exists; we
+    //     create a fresh default here.
     //   - Passport import: the importer pre-saved a config row carrying the
-    //     imported elementDesign/defaultComponents — reuse it instead of
-    //     overwriting.
+    //     imported elementDesign/defaultComponents — reuse it.
+    // findByReference returns the first by createdAt (deterministic), so
+    // multi-config passports always permalink to the same canonical row.
     // Server-generated passport ids prevent two creators from racing on the
     // same referenceId, so this needs no retry.
     const existingConfig = await this.presentationConfigurationRepository.findByReference(
