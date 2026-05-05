@@ -26,29 +26,38 @@ const isDateOrDateTime = computed(
   () => props.valueType === DataTypeDef.Date || props.valueType === DataTypeDef.DateTime,
 );
 const currentTimezone = computed(() => getCurrentTimezone());
+
+const isErrorVisible = computed(() => props.showError && !!props.error);
+const errorMessageId = computed(() => `${props.id}-error`);
+const describedBy = computed(() => (isErrorVisible.value ? errorMessageId.value : undefined));
 </script>
 
 <template>
   <div class="flex flex-col gap-2">
-    <span class="text-xl font-bold">{{ t("aasEditor.formLabels.value") }}</span>
+    <h3 class="text-xl font-bold">{{ props.label }}</h3>
     <InputGroup>
-      <FloatLabel variant="on">
-        <PropertyValue
-          :id="props.id"
-          :model-value="props.modelValue"
-          :invalid="props.showError && !!props.error"
-          :value-type="props.valueType"
-          :disabled="props.disabled"
-          @update:model-value="emit('update:modelValue', $event)"
-        />
-        <label :for="props.id">{{ props.label }}</label>
-      </FloatLabel>
+      <PropertyValue
+        :id="props.id"
+        :model-value="props.modelValue"
+        :invalid="isErrorVisible"
+        :value-type="props.valueType"
+        :disabled="props.disabled"
+        :aria-describedby="describedBy"
+        :aria-invalid="isErrorVisible ? 'true' : undefined"
+        @update:model-value="emit('update:modelValue', $event)"
+      />
       <slot name="addon-right" />
     </InputGroup>
     <small v-if="isDateOrDateTime" class="text-muted-color" data-testid="property-value-timezone">
       {{ t("aasEditor.timezone") }}: {{ currentTimezone }}
     </small>
-    <Message v-if="props.showError && props.error" size="small" severity="error" variant="simple">
+    <Message
+      v-if="isErrorVisible"
+      :id="errorMessageId"
+      size="small"
+      severity="error"
+      variant="simple"
+    >
       {{ props.error }}
     </Message>
   </div>

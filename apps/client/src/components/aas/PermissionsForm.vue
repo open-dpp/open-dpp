@@ -124,7 +124,7 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-2">
-    <span class="text-xl font-bold">{{ t("aasEditor.security.permissions") }}</span>
+    <h3 class="text-xl font-bold">{{ t("aasEditor.security.permissions") }}</h3>
     <div class="flex flex-row gap-2">
       <Select
         v-model="selectedRole"

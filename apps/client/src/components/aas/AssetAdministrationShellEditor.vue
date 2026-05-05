@@ -13,7 +13,6 @@ import { LanguageTextFormSchema } from "../../lib/submodel-base-form.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import GalleriaEdit from "../media/GalleriaEdit.vue";
 import DisplayNameForm from "./form/DisplayNameForm.vue";
-import FormContainer from "./form/FormContainer.vue";
 
 const props =
   defineProps<
@@ -38,16 +37,14 @@ const formSchema = z.object({
 
 export type FormValues = z.infer<typeof formSchema>;
 
-const { handleSubmit, meta, submitCount, errors } = useForm<FormValues>({
+const { handleSubmit, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...props.data,
   },
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 async function submit() {
   await handleSubmit(async (data) => {
@@ -72,17 +69,17 @@ defineExpose<{
 </script>
 
 <template>
-  <FormContainer>
-    <DisplayNameForm :show-errors="showErrors" :errors="errors" />
-  </FormContainer>
-  <GalleriaEdit
-    v-model="files"
-    :title="t('aasEditor.productImages')"
-    @add-image="addImage"
-    @remove-image="removeImage"
-    @modify-image="modifyImage"
-    @move-image="moveImage"
-  />
+  <div class="flex flex-col gap-4 p-2">
+    <DisplayNameForm :submit-attempted="showErrors" />
+    <GalleriaEdit
+      v-model="files"
+      :title="t('aasEditor.productImages')"
+      @add-image="addImage"
+      @remove-image="removeImage"
+      @modify-image="modifyImage"
+      @move-image="moveImage"
+    />
+  </div>
 </template>
 
 <style scoped></style>

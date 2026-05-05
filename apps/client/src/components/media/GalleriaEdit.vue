@@ -68,9 +68,10 @@ function onMoveImageDown(image: MediaInfo) {
     <DataTable :value="images">
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{ props.title ?? t("media.media") }}</span>
+          <h3 class="text-xl font-bold">{{ props.title ?? t("media.media") }}</h3>
           <Button
             data-cy="add-image"
+            :aria-label="t('common.add')"
             icon="pi pi-plus"
             rounded
             raised
@@ -89,12 +90,13 @@ function onMoveImageDown(image: MediaInfo) {
           <Image :src="slotProps.data.url" preview width="100px" />
         </template>
       </Column>
-      <Column class="w-24 text-end!">
+      <Column class="w-44 text-end! align-middle!">
         <template #body="{ data, index }">
-          <div class="flex items-center gap-2 rounded-md">
+          <div class="flex items-center justify-end gap-2 rounded-md">
             <Button
               icon="pi pi-pencil"
               :data-cy="`modify-media-${data.mediaInfo.id}`"
+              :aria-label="t('common.edit')"
               severity="primary"
               rounded
               @click="onModifyImage(data.mediaInfo)"
@@ -102,6 +104,7 @@ function onMoveImageDown(image: MediaInfo) {
             <Button
               icon="pi pi-chevron-up"
               :data-cy="`move-media-${data.mediaInfo.id}-up`"
+              :aria-label="t('common.moveUp')"
               severity="secondary"
               :disabled="isFirst(index)"
               rounded
@@ -110,6 +113,7 @@ function onMoveImageDown(image: MediaInfo) {
             <Button
               icon="pi pi-chevron-down"
               :data-cy="`move-media-${data.mediaInfo.id}-down`"
+              :aria-label="t('common.moveDown')"
               severity="secondary"
               :disabled="isLast(index)"
               rounded
@@ -118,6 +122,7 @@ function onMoveImageDown(image: MediaInfo) {
             <Button
               icon="pi pi-trash"
               :data-cy="`delete-media-${data.mediaInfo.id}`"
+              :aria-label="t('common.remove')"
               severity="danger"
               rounded
               @click="emits('removeImage', data.mediaInfo)"

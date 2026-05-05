@@ -12,6 +12,8 @@ const props = defineProps<{
   invalid?: boolean;
   valueType?: DataTypeDefType;
   disabled?: boolean;
+  ariaDescribedby?: string;
+  ariaInvalid?: "true" | "false" | undefined;
 }>();
 
 const emit = defineEmits<{
@@ -93,6 +95,8 @@ const textValue = computed({
     :invalid="props.invalid"
     :locale="locale"
     :max-fraction-digits="maxFractionDigits"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
     show-buttons
   />
   <DatePicker
@@ -103,16 +107,21 @@ const textValue = computed({
     :invalid="props.invalid"
     :show-time="isDateTime"
     :show-seconds="isDateTime"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
     show-icon
     icon-display="input"
     fluid
   />
-  <InputText
+  <Textarea
     v-else
     :id="props.id"
     v-model="textValue"
     :disabled="props.disabled"
     :invalid="props.invalid"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
+    fluid
   />
 </template>
 

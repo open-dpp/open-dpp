@@ -37,6 +37,7 @@ declare module 'vue' {
     DigitalProductDocumentTable: typeof import('./src/components/digital-product-document/DigitalProductDocumentTable.vue')['default']
     DigitalProductDocumentToolbar: typeof import('./src/components/digital-product-document/DigitalProductDocumentToolbar.vue')['default']
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
+    DisplayNameRow: typeof import('./src/components/aas/form/DisplayNameRow.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
@@ -122,6 +123,7 @@ declare module 'vue' {
     Tabs: typeof import('./src/components/lists/Tabs.vue')['default']
     Tag: typeof import('primevue/tag')['default']
     TemplateCreateDialog: typeof import('./src/components/template/TemplateCreateDialog.vue')['default']
+    Textarea: typeof import('primevue/textarea')['default']
     TextFieldWithValidation: typeof import('./src/components/basics/TextFieldWithValidation.vue')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     Toolbar: typeof import('primevue/toolbar')['default']
@@ -162,6 +164,7 @@ declare global {
   const DigitalProductDocumentTable: (typeof import("./src/components/digital-product-document/DigitalProductDocumentTable.vue"))["default"];
   const DigitalProductDocumentToolbar: (typeof import("./src/components/digital-product-document/DigitalProductDocumentToolbar.vue"))["default"];
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
+  const DisplayNameRow: (typeof import("./src/components/aas/form/DisplayNameRow.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
   const FileCreateEditor: (typeof import("./src/components/aas/FileCreateEditor.vue"))["default"];
@@ -247,6 +250,7 @@ declare global {
   const Tabs: (typeof import("./src/components/lists/Tabs.vue"))["default"];
   const Tag: (typeof import("primevue/tag"))["default"];
   const TemplateCreateDialog: (typeof import("./src/components/template/TemplateCreateDialog.vue"))["default"];
+  const Textarea: (typeof import("primevue/textarea"))["default"];
   const TextFieldWithValidation: (typeof import("./src/components/basics/TextFieldWithValidation.vue"))["default"];
   const ToggleSwitch: (typeof import("primevue/toggleswitch"))["default"];
   const Toolbar: (typeof import("primevue/toolbar"))["default"];

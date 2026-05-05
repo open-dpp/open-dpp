@@ -4,6 +4,9 @@
   },
   "common": {
     "reset": "Zurücksetzen",
+    "noEntries": "Keine Einträge gefunden",
+    "moveUp": "Nach oben verschieben",
+    "moveDown": "Nach unten verschieben",
     "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
