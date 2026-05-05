@@ -18,8 +18,6 @@ import { UsersModule } from "../../identity/users/users.module";
 import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
 import { MediaService } from "../infrastructure/media.service";
 import { MediaController } from "./media.controller";
-import request from "supertest";
-import { getApp } from "../../../test/utils.for.test";
 
 describe("mediaController", () => {
   let app: INestApplication;
