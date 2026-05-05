@@ -137,6 +137,8 @@ watch(
 watch(
   () => presentationConfigStore.activeConfigId,
   (next) => {
+    const current = typeof route.query.config === "string" ? route.query.config : null;
+    if (current === next) return;
     router.push({ query: { ...route.query, config: next ?? undefined } });
   },
 );
