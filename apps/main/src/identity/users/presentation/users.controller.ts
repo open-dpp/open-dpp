@@ -1,11 +1,3 @@
-import type {
-  CreateUserDto,
-  MeDto,
-  RequestEmailChangeDto,
-  SetUserRoleDto,
-  UpdateProfileDto,
-  UserDto,
-} from "@open-dpp/dto";
 import {
   Body,
   Controller,
@@ -15,14 +7,24 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
-  NotFoundException,
   Param,
   Patch,
   Post,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
+import type {
+  CreateUserDto,
+  InvitationResponseDto,
+  InvitationStatusDtoType,
+  MeDto,
+  RequestEmailChangeDto,
+  SetUserRoleDto,
+  UpdateProfileDto,
+  UserDto,
+} from "@open-dpp/dto";
 import {
   CreateUserDtoSchema,
+  InvitationResponseSchema,
   RequestEmailChangeDtoSchema,
   SetUserRoleDtoSchema,
   UpdateProfileDtoSchema,
@@ -34,13 +36,19 @@ import { EmailService } from "../../../email/email.service";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session as SessionDomainEntity } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
+import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
 import { UserHasRole } from "../../auth/presentation/decorators/user-has-role.decorator";
 import { EmailChangeRequestsService } from "../../email-change-requests/application/services/email-change-requests.service";
 import { signRevokeToken } from "../../email-change-requests/domain/revoke-token";
 import { EmailChangeRequestMapper } from "../../email-change-requests/infrastructure/mappers/email-change-request.mapper";
+import { InvitationPopulateDecorator } from "../../organizations/application/invitation-populate-decorator";
+import { Invitation } from "../../organizations/domain/invitation";
+import { InvitationsRepository } from "../../organizations/infrastructure/adapters/invitations.repository";
+import { OrganizationsRepository } from "../../organizations/infrastructure/adapters/organizations.repository";
 import { UsersService } from "../application/services/users.service";
 import { UserRole, UserRoleEnum } from "../domain/user-role.enum";
 import { UserMapper } from "../infrastructure/mappers/user.mapper";
+import { InvitationStatusQueryParam } from "./users.decorators";
 
 const REVOKE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -53,6 +61,8 @@ export class UsersController {
     private readonly emailChangeRequestsService: EmailChangeRequestsService,
     private readonly emailService: EmailService,
     private readonly envService: EnvService,
+    private readonly organizationRepository: OrganizationsRepository,
+    private readonly invitationsRepository: InvitationsRepository,
   ) {}
 
   @Post()
@@ -125,7 +135,6 @@ export class UsersController {
         }),
       );
     } catch (error) {
-      // Notification email is best-effort — request itself already succeeded.
       this.logger.error(
         `Failed to send email-change notification to ${user.email} for user ${user.id}`,
         error,
@@ -158,12 +167,26 @@ export class UsersController {
     return UserMapper.toDto(user);
   }
 
-  @Get(":id")
-  async getUser(@Param("id") id: string): Promise<UserDto> {
-    const user = await this.usersService.findOne(id);
-    if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
-    }
-    return UserMapper.toDto(user);
+  @Get("me/invitations")
+  async getInvitations(
+    @UserEmailDecorator() email: string,
+    @InvitationStatusQueryParam() status: InvitationStatusDtoType | undefined,
+  ): Promise<InvitationResponseDto[]> {
+    const invitations = await this.invitationsRepository.findByEmail(email);
+    const filteredInvitations = status
+      ? invitations.filter((i) => i.status === status)
+      : invitations;
+    const populatedInvitations = await Promise.all(
+      filteredInvitations.map(async (i: Invitation) => {
+        const decorator = new InvitationPopulateDecorator(
+          i,
+          this.organizationRepository,
+          this.usersService,
+        );
+
+        return (await decorator.populate()).toPlain();
+      }),
+    );
+    return InvitationResponseSchema.array().parse(populatedInvitations);
   }
 }

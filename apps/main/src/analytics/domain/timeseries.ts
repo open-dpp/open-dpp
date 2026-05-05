@@ -33,8 +33,6 @@ export class Timeseries {
     // Convert data to a map for fast lookup
     const dataMap = new Map<string, number>();
     for (const point of this.dataPoints) {
-      // console.log(dayjs.tz(point.datetime, timezone).format());
-      // console.log(dayjs.tz(point.datetime, timezone).startOf(unit).format(), dayjs.tz(point.datetime, timezone).startOf(unit).toISOString());
       const key = dayjs.utc(point.datetime).startOf(unit).toISOString();
       dataMap.set(key, point.sum);
     }

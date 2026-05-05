@@ -82,9 +82,10 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Instance settings
 
-| Variable                           | Type                    | Required | Default | Description                                                  |
-| ---------------------------------- | ----------------------- | -------- | ------- | ------------------------------------------------------------ |
-| `OPEN_DPP_INSTANCE_SIGNUP_ENABLED` | strict boolean (string) | No       | –       | Allows/disables signup; value must be `"true"` or `"false"`. |
+| Variable                                          | Type                    | Required | Default | Description                                                                                                    |
+| ------------------------------------------------- | ----------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_INSTANCE_SIGNUP_ENABLED`                | strict boolean (string) | No       | true    | Allows/disables signup; value must be `"true"` or `"false"`.                                                   |
+| `OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED` | strict boolean (string) | No       | true    | Allows/disables creation of organizations for users which are not admins; value must be `"true"` or `"false"`. |
 
 ## Default caps
 

@@ -1,4 +1,4 @@
-import type { Connection, Model } from "mongoose";
+import { Connection, Model, Types } from "mongoose";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -6,11 +6,11 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../../../database/config";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
-import { Invitation, InvitationSchema } from "./invitation.schema";
+import { InvitationDoc, InvitationSchema } from "./invitation.schema";
 
 describe("invitationSchema", () => {
   let mongoConnection: Connection;
-  let InvitationModel: Model<Invitation>;
+  let InvitationModel: Model<InvitationDoc>;
   let module: TestingModule;
 
   beforeAll(async () => {
@@ -24,11 +24,11 @@ describe("invitationSchema", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([{ name: Invitation.name, schema: InvitationSchema }]),
+        MongooseModule.forFeature([{ name: InvitationDoc.name, schema: InvitationSchema }]),
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());
-    InvitationModel = mongoConnection.model(Invitation.name, InvitationSchema);
+    InvitationModel = mongoConnection.model(InvitationDoc.name, InvitationSchema);
   });
 
   afterEach(async () => {
@@ -46,7 +46,7 @@ describe("invitationSchema", () => {
 
   it("should create an invitation document", async () => {
     const invitationData = {
-      _id: "invitation-123",
+      _id: new Types.ObjectId().toHexString(),
       email: "test@example.com",
       inviterId: "user-123",
       organizationId: "org-123",
@@ -59,7 +59,7 @@ describe("invitationSchema", () => {
     const invitation = new InvitationModel(invitationData);
     const savedInvitation = await invitation.save();
 
-    expect(savedInvitation._id).toBe(invitationData._id);
+    expect(savedInvitation._id.toHexString()).toBe(invitationData._id);
     expect(savedInvitation.email).toBe(invitationData.email);
     expect(savedInvitation.role).toBe(invitationData.role);
   });

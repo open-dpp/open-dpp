@@ -18,8 +18,6 @@ const baseUser: UserDto = {
   image: null,
   emailVerified: true,
   preferredLanguage: Language.en,
-  pendingEmail: null,
-  pendingEmailRequestedAt: null,
   createdAt: new Date("2026-01-01"),
   updatedAt: new Date("2026-01-01"),
 };

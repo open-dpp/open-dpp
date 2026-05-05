@@ -12,6 +12,7 @@ const mockMinioInstance = {
   bucketExists: jest.fn<any>(),
   putObject: jest.fn<any>(),
   getObject: jest.fn<any>(),
+  removeObject: jest.fn<any>(),
 };
 
 const mockMinioClient = jest.fn(() => mockMinioInstance);
@@ -121,25 +122,6 @@ describe("MediaService", () => {
       await expect(
         service.uploadFile("bucket", Buffer.from("test"), "file", [], 4, "text/plain"),
       ).rejects.toThrow("Bucket bucket does not exist");
-    });
-  });
-
-  describe("uploadProfilePicture", () => {
-    it("should upload profile picture to profile bucket", async () => {
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({});
-
-      const buffer = Buffer.from("image");
-      await service.uploadProfilePicture(buffer, "user-id");
-
-      expect(mockMinioInstance.bucketExists).toHaveBeenCalledWith("profile-bucket");
-      expect(mockMinioInstance.putObject).toHaveBeenCalledWith(
-        "profile-bucket",
-        "user-id",
-        buffer,
-        buffer.length,
-        { "Content-Type": "image/webp" },
-      );
     });
   });
 
@@ -368,6 +350,22 @@ describe("MediaService", () => {
     it("should call deleteOne", async () => {
       await service.removeById("id");
       expect(mockMediaModel.deleteOne).toHaveBeenCalledWith({ _id: "id" });
+    });
+  });
+
+  describe("deleteFileById", () => {
+    it("should remove object from storage and delete from db", async () => {
+      mockMediaModel.findById.mockResolvedValue(validMediaDoc);
+      mockMinioInstance.removeObject.mockResolvedValue(undefined);
+      mockMediaModel.deleteOne.mockResolvedValue(undefined);
+
+      await service.deleteFileById("media-id");
+
+      expect(mockMinioInstance.removeObject).toHaveBeenCalledWith(
+        validMediaDoc.bucket,
+        validMediaDoc.objectName,
+      );
+      expect(mockMediaModel.deleteOne).toHaveBeenCalledWith({ _id: "media-id" });
     });
   });
 

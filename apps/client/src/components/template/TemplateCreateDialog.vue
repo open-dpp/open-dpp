@@ -24,16 +24,14 @@ const formSchema = z.object({
 
 export type FormValues = z.infer<typeof formSchema>;
 
-const { handleSubmit, meta, submitCount, errors } = useForm<FormValues>({
+const { handleSubmit, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...displayNameFormDefaultValues(convertLocaleToLanguage(locale.value)),
   },
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 function close() {
   visible.value = false;
@@ -50,7 +48,7 @@ async function submit() {
 <template>
   <Dialog v-model:visible="visible" modal :header="t('templates.create')" @hide="close">
     <div class="flex flex-col gap-4">
-      <DisplayNameForm :show-errors="showErrors" :errors="errors" />
+      <DisplayNameForm :submit-attempted="showErrors" />
       <div class="flex justify-end gap-2">
         <Button type="button" :label="t('common.cancel')" severity="secondary" @click="close" />
         <Button type="button" :label="t('common.add')" @click="submit" />

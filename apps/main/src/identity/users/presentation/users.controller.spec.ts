@@ -1,266 +1,556 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { randomUUID } from "node:crypto";
+import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
+import type { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { EnvService } from "@open-dpp/env";
-import { Language } from "@open-dpp/dto";
-import { UsersService } from "../application/services/users.service";
-import { Session } from "../../auth/domain/session";
-import { EmailChangeRequestsService } from "../../email-change-requests/application/services/email-change-requests.service";
-import { EmailChangeRequest } from "../../email-change-requests/domain/email-change-request";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import {
+  ForbiddenExceptionFilter,
+  NotFoundExceptionFilter,
+  NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
+} from "@open-dpp/exception";
+import type { Auth } from "better-auth";
+import request from "supertest";
+import { BetterAuthHelper } from "../../../../test/better-auth-helper";
+import { generateMongoConfig } from "../../../database/config";
 import { EmailService } from "../../../email/email.service";
-import { User } from "../domain/user";
+import { AuthModule } from "../../auth/auth.module";
+import { AUTH } from "../../auth/auth.provider";
+import { AuthGuard } from "../../auth/infrastructure/guards/auth.guard";
+import { InvitationStatus } from "../../organizations/domain/invitation-status.enum";
+import { OrganizationsModule } from "../../organizations/organizations.module";
+import { UsersService } from "../application/services/users.service";
 import { UserRole } from "../domain/user-role.enum";
-import { UsersController } from "./users.controller";
+import { UsersRepository } from "../infrastructure/adapters/users.repository";
+import { UsersModule } from "../users.module";
+
+const TEST_PASSWORD = "password1234";
 
 describe("UsersController", () => {
-  let controller: UsersController;
-  let mockUsersService: any;
-  let mockEmailChangeRequestsService: any;
-  let mockEmailService: any;
-  let mockEnvService: any;
+  let app: INestApplication;
+  let moduleRef: TestingModule;
+  let usersRepository: UsersRepository;
+  let emailSendMock: jest.Mock;
+  const betterAuthHelper = new BetterAuthHelper();
 
-  beforeEach(async () => {
-    mockUsersService = {
-      createUser: jest.fn(),
-      findOne: jest.fn(),
-      setUserRole: jest.fn(),
-      getMe: jest.fn(),
-      updateProfile: jest.fn(),
-    };
-    mockEmailChangeRequestsService = {
-      findByUserId: jest.fn(),
-      request: jest.fn(),
-      hardCancel: jest.fn(),
-    };
-    mockEmailService = {
-      send: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    };
-    mockEnvService = {
-      get: jest.fn((key: string) => {
-        if (key === "OPEN_DPP_URL") return "https://open-dpp.test";
-        if (key === "OPEN_DPP_AUTH_SECRET") return "test-secret-32-chars-min-........";
-        return undefined;
-      }),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UsersController],
-      providers: [
-        { provide: UsersService, useValue: mockUsersService },
-        { provide: EmailChangeRequestsService, useValue: mockEmailChangeRequestsService },
-        { provide: EmailService, useValue: mockEmailService },
-        { provide: EnvService, useValue: mockEnvService },
+  beforeAll(async () => {
+    emailSendMock = jest.fn();
+    moduleRef = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        AuthModule,
+        UsersModule,
+        OrganizationsModule,
       ],
-    }).compile();
-
-    controller = module.get<UsersController>(UsersController);
-  });
-
-  it("should create user and return a UserDto", async () => {
-    const dto = { email: "test@example.com", firstName: "John", lastName: "Doe" };
-    const createdUser = User.create({
-      email: dto.email,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-    });
-    mockUsersService.createUser.mockResolvedValue(createdUser);
-
-    const result = await controller.createUser(dto);
-
-    expect(mockUsersService.createUser).toHaveBeenCalledWith(
-      dto.email,
-      dto.firstName,
-      dto.lastName,
-    );
-    expect(result).toEqual(
-      expect.objectContaining({
-        id: createdUser.id,
-        email: createdUser.email,
-        firstName: "John",
-        lastName: "Doe",
-      }),
-    );
-    expect(result).not.toHaveProperty("role");
-    expect(result).not.toHaveProperty("banned");
-  });
-
-  it("should get user by id and return a UserDto without admin fields", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: "John",
-      lastName: "Doe",
-      role: UserRole.ADMIN,
-      banned: true,
-    });
-    mockUsersService.findOne.mockResolvedValue(user);
-
-    const result = await controller.getUser(user.id);
-
-    expect(result.id).toBe(user.id);
-    expect(result).not.toHaveProperty("role");
-    expect(result).not.toHaveProperty("banned");
-    expect(result).not.toHaveProperty("banReason");
-    expect(result).not.toHaveProperty("banExpires");
-  });
-
-  it("should set user role and return a UserDto", async () => {
-    const user = User.create({
-      email: "test@example.com",
-      firstName: "John",
-      lastName: "Doe",
-      role: UserRole.USER,
-    });
-    const updatedUser = user.withRole(UserRole.ADMIN);
-    mockUsersService.setUserRole.mockResolvedValue(updatedUser);
-
-    const result = await controller.setUserRole(user.id, { role: "admin" });
-
-    expect(mockUsersService.setUserRole).toHaveBeenCalledWith(user.id, "admin");
-    expect(result.id).toBe(user.id);
-    expect(result).not.toHaveProperty("role");
-  });
-
-  describe("getMe", () => {
-    it("returns the current user as a MeDto with no pendingEmailChange when none is pending", async () => {
-      const user = User.create({
-        email: "me@example.com",
-        firstName: "Me",
-        lastName: "Self",
-        role: UserRole.ADMIN,
-      });
-      mockUsersService.getMe.mockResolvedValue(user);
-      mockEmailChangeRequestsService.findByUserId.mockResolvedValue(null);
-      const session = { userId: user.id } as unknown as Session;
-
-      const result = await controller.getMe(session);
-
-      expect(mockUsersService.getMe).toHaveBeenCalledWith(user.id);
-      expect(mockEmailChangeRequestsService.findByUserId).toHaveBeenCalledWith(user.id);
-      expect(result.user.id).toBe(user.id);
-      expect(result.user.email).toBe(user.email);
-      expect(result.user.firstName).toBe("Me");
-      expect(result.user.preferredLanguage).toBe(Language.en);
-      expect(result.user).not.toHaveProperty("role");
-      expect(result.pendingEmailChange).toBeNull();
-    });
-
-    it("returns the pending email change when one exists", async () => {
-      const user = User.create({
-        email: "me@example.com",
-        firstName: "Me",
-        lastName: "Self",
-      });
-      const pending = EmailChangeRequest.create({ userId: user.id, newEmail: "new@example.com" });
-      mockUsersService.getMe.mockResolvedValue(user);
-      mockEmailChangeRequestsService.findByUserId.mockResolvedValue(pending);
-      const session = { userId: user.id } as unknown as Session;
-
-      const result = await controller.getMe(session);
-
-      expect(result.pendingEmailChange).toEqual({
-        newEmail: "new@example.com",
-        requestedAt: pending.requestedAt,
-      });
-    });
-  });
-
-  describe("updateProfile", () => {
-    it("forwards the body and session user id to the service and returns a MeDto", async () => {
-      const user = User.create({
-        email: "me@example.com",
-        firstName: "Old",
-        lastName: "Name",
-      });
-      const updated = user.withName("New", "Name").withPreferredLanguage(Language.de);
-      mockUsersService.updateProfile.mockResolvedValue(updated);
-      mockEmailChangeRequestsService.findByUserId.mockResolvedValue(null);
-      const session = { userId: user.id } as unknown as Session;
-      const body = { firstName: "New", preferredLanguage: Language.de } as const;
-
-      const result = await controller.updateProfile(session, body);
-
-      expect(mockUsersService.updateProfile).toHaveBeenCalledWith(user.id, body);
-      expect(result.user.firstName).toBe("New");
-      expect(result.user.preferredLanguage).toBe(Language.de);
-      expect(result.user).not.toHaveProperty("role");
-      expect(result.pendingEmailChange).toBeNull();
-    });
-  });
-
-  describe("requestEmailChange", () => {
-    it("calls the EmailChangeRequestsService.request, sends a notification, and returns a MeDto", async () => {
-      const user = User.create({
-        email: "me@example.com",
-        firstName: "Me",
-        lastName: "Self",
-      });
-      const pending = EmailChangeRequest.create({ userId: user.id, newEmail: "fresh@example.com" });
-      mockUsersService.getMe.mockResolvedValue(user);
-      mockEmailChangeRequestsService.request.mockResolvedValue(pending);
-      const session = { userId: user.id } as unknown as Session;
-      const headers: Record<string, string> = {
-        cookie: "better-auth.session=abc",
-        "x-api-key": "key-1",
-        "user-agent": "jest",
-      };
-
-      const result = await controller.requestEmailChange(session, headers, {
-        newEmail: "fresh@example.com",
-        currentPassword: "hunter2",
-      });
-
-      expect(mockEmailChangeRequestsService.request).toHaveBeenCalledWith(
-        user.id,
-        "fresh@example.com",
-        user.email,
-        "hunter2",
+      providers: [
         {
-          cookie: "better-auth.session=abc",
-          "x-api-key": "key-1",
+          provide: APP_GUARD,
+          useClass: AuthGuard,
         },
-      );
-      expect(mockEmailService.send).toHaveBeenCalledTimes(1);
-      expect(result.pendingEmailChange?.newEmail).toBe("fresh@example.com");
-      expect(result.user).not.toHaveProperty("role");
+      ],
+    })
+      .overrideProvider(EmailService)
+      .useValue({ send: emailSendMock })
+      .compile();
+
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
+    usersRepository = moduleRef.get<UsersRepository>(UsersRepository);
+
+    app = moduleRef.createNestApplication();
+    app.useGlobalFilters(
+      new NotFoundInDatabaseExceptionFilter(),
+      new NotFoundExceptionFilter(),
+      new ValueErrorFilter(),
+      new ForbiddenExceptionFilter(),
+    );
+    await app.init();
+  });
+
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
+  });
+
+  describe("POST /users", () => {
+    it("returns 403 when caller is not an admin", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .post("/users")
+        .set("Cookie", userCookie)
+        .send({ email: `${randomUUID()}@test.test`, firstName: "Jane", lastName: "Doe" });
+
+      expect(response.status).toBe(403);
     });
 
-    it("still returns a MeDto when the notification email send fails (best-effort)", async () => {
-      const user = User.create({
-        email: "me@example.com",
-        firstName: "Me",
-        lastName: "Self",
-      });
-      const pending = EmailChangeRequest.create({ userId: user.id, newEmail: "fresh@example.com" });
-      mockUsersService.getMe.mockResolvedValue(user);
-      mockEmailChangeRequestsService.request.mockResolvedValue(pending);
-      mockEmailService.send.mockRejectedValue(new Error("smtp down"));
-      const session = { userId: user.id } as unknown as Session;
+    it("creates a user and returns a UserDto without admin-only fields", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+      const newEmail = `${randomUUID()}@test.test`;
 
-      const result = await controller.requestEmailChange(
-        session,
-        { cookie: "x" },
-        { newEmail: "fresh@example.com", currentPassword: "hunter2" },
+      const response = await request(app.getHttpServer())
+        .post("/users")
+        .set("Cookie", adminCookie)
+        .send({ email: newEmail, firstName: "Jane", lastName: "Doe" });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          email: newEmail,
+          firstName: "Jane",
+          lastName: "Doe",
+        }),
       );
+      expect(response.body).not.toHaveProperty("role");
+      expect(response.body).not.toHaveProperty("banned");
 
-      expect(result.pendingEmailChange?.newEmail).toBe("fresh@example.com");
+      const persisted = await usersRepository.findOneByEmail(newEmail);
+      expect(persisted!.email).toBe(newEmail);
     });
   });
 
-  describe("cancelEmailChange", () => {
-    it("forwards the user id to the service and returns a MeDto with a null pending change", async () => {
-      const user = User.create({
-        email: "me@example.com",
-        firstName: "Me",
-        lastName: "Self",
+  describe("PATCH /users/:id/role", () => {
+    it("returns 403 when caller is not an admin", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .patch(`/users/${user.id}/role`)
+        .set("Cookie", userCookie)
+        .send({ role: UserRole.ADMIN });
+
+      expect(response.status).toBe(403);
+    });
+
+    it("changes the user's role and returns a UserDto without admin-only fields", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+      const { user: target } = await betterAuthHelper.createUser({ role: UserRole.USER });
+
+      const response = await request(app.getHttpServer())
+        .patch(`/users/${target.id}/role`)
+        .set("Cookie", adminCookie)
+        .send({ role: UserRole.ADMIN });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: target.id,
+          email: target.email,
+        }),
+      );
+      expect(response.body).not.toHaveProperty("role");
+      expect(response.body).not.toHaveProperty("banned");
+
+      const persisted = await usersRepository.findOneById(target.id);
+      expect(persisted!.role).toBe(UserRole.ADMIN);
+    });
+  });
+
+  describe("GET /users/me", () => {
+    it("returns 403 when no session is present", async () => {
+      const response = await request(app.getHttpServer()).get("/users/me");
+      expect(response.status).toBe(403);
+    });
+
+    it("returns the authenticated user with preferredLanguage defaulted to 'en'", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .get("/users/me")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body.user).toEqual(
+        expect.objectContaining({
+          id: user.id,
+          email: user.email,
+          preferredLanguage: "en",
+        }),
+      );
+      expect(response.body.pendingEmailChange).toBeNull();
+    });
+
+    it("strips admin-only fields (role, banned) from the user object", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .get("/users/me")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body.user).not.toHaveProperty("role");
+      expect(response.body.user).not.toHaveProperty("banned");
+      expect(response.body.user).not.toHaveProperty("banReason");
+      expect(response.body.user).not.toHaveProperty("banExpires");
+    });
+  });
+
+  describe("PATCH /users/me", () => {
+    it("returns 403 when no session is present", async () => {
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .send({ firstName: "Jane" });
+      expect(response.status).toBe(403);
+    });
+
+    it("updates firstName, lastName, and preferredLanguage", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({ firstName: "Jane", lastName: "Roe", preferredLanguage: "de" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.user).toEqual(
+        expect.objectContaining({
+          firstName: "Jane",
+          lastName: "Roe",
+          name: "Jane Roe",
+          preferredLanguage: "de",
+        }),
+      );
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.firstName).toBe("Jane");
+      expect(persisted!.lastName).toBe("Roe");
+      expect(persisted!.preferredLanguage).toBe("de");
+    });
+
+    it("rejects an empty firstName with 400", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({ firstName: "" });
+
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects an unsupported language with 400", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({ preferredLanguage: "fr" });
+
+      expect(response.status).toBe(400);
+    });
+
+    it("returns 200 with the unchanged user and does not bump updatedAt for an empty body", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const before = await usersRepository.findOneById(user.id);
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({});
+
+      expect(response.status).toBe(200);
+      const after = await usersRepository.findOneById(user.id);
+      expect(after!.updatedAt.getTime()).toBe(before!.updatedAt.getTime());
+    });
+
+    it("does not bump updatedAt when patch values match the current user", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const before = await usersRepository.findOneById(user.id);
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({ preferredLanguage: before!.preferredLanguage });
+
+      expect(response.status).toBe(200);
+      const after = await usersRepository.findOneById(user.id);
+      expect(after!.updatedAt.getTime()).toBe(before!.updatedAt.getTime());
+    });
+  });
+
+  describe("POST /users/me/email-change", () => {
+    it("returns 403 when no session is present", async () => {
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .send({ newEmail: `${randomUUID()}@test.test`, currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(403);
+    });
+
+    it("triggers a notification email, creates a pending change request, keeps the current email unchanged", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+      const newEmail = `${randomUUID()}@test.test`;
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(202);
+      expect(emailSendMock).toHaveBeenCalled();
+      expect(response.body.pendingEmailChange?.newEmail).toBe(newEmail);
+      expect(response.body.pendingEmailChange?.requestedAt).toBeDefined();
+      expect(response.body.user).not.toHaveProperty("role");
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.email).toBe(user.email);
+    });
+
+    it("rejects requestEmailChange with wrong password", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: `${randomUUID()}@test.test`, currentPassword: "wrong-password" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message.toLowerCase()).toContain("password");
+    });
+
+    it("rejects a malformed email with 400", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: "not-an-email", currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects a request to change to the user's current email", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: user.email, currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(400);
+      expect(emailSendMock).not.toHaveBeenCalled();
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.email).toBe(user.email);
+    });
+
+    it("does not change emailVerified on the requesting user", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const before = await usersRepository.findOneById(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(202);
+      const after = await usersRepository.findOneById(user.id);
+      expect(after!.emailVerified).toBe(before!.emailVerified);
+    });
+  });
+
+  describe("DELETE /users/me/email-change", () => {
+    it("returns 403 when no session is present", async () => {
+      const response = await request(app.getHttpServer()).delete("/users/me/email-change");
+      expect(response.status).toBe(403);
+    });
+
+    it("clears the pending email change", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      const response = await request(app.getHttpServer())
+        .delete("/users/me/email-change")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body.pendingEmailChange).toBeNull();
+    });
+
+    it("is a no-op when no email change is pending (still returns 200)", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .delete("/users/me/email-change")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body.pendingEmailChange).toBeNull();
+    });
+
+    it("allows the user to request a new change after cancelling", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const firstNewEmail = `${randomUUID()}@test.test`;
+      const secondNewEmail = `${randomUUID()}@test.test`;
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: firstNewEmail, currentPassword: TEST_PASSWORD });
+      await request(app.getHttpServer()).delete("/users/me/email-change").set("Cookie", userCookie);
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: secondNewEmail, currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(202);
+      expect(emailSendMock).toHaveBeenCalled();
+      expect(response.body.pendingEmailChange?.newEmail).toBe(secondNewEmail);
+    });
+
+    it("blocks completion of a verification link after the change has been revoked", async () => {
+      // After the user clicks the revoke link sent to their old inbox, the verification
+      // JWT in the new inbox must no longer be able to mutate user.email. Better Auth's
+      // change-email JWT is stateless, so the gate lives in the user.update before-hook
+      // that requires a matching EmailChangeRequest row to exist.
+      const auth = moduleRef.get<Auth>(AUTH);
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      const verifyEmailCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
       });
-      mockEmailChangeRequestsService.hardCancel.mockResolvedValue(undefined);
-      mockUsersService.getMe.mockResolvedValue(user);
-      const session = { userId: user.id } as unknown as Session;
+      expect(verifyEmailCall).toBeDefined();
+      const verifyLink = (verifyEmailCall![0] as { templateProperties: { link: string } })
+        .templateProperties.link;
+      const token = new URL(verifyLink).searchParams.get("token");
+      expect(typeof token).toBe("string");
 
-      const result = await controller.cancelEmailChange(session);
+      const revokeResponse = await request(app.getHttpServer())
+        .delete("/users/me/email-change")
+        .set("Cookie", userCookie);
+      expect(revokeResponse.status).toBe(200);
 
-      expect(mockEmailChangeRequestsService.hardCancel).toHaveBeenCalledWith(user.id);
-      expect(result.pendingEmailChange).toBeNull();
-      expect(result.user).not.toHaveProperty("role");
+      try {
+        await (auth.api as any).verifyEmail({
+          query: { token, callbackURL: "/" },
+          asResponse: true,
+        });
+      } catch {
+        // Hook veto can surface as an error from parseUserOutput on null — expected.
+      }
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.email).toBe(user.email);
+    });
+  });
+
+  describe("GET /users/me/invitations", () => {
+    it("returns 403 when no session is present", async () => {
+      const response = await request(app.getHttpServer()).get("/users/me/invitations");
+      expect(response.status).toBe(403);
+    });
+
+    it("returns invitations for the signed-in user populated with organization and inviter", async () => {
+      const { user: inviter } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const inviterCookie = await betterAuthHelper.signAsUser(inviter.id);
+      const organization = await betterAuthHelper.createOrganization(inviter.id);
+      const inviteeEmail = `invite.${randomUUID()}@test.test`;
+
+      const inviteResponse = await request(app.getHttpServer())
+        .post(`/organizations/${organization.id}/invite`)
+        .set("Cookie", inviterCookie)
+        .send({ email: inviteeEmail });
+      expect(inviteResponse.status).toBe(201);
+
+      const { user: invitee } = await betterAuthHelper.createUser({
+        role: UserRole.USER,
+        email: inviteeEmail,
+      });
+      const inviteeCookie = await betterAuthHelper.signAsUser(invitee.id);
+
+      const response = await request(app.getHttpServer())
+        .get("/users/me/invitations")
+        .set("Cookie", inviteeCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0]).toEqual(
+        expect.objectContaining({
+          organization: { name: organization.name },
+          inviter: { name: "First Last" },
+          status: InvitationStatus.PENDING,
+          organizationId: organization.id,
+        }),
+      );
+      expect(typeof response.body[0].id).toBe("string");
+      expect(typeof response.body[0].expiresAt).toBe("string");
+    });
+
+    it("filters invitations by status query param", async () => {
+      const { user: inviter } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const inviterCookie = await betterAuthHelper.signAsUser(inviter.id);
+      const organization = await betterAuthHelper.createOrganization(inviter.id);
+      const inviteeEmail = `invite.${randomUUID()}@test.test`;
+
+      const pendingInvite = await request(app.getHttpServer())
+        .post(`/organizations/${organization.id}/invite`)
+        .set("Cookie", inviterCookie)
+        .send({ email: inviteeEmail });
+      expect(pendingInvite.status).toBe(201);
+
+      const { user: invitee } = await betterAuthHelper.createUser({
+        role: UserRole.USER,
+        email: inviteeEmail,
+      });
+      const inviteeCookie = await betterAuthHelper.signAsUser(invitee.id);
+
+      const pendingResponse = await request(app.getHttpServer())
+        .get("/users/me/invitations?status=pending")
+        .set("Cookie", inviteeCookie);
+      expect(pendingResponse.status).toBe(200);
+      expect(pendingResponse.body).toHaveLength(1);
+      expect(pendingResponse.body[0].status).toBe(InvitationStatus.PENDING);
+
+      const declinedResponse = await request(app.getHttpServer())
+        .get("/users/me/invitations?status=declined")
+        .set("Cookie", inviteeCookie);
+      expect(declinedResponse.status).toBe(200);
+      expect(declinedResponse.body).toHaveLength(0);
     });
   });
 });

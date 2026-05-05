@@ -1,18 +1,15 @@
 import type {
   CreateUserDto,
+  InvitationResponseDto,
+  InvitationStatusDtoType,
   MeDto,
   SetUserRoleDto,
   UpdateProfileDto,
-  UserDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
 
 export class UsersNamespace {
   constructor(private readonly axiosInstance: AxiosInstance) {}
-
-  public async getById(id: string) {
-    return this.axiosInstance.get<UserDto>(`/users/${id}`);
-  }
 
   public async getMe() {
     return this.axiosInstance.get<MeDto>("/users/me");
@@ -36,5 +33,9 @@ export class UsersNamespace {
 
   public async setRole(id: string, data: SetUserRoleDto) {
     return this.axiosInstance.patch<void>(`/users/${id}/role`, data);
+  }
+
+  public async getInvitations(params?: { status: InvitationStatusDtoType }) {
+    return this.axiosInstance.get<InvitationResponseDto[]>("/users/me/invitations", { params });
   }
 }

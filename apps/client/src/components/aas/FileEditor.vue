@@ -33,15 +33,13 @@ const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;
 } | null>(null);
 
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...props.data,
   },
 });
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 async function submit() {
   await handleSubmit(async (data) => {
@@ -61,12 +59,7 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-4 p-2">
-    <FileForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.EDIT"
-      :disabled="disableEdit"
-    />
+    <FileForm :show-errors="showErrors" :editor-mode="EditorMode.EDIT" :disabled="disableEdit" />
     <PermissionsForm
       ref="permissionsFormRef"
       :disabled="disableEdit"

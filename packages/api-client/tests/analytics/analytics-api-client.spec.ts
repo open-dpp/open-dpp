@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { OpenDppClient } from "../../src";
-import { activeOrganization } from "../organization";
+import { activeOrganization } from "../dpp/handlers/organization";
 import { expectWithDetailedError } from "../utils";
 import { analyticsUrl } from "./handlers";
 import {

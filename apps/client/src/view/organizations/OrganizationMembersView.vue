@@ -29,7 +29,6 @@ watch(() => indexStore.selectedOrganization, fetchMembers, { immediate: true });
       v-if="indexStore.selectedOrganization"
       :members="members"
       :organization-id="indexStore.selectedOrganization"
-      @invited-user="fetchMembers"
     />
   </ContentViewWrapper>
 </template>

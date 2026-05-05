@@ -4,6 +4,9 @@
   },
   "common": {
     "reset": "Reset",
+    "noEntries": "No entries found",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
@@ -266,7 +269,6 @@
       "errorSwitch": "Failed to switch model passport",
       "errorLoad": "Failed to load connections:",
       "add": "Create connection",
-      "id": "ID",
       "name": {
         "label": "Name",
         "help": "Give your connection a name"
@@ -330,11 +332,15 @@
     "details": "Organization details and users.",
     "create": "Create a new organization.",
     "createError": "Error creating organization.",
+    "organizationCreationDisabled": {
+      "title": "Creating organizations is disabled",
+      "description": "Your administrator has disabled the ability to create organizations. Please ask your administrator or a colleague to invite you to an organization."
+    },
     "fetchError": "Error fetching organizations.",
     "fetchCurrentError": "Error fetching current organization.",
     "assignedOrganizations": "All assigned organizations",
     "pick": "Select organization",
-    "new": "Create new organization",
+    "new": "Create organization",
     "invite": "Invite",
     "inviteUser": "Invite user",
     "inviteUserSuccess": "The user has been successfully invited.",
@@ -345,7 +351,6 @@
     "owner": "Organisation admin",
     "addUser": "Add user",
     "form": {
-      "id": "ID",
       "createdBy": "Created by",
       "administeredBy": "Administered by",
       "description": "Description",
@@ -373,9 +378,14 @@
       "accept": "Accept",
       "decline": "Decline",
       "cancel": "Cancel invitation",
+      "expiresAt": "Expires at",
+      "expired": "Expired",
       "acceptSuccess": "Successfully accepted invitation.",
       "acceptError": "Error on accepting invitation.",
-      "acceptTitle": "You have been invited to join an organization"
+      "acceptTitle": "You have been invited to join an organization",
+      "errorLoading": "Failed to load invitation | Failed to load invitations",
+      "invitedBy": "Invited by",
+      "invitedToOrganization": "Invited to the organization"
     },
     "userInvitations": {
       "title": "Invitations",
@@ -424,10 +434,17 @@
       },
       "instanceSettings": {
         "title": "Instance Settings",
-        "signupEnabled": "Public signup enabled",
-        "signupEnabledDescription": "When disabled, only admins can add new users.",
+        "signupEnabled": {
+          "title": "Public signup enabled",
+          "description": "When disabled, only admins can add new users."
+        },
+        "organizationCreationEnabled": {
+          "title": "Public creation of organizations enabled",
+          "description": "When disabled, only admins can create new organizations."
+        },
         "saved": "Settings saved successfully",
         "error": "Error saving settings",
+        "errorLoading": "Error loading settings",
         "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
     }
@@ -539,12 +556,21 @@
   "media": {
     "title": "Title",
     "media": "Media",
-    "preview": "Preview"
+    "preview": "Preview",
+    "deletedFile": "Deleted File",
+    "deleteDialog": {
+      "header": "Confirm Delete",
+      "message": "If this file appears in product passports, it will be removed from them. Still delete?"
+    },
+    "deleteSuccess": "Successfully deleted file",
+    "deleteFailure": "Failed to delete file"
   },
   "file": {
     "type": "File type",
     "size": "File size",
     "upload": "Upload file",
+    "delete": "Delete File",
+    "actions": "Actions",
     "uploadSuccess": "File uploaded successfully.",
     "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
     "change": "Change file",

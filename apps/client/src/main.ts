@@ -6,7 +6,7 @@ import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
 import ToastService from "primevue/toastservice";
 import Tooltip from "primevue/tooltip";
-import { createApp, watch } from "vue";
+import { createApp, toRaw, watch } from "vue";
 import App from "./App.vue";
 import { authClient } from "./auth-client.ts";
 import apiClient from "./lib/api-client.ts";
@@ -80,7 +80,7 @@ async function startApp() {
     } else if (session.session.activeOrganizationId) {
       indexStore.selectOrganization(session.session.activeOrganizationId);
     } else {
-      indexStore.selectOrganization(organizationStore.organizations[0]!.id);
+      indexStore.selectOrganization(toRaw(organizationStore.organizations[0]!).id);
     }
   }
 
