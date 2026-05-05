@@ -1,18 +1,19 @@
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
-import { computed, inject } from "vue";
+import { computed } from "vue";
+import { usePassportStore } from "../../stores/passport";
 import { PRESENTATION_COMPONENTS } from "./components/presentation-components";
-import { presentationConfigKey, resolveComponent } from "./presentation-config";
+import { resolveComponent } from "./presentation-config";
 
 export function usePresentationDispatch(
   getElement: () => SubmodelElementResponseDto,
   getPath: () => string | undefined,
 ) {
-  const configRef = inject(presentationConfigKey, null);
+  const passportStore = usePassportStore();
 
   const name = computed(() => {
     const path = getPath();
     if (!path) return undefined;
-    return resolveComponent(configRef?.value ?? null, {
+    return resolveComponent(passportStore.presentationConfig, {
       path,
       modelType: getElement().modelType,
     });

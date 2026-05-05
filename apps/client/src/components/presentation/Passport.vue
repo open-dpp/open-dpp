@@ -1,19 +1,16 @@
 <script lang="ts" setup>
-import { computed, provide, toRef } from "vue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 import NavigationTree from "./NavigationTree.vue";
 import PassportHeader from "./PassportHeader.vue";
-import { presentationConfigKey } from "./presentation-config";
 import Submodel from "./Submodel.vue";
 
 const { t } = useI18n();
 const passportStore = usePassportStore();
 const route = useRoute();
-
-provide(presentationConfigKey, toRef(passportStore, "presentationConfig"));
 
 const { submodelTree, submodelTreeDepth, mapTreeElementsToSubmodels, findTreeElementById } =
   useSubmodelTree(passportStore.submodels);

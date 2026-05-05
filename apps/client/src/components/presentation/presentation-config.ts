@@ -4,10 +4,6 @@ import type {
   PresentationConfigurationDto,
 } from "@open-dpp/dto";
 import { KeyTypesEnum } from "@open-dpp/dto";
-import type { InjectionKey, Ref } from "vue";
-
-export const presentationConfigKey: InjectionKey<Ref<PresentationConfigurationDto | null>> =
-  Symbol("presentationConfig");
 
 export function resolveComponent(
   config: PresentationConfigurationDto | null | undefined,
