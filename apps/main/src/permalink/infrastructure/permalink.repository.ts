@@ -39,17 +39,6 @@ export class PermalinkRepository {
     );
   }
 
-  async update(permalink: Permalink, options?: DbSessionOptions): Promise<Permalink> {
-    return await save(
-      permalink,
-      this.permalinkDoc,
-      PermalinkDocVersion.v1_0_0,
-      this.fromPlain.bind(this),
-      undefined,
-      options,
-    );
-  }
-
   async findOne(id: string): Promise<Permalink | undefined> {
     return await findOne(id, this.permalinkDoc, this.fromPlain.bind(this));
   }

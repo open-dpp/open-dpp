@@ -103,7 +103,7 @@ export class PermalinkApplicationService {
   ): Promise<Permalink> {
     const permalink = await this.permalinkRepository.findOneOrFail(permalinkId);
     const next = permalink.withSlug(slug);
-    return await this.permalinkRepository.update(next, options);
+    return await this.permalinkRepository.save(next, options);
   }
 }
 

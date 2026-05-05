@@ -50,6 +50,7 @@ import {
 } from "../../aas/presentation/aas.decorators";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
+import { isDuplicateKeyError } from "../../lib/mongo-errors";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import {
@@ -96,11 +97,10 @@ export class PermalinkController {
     // Hide non-published passports from anonymous / cross-org callers — same
     // gate as resolveToPassport so the listing endpoint can't enumerate
     // draft permalinks. Members of the owning org keep full visibility.
-    const passport = await this.permalinkApplicationService.resolveToPassport(permalinks[0].id, {
+    await this.permalinkApplicationService.resolveToPassport(permalinks[0].id, {
       organizationId,
       memberRole,
     });
-    void passport;
     return PermalinkListDtoSchema.parse(permalinks.map((p) => p.toPlain()));
   }
 
@@ -171,7 +171,7 @@ export class PermalinkController {
       const next = await this.permalinkApplicationService.updateSlug(id, body.slug);
       return PermalinkDtoSchema.parse(next.toPlain());
     } catch (error) {
-      if (isMongoDuplicateKeyError(error)) {
+      if (isDuplicateKeyError(error)) {
         throw new ConflictException("Slug is already taken");
       }
       throw error;
@@ -347,13 +347,4 @@ export class PermalinkController {
       subject,
     );
   }
-}
-
-function isMongoDuplicateKeyError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code: unknown }).code === 11000
-  );
 }
