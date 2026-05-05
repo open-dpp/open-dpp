@@ -269,7 +269,6 @@
       "errorSwitch": "Wechsel des Modellpasses fehlgeschlagen",
       "errorLoad": "Laden der Verbindungen fehlgeschlagen:",
       "add": "Verbindung erstellen",
-      "id": "ID",
       "name": {
         "label": "Name",
         "help": "Geben Sie Ihrer Verbindung einen Namen"
@@ -348,7 +347,6 @@
     "owner": "Organisationsadministrator*in",
     "addUser": "Benutzer hinzufügen",
     "form": {
-      "id": "ID",
       "createdBy": "Erstellt von",
       "administeredBy": "Administriert von",
       "description": "Beschreibung",

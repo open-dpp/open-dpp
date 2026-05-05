@@ -5,6 +5,9 @@ import { computed } from "vue";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import DisplayNameForm from "./form/DisplayNameForm.vue";
 import IdField from "./form/IdField.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   showErrors: boolean;
@@ -34,7 +37,7 @@ const showIdShortError = computed(() => idShortMeta.dirty || props.showErrors);
       v-model="idShort"
       class="col-span-3"
       :disabled="isEditMode"
-      label="ID"
+      :label="t('common.id')"
       :show-error="showIdShortError"
       :error="errorMessage"
     />

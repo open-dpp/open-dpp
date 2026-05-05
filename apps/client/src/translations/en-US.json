@@ -269,7 +269,6 @@
       "errorSwitch": "Failed to switch model passport",
       "errorLoad": "Failed to load connections:",
       "add": "Create connection",
-      "id": "ID",
       "name": {
         "label": "Name",
         "help": "Give your connection a name"
@@ -348,7 +347,6 @@
     "owner": "Organisation admin",
     "addUser": "Add user",
     "form": {
-      "id": "ID",
       "createdBy": "Created by",
       "administeredBy": "Administered by",
       "description": "Description",
