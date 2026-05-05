@@ -4,9 +4,11 @@ import Galleria from "primevue/galleria";
 import Image from "primevue/image";
 import { computed } from "vue";
 import emptyState from "../../assets/empty-state.png";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{ autoPlay?: boolean; size?: number; withBorder?: boolean }>();
 const model = defineModel<MediaFileCollectionItem[]>();
+const { t } = useI18n();
 
 const productImagesExist = computed<boolean>(
   () => model.value !== undefined && model.value.length > 0,
@@ -32,6 +34,7 @@ const size = props.size ?? 340;
     <template #item="slotProps">
       <div class="flex w-full items-center justify-center" :style="`height: ${size}px;`">
         <Image
+          v-if="!slotProps.item.deleted"
           :src="slotProps.item.url"
           alt="Image"
           :pt="{
@@ -40,6 +43,7 @@ const size = props.size ?? 340;
             },
           }"
         />
+        <div v-else class="text-red-600">{{ t("media.deletedFile") }}</div>
       </div>
     </template>
   </Galleria>

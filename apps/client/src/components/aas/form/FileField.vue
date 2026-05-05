@@ -12,14 +12,18 @@ const mediaInfoId = defineModel<string>();
 const contentType = defineModel<string>("contentType");
 const { t } = useI18n();
 
-const { download, mediaInfo } = useMediaFile();
+const { download, mediaInfo, notFound } = useMediaFile();
 const openFileModal = ref<boolean>(false);
 
 watch(
   () => mediaInfoId.value,
   async (newMediaInfoId) => {
     if (newMediaInfoId) {
-      await download(newMediaInfoId);
+      try {
+        await download(newMediaInfoId);
+      } catch (e) {
+        notFound.value = true;
+      }
     }
   },
   { immediate: true },
@@ -61,6 +65,19 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
             <div class="my-auto max-w-full truncate text-sm text-gray-600">
               {{ mediaInfo.title }}
             </div>
+          </div>
+          <div v-else-if="notFound === true" class="flex w-full flex-row justify-between gap-4">
+            <div class="my-auto text-red-600">
+              {{ t("media.deletedFile") }}
+            </div>
+            <Button
+              size="small"
+              class="my-auto shrink"
+              :disabled="props.disabled"
+              @click.prevent="openFileModal = true"
+            >
+              <PencilIcon class="h-4 w-4" />
+            </Button>
           </div>
           <div v-else class="flex w-full flex-row justify-between gap-4">
             <div class="my-auto text-gray-600">

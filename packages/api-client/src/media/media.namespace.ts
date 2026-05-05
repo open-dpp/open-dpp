@@ -82,4 +82,8 @@ export class MediaNamespace {
 
     throw new Error(`Unexpected upload status ${response.status}`);
   }
+
+  async deleteFile(id: string) {
+    return this.axiosInstance.delete<void>(`${this.mediaEndpoint}/${id}`);
+  }
 }

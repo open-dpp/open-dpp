@@ -438,6 +438,8 @@
   "file": {
     "type": "Dateityp",
     "size": "Dateigröße",
+    "delete": "Datei löschen",
+    "actions": "Aktionen",
     "upload": "Datei hochladen",
     "uploadSuccess": "Datei erfolgreich hochgeladen.",
     "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
@@ -454,7 +456,14 @@
   "media": {
     "title": "Titel",
     "media": "Medien",
-    "preview": "Vorschau"
+    "preview": "Vorschau",
+    "deletedFile": "Gelöschte Datei",
+    "deleteDialog": {
+      "header": "Löschen bestätigen",
+      "message": "Falls diese Datei in Produktpässen angezeigt wird, wird sie daraus entfernt. Trotzdem löschen?"
+    },
+    "deleteSuccess": "Datei wurde erfolgreich gelöscht",
+    "deleteFailure": "Fehler beim Löschen der Datei"
   },
   "passports": {
     "select": "Produktpass auswählen",
