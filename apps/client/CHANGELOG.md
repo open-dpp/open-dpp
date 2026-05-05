@@ -1,5 +1,19 @@
 # @open-dpp/client
 
+## 0.4.3
+
+### Patch Changes
+
+- [#519](https://github.com/open-dpp/open-dpp/pull/519) [`76dcc6b`](https://github.com/open-dpp/open-dpp/commit/76dcc6bd5961f93df2bf902543a2f2cf4d05963b) Thanks [@florianBieck](https://github.com/florianBieck)! - UX Improvements for the AAS Editor
+
+- [#556](https://github.com/open-dpp/open-dpp/pull/556) [`d5c6ddf`](https://github.com/open-dpp/open-dpp/commit/d5c6ddf976cf87947cacc2b59aaaf2666501d5b1) Thanks [@Hentra](https://github.com/Hentra)! - Allow deletion of media files
+
+- [#553](https://github.com/open-dpp/open-dpp/pull/553) [`6cc122c`](https://github.com/open-dpp/open-dpp/commit/6cc122cf3f1cc5f1964dba211a7e2b4aad08a185) Thanks [@Hentra](https://github.com/Hentra)! - Switch id and name in AAS Table and remove chat button
+
+- Updated dependencies [[`d5c6ddf`](https://github.com/open-dpp/open-dpp/commit/d5c6ddf976cf87947cacc2b59aaaf2666501d5b1)]:
+  - @open-dpp/api-client@0.4.3
+  - @open-dpp/dto@0.4.3
+
 ## 0.4.2
 
 ### Patch Changes
