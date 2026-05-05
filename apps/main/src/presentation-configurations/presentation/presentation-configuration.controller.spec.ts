@@ -89,7 +89,10 @@ describe("PresentationConfigurationController", () => {
     referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
     overrides: Partial<{
       label: string | null;
-      elementDesign: Record<string, (typeof PresentationComponentName)[keyof typeof PresentationComponentName]>;
+      elementDesign: Record<
+        string,
+        (typeof PresentationComponentName)[keyof typeof PresentationComponentName]
+      >;
     }> = {},
   ): PresentationConfiguration {
     return PresentationConfiguration.create({
@@ -304,12 +307,9 @@ describe("PresentationConfigurationController", () => {
     it("createForTemplate creates a variant and returns the DTO", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const created = makeConfig(
-        organizationId,
-        template.id,
-        PresentationReferenceType.Template,
-        { label: "Variant A" },
-      );
+      const created = makeConfig(organizationId, template.id, PresentationReferenceType.Template, {
+        label: "Variant A",
+      });
       templateRepository.findOneOrFail.mockResolvedValue(template);
       service.createForTemplate.mockResolvedValue(created);
 
@@ -347,14 +347,9 @@ describe("PresentationConfigurationController", () => {
     it("patchByIdForTemplate applies patch and returns updated DTO", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const patched = makeConfig(
-        organizationId,
-        template.id,
-        PresentationReferenceType.Template,
-        {
-          elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
-        },
-      );
+      const patched = makeConfig(organizationId, template.id, PresentationReferenceType.Template, {
+        elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
+      });
       templateRepository.findOneOrFail.mockResolvedValue(template);
       service.applyPatchByConfigIdForTemplate.mockResolvedValue(patched);
 
@@ -367,11 +362,9 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.applyPatchByConfigIdForTemplate).toHaveBeenCalledWith(
-        template,
-        patched.id,
-        { elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber } },
-      );
+      expect(service.applyPatchByConfigIdForTemplate).toHaveBeenCalledWith(template, patched.id, {
+        elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
+      });
       expect(result.elementDesign).toEqual({
         "submodel.numericField": PresentationComponentName.BigNumber,
       });

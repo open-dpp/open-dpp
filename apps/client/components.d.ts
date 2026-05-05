@@ -42,6 +42,7 @@ declare module 'vue' {
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
     Dropdown: typeof import('./src/components/Dropdown.vue')['default']
+    ElementPresentationPanel: typeof import('./src/components/aas/presentation/ElementPresentationPanel.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
     FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
@@ -95,7 +96,6 @@ declare module 'vue' {
     Password: typeof import('primevue/password')['default']
     PermissionsForm: typeof import('./src/components/aas/PermissionsForm.vue')['default']
     PresentationComponentRenderer: typeof import('./src/components/presentation/components/PresentationComponentRenderer.vue')['default']
-    PresentationTab: typeof import('./src/components/aas/presentation/PresentationTab.vue')['default']
     ProductImageGalleria: typeof import('./src/components/media/ProductImageGalleria.vue')['default']
     ProfileForm: typeof import('./src/components/ProfileForm.vue')['default']
     PropertyCreateEditor: typeof import('./src/components/aas/PropertyCreateEditor.vue')['default']
@@ -174,6 +174,7 @@ declare global {
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
   const Dropdown: (typeof import("./src/components/Dropdown.vue"))["default"];
+  const ElementPresentationPanel: (typeof import("./src/components/aas/presentation/ElementPresentationPanel.vue"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
   const FileCreateEditor: (typeof import("./src/components/aas/FileCreateEditor.vue"))["default"];
   const FileEditor: (typeof import("./src/components/aas/FileEditor.vue"))["default"];
@@ -227,7 +228,6 @@ declare global {
   const Password: (typeof import("primevue/password"))["default"];
   const PermissionsForm: (typeof import("./src/components/aas/PermissionsForm.vue"))["default"];
   const PresentationComponentRenderer: (typeof import("./src/components/presentation/components/PresentationComponentRenderer.vue"))["default"];
-  const PresentationTab: (typeof import("./src/components/aas/presentation/PresentationTab.vue"))["default"];
   const ProductImageGalleria: (typeof import("./src/components/media/ProductImageGalleria.vue"))["default"];
   const ProfileForm: (typeof import("./src/components/ProfileForm.vue"))["default"];
   const PropertyCreateEditor: (typeof import("./src/components/aas/PropertyCreateEditor.vue"))["default"];

@@ -21,9 +21,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const store = usePresentationConfigurationStore();
 
-const componentOptions = computed(() =>
-  applicableComponentOptions(props.element as any, t),
-);
+const componentOptions = computed(() => applicableComponentOptions(props.element as any, t));
 
 const hasApplicableComponents = computed(() => componentOptions.value.length > 1);
 

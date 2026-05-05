@@ -447,8 +447,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 :element="editorVNode!.props.data"
                 :path="editorVNode!.props.path.idShortPathIncludingSubmodel!"
                 :disabled="
-                  isArchived ||
-                  !canEditPath(editorVNode!.props.path.idShortPathIncludingSubmodel!)
+                  isArchived || !canEditPath(editorVNode!.props.path.idShortPathIncludingSubmodel!)
                 "
               />
             </TabPanel>

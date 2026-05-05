@@ -45,11 +45,7 @@ export class PresentationConfigurationNamespace {
     );
   }
 
-  public async patchById(
-    id: string,
-    configId: string,
-    body: PresentationConfigurationPatchDto,
-  ) {
+  public async patchById(id: string, configId: string, body: PresentationConfigurationPatchDto) {
     return await this.axiosInstance.patch<PresentationConfigurationDto>(
       `${this.basePath}/${id}/presentation-configurations/${configId}`,
       body,

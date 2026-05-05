@@ -152,18 +152,14 @@ describe("PresentationConfigurationDtoSchema label", () => {
 
 describe("PresentationConfigurationCreateRequestSchema", () => {
   it("accepts a null label", () => {
-    expect(
-      PresentationConfigurationCreateRequestSchema.parse({ label: null }).label,
-    ).toBeNull();
+    expect(PresentationConfigurationCreateRequestSchema.parse({ label: null }).label).toBeNull();
   });
   it("accepts a string label", () => {
-    expect(
-      PresentationConfigurationCreateRequestSchema.parse({ label: "v1" }).label,
-    ).toBe("v1");
+    expect(PresentationConfigurationCreateRequestSchema.parse({ label: "v1" }).label).toBe("v1");
   });
   it("rejects an empty string label", () => {
-    expect(
-      PresentationConfigurationCreateRequestSchema.safeParse({ label: "" }).success,
-    ).toBe(false);
+    expect(PresentationConfigurationCreateRequestSchema.safeParse({ label: "" }).success).toBe(
+      false,
+    );
   });
 });

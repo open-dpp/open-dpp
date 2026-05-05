@@ -116,9 +116,9 @@ describe("PresentationConfigurationService", () => {
       const passportB = makePassport();
       const configForB = await service.createForPassport(passportB, { label: "B-config" });
 
-      await expect(
-        service.deleteByConfigIdForPassport(passportA, configForB.id),
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.deleteByConfigIdForPassport(passportA, configForB.id)).rejects.toThrow(
+        NotFoundError,
+      );
 
       // Confirm the config still exists on passport B
       const stillThere = await service.getByIdForPassport(passportB, configForB.id);

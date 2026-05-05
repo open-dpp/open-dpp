@@ -81,7 +81,9 @@ vi.mock("./PropertyCreateEditor.vue", () => ({ default: StubPropertyCreateEditor
 vi.mock("./FileEditor.vue", () => ({ default: StubFileEditor }));
 vi.mock("./FileCreateEditor.vue", () => ({ default: StubFileCreateEditor }));
 vi.mock("./ReferenceElementEditor.vue", () => ({ default: StubReferenceElementEditor }));
-vi.mock("./ReferenceElementCreateEditor.vue", () => ({ default: StubReferenceElementCreateEditor }));
+vi.mock("./ReferenceElementCreateEditor.vue", () => ({
+  default: StubReferenceElementCreateEditor,
+}));
 vi.mock("./SubmodelEditor.vue", () => ({ default: { name: "SubmodelEditor" } }));
 vi.mock("./SubmodelCreateEditor.vue", () => ({ default: { name: "SubmodelCreateEditor" } }));
 vi.mock("./SubmodelElementCollectionEditor.vue", () => ({

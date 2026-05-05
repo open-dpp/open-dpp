@@ -99,10 +99,7 @@ export class PresentationConfigurationRepository {
     });
   }
 
-  async deleteById(
-    id: string,
-    options?: DbSessionOptions,
-  ): Promise<boolean> {
+  async deleteById(id: string, options?: DbSessionOptions): Promise<boolean> {
     const result = await this.presentationConfigurationDoc
       .deleteOne({ _id: id })
       .session(options?.session ?? null);

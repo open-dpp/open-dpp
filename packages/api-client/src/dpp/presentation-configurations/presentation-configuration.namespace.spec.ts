@@ -19,35 +19,29 @@ describe("PresentationConfigurationNamespace plural", () => {
   it("create calls POST plural URL with body", async () => {
     const { ns, axios } = makeNamespace();
     await ns.create("p-1", { label: "v1" });
-    expect(axios.post).toHaveBeenCalledWith(
-      "/passports/p-1/presentation-configurations",
-      { label: "v1" },
-    );
+    expect(axios.post).toHaveBeenCalledWith("/passports/p-1/presentation-configurations", {
+      label: "v1",
+    });
   });
 
   it("getById calls GET config-scoped URL", async () => {
     const { ns, axios } = makeNamespace();
     await ns.getById("p-1", "c-1");
-    expect(axios.get).toHaveBeenCalledWith(
-      "/passports/p-1/presentation-configurations/c-1",
-    );
+    expect(axios.get).toHaveBeenCalledWith("/passports/p-1/presentation-configurations/c-1");
   });
 
   it("patchById calls PATCH config-scoped URL", async () => {
     const { ns, axios } = makeNamespace();
     await ns.patchById("p-1", "c-1", { elementDesign: { foo: "BigNumber" } });
-    expect(axios.patch).toHaveBeenCalledWith(
-      "/passports/p-1/presentation-configurations/c-1",
-      { elementDesign: { foo: "BigNumber" } },
-    );
+    expect(axios.patch).toHaveBeenCalledWith("/passports/p-1/presentation-configurations/c-1", {
+      elementDesign: { foo: "BigNumber" },
+    });
   });
 
   it("deleteById calls DELETE config-scoped URL", async () => {
     const { ns, axios } = makeNamespace();
     await ns.deleteById("p-1", "c-1");
-    expect(axios.delete).toHaveBeenCalledWith(
-      "/passports/p-1/presentation-configurations/c-1",
-    );
+    expect(axios.delete).toHaveBeenCalledWith("/passports/p-1/presentation-configurations/c-1");
   });
 
   it("get (singular) keeps existing URL", async () => {
