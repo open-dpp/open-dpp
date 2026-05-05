@@ -30,7 +30,7 @@ function makeElement(
     embeddedDataSpecifications: [],
     ...overrides,
   };
-  return { ...element, modelType: KeyTypes.Property } as unknown as SubmodelElementResponseDto;
+  return { ...element, modelType: KeyTypes.Property };
 }
 
 function renderValue(value: string | null | undefined, locale = "en-US"): string {

@@ -203,7 +203,7 @@ export class PresentationConfigurationService {
     );
   }
 
-  async listForPassportWithSession(
+  async findExistingForPassport(
     passport: Passport,
     options?: DbSessionOptions,
   ): Promise<PresentationConfiguration[]> {

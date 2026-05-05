@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type {
+  KeyTypesType,
   PresentationComponentNameType,
   SubmodelElementSharedResponseDto,
 } from "@open-dpp/dto";
@@ -14,7 +15,7 @@ import { usePresentationConfigurationStore } from "../../../stores/presentation-
 import PresentationPreviewFrame from "./PresentationPreviewFrame.vue";
 
 const props = defineProps<{
-  element: SubmodelElementSharedResponseDto & { modelType: string; valueType?: string };
+  element: SubmodelElementSharedResponseDto & { modelType: KeyTypesType; valueType?: string };
   path: string;
   disabled: boolean;
 }>();
@@ -22,7 +23,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const store = usePresentationConfigurationStore();
 
-const componentOptions = computed(() => applicableComponentOptions(props.element as any, t));
+const componentOptions = computed(() => applicableComponentOptions(props.element, t));
 
 const hasApplicableComponents = computed(() => componentOptions.value.length > 1);
 

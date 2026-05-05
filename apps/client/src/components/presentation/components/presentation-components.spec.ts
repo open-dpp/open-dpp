@@ -28,7 +28,7 @@ function makeProperty(overrides: Partial<PropertyResponseDto> = {}): TestElement
     embeddedDataSpecifications: [],
     ...overrides,
   };
-  return { ...property, modelType: KeyTypes.Property } as unknown as TestElement;
+  return { ...property, modelType: KeyTypes.Property };
 }
 
 function makeUnrelatedContainer(): TestElement {
@@ -41,7 +41,7 @@ function makeUnrelatedContainer(): TestElement {
     qualifiers: [],
     embeddedDataSpecifications: [],
     value: [],
-  } as unknown as TestElement;
+  };
 }
 
 const entries = Object.entries(PRESENTATION_COMPONENTS) as [
@@ -126,7 +126,7 @@ describe("BigNumber.sampleElement", () => {
         makeProperty({ value: null, valueType: DataTypeDef.Long }),
       );
       expect(result.usedSample).toBe(true);
-      expect((result.element as unknown as PropertyResponseDto).value).toBe("1234567");
+      expect((result.element as { value?: string | null }).value).toBe("1234567");
     });
 
     it("samples a decimal when value is null and valueType is Decimal", () => {
@@ -134,7 +134,7 @@ describe("BigNumber.sampleElement", () => {
         makeProperty({ value: null, valueType: DataTypeDef.Decimal }),
       );
       expect(result.usedSample).toBe(true);
-      expect((result.element as unknown as PropertyResponseDto).value).toBe("1234567.89");
+      expect((result.element as { value?: string | null }).value).toBe("1234567.89");
     });
 
     it("samples when value is empty string", () => {
@@ -142,7 +142,7 @@ describe("BigNumber.sampleElement", () => {
         makeProperty({ value: "", valueType: DataTypeDef.Float }),
       );
       expect(result.usedSample).toBe(true);
-      expect((result.element as unknown as PropertyResponseDto).value).toBe("1234567.89");
+      expect((result.element as { value?: string | null }).value).toBe("1234567.89");
     });
 
     it("samples when value is non-numeric", () => {
@@ -150,7 +150,7 @@ describe("BigNumber.sampleElement", () => {
         makeProperty({ value: "abc", valueType: DataTypeDef.Double }),
       );
       expect(result.usedSample).toBe(true);
-      expect((result.element as unknown as PropertyResponseDto).value).toBe("1234567.89");
+      expect((result.element as { value?: string | null }).value).toBe("1234567.89");
     });
 
     it.each([
@@ -162,7 +162,7 @@ describe("BigNumber.sampleElement", () => {
     ])("samples an integer for valueType %s", (valueType) => {
       const result = bigNumber.sampleElement(makeProperty({ value: null, valueType }));
       expect(result.usedSample).toBe(true);
-      expect((result.element as unknown as PropertyResponseDto).value).toBe("1234567");
+      expect((result.element as { value?: string | null }).value).toBe("1234567");
     });
 
     it.each([DataTypeDef.Float, DataTypeDef.Double])(
@@ -170,7 +170,7 @@ describe("BigNumber.sampleElement", () => {
       (valueType) => {
         const result = bigNumber.sampleElement(makeProperty({ value: null, valueType }));
         expect(result.usedSample).toBe(true);
-        expect((result.element as unknown as PropertyResponseDto).value).toBe("1234567.89");
+        expect((result.element as { value?: string | null }).value).toBe("1234567.89");
       },
     );
   });
@@ -184,10 +184,9 @@ describe("BigNumber.sampleElement", () => {
           displayName: [{ language: "en", text: "My Custom Label" }],
         }),
       );
-      const sampled = result.element as unknown as PropertyResponseDto;
-      expect(sampled.idShort).toBe("MyField");
-      expect(sampled.displayName).toEqual([{ language: "en", text: "My Custom Label" }]);
-      expect(sampled.value).toBe("1234567.89");
+      expect(result.element.idShort).toBe("MyField");
+      expect(result.element.displayName).toEqual([{ language: "en", text: "My Custom Label" }]);
+      expect((result.element as { value?: string | null }).value).toBe("1234567.89");
     });
   });
 });

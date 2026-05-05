@@ -804,7 +804,7 @@ export class PassportController
       },
       async (p, options) => {
         const importedConfigs =
-          await this.presentationConfigurationService.listForPassportWithSession(p, options);
+          await this.presentationConfigurationService.findExistingForPassport(p, options);
         const configs =
           importedConfigs.length > 0
             ? importedConfigs
