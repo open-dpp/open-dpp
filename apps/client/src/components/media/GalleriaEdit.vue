@@ -3,6 +3,7 @@ import type { MediaInfo } from "./MediaInfo.interface.ts";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaModal from "./MediaModal.vue";
+import type { MediaFileCollectionItem } from "../../composables/media-file.ts";
 
 const props = defineProps<{ title?: string }>();
 const emits = defineEmits<{
@@ -12,7 +13,7 @@ const emits = defineEmits<{
   (e: "modifyImage", image: MediaInfo, newMediaInfo: MediaInfo): void;
 }>();
 const { t } = useI18n();
-const images = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
+const images = defineModel<MediaFileCollectionItem[]>();
 const openMediaModal = ref(false);
 const imageToModify = ref<MediaInfo | null>(null);
 
@@ -67,9 +68,10 @@ function onMoveImageDown(image: MediaInfo) {
     <DataTable :value="images">
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{ props.title ?? t("media.media") }}</span>
+          <h3 class="text-xl font-bold">{{ props.title ?? t("media.media") }}</h3>
           <Button
             data-cy="add-image"
+            :aria-label="t('common.add')"
             icon="pi pi-plus"
             rounded
             raised
@@ -77,18 +79,24 @@ function onMoveImageDown(image: MediaInfo) {
           />
         </div>
       </template>
-      <Column field="mediaInfo.title" :header="t('media.title')" />
+      <Column field="mediaInfo.title" :header="t('media.title')">
+        <template #body="{ data, index }">
+          <span v-if="!data.deleted">{{ data.mediaInfo.title }}</span>
+          <span class="text-red-600" v-else>{{ t("media.deletedFile") }}</span>
+        </template>
+      </Column>
       <Column :header="t('media.preview')">
         <template #body="slotProps">
           <Image :src="slotProps.data.url" preview width="100px" />
         </template>
       </Column>
-      <Column class="w-24 text-end!">
+      <Column class="w-44 text-end! align-middle!">
         <template #body="{ data, index }">
-          <div class="flex items-center gap-2 rounded-md">
+          <div class="flex items-center justify-end gap-2 rounded-md">
             <Button
               icon="pi pi-pencil"
               :data-cy="`modify-media-${data.mediaInfo.id}`"
+              :aria-label="t('common.edit')"
               severity="primary"
               rounded
               @click="onModifyImage(data.mediaInfo)"
@@ -96,6 +104,7 @@ function onMoveImageDown(image: MediaInfo) {
             <Button
               icon="pi pi-chevron-up"
               :data-cy="`move-media-${data.mediaInfo.id}-up`"
+              :aria-label="t('common.moveUp')"
               severity="secondary"
               :disabled="isFirst(index)"
               rounded
@@ -104,6 +113,7 @@ function onMoveImageDown(image: MediaInfo) {
             <Button
               icon="pi pi-chevron-down"
               :data-cy="`move-media-${data.mediaInfo.id}-down`"
+              :aria-label="t('common.moveDown')"
               severity="secondary"
               :disabled="isLast(index)"
               rounded
@@ -112,6 +122,7 @@ function onMoveImageDown(image: MediaInfo) {
             <Button
               icon="pi pi-trash"
               :data-cy="`delete-media-${data.mediaInfo.id}`"
+              :aria-label="t('common.remove')"
               severity="danger"
               rounded
               @click="emits('removeImage', data.mediaInfo)"

@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import type { LanguageTextDto, LanguageType } from "@open-dpp/dto";
-import type { FormErrors } from "vee-validate";
 import { Language, LanguageEnum } from "@open-dpp/dto";
 import { useFieldArray } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { convertLocaleToLanguage } from "../../../translations/i18n.ts";
-import LanguageSelect from "../../basics/LanguageSelect.vue";
-import TextFieldWithValidation from "../../basics/TextFieldWithValidation.vue";
+import DisplayNameRow from "./DisplayNameRow.vue";
 
 const props = defineProps<{
-  showErrors: boolean;
-  errors: FormErrors<any>;
+  submitAttempted: boolean;
   disabled?: boolean;
 }>();
 const { t, locale } = useI18n();
@@ -34,59 +31,44 @@ function nextLanguage(): LanguageType {
   return LanguageEnum.parse(bestMatch ?? remainingLanguages.value[0]);
 }
 
-function ignoreOptions(language: string) {
-  return displayName.value.map((f) => f.value.language).filter((l) => l !== language);
+function ignoreOptions(language: LanguageType): LanguageType[] {
+  return displayName.value
+    .map((f) => f.value.language)
+    .filter((l): l is LanguageType => l !== language);
 }
 </script>
 
 <template>
-  <DataView :value="displayName">
-    <template #header>
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t("aasEditor.formLabels.name") }}</span>
-        <Button
-          icon="pi pi-plus"
-          raised
-          :disabled="remainingLanguages.length === 0 || props.disabled"
-          @click="
-            pushDisplayName({
-              text: '',
-              language: nextLanguage(),
-            })
-          "
-        />
-      </div>
-    </template>
-    <template #list="slotProps">
-      <div>
-        <div
-          v-for="(field, index) in slotProps.items"
-          :key="field.key"
-          class="grid gap-4 pt-2 lg:grid-cols-3"
-        >
-          <LanguageSelect
-            v-model="field.value.language"
-            :disabled="props.disabled"
-            :ignore-options="ignoreOptions(field.value.language)"
-          />
-          <TextFieldWithValidation
-            :id="`displayName-${field.key}`"
-            v-model="field.value.text"
-            :label="t('aasEditor.formLabels.name')"
-            :show-errors="props.showErrors"
-            :error="props.errors[`displayName[${index}].text`]"
-            :disabled="props.disabled"
-          />
-          <Button
-            icon="pi pi-trash"
-            severity="danger"
-            :disabled="props.disabled"
-            @click="removeDisplayName(Number(index))"
-          />
-        </div>
-      </div>
-    </template>
-  </DataView>
+  <div>
+    <h3 class="pb-2 text-xl font-bold">{{ t("aasEditor.formLabels.name") }}</h3>
+    <DisplayNameRow
+      v-if="displayName.length > 0"
+      v-for="(field, index) in displayName"
+      :key="field.key"
+      :index="Number(index)"
+      :field-key="field.key"
+      :submit-attempted="props.submitAttempted"
+      :ignore-language-options="ignoreOptions(field.value.language)"
+      :disabled="props.disabled"
+      @remove="removeDisplayName(Number(index))"
+    />
+    <div>
+      <Button
+        severity="secondary"
+        data-cy="add-display-name"
+        :aria-label="t('common.add')"
+        icon="pi pi-plus"
+        label="Sprache hinzufügen"
+        :disabled="remainingLanguages.length === 0 || props.disabled"
+        @click="
+          pushDisplayName({
+            text: '',
+            language: nextLanguage(),
+          })
+        "
+      ></Button>
+    </div>
+  </div>
 </template>
 
 <style scoped></style>

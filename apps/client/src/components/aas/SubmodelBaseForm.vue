@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { FormErrors } from "vee-validate";
 import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { useField } from "vee-validate";
 import { computed } from "vue";
@@ -9,14 +8,23 @@ import IdField from "./form/IdField.vue";
 
 const props = defineProps<{
   showErrors: boolean;
-  errors: FormErrors<any>;
   editorMode: EditorModeType;
   disabled?: boolean;
 }>();
 
-const { value: idShort, errorMessage } = useField<string | undefined | null>("idShort");
+const {
+  value: idShort,
+  errorMessage,
+  meta: idShortMeta,
+} = useField<string | undefined | null>("idShort");
 
 const isEditMode = computed(() => props.editorMode === EditorMode.EDIT);
+
+// Per-field gating: show the idShort error once the user has touched/modified
+// the field, OR once a submit has been attempted (props.showErrors).
+// meta.dirty flips as soon as the user types and stays sticky, so we don't
+// need to wire a blur handler down through IdField's children.
+const showIdShortError = computed(() => idShortMeta.dirty || props.showErrors);
 </script>
 
 <template>
@@ -26,14 +34,10 @@ const isEditMode = computed(() => props.editorMode === EditorMode.EDIT);
       v-model="idShort"
       class="col-span-3"
       :disabled="isEditMode"
-      label="Id"
-      :show-error="showErrors"
+      label="ID"
+      :show-error="showIdShortError"
       :error="errorMessage"
     />
   </div>
-  <DisplayNameForm
-    :show-errors="props.showErrors"
-    :errors="props.errors"
-    :disabled="props.disabled"
-  />
+  <DisplayNameForm :submit-attempted="props.showErrors" :disabled="props.disabled" />
 </template>

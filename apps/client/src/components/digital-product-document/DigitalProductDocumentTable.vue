@@ -73,7 +73,6 @@ async function goToItem(item: DigitalProductDocumentDto) {
         </div>
       </div>
     </template>
-    <Column field="id" header="Id" />
     <Column field="environment" header="Name">
       <template #body="slotProps">
         <p>
@@ -81,6 +80,7 @@ async function goToItem(item: DigitalProductDocumentDto) {
         </p>
       </template>
     </Column>
+    <Column field="id" header="Id" />
     <Column :header="t('templates.createdAt')">
       <template #body="slotProps">
         <p>

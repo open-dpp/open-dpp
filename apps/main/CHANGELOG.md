@@ -1,5 +1,18 @@
 # @open-dpp/main
 
+## 0.4.3
+
+### Patch Changes
+
+- [#556](https://github.com/open-dpp/open-dpp/pull/556) [`d5c6ddf`](https://github.com/open-dpp/open-dpp/commit/d5c6ddf976cf87947cacc2b59aaaf2666501d5b1) Thanks [@Hentra](https://github.com/Hentra)! - Allow deletion of media files
+
+- Updated dependencies [[`d5c6ddf`](https://github.com/open-dpp/open-dpp/commit/d5c6ddf976cf87947cacc2b59aaaf2666501d5b1)]:
+  - @open-dpp/api-client@0.4.3
+  - @open-dpp/dto@0.4.3
+  - @open-dpp/env@0.4.3
+  - @open-dpp/exception@0.4.3
+  - @open-dpp/permission@0.4.3
+
 ## 0.4.2
 
 ### Patch Changes
