@@ -54,10 +54,12 @@ declare module 'vue' {
     InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
     InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
+    InstanceSettingToogle: typeof import('./src/components/admin/InstanceSettingToogle.vue')['default']
     InviteMemberDialog: typeof import('./src/components/organizations/InviteMemberDialog.vue')['default']
     InviteToOrganizationDialog: typeof import('./src/components/admin/InviteToOrganizationDialog.vue')['default']
     InviteUserDialog: typeof import('./src/components/admin/InviteUserDialog.vue')['default']
     LanguageSelect: typeof import('./src/components/basics/LanguageSelect.vue')['default']
+    Layout: typeof import('./src/components/layout/Layout.vue')['default']
     LazyPassportSelect: typeof import('./src/components/passport/LazyPassportSelect.vue')['default']
     LinkCellField: typeof import('./src/components/aas/LinkCellField.vue')['default']
     List: typeof import('./src/components/presentation/List.vue')['default']
@@ -181,10 +183,12 @@ declare global {
   const InputGroupAddon: (typeof import("primevue/inputgroupaddon"))["default"];
   const InputNumber: (typeof import("primevue/inputnumber"))["default"];
   const InputText: (typeof import("primevue/inputtext"))["default"];
+  const InstanceSettingToogle: (typeof import("./src/components/admin/InstanceSettingToogle.vue"))["default"];
   const InviteMemberDialog: (typeof import("./src/components/organizations/InviteMemberDialog.vue"))["default"];
   const InviteToOrganizationDialog: (typeof import("./src/components/admin/InviteToOrganizationDialog.vue"))["default"];
   const InviteUserDialog: (typeof import("./src/components/admin/InviteUserDialog.vue"))["default"];
   const LanguageSelect: (typeof import("./src/components/basics/LanguageSelect.vue"))["default"];
+  const Layout: (typeof import("./src/components/layout/Layout.vue"))["default"];
   const LazyPassportSelect: (typeof import("./src/components/passport/LazyPassportSelect.vue"))["default"];
   const LinkCellField: (typeof import("./src/components/aas/LinkCellField.vue"))["default"];
   const List: (typeof import("./src/components/presentation/List.vue"))["default"];

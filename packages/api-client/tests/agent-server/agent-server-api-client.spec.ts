@@ -1,5 +1,5 @@
 import { AiProvider, OpenDppClient } from "../../src";
-import { activeOrganization } from "../organization";
+import { activeOrganization } from "../dpp/handlers/organization";
 import { agentServerURL } from "./handlers";
 import { aiConfigurationDto } from "./handlers/ai-configurations";
 import { server } from "./msw.server";

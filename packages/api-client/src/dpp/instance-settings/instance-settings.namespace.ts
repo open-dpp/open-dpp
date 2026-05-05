@@ -1,16 +1,9 @@
 import type { AxiosInstance } from "axios";
-
-export interface InstanceSettingsDto {
-  id: string;
-  signupEnabled: {
-    value: boolean;
-    locked?: boolean;
-  };
-}
-
-export interface PublicInstanceSettingsDto {
-  signupEnabled: boolean;
-}
+import type {
+  InstanceSettingsDto,
+  InstanceSettingsUpdateDto,
+  PublicInstanceSettingsDto,
+} from "@open-dpp/dto";
 
 export class InstanceSettingsNamespace {
   constructor(private readonly axiosInstance: AxiosInstance) {}
@@ -19,7 +12,7 @@ export class InstanceSettingsNamespace {
     return this.axiosInstance.get<InstanceSettingsDto>("/instance-settings");
   }
 
-  public async update(data: { signupEnabled?: boolean }) {
+  public async update(data: InstanceSettingsUpdateDto) {
     return this.axiosInstance.patch<InstanceSettingsDto>("/instance-settings", data);
   }
 

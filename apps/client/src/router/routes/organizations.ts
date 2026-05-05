@@ -6,9 +6,9 @@ import { ORGANIZATION_INTEGRATIONS_PARENT } from "./integrations";
 import { ORGANIZATION_PASSPORTS_PARENT } from "./passports/passports.ts";
 import { ORGANIZATION_TEMPLATES_PARENT } from "./templates/templates.ts";
 
-export const ORGANIZATION_LIST: RouteRecordRaw = {
-  redirect: "/profile",
+export const ORGANIZATION_LIST = {
   path: "",
+  redirect: "/",
 };
 
 function organizationListBreadCrumbs(to: RouteLocationNormalizedGeneric) {

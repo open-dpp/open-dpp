@@ -157,11 +157,10 @@ export const AuthProvider: Provider = {
                 if (member) {
                   organizationId = member.organizationId;
                 }
-
                 return {
                   data: {
                     ...session,
-                    activeOrganizationId: organizationId,
+                    activeOrganizationId: organizationId ? organizationId.toString() : undefined, // Convert ObjectId to string since it otherwise is transferred to the frontend as Buffer which causes issues
                   },
                 };
               } catch (error) {

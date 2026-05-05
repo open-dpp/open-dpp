@@ -1,16 +1,16 @@
 import type { MemberRoleType } from "../../domain/member-role.enum";
 import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
 
-export type InvitationDocument = HydratedDocument<Invitation>;
+export type InvitationDocument = HydratedDocument<InvitationDoc>;
 
 @Schema({ collection: "invitation", autoCreate: process.env.NODE_ENV === "test" })
-export class Invitation {
-  @Prop({ type: String, required: true })
-  _id: string;
+export class InvitationDoc {
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  _id: Types.ObjectId;
 
   @Prop({ required: true, index: true })
   email: string;
@@ -34,4 +34,4 @@ export class Invitation {
   expiresAt: Date;
 }
 
-export const InvitationSchema = SchemaFactory.createForClass(Invitation);
+export const InvitationSchema = SchemaFactory.createForClass(InvitationDoc);

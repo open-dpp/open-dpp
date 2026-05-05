@@ -332,11 +332,15 @@
     "details": "Organization details and users.",
     "create": "Create a new organization.",
     "createError": "Error creating organization.",
+    "organizationCreationDisabled": {
+      "title": "Creating organizations is disabled",
+      "description": "Your administrator has disabled the ability to create organizations. Please ask your administrator or a colleague to invite you to an organization."
+    },
     "fetchError": "Error fetching organizations.",
     "fetchCurrentError": "Error fetching current organization.",
     "assignedOrganizations": "All assigned organizations",
     "pick": "Select organization",
-    "new": "Create new organization",
+    "new": "Create organization",
     "invite": "Invite",
     "inviteUser": "Invite user",
     "inviteUserSuccess": "The user has been successfully invited.",
@@ -374,9 +378,14 @@
       "accept": "Accept",
       "decline": "Decline",
       "cancel": "Cancel invitation",
+      "expiresAt": "Expires at",
+      "expired": "Expired",
       "acceptSuccess": "Successfully accepted invitation.",
       "acceptError": "Error on accepting invitation.",
-      "acceptTitle": "You have been invited to join an organization"
+      "acceptTitle": "You have been invited to join an organization",
+      "errorLoading": "Failed to load invitation | Failed to load invitations",
+      "invitedBy": "Invited by",
+      "invitedToOrganization": "Invited to the organization"
     },
     "userInvitations": {
       "title": "Invitations",
@@ -425,10 +434,17 @@
       },
       "instanceSettings": {
         "title": "Instance Settings",
-        "signupEnabled": "Public signup enabled",
-        "signupEnabledDescription": "When disabled, only admins can add new users.",
+        "signupEnabled": {
+          "title": "Public signup enabled",
+          "description": "When disabled, only admins can add new users."
+        },
+        "organizationCreationEnabled": {
+          "title": "Public creation of organizations enabled",
+          "description": "When disabled, only admins can create new organizations."
+        },
         "saved": "Settings saved successfully",
         "error": "Error saving settings",
+        "errorLoading": "Error loading settings",
         "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
     }

@@ -4,7 +4,7 @@ import { User as BetterAuthUser } from "better-auth";
 import { UsersService } from "../src/identity/users/application/services/users.service";
 import { UserRoleType } from "../src/identity/users/domain/user-role.enum";
 
-interface BetterAuthOrganization {
+export interface BetterAuthOrganization {
   id: string;
   name: string;
   slug: string;
@@ -70,8 +70,8 @@ export class BetterAuthHelper {
     return cookie;
   }
 
-  async createUser(role?: UserRoleType) {
-    const userEmail = `${randomUUID()}@test.test`;
+  async createUser(userData?: { role?: UserRoleType; email?: string }) {
+    const userEmail = userData?.email ?? `${randomUUID()}@test.test`;
     if (!this.auth) {
       throw new Error("No auth setup");
     }
@@ -86,8 +86,8 @@ export class BetterAuthHelper {
       body,
     });
     await this.usersService.setUserEmailVerified(data.user.email, true);
-    if (role) {
-      await this.usersService.setUserRole(data.user.id, role);
+    if (userData?.role) {
+      await this.usersService.setUserRole(data.user.id, userData.role);
     }
     const user = data.user;
     this.userMap.set(user.id, user);

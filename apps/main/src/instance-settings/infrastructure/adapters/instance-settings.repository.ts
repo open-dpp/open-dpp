@@ -4,8 +4,8 @@ import { Model } from "mongoose";
 import { convertToDomain, save } from "../../../lib/repositories";
 import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
 import {
-  INSTANCE_SETTINGS_SCHEMA_VERSION,
   InstanceSettingsDocument,
+  InstanceSettingsDocVersion,
   InstanceSettingsSchema,
 } from "../schemas/instance-settings.schema";
 
@@ -32,7 +32,7 @@ export class InstanceSettingsRepository {
     return await save(
       settings,
       this.model,
-      INSTANCE_SETTINGS_SCHEMA_VERSION,
+      InstanceSettingsDocVersion.v1_1_0,
       this.fromPlain.bind(this),
     );
   }

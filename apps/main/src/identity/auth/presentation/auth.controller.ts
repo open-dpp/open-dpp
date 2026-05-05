@@ -25,6 +25,11 @@ export class AuthController {
         throw new ForbiddenException("Signup is disabled");
       }
     }
+    if (request.url.includes("/organization/create")) {
+      throw new ForbiddenException(
+        "This operation is not supported. Please use the correct endpoint.",
+      );
+    }
     const handler = toNodeHandler(this.auth!);
     await handler(request, response);
   }

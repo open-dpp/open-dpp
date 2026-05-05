@@ -4,7 +4,12 @@ import { HydratedDocument } from "mongoose";
 
 export type InstanceSettingsDocument = HydratedDocument<InstanceSettingsSchema>;
 
-export const INSTANCE_SETTINGS_SCHEMA_VERSION = "1.0.0";
+export const InstanceSettingsDocVersion = {
+  v1_0_0: "1.0.0",
+  v1_1_0: "1.1.0",
+} as const;
+type InstanceSettingsDocVersionType =
+  (typeof InstanceSettingsDocVersion)[keyof typeof InstanceSettingsDocVersion];
 
 @Schema({ collection: "instance_settings", autoCreate: process.env.NODE_ENV === "test" })
 export class InstanceSettingsSchema {
@@ -14,8 +19,16 @@ export class InstanceSettingsSchema {
   @Prop({ required: true, default: true })
   signupEnabled: boolean;
 
-  @Prop({ required: true, default: INSTANCE_SETTINGS_SCHEMA_VERSION })
-  _schemaVersion: string;
+  @Prop({ required: true, default: true })
+  organizationCreationEnabled: boolean;
+
+  @Prop({
+    required: true,
+    default: InstanceSettingsDocVersion.v1_1_0,
+    enum: Object.values(InstanceSettingsDocVersion),
+    type: String,
+  })
+  _schemaVersion: InstanceSettingsDocVersionType;
 }
 
 export const InstanceSettingsMongooseSchema = SchemaFactory.createForClass(InstanceSettingsSchema);

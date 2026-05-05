@@ -33,10 +33,6 @@ async function create() {
 <template>
   <form class="w-full" @submit.prevent="create">
     <div class="w-full">
-      <h3 class="mb-4 font-bold">
-        {{ t("common.general") }}
-      </h3>
-
       <div class="field">
         <label for="organization-name" class="mb-2 block">
           {{ t("organizations.form.name.label") }}

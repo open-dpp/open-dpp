@@ -10,6 +10,7 @@ import { AUTH_ROUTES } from "./routes/auth";
 import { MEDIA_ROUTES } from "./routes/media";
 import { ORGANIZATION_ROUTES } from "./routes/organizations";
 import { PRESENTATION_ROUTES } from "./routes/presentation/presentation";
+import { toRaw } from "vue";
 
 // const MODE = import.meta.env.MODE;
 
@@ -23,7 +24,7 @@ export const routes: RouteRecordRaw[] = [
       if (org) {
         return `/organizations/${indexStore.selectedOrganization}/passports`;
       } else {
-        return "/organizations"; // fallback
+        return "/organizations/create"; // fallback
       }
     },
   },
@@ -133,17 +134,17 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
-  const organizationStore = useOrganizationsStore();
+  const { organizations } = useOrganizationsStore();
   const indexStore = useIndexStore();
   const paramOrganizationId = to.params.organizationId;
-  if (paramOrganizationId) {
-    const organization = organizationStore.organizations.find((o) => o.id === paramOrganizationId);
+  if (paramOrganizationId && paramOrganizationId !== indexStore.selectedOrganization) {
+    const organization = organizations.find((o) => o.id === paramOrganizationId);
     if (!organization) {
-      next("/organizations");
+      next("/organizations/create");
       indexStore.selectOrganization(null);
       return;
     }
-    indexStore.selectOrganization(organization.id);
+    indexStore.selectOrganization(toRaw(organization).id);
   }
 
   next();

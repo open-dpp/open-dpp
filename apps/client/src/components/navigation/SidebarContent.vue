@@ -94,12 +94,6 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           icon: Cog6ToothIcon,
           show: () => indexStore.selectedOrganization !== null,
         },
-        {
-          name: t("organizations.pick"),
-          to: "/organizations",
-          icon: BuildingOfficeIcon,
-          show: () => indexStore.selectedOrganization === null,
-        },
       ],
     },
     {
@@ -188,7 +182,7 @@ const { t } = useI18n();
           </ul>
         </li>
         <li class="mt-auto">
-          <SelectOrganization v-if="organizationsStore.organizations.length > 1" />
+          <SelectOrganization />
           <p v-if="statusStore.version" class="mt-2 text-center text-xs text-gray-500">
             v{{ statusStore.version }}
           </p>

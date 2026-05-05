@@ -41,7 +41,7 @@ const showErrors = computed(() => {
 });
 
 onMounted(async () => {
-  statusStore.fetchStatus();
+  await statusStore.fetchStatus();
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
     signupEnabled.value = res.data.signupEnabled;
