@@ -28,8 +28,6 @@ const { t, locale } = useI18n();
 const notificationStore = useNotificationStore();
 const confirm = useConfirm();
 
-const SAVED_CHIP_DURATION_MS = 3000;
-
 const profileSchema = UpdateProfileDtoSchema;
 const newEmailSchema = z.email();
 
@@ -64,17 +62,6 @@ const emailSubmitting = ref(false);
 const cancelSubmitting = ref(false);
 const changeEmailButtonRef = ref<ComponentPublicInstance | null>(null);
 const cancelPendingButtonRef = ref<ComponentPublicInstance | null>(null);
-
-const lastSavedAt = ref<Date | null>(null);
-const savedChipVisible = ref(false);
-let savedChipTimer: ReturnType<typeof setTimeout> | null = null;
-
-const lastSavedLabel = computed(() => {
-  const at = lastSavedAt.value;
-  if (!at) return null;
-  const formatted = new Intl.DateTimeFormat(locale.value, { timeStyle: "short" }).format(at);
-  return t("user.profileSavedAt", { time: formatted });
-});
 
 function focusEmailRowAction() {
   void nextTick(() => {
@@ -136,7 +123,6 @@ onMounted(async () => {
   try {
     await hydrate();
   } catch (error) {
-    console.error("Failed to load profile", error);
     hydrationFailed.value = true;
     notificationStore.addErrorNotification(t("user.profileLoadFailed"));
   }
@@ -146,21 +132,12 @@ async function retryHydrate() {
   try {
     await hydrate();
   } catch (error) {
-    console.error("Failed to load profile", error);
     hydrationFailed.value = true;
     notificationStore.addErrorNotification(t("user.profileLoadFailed"));
   }
 }
 
 const showErrors = computed(() => meta.value.dirty || meta.value.touched);
-
-function showSavedChip() {
-  savedChipVisible.value = true;
-  if (savedChipTimer) clearTimeout(savedChipTimer);
-  savedChipTimer = setTimeout(() => {
-    savedChipVisible.value = false;
-  }, SAVED_CHIP_DURATION_MS);
-}
 
 const submitProfile = handleSubmit(async (formValues) => {
   if (!original.value) return;
@@ -177,11 +154,8 @@ const submitProfile = handleSubmit(async (formValues) => {
       original.value = mergeUpdatedUserIntoOriginal(updated.data.user, original.value);
     }
     resetForm({ values: mapUserToFormValues(updated.data.user) });
-    lastSavedAt.value = new Date();
-    showSavedChip();
     notificationStore.addSuccessNotification(t("user.profileSaved"));
   } catch (error) {
-    console.error("Profile save failed", error);
     notificationStore.addErrorNotification(extractServerMessage(error, "user.profileSaveFailed"));
   }
 });
@@ -248,7 +222,6 @@ async function sendVerification() {
     notificationStore.addInfoNotification(t("user.emailChangeRequested"));
     closeEmailPanel();
   } catch (error) {
-    console.error("Email change request failed", error);
     const status = (error as { response?: { status?: number } })?.response?.status;
     if (status === 429) {
       newEmailError.value = t("user.emailChangeRateLimited");
@@ -284,7 +257,6 @@ async function cancelPending() {
     applyMe(updated.data);
     notificationStore.addInfoNotification(t("user.emailChangeCancelled"));
   } catch (error) {
-    console.error("Email change cancellation failed", error);
     notificationStore.addErrorNotification(
       extractServerMessage(error, "user.emailChangeCancelFailed"),
     );
@@ -308,7 +280,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
 
 <template>
   <form
-    class="flex w-full max-w-[40rem] flex-col"
+    class="flex w-full max-w-160 flex-col"
     :aria-busy="isSubmitting"
     @submit.prevent="submitProfile"
   >
@@ -427,10 +399,10 @@ function handleEmailKeydown(event: KeyboardEvent) {
         class="border-rule bg-surface-recessed flex flex-wrap items-start justify-between gap-4 rounded-md border px-4 py-3"
       >
         <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
-          <span class="text-ink max-w-full text-sm break-words">{{ currentEmail }}</span>
+          <span class="text-ink max-w-full text-sm wrap-break-word">{{ currentEmail }}</span>
           <span
             v-if="pendingEmail"
-            class="border-status-warning/20 bg-status-warning/10 text-status-warning inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider break-words"
+            class="border-status-warning/20 bg-status-warning/10 text-status-warning inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider wrap-break-word"
             role="status"
             aria-live="polite"
           >
@@ -576,37 +548,6 @@ function handleEmailKeydown(event: KeyboardEvent) {
     <hr class="border-rule m-0 border-0 border-t" />
 
     <div class="flex justify-end gap-2 pt-6">
-      <div
-        class="text-ink-muted mr-auto flex min-h-6 items-center gap-2 text-xs leading-normal"
-        aria-live="polite"
-      >
-        <Transition
-          enter-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-out"
-          enter-from-class="scale-95 opacity-0"
-          enter-to-class="scale-100 opacity-100"
-          leave-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-in"
-          leave-from-class="scale-100 opacity-100"
-          leave-to-class="scale-95 opacity-0"
-        >
-          <span
-            v-if="savedChipVisible"
-            class="border-status-success/20 bg-status-success/10 text-status-success inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider"
-          >
-            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
-              <path
-                d="M3.5 8.5L6.5 11.5L12.5 5"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            {{ t("user.profileSaved") }}
-          </span>
-        </Transition>
-        <span v-if="lastSavedLabel" class="tabular-nums">{{ lastSavedLabel }}</span>
-      </div>
       <Button
         v-if="meta.dirty"
         type="button"
