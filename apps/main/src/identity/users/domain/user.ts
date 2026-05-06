@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { Language, LanguageType } from "@open-dpp/dto";
 import { UserRole, UserRoleType } from "./user-role.enum";
 
 export interface UserCreateProps {
@@ -12,15 +13,19 @@ export interface UserCreateProps {
   banned?: boolean;
   banReason?: string | null;
   banExpires?: Date | null;
+  preferredLanguage?: LanguageType;
 }
 
 export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
+  // firstName/lastName may be null for accounts created before names became required
+  // at signup. New writes always populate them; nullable here exists purely for legacy reads.
   firstName: string | null;
   lastName: string | null;
   id: string;
   createdAt: Date;
   updatedAt: Date;
   role: UserRoleType;
+  preferredLanguage: LanguageType;
 };
 
 export class User {
@@ -37,6 +42,7 @@ export class User {
   public readonly banned: boolean;
   public readonly banReason: string | null;
   public readonly banExpires: Date | null;
+  public readonly preferredLanguage: LanguageType;
 
   private constructor(
     id: string,
@@ -51,6 +57,7 @@ export class User {
     banned: boolean,
     banReason: string | null,
     banExpires: Date | null,
+    preferredLanguage: LanguageType,
   ) {
     this.id = id;
     this.email = email;
@@ -66,15 +73,16 @@ export class User {
     this.banned = banned;
     this.banReason = banReason;
     this.banExpires = banExpires;
+    this.preferredLanguage = preferredLanguage;
   }
 
-  public static create(data: UserCreateProps) {
+  public static create(data: UserCreateProps): User {
     const now = new Date();
     return new User(
       randomUUID(),
       data.email,
-      data.firstName ?? null,
-      data.lastName ?? null,
+      data.firstName,
+      data.lastName,
       data.image ?? null,
       data.emailVerified ?? false,
       now,
@@ -83,6 +91,7 @@ export class User {
       !!data.banned,
       data.banReason ?? null,
       data.banExpires ?? null,
+      data.preferredLanguage ?? Language.en,
     );
   }
 
@@ -100,6 +109,7 @@ export class User {
       overrides.banned ?? this.banned,
       overrides.banReason !== undefined ? overrides.banReason : this.banReason,
       overrides.banExpires !== undefined ? overrides.banExpires : this.banExpires,
+      overrides.preferredLanguage ?? this.preferredLanguage,
     );
   }
 
@@ -111,12 +121,26 @@ export class User {
     return this.copyWith({ emailVerified });
   }
 
-  public static loadFromDb(data: UserDbProps) {
+  public withName(firstName: string | null, lastName: string | null): User {
+    if (firstName === this.firstName && lastName === this.lastName) {
+      return this;
+    }
+    return this.copyWith({ firstName, lastName });
+  }
+
+  public withPreferredLanguage(preferredLanguage: LanguageType): User {
+    if (preferredLanguage === this.preferredLanguage) {
+      return this;
+    }
+    return this.copyWith({ preferredLanguage });
+  }
+
+  public static loadFromDb(data: UserDbProps): User {
     return new User(
       data.id,
       data.email,
-      data.firstName ?? null,
-      data.lastName ?? null,
+      data.firstName,
+      data.lastName,
       data.image ?? null,
       data.emailVerified ?? false,
       data.createdAt,
@@ -125,6 +149,7 @@ export class User {
       data.banned ?? false,
       data.banReason ?? null,
       data.banExpires ?? null,
+      data.preferredLanguage ?? Language.en,
     );
   }
 }

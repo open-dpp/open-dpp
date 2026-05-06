@@ -3,11 +3,30 @@
 :root {
   --primary-500: #6bad87;
   --primary-600: #00965e;
+  /* DESIGN.md neutrals + status (see DESIGN.md §2 Colors). */
+  --ink: #101828;
+  --ink-muted: #475467;
+  --ink-subtle: #98a2b3;
+  --rule: #e4e7ec;
+  --surface: #ffffff;
+  --surface-recessed: #fafafa;
+  --status-success: #079455;
+  --status-warning: #dc6803;
+  --status-danger: #d92d20;
 }
 
 @theme {
   --color-primary-500: var(--primary-500);
   --color-primary-600: var(--primary-600);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-rule: var(--rule);
+  --color-surface: var(--surface);
+  --color-surface-recessed: var(--surface-recessed);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
 }
 
 @plugin "@tailwindcss/forms";

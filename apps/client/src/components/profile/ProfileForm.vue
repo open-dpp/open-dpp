@@ -1,106 +1,567 @@
 <script lang="ts" setup>
-import { watch } from "vue";
+import type { MeDto, UserDto } from "@open-dpp/dto";
+import { Language, UpdateProfileDtoSchema } from "@open-dpp/dto";
+import { toTypedSchema } from "@vee-validate/zod";
+import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
+import InputText from "primevue/inputtext";
+import Message from "primevue/message";
+import SelectButton from "primevue/selectbutton";
+import Skeleton from "primevue/skeleton";
+import { useConfirm } from "primevue/useconfirm";
+import { useForm } from "vee-validate";
+import { computed, nextTick, onMounted, ref, watch, type ComponentPublicInstance } from "vue";
 import { useI18n } from "vue-i18n";
-import { authClient } from "../../auth-client.ts";
-import { LAST_SELECTED_LANGUAGE } from "../../const.ts";
+import { z } from "zod";
+import {
+  computeProfileDiff,
+  mapUserToFormValues,
+  mergeUpdatedUserIntoOriginal,
+  shouldSubmitEmailChange,
+  type ProfileFormValues,
+} from "../../composables/profile-form.ts";
+import apiClient from "../../lib/api-client.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
+import { convertLanguageToLocale } from "../../translations/i18n.ts";
 
 const { t, locale } = useI18n();
+const notificationStore = useNotificationStore();
+const confirm = useConfirm();
 
-const session = authClient.useSession();
+const profileSchema = UpdateProfileDtoSchema;
+const newEmailSchema = z.email();
 
-watch(locale, (newLocale) => {
-  localStorage.setItem(LAST_SELECTED_LANGUAGE, newLocale as string);
+type ProfileFields = z.infer<typeof profileSchema>;
+
+const { handleSubmit, defineField, setValues, errors, isSubmitting, meta, resetForm } =
+  useForm<ProfileFields>({
+    validationSchema: toTypedSchema(profileSchema),
+    initialValues: {
+      firstName: "",
+      lastName: "",
+      preferredLanguage: Language.en,
+    },
+  });
+
+const [firstName] = defineField("firstName");
+const [lastName] = defineField("lastName");
+const [preferredLanguage] = defineField("preferredLanguage");
+
+const loaded = ref(false);
+const hydrationFailed = ref(false);
+const user = ref<UserDto | null>(null);
+const pendingEmailChange = ref<{ newEmail: string; requestedAt: Date } | null>(null);
+const original = ref<ProfileFormValues | null>(null);
+
+const emailPanelOpen = ref(false);
+const newEmail = ref("");
+const newEmailError = ref<string | null>(null);
+const currentPassword = ref("");
+const currentPasswordError = ref<string | null>(null);
+const emailSubmitting = ref(false);
+const cancelSubmitting = ref(false);
+const changeEmailButtonRef = ref<ComponentPublicInstance | null>(null);
+const cancelPendingButtonRef = ref<ComponentPublicInstance | null>(null);
+
+function focusEmailRowAction() {
+  void nextTick(() => {
+    const instance = cancelPendingButtonRef.value ?? changeEmailButtonRef.value;
+    const el = instance?.$el as HTMLElement | undefined;
+    el?.focus?.();
+  });
+}
+
+const languageOptions = computed(() => [
+  { value: Language.en, label: t("languages.english") },
+  { value: Language.de, label: t("languages.german") },
+]);
+
+const pendingEmail = computed(() => pendingEmailChange.value?.newEmail ?? null);
+const pendingEmailRequestedAt = computed(() => pendingEmailChange.value?.requestedAt ?? null);
+const pendingRequestedLabel = computed(() => {
+  const at = pendingEmailRequestedAt.value;
+  if (!at || Number.isNaN(at.getTime())) return null;
+  const formatted = new Intl.DateTimeFormat(locale.value, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(at);
+  return t("user.emailPendingRequestedAt", { time: formatted });
 });
+const currentEmail = computed(() => user.value?.email ?? "");
+
+const canSendVerification = computed(() =>
+  shouldSubmitEmailChange(newEmail.value.trim(), currentEmail.value),
+);
+
+async function hydrate() {
+  hydrationFailed.value = false;
+  const response = await apiClient.dpp.users.getMe();
+  applyMe(response.data);
+  loaded.value = true;
+}
+
+function applyMe(next: MeDto) {
+  user.value = next.user;
+  pendingEmailChange.value = next.pendingEmailChange
+    ? {
+        newEmail: next.pendingEmailChange.newEmail,
+        requestedAt:
+          next.pendingEmailChange.requestedAt instanceof Date
+            ? next.pendingEmailChange.requestedAt
+            : new Date(next.pendingEmailChange.requestedAt),
+      }
+    : null;
+  const formValues = mapUserToFormValues(next.user);
+  original.value = formValues;
+  setValues(formValues);
+  if (next.user.preferredLanguage) {
+    locale.value = convertLanguageToLocale(next.user.preferredLanguage);
+  }
+}
+
+onMounted(async () => {
+  try {
+    await hydrate();
+  } catch (error) {
+    hydrationFailed.value = true;
+    notificationStore.addErrorNotification(t("user.profileLoadFailed"));
+  }
+});
+
+async function retryHydrate() {
+  try {
+    await hydrate();
+  } catch (error) {
+    hydrationFailed.value = true;
+    notificationStore.addErrorNotification(t("user.profileLoadFailed"));
+  }
+}
+
+const showErrors = computed(() => meta.value.dirty || meta.value.touched);
+
+const submitProfile = handleSubmit(async (formValues) => {
+  if (!original.value) return;
+  const diff = computeProfileDiff(formValues, original.value);
+  if (Object.keys(diff).length === 0) return;
+
+  try {
+    const updated = await apiClient.dpp.users.updateProfile(diff);
+    applyMe(updated.data);
+    if (updated.data.user.preferredLanguage) {
+      locale.value = convertLanguageToLocale(updated.data.user.preferredLanguage);
+    }
+    if (original.value) {
+      original.value = mergeUpdatedUserIntoOriginal(updated.data.user, original.value);
+    }
+    resetForm({ values: mapUserToFormValues(updated.data.user) });
+    notificationStore.addSuccessNotification(t("user.profileSaved"));
+  } catch (error) {
+    notificationStore.addErrorNotification(extractServerMessage(error, "user.profileSaveFailed"));
+  }
+});
+
+function extractServerMessage(error: unknown, fallbackKey: string): string {
+  const maybeMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data
+    ?.message;
+  if (typeof maybeMessage === "string" && maybeMessage.length > 0) {
+    return maybeMessage;
+  }
+  return t(fallbackKey);
+}
+
+function discard() {
+  if (!original.value) return;
+  resetForm({ values: original.value });
+}
+
+function openEmailPanel() {
+  newEmail.value = "";
+  newEmailError.value = null;
+  currentPassword.value = "";
+  currentPasswordError.value = null;
+  emailPanelOpen.value = true;
+}
+
+function closeEmailPanel() {
+  emailPanelOpen.value = false;
+  newEmail.value = "";
+  newEmailError.value = null;
+  currentPassword.value = "";
+  currentPasswordError.value = null;
+  focusEmailRowAction();
+}
+
+watch(newEmail, () => {
+  newEmailError.value = null;
+});
+
+watch(currentPassword, () => {
+  currentPasswordError.value = null;
+});
+
+async function sendVerification() {
+  const candidate = newEmail.value.trim();
+  const parsed = newEmailSchema.safeParse(candidate);
+  if (!parsed.success) {
+    newEmailError.value = t("common.form.email.invalid");
+    return;
+  }
+  if (!currentPassword.value) {
+    currentPasswordError.value = t("user.emailChangeCurrentPasswordRequired");
+    return;
+  }
+  if (!canSendVerification.value) return;
+
+  emailSubmitting.value = true;
+  try {
+    const updated = await apiClient.dpp.users.requestEmailChange({
+      newEmail: candidate,
+      currentPassword: currentPassword.value,
+    });
+    applyMe(updated.data);
+    notificationStore.addInfoNotification(t("user.emailChangeRequested"));
+    closeEmailPanel();
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 429) {
+      newEmailError.value = t("user.emailChangeRateLimited");
+    } else {
+      const serverMessage = extractServerMessage(error, "user.emailChangeFailed");
+      if (serverMessage.toLowerCase().includes("password")) {
+        currentPasswordError.value = serverMessage;
+      } else {
+        newEmailError.value = serverMessage;
+      }
+    }
+  } finally {
+    emailSubmitting.value = false;
+  }
+}
+
+function confirmCancelPending() {
+  if (!pendingEmail.value || cancelSubmitting.value) return;
+  confirm.require({
+    header: t("user.emailChangeConfirmTitle"),
+    message: t("user.emailChangeConfirmMessage"),
+    acceptLabel: t("user.emailChangeConfirmYes"),
+    rejectLabel: t("user.emailChangeConfirmNo"),
+    acceptClass: "p-button-danger",
+    accept: () => void cancelPending(),
+  });
+}
+
+async function cancelPending() {
+  cancelSubmitting.value = true;
+  try {
+    const updated = await apiClient.dpp.users.cancelEmailChange();
+    applyMe(updated.data);
+    notificationStore.addInfoNotification(t("user.emailChangeCancelled"));
+  } catch (error) {
+    notificationStore.addErrorNotification(
+      extractServerMessage(error, "user.emailChangeCancelFailed"),
+    );
+  } finally {
+    cancelSubmitting.value = false;
+  }
+}
+
+function handleEmailKeydown(event: KeyboardEvent) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeEmailPanel();
+    return;
+  }
+  if (event.key === "Enter") {
+    event.preventDefault();
+    void sendVerification();
+  }
+}
 </script>
 
 <template>
-  <form>
-    <div class="space-y-12">
-      <div class="grid grid-cols-1 gap-x-8 gap-y-10 pb-12 md:grid-cols-3">
-        <div>
-          <h2 class="text-base leading-7 font-semibold text-gray-900">
-            {{ t("user.personalInformation") }}
-          </h2>
+  <form
+    class="flex w-full max-w-160 flex-col"
+    :aria-busy="isSubmitting"
+    @submit.prevent="submitProfile"
+  >
+    <ConfirmDialog />
+    <header class="mb-6">
+      <h1 class="text-ink m-0 mb-1 text-3xl leading-tight font-semibold tracking-tight">
+        {{ t("user.profile") }}
+      </h1>
+      <p class="text-ink-muted m-0 text-sm">{{ t("user.profileSubtitle") }}</p>
+    </header>
+
+    <Message v-if="hydrationFailed" severity="error" class="mb-6" :closable="false">
+      <div class="flex w-full items-center gap-3">
+        <span>{{ t("user.profileLoadFailed") }}</span>
+        <Button
+          :label="t('user.profileLoadRetry')"
+          severity="secondary"
+          size="small"
+          class="ml-auto"
+          data-testid="retry"
+          @click="retryHydrate"
+        />
+      </div>
+    </Message>
+
+    <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-name-heading">
+      <h2
+        id="profile-form-name-heading"
+        class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
+      >
+        {{ t("user.personalInformation") }}
+      </h2>
+      <p class="text-ink-muted m-0 text-xs">{{ t("user.nameHelper") }}</p>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-2">
+          <label class="text-ink text-sm leading-snug font-medium" for="profile-first-name">
+            {{ t("user.firstName") }}
+          </label>
+          <Skeleton v-if="!loaded && !hydrationFailed" height="2.375rem" />
+          <InputText
+            v-else
+            id="profile-first-name"
+            v-model="firstName"
+            autocomplete="given-name"
+            class="w-full"
+            :invalid="showErrors && !!errors.firstName"
+            :disabled="isSubmitting"
+            :aria-describedby="
+              showErrors && errors.firstName ? 'profile-first-name-error' : undefined
+            "
+          />
+          <Message
+            v-if="showErrors && errors.firstName"
+            id="profile-first-name-error"
+            severity="error"
+            variant="simple"
+            size="small"
+          >
+            {{ errors.firstName }}
+          </Message>
         </div>
 
-        <div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
-          <div class="sm:col-span-3">
-            <label class="block text-sm leading-6 font-medium text-gray-900" for="first-name">{{
-              t("user.firstName")
-            }}</label>
-            <div class="mt-2">
-              <input
-                id="first-name"
-                autocomplete="given-name"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
-                name="first-name"
-                type="text"
-                disabled
-                :value="session.data?.user.firstName"
-              />
-            </div>
-          </div>
-
-          <div class="sm:col-span-3">
-            <label class="block text-sm leading-6 font-medium text-gray-900" for="family-name">{{
-              t("user.lastName")
-            }}</label>
-            <div class="mt-2">
-              <input
-                id="family-name"
-                autocomplete="family-name"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
-                name="family-name"
-                type="text"
-                disabled
-                :value="session.data?.user.lastName"
-              />
-            </div>
-          </div>
-
-          <div class="sm:col-span-6">
-            <label class="block text-sm leading-6 font-medium text-gray-900" for="email">{{
-              t("common.form.email.label")
-            }}</label>
-            <div class="mt-2">
-              <input
-                id="email"
-                autocomplete="email"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
-                name="email"
-                type="email"
-                disabled
-                :value="session.data?.user.email"
-              />
-            </div>
-          </div>
-        </div>
-        <div>
-          <h2 class="text-base leading-7 font-semibold text-gray-900">
-            {{ t("user.displaySettings") }}
-          </h2>
-        </div>
-
-        <div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
-          <div class="sm:col-span-6">
-            <label class="block text-sm leading-6 font-medium text-gray-900" for="email">{{
-              t("user.language")
-            }}</label>
-            <div class="mt-2">
-              <select
-                id="email"
-                v-model="locale"
-                autocomplete="email"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
-                name="language"
-              >
-                <option value="de-DE">Deutsch</option>
-                <option value="en-US">English</option>
-              </select>
-            </div>
-          </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-ink text-sm leading-snug font-medium" for="profile-last-name">
+            {{ t("user.lastName") }}
+          </label>
+          <Skeleton v-if="!loaded && !hydrationFailed" height="2.375rem" />
+          <InputText
+            v-else
+            id="profile-last-name"
+            v-model="lastName"
+            autocomplete="family-name"
+            class="w-full"
+            :invalid="showErrors && !!errors.lastName"
+            :disabled="isSubmitting"
+            :aria-describedby="
+              showErrors && errors.lastName ? 'profile-last-name-error' : undefined
+            "
+          />
+          <Message
+            v-if="showErrors && errors.lastName"
+            id="profile-last-name-error"
+            severity="error"
+            variant="simple"
+            size="small"
+          >
+            {{ errors.lastName }}
+          </Message>
         </div>
       </div>
+    </section>
+
+    <hr class="border-rule m-0 border-0 border-t" />
+
+    <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-email-heading">
+      <h2
+        id="profile-form-email-heading"
+        class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
+      >
+        {{ t("user.email") }}
+      </h2>
+
+      <div
+        v-if="!loaded && !hydrationFailed"
+        class="border-rule bg-surface-recessed flex flex-wrap items-start justify-between gap-4 rounded-md border px-4 py-3"
+        aria-hidden="true"
+      >
+        <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
+          <Skeleton width="70%" height="1.125rem" />
+          <Skeleton width="50%" height="0.875rem" />
+        </div>
+        <Skeleton width="7.5rem" height="2rem" />
+      </div>
+      <div
+        v-else-if="loaded"
+        class="border-rule bg-surface-recessed flex flex-wrap items-start justify-between gap-4 rounded-md border px-4 py-3"
+      >
+        <div class="flex min-w-0 flex-1 basis-60 flex-col items-start gap-1.5">
+          <span class="text-ink max-w-full text-sm wrap-break-word">{{ currentEmail }}</span>
+          <span
+            v-if="pendingEmail"
+            class="border-status-warning/20 bg-status-warning/10 text-status-warning inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider wrap-break-word"
+            role="status"
+            aria-live="polite"
+          >
+            {{ t("user.emailPending", { email: pendingEmail }) }}
+          </span>
+          <span v-if="pendingRequestedLabel" class="text-ink-muted text-xs leading-normal">
+            {{ pendingRequestedLabel }}
+          </span>
+        </div>
+        <div class="flex shrink-0 gap-2">
+          <Button
+            v-if="pendingEmail"
+            ref="cancelPendingButtonRef"
+            type="button"
+            severity="secondary"
+            size="small"
+            :label="t('user.cancelEmailChange')"
+            :loading="cancelSubmitting"
+            :disabled="cancelSubmitting"
+            data-testid="cancel-pending"
+            @click="confirmCancelPending"
+          />
+          <Button
+            v-else-if="!emailPanelOpen"
+            ref="changeEmailButtonRef"
+            type="button"
+            severity="secondary"
+            size="small"
+            :label="t('user.changeEmail')"
+            aria-controls="profile-email-panel"
+            :aria-expanded="emailPanelOpen"
+            data-testid="change-email"
+            @click="openEmailPanel"
+          />
+        </div>
+      </div>
+
+      <Transition
+        enter-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-out"
+        enter-from-class="-translate-y-1 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="motion-safe:transition motion-safe:duration-200 motion-safe:ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="-translate-y-1 opacity-0"
+      >
+        <div
+          v-if="emailPanelOpen && !pendingEmail"
+          id="profile-email-panel"
+          class="border-rule bg-surface mt-3 flex flex-col gap-2 rounded-lg border p-4"
+          role="region"
+          :aria-label="t('user.changeEmail')"
+          @keydown="handleEmailKeydown"
+        >
+          <label class="text-ink text-sm leading-snug font-medium" for="profile-new-email">
+            {{ t("user.newEmail") }}
+          </label>
+          <InputText
+            id="profile-new-email"
+            v-model="newEmail"
+            type="email"
+            autocomplete="email"
+            class="w-full"
+            :invalid="!!newEmailError"
+            :disabled="emailSubmitting"
+            :aria-describedby="newEmailError ? 'profile-new-email-error' : 'profile-new-email-hint'"
+            data-testid="new-email"
+            autofocus
+          />
+          <p id="profile-new-email-hint" class="text-ink-muted m-0 text-xs">
+            {{ t("user.emailChangeHint") }}
+          </p>
+          <Message
+            v-if="newEmailError"
+            id="profile-new-email-error"
+            severity="error"
+            variant="simple"
+            size="small"
+          >
+            {{ newEmailError }}
+          </Message>
+          <div class="flex flex-col gap-2">
+            <label class="text-ink text-sm leading-snug font-medium" for="profile-current-password">
+              {{ t("user.emailChangeCurrentPassword") }}
+            </label>
+            <InputText
+              id="profile-current-password"
+              v-model="currentPassword"
+              type="password"
+              autocomplete="current-password"
+              class="w-full"
+              :invalid="!!currentPasswordError"
+              :disabled="emailSubmitting"
+              data-testid="current-password"
+              @keydown="handleEmailKeydown"
+            />
+            <Message v-if="currentPasswordError" severity="error" variant="simple" size="small">
+              {{ currentPasswordError }}
+            </Message>
+          </div>
+          <div class="mt-2 flex justify-end gap-2">
+            <Button
+              type="button"
+              severity="secondary"
+              :label="t('user.cancel')"
+              :disabled="emailSubmitting"
+              @click="closeEmailPanel"
+            />
+            <Button
+              type="button"
+              :label="t('user.sendVerification')"
+              :loading="emailSubmitting"
+              :disabled="!canSendVerification || emailSubmitting"
+              data-testid="send-verification"
+              @click="sendVerification"
+            />
+          </div>
+        </div>
+      </Transition>
+    </section>
+
+    <hr class="border-rule m-0 border-0 border-t" />
+
+    <section class="flex flex-col gap-3 py-6" aria-labelledby="profile-form-language-heading">
+      <h2
+        id="profile-form-language-heading"
+        class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
+      >
+        {{ t("user.language") }}
+      </h2>
+      <p class="text-ink-muted m-0 text-xs">{{ t("user.languageHelper") }}</p>
+      <SelectButton
+        v-model="preferredLanguage"
+        :options="languageOptions"
+        option-label="label"
+        option-value="value"
+        :allow-empty="false"
+        :disabled="!loaded || isSubmitting"
+        aria-labelledby="profile-form-language-heading"
+        class="self-start"
+      />
+    </section>
+
+    <hr class="border-rule m-0 border-0 border-t" />
+
+    <div class="flex justify-end gap-2 pt-6">
+      <Button
+        v-if="meta.dirty"
+        type="button"
+        severity="secondary"
+        :label="t('user.discardChanges')"
+        :disabled="isSubmitting"
+        @click="discard"
+      />
+      <Button
+        type="submit"
+        :label="t('user.save')"
+        :loading="isSubmitting"
+        :disabled="!loaded || !meta.dirty"
+      />
     </div>
   </form>
 </template>

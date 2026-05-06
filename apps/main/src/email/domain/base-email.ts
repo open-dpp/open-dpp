@@ -1,6 +1,11 @@
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 
-export type BaseEmailType = "VERIFY_EMAIL" | "INVITE_USER_TO_ORGANIZATION" | "PASSWORD_RESET";
+export type BaseEmailType =
+  | "VERIFY_EMAIL"
+  | "INVITE_USER_TO_ORGANIZATION"
+  | "PASSWORD_RESET"
+  | "EMAIL_CHANGE_NOTIFICATION"
+  | "EMAIL_CHANGE_COMPLETED";
 
 export interface BaseEmailCreateProps {
   type: BaseEmailType;

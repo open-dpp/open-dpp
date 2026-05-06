@@ -29,6 +29,11 @@ export const authClient = createAuthClient({
           required: false,
           input: true,
         },
+        preferredLanguage: {
+          type: "string",
+          required: false,
+          input: true,
+        },
       },
       organization: {
         image: {

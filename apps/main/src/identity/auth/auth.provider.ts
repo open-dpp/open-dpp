@@ -10,6 +10,7 @@ import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
 import { EmailService } from "../../email/email.service";
+import { EMAIL_CHANGE_REQUEST_COLLECTION } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 
 export const AUTH = "auth";
 
@@ -102,6 +103,44 @@ export const AuthProvider: Provider = {
             required: false,
             input: true,
           },
+          preferredLanguage: {
+            type: "string",
+            required: false,
+            input: true,
+            defaultValue: "en",
+          },
+        },
+        changeEmail: {
+          enabled: true,
+          sendChangeEmailVerification: async ({
+            user,
+            newEmail,
+            url,
+          }: {
+            user: { firstName?: string };
+            newEmail: string;
+            url: string;
+            token: string;
+          }) => {
+            try {
+              const firstName = user.firstName ?? "User";
+              if (!user.firstName) {
+                logger.warn(
+                  `sendChangeEmailVerification invoked without firstName on user payload (newEmail=${newEmail})`,
+                );
+              }
+              await emailService.send(
+                VerifyEmailMail.create({
+                  to: newEmail,
+                  subject: "Confirm your new email address",
+                  templateProperties: { link: url, firstName },
+                }),
+              );
+            } catch (error) {
+              logger.error("Failed to send email change verification", error);
+              throw error;
+            }
+          },
         },
       },
       emailAndPassword: {
@@ -168,6 +207,45 @@ export const AuthProvider: Provider = {
                 return {
                   data: session,
                 };
+              }
+            },
+          },
+        },
+        user: {
+          update: {
+            before: async (data) => {
+              // Better-auth's change-email flow is JWT-based: the verification link in the
+              // user's new inbox is a stateless, signed token that is not stored in the
+              // database, so it cannot be invalidated by deleting any row. To make `revoke`
+              // effective, we gate the actual email mutation on the EmailChangeRequest
+              // shadow table. `hardCancel` deletes that row, so a revoked link will fail
+              // here even if the JWT is still cryptographically valid.
+              const newEmail = (data as { email?: unknown } | null | undefined)?.email;
+              if (typeof newEmail !== "string") {
+                return;
+              }
+              const pending = await db
+                .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
+                .findOne({ newEmail });
+              if (!pending) {
+                logger.warn(
+                  `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest (revoked or unknown)`,
+                );
+                return false;
+              }
+            },
+            after: async (user) => {
+              // When better-auth completes a verified email change, user.email is now the new
+              // address. Best-effort: delete the matching EmailChangeRequest row. The
+              // newEmail filter ensures we only act on completion (other user updates leave
+              // user.email unchanged, so no row matches).
+              try {
+                await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).deleteOne({
+                  userId: user.id,
+                  newEmail: user.email,
+                });
+              } catch (error) {
+                logger.error("Failed to clear EmailChangeRequest after user.email update", error);
               }
             },
           },

@@ -1,14 +1,20 @@
+import { LanguageEnum } from "../aas/enums/language-enum";
 import { z } from "zod";
 
-export interface UserDto {
-  id: string;
-  email: string;
-  name?: string;
-  image?: string;
-  emailVerified: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export const UserDtoSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  name: z.string().nullable(),
+  image: z.string().nullable(),
+  emailVerified: z.boolean(),
+  preferredLanguage: LanguageEnum,
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
+export type UserDto = z.infer<typeof UserDtoSchema>;
 
 export const UserRoleDto = {
   ADMIN: "admin", // That is the super admin over all organizations

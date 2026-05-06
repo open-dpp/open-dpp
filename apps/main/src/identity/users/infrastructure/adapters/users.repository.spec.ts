@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Language } from "@open-dpp/dto";
 import { ObjectId } from "mongodb";
 import { generateMongoConfig } from "../../../../database/config";
 import { EmailService } from "../../../../email/email.service";
@@ -240,10 +241,42 @@ describe("UsersRepository", () => {
         role: UserRole.USER,
         createdAt: new Date(),
         updatedAt: new Date(),
+        preferredLanguage: Language.en,
       });
 
       const result = await repository.update(user);
       expect(result).toBeNull();
+    });
+
+    it("persists preferredLanguage changes", async () => {
+      const seeded = await seedUser();
+      expect(seeded.preferredLanguage).toBe(Language.en);
+
+      const updated = seeded.withPreferredLanguage(Language.de);
+      const result = await repository.update(updated);
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.preferredLanguage).toBe(Language.de);
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.preferredLanguage).toBe(Language.de);
+    });
+
+    it("persists name changes via withName", async () => {
+      const seeded = await seedUser();
+
+      const updated = seeded.withName("Jane", "Roe");
+      const result = await repository.update(updated);
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.firstName).toBe("Jane");
+      expect(result!.lastName).toBe("Roe");
+      expect(result!.name).toBe("Jane Roe");
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.firstName).toBe("Jane");
+      expect(roundTripped!.lastName).toBe("Roe");
+      expect(roundTripped!.name).toBe("Jane Roe");
     });
   });
 });
