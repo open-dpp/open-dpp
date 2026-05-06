@@ -84,6 +84,10 @@ export const useMediaStore = defineStore("media", () => {
     return media;
   };
 
+  const deleteMedia = async (id: string) => {
+    return await apiClient.media.media.deleteFile(id);
+  };
+
   return {
     getDppMediaInfo,
     downloadDppMedia,
@@ -93,6 +97,7 @@ export const useMediaStore = defineStore("media", () => {
     getMediaInfo,
     fetchMedia,
     uploadMedia,
+    deleteMedia,
     uploadDppMedia,
     organizationMedia,
   };

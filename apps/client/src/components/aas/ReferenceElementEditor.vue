@@ -27,7 +27,7 @@ const formSchema = z.object({
 });
 export type FormValues = z.infer<typeof formSchema>;
 
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, errors, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...props.data,
@@ -43,9 +43,7 @@ const disableEdit = computed(() => {
   return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
-const showErrors = computed(() => {
-  return meta.value.dirty || submitCount.value > 0;
-});
+const showErrors = computed(() => submitCount.value > 0);
 
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;

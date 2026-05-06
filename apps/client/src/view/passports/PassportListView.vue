@@ -209,13 +209,6 @@ onMounted(async () => {
         @click="goToItem(item)"
       />
       <Button
-        icon="pi pi-comments"
-        severity="primary"
-        :aria-label="t('dpp.openPresentationChat')"
-        :title="t('dpp.openPresentationChat')"
-        @click="forwardToPresentationChat(item)"
-      />
-      <Button
         icon="pi pi-download"
         severity="secondary"
         :aria-label="t('common.exportPassport')"

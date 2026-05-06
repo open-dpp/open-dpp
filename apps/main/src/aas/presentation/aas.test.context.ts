@@ -170,7 +170,7 @@ export function createAasTestContext<T>(
     const submodel2 = Submodel.fromPlain(
       submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
-    user1data = await betterAuthHelper.createUser(subject.userRole);
+    user1data = await betterAuthHelper.createUser({ role: subject.userRole });
     if (subject.memberRole === MemberRole.OWNER) {
       orga1 = await betterAuthHelper.createOrganization(user1data?.user.id as string);
     }

@@ -48,17 +48,8 @@ import {
   PopulateQueryParamSchema,
   StatusQueryParamSchema,
 } from "../digital-product-document/presentation/digital-product-document-decorators";
-
-const HTTPCode = {
-  OK: 200,
-  CREATED: 201,
-  NO_CONTENT: 204,
-  BAD_REQUEST: 400,
-} as const;
-
-const ContentType = {
-  JSON: "application/json",
-} as const;
+import { HTTPCode } from "./http.codes";
+import { ContentType } from "./content.types";
 
 const security = [{ apiKeyAuth: [] }];
 const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };

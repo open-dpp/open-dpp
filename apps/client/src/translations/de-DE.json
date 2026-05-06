@@ -4,6 +4,9 @@
   },
   "common": {
     "reset": "Zurücksetzen",
+    "noEntries": "Keine Einträge gefunden",
+    "moveUp": "Nach oben verschieben",
+    "moveDown": "Nach unten verschieben",
     "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
@@ -266,7 +269,6 @@
       "errorSwitch": "Wechsel des Modellpasses fehlgeschlagen",
       "errorLoad": "Laden der Verbindungen fehlgeschlagen:",
       "add": "Verbindung erstellen",
-      "id": "ID",
       "name": {
         "label": "Name",
         "help": "Geben Sie Ihrer Verbindung einen Namen"
@@ -330,11 +332,15 @@
     "details": "Details und User der Organisation.",
     "create": " Erstellen Sie eine neue Organisation.",
     "createError": "Fehler beim Erstellen der Organisation.",
+    "organizationCreationDisabled": {
+      "title": "Erstellung von Organisationen deaktiviert",
+      "description": "Die Erstellung von Organisationen ist von Ihrer Administrator*in deaktiviert worden. Bitte lassen Sie sich von Ihrer Adminstrator*in oder Kolleg*in zu einer Organisation einladen."
+    },
     "fetchError": "Fehler beim Laden der Organisationen.",
     "fetchCurrentError": "Fehler beim Laden der aktuellen Organisation.",
     "assignedOrganizations": "Alle zugewiesenen Organisationen",
     "pick": "Organisation auswählen",
-    "new": "Neue Organisation erstellen",
+    "new": "Organisation erstellen",
     "invite": "Einladen",
     "inviteUser": "Benutzer einladen",
     "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
@@ -345,7 +351,6 @@
     "owner": "Organisationsadministrator*in",
     "addUser": "Benutzer hinzufügen",
     "form": {
-      "id": "ID",
       "createdBy": "Erstellt von",
       "administeredBy": "Administriert von",
       "description": "Beschreibung",
@@ -373,9 +378,14 @@
       "accept": "Akzeptieren",
       "decline": "Ablehnen",
       "cancel": "Einladung zurücknehmen",
+      "expiresAt": "Ablaufdatum",
+      "expired": "Abgelaufen",
       "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
       "acceptError": "Fehler bei der Akzeptanz der Einladung.",
-      "acceptTitle": "Du wurdest zu einer Organisation eingeladen."
+      "acceptTitle": "Du wurdest zu einer Organisation eingeladen.",
+      "errorLoading": "Fehler beim Laden der Einladung | Fehler beim Laden der Einladungen",
+      "invitedBy": "Eingeladen von",
+      "invitedToOrganization": "Eingeladen zu der Organisation"
     },
     "userInvitations": {
       "title": "Einladungen",
@@ -424,10 +434,17 @@
       },
       "instanceSettings": {
         "title": "Instanz-Einstellungen",
-        "signupEnabled": "Öffentliche Registrierung aktiviert",
-        "signupEnabledDescription": "Wenn deaktiviert, können nur Administratoren neue Benutzer hinzufügen.",
+        "signupEnabled": {
+          "title": "Öffentliche Registrierung aktiviert",
+          "description": "Wenn deaktiviert, können nur Administrator*innen neue Benutzer*innen hinzufügen."
+        },
+        "organizationCreationEnabled": {
+          "title": "Öffentliche Erstellung von Organisationen aktiviert",
+          "description": "Wenn deaktiviert, können nur Administrator*innen neue Organisationen hinzufügen."
+        },
         "saved": "Einstellungen erfolgreich gespeichert",
         "error": "Fehler beim Speichern der Einstellungen",
+        "errorLoading": "Fehler beim Laden der Einstellungen",
         "lockedByEnv": "Diese Einstellung wird durch eine Umgebungsvariable gesteuert und kann hier nicht geändert werden."
       }
     }
@@ -438,6 +455,8 @@
   "file": {
     "type": "Dateityp",
     "size": "Dateigröße",
+    "delete": "Datei löschen",
+    "actions": "Aktionen",
     "upload": "Datei hochladen",
     "uploadSuccess": "Datei erfolgreich hochgeladen.",
     "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
@@ -454,7 +473,14 @@
   "media": {
     "title": "Titel",
     "media": "Medien",
-    "preview": "Vorschau"
+    "preview": "Vorschau",
+    "deletedFile": "Gelöschte Datei",
+    "deleteDialog": {
+      "header": "Löschen bestätigen",
+      "message": "Falls diese Datei in Produktpässen angezeigt wird, wird sie daraus entfernt. Trotzdem löschen?"
+    },
+    "deleteSuccess": "Datei wurde erfolgreich gelöscht",
+    "deleteFailure": "Fehler beim Löschen der Datei"
   },
   "activityHistory": {
     "errorLoading": "Fehler beim Laden des Aktivitätsverlaufs",
