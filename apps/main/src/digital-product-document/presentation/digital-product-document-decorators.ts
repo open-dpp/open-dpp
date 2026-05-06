@@ -8,6 +8,11 @@ export function ApiGetActivities() {
   return applyDecorators(Get(ApiGetActivitiesPath));
 }
 
+export const ApiDownloadActivitiesPath = "/:id/activities/download";
+export function ApiDownloadActivities() {
+  return applyDecorators(Get(ApiDownloadActivitiesPath));
+}
+
 export const PopulateQueryParamSchema = PopulateSchema.meta({
   description: "Populates specified environment property",
   example: "environment.assetAdministrationShells",

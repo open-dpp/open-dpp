@@ -74,4 +74,11 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
       },
     );
   }
+
+  downloadActivities(id: string, params: ActivityParams): Promise<AxiosResponse<Blob>> {
+    return this.axiosInstance.get(`${this.templatesEndpoint}/${id}/activities/download`, {
+      responseType: "blob",
+      params: { ...params.pagination },
+    });
+  }
 }

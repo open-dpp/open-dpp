@@ -67,7 +67,7 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     id: string,
     pagination: PagingParamsDto = { limit: 10, cursor: undefined },
   ): Promise<PagingResult> {
-    const errorMessage = t(`digitalProductDocument.errorLoadingActivityHistory`);
+    const errorMessage = t(`activityHistory.errorLoading`);
     try {
       const response = await digitalProductDocNamespace.getActivities(id, { pagination });
       if (response.status === HTTPCode.OK) {

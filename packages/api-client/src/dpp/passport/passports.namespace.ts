@@ -68,4 +68,11 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
       },
     );
   }
+
+  downloadActivities(id: string, params: ActivityParams): Promise<AxiosResponse<Blob>> {
+    return this.axiosInstance.get(`${this.passportEndpoint}/${id}/activities/download`, {
+      responseType: "blob",
+      params: { ...params.pagination },
+    });
+  }
 }

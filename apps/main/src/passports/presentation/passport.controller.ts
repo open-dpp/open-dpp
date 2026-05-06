@@ -15,6 +15,7 @@ import type {
   ActivityPaginationDto,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import { Response } from "express";
 
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
@@ -30,6 +31,7 @@ import {
   Param,
   Post,
   Put,
+  Res,
 } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -109,6 +111,7 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
+  ApiDownloadActivities,
   ApiGetActivities,
   LimitQueryParam,
   PopulateQueryParam,
@@ -759,6 +762,27 @@ export class PassportController
   ): Promise<ActivityPaginationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.getActivities(
+      organizationId,
+      id,
+      subject,
+      limit,
+      cursor,
+    );
+  }
+
+  @ApiDownloadActivities()
+  async downloadActivities(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    await this.passportService.digitalProductDocumentService.downloadActivities(
+      res,
       organizationId,
       id,
       subject,

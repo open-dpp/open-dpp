@@ -32,6 +32,22 @@ export const PASSPORT: RouteRecordRaw = {
   },
 };
 
+export const PASSPORT_ACTIVITY_HISTORY: RouteRecordRaw = {
+  path: "activities",
+  name: "activities",
+  component: () => import("../../../view/activity-history/PassportActivityHistoryView.vue"),
+  beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = [
+      ...(await passportBreadcrumbs(to)),
+      {
+        name: localizedBreadcrumb("activityHistory.label"),
+        route: PASSPORT_ACTIVITY_HISTORY,
+      },
+    ];
+  },
+};
+
 export async function passportBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   const text = to.params.passportId ? String(to.params.passportId) : "Editor";
   return [
@@ -49,7 +65,7 @@ export async function passportBreadcrumbs(to: RouteLocationNormalizedGeneric) {
 
 const PASSPORT_PARENT: RouteRecordRaw = {
   path: ":passportId",
-  children: [PASSPORT],
+  children: [PASSPORT, PASSPORT_ACTIVITY_HISTORY],
 };
 
 export const ORGANIZATION_PASSPORTS_PARENT: RouteRecordRaw = {

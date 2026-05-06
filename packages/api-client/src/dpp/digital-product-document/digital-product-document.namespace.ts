@@ -16,4 +16,5 @@ export interface IDigitalProductDocumentNamespace {
     data: DigitalProductDocumentStatusModificationDto,
   ): Promise<AxiosResponse<DigitalProductDocumentDto>>;
   getActivities(id: string, params: ActivityParams): Promise<AxiosResponse<ActivityPaginationDto>>;
+  downloadActivities(id: string, params: ActivityParams): Promise<AxiosResponse<Blob>>;
 }

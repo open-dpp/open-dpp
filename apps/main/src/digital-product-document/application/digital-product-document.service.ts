@@ -1,7 +1,8 @@
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
+import { Response } from "express";
+
 import {
   ActivityPaginationDtoSchema,
   AssetAdministrationShellModificationDto,
@@ -25,6 +26,8 @@ import {
 import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { Pagination } from "../../pagination/pagination";
+import archiver from "archiver";
+import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -400,6 +403,35 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
         })
       ).toPlain(),
     );
+  }
+
+  async downloadActivities(
+    res: Response,
+    organizationId: string,
+    id: string,
+    subject: SubjectAttributes,
+    limit: number = 10,
+    cursor: string | undefined,
+  ) {
+    const activities = await this.getActivities(organizationId, id, subject, limit, cursor);
+    const archive = archiver("zip", {
+      zlib: { level: 9 },
+    });
+
+    res.set({
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="data.zip"',
+    });
+
+    archive.pipe(res);
+
+    activities.result.forEach((activity) => {
+      archive.append(JSON.stringify(activity.payload, null, 2), {
+        name: activity.header.createdAt.toISOString() + "-" + activity.header.id + ".json",
+      });
+    });
+
+    await archive.finalize();
   }
 
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {

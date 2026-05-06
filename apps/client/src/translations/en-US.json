@@ -435,8 +435,9 @@
   "marketplace": {
     "marketplace": "Marketplace"
   },
-  "digitalProductDocument": {
-    "errorLoadingActivityHistory": "Failed to load activity history"
+  "activityHistory": {
+    "errorLoading": "Failed to load activity history",
+    "label": "Activity history"
   },
   "passports": {
     "select": "Select passport",

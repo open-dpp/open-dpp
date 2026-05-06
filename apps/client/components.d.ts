@@ -13,6 +13,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+    ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
     BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
@@ -138,6 +139,7 @@ declare module 'vue' {
 // For TSX support
 declare global {
   const AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+  const ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
   const AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
   const AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
   const BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
