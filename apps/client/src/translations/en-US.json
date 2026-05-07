@@ -18,6 +18,7 @@
     "save": "Save",
     "create": "Create",
     "change": "Change",
+    "download": "Download",
     "close": "Close",
     "cancel": "Cancel",
     "select": "Select",
@@ -454,7 +455,9 @@
   },
   "activityHistory": {
     "errorLoading": "Failed to load activity history",
-    "label": "Activity history"
+    "errorDownloading": "Failed to download activity history",
+    "label": "Activity history",
+    "createdAt": "Date"
   },
   "passports": {
     "select": "Select passport",

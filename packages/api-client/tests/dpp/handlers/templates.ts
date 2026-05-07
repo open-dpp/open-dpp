@@ -7,7 +7,6 @@ import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
-import { activitiesPlainFactory } from "@open-dpp/testing";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const template1 = templatesPlainFactory.build({ organizationId: activeOrganization.id });

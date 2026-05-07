@@ -40,8 +40,7 @@ async function uploadFile() {
     if (err instanceof LimitError) {
       notificationStore.addErrorNotification(t(`api.error.limit.${err.key}`, { limit: err.limit }));
     } else {
-      console.error("Fehler beim Hochladen der Datei:", error);
-      notificationStore.addErrorNotification(t("file.uploadError"));
+      notificationStore.addErrorNotification(t("file.uploadError"), error);
     }
     selectedFile.value = null;
   } finally {

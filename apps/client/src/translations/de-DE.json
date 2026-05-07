@@ -28,6 +28,7 @@
     "selected": "Ausgewählt",
     "submit": "Bestätigen",
     "abort": "Abbrechen",
+    "download": "Herunterladen",
     "general": "Allgemein",
     "remove": "Entfernen",
     "copy": "Kopieren",
@@ -484,7 +485,9 @@
   },
   "activityHistory": {
     "errorLoading": "Fehler beim Laden des Aktivitätsverlaufs",
-    "label": "Aktivitätsverlauf"
+    "errorDownloading": "Fehler beim Herunterladen des Aktivitätsverlaufs",
+    "label": "Aktivitätsverlauf",
+    "createdAt": "Datum"
   },
   "passports": {
     "select": "Produktpass auswählen",

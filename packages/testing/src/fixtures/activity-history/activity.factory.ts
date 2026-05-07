@@ -13,6 +13,8 @@ export const activitiesPlainFactory = Factory.define<ActivityDto>(() => ({
     version: "1.0.0",
   },
   payload: {
+    submodelId: randomUUID(),
     fullIdShortPath: "some-path",
+    data: { idShort: "some-id-short", value: "some-value" },
   },
 }));

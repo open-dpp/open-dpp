@@ -786,7 +786,6 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Res() res: Response,
   ): Promise<void> {
-    // start, end
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.downloadActivities(
       res,
