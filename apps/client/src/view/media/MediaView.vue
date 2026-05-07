@@ -8,10 +8,12 @@ import MediaGrid from "../../components/media/MediaGrid.vue";
 import { handleApiError, LimitError } from "../../lib/api-error-mapping";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
+const errorHandlingStore = useErrorHandlingStore();
 
 const selected = ref<Array<MediaInfo>>([]);
 const sidebarOpen = ref<boolean>(false);
@@ -38,9 +40,12 @@ async function uploadFile() {
   } catch (error: unknown) {
     const err = handleApiError(error);
     if (err instanceof LimitError) {
-      notificationStore.addErrorNotification(t(`api.error.limit.${err.key}`, { limit: err.limit }));
+      errorHandlingStore.logErrorWithNotification(
+        t(`api.error.limit.${err.key}`, { limit: err.limit }),
+        error,
+      );
     } else {
-      notificationStore.addErrorNotification(t("file.uploadError"), error);
+      errorHandlingStore.logErrorWithNotification(t("file.uploadError"), error);
     }
     selectedFile.value = null;
   } finally {
