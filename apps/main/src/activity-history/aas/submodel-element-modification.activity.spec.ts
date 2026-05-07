@@ -10,14 +10,18 @@ describe("SubmodelElementModificationEvent", () => {
     const event = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: submodelId,
       payload: SubmodelElementModificationActivityPayload.create({
+        submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
+        data: { idShort: "prop1", value: "20" },
       }),
     });
     expect(event.toDatabase()).toEqual({
       _id: event.header.id,
       ...event.header,
       payload: {
+        submodelId,
         fullIdShortPath: `${submodelId}.prop1`,
+        data: { idShort: "prop1", value: "20" },
       },
     });
   });

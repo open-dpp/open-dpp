@@ -7,6 +7,7 @@ export * from "./aas/common/language-text-json-schema";
 
 export * from "./shared/get-all-params.dto";
 export * from "./shared/filter.dto";
+export * from "./shared/time.dto";
 
 export * from "./organizations/invitation.dto";
 

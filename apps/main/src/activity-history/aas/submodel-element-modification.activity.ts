@@ -54,23 +54,37 @@ export class SubmodelElementModificationActivity implements IActivity {
 }
 
 const SubmodelElementModificationActivityPayloadSchema = z.object({
+  submodelId: z.string(),
   fullIdShortPath: z.string(),
+  data: z.unknown(),
 });
 
 export class SubmodelElementModificationActivityPayload implements IActivityPayload {
-  private constructor(public readonly fullIdShortPath: IdShortPath) {}
-  static create(data: { fullIdShortPath: IdShortPath }) {
-    return new SubmodelElementModificationActivityPayload(data.fullIdShortPath);
+  private constructor(
+    public readonly submodelId: string,
+    public readonly fullIdShortPath: IdShortPath,
+    public readonly data: unknown,
+  ) {}
+  static create(data: { submodelId: string; fullIdShortPath: IdShortPath; data: unknown }) {
+    return new SubmodelElementModificationActivityPayload(
+      data.submodelId,
+      data.fullIdShortPath,
+      data.data,
+    );
   }
   static fromPlain(data: unknown) {
     const parsed = SubmodelElementModificationActivityPayloadSchema.parse(data);
     return new SubmodelElementModificationActivityPayload(
+      parsed.submodelId,
       IdShortPath.create({ path: parsed.fullIdShortPath }),
+      parsed.data,
     );
   }
   toPlain() {
     return {
+      submodelId: this.submodelId,
       fullIdShortPath: this.fullIdShortPath.toString(),
+      data: this.data,
     };
   }
 }

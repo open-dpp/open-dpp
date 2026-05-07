@@ -152,7 +152,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
       SubmodelElementModificationActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
         payload: SubmodelElementModificationActivityPayload.create({
+          submodelId: this.id,
           fullIdShortPath: submodelElement.getIdShortPath(),
+          data,
         }),
         userId: options.ability.userId ?? undefined,
       }),

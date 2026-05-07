@@ -26,8 +26,9 @@ import {
 import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { Pagination } from "../../pagination/pagination";
-import archiver from "archiver";
+import archiver, { Archiver } from "archiver";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
+import { Period } from "../../time/period";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -387,22 +388,77 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     organizationId: string,
     id: string,
     subject: SubjectAttributes,
+    startDate: string | undefined,
+    endDate: string | undefined,
     limit: number = 10,
     cursor: string | undefined,
+    ascending: boolean = false,
   ) {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
       subject,
       organizationId,
     );
+    const period =
+      startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
     const pagination = Pagination.create({ limit, cursor });
     return ActivityPaginationDtoSchema.parse(
       (
         await this.activityRepository.findByAggregateId(item.id, {
           pagination,
+          period,
+          ascending,
         })
       ).toPlain(),
     );
+  }
+
+  async downloadActivitiesWithArchiver(
+    res: Response,
+    organizationId: string,
+    id: string,
+    subject: SubjectAttributes,
+    startDate: string | undefined,
+    endDate: string | undefined,
+    limit: number,
+    archive: Archiver,
+  ) {
+    res.set({
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="activities.zip"',
+    });
+
+    archive.pipe(res);
+
+    let currentCursor = undefined;
+    while (true) {
+      const activities = await this.getActivities(
+        organizationId,
+        id,
+        subject,
+        startDate,
+        endDate,
+        limit,
+        currentCursor,
+        true,
+      );
+      if (activities.result.length === 0) {
+        break;
+      }
+      const payload = activities.result.map((activity) => activity);
+
+      archive.append(JSON.stringify(payload, null, 2), {
+        name:
+          activities.result[0].header.createdAt.toISOString() +
+          "-" +
+          activities.result[activities.result.length - 1].header.createdAt.toISOString() +
+          ".json",
+      });
+
+      currentCursor = activities.paging_metadata.cursor ?? undefined;
+    }
+
+    await archive.finalize();
   }
 
   async downloadActivities(
@@ -410,28 +466,22 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     organizationId: string,
     id: string,
     subject: SubjectAttributes,
-    limit: number = 10,
-    cursor: string | undefined,
+    startDate: string | undefined,
+    endDate: string | undefined,
   ) {
-    const activities = await this.getActivities(organizationId, id, subject, limit, cursor);
     const archive = archiver("zip", {
       zlib: { level: 9 },
     });
-
-    res.set({
-      "Content-Type": "application/zip",
-      "Content-Disposition": 'attachment; filename="data.zip"',
-    });
-
-    archive.pipe(res);
-
-    activities.result.forEach((activity) => {
-      archive.append(JSON.stringify(activity.payload, null, 2), {
-        name: activity.header.createdAt.toISOString() + "-" + activity.header.id + ".json",
-      });
-    });
-
-    await archive.finalize();
+    await this.downloadActivitiesWithArchiver(
+      res,
+      organizationId,
+      id,
+      subject,
+      startDate,
+      endDate,
+      100,
+      archive,
+    );
   }
 
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {

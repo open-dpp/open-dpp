@@ -1,6 +1,7 @@
 import type {
   ActivityPaginationDto,
   DigitalProductDocumentStatusModificationDto,
+  GetAllActivitiesParamsDto,
   GetAllParamsDto,
   TemplateCreateDto,
   TemplateDto,
@@ -10,7 +11,7 @@ import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
 import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
 import type {
-  ActivityParams,
+  DownloadActivityParams,
   IDigitalProductDocumentNamespace,
 } from "../digital-product-document/digital-product-document.namespace";
 
@@ -65,20 +66,20 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
 
   async getActivities(
     id: string,
-    params: ActivityParams,
+    params: GetAllActivitiesParamsDto,
   ): Promise<AxiosResponse<ActivityPaginationDto>> {
     return this.axiosInstance.get<ActivityPaginationDto>(
       `${this.templatesEndpoint}/${id}/activities`,
       {
-        params: { ...params.pagination },
+        params: { ...params.pagination, ...params.period },
       },
     );
   }
 
-  downloadActivities(id: string, params: ActivityParams): Promise<AxiosResponse<Blob>> {
+  downloadActivities(id: string, params: DownloadActivityParams): Promise<AxiosResponse<Blob>> {
     return this.axiosInstance.get(`${this.templatesEndpoint}/${id}/activities/download`, {
       responseType: "blob",
-      params: { ...params.pagination },
+      params: { ...params.period },
     });
   }
 }

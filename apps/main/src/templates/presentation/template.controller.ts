@@ -41,6 +41,7 @@ import {
   Param,
   Post,
   Put,
+  Res,
 } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
@@ -102,12 +103,16 @@ import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
+  ApiDownloadActivities,
   ApiGetActivities,
+  EndDateQueryParam,
   LimitQueryParam,
   PopulateQueryParam,
+  StartDateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
+import type { Response } from "express";
 
 @Controller("/templates")
 export class TemplateController
@@ -609,6 +614,8 @@ export class TemplateController
   async getActivities(
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
@@ -619,8 +626,31 @@ export class TemplateController
       organizationId,
       id,
       subject,
+      startDate,
+      endDate,
       limit,
       cursor,
+    );
+  }
+
+  @ApiDownloadActivities()
+  async downloadActivities(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    await this.templateService.digitalProductDocumentService.downloadActivities(
+      res,
+      organizationId,
+      id,
+      subject,
+      startDate,
+      endDate,
     );
   }
 

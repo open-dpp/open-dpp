@@ -43,3 +43,25 @@ export const LimitQueryParamSchema = z.coerce
     param: { in: "query", name: "limit" },
   });
 export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(LimitQueryParamSchema));
+
+export const StartDateQueryParamSchema = z.iso
+  .datetime()
+  .optional()
+  .meta({
+    description: "Start datetime as iso string.",
+    example: "2011-10-05T14:48:00.000Z",
+    param: { in: "query", name: "startDate" },
+  });
+
+export const EndDateQueryParamSchema = z.iso
+  .datetime()
+  .optional()
+  .meta({
+    description: "End datetime as iso string.",
+    example: "2011-11-05T14:48:00.000Z",
+    param: { in: "query", name: "endDate" },
+  });
+export const StartDateQueryParam = () =>
+  Query("startDate", new ZodValidationPipe(StartDateQueryParamSchema));
+export const EndDateQueryParam = () =>
+  Query("endDate", new ZodValidationPipe(EndDateQueryParamSchema));

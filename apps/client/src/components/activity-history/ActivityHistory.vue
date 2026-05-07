@@ -7,17 +7,17 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import apiClient from "../../lib/api-client.ts";
+import { useI18n } from "vue-i18n";
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 const props = defineProps<{ id: string; type: DigitalProductDocumentTypeType }>();
 
 const { getActivities } = useDigitalProductDocument(props.type);
 const activities = ref<ActivityDto[]>([]);
+const { t } = useI18n();
 
-const downloadZip = async (activityDto: ActivityDto) => {
-  const response = await apiClient.dpp.passports.downloadActivities(props.id, {
-    pagination: {},
-  });
+const downloadZip = async () => {
+  const response = await apiClient.dpp.passports.downloadActivities(props.id, { period: {} });
 
   const url = window.URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement("a");
@@ -50,6 +50,12 @@ onMounted(async () => {
 
 <template>
   <DataTable :value="activities" tableStyle="min-width: 50rem">
+    <template #header>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xl font-bold">{{ t("activityHistory.label") }}</span>
+        <Button icon="pi pi-refresh" rounded raised @click="downloadZip" />
+      </div>
+    </template>
     <Column field="header.createdAt" header="Created at">
       <template #body="slotProps">
         <p>

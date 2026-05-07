@@ -15,7 +15,7 @@ import type {
   ActivityPaginationDto,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
-import { Response } from "express";
+import { type Response } from "express";
 
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
@@ -113,8 +113,10 @@ import { PassportRepository } from "../infrastructure/passport.repository";
 import {
   ApiDownloadActivities,
   ApiGetActivities,
+  EndDateQueryParam,
   LimitQueryParam,
   PopulateQueryParam,
+  StartDateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
@@ -755,6 +757,8 @@ export class PassportController
   async getActivities(
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
@@ -765,6 +769,8 @@ export class PassportController
       organizationId,
       id,
       subject,
+      startDate,
+      endDate,
       limit,
       cursor,
     );
@@ -774,20 +780,21 @@ export class PassportController
   async downloadActivities(
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
-    @LimitQueryParam() limit: number | undefined,
-    @CursorQueryParam() cursor: string | undefined,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Res() res: Response,
   ): Promise<void> {
+    // start, end
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.downloadActivities(
       res,
       organizationId,
       id,
       subject,
-      limit,
-      cursor,
+      startDate,
+      endDate,
     );
   }
 

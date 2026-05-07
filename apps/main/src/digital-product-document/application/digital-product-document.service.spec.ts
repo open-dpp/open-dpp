@@ -27,7 +27,7 @@ import { SubjectAttributes } from "../../aas/domain/security/subject-attributes"
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { beforeAll, expect, jest } from "@jest/globals";
 import { BadRequestException } from "@nestjs/common";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { DigitalProductDocumentService } from "./digital-product-document.service";
@@ -39,13 +39,21 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { KeyTypes } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import {
+  SubmodelElementModificationActivity,
+  SubmodelElementModificationActivityPayload,
+} from "../../activity-history/aas/submodel-element-modification.activity";
+
+import { Response } from "express";
+import { Archiver } from "archiver";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
   let module: TestingModule;
   let passportRepository: PassportRepository;
+  let activityRepository: ActivityRepository;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
@@ -74,10 +82,10 @@ describe("DigitalProductDocumentService", () => {
         ConceptDescriptionRepository,
       ],
     }).compile();
-
+    await module.init();
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
-    const activityRepository = module.get<ActivityRepository>(ActivityRepository);
+    activityRepository = module.get<ActivityRepository>(ActivityRepository);
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
@@ -269,6 +277,87 @@ describe("DigitalProductDocumentService", () => {
         subject,
       ),
     ).rejects.toThrow(exception);
+  });
+
+  it("should download activities", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const date3 = new Date("2022-03-01T00:00:00.000Z");
+    const date4 = new Date("2022-03-03T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const submodelId = randomUUID();
+    const submodelIdShort = "submodelIdShort";
+
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(passport);
+    const createActivity = (idShort: string, createdAt: Date) =>
+      SubmodelElementModificationActivity.create({
+        digitalProductDocumentId: passport.id,
+        payload: SubmodelElementModificationActivityPayload.create({
+          fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
+          submodelId,
+          data: { idShort, value: "20" },
+        }),
+        createdAt,
+      });
+
+    const event1 = createActivity("prop1", date1);
+
+    const event2 = createActivity("prop2", date2);
+    const event3 = createActivity("prop3", date3);
+
+    const event4 = createActivity("prop4", date4);
+    await activityRepository.createMany([event1, event2, event3, event4]);
+    const res = {
+      set: jest.fn(),
+    } as unknown as Response;
+
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+
+    const mockArchive = {
+      pipe: jest.fn(),
+      append: jest.fn(),
+      finalize: jest.fn(),
+    } as unknown as Archiver;
+
+    await service.downloadActivitiesWithArchiver(
+      res,
+      organizationId,
+      passport.id,
+      subject,
+      date1.toISOString(),
+      date4.toISOString(),
+      2,
+      mockArchive,
+    );
+    expect(mockArchive.append).toHaveBeenNthCalledWith(
+      1,
+      JSON.stringify([event1.toPlain(), event2.toPlain()], null, 2),
+      {
+        name: `${date1.toISOString()}-${date2.toISOString()}.json`,
+      },
+    );
+
+    expect(mockArchive.append).toHaveBeenNthCalledWith(
+      2,
+      JSON.stringify([event3.toPlain(), event4.toPlain()], null, 2),
+      {
+        name: `${date3.toISOString()}-${date4.toISOString()}.json`,
+      },
+    );
+    expect(res.set).toHaveBeenCalledWith({
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="activities.zip"',
+    });
+    expect(mockArchive.pipe).toHaveBeenCalledWith(res);
+    expect(mockArchive.append).toHaveBeenCalledTimes(2);
+    expect(mockArchive.finalize).toHaveBeenCalledTimes(1);
   });
 
   afterAll(async () => {

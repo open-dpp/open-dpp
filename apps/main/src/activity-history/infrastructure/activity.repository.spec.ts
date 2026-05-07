@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { beforeAll, expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -17,6 +17,7 @@ import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { ActivityRegistryInitializer } from "../presentation/activity-registry-initializer";
 import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
+import { Period } from "../../time/period";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -49,17 +50,22 @@ describe("activityRepository", () => {
   });
 
   it("should save a activities", async () => {
+    const passportId = randomUUID();
     const submodelId = randomUUID();
     const event1 = SubmodelElementModificationActivity.create({
-      digitalProductDocumentId: submodelId,
+      digitalProductDocumentId: passportId,
       payload: SubmodelElementModificationActivityPayload.create({
+        submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
+        data: { idShort: "prop1", value: "20" },
       }),
     });
     const event2 = SubmodelElementModificationActivity.create({
-      digitalProductDocumentId: submodelId,
+      digitalProductDocumentId: passportId,
       payload: SubmodelElementModificationActivityPayload.create({
+        submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
+        data: { idShort: "prop1", value: "29" },
       }),
     });
     await activityRepository.createMany([event1, event2]);
@@ -71,93 +77,154 @@ describe("activityRepository", () => {
     expect(foundEvents.items).toEqual([event1, event2]);
   });
 
-  it("should find activities using pagination", async () => {
+  describe("should find activities", () => {
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-02T00:00:00.000Z");
     const date5 = new Date("2022-03-03T00:00:00.000Z");
     const submodelId = randomUUID();
+    const submodelIdShort = "submodelIdShort";
+    const passportId = randomUUID();
+    const createActivity = (idShort: string, createdAt: Date) =>
+      SubmodelElementModificationActivity.create({
+        digitalProductDocumentId: passportId,
+        payload: SubmodelElementModificationActivityPayload.create({
+          fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
+          submodelId,
+          data: { idShort, value: "20" },
+        }),
+        createdAt,
+      });
 
-    const event1 = SubmodelElementModificationActivity.create({
-      digitalProductDocumentId: submodelId,
-      payload: SubmodelElementModificationActivityPayload.create({
-        fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop1` }),
-      }),
-      createdAt: date1,
-    });
+    const event1 = createActivity("prop1", date1);
 
-    const event2 = SubmodelElementModificationActivity.create({
-      digitalProductDocumentId: submodelId,
-      payload: SubmodelElementModificationActivityPayload.create({
-        fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop2` }),
-      }),
-      createdAt: date2,
-    });
-    const event3 = SubmodelElementModificationActivity.create({
-      digitalProductDocumentId: submodelId,
-      payload: SubmodelElementModificationActivityPayload.create({
-        fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop3` }),
-      }),
-      createdAt: date3,
-    });
+    const event2 = createActivity("prop2", date2);
+    const event3 = createActivity("prop3", date3);
+
+    const event4 = createActivity("prop5", date5);
+
     const eventOfOtherAggregate = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: randomUUID(),
       payload: SubmodelElementModificationActivityPayload.create({
+        submodelId: randomUUID(),
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
+        data: { idShort: "prop4", value: "20" },
       }),
       createdAt: date4,
     });
-    const event4 = SubmodelElementModificationActivity.create({
-      digitalProductDocumentId: submodelId,
-      payload: SubmodelElementModificationActivityPayload.create({
-        fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
-      }),
-      createdAt: date5,
-    });
-    await activityRepository.createMany([event1, event2, event3, eventOfOtherAggregate, event4]);
-    let foundEvents = await activityRepository.findByAggregateId(submodelId);
-    expect(foundEvents).toEqual(
-      PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
-          limit: 100,
-        }),
-        items: [event4, event3, event2, event1],
-      }),
-    );
 
-    let pagination = Pagination.create({
-      cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
+    beforeAll(async () => {
+      await activityRepository.createMany([event1, event2, event3, eventOfOtherAggregate, event4]);
     });
-    foundEvents = await activityRepository.findByAggregateId(submodelId, {
-      pagination,
-    });
-    expect(foundEvents).toEqual(
-      PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
-        }),
-        items: [event2, event1],
-      }),
-    );
 
-    pagination = Pagination.create({
-      cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
-      limit: 1,
-    });
-    foundEvents = await activityRepository.findByAggregateId(submodelId, {
-      pagination,
-    });
-    expect(foundEvents).toEqual(
-      PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(event2.header.createdAt.toISOString(), event2.header.id),
-          limit: 1,
+    it("using pagination", async () => {
+      let foundEvents = await activityRepository.findByAggregateId(passportId);
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+            limit: 100,
+          }),
+          items: [event4, event3, event2, event1],
         }),
-        items: [event2],
-      }),
-    );
+      );
+
+      let pagination = Pagination.create({
+        cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
+      });
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        pagination,
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+          }),
+          items: [event2, event1],
+        }),
+      );
+
+      pagination = Pagination.create({
+        cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
+        limit: 1,
+      });
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        pagination,
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event2.header.createdAt.toISOString(), event2.header.id),
+            limit: 1,
+          }),
+          items: [event2],
+        }),
+      );
+    });
+    it("using period", async () => {
+      let foundEvents = await activityRepository.findByAggregateId(passportId, {
+        period: Period.fromIso({ start: date1.toISOString(), end: date3.toISOString() }),
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+            limit: 100,
+          }),
+          items: [event3, event2, event1],
+        }),
+      );
+
+      let pagination = Pagination.create({
+        cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
+      });
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        period: Period.fromIso({ start: date1.toISOString(), end: date3.toISOString() }),
+        pagination,
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+          }),
+          items: [event2, event1],
+        }),
+      );
+    });
+
+    it("using period ascending", async () => {
+      let foundEvents = await activityRepository.findByAggregateId(passportId, {
+        period: Period.fromIso({ start: date1.toISOString(), end: date3.toISOString() }),
+        ascending: true,
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
+            limit: 100,
+          }),
+          items: [event1, event2, event3],
+        }),
+      );
+
+      let pagination = Pagination.create({
+        cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+      });
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        period: Period.fromIso({ start: date1.toISOString(), end: date3.toISOString() }),
+        pagination,
+        ascending: true,
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event3.header.createdAt.toISOString(), event3.header.id),
+          }),
+          items: [event2, event3],
+        }),
+      );
+    });
   });
 
   afterAll(async () => {

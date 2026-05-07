@@ -175,6 +175,10 @@ describe("templateController", () => {
     await ctx.asserts.getActivities(createTemplate, saveTemplate);
   });
 
+  it(`/GET download activities`, async () => {
+    await ctx.asserts.downloadActivities(createTemplate, saveTemplate);
+  });
+
   it("/GET all templates", async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();

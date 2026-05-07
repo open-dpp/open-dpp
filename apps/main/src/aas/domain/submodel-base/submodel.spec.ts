@@ -723,18 +723,17 @@ describe("submodel", () => {
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     submodel.addSubmodelElement(prop1, { ability });
     const digitalProductDocumentId = "12345";
-    submodel.modifySubmodelElement(
-      { idShort: prop1.idShort, value: "20" },
-      IdShortPath.create({ path: "prop1" }),
-      {
-        ability,
-        digitalProductDocumentId,
-      },
-    );
+    const modification = { idShort: prop1.idShort, value: "20" };
+    submodel.modifySubmodelElement(modification, IdShortPath.create({ path: "prop1" }), {
+      ability,
+      digitalProductDocumentId,
+    });
     const events = submodel.pullAuditEvents();
     expect(events.map((e) => e.payload)).toEqual([
       SubmodelElementModificationActivityPayload.create({
+        submodelId: submodel.id,
         fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
+        data: modification,
       }),
     ]);
   });

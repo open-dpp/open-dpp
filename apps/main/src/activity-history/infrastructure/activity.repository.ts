@@ -8,6 +8,7 @@ import { ActivityDoc, ActivityDocVersion } from "./activity.schema";
 import { ActivityHeaderSchema, IActivity, parseActivity } from "../activity-event";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Period } from "../../time/period";
 
 @Injectable()
 export class ActivityRepository {
@@ -39,24 +40,44 @@ export class ActivityRepository {
 
   async findByAggregateId(
     aggregateId: string,
-    options?: { pagination?: Pagination },
+    options?: { pagination?: Pagination; period?: Period; ascending?: boolean },
   ): Promise<PagingResult<IActivity>> {
     const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
+    const period = options?.period ?? Period.create({ end: new Date() });
+    const ascending = options?.ascending ?? false;
+    const sortDirection = ascending ? 1 : -1;
+    const cursorOperator = ascending ? "$gt" : "$lt";
+
+    const periodFilter = {
+      createdAt: {
+        ...(period.start && { $gte: period.start }),
+        ...(period.end && { $lte: period.end }),
+      },
+    };
+
+    const decodedCursor = tmpPagination.cursor ? decodeCursor(tmpPagination.cursor) : undefined;
+    const cursorFilter = decodedCursor
+      ? {
+          $or: [
+            { createdAt: { [cursorOperator]: decodedCursor.createdAt } },
+            {
+              createdAt: decodedCursor.createdAt,
+              id: { [cursorOperator]: decodedCursor.id },
+            },
+          ],
+        }
+      : undefined;
 
     const documents = await this.activityDoc
       .find({
         aggregateId,
-        ...(tmpPagination.cursor && {
-          $or: [
-            { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-              id: { $lt: decodeCursor(tmpPagination.cursor).id },
-            },
-          ],
-        }),
+        ...(periodFilter || cursorFilter
+          ? {
+              $and: [periodFilter, cursorFilter].filter((f) => f !== undefined),
+            }
+          : {}),
       })
-      .sort({ createdAt: -1, id: -1 })
+      .sort({ createdAt: sortDirection, id: sortDirection })
       .limit(tmpPagination.limit ?? 100)
       .exec();
     const domainObjects = await Promise.all(documents.map(this.fromPlain.bind(this)));

@@ -1,5 +1,6 @@
-import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
+import { PagingMetadataDtoSchema, PagingParamsDtoSchema } from "../shared/pagination.dto";
 import { z } from "zod";
+import { PeriodDtoSchema } from "../shared/time.dto";
 
 export const ActivityDtoTypes = {
   SubmodelElementModification: "SubmodelElementModification",
@@ -32,3 +33,10 @@ export const ActivityPaginationDtoSchema = z
   .meta({ id: "Passports" });
 
 export type ActivityPaginationDto = z.infer<typeof ActivityPaginationDtoSchema>;
+
+export const GetAllActivitiesParamsDtoSchema = z.object({
+  pagination: PagingParamsDtoSchema.optional(),
+  period: PeriodDtoSchema.optional(),
+});
+
+export type GetAllActivitiesParamsDto = z.infer<typeof GetAllActivitiesParamsDtoSchema>;

@@ -437,6 +437,10 @@ describe("passportController", () => {
     await ctx.asserts.getActivities(createPassport, savePassport);
   });
 
+  it(`/GET download activities`, async () => {
+    await ctx.asserts.downloadActivities(createPassport, savePassport);
+  });
+
   it("/GET export passport", async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();

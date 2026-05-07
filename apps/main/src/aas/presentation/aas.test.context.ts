@@ -718,10 +718,47 @@ export function createAasTestContext<T>(
           userId: user.id,
         },
         payload: {
+          submodelId: submodel.id,
           fullIdShortPath: `${submodel.idShort}.Property01`,
+          data: modificationBody,
         },
       },
     ]);
+  }
+
+  async function assertDownloadActivities(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(property, { ability });
+    const modificationBody = {
+      idShort: property.idShort,
+      displayName: [{ language: "en", text: "Bill of Materials" }],
+      description: [{ language: "en", text: "A list of all products in the factory" }],
+    };
+
+    submodel.modifySubmodelElement(modificationBody, IdShortPath.create({ path: "Property01" }), {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${entity.id}/activities/download`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.header["content-type"]).toEqual("application/zip");
+    expect(response.header["content-disposition"]).toEqual('attachment; filename="activities.zip"');
   }
 
   async function assertModifySubmodelElementValue(
@@ -1088,6 +1125,7 @@ export function createAasTestContext<T>(
       getSubmodelElementById: assertGetSubmodelElementById,
       getSubmodelElementValue: assertGetSubmodelElementValue,
       getActivities: assertGetActivities,
+      downloadActivities: assertDownloadActivities,
     },
   };
 }
