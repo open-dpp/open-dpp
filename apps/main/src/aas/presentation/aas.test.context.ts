@@ -80,7 +80,6 @@ import {
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { SubmodelElementModificationActivityVersion } from "../../activity-history/aas/submodel-element-modification.activity";
 import { ActivityTypes } from "../../activity-history/activity-types";
 
 export function createAasTestContext<T>(
@@ -713,7 +712,7 @@ export function createAasTestContext<T>(
           createdAt: expect.any(String),
           id: expect.any(String),
           type: ActivityTypes.SubmodelElementModification,
-          version: SubmodelElementModificationActivityVersion.v1_0_0,
+          version: "1.0.0",
           aggregateId: entity.id,
           userId: user.id,
         },

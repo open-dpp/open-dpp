@@ -1,15 +1,13 @@
-import {
-  SubmodelElementModificationActivity,
-  SubmodelElementModificationActivityPayload,
-} from "./submodel-element-modification.activity";
-import { IdShortPath } from "../../aas/domain/common/id-short-path";
+import { SubmodelElementModificationActivity } from "./submodel-element-modification.activity";
+import { IdShortPath } from "../../../aas/domain/common/id-short-path";
+import { SubmodelBaseModificationActivityPayload } from "./submodel-base-modification.payload";
 
 describe("SubmodelElementModificationEvent", () => {
   it("should return database representation", () => {
     const submodelId = "submodelId";
     const event = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: submodelId,
-      payload: SubmodelElementModificationActivityPayload.create({
+      payload: SubmodelBaseModificationActivityPayload.create({
         submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
         data: { idShort: "prop1", value: "20" },

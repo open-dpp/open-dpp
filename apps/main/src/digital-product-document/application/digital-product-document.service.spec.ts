@@ -39,13 +39,11 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { KeyTypes } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import {
-  SubmodelElementModificationActivity,
-  SubmodelElementModificationActivityPayload,
-} from "../../activity-history/aas/submodel-element-modification.activity";
+import { SubmodelElementModificationActivity } from "../../activity-history/aas/submodel-base/submodel-element-modification.activity";
 
 import { Response } from "express";
 import { Archiver } from "archiver";
+import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -296,7 +294,7 @@ describe("DigitalProductDocumentService", () => {
     const createActivity = (idShort: string, createdAt: Date) =>
       SubmodelElementModificationActivity.create({
         digitalProductDocumentId: passport.id,
-        payload: SubmodelElementModificationActivityPayload.create({
+        payload: SubmodelBaseModificationActivityPayload.create({
           fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
           submodelId,
           data: { idShort, value: "20" },

@@ -5,7 +5,7 @@ import {
   activityToDatabase,
   ActivitySchema,
   activityToPlain,
-} from "../activity-event";
+} from "../activity";
 
 export const DigitalProductDocumentStatusChangedEventVersion = {
   v1_0_0: "1.0.0",

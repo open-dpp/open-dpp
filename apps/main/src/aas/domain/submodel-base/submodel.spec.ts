@@ -22,7 +22,8 @@ import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
-import { SubmodelElementModificationActivityPayload } from "../../../activity-history/aas/submodel-element-modification.activity";
+import { SubmodelBaseModificationActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-modification.payload";
+import { ActivityTypes } from "../../../activity-history/activity-types";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -706,7 +707,7 @@ describe("submodel", () => {
     );
   });
 
-  it("should modify submodel element and track activiy", () => {
+  it("should modify submodel element and track activity", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -728,13 +729,35 @@ describe("submodel", () => {
       ability,
       digitalProductDocumentId,
     });
+
+    const valueModification = "30";
+    submodel.modifyValueOfSubmodelElement(
+      valueModification,
+      IdShortPath.create({ path: "prop1" }),
+      {
+        ability,
+        digitalProductDocumentId,
+      },
+    );
+
     const events = submodel.pullAuditEvents();
-    expect(events.map((e) => e.payload)).toEqual([
-      SubmodelElementModificationActivityPayload.create({
-        submodelId: submodel.id,
-        fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
-        data: modification,
-      }),
+    expect(events.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual([
+      {
+        type: ActivityTypes.SubmodelElementModification,
+        payload: SubmodelBaseModificationActivityPayload.create({
+          submodelId: submodel.id,
+          fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
+          data: modification,
+        }),
+      },
+      {
+        type: ActivityTypes.SubmodelElementValueModification,
+        payload: SubmodelBaseModificationActivityPayload.create({
+          submodelId: submodel.id,
+          fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
+          data: valueModification,
+        }),
+      },
     ]);
   });
 

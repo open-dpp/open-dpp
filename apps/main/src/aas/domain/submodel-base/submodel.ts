@@ -33,11 +33,10 @@ import {
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
-import { IActivity } from "../../../activity-history/activity-event";
-import {
-  SubmodelElementModificationActivity,
-  SubmodelElementModificationActivityPayload,
-} from "../../../activity-history/aas/submodel-element-modification.activity";
+import { IActivity } from "../../../activity-history/activity";
+import { SubmodelElementModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-modification.activity";
+import { SubmodelBaseModificationActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-modification.payload";
+import { SubmodelElementValueModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-value-modification.activity";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -151,7 +150,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this._auditEvents.push(
       SubmodelElementModificationActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
-        payload: SubmodelElementModificationActivityPayload.create({
+        payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
           fullIdShortPath: submodelElement.getIdShortPath(),
           data,
@@ -169,6 +168,17 @@ export class Submodel implements ISubmodelBase, IPersistable {
   ) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     submodelElement.accept(new ValueModifierVisitor(options), { data });
+    this._auditEvents.push(
+      SubmodelElementValueModificationActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
+        payload: SubmodelBaseModificationActivityPayload.create({
+          submodelId: this.id,
+          fullIdShortPath: submodelElement.getIdShortPath(),
+          data,
+        }),
+        userId: options.ability.userId ?? undefined,
+      }),
+    );
     return submodelElement;
   }
 

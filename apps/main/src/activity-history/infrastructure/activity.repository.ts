@@ -5,7 +5,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail } from "../../lib/repositories";
 import { ActivityDoc, ActivityDocVersion } from "./activity.schema";
-import { ActivityHeaderSchema, IActivity, parseActivity } from "../activity-event";
+import { ActivityHeaderSchema, IActivity, parseActivity } from "../activity";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Period } from "../../time/period";

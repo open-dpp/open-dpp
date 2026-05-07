@@ -1,5 +1,5 @@
 import { ActivityTypesType } from "./activity-types";
-import { IActivity } from "./activity-event";
+import { IActivity } from "./activity";
 
 // Define the static side of the classes
 export interface ActivityStatic {

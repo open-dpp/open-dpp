@@ -9,15 +9,13 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { ActivityRepository } from "./activity.repository";
 import { ActivityDbSchema, ActivityDoc } from "./activity.schema";
-import {
-  SubmodelElementModificationActivity,
-  SubmodelElementModificationActivityPayload,
-} from "../aas/submodel-element-modification.activity";
+import { SubmodelElementModificationActivity } from "../aas/submodel-base/submodel-element-modification.activity";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { ActivityRegistryInitializer } from "../presentation/activity-registry-initializer";
 import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
+import { SubmodelBaseModificationActivityPayload } from "../aas/submodel-base/submodel-base-modification.payload";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -54,7 +52,7 @@ describe("activityRepository", () => {
     const submodelId = randomUUID();
     const event1 = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: passportId,
-      payload: SubmodelElementModificationActivityPayload.create({
+      payload: SubmodelBaseModificationActivityPayload.create({
         submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
         data: { idShort: "prop1", value: "20" },
@@ -62,7 +60,7 @@ describe("activityRepository", () => {
     });
     const event2 = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: passportId,
-      payload: SubmodelElementModificationActivityPayload.create({
+      payload: SubmodelBaseModificationActivityPayload.create({
         submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
         data: { idShort: "prop1", value: "29" },
@@ -89,7 +87,7 @@ describe("activityRepository", () => {
     const createActivity = (idShort: string, createdAt: Date) =>
       SubmodelElementModificationActivity.create({
         digitalProductDocumentId: passportId,
-        payload: SubmodelElementModificationActivityPayload.create({
+        payload: SubmodelBaseModificationActivityPayload.create({
           fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
           submodelId,
           data: { idShort, value: "20" },
@@ -106,7 +104,7 @@ describe("activityRepository", () => {
 
     const eventOfOtherAggregate = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: randomUUID(),
-      payload: SubmodelElementModificationActivityPayload.create({
+      payload: SubmodelBaseModificationActivityPayload.create({
         submodelId: randomUUID(),
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
         data: { idShort: "prop4", value: "20" },
