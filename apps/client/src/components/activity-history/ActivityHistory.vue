@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { type DigitalProductDocumentTypeType } from "../../lib/digital-product-document.ts";
 import { onMounted, ref } from "vue";
 import type { ActivityDto, PagingParamsDto } from "@open-dpp/dto";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import apiClient from "../../lib/api-client.ts";
 import { useI18n } from "vue-i18n";
 import { useActivityHistory } from "../../composables/activity-history.ts";
 import { usePagination } from "../../composables/pagination.ts";
@@ -17,12 +15,9 @@ dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 const props = defineProps<{ id: string; type: DigitalProductDocumentTypeType }>();
 
-const { getActivities, downloadActivities } = useActivityHistory(props.type);
-const activities = ref<ActivityDto[]>([]);
+const { period, changePeriod, activities, fetchActivities, downloadActivities } =
+  useActivityHistory(props.type);
 const { t } = useI18n();
-const defaultEnd = dayjs().utc();
-const defaultStart = defaultEnd.subtract(1, "month");
-const period = ref<Date[] | (Date | null)[]>([defaultStart.toDate(), defaultEnd.toDate()]);
 const router = useRouter();
 
 const route = useRoute();
@@ -37,13 +32,8 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 async function fetchCallback(pagingParams: PagingParamsDto) {
-  const response = await getActivities(props.id, {
-    period: {
-      startDate: period.value[0]?.toISOString(),
-      endDate: period.value[1]?.toISOString(),
-    },
-    pagination: pagingParams,
-  });
+  const response = await fetchActivities(props.id, pagingParams);
+
   activities.value = response.result;
   return response;
 }
@@ -64,10 +54,7 @@ const {
 });
 
 const downloadZip = async () => {
-  await downloadActivities(props.id, {
-    startDate: period.value[0]?.toISOString(),
-    endDate: period.value[1]?.toISOString(),
-  });
+  await downloadActivities(props.id);
 };
 
 const downloadJson = (activityDto: ActivityDto) => {
@@ -86,7 +73,7 @@ const downloadJson = (activityDto: ActivityDto) => {
 
 async function onPeriodChange(newPeriod: Date | Date[] | (Date | null)[] | null | undefined) {
   if (Array.isArray(newPeriod)) {
-    period.value = newPeriod;
+    await changePeriod(newPeriod);
     await resetCursor();
   }
 }

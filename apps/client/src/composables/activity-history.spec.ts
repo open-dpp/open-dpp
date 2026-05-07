@@ -11,14 +11,22 @@ import {
 } from "../lib/digital-product-document.ts";
 import { v4 as uuid4 } from "uuid";
 import { useActivityHistory } from "./activity-history.ts";
-import type { PeriodDto } from "@open-dpp/dto";
 
 const mocks = vi.hoisted(() => {
   return {
     getActivities: vi.fn(),
     downloadActivities: vi.fn(),
+    query: vi.fn(),
+    routerPush: vi.fn(),
   };
 });
+
+vi.mock("vue-router", () => ({
+  useRoute: () => ({ query: mocks.query() }),
+  useRouter: () => ({
+    push: mocks.routerPush,
+  }),
+}));
 
 vi.mock("../lib/api-client", () => ({
   default: {
@@ -64,8 +72,26 @@ describe("activity history", () => {
     };
   }
 
+  it("should change period", async () => {
+    const startDate = "2022-01-01T00:00:00.000Z";
+    const endDate = "2022-01-08T00:00:00.000Z";
+    mocks.query.mockReturnValue({ startDate, endDate });
+    const { period, changePeriod } = mountHarness(DigitalProductDocumentType.Passport);
+    expect(period.value).toEqual([new Date(startDate), new Date(endDate)]);
+    const modifiedStartDate = "2022-02-01T00:00:00.000Z";
+    const modifiedEndDate = "2022-02-10T00:00:00.000Z";
+    await changePeriod([new Date(modifiedStartDate), new Date(modifiedEndDate)]);
+    expect(mocks.routerPush).toHaveBeenCalledWith({
+      query: expect.objectContaining({ startDate: modifiedStartDate, endDate: modifiedEndDate }),
+    });
+    expect(period.value).toEqual([new Date(modifiedStartDate), new Date(modifiedEndDate)]);
+  });
+
   it("should get activities", async () => {
-    const { getActivities } = mountHarness(DigitalProductDocumentType.Passport);
+    mocks.query.mockReturnValue({});
+    const { activities, changePeriod, fetchActivities } = mountHarness(
+      DigitalProductDocumentType.Passport,
+    );
     const id = uuid4();
     const passportActivity1 = activitiesPlainFactory.build({ header: { aggregateId: id } });
     const passportActivity2 = activitiesPlainFactory.build({ header: { aggregateId: id } });
@@ -78,21 +104,24 @@ describe("activity history", () => {
       },
       status: HTTPCode.OK,
     });
-    const period: PeriodDto = {
+    const newPeriod = {
       startDate: "2022-01-01T00:00:00.000Z",
       endDate: "2022-01-08T00:00:00.000Z",
     };
+    await changePeriod([new Date(newPeriod.startDate), new Date(newPeriod.endDate)]);
 
-    const { result } = await getActivities(id, { period });
+    await fetchActivities(id);
 
     expect(mocks.getActivities).toHaveBeenCalledWith(id, {
       pagination: { limit: 10, cursor: undefined },
-      period,
+      period: newPeriod,
     });
-    expect(result).toEqual([passportActivity1, passportActivity2]);
+    expect(activities.value).toEqual([passportActivity1, passportActivity2]);
   });
 
   it("should download activities", async () => {
+    mocks.query.mockReturnValue({});
+
     const createObjectURLSpy = vi
       .spyOn(window.URL, "createObjectURL")
       .mockReturnValue("blob:activities-url");
@@ -121,7 +150,7 @@ describe("activity history", () => {
       .spyOn(document.body, "appendChild")
       .mockImplementation((node) => node);
 
-    const { downloadActivities } = mountHarness(DigitalProductDocumentType.Passport);
+    const { downloadActivities, changePeriod } = mountHarness(DigitalProductDocumentType.Passport);
     const id = uuid4();
 
     const emptyZipBytes = new Uint8Array([
@@ -142,15 +171,17 @@ describe("activity history", () => {
       },
     });
 
-    const period: PeriodDto = {
+    const newPeriod = {
       startDate: "2022-01-01T00:00:00.000Z",
       endDate: "2022-01-08T00:00:00.000Z",
     };
 
-    await downloadActivities(id, period);
+    await changePeriod([new Date(newPeriod.startDate), new Date(newPeriod.endDate)]);
+
+    await downloadActivities(id);
 
     expect(mocks.downloadActivities).toHaveBeenCalledWith(id, {
-      period,
+      period: newPeriod,
     });
 
     expect(createObjectURLSpy).toHaveBeenCalledWith(expect.any(Blob));
