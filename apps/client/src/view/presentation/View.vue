@@ -18,7 +18,7 @@ const errorHandlingStore = useErrorHandlingStore();
 const passportAvailable = ref(false);
 
 async function loadPassport(id: string): Promise<boolean> {
-  const response = await apiClient.dpp.permalinks.getPassport(id);
+  const response = await apiClient.dpp.permalinks.getById(id);
   if (response.status === 404) {
     return false;
   }
@@ -30,7 +30,8 @@ async function loadPassport(id: string): Promise<boolean> {
     return false;
   }
 
-  passportStore.productPassport = response.data;
+  passportStore.productPassport = response.data.passport;
+  passportStore.presentationConfig = response.data.presentationConfiguration;
 
   const submodels = await apiClient.dpp.permalinks.aas.getSubmodels(id, {});
   if (submodels.status !== 200) {
@@ -52,18 +53,14 @@ async function loadPassport(id: string): Promise<boolean> {
   }
   passportStore.shells = aas.data.result || [];
 
+  // Page-view tracking is best-effort. The analytics endpoint resolves the
+  // permalink without auth context, so it 404s for unpublished passports —
+  // which must not break the page render for an org-member previewing a draft.
   try {
-    const presentationConfig = await apiClient.dpp.permalinks.getPresentationConfiguration(id);
-    passportStore.presentationConfig = presentationConfig.data;
+    await analyticsStore.addPageView();
   } catch (error) {
-    errorHandlingStore.logErrorWithNotification(
-      t("presentation.loadPresentationConfigError"),
-      error,
-    );
-    passportStore.presentationConfig = null;
+    errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportError"), error);
   }
-
-  await analyticsStore.addPageView();
 
   return true;
 }

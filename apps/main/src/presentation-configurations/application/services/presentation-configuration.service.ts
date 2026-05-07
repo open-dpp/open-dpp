@@ -1,15 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import {
   KeyTypesType,
+  Permissions,
   PresentationComponentNameType,
   PresentationConfigurationPatchDto,
   PresentationReferenceType,
   PresentationReferenceTypeType,
 } from "@open-dpp/dto";
-import { NotFoundError } from "@open-dpp/exception";
+import { ForbiddenError, NotFoundError } from "@open-dpp/exception";
+import { IdShortPath } from "../../../aas/domain/common/id-short-path";
+import { AasAbility } from "../../../aas/domain/security/aas-ability";
+import type { DbSessionOptions } from "../../../database/query-options";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
-import type { DbSessionOptions } from "../../../database/query-options";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
 
@@ -19,20 +22,28 @@ export class PresentationConfigurationService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
   ) {}
 
-  async listForPassport(passport: Passport): Promise<PresentationConfiguration[]> {
-    return this.listOrSeed({
+  async listForPassport(
+    passport: Passport,
+    ability?: AasAbility,
+  ): Promise<PresentationConfiguration[]> {
+    const configs = await this.listOrSeed({
       referenceType: PresentationReferenceType.Passport,
       referenceId: passport.id,
       organizationId: passport.organizationId,
     });
+    return configs.map((config) => filterReadable(config, ability));
   }
 
-  async listForTemplate(template: Template): Promise<PresentationConfiguration[]> {
-    return this.listOrSeed({
+  async listForTemplate(
+    template: Template,
+    ability?: AasAbility,
+  ): Promise<PresentationConfiguration[]> {
+    const configs = await this.listOrSeed({
       referenceType: PresentationReferenceType.Template,
       referenceId: template.id,
       organizationId: template.organizationId,
     });
+    return configs.map((config) => filterReadable(config, ability));
   }
 
   private async listOrSeed(input: {
@@ -58,21 +69,25 @@ export class PresentationConfigurationService {
   async getByIdForPassport(
     passport: Passport,
     configId: string,
+    ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
-    return this.requireOwned(configId, {
+    const config = await this.requireOwned(configId, {
       referenceType: PresentationReferenceType.Passport,
       referenceId: passport.id,
     });
+    return filterReadable(config, ability);
   }
 
   async getByIdForTemplate(
     template: Template,
     configId: string,
+    ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
-    return this.requireOwned(configId, {
+    const config = await this.requireOwned(configId, {
       referenceType: PresentationReferenceType.Template,
       referenceId: template.id,
     });
+    return filterReadable(config, ability);
   }
 
   private async requireOwned(
@@ -116,8 +131,13 @@ export class PresentationConfigurationService {
     passport: Passport,
     configId: string,
     patch: PresentationConfigurationPatchDto,
+    ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
-    const config = await this.getByIdForPassport(passport, configId);
+    const config = await this.requireOwned(configId, {
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+    ensureWritable(patch.elementDesign, ability);
     return this.persistPatch(config, patch);
   }
 
@@ -125,8 +145,13 @@ export class PresentationConfigurationService {
     template: Template,
     configId: string,
     patch: PresentationConfigurationPatchDto,
+    ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
-    const config = await this.getByIdForTemplate(template, configId);
+    const config = await this.requireOwned(configId, {
+      referenceType: PresentationReferenceType.Template,
+      referenceId: template.id,
+    });
+    ensureWritable(patch.elementDesign, ability);
     return this.persistPatch(config, patch);
   }
 
@@ -140,13 +165,19 @@ export class PresentationConfigurationService {
     await this.presentationConfigurationRepository.deleteById(configId);
   }
 
-  async getEffectiveForPassport(passport: Passport): Promise<PresentationConfiguration> {
-    const [first] = await this.listForPassport(passport);
+  async getEffectiveForPassport(
+    passport: Passport,
+    ability?: AasAbility,
+  ): Promise<PresentationConfiguration> {
+    const [first] = await this.listForPassport(passport, ability);
     return first;
   }
 
-  async getEffectiveForTemplate(template: Template): Promise<PresentationConfiguration> {
-    const [first] = await this.listForTemplate(template);
+  async getEffectiveForTemplate(
+    template: Template,
+    ability?: AasAbility,
+  ): Promise<PresentationConfiguration> {
+    const [first] = await this.listForTemplate(template, ability);
     return first;
   }
 
@@ -240,5 +271,44 @@ export class PresentationConfigurationService {
     }
     if (next === config) return config;
     return await this.presentationConfigurationRepository.save(next);
+  }
+}
+
+function filterReadable(
+  config: PresentationConfiguration,
+  ability: AasAbility | undefined,
+): PresentationConfiguration {
+  if (!ability) return config;
+  const allowed: Record<string, PresentationComponentNameType> = {};
+  let stripped = false;
+  for (const [path, component] of config.elementDesign) {
+    if (ability.can(Permissions.Read, IdShortPath.create({ path }))) {
+      allowed[path] = component;
+    } else {
+      stripped = true;
+    }
+  }
+  if (!stripped) return config;
+  return PresentationConfiguration.fromPlain({
+    ...config.toPlain(),
+    elementDesign: allowed,
+  });
+}
+
+function ensureWritable(
+  elementDesign: PresentationConfigurationPatchDto["elementDesign"],
+  ability: AasAbility | undefined,
+): void {
+  if (!elementDesign || !ability) return;
+  const denied: string[] = [];
+  for (const path of Object.keys(elementDesign)) {
+    if (!ability.can(Permissions.Edit, IdShortPath.create({ path }))) {
+      denied.push(path);
+    }
+  }
+  if (denied.length > 0) {
+    throw new ForbiddenError(
+      `Missing edit permission for presentation paths: ${denied.join(", ")}`,
+    );
   }
 }

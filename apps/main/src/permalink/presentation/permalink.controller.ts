@@ -8,21 +8,17 @@ import {
   ForbiddenException,
   Get,
   Headers,
-  NotFoundException,
   Param,
   Patch,
   Query,
 } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
-  BrandingDto,
-  BrandingDtoSchema,
-  PassportDtoSchema,
+  PassportPermalinkBundleDto,
+  PassportPermalinkBundleDtoSchema,
   PermalinkDtoSchema,
   PermalinkListDtoSchema,
   PermalinkSlugUpdateRequestSchema,
-  PresentationConfigurationDto,
-  PresentationConfigurationDtoSchema,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
@@ -33,6 +29,8 @@ import type { PermalinkSlugUpdateRequest } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
+import { Environment } from "../../aas/domain/environment";
+import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ApiGetShells,
@@ -105,47 +103,36 @@ export class PermalinkController {
   }
 
   @OptionalAuth()
-  @Get("/p/:id/passport")
-  async getReferencedPassport(
+  @Get("/p/:id")
+  async getById(
     @IdOrSlugParam() id: string,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ) {
+  ): Promise<PassportPermalinkBundleDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
       memberRole,
     });
-    return PassportDtoSchema.parse(passport);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const ability = await this.buildAbility(passport.environment, subject);
+    const presentationConfiguration =
+      await this.presentationConfigurationService.getEffectiveForPassport(passport, ability);
+    const branding = await this.loadBrandingOrDefault(passport.organizationId);
+    return PassportPermalinkBundleDtoSchema.parse({
+      passport: passport.toPlain(),
+      branding: branding.toPlain(),
+      presentationConfiguration: presentationConfiguration.toPlain(),
+    });
   }
 
-  @OptionalAuth()
-  @Get("/p/:id/presentation-configuration")
-  async getPresentationConfiguration(
-    @IdOrSlugParam() id: string,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<PresentationConfigurationDto> {
-    const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
-    });
-    const config = await this.presentationConfigurationService.getEffectiveForPassport(passport);
-    return PresentationConfigurationDtoSchema.parse(config.toPlain());
-  }
-
-  @OptionalAuth()
-  @Get("/p/:id/branding")
-  async getPassportBranding(
-    @IdOrSlugParam() id: string,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<BrandingDto> {
-    const metadata = await this.permalinkApplicationService.getMetadataByPermalink(id, {
-      organizationId,
-      memberRole,
-    });
-    const branding = await this.loadBrandingOrDefault(metadata.organizationId);
-    return BrandingDtoSchema.parse(branding.toPlain());
+  private async buildAbility(
+    environment: Environment,
+    subject: SubjectAttributes,
+  ): Promise<AasAbility | undefined> {
+    const expanded = await this.environmentService.loadExpandedEnvironment(environment);
+    if (expanded.shells.length === 0) return undefined;
+    return expanded.shells[0].security.defineAbilityForSubject(subject);
   }
 
   // Authenticated update of a permalink's slug. Permalink IDs are UUID-only
@@ -179,13 +166,13 @@ export class PermalinkController {
   }
 
   private async loadBrandingOrDefault(organizationId: string): Promise<Branding> {
+    // Branding is non-essential display data: any lookup failure (missing
+    // record, invalid org-id format, transient backend error) falls back to
+    // the default rather than 500-ing the public bundle endpoint.
     try {
       return await this.brandingRepository.findOneByOrganizationId(organizationId);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return Branding.getDefault();
-      }
-      throw error;
+    } catch {
+      return Branding.getDefault();
     }
   }
 

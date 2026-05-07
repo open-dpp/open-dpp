@@ -843,7 +843,7 @@ describe("passportController", () => {
     const patchResponse = await request(app.getHttpServer())
       .patch(`/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
       .set(authHeaders)
-      .send({ elementDesign: { "submodel.numericField": "BigNumber" } });
+      .send({ elementDesign: { "DesignOfProduct.numericField": "BigNumber" } });
     expect(patchResponse.status).toEqual(200);
 
     // Create a second variant config on the template
@@ -874,7 +874,7 @@ describe("passportController", () => {
 
     // The default config snapshot should carry the elementDesign override
     const passportDefault = passportConfigsResponse.body.find((c: any) => c.label === null);
-    expect(passportDefault.elementDesign["submodel.numericField"]).toBe("BigNumber");
+    expect(passportDefault.elementDesign["DesignOfProduct.numericField"]).toBe("BigNumber");
   });
 
   describe("api key authentication", () => {

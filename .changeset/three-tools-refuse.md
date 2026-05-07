@@ -7,4 +7,4 @@
 "e2e": minor
 ---
 
-Added granular passport UI customization capabilities
+Added granular passport UI customization capabilities and refactored presentation layer into permalink structure.

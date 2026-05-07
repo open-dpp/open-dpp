@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { BrandingDtoSchema } from "../branding/branding.dto";
+import { PassportDtoSchema } from "../passports/passport.dto";
+import { PresentationConfigurationDtoSchema } from "../presentation-configurations/presentation-configuration.dto";
 import { DateTimeSchema } from "../shared/digital-product-document.schemas";
 
 // Slugs that would collide with literal path segments under the public `/p`
@@ -58,3 +61,16 @@ export const PermalinkSlugUpdateRequestSchema = z
   .meta({ id: "PermalinkSlugUpdateRequest" });
 
 export type PermalinkSlugUpdateRequest = z.infer<typeof PermalinkSlugUpdateRequestSchema>;
+
+// Unified response for `GET /p/:id` returning everything a public viewer needs
+// in a single round-trip: passport DTO, branding, and the (filtered) effective
+// presentation configuration.
+export const PassportPermalinkBundleDtoSchema = z
+  .object({
+    passport: PassportDtoSchema,
+    branding: BrandingDtoSchema,
+    presentationConfiguration: PresentationConfigurationDtoSchema,
+  })
+  .meta({ id: "PassportPermalinkBundle" });
+
+export type PassportPermalinkBundleDto = z.infer<typeof PassportPermalinkBundleDtoSchema>;

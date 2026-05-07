@@ -2,8 +2,22 @@ import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
+import {
+  KeyTypes,
+  PermissionKind,
+  Permissions,
+  PresentationComponentName,
+  PresentationReferenceType,
+} from "@open-dpp/dto";
+import { ForbiddenError } from "@open-dpp/exception";
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { Environment } from "../../aas/domain/environment";
+import { ExpandedEnvironment } from "../../aas/domain/expanded-environment";
+import { AasAbility } from "../../aas/domain/security/aas-ability";
+import { Permission } from "../../aas/domain/security/permission";
+import { Security } from "../../aas/domain/security/security";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
@@ -40,6 +54,9 @@ describe("PresentationConfigurationController", () => {
   let passportRepository: {
     findOneOrFail: jest.Mock<(...args: never[]) => Promise<Passport>>;
   };
+  let environmentService: {
+    loadExpandedEnvironment: jest.Mock<(...args: never[]) => Promise<ExpandedEnvironment>>;
+  };
 
   beforeEach(async () => {
     service = {
@@ -62,6 +79,9 @@ describe("PresentationConfigurationController", () => {
     passportRepository = {
       findOneOrFail: jest.fn(),
     };
+    environmentService = {
+      loadExpandedEnvironment: jest.fn(async () => ExpandedEnvironment.empty()),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PresentationConfigurationController],
@@ -69,6 +89,7 @@ describe("PresentationConfigurationController", () => {
         { provide: PresentationConfigurationService, useValue: service },
         { provide: TemplateRepository, useValue: templateRepository },
         { provide: PassportRepository, useValue: passportRepository },
+        { provide: EnvironmentService, useValue: environmentService },
       ],
     }).compile();
 
@@ -124,7 +145,7 @@ describe("PresentationConfigurationController", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(config.id);
-      expect(service.listForPassport).toHaveBeenCalledWith(passport);
+      expect(service.listForPassport).toHaveBeenCalledWith(passport, undefined);
     });
 
     it("listForPassport throws ForbiddenException for cross-organization passport", async () => {
@@ -183,7 +204,7 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getByIdForPassport).toHaveBeenCalledWith(passport, config.id);
+      expect(service.getByIdForPassport).toHaveBeenCalledWith(passport, config.id, undefined);
       expect(result.id).toBe(config.id);
     });
 
@@ -205,9 +226,12 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.applyPatchByConfigIdForPassport).toHaveBeenCalledWith(passport, patched.id, {
-        elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
-      });
+      expect(service.applyPatchByConfigIdForPassport).toHaveBeenCalledWith(
+        passport,
+        patched.id,
+        { elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber } },
+        undefined,
+      );
       expect(result.elementDesign).toEqual({
         "submodel.numericField": PresentationComponentName.BigNumber,
       });
@@ -246,7 +270,7 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getEffectiveForPassport).toHaveBeenCalledWith(passport);
+      expect(service.getEffectiveForPassport).toHaveBeenCalledWith(passport, undefined);
       expect(result.id).toBe(effective.id);
     });
 
@@ -281,7 +305,7 @@ describe("PresentationConfigurationController", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(config.id);
-      expect(service.listForTemplate).toHaveBeenCalledWith(template);
+      expect(service.listForTemplate).toHaveBeenCalledWith(template, undefined);
     });
 
     it("listForTemplate throws ForbiddenException for cross-organization template", async () => {
@@ -340,7 +364,7 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getByIdForTemplate).toHaveBeenCalledWith(template, config.id);
+      expect(service.getByIdForTemplate).toHaveBeenCalledWith(template, config.id, undefined);
       expect(result.id).toBe(config.id);
     });
 
@@ -362,9 +386,12 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.applyPatchByConfigIdForTemplate).toHaveBeenCalledWith(template, patched.id, {
-        elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
-      });
+      expect(service.applyPatchByConfigIdForTemplate).toHaveBeenCalledWith(
+        template,
+        patched.id,
+        { elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber } },
+        undefined,
+      );
       expect(result.elementDesign).toEqual({
         "submodel.numericField": PresentationComponentName.BigNumber,
       });
@@ -422,7 +449,7 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getEffectiveForTemplate).toHaveBeenCalledWith(template);
+      expect(service.getEffectiveForTemplate).toHaveBeenCalledWith(template, undefined);
       expect(result.id).toBe(config.id);
       expect(result.elementDesign).toEqual({ "sm.p": PresentationComponentName.BigNumber });
     });
@@ -478,6 +505,130 @@ describe("PresentationConfigurationController", () => {
         ),
       ).rejects.toBeInstanceOf(ForbiddenException);
       expect(service.deleteByConfigIdForTemplate).not.toHaveBeenCalled();
+    });
+  });
+
+  // ---- Element-level ability flow ----
+
+  describe("element-level ability flow", () => {
+    function buildShellAndAbility(): {
+      expandedEnv: ExpandedEnvironment;
+      memberAbility: AasAbility;
+    } {
+      const memberSubject = SubjectAttributes.create({
+        userRole: UserRole.USER,
+        memberRole: MemberRole.MEMBER,
+      });
+      const security = Security.create({});
+      security.addPolicy(memberSubject, IdShortPath.create({ path: "Pub" }), [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      ]);
+      security.addPolicy(memberSubject, IdShortPath.create({ path: "Secret" }), [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      ]);
+      const shell = {
+        security,
+      } as unknown as ExpandedEnvironment["shells"][number];
+      const expandedEnv = ExpandedEnvironment.fromLoaded([shell], [], []);
+      const memberAbility = security.defineAbilityForSubject(memberSubject);
+      return { expandedEnv, memberAbility };
+    }
+
+    it("patchByIdForPassport builds an ability from the loaded env and forwards it", async () => {
+      const { expandedEnv } = buildShellAndAbility();
+      const organizationId = randomUUID();
+      const passport = makePassport(organizationId);
+      const patched = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passport.id,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      passportRepository.findOneOrFail.mockResolvedValue(passport);
+      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
+      service.applyPatchByConfigIdForPassport.mockResolvedValue(patched);
+
+      await controller.patchByIdForPassport(
+        organizationId,
+        passport.id,
+        patched.id,
+        { elementDesign: { Pub: PresentationComponentName.BigNumber } },
+        UserRole.USER,
+        MemberRole.MEMBER,
+      );
+
+      expect(environmentService.loadExpandedEnvironment).toHaveBeenCalledWith(passport.environment);
+      const lastCall = service.applyPatchByConfigIdForPassport.mock.calls.at(-1)!;
+      expect(lastCall[3]).toBeInstanceOf(AasAbility);
+    });
+
+    it("patchByIdForPassport propagates ForbiddenError from the service", async () => {
+      const { expandedEnv } = buildShellAndAbility();
+      const organizationId = randomUUID();
+      const passport = makePassport(organizationId);
+      passportRepository.findOneOrFail.mockResolvedValue(passport);
+      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
+      service.applyPatchByConfigIdForPassport.mockRejectedValue(
+        new ForbiddenError("Missing edit permission for presentation paths: Secret"),
+      );
+
+      await expect(
+        controller.patchByIdForPassport(
+          organizationId,
+          passport.id,
+          randomUUID(),
+          { elementDesign: { Secret: PresentationComponentName.BigNumber } },
+          UserRole.USER,
+          MemberRole.MEMBER,
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenError);
+    });
+
+    it("getForPassport forwards the built ability to the service", async () => {
+      const { expandedEnv } = buildShellAndAbility();
+      const organizationId = randomUUID();
+      const passport = makePassport(organizationId);
+      const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
+      passportRepository.findOneOrFail.mockResolvedValue(passport);
+      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
+      service.getEffectiveForPassport.mockResolvedValue(config);
+
+      await controller.getForPassport(
+        organizationId,
+        passport.id,
+        UserRole.USER,
+        MemberRole.MEMBER,
+      );
+
+      const lastCall = service.getEffectiveForPassport.mock.calls.at(-1)!;
+      expect(lastCall[1]).toBeInstanceOf(AasAbility);
+    });
+
+    it("patchByIdForTemplate builds the ability from the template's env", async () => {
+      const { expandedEnv } = buildShellAndAbility();
+      const organizationId = randomUUID();
+      const template = Template.create({ organizationId });
+      const patched = PresentationConfiguration.create({
+        organizationId,
+        referenceId: template.id,
+        referenceType: PresentationReferenceType.Template,
+      });
+      templateRepository.findOneOrFail.mockResolvedValue(template);
+      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
+      service.applyPatchByConfigIdForTemplate.mockResolvedValue(patched);
+
+      await controller.patchByIdForTemplate(
+        organizationId,
+        template.id,
+        patched.id,
+        { elementDesign: { Pub: PresentationComponentName.BigNumber } },
+        UserRole.USER,
+        MemberRole.MEMBER,
+      );
+
+      expect(environmentService.loadExpandedEnvironment).toHaveBeenCalledWith(template.environment);
+      const lastCall = service.applyPatchByConfigIdForTemplate.mock.calls.at(-1)!;
+      expect(lastCall[3]).toBeInstanceOf(AasAbility);
     });
   });
 

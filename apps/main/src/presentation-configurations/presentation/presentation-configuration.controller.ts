@@ -5,9 +5,11 @@ import {
   ForbiddenException,
   Get,
   HttpCode,
+  Inject,
   Param,
   Patch,
   Post,
+  forwardRef,
 } from "@nestjs/common";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
@@ -24,7 +26,10 @@ import {
   PresentationConfigurationPatchSchema,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { Environment } from "../../aas/domain/environment";
+import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
@@ -41,7 +46,18 @@ export class PresentationConfigurationController {
     private readonly service: PresentationConfigurationService,
     private readonly templateRepository: TemplateRepository,
     private readonly passportRepository: PassportRepository,
+    @Inject(forwardRef(() => EnvironmentService))
+    private readonly environmentService: EnvironmentService,
   ) {}
+
+  private async buildAbility(
+    environment: Environment,
+    subject: SubjectAttributes,
+  ): Promise<AasAbility | undefined> {
+    const expanded = await this.environmentService.loadExpandedEnvironment(environment);
+    if (expanded.shells.length === 0) return undefined;
+    return expanded.shells[0].security.defineAbilityForSubject(subject);
+  }
 
   // ---- Plural (editor surface) — Passport ----
 
@@ -54,7 +70,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const list = await this.service.listForPassport(passport);
+    const ability = await this.buildAbility(passport.environment, subject);
+    const list = await this.service.listForPassport(passport, ability);
     return PresentationConfigurationListResponseSchema.parse(list.map((c) => c.toPlain()));
   }
 
@@ -83,7 +100,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const c = await this.service.getByIdForPassport(passport, configId);
+    const ability = await this.buildAbility(passport.environment, subject);
+    const c = await this.service.getByIdForPassport(passport, configId, ability);
     return this.toDto(c);
   }
 
@@ -99,7 +117,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const c = await this.service.applyPatchByConfigIdForPassport(passport, configId, body);
+    const ability = await this.buildAbility(passport.environment, subject);
+    const c = await this.service.applyPatchByConfigIdForPassport(passport, configId, body, ability);
     return this.toDto(c);
   }
 
@@ -128,7 +147,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const list = await this.service.listForTemplate(template);
+    const ability = await this.buildAbility(template.environment, subject);
+    const list = await this.service.listForTemplate(template, ability);
     return PresentationConfigurationListResponseSchema.parse(list.map((c) => c.toPlain()));
   }
 
@@ -157,7 +177,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const c = await this.service.getByIdForTemplate(template, configId);
+    const ability = await this.buildAbility(template.environment, subject);
+    const c = await this.service.getByIdForTemplate(template, configId, ability);
     return this.toDto(c);
   }
 
@@ -173,7 +194,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const c = await this.service.applyPatchByConfigIdForTemplate(template, configId, body);
+    const ability = await this.buildAbility(template.environment, subject);
+    const c = await this.service.applyPatchByConfigIdForTemplate(template, configId, body, ability);
     return this.toDto(c);
   }
 
@@ -202,7 +224,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const c = await this.service.getEffectiveForPassport(passport);
+    const ability = await this.buildAbility(passport.environment, subject);
+    const c = await this.service.getEffectiveForPassport(passport, ability);
     return this.toDto(c);
   }
 
@@ -215,7 +238,8 @@ export class PresentationConfigurationController {
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const c = await this.service.getEffectiveForTemplate(template);
+    const ability = await this.buildAbility(template.environment, subject);
+    const c = await this.service.getEffectiveForTemplate(template, ability);
     return this.toDto(c);
   }
 

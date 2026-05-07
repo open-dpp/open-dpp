@@ -116,7 +116,7 @@ describe("PermalinkController", () => {
     };
   }
 
-  it(`/GET passport from permalink by UUID`, async () => {
+  it(`/GET bundle from permalink by UUID`, async () => {
     const { userCookie } = await ctx
       .globals()
       .betterAuthHelper.getUserWithCookie(ctx.globals().userId);
@@ -124,39 +124,33 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/p/${fixture.id}/passport`)
+      .get(`/p/${fixture.id}`)
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual({
-      ...fixture.passport.toPlain(),
-      createdAt: fixture.passport.createdAt.toISOString(),
-      updatedAt: fixture.passport.updatedAt.toISOString(),
-    });
+    expect(response.body.passport.id).toEqual(fixture.passport.id);
+    expect(response.body.branding).toBeDefined();
+    expect(response.body.presentationConfiguration.id).toEqual(fixture.config.id);
   });
 
-  it(`/GET passport from permalink by slug`, async () => {
+  it(`/GET bundle from permalink by slug`, async () => {
     const slug = `slug-${randomUUID().slice(0, 8)}`;
     const fixture = await createPassportWithPermalink({ slug });
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${slug}/passport`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${slug}`);
 
     expect(response.status).toEqual(200);
-    expect(response.body.id).toEqual(fixture.passport.id);
+    expect(response.body.passport.id).toEqual(fixture.passport.id);
   });
 
   it(`/GET returns 404 for unknown permalink id`, async () => {
-    const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p/${randomUUID()}/passport`,
-    );
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${randomUUID()}`);
 
     expect(response.status).toEqual(404);
   });
 
   it(`/GET returns 404 for unknown slug`, async () => {
-    const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p/nonexistent-slug/passport`,
-    );
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/nonexistent-slug`);
 
     expect(response.status).toEqual(404);
   });
@@ -194,9 +188,7 @@ describe("PermalinkController", () => {
     const permalink = Permalink.create({ presentationConfigurationId: templateConfig.id });
     await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p/${permalink.id}/passport`,
-    );
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${permalink.id}`);
 
     expect(response.status).toEqual(404);
   });
@@ -233,9 +225,7 @@ describe("PermalinkController", () => {
     it("returns 404 to anonymous when the passport is in draft", async () => {
       const fixture = await createPassportWithPermalink({ published: false });
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/p/${fixture.id}/passport`,
-      );
+      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
 
       expect(response.status).toEqual(404);
     });
@@ -263,12 +253,12 @@ describe("PermalinkController", () => {
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p/${permalink.id}/passport`)
+        .get(`/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
       expect(response.status).toEqual(200);
-      expect(response.body.id).toEqual(passport.id);
+      expect(response.body.passport.id).toEqual(passport.id);
     });
 
     it("returns 404 to a member of a different org for a draft passport", async () => {
@@ -295,7 +285,7 @@ describe("PermalinkController", () => {
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p/${permalink.id}/passport`)
+        .get(`/p/${permalink.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id);
 
@@ -465,7 +455,7 @@ describe("PermalinkController", () => {
     });
   });
 
-  it(`/GET presentation-configuration is anonymous readable and never materializes a row`, async () => {
+  it(`/GET bundle is anonymous readable and never materializes a row`, async () => {
     const fixture = await createPassportWithPermalink();
     const presentationConfigurationRepository = ctx
       .getModuleRef()
@@ -479,13 +469,11 @@ describe("PermalinkController", () => {
     const countBefore = await presentationConfigurationRepository.countByReference(referenceFilter);
     expect(countBefore).toEqual(1);
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p/${fixture.id}/presentation-configuration`,
-    );
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
 
     expect(response.status).toEqual(200);
-    expect(response.body.referenceType).toEqual("passport");
-    expect(response.body.referenceId).toEqual(fixture.passport.id);
+    expect(response.body.presentationConfiguration.referenceType).toEqual("passport");
+    expect(response.body.presentationConfiguration.referenceId).toEqual(fixture.passport.id);
 
     // Anonymous read must NOT materialize a new row. The fixture already wrote one;
     // the count must remain unchanged.

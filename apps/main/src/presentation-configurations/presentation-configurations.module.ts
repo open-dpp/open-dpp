@@ -1,5 +1,6 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { AasModule } from "../aas/aas.module";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../passports/infrastructure/passport.schema";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
@@ -28,6 +29,7 @@ import { PresentationConfigurationController } from "./presentation/presentation
         schema: PassportSchema,
       },
     ]),
+    forwardRef(() => AasModule),
   ],
   controllers: [PresentationConfigurationController],
   providers: [

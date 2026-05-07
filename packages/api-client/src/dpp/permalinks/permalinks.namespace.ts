@@ -1,9 +1,4 @@
-import type {
-  BrandingDto,
-  PassportDto,
-  PermalinkDto,
-  PresentationConfigurationDto,
-} from "@open-dpp/dto";
+import type { PassportPermalinkBundleDto, PermalinkDto } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
 
@@ -20,17 +15,7 @@ export class PermalinksNamespace {
     );
   }
 
-  public async getPassport(idOrSlug: string) {
-    return this.axiosInstance.get<PassportDto>(`/p/${encodeURIComponent(idOrSlug)}/passport`);
-  }
-
-  public async getBranding(idOrSlug: string) {
-    return this.axiosInstance.get<BrandingDto>(`/p/${encodeURIComponent(idOrSlug)}/branding`);
-  }
-
-  public async getPresentationConfiguration(idOrSlug: string) {
-    return this.axiosInstance.get<PresentationConfigurationDto>(
-      `/p/${encodeURIComponent(idOrSlug)}/presentation-configuration`,
-    );
+  public async getById(idOrSlug: string) {
+    return this.axiosInstance.get<PassportPermalinkBundleDto>(`/p/${encodeURIComponent(idOrSlug)}`);
   }
 }

@@ -2,13 +2,25 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
+import {
+  KeyTypes,
+  PermissionKind,
+  Permissions,
+  PresentationComponentName,
+  PresentationReferenceType,
+} from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { NotFoundError } from "@open-dpp/exception";
+import { ForbiddenError, NotFoundError } from "@open-dpp/exception";
 import type { Connection } from "mongoose";
 
+import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { Environment } from "../../../aas/domain/environment";
+import { Permission } from "../../../aas/domain/security/permission";
+import { Security } from "../../../aas/domain/security/security";
+import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { generateMongoConfig } from "../../../database/config";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
@@ -259,6 +271,227 @@ describe("PresentationConfigurationService", () => {
       const passport = makePassport();
       const snapshots = await service.snapshotTemplateConfigsToPassport(passport);
       expect(snapshots).toHaveLength(0);
+    });
+  });
+
+  describe("element-level permission enforcement", () => {
+    const memberSubject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const anonymousSubject = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
+    function buildAbilities() {
+      const security = Security.create({});
+      const readPerm = Permission.create({
+        permission: Permissions.Read,
+        kindOfPermission: PermissionKind.Allow,
+      });
+      const editPerm = Permission.create({
+        permission: Permissions.Edit,
+        kindOfPermission: PermissionKind.Allow,
+      });
+      // Member: read + edit on Pub; read-only on Secret.
+      security.addPolicy(memberSubject, IdShortPath.create({ path: "Pub" }), [readPerm, editPerm]);
+      security.addPolicy(memberSubject, IdShortPath.create({ path: "Secret" }), [readPerm]);
+      // Anonymous: no rules → all paths denied for read.
+      return {
+        memberAbility: security.defineAbilityForSubject(memberSubject),
+        anonymousAbility: security.defineAbilityForSubject(anonymousSubject),
+      };
+    }
+
+    async function seedConfigWithEntries(
+      passport: Passport,
+      entries: Record<string, PresentationComponentName>,
+    ) {
+      const [defaultConfig] = await service.listForPassport(passport);
+      await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+        elementDesign: entries,
+      });
+      return (await service.listForPassport(passport))[0];
+    }
+
+    async function seedTemplateConfigWithEntries(
+      template: Template,
+      entries: Record<string, PresentationComponentName>,
+    ) {
+      const [defaultConfig] = await service.listForTemplate(template);
+      await service.applyPatchByConfigIdForTemplate(template, defaultConfig.id, {
+        elementDesign: entries,
+      });
+      return (await service.listForTemplate(template))[0];
+    }
+
+    it("getEffectiveForPassport strips elementDesign entries the subject can't read", async () => {
+      const { memberAbility } = buildAbilities();
+      const passport = makePassport();
+      await seedConfigWithEntries(passport, {
+        Pub: PresentationComponentName.BigNumber,
+        Secret: PresentationComponentName.BigNumber,
+      });
+
+      const effective = await service.getEffectiveForPassport(passport, memberAbility);
+      expect(Object.fromEntries(effective.elementDesign)).toEqual({
+        Pub: PresentationComponentName.BigNumber,
+        Secret: PresentationComponentName.BigNumber,
+      });
+    });
+
+    it("getEffectiveForPassport hides every elementDesign entry for an anonymous subject without rules", async () => {
+      const { anonymousAbility } = buildAbilities();
+      const passport = makePassport();
+      await seedConfigWithEntries(passport, {
+        Pub: PresentationComponentName.BigNumber,
+        Secret: PresentationComponentName.BigNumber,
+      });
+
+      const effective = await service.getEffectiveForPassport(passport, anonymousAbility);
+      expect(effective.elementDesign.size).toBe(0);
+    });
+
+    it("getEffectiveForTemplate filters by readable paths", async () => {
+      const { memberAbility, anonymousAbility } = buildAbilities();
+      const template = makeTemplate();
+      await seedTemplateConfigWithEntries(template, {
+        Pub: PresentationComponentName.BigNumber,
+        Secret: PresentationComponentName.BigNumber,
+      });
+
+      const memberView = await service.getEffectiveForTemplate(template, memberAbility);
+      expect(memberView.elementDesign.size).toBe(2);
+
+      const anonymousView = await service.getEffectiveForTemplate(template, anonymousAbility);
+      expect(anonymousView.elementDesign.size).toBe(0);
+    });
+
+    it("getByIdForPassport applies the same read filter", async () => {
+      const { anonymousAbility } = buildAbilities();
+      const passport = makePassport();
+      const seeded = await seedConfigWithEntries(passport, {
+        Pub: PresentationComponentName.BigNumber,
+      });
+
+      const filtered = await service.getByIdForPassport(passport, seeded.id, anonymousAbility);
+      expect(filtered.elementDesign.size).toBe(0);
+    });
+
+    it("listForPassport filters every config in the array", async () => {
+      const { anonymousAbility } = buildAbilities();
+      const passport = makePassport();
+      await seedConfigWithEntries(passport, { Pub: PresentationComponentName.BigNumber });
+      const variant = await service.createForPassport(passport, { label: "Variant A" });
+      await service.applyPatchByConfigIdForPassport(passport, variant.id, {
+        elementDesign: { Pub: PresentationComponentName.BigNumber },
+      });
+
+      const list = await service.listForPassport(passport, anonymousAbility);
+      expect(list).toHaveLength(2);
+      for (const config of list) {
+        expect(config.elementDesign.size).toBe(0);
+      }
+    });
+
+    it("applyPatchByConfigIdForPassport allows entries the subject can edit", async () => {
+      const { memberAbility } = buildAbilities();
+      const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
+
+      const result = await service.applyPatchByConfigIdForPassport(
+        passport,
+        defaultConfig.id,
+        { elementDesign: { Pub: PresentationComponentName.BigNumber } },
+        memberAbility,
+      );
+
+      expect(Object.fromEntries(result.elementDesign)).toEqual({
+        Pub: PresentationComponentName.BigNumber,
+      });
+    });
+
+    it("applyPatchByConfigIdForPassport rejects edits to read-only paths", async () => {
+      const { memberAbility } = buildAbilities();
+      const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
+
+      await expect(
+        service.applyPatchByConfigIdForPassport(
+          passport,
+          defaultConfig.id,
+          { elementDesign: { Secret: PresentationComponentName.BigNumber } },
+          memberAbility,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+
+      const [persisted] = await service.listForPassport(passport);
+      expect(persisted.elementDesign.size).toBe(0);
+    });
+
+    it("applyPatchByConfigIdForPassport rejects atomically when any path is denied", async () => {
+      const { memberAbility } = buildAbilities();
+      const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
+
+      await expect(
+        service.applyPatchByConfigIdForPassport(
+          passport,
+          defaultConfig.id,
+          {
+            elementDesign: {
+              Pub: PresentationComponentName.BigNumber,
+              Secret: PresentationComponentName.BigNumber,
+            },
+          },
+          memberAbility,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+
+      const [persisted] = await service.listForPassport(passport);
+      expect(persisted.elementDesign.size).toBe(0);
+    });
+
+    it("applyPatchByConfigIdForPassport allows defaultComponents-only patches without per-path checks", async () => {
+      const { memberAbility } = buildAbilities();
+      const passport = makePassport();
+      const [defaultConfig] = await service.listForPassport(passport);
+
+      const result = await service.applyPatchByConfigIdForPassport(
+        passport,
+        defaultConfig.id,
+        {
+          defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
+        },
+        memberAbility,
+      );
+
+      expect(Object.fromEntries(result.defaultComponents)).toEqual({
+        [KeyTypes.Property]: PresentationComponentName.BigNumber,
+      });
+    });
+
+    it("applyPatchByConfigIdForTemplate enforces the same write rules", async () => {
+      const { memberAbility } = buildAbilities();
+      const template = makeTemplate();
+      const [defaultConfig] = await service.listForTemplate(template);
+
+      await expect(
+        service.applyPatchByConfigIdForTemplate(
+          template,
+          defaultConfig.id,
+          { elementDesign: { Secret: PresentationComponentName.BigNumber } },
+          memberAbility,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+
+      const allowed = await service.applyPatchByConfigIdForTemplate(
+        template,
+        defaultConfig.id,
+        { elementDesign: { Pub: PresentationComponentName.BigNumber } },
+        memberAbility,
+      );
+      expect(Object.fromEntries(allowed.elementDesign)).toEqual({
+        Pub: PresentationComponentName.BigNumber,
+      });
     });
   });
 });

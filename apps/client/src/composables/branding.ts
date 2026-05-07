@@ -109,9 +109,13 @@ export function useBranding() {
 }
 
 export function useBrandingAnonymous(permalink: Ref<string>) {
-  const { src, applyBranding } = useBrandingCommon(async () =>
-    apiClient.dpp.permalinks.getBranding(permalink.value),
-  );
+  const { src, applyBranding } = useBrandingCommon(async () => {
+    const response = await apiClient.dpp.permalinks.getById(permalink.value);
+    return {
+      ...response,
+      data: response.data.branding,
+    };
+  });
 
   watch(
     () => permalink.value,
