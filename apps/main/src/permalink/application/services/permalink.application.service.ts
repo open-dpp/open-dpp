@@ -6,6 +6,7 @@ import type { MemberRoleType } from "../../../identity/organizations/domain/memb
 import { Passport } from "../../../passports/domain/passport";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
@@ -23,6 +24,7 @@ export class PermalinkApplicationService {
   constructor(
     private readonly permalinkRepository: PermalinkRepository,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
     private readonly passportRepository: PassportRepository,
   ) {}
 
@@ -105,9 +107,25 @@ export class PermalinkApplicationService {
     const next = permalink.withSlug(slug);
     return await this.permalinkRepository.save(next, options);
   }
+
+  // TODO: remove after the eager-migration script (Option a) backfills every
+  // pre-refactor passport. Once the lazy callers (legacy UPI redirect +
+  // backoffice GET /p?passportId=...) stop hitting the synthesise branch,
+  // delete this method and inline the eager flow into PassportController.create.
+  async ensureDefaultForPassport(
+    passport: Passport,
+    options?: DbSessionOptions,
+  ): Promise<Permalink> {
+    const config = await this.presentationConfigurationService.ensureDefaultForPassport(
+      passport,
+      options,
+    );
+    const [permalink] = await this.createPermalinksForConfigs([config], options);
+    return permalink;
+  }
 }
 
-function isMemberOfPassportOrg(
+export function isMemberOfPassportOrg(
   passport: Passport,
   access: PermalinkAccessContext | undefined,
 ): boolean {

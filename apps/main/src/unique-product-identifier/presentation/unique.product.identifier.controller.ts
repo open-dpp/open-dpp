@@ -16,7 +16,6 @@ import { OptionalAuth } from "../../identity/auth/presentation/decorators/option
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 
@@ -39,7 +38,6 @@ export class UniqueProductIdentifierController {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly permalinkRepository: PermalinkRepository,
     private readonly passportRepository: PassportRepository,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly environmentService: EnvironmentService,
   ) {}
@@ -112,12 +110,8 @@ export class UniqueProductIdentifierController {
     }
 
     return await this.environmentService.withTransaction(async (options) => {
-      const config = await this.presentationConfigurationService.ensureDefaultForPassport(
+      const permalink = await this.permalinkApplicationService.ensureDefaultForPassport(
         passport,
-        options,
-      );
-      const [permalink] = await this.permalinkApplicationService.createPermalinksForConfigs(
-        [config],
         options,
       );
       this.logger.debug(

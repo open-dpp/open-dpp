@@ -8,6 +8,7 @@ import {
   ForbiddenException,
   Get,
   Headers,
+  Logger,
   Param,
   Patch,
   Query,
@@ -58,8 +59,12 @@ import {
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
-import { PermalinkApplicationService } from "../application/services/permalink.application.service";
+import {
+  PermalinkApplicationService,
+  isMemberOfPassportOrg,
+} from "../application/services/permalink.application.service";
 
 // Note: PermalinkController used to implement IAasReadEndpoints. The added
 // access-context parameter (organizationId) for the draft-passport gate
@@ -70,12 +75,15 @@ import { PermalinkApplicationService } from "../application/services/permalink.a
 // controller).
 @Controller()
 export class PermalinkController {
+  private readonly logger = new Logger(PermalinkController.name);
+
   constructor(
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly permalinkRepository: PermalinkRepository,
     private readonly environmentService: EnvironmentService,
     private readonly brandingRepository: BrandingRepository,
     private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly passportRepository: PassportRepository,
   ) {}
 
   @OptionalAuth()
@@ -90,7 +98,25 @@ export class PermalinkController {
     }
     const permalinks = await this.permalinkRepository.findAllByPassportId(passportId);
     if (permalinks.length === 0) {
-      return PermalinkListDtoSchema.parse([]);
+      // Lazy-backfill for pre-refactor passports that lack a config / permalink
+      // row. Mirrors the legacy UPI redirect path so an admin can print a QR
+      // for an old passport from the backoffice without manual migration.
+      // Gate on owning-org membership so anonymous / cross-org traffic stays
+      // on the read-only path (no DoS / no information leak).
+      const passport = await this.passportRepository.findOne(passportId);
+      if (!passport) {
+        return PermalinkListDtoSchema.parse([]);
+      }
+      if (!isMemberOfPassportOrg(passport, { organizationId, memberRole })) {
+        return PermalinkListDtoSchema.parse([]);
+      }
+      const created = await this.environmentService.withTransaction(async (options) => {
+        return await this.permalinkApplicationService.ensureDefaultForPassport(passport, options);
+      });
+      this.logger.debug(
+        `Lazy-backfilled permalink for backoffice passportId=${passport.id} → permalink=${created.id}`,
+      );
+      return PermalinkListDtoSchema.parse([created.toPlain()]);
     }
     // Hide non-published passports from anonymous / cross-org callers — same
     // gate as resolveToPassport so the listing endpoint can't enumerate

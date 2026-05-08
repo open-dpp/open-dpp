@@ -177,6 +177,182 @@ describe("PermalinkController", () => {
     expect(response.body).toEqual([]);
   });
 
+  describe("GET /p?passportId=... — lazy backfill for pre-refactor passports", () => {
+    async function seedBarePassport(orgId: string) {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      return passport;
+    }
+
+    it("synthesises config + permalink for a member of the owning org and returns the new permalink", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await seedBarePassport(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p?passportId=${passport.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].id).toBeDefined();
+
+      const config = await ctx
+        .getModuleRef()
+        .get(PresentationConfigurationRepository)
+        .findByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId: passport.id,
+        });
+      expect(config).toBeDefined();
+
+      const persistedPermalink = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findByPresentationConfigurationId(config!.id);
+      expect(persistedPermalink).toBeDefined();
+      expect(persistedPermalink!.id).toEqual(response.body[0].id);
+    });
+
+    it("returns the existing permalink without creating duplicates when it already exists", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await seedBarePassport(org.id);
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      const existingPermalink = Permalink.create({ presentationConfigurationId: config.id });
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getModuleRef().get(PermalinkRepository).save(existingPermalink);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p?passportId=${passport.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].id).toEqual(existingPermalink.id);
+
+      const allPermalinks = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findAllByPassportId(passport.id);
+      expect(allPermalinks).toHaveLength(1);
+    });
+
+    it("returns [] for an anonymous caller and does not create rows", async () => {
+      const orgId = randomUUID();
+      const passport = await seedBarePassport(orgId);
+
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/p?passportId=${passport.id}`,
+      );
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual([]);
+
+      const config = await ctx
+        .getModuleRef()
+        .get(PresentationConfigurationRepository)
+        .findByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId: passport.id,
+        });
+      expect(config).toBeUndefined();
+    });
+
+    it("returns [] for a member of a different org and does not create rows", async () => {
+      const ownerOrgId = randomUUID();
+      const passport = await seedBarePassport(ownerOrgId);
+      const outsider = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p?passportId=${passport.id}`)
+        .set("Cookie", outsider.userCookie)
+        .set(ORGANIZATION_ID_HEADER, outsider.org.id);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual([]);
+
+      const config = await ctx
+        .getModuleRef()
+        .get(PresentationConfigurationRepository)
+        .findByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId: passport.id,
+        });
+      expect(config).toBeUndefined();
+    });
+
+    it("returns [] when the passport row is missing entirely (authenticated caller)", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const ghostPassportId = randomUUID();
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p?passportId=${ghostPassportId}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual([]);
+    });
+
+    it("synthesises only the missing permalink when the config already exists", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await seedBarePassport(org.id);
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p?passportId=${passport.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(1);
+
+      const persistedPermalink = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findByPresentationConfigurationId(config.id);
+      expect(persistedPermalink).toBeDefined();
+      expect(persistedPermalink!.id).toEqual(response.body[0].id);
+
+      const configs = await ctx
+        .getModuleRef()
+        .get(PresentationConfigurationRepository)
+        .findManyByReference({
+          referenceType: PresentationReferenceType.Passport,
+          referenceId: passport.id,
+        });
+      expect(configs).toHaveLength(1);
+      expect(configs[0].id).toEqual(config.id);
+    });
+  });
+
   it(`/GET rejects permalink when config is template-type`, async () => {
     const organizationId = randomUUID();
     const templateConfig = PresentationConfiguration.create({
