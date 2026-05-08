@@ -1,6 +1,6 @@
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useI18n } from "vue-i18n";
-import type { PagingParamsDto } from "@open-dpp/dto";
+import type { ActivityDto, PagingParamsDto } from "@open-dpp/dto";
 import type { PagingResult } from "./pagination.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { type DigitalProductDocumentTypeType } from "../lib/digital-product-document.ts";
@@ -10,6 +10,7 @@ import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import { z } from "zod";
 
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
@@ -19,8 +20,9 @@ export function useActivityHistory(type: DigitalProductDocumentTypeType) {
   const router = useRouter();
 
   const initialPeriod = () => {
-    const startDate = route.query.startDate;
-    const endDate = route.query.endDate;
+    const dateParser = z.iso.datetime().optional();
+    const startDate = dateParser.parse(route.query.startDate);
+    const endDate = dateParser.parse(route.query.endDate);
     if (startDate && endDate) {
       return [new Date(startDate), new Date(endDate)];
     } else if (startDate) {

@@ -1,8 +1,8 @@
 import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
 import { DataTypeDef, EntityType, PermissionKind, Permissions } from "@open-dpp/dto";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -21,12 +21,9 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { IdShortPath } from "../domain/common/id-short-path";
 import { Permission } from "../domain/security/permission";
-import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 describe("submodelRepository", () => {
   let submodelRepository: SubmodelRepository;
-  let auditEventRepository: ActivityRepository;
   let module: TestingModule;
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -45,13 +42,11 @@ describe("submodelRepository", () => {
             schema: SubmodelSchema,
           },
         ]),
-        ActivityHistoryModule,
       ],
       providers: [SubmodelRegistryInitializer, SubmodelRepository],
     }).compile();
     await module.init();
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
-    auditEventRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
   it("should save a submodel", async () => {
@@ -129,12 +124,8 @@ describe("submodelRepository", () => {
         digitalProductDocumentId,
       },
     );
-    const expected = [...submodel.auditEvents];
+
     await submodelRepository.save(submodel);
-    const foundEvents = await auditEventRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundEvents.items).toEqual(expected);
-    expect(foundEvents.items.every((event) => event.header.userId === ability.userId)).toBeTruthy();
-    expect(submodel.auditEvents).toEqual([]);
   });
 
   it("should delete a submodel", async () => {

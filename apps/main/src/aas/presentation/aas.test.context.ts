@@ -80,7 +80,9 @@ import {
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { ActivityTypes } from "../../activity-history/activity-types";
+import { SubmodelElementModificationActivity } from "../../activity-history/aas/submodel-base/submodel-element-modification.activity";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -95,6 +97,7 @@ export function createAasTestContext<T>(
   let aasRepository: AasRepository;
   let moduleRef: TestingModule;
   let uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
+  let activityRepository: ActivityRepository;
 
   const betterAuthHelper = new BetterAuthHelper();
   let aas: AssetAdministrationShell;
@@ -161,6 +164,7 @@ export function createAasTestContext<T>(
     uniqueProductIdentifierRepository = moduleRef.get<UniqueProductIdentifierRepository>(
       UniqueProductIdentifierRepository,
     );
+    activityRepository = moduleRef.get<ActivityRepository>(ActivityRepository);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel1 = Submodel.fromPlain(
@@ -674,30 +678,37 @@ export function createAasTestContext<T>(
     }).toEqual(modificationBody);
   }
 
-  async function assertGetActivities(createEntity: CreateEntity, saveEntity: SaveEntity) {
+  async function assertGetActivities(createEntity: CreateEntity) {
     const { org, userCookie, user } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
-    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
-    const submodel = Submodel.fromPlain(
-      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
-    );
-    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property, { ability });
-    const modificationBody = {
-      idShort: property.idShort,
-      displayName: [{ language: "en", text: "Bill of Materials" }],
-      description: [{ language: "en", text: "A list of all products in the factory" }],
-    };
-
-    submodel.modifySubmodelElement(modificationBody, IdShortPath.create({ path: "Property01" }), {
-      ability,
+    const activity1 = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: entity.id,
+      userId: user.id,
+      payload: SubmodelBaseModificationActivityPayload.create({
+        submodelId: submodels[0].id,
+        fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+        data: {
+          idShort: "Author",
+          displayName: [{ language: "en", text: "Author" }],
+        },
+      }),
     });
 
-    await submodelRepository.save(submodel);
-    entity.getEnvironment().submodels.push(submodel.id);
-    await saveEntity(entity);
+    const activity2 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: entity.id,
+      userId: user.id,
+      payload: SubmodelBaseModificationActivityPayload.create({
+        submodelId: submodels[0].id,
+        fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+        data: {
+          idShort: "Model",
+          displayName: [{ language: "en", text: "Model" }],
+        },
+      }),
+    });
+
+    await activityRepository.createMany([activity1, activity2]);
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/activities`)
@@ -705,50 +716,44 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
     expect(response.status).toEqual(200);
-    expect(response.body.result).toEqual([
-      {
-        header: {
-          correlationId: expect.any(String),
-          createdAt: expect.any(String),
-          id: expect.any(String),
-          type: ActivityTypes.SubmodelElementModification,
-          version: "1.0.0",
-          aggregateId: entity.id,
-          userId: user.id,
-        },
-        payload: {
-          submodelId: submodel.id,
-          fullIdShortPath: `${submodel.idShort}.Property01`,
-          data: modificationBody,
-        },
-      },
-    ]);
+    expect(response.body.result).toEqual(
+      [activity1.toPlain(), activity2.toPlain()].map((a) => ({
+        ...a,
+        header: { ...a.header, createdAt: (a.header.createdAt as any).toISOString() },
+      })),
+    );
   }
 
-  async function assertDownloadActivities(createEntity: CreateEntity, saveEntity: SaveEntity) {
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+  async function assertDownloadActivities(createEntity: CreateEntity) {
+    const { org, userCookie, user } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
-    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-
-    const submodel = Submodel.fromPlain(
-      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
-    );
-    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property, { ability });
-    const modificationBody = {
-      idShort: property.idShort,
-      displayName: [{ language: "en", text: "Bill of Materials" }],
-      description: [{ language: "en", text: "A list of all products in the factory" }],
-    };
-
-    submodel.modifySubmodelElement(modificationBody, IdShortPath.create({ path: "Property01" }), {
-      ability,
+    const activity1 = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: entity.id,
+      userId: user.id,
+      payload: SubmodelBaseModificationActivityPayload.create({
+        submodelId: submodels[0].id,
+        fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+        data: {
+          idShort: "Author",
+          displayName: [{ language: "en", text: "Author" }],
+        },
+      }),
     });
 
-    await submodelRepository.save(submodel);
-    entity.getEnvironment().submodels.push(submodel.id);
-    await saveEntity(entity);
+    const activity2 = SubmodelElementModificationActivity.create({
+      digitalProductDocumentId: entity.id,
+      userId: user.id,
+      payload: SubmodelBaseModificationActivityPayload.create({
+        submodelId: submodels[0].id,
+        fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+        data: {
+          idShort: "Model",
+          displayName: [{ language: "en", text: "Model" }],
+        },
+      }),
+    });
+
+    await activityRepository.createMany([activity1, activity2]);
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/activities/download`)

@@ -44,7 +44,7 @@ export class AssetAdministrationShell
     public readonly idShort: string | null = null,
     displayName: Array<LanguageText>,
     description: Array<LanguageText>,
-    public readonly administration: AdministrativeInformation | null = null,
+    public readonly administration: AdministrativeInformation,
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
@@ -168,7 +168,9 @@ export class AssetAdministrationShell
       parsed.idShort,
       parsed.displayName.map(LanguageText.fromPlain),
       parsed.description.map(LanguageText.fromPlain),
-      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.administration
+        ? AdministrativeInformation.fromPlain(parsed.administration)
+        : AdministrativeInformation.create({ version: "1", revision: "0" }),
       parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),

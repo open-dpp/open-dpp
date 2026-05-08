@@ -52,6 +52,10 @@ import { ConceptDescriptionRepository } from "../infrastructure/concept-descript
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { EnvironmentService } from "./environment.service";
 import { randomUUID } from "node:crypto";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
+import { ActivityTypes } from "../../activity-history/activity-types";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -61,6 +65,8 @@ describe("environmentService", () => {
   let passportRepository: PassportRepository;
   let conceptDescriptionRepository: ConceptDescriptionRepository;
   let connection: Connection;
+  let activityRepository: ActivityRepository;
+
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -77,6 +83,7 @@ describe("environmentService", () => {
         AuthModule,
         OrganizationsModule,
         UsersModule,
+        ActivityHistoryModule,
       ],
     }).compile();
     await module.init();
@@ -88,6 +95,7 @@ describe("environmentService", () => {
     conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(
       ConceptDescriptionRepository,
     );
+    activityRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
   it("should create environment", async () => {
@@ -496,6 +504,8 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel element", async () => {
+    const digitalProductDocumentId = randomUUID();
+
     const { environment, admin, member, submodel1, submodelElementCollection1, property1 } =
       await createDefaultEnvironment();
     const modification = {
@@ -506,7 +516,6 @@ describe("environmentService", () => {
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
     const userId = randomUUID();
-    const digitalProductDocumentId = randomUUID();
     await environmentService.modifySubmodelElement(
       digitalProductDocumentId,
       environment,
@@ -514,6 +523,24 @@ describe("environmentService", () => {
       modification,
       idShortPathToProperty1,
       { subject: admin, userId },
+    );
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
+    expect(foundSubmodel.administration.version).toEqual("2");
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelElementModification,
+          payload: SubmodelBaseModificationActivityPayload.create({
+            submodelId: submodel1.id,
+            fullIdShortPath: IdShortPath.create({
+              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
+            }),
+            data: modification,
+          }),
+        },
+      ],
     );
     //
     await expect(
@@ -677,6 +704,7 @@ describe("environmentService", () => {
   });
 
   it("should modify value of submodel element", async () => {
+    const digitalProductDocumentId = randomUUID();
     const {
       environment,
       admin,
@@ -690,21 +718,42 @@ describe("environmentService", () => {
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}`,
     });
+    const userId = randomUUID();
     await environmentService.modifyValueOfSubmodelElement(
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       modification,
       idShortPathToProperty1,
-      admin,
+      { subject: admin, userId },
     );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelElementValueModification,
+          payload: SubmodelBaseModificationActivityPayload.create({
+            submodelId: submodel1.id,
+            fullIdShortPath: IdShortPath.create({
+              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
+            }),
+            data: modification,
+          }),
+        },
+      ],
+    );
+
     //
     await expect(
       environmentService.modifyValueOfSubmodelElement(
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         modification,
         idShortPathToProperty1,
-        member,
+        { subject: member, userId },
       ),
     ).rejects.toThrow(
       new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),

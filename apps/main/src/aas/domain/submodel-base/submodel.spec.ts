@@ -22,8 +22,6 @@ import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
-import { SubmodelBaseModificationActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-modification.payload";
-import { ActivityTypes } from "../../../activity-history/activity-types";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -705,60 +703,6 @@ describe("submodel", () => {
         submodelDesignOfProductPlainFactory.build({ id: copy!.id }, { transient: { iriDomain } }),
       ),
     );
-  });
-
-  it("should modify submodel element and track activity", () => {
-    const security = Security.create({});
-    const member = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-
-    const submodel = Submodel.create({ idShort: "section1" });
-    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
-      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
-      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-    ]);
-    const ability = security.defineAbilityForSubject(member);
-    const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
-    submodel.addSubmodelElement(prop1, { ability });
-    const digitalProductDocumentId = "12345";
-    const modification = { idShort: prop1.idShort, value: "20" };
-    submodel.modifySubmodelElement(modification, IdShortPath.create({ path: "prop1" }), {
-      ability,
-      digitalProductDocumentId,
-    });
-
-    const valueModification = "30";
-    submodel.modifyValueOfSubmodelElement(
-      valueModification,
-      IdShortPath.create({ path: "prop1" }),
-      {
-        ability,
-        digitalProductDocumentId,
-      },
-    );
-
-    const events = submodel.pullAuditEvents();
-    expect(events.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual([
-      {
-        type: ActivityTypes.SubmodelElementModification,
-        payload: SubmodelBaseModificationActivityPayload.create({
-          submodelId: submodel.id,
-          fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
-          data: modification,
-        }),
-      },
-      {
-        type: ActivityTypes.SubmodelElementValueModification,
-        payload: SubmodelBaseModificationActivityPayload.create({
-          submodelId: submodel.id,
-          fullIdShortPath: IdShortPath.create({ path: "section1.prop1" }),
-          data: valueModification,
-        }),
-      },
-    ]);
   });
 
   it("should be modified", () => {

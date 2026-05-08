@@ -41,7 +41,7 @@ import { SubmodelElementValueModificationActivity } from "../../../activity-hist
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _auditEvents: Array<IActivity> = [];
+  private _activities: Array<IActivity> = [];
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -49,7 +49,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     public readonly idShort: string,
     displayName: Array<LanguageText>,
     description: Array<LanguageText>,
-    public readonly administration: AdministrativeInformation | null,
+    public readonly administration: AdministrativeInformation,
     public readonly kind: ModellingKindType | null,
     public readonly semanticId: Reference | null,
     public readonly supplementalSemanticIds: Array<Reference>,
@@ -99,7 +99,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
       data.idShort,
       data.displayName ?? [],
       data.description ?? [],
-      data.administration ?? null,
+      data.administration ?? AdministrativeInformation.create({ version: "1", revision: "0" }),
       data.kind ?? null,
       data.semanticId ?? null,
       data.supplementalSemanticIds ?? [],
@@ -119,7 +119,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
       baseObjects.idShort,
       baseObjects.displayName,
       baseObjects.description,
-      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.administration
+        ? AdministrativeInformation.fromPlain(parsed.administration)
+        : AdministrativeInformation.create({ version: "1", revision: "0" }),
       parsed.kind ?? null,
       baseObjects.semanticId,
       baseObjects.supplementalSemanticIds,
@@ -133,13 +135,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.accept(new ModifierVisitor(options), { data });
   }
 
-  get auditEvents(): Array<IActivity> {
-    return this._auditEvents;
+  private publishActivity(activity: IActivity) {
+    this._activities.push(activity);
+    this.administration.increaseVersion();
   }
 
-  pullAuditEvents(): Array<IActivity> {
-    const events = [...this._auditEvents];
-    this._auditEvents = [];
+  get activities(): Array<IActivity> {
+    return this._activities;
+  }
+
+  pullActivities(): Array<IActivity> {
+    const events = [...this._activities];
+    this._activities = [];
     return events;
   }
 
@@ -147,7 +154,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
 
     submodelElement.accept(new ModifierVisitor(options), { data });
-    this._auditEvents.push(
+    this.publishActivity(
       SubmodelElementModificationActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
         payload: SubmodelBaseModificationActivityPayload.create({
@@ -168,7 +175,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
   ) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     submodelElement.accept(new ValueModifierVisitor(options), { data });
-    this._auditEvents.push(
+    this.publishActivity(
       SubmodelElementValueModificationActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
         payload: SubmodelBaseModificationActivityPayload.create({

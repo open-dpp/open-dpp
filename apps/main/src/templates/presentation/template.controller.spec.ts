@@ -172,11 +172,11 @@ describe("templateController", () => {
   });
 
   it(`/GET activities`, async () => {
-    await ctx.asserts.getActivities(createTemplate, saveTemplate);
+    await ctx.asserts.getActivities(createTemplate);
   });
 
   it(`/GET download activities`, async () => {
-    await ctx.asserts.downloadActivities(createTemplate, saveTemplate);
+    await ctx.asserts.downloadActivities(createTemplate);
   });
 
   it("/GET all templates", async () => {

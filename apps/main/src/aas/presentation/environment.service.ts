@@ -56,6 +56,7 @@ import { ConceptDescriptionRepository } from "../infrastructure/concept-descript
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { DigitalProductPassportIdentifiableEnvironmentPopulateDecorator } from "./digital-product-passport-identifiable-environment-populate-decorator";
 import { PopulateOptions } from "./environment-populate-decorator";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -74,19 +75,18 @@ export class EnvironmentService {
   private aasRepository: AasRepository;
   private submodelRepository: SubmodelRepository;
   private conceptDescriptionRepository: ConceptDescriptionRepository;
-  private membersService: MembersService;
 
   constructor(
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
     conceptDescriptionRepository: ConceptDescriptionRepository,
     membersService: MembersService,
+    private activityRepository: ActivityRepository,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
     this.submodelRepository = submodelRepository;
     this.conceptDescriptionRepository = conceptDescriptionRepository;
-    this.membersService = membersService;
   }
 
   async loadAbility(environment: Environment, subject: SubjectAttributes, userId?: string) {
@@ -378,24 +378,44 @@ export class EnvironmentService {
       ability,
       digitalProductDocumentId,
     });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+    const activities = submodel.pullActivities();
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany(activities, { session });
+      });
+      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
   }
 
   async modifyValueOfSubmodelElement(
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     modification: ValueRequestDto,
     idShortPath: IdShortPath,
-    subject: SubjectAttributes,
+    { subject, userId }: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
+    const ability = await this.loadAbility(environment, subject, userId);
     const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, {
       ability,
+      digitalProductDocumentId,
     });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+    const activities = submodel.pullActivities();
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany(activities, { session });
+      });
+      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
   }
 
   async addColumn(

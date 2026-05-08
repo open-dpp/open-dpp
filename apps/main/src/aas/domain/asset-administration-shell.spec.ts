@@ -146,8 +146,8 @@ describe("assetAdministrationShell", () => {
       security,
     });
 
-    const copyS1 = submodel1.copy();
-    const copyS2 = submodel2.copy();
+    const copyS1 = submodel1.copy()!;
+    const copyS2 = submodel2.copy()!;
     const copy = aas.copy([copyS1, copyS2]);
     expect(copy.id).not.toEqual(aas.id);
     expect(copy.assetInformation).toEqual({ ...aas.assetInformation, globalAssetId: copy.id });

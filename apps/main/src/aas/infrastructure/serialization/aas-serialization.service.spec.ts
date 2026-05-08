@@ -587,7 +587,10 @@ describe("aasSerializationService", () => {
       });
       expect(exportedForMember.environment.submodels).toEqual([
         {
-          administration: null,
+          administration: {
+            revision: "0",
+            version: "1",
+          },
           category: null,
           description: [],
           displayName: [],

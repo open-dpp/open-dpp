@@ -44,6 +44,7 @@ import { SubmodelElementModificationActivity } from "../../activity-history/aas/
 import { Response } from "express";
 import { Archiver } from "archiver";
 import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -69,6 +70,7 @@ describe("DigitalProductDocumentService", () => {
           { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
           { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
         ]),
+        ActivityHistoryModule,
         AasModule,
         UsersModule,
         OrganizationsModule,
@@ -151,7 +153,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         IdShortPath.create({ path: "col1" }),
         {},
-        subject,
+        { subject, userId },
       ),
     ).rejects.toThrow(exception);
 

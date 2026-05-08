@@ -434,11 +434,11 @@ describe("passportController", () => {
   });
 
   it(`/GET activities`, async () => {
-    await ctx.asserts.getActivities(createPassport, savePassport);
+    await ctx.asserts.getActivities(createPassport);
   });
 
   it(`/GET download activities`, async () => {
-    await ctx.asserts.downloadActivities(createPassport, savePassport);
+    await ctx.asserts.downloadActivities(createPassport);
   });
 
   it("/GET export passport", async () => {
