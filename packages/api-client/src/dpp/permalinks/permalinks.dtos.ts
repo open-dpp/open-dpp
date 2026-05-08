@@ -1,1 +1,7 @@
-export type { PermalinkDto, PermalinkListDto, PermalinkMetadataDto } from "@open-dpp/dto";
+export type {
+  PermalinkDto,
+  PermalinkListDto,
+  PermalinkMetadataDto,
+  PermalinkPublicDto,
+  PermalinkUpdateRequest,
+} from "@open-dpp/dto";

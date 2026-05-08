@@ -390,6 +390,10 @@
         "palette": "Color palette",
         "description": "This color will be used as a base color to generate a color palette."
       },
+      "permalinkBaseUrl": {
+        "label": "Custom permalink domain",
+        "description": "Public passport URLs and QR codes will use this base. Leave blank to use the platform default. DNS for the domain must point at your open-dpp instance."
+      },
       "updateError": "Failed to update organization.",
       "updateSuccess": "Organization settings saved successfully."
     },
@@ -668,6 +672,25 @@
     "passportNotFoundLong": "Your digital product passport could not be found. Please validate your data or contact support."
   },
   "permalink": {
-    "notfound": "Could not find permalink. Please contact your administrator."
+    "notfound": "Could not find permalink. Please contact your administrator.",
+    "settings": {
+      "title": "Permalink settings",
+      "open": "Permalink settings",
+      "loadError": "Could not load permalink settings.",
+      "saveError": "Could not save permalink settings.",
+      "saveSuccess": "Permalink settings saved.",
+      "slugConflict": "This slug is already in use by another permalink.",
+      "slugInvalid": "Slug must be 2–64 characters of lowercase letters, digits, and hyphens.",
+      "baseUrlInvalid": "Base URL must be a full origin (e.g. https://example.com), no path or query.",
+      "slug": {
+        "label": "Slug",
+        "description": "Custom path segment for the public URL. Leave blank to use the auto-generated UUID.",
+        "placeholder": "acme-widget-v1"
+      },
+      "baseUrl": {
+        "label": "Custom base URL",
+        "description": "Override the organization's default permalink domain for this passport. Leave blank to inherit."
+      }
+    }
   }
 }

@@ -32,6 +32,15 @@ const colorPalette = computed(() => {
   return createColorPalette(branding.value?.primaryColor ?? defaultColor);
 });
 
+// Empty input → `null` so the server clears the field instead of trying to
+// validate "" as a URL. Non-empty strings flow through verbatim and are
+// canonicalised server-side (lowercase host, no trailing slash).
+function trimToNull(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
 async function save() {
   try {
     let updatedSettings = false;
@@ -51,6 +60,7 @@ async function save() {
       const brandingResult = await apiClient.dpp.branding.set({
         logo: branding.value.logo,
         primaryColor: branding.value.primaryColor,
+        permalinkBaseUrl: trimToNull(branding.value.permalinkBaseUrl),
       });
 
       branding.value = brandingResult.data;
@@ -143,6 +153,22 @@ onMounted(async () => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="permalinkBaseUrl" class="block text-sm leading-6 font-medium text-gray-900">{{
+            t("organizations.form.permalinkBaseUrl.label")
+          }}</label>
+          <small class="text-gray-700">{{
+            t("organizations.form.permalinkBaseUrl.description")
+          }}</small>
+          <InputText
+            id="permalinkBaseUrl"
+            v-model="branding.permalinkBaseUrl"
+            placeholder="https://passports.example.com"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+          />
         </div>
       </form>
 

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { DigitalProductDocumentStatusDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { useRouterUtils } from "../../composables/router-utils.ts";
+import PermalinkSettingsDialog from "./PermalinkSettingsDialog.vue";
 
 const { t } = useI18n();
 
@@ -31,6 +32,7 @@ async function fetchDPD(id: string) {
 }
 
 const qrCodeDialogVisible = ref<boolean>(false);
+const permalinkSettingsDialogVisible = ref<boolean>(false);
 
 async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
   await deleteDPD(item.id, async () => {
@@ -54,6 +56,19 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
 }
 
 const status = computed(() => model.value?.lastStatusChange.currentStatus);
+
+// Secondary actions surfaced in the QR-code SplitButton's dropdown. Computed
+// so the labels react to locale changes; `command` is invoked when the menu
+// item is selected.
+const permalinkActions = computed(() => [
+  {
+    label: t("permalink.settings.open"),
+    icon: "pi pi-cog",
+    command: () => {
+      permalinkSettingsDialogVisible.value = true;
+    },
+  },
+]);
 </script>
 
 <template>
@@ -109,11 +124,12 @@ const status = computed(() => model.value?.lastStatusChange.currentStatus);
       </template>
       <template #end>
         <div class="flex items-center gap-2">
-          <Button
+          <SplitButton
             v-if="type === DigitalProductDocumentType.Passport"
             icon="pi pi-qrcode"
             severity="primary"
             :label="t('common.qrCode')"
+            :model="permalinkActions"
             @click="qrCodeDialogVisible = true"
           />
           <Tag v-if="type === DigitalProductDocumentType.Template" severity="contrast">{{
@@ -128,6 +144,9 @@ const status = computed(() => model.value?.lastStatusChange.currentStatus);
     v-model:visible="qrCodeDialogVisible"
     :passportId="model.id"
   />
+  <PermalinkSettingsDialog
+    v-if="type === DigitalProductDocumentType.Passport && model"
+    v-model:visible="permalinkSettingsDialogVisible"
+    :passportId="model.id"
+  />
 </template>
-
-<style scoped></style>

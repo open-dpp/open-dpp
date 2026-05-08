@@ -27,6 +27,7 @@ const validBundle = {
   branding: {
     logo: null,
     primaryColor: null,
+    permalinkBaseUrl: null,
   },
   presentationConfiguration: {
     id: configId,
@@ -39,6 +40,7 @@ const validBundle = {
     createdAt: isoNow,
     updatedAt: isoNow,
   },
+  publicUrl: "https://passports.example.com/p/11111111-1111-4111-8111-111111111111",
 };
 
 describe("PassportPermalinkBundleDtoSchema", () => {
@@ -61,6 +63,12 @@ describe("PassportPermalinkBundleDtoSchema", () => {
 
   it("rejects a bundle missing the passport key", () => {
     const { passport: _passport, ...rest } = validBundle;
+    const result = PassportPermalinkBundleDtoSchema.safeParse(rest);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a bundle missing the publicUrl key", () => {
+    const { publicUrl: _publicUrl, ...rest } = validBundle;
     const result = PassportPermalinkBundleDtoSchema.safeParse(rest);
     expect(result.success).toBe(false);
   });

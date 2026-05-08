@@ -1,37 +1,37 @@
 <script lang="ts" setup>
-import type { PermalinkDto } from "@open-dpp/api-client";
+import type { PermalinkPublicDto } from "@open-dpp/api-client";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { VIEW_ROOT_URL } from "../../const";
 import apiClient from "../../lib/api-client";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/16/solid";
 import { useClipboard, useWindowSize } from "@vueuse/core";
 import { useToast } from "primevue/usetoast";
 
-const model = defineModel<boolean>();
+const model = defineModel<boolean>("visible");
 const props = defineProps<{ passportId: string | undefined }>();
-const permalinks = ref<PermalinkDto[] | undefined>(undefined);
+const permalinks = ref<PermalinkPublicDto[] | undefined>(undefined);
 const { t } = useI18n();
 
+// Refetch on every open (in addition to initial mount) so edits made via
+// PermalinkSettingsDialog propagate without forcing the user to re-navigate.
+// Watching both inputs keeps the dialog in sync if either the passport
+// changes or the user closes + reopens after an edit.
 watch(
-  () => props.passportId,
-  async (newValue) => {
-    if (newValue) {
-      const result = await apiClient.dpp.permalinks.getByPassport(String(props.passportId));
-
-      permalinks.value = result.data;
-    }
+  [() => props.passportId, model],
+  async ([passportId, visible]) => {
+    if (!passportId || !visible) return;
+    const result = await apiClient.dpp.permalinks.getByPassport(String(passportId));
+    permalinks.value = result.data;
   },
   { immediate: true },
 );
 
 const toast = useToast();
 
-const link = computed(() => {
-  const first = permalinks.value?.[0];
-  if (!first) return undefined;
-  return `${VIEW_ROOT_URL}/p/${first.slug ?? first.id}`;
-});
+// `publicUrl` is the server-resolved white-label URL — falls back through
+// permalink override → org branding → OPEN_DPP_URL so the QR encodes
+// whatever the org has configured without the client duplicating that chain.
+const link = computed(() => permalinks.value?.[0]?.publicUrl);
 
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { copy } = useClipboard();

@@ -127,4 +127,73 @@ describe("Permalink", () => {
       expect((error as Error).cause).toBeInstanceOf(ZodError);
     }
   });
+
+  it("fromPlain rehydrates legacy DB documents that lack baseUrl", () => {
+    const id = randomUUID();
+    const presentationConfigurationId = randomUUID();
+    const isoNow = new Date().toISOString();
+    const restored = Permalink.fromPlain({
+      id,
+      slug: null,
+      presentationConfigurationId,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    });
+
+    expect(restored.baseUrl).toBeNull();
+  });
+
+  it("creates with null baseUrl by default", () => {
+    const permalink = Permalink.create(baseInput());
+    expect(permalink.baseUrl).toBeNull();
+  });
+
+  it("accepts a valid baseUrl", () => {
+    const permalink = Permalink.create({
+      ...baseInput(),
+      baseUrl: "https://passports.example.com",
+    });
+    expect(permalink.baseUrl).toBe("https://passports.example.com");
+  });
+
+  it("canonicalises the baseUrl on create (lowercase host, no trailing slash)", () => {
+    const permalink = Permalink.create({
+      ...baseInput(),
+      baseUrl: "https://Passports.Example.com/",
+    });
+    expect(permalink.baseUrl).toBe("https://passports.example.com");
+  });
+
+  it("rejects an invalid baseUrl with ValueError", () => {
+    expect(() =>
+      Permalink.create({ ...baseInput(), baseUrl: "https://example.com/with/path" }),
+    ).toThrow(ValueError);
+  });
+
+  it("withBaseUrl returns a new instance and bumps updatedAt", () => {
+    const permalink = Permalink.create(baseInput());
+    const originalUpdatedAt = permalink.updatedAt.getTime();
+
+    const next = permalink.withBaseUrl("https://passports.example.com");
+
+    expect(next).not.toBe(permalink);
+    expect(next.baseUrl).toBe("https://passports.example.com");
+    expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(originalUpdatedAt);
+  });
+
+  it("withBaseUrl(null) clears the override", () => {
+    const permalink = Permalink.create({
+      ...baseInput(),
+      baseUrl: "https://passports.example.com",
+    });
+
+    const next = permalink.withBaseUrl(null);
+
+    expect(next.baseUrl).toBeNull();
+  });
+
+  it("withBaseUrl throws ValueError on bad input", () => {
+    const permalink = Permalink.create(baseInput());
+    expect(() => permalink.withBaseUrl("not-a-url")).toThrow(ValueError);
+  });
 });

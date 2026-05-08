@@ -3,6 +3,7 @@ import { Document } from "mongoose";
 
 export const PermalinkDocVersion = {
   v1_0_0: "1.0.0",
+  v1_1_0: "1.1.0",
 } as const;
 
 type PermalinkDocVersionType = (typeof PermalinkDocVersion)[keyof typeof PermalinkDocVersion];
@@ -10,7 +11,7 @@ type PermalinkDocVersionType = (typeof PermalinkDocVersion)[keyof typeof Permali
 @Schema({ collection: "permalinks" })
 export class PermalinkDoc extends Document<string> {
   @Prop({
-    default: PermalinkDocVersion.v1_0_0,
+    default: PermalinkDocVersion.v1_1_0,
     enum: Object.values(PermalinkDocVersion),
     type: String,
   })
@@ -21,6 +22,12 @@ export class PermalinkDoc extends Document<string> {
 
   @Prop({ type: String, required: false, default: null })
   slug: string | null;
+
+  // Per-permalink white-label override. Falls back to Branding.permalinkBaseUrl
+  // and finally OPEN_DPP_URL when null. Stored as a canonical origin URL
+  // (validated/transformed by PermalinkBaseUrlSchema in the domain layer).
+  @Prop({ type: String, required: false, default: null })
+  baseUrl: string | null;
 
   @Prop({ type: String, required: true })
   presentationConfigurationId: string;

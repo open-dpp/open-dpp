@@ -47,6 +47,8 @@ export type {
   PermalinkDto,
   PermalinkListDto,
   PermalinkMetadataDto,
+  PermalinkPublicDto,
+  PermalinkUpdateRequest,
 } from "./dpp/permalinks/permalinks.dtos";
 export { PermalinksNamespace } from "./dpp/permalinks/permalinks.namespace";
 export type { CreateUserDto, UserDto } from "./dpp/users/user.dtos";

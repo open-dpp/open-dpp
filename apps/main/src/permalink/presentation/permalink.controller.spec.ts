@@ -278,9 +278,7 @@ describe("PermalinkController", () => {
     it("returns [] for a member of a different org and does not create rows", async () => {
       const ownerOrgId = randomUUID();
       const passport = await seedBarePassport(ownerOrgId);
-      const outsider = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
         .get(`/p?passportId=${passport.id}`)
@@ -509,7 +507,7 @@ describe("PermalinkController", () => {
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}/slug`)
+        .patch(`/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug });
@@ -533,7 +531,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id, initialSlug);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}/slug`)
+        .patch(`/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: null });
@@ -549,7 +547,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}/slug`)
+        .patch(`/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "BAD SLUG" });
@@ -564,7 +562,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}/slug`)
+        .patch(`/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "new" });
@@ -581,7 +579,7 @@ describe("PermalinkController", () => {
       const { permalink: target } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${target.id}/slug`)
+        .patch(`/p/${target.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: taken });
@@ -597,7 +595,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(ownerOrg.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}/slug`)
+        .patch(`/p/${permalink.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id)
         .send({ slug: "trespass" });
@@ -610,10 +608,45 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}/slug`)
+        .patch(`/p/${permalink.id}`)
         .send({ slug: "anon" });
 
       expect([401, 403]).toContain(response.status);
+    });
+
+    it("succeeds for an org member when the passport is in Draft", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      // Build a draft passport directly so we exercise the privacy-gate
+      // interaction with PATCH (the helper publishes by default).
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: org.id,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+
+      const slug = `slug-${randomUUID().slice(0, 8)}`;
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.slug).toEqual(slug);
     });
 
     it("returns 404 when the permalink does not exist", async () => {
@@ -622,12 +655,110 @@ describe("PermalinkController", () => {
         .betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${randomUUID()}/slug`)
+        .patch(`/p/${randomUUID()}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "ghost" });
 
       expect(response.status).toEqual(404);
+    });
+
+    it("sets a baseUrl override", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ baseUrl: "https://passports.example.com" });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.baseUrl).toEqual("https://passports.example.com");
+      expect(response.body.publicUrl).toEqual(`https://passports.example.com/p/${permalink.id}`);
+
+      const refetched = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(permalink.id);
+      expect(refetched.baseUrl).toEqual("https://passports.example.com");
+    });
+
+    it("clears a baseUrl when the body sends baseUrl: null", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink: created } = await createPassportWithPermalinkInOrg(org.id);
+      const seeded = created.withBaseUrl("https://passports.example.com");
+      await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${created.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ baseUrl: null });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.baseUrl).toBeNull();
+    });
+
+    it("rejects an invalid baseUrl with 400", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ baseUrl: "https://example.com/with/path" });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("updates slug and baseUrl together in one request", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { permalink } = await createPassportWithPermalinkInOrg(org.id);
+      const slug = `slug-${randomUUID().slice(0, 8)}`;
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/p/${permalink.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug, baseUrl: "https://passports.example.com" });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.slug).toEqual(slug);
+      expect(response.body.baseUrl).toEqual("https://passports.example.com");
+      expect(response.body.publicUrl).toEqual(`https://passports.example.com/p/${slug}`);
+    });
+  });
+
+  describe("GET /p/:id — publicUrl resolution", () => {
+    it("uses permalink.baseUrl when set (highest precedence)", async () => {
+      const fixture = await createPassportWithPermalink();
+      const seeded = fixture.permalink.withBaseUrl("https://override.example.com");
+      await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
+
+      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body.publicUrl).toEqual(`https://override.example.com/p/${fixture.id}`);
+    });
+
+    it("falls back to OPEN_DPP_URL when neither permalink nor branding has a base URL", async () => {
+      const fixture = await createPassportWithPermalink();
+
+      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+
+      expect(response.status).toEqual(200);
+      expect(typeof response.body.publicUrl).toBe("string");
+      expect(response.body.publicUrl).toMatch(new RegExp(`/p/${fixture.id}$`));
     });
   });
 

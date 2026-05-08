@@ -17,16 +17,17 @@ import {
   AssetAdministrationShellPaginationResponseDto,
   PassportPermalinkBundleDto,
   PassportPermalinkBundleDtoSchema,
-  PermalinkDtoSchema,
   PermalinkListDtoSchema,
-  PermalinkSlugUpdateRequestSchema,
+  PermalinkPublicDtoSchema,
+  PermalinkUpdateRequestSchema,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import type { PermalinkSlugUpdateRequest } from "@open-dpp/dto";
+import type { PermalinkUpdateRequest } from "@open-dpp/dto";
+import { EnvService } from "@open-dpp/env";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
@@ -60,10 +61,12 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { Pagination } from "../../pagination/pagination";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
+import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import {
   PermalinkApplicationService,
   isMemberOfPassportOrg,
+  resolvePublicUrl,
 } from "../application/services/permalink.application.service";
 
 // Note: PermalinkController used to implement IAasReadEndpoints. The added
@@ -84,6 +87,7 @@ export class PermalinkController {
     private readonly brandingRepository: BrandingRepository,
     private readonly presentationConfigurationService: PresentationConfigurationService,
     private readonly passportRepository: PassportRepository,
+    private readonly envService: EnvService,
   ) {}
 
   @OptionalAuth()
@@ -116,16 +120,21 @@ export class PermalinkController {
       this.logger.debug(
         `Lazy-backfilled permalink for backoffice passportId=${passport.id} → permalink=${created.id}`,
       );
-      return PermalinkListDtoSchema.parse([created.toPlain()]);
+      const branding = await this.loadBrandingOrDefault(passport.organizationId);
+      return PermalinkListDtoSchema.parse([this.toPublicDto(created, branding)]);
     }
     // Hide non-published passports from anonymous / cross-org callers — same
     // gate as resolveToPassport so the listing endpoint can't enumerate
     // draft permalinks. Members of the owning org keep full visibility.
-    await this.permalinkApplicationService.resolveToPassport(permalinks[0].id, {
-      organizationId,
-      memberRole,
-    });
-    return PermalinkListDtoSchema.parse(permalinks.map((p) => p.toPlain()));
+    const { passport } = await this.permalinkApplicationService.resolveToPassport(
+      permalinks[0].id,
+      {
+        organizationId,
+        memberRole,
+      },
+    );
+    const branding = await this.loadBrandingOrDefault(passport.organizationId);
+    return PermalinkListDtoSchema.parse(permalinks.map((p) => this.toPublicDto(p, branding)));
   }
 
   @OptionalAuth()
@@ -136,7 +145,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportPermalinkBundleDto> {
-    const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
+    const { permalink, passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
       memberRole,
     });
@@ -149,6 +158,7 @@ export class PermalinkController {
       passport: passport.toPlain(),
       branding: branding.toPlain(),
       presentationConfiguration: presentationConfiguration.toPlain(),
+      publicUrl: resolvePublicUrl(permalink, branding, this.envService.get("OPEN_DPP_URL")),
     });
   }
 
@@ -161,28 +171,42 @@ export class PermalinkController {
     return expanded.shells[0].security.defineAbilityForSubject(subject);
   }
 
-  // Authenticated update of a permalink's slug. Permalink IDs are UUID-only
+  // Authenticated partial update of a permalink. Permalink IDs are UUID-only
   // (slugs aren't accepted because slug→slug rename via slug lookup would
   // ambiguate the just-changed slug). Member-role on the owning passport's
-  // organization is required.
-  @Patch("/p/:id/slug")
-  async updateSlug(
+  // organization is required. Body fields are independent: omit a field to
+  // leave it untouched, send `null` to clear, send a value to set.
+  @Patch("/p/:id")
+  async update(
     @Param("id") id: string,
-    @Body(new ZodValidationPipe(PermalinkSlugUpdateRequestSchema))
-    body: PermalinkSlugUpdateRequest,
+    @Body(new ZodValidationPipe(PermalinkUpdateRequestSchema))
+    body: PermalinkUpdateRequest,
     @OrganizationId() organizationId: string,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
     if (memberRole === undefined) {
       throw new ForbiddenException();
     }
-    const { passport } = await this.permalinkApplicationService.resolveToPassport(id);
+    // Pass the caller's access context so the draft-passport gate inside
+    // `resolveToPassport` doesn't 404 a legitimate org member editing a
+    // not-yet-published permalink. Cross-org callers still hit the
+    // explicit organization check below.
+    const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
+      organizationId,
+      memberRole,
+    });
     if (passport.organizationId !== organizationId) {
       throw new ForbiddenException();
     }
     try {
-      const next = await this.permalinkApplicationService.updateSlug(id, body.slug);
-      return PermalinkDtoSchema.parse(next.toPlain());
+      // Forward both fields verbatim — the service treats undefined as "skip"
+      // and null as "clear", matching the `.nullish()` wire contract.
+      const update: { slug?: string | null; baseUrl?: string | null } = {};
+      if (body.slug !== undefined) update.slug = body.slug;
+      if (body.baseUrl !== undefined) update.baseUrl = body.baseUrl;
+      const next = await this.permalinkApplicationService.updatePermalink(id, update);
+      const branding = await this.loadBrandingOrDefault(passport.organizationId);
+      return PermalinkPublicDtoSchema.parse(this.toPublicDto(next, branding));
     } catch (error) {
       if (isDuplicateKeyError(error)) {
         throw new ConflictException("Slug is already taken");
@@ -200,6 +224,13 @@ export class PermalinkController {
     } catch {
       return Branding.getDefault();
     }
+  }
+
+  private toPublicDto(permalink: Permalink, branding: Branding | null) {
+    return {
+      ...permalink.toPlain(),
+      publicUrl: resolvePublicUrl(permalink, branding, this.envService.get("OPEN_DPP_URL")),
+    };
   }
 
   @OptionalAuth()

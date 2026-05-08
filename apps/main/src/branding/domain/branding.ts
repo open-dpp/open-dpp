@@ -5,10 +5,21 @@ export class Branding {
     public readonly organizationId: string,
     public readonly logo: string | null = null,
     public readonly primaryColor: string | null = null,
+    public readonly permalinkBaseUrl: string | null = null,
   ) {}
 
-  static create(data: { organizationId: string; logo?: string; primaryColor?: string }) {
-    return new Branding(data.organizationId, data.logo, data.primaryColor);
+  static create(data: {
+    organizationId: string;
+    logo?: string;
+    primaryColor?: string;
+    permalinkBaseUrl?: string | null;
+  }) {
+    return new Branding(
+      data.organizationId,
+      data.logo,
+      data.primaryColor,
+      data.permalinkBaseUrl ?? null,
+    );
   }
 
   static getDefault() {
@@ -21,11 +32,26 @@ export class Branding {
 
   static fromPlain(data: unknown, organizationId: string) {
     const parsed = BrandingDtoSchema.parse(data);
-    return new Branding(organizationId, parsed.logo ?? null, parsed.primaryColor ?? null);
+    return new Branding(
+      organizationId,
+      parsed.logo ?? null,
+      parsed.primaryColor ?? null,
+      parsed.permalinkBaseUrl ?? null,
+    );
   }
 
-  static fromDb(data: { organizationId: string; logo?: string; primaryColor?: string }) {
-    return new Branding(data.organizationId, data.logo, data.primaryColor);
+  static fromDb(data: {
+    organizationId: string;
+    logo?: string;
+    primaryColor?: string;
+    permalinkBaseUrl?: string | null;
+  }) {
+    return new Branding(
+      data.organizationId,
+      data.logo,
+      data.primaryColor,
+      data.permalinkBaseUrl ?? null,
+    );
   }
 
   toPlain() {
@@ -33,6 +59,7 @@ export class Branding {
       organizationId: this.organizationId,
       logo: this.logo,
       primaryColor: this.primaryColor,
+      permalinkBaseUrl: this.permalinkBaseUrl,
     };
   }
 }

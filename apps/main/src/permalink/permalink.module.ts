@@ -1,5 +1,6 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { EnvModule } from "@open-dpp/env";
 import { AasModule } from "../aas/aas.module";
 import { BrandingModule } from "../branding/branding.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
@@ -22,6 +23,7 @@ import { PermalinkController } from "./presentation/permalink.controller";
       { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
     ]),
     AasModule,
+    EnvModule,
     OrganizationsModule,
     UsersModule,
     forwardRef(() => PassportsModule),

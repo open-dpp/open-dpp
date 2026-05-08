@@ -61,6 +61,7 @@ export * from "./permalinks/permalink.dto";
 export * from "./presentation-configurations/presentation-configuration.dto";
 export * from "./shared/digital-product-document.schemas";
 export * from "./shared/pagination.dto";
+export * from "./shared/permalink-base-url.schema";
 export * from "./shared/populate.dto";
 export * from "./shared/table.dto";
 export * from "./status/status.dto";

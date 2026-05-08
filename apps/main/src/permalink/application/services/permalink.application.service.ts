@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PermalinkMetadataDtoSchema, PresentationReferenceType } from "@open-dpp/dto";
 import { z } from "zod/v4";
+import { Branding } from "../../../branding/domain/branding";
 import { DbSessionOptions } from "../../../database/query-options";
 import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
 import { Passport } from "../../../passports/domain/passport";
@@ -17,6 +18,14 @@ import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 export interface PermalinkAccessContext {
   organizationId?: string;
   memberRole?: MemberRoleType;
+}
+
+// Partial update for a permalink. `undefined` (key absent) leaves the field
+// untouched; `null` clears it; a value sets it. Mirrors the wire schema so
+// the controller can pass the parsed body straight through.
+export interface PermalinkUpdate {
+  slug?: string | null;
+  baseUrl?: string | null;
 }
 
 @Injectable()
@@ -98,13 +107,23 @@ export class PermalinkApplicationService {
     return results;
   }
 
-  async updateSlug(
+  // Partial update. Each field is independent: pass undefined / omit the key
+  // to leave it alone; pass null to clear; pass a value to set. Validation
+  // (slug shape, base URL canonicalisation) lives in the domain `with*`
+  // methods and surfaces as ValueError; duplicate-slug collisions surface as
+  // a Mongo duplicate-key error from the unique index.
+  async updatePermalink(
     permalinkId: string,
-    slug: string | null,
+    update: PermalinkUpdate,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    const permalink = await this.permalinkRepository.findOneOrFail(permalinkId);
-    const next = permalink.withSlug(slug);
+    let next = await this.permalinkRepository.findOneOrFail(permalinkId);
+    if (update.slug !== undefined) {
+      next = next.withSlug(update.slug);
+    }
+    if (update.baseUrl !== undefined) {
+      next = next.withBaseUrl(update.baseUrl);
+    }
     return await this.permalinkRepository.save(next, options);
   }
 
@@ -132,4 +151,21 @@ export function isMemberOfPassportOrg(
   if (!access) return false;
   if (access.memberRole === undefined) return false;
   return access.organizationId === passport.organizationId;
+}
+
+// Pure resolver for the public URL of a permalink. Layered fallback:
+//   1. Per-permalink override (`Permalink.baseUrl`)
+//   2. Org-level white-label default (`Branding.permalinkBaseUrl`)
+//   3. Instance-wide env (`OPEN_DPP_URL`), normalised to its origin
+// The slug takes precedence over the UUID so customers' QR codes / share
+// links stay branded once a slug is assigned. Returns the full public URL
+// the QR code should encode.
+export function resolvePublicUrl(
+  permalink: Permalink,
+  branding: Branding | null,
+  fallbackEnvUrl: string,
+): string {
+  const base = permalink.baseUrl ?? branding?.permalinkBaseUrl ?? new URL(fallbackEnvUrl).origin;
+  const slugOrId = permalink.slug ?? permalink.id;
+  return `${base}/p/${slugOrId}`;
 }

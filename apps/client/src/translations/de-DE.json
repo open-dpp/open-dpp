@@ -390,6 +390,10 @@
         "palette": "Farbpalette",
         "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
       },
+      "permalinkBaseUrl": {
+        "label": "Eigene Permalink-Domain",
+        "description": "Öffentliche Pass-URLs und QR-Codes verwenden diese Basis. Leer lassen, um die Plattform-Standard-URL zu nutzen. Die DNS für die Domain muss auf diese open-dpp-Instanz zeigen."
+      },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
@@ -668,6 +672,25 @@
     "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
   },
   "permalink": {
-    "notfound": "Permalink konnte nicht gefunden werden, bitte Administrator kontaktieren."
+    "notfound": "Permalink konnte nicht gefunden werden, bitte Administrator kontaktieren.",
+    "settings": {
+      "title": "Permalink-Einstellungen",
+      "open": "Permalink-Einstellungen",
+      "loadError": "Permalink-Einstellungen konnten nicht geladen werden.",
+      "saveError": "Permalink-Einstellungen konnten nicht gespeichert werden.",
+      "saveSuccess": "Permalink-Einstellungen gespeichert.",
+      "slugConflict": "Dieser Slug wird bereits von einem anderen Permalink verwendet.",
+      "slugInvalid": "Slug muss 2–64 Zeichen aus Kleinbuchstaben, Ziffern und Bindestrichen enthalten.",
+      "baseUrlInvalid": "Basis-URL muss ein vollständiger Origin sein (z. B. https://example.com), ohne Pfad oder Query.",
+      "slug": {
+        "label": "Slug",
+        "description": "Eigener Pfadabschnitt für die öffentliche URL. Leer lassen, um die automatisch generierte UUID zu verwenden.",
+        "placeholder": "acme-widget-v1"
+      },
+      "baseUrl": {
+        "label": "Eigene Basis-URL",
+        "description": "Überschreibt die Standard-Permalink-Domain der Organisation für diesen Pass. Leer lassen, um zu erben."
+      }
+    }
   }
 }
