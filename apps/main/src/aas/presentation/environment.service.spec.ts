@@ -61,6 +61,8 @@ import { AssetAdministrationShellModificationActivityPayload } from "../../activ
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { SubmodelBaseCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-create.payload";
 import { parseSubmodelElement } from "../domain/submodel-base/submodel-base";
+import { SubmodelRowCreateActivity } from "../../activity-history/aas/submodel-base/submodel-row-create.activity";
+import { SubmodelRowCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-row-create.payload";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -491,6 +493,38 @@ describe("environmentService", () => {
               listIdShortPath,
             ),
             data: column.toPlain(),
+            position,
+          }),
+        },
+      ],
+    );
+  });
+
+  it("should add row", async () => {
+    const { digitalProductDocumentId, listIdShortPath, environment, admin, submodel1 } =
+      await createEnvironmentWithList();
+    const position = 3;
+
+    await environmentService.addRow(
+      digitalProductDocumentId,
+      environment,
+      submodel1.id,
+      listIdShortPath,
+      admin,
+      position,
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelRowCreate,
+          payload: SubmodelRowCreateActivityPayload.create({
+            submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+            fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(
+              listIdShortPath,
+            ),
             position,
           }),
         },

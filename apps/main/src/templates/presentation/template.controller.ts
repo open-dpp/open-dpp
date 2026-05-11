@@ -456,6 +456,7 @@ export class TemplateController
     @PositionQueryParam() position: number | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.addRowToSubmodelElementList(
@@ -464,7 +465,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       position,
-      subject,
+      { subject, userId },
     );
   }
 

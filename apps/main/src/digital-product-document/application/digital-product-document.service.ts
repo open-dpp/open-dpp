@@ -89,19 +89,20 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     idShortPath: IdShortPath,
     position: number | undefined,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.addRow(
+      id,
       item.getEnvironment(),
       submodelId,
       idShortPath,
-      subject,
+      userContext,
       position,
     );
   }

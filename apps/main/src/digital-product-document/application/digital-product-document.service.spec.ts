@@ -240,7 +240,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         IdShortPath.create({ path: "sub" }),
         undefined,
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
