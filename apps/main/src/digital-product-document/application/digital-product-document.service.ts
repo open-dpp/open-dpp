@@ -154,19 +154,20 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     aasId: string,
     body: AssetAdministrationShellModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<AssetAdministrationShellResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.modifyAasShell(
+      id,
       item.getEnvironment(),
       aasId,
       body,
-      subject,
+      userContext,
     );
   }
 
@@ -199,21 +200,22 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     body: SubmodelModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.modifyColumn(
+      id,
       item.getEnvironment(),
       submodelId,
       idShortPath,
       idShortOfColumn,
       body,
-      subject,
+      userContext,
     );
   }
 

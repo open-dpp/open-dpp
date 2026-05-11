@@ -161,16 +161,26 @@ export class EnvironmentService {
   }
 
   async modifyAasShell(
+    digitalProductDocumentId: string,
     environment: Environment,
     aasId: string,
     modification: AssetAdministrationShellModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
-    const ability = aas.security.defineAbilityForSubject(subject);
-    aas.modify(modification, { subject, ability });
-    await this.aasRepository.save(aas);
-    return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ ability }));
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    aas.modify(modification, { subject: userContext.subject, ability, digitalProductDocumentId });
+    const activities = aas.pullActivities();
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.aasRepository.save(aas);
+        await this.activityRepository.createMany(activities, { session });
+      });
+      return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
   }
 
   async getSubmodels(
@@ -448,23 +458,34 @@ export class EnvironmentService {
   }
 
   async modifyColumn(
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     modifications: SubmodelElementModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const modifiedSubmodelElement = submodel.modifyColumn(
       idShortPath,
       idShortOfColumn,
       modifications,
-      { ability },
+      { ability, digitalProductDocumentId },
     );
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
+
+    const activities = submodel.pullActivities();
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany(activities, { session });
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
   }
 
   async deleteColumn(

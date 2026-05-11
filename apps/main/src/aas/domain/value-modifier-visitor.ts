@@ -33,7 +33,7 @@ import { IVisitor } from "./visitor";
 
 export interface ValueModifierVisitorOptions {
   ability: AasAbility;
-  digitalProductDocumentId?: string;
+  digitalProductDocumentId: string;
 }
 export interface ValueModifierVisitorContextType {
   data: unknown;

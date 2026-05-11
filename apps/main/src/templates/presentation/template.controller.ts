@@ -162,6 +162,7 @@ export class TemplateController
     body: AssetAdministrationShellModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return this.templateService.digitalProductDocumentService.modifyShell(
@@ -169,7 +170,7 @@ export class TemplateController
       id,
       aasId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -409,6 +410,7 @@ export class TemplateController
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
@@ -418,7 +420,7 @@ export class TemplateController
       idShortPath,
       idShortOfColumn,
       body,
-      subject,
+      { subject, userId },
     );
   }
 

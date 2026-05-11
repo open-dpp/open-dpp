@@ -38,6 +38,7 @@ import { SubmodelElementModificationActivity } from "../../../activity-history/a
 import { SubmodelBaseModificationActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { SubmodelElementValueModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-value-modification.activity";
 import { SubmodelModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-modification.activity";
+import { SubmodelColumnModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-column-modification.activity";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -136,7 +137,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.accept(new ModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelModificationActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
+        digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
           fullIdShortPath: this.getIdShortPath(),
@@ -168,7 +169,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     submodelElement.accept(new ModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelElementModificationActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
+        digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
           fullIdShortPath: submodelElement.getIdShortPath(),
@@ -189,7 +190,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     submodelElement.accept(new ValueModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelElementValueModificationActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
+        digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
           fullIdShortPath: submodelElement.getIdShortPath(),
@@ -238,6 +239,17 @@ export class Submodel implements ISubmodelBase, IPersistable {
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.modifyColumn(idShortOfColumn, data, options);
+    this.publishActivity(
+      SubmodelColumnModificationActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId,
+        payload: SubmodelBaseModificationActivityPayload.create({
+          submodelId: this.id,
+          fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
+          data,
+        }),
+        userId: options.ability.userId ?? undefined,
+      }),
+    );
     return tableExtension.getTableElement();
   }
 

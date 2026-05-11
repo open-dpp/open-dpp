@@ -185,6 +185,7 @@ export interface IAasModifyEndpoints {
     body: AssetAdministrationShellModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<AssetAdministrationShellResponseDto>;
   modifySubmodel: (
     organizationId: string,
@@ -224,6 +225,7 @@ export interface IAasModifyEndpoints {
     body: SubmodelElementModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 

@@ -319,6 +319,7 @@ export class PassportController
     body: AssetAdministrationShellModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyShell(
@@ -326,7 +327,7 @@ export class PassportController
       id,
       aasId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -502,6 +503,7 @@ export class PassportController
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
@@ -511,7 +513,7 @@ export class PassportController
       idShortPath,
       idShortOfColumn,
       body,
-      subject,
+      { subject, userId },
     );
   }
 

@@ -6,8 +6,9 @@ import {
   IActivity,
 } from "../../activity";
 import { ActivityTypes } from "../../activity-types";
-import { createActivityHeader, SubmodelActivityCreateProps } from "./submodel-base.activity";
+import { createActivityHeader } from "../shared.activity";
 import { SubmodelBaseModificationActivityPayload } from "./submodel-base-modification.payload";
+import { SubmodelActivityCreateProps } from "./submodel-base.activity";
 
 export class SubmodelModificationActivity implements IActivity {
   private constructor(

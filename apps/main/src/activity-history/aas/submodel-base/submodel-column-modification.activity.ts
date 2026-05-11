@@ -6,18 +6,22 @@ import {
   IActivity,
 } from "../../activity";
 import { ActivityTypes } from "../../activity-types";
-import { createActivityHeader } from "../shared.activity";
 import { SubmodelBaseModificationActivityPayload } from "./submodel-base-modification.payload";
-import { SubmodelActivityCreateProps } from "./submodel-base.activity";
+import { createActivityHeader } from "../shared.activity";
 
-export class SubmodelElementModificationActivity implements IActivity {
+export class SubmodelColumnModificationActivity implements IActivity {
   private constructor(
     public header: ActivityHeader,
     readonly payload: SubmodelBaseModificationActivityPayload,
   ) {}
-  static create(data: SubmodelActivityCreateProps): SubmodelElementModificationActivity {
-    return new SubmodelElementModificationActivity(
-      createActivityHeader(ActivityTypes.SubmodelElementModification, data),
+  static create(data: {
+    digitalProductDocumentId: string;
+    payload: SubmodelBaseModificationActivityPayload;
+    userId?: string;
+    createdAt?: Date;
+  }) {
+    return new SubmodelColumnModificationActivity(
+      createActivityHeader(ActivityTypes.SubmodelColumnModification, data),
       data.payload,
     );
   }
@@ -25,7 +29,7 @@ export class SubmodelElementModificationActivity implements IActivity {
   static fromPlain(data: unknown) {
     const parsed = ActivitySchema.parse(data);
 
-    return new SubmodelElementModificationActivity(
+    return new SubmodelColumnModificationActivity(
       ActivityHeader.fromPlain(parsed.header),
       SubmodelBaseModificationActivityPayload.fromPlain(parsed.payload),
     );

@@ -15,6 +15,9 @@ import { IPersistable } from "./persistable";
 import { Security } from "./security/security";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
+import { IActivity } from "../../activity-history/activity";
+import { AssetAdministrationShellModificationActivity } from "../../activity-history/aas/asset-administration-shell-modification.activity";
+import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/submodel-base/asset-administration-shell-modification.payload";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -36,6 +39,8 @@ export class AssetAdministrationShell
 {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _activities: Array<IActivity> = [];
+
   private constructor(
     public readonly id: string,
     public readonly assetInformation: AssetInformation,
@@ -72,6 +77,21 @@ export class AssetAdministrationShell
     return this._description;
   }
 
+  private publishActivity(activity: IActivity) {
+    this._activities.push(activity);
+    this.administration.increaseVersion();
+  }
+
+  get activities(): Array<IActivity> {
+    return this._activities;
+  }
+
+  pullActivities(): Array<IActivity> {
+    const events = [...this._activities];
+    this._activities = [];
+    return events;
+  }
+
   static create(data: AssetAdministrationShellCreateProps) {
     const id = data.id ?? randomUUID();
 
@@ -94,6 +114,16 @@ export class AssetAdministrationShell
 
   modify(data: unknown, options: ModifierVisitorOptions) {
     this.accept(new ModifierVisitor(options), { data });
+    this.publishActivity(
+      AssetAdministrationShellModificationActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId,
+        userId: options.ability.userId ?? undefined,
+        payload: AssetAdministrationShellModificationActivityPayload.create({
+          assetAdministrationShellId: this.id,
+          data: data,
+        }),
+      }),
+    );
   }
 
   addSubmodelReference(reference: Reference) {

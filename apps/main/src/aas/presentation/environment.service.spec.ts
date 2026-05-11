@@ -56,6 +56,7 @@ import { ActivityHistoryModule } from "../../activity-history/activity-history.m
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { ActivityTypes } from "../../activity-history/activity-types";
+import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/submodel-base/asset-administration-shell-modification.payload";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -196,6 +197,8 @@ describe("environmentService", () => {
   });
 
   it("should modify asset administration shell", async () => {
+    const digitalProductDocumentId = randomUUID();
+    const userId = randomUUID();
     const security = Security.create({});
     security.addPolicy(
       SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
@@ -233,12 +236,30 @@ describe("environmentService", () => {
         },
       ],
     };
-
+    const modification = {
+      security: securityPlainFactory.build(undefined, { transient: transientParams }),
+    };
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     await environmentService.modifyAasShell(
+      digitalProductDocumentId,
       environment,
       assetAdministrationShell.id,
-      { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
-      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+      modification,
+      { subject: admin, userId },
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.AssetAdministrationShellModification,
+          payload: AssetAdministrationShellModificationActivityPayload.create({
+            assetAdministrationShellId: assetAdministrationShell.id,
+            data: modification,
+          }),
+        },
+      ],
     );
 
     const foundAas = await aasRepository.findOneOrFail(assetAdministrationShell.id);
@@ -276,6 +297,8 @@ describe("environmentService", () => {
   });
 
   it("should modify asset administration shell fails due to insufficient permissions", async () => {
+    const digitalProductDocumentId = randomUUID();
+    const userId = randomUUID();
     const security = Security.create({});
     security.addPolicy(
       SubjectAttributes.create({ userRole: UserRole.ADMIN }),
@@ -317,10 +340,17 @@ describe("environmentService", () => {
 
     await expect(
       environmentService.modifyAasShell(
+        digitalProductDocumentId,
         environment,
         assetAdministrationShell.id,
         { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
-        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+        {
+          subject: SubjectAttributes.create({
+            userRole: UserRole.USER,
+            memberRole: MemberRole.MEMBER,
+          }),
+          userId,
+        },
       ),
     ).rejects.toThrow(
       new ForbiddenError("Administrator has no permission to add/ modify/ delete policy."),
@@ -653,6 +683,8 @@ describe("environmentService", () => {
   }
 
   it("should modify column", async () => {
+    const digitalProductDocumentId = randomUUID();
+    const userId = randomUUID();
     const { environment, admin, member, submodel1, row1, col1, listIdShortPath } =
       await createEnvironmentWithList();
     const modification = {
@@ -660,22 +692,40 @@ describe("environmentService", () => {
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
     await environmentService.modifyColumn(
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       listIdShortPath,
       col1.idShort,
       modification,
-      admin,
+      { subject: admin, userId },
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelColumnModification,
+          payload: SubmodelBaseModificationActivityPayload.create({
+            submodelId: submodel1.id,
+            fullIdShortPath: IdShortPath.create({
+              path: `${listIdShortPath}.${col1.idShort}`,
+            }),
+            data: modification,
+          }),
+        },
+      ],
     );
     //
     await expect(
       environmentService.modifyColumn(
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         listIdShortPath,
         col1.idShort,
         modification,
-        member,
+        { subject: member, userId },
       ),
     ).rejects.toThrow(
       new ForbiddenError(

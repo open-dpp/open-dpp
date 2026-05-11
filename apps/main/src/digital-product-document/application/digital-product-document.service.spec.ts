@@ -119,7 +119,7 @@ describe("DigitalProductDocumentService", () => {
         passport.id,
         randomUUID(),
         { idShort: "demo" },
-        subject,
+        { subject, userId },
       ),
     ).rejects.toThrow(exception);
 
@@ -131,7 +131,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "col1",
         { idShort: "col1" },
-        subject,
+        { subject, userId },
       ),
     ).rejects.toThrow(exception);
 
