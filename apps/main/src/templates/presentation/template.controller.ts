@@ -256,6 +256,7 @@ export class TemplateController
     @SubmodelModificationRequestBody() body: SubmodelModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodel(
@@ -263,7 +264,7 @@ export class TemplateController
       id,
       submodelId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 

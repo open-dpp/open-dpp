@@ -491,15 +491,51 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel", async () => {
+    const digitalProductDocumentId = randomUUID();
+    const userId = randomUUID();
+
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const modification = {
       idShort: submodel1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
-    await environmentService.modifySubmodel(environment, submodel1.id, modification, admin);
+    await environmentService.modifySubmodel(
+      digitalProductDocumentId,
+      environment,
+      submodel1.id,
+      modification,
+      {
+        subject: admin,
+        userId,
+      },
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelModification,
+          payload: SubmodelBaseModificationActivityPayload.create({
+            submodelId: submodel1.id,
+            fullIdShortPath: IdShortPath.create({
+              path: `${submodel1.idShort}`,
+            }),
+            data: modification,
+          }),
+        },
+      ],
+    );
+
     //
     await expect(
-      environmentService.modifySubmodel(environment, submodel1.id, modification, member),
+      environmentService.modifySubmodel(
+        digitalProductDocumentId,
+        environment,
+        submodel1.id,
+        modification,
+        { subject: member, userId },
+      ),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));
   });
 

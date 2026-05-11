@@ -7,7 +7,7 @@ import {
 } from "../../activity";
 import { ActivityTypes } from "../../activity-types";
 import { SubmodelBaseModificationActivityPayload } from "./submodel-base-modification.payload";
-import { createActivityHeader } from "./submodel.activity";
+import { createActivityHeader } from "./submodel-base.activity";
 
 export const SubmodelElementValueModificationActivityVersion = {
   v1_0_0: "1.0.0",

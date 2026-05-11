@@ -9,14 +9,14 @@ import { ActivityTypes } from "../../activity-types";
 import { createActivityHeader, SubmodelActivityCreateProps } from "./submodel-base.activity";
 import { SubmodelBaseModificationActivityPayload } from "./submodel-base-modification.payload";
 
-export class SubmodelElementModificationActivity implements IActivity {
+export class SubmodelModificationActivity implements IActivity {
   private constructor(
     public header: ActivityHeader,
     readonly payload: SubmodelBaseModificationActivityPayload,
   ) {}
-  static create(data: SubmodelActivityCreateProps): SubmodelElementModificationActivity {
-    return new SubmodelElementModificationActivity(
-      createActivityHeader(ActivityTypes.SubmodelElementModification, data),
+  static create(data: SubmodelActivityCreateProps): SubmodelModificationActivity {
+    return new SubmodelModificationActivity(
+      createActivityHeader(ActivityTypes.SubmodelModification, data),
       data.payload,
     );
   }
@@ -24,7 +24,7 @@ export class SubmodelElementModificationActivity implements IActivity {
   static fromPlain(data: unknown) {
     const parsed = ActivitySchema.parse(data);
 
-    return new SubmodelElementModificationActivity(
+    return new SubmodelModificationActivity(
       ActivityHeader.fromPlain(parsed.header),
       SubmodelBaseModificationActivityPayload.fromPlain(parsed.payload),
     );

@@ -37,6 +37,7 @@ import { IActivity } from "../../../activity-history/activity";
 import { SubmodelElementModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-modification.activity";
 import { SubmodelBaseModificationActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { SubmodelElementValueModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-value-modification.activity";
+import { SubmodelModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-modification.activity";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -133,6 +134,17 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   modify(data: unknown, options: ModifierVisitorOptions) {
     this.accept(new ModifierVisitor(options), { data });
+    this.publishActivity(
+      SubmodelModificationActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove ! as soon as digitalProductDocumentId is required
+        payload: SubmodelBaseModificationActivityPayload.create({
+          submodelId: this.id,
+          fullIdShortPath: this.getIdShortPath(),
+          data,
+        }),
+        userId: options.ability.userId ?? undefined,
+      }),
+    );
   }
 
   private publishActivity(activity: IActivity) {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const ActivityTypes = {
+  SubmodelModification: "SubmodelModification",
   SubmodelElementModification: "SubmodelElementModification",
   SubmodelElementValueModification: "SubmodelElementValueModification",
 } as const;
