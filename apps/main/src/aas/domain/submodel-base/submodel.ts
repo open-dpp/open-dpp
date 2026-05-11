@@ -140,6 +140,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
+          administration: this.administration,
           fullIdShortPath: this.getIdShortPath(),
           data,
         }),
@@ -172,6 +173,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
+          administration: this.administration,
           fullIdShortPath: submodelElement.getIdShortPath(),
           data,
         }),
@@ -193,6 +195,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
+          administration: this.administration,
           fullIdShortPath: submodelElement.getIdShortPath(),
           data,
         }),
@@ -244,6 +247,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         payload: SubmodelBaseModificationActivityPayload.create({
           submodelId: this.id,
+          administration: this.administration,
           fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
           data,
         }),

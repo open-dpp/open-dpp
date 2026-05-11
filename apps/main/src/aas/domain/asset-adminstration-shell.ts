@@ -120,6 +120,7 @@ export class AssetAdministrationShell
         userId: options.ability.userId ?? undefined,
         payload: AssetAdministrationShellModificationActivityPayload.create({
           assetAdministrationShellId: this.id,
+          administration: this.administration,
           data: data,
         }),
       }),

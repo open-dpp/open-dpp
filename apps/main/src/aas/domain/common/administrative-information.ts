@@ -26,4 +26,11 @@ export class AdministrativeInformation implements IVisitable {
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitAdministrativeInformation(this, context);
   }
+
+  toPlain(): Record<string, any> {
+    return {
+      version: this.version,
+      revision: this.revision,
+    };
+  }
 }

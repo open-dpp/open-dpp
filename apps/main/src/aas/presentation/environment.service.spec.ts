@@ -57,6 +57,7 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { ActivityTypes } from "../../activity-history/activity-types";
 import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/submodel-base/asset-administration-shell-modification.payload";
+import { AdministrativeInformation } from "../domain/common/administrative-information";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -256,6 +257,7 @@ describe("environmentService", () => {
           type: ActivityTypes.AssetAdministrationShellModification,
           payload: AssetAdministrationShellModificationActivityPayload.create({
             assetAdministrationShellId: assetAdministrationShell.id,
+            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
             data: modification,
           }),
         },
@@ -548,6 +550,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}`,
             }),
@@ -600,6 +603,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelElementModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
@@ -708,6 +712,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelColumnModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${listIdShortPath}.${col1.idShort}`,
             }),
@@ -822,6 +827,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelElementValueModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
