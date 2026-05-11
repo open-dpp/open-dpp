@@ -369,20 +369,30 @@ export class EnvironmentService {
   }
 
   async addSubmodelElement(
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     submodelElementPlain: SubmodelElementRequestDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
     idShortPath?: IdShortPath,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const submodelElement = submodel.addSubmodelElement(
       parseSubmodelElement(submodelElementPlain),
-      { idShortPath, ability },
+      { idShortPath, ability, digitalProductDocumentId },
     );
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain());
+    const activities = submodel.pullActivities();
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany(activities, { session });
+      });
+      return SubmodelElementSchema.parse(submodelElement.toPlain());
+    } finally {
+      await session.endSession();
+    }
   }
 
   async modifySubmodelElement(

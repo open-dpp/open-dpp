@@ -110,19 +110,20 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     submodelId: string,
     body: SubmodelElementRequestDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelElement(
+      id,
       item.getEnvironment(),
       submodelId,
       body,
-      subject,
+      userContext,
     );
   }
 
@@ -132,19 +133,20 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     idShortPath: IdShortPath,
     body: SubmodelElementRequestDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelElement(
+      id,
       item.getEnvironment(),
       submodelId,
       body,
-      subject,
+      userContext,
       idShortPath,
     );
   }

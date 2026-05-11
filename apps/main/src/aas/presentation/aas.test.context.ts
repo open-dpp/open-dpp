@@ -83,6 +83,7 @@ import { ActivityHistoryModule } from "../../activity-history/activity-history.m
 import { SubmodelElementModificationActivity } from "../../activity-history/aas/submodel-base/submodel-element-modification.activity";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
+import { AdministrativeInformation } from "../domain/common/administrative-information";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -688,6 +689,7 @@ export function createAasTestContext<T>(
       payload: SubmodelBaseModificationActivityPayload.create({
         submodelId: submodels[0].id,
         fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
         data: {
           idShort: "Author",
           displayName: [{ language: "en", text: "Author" }],
@@ -701,6 +703,7 @@ export function createAasTestContext<T>(
       payload: SubmodelBaseModificationActivityPayload.create({
         submodelId: submodels[0].id,
         fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
         data: {
           idShort: "Model",
           displayName: [{ language: "en", text: "Model" }],
@@ -733,6 +736,7 @@ export function createAasTestContext<T>(
       payload: SubmodelBaseModificationActivityPayload.create({
         submodelId: submodels[0].id,
         fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
         data: {
           idShort: "Author",
           displayName: [{ language: "en", text: "Author" }],
@@ -746,6 +750,7 @@ export function createAasTestContext<T>(
       payload: SubmodelBaseModificationActivityPayload.create({
         submodelId: submodels[0].id,
         fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
         data: {
           idShort: "Model",
           displayName: [{ language: "en", text: "Model" }],

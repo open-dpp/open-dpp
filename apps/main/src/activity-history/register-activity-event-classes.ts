@@ -5,6 +5,7 @@ import { SubmodelElementValueModificationActivity } from "./aas/submodel-base/su
 import { SubmodelModificationActivity } from "./aas/submodel-base/submodel-modification.activity";
 import { SubmodelColumnModificationActivity } from "./aas/submodel-base/submodel-column-modification.activity";
 import { AssetAdministrationShellModificationActivity } from "./aas/asset-administration-shell-modification.activity";
+import { SubmodelElementCreateActivity } from "./aas/submodel-base/submodel-element-create.activity";
 
 export function registerActivityEventClasses(): void {
   registerActivity(ActivityTypes.SubmodelModification, SubmodelModificationActivity);
@@ -18,4 +19,5 @@ export function registerActivityEventClasses(): void {
     ActivityTypes.AssetAdministrationShellModification,
     AssetAdministrationShellModificationActivity,
   );
+  registerActivity(ActivityTypes.SubmodelElementCreate, SubmodelElementCreateActivity);
 }

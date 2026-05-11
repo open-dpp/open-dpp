@@ -45,6 +45,7 @@ import { Response } from "express";
 import { Archiver } from "archiver";
 import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -107,10 +108,11 @@ describe("DigitalProductDocumentService", () => {
       userRole: UserRole.USER,
       memberRole: MemberRole.MEMBER,
     });
+    const userContext = { subject, userId };
     await passportRepository.save(passport);
     const exception = new BadRequestException("Archived passport/ template cannot be modified");
     await expect(
-      service.modifyShell(passport.organizationId, passport.id, randomUUID(), {}, subject),
+      service.modifyShell(passport.organizationId, passport.id, randomUUID(), {}, userContext),
     ).rejects.toThrow(exception);
 
     await expect(
@@ -119,7 +121,7 @@ describe("DigitalProductDocumentService", () => {
         passport.id,
         randomUUID(),
         { idShort: "demo" },
-        { subject, userId },
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
@@ -131,7 +133,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "col1",
         { idShort: "col1" },
-        { subject, userId },
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
@@ -142,7 +144,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         IdShortPath.create({ path: "col1" }),
         { idShort: "col1" },
-        { subject, userId },
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
@@ -153,7 +155,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         IdShortPath.create({ path: "col1" }),
         {},
-        { subject, userId },
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
@@ -256,7 +258,7 @@ describe("DigitalProductDocumentService", () => {
           supplementalSemanticIds: [],
           qualifiers: [],
         },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -274,7 +276,7 @@ describe("DigitalProductDocumentService", () => {
           supplementalSemanticIds: [],
           qualifiers: [],
         },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
   });
@@ -300,6 +302,7 @@ describe("DigitalProductDocumentService", () => {
           fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
           submodelId,
           data: { idShort, value: "20" },
+          administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
         }),
         createdAt,
       });

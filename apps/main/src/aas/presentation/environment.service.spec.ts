@@ -1,12 +1,13 @@
 import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import { expect, jest } from "@jest/globals";
 
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
 import {
   AasSubmodelElements,
   AssetKind,
   DataTypeDef,
+  KeyTypes,
   LanguageTextDto,
   MemberRoleDto,
   PermissionKind,
@@ -58,6 +59,8 @@ import { SubmodelBaseModificationActivityPayload } from "../../activity-history/
 import { ActivityTypes } from "../../activity-history/activity-types";
 import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/submodel-base/asset-administration-shell-modification.payload";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
+import { SubmodelBaseCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-create.payload";
+import { parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -360,8 +363,11 @@ describe("environmentService", () => {
   });
 
   async function createDefaultEnvironment() {
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const adminUserId = randomUUID();
+    const memberUserId = randomUUID();
     const member = SubjectAttributes.create({
       userRole: UserRole.USER,
       memberRole: MemberRole.MEMBER,
@@ -386,11 +392,12 @@ describe("environmentService", () => {
 
     const submodel1 = Submodel.create({ idShort: "section1" });
     const submodelElementCollection1 = SubmodelElementCollection.create({ idShort: "subSection1" });
-    submodel1.addSubmodelElement(submodelElementCollection1, { ability });
+    submodel1.addSubmodelElement(submodelElementCollection1, { ability, digitalProductDocumentId });
+
     const property1 = Property.create({ idShort: "property1", valueType: DataTypeDef.String });
     const property2 = Property.create({ idShort: "property2", valueType: DataTypeDef.String });
-    submodelElementCollection1.addSubmodelElement(property1, { ability });
-    submodelElementCollection1.addSubmodelElement(property2, { ability });
+    submodelElementCollection1.addSubmodelElement(property1, { ability, digitalProductDocumentId });
+    submodelElementCollection1.addSubmodelElement(property2, { ability, digitalProductDocumentId });
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
@@ -402,9 +409,10 @@ describe("environmentService", () => {
       submodels: [submodel1.id],
     });
     return {
+      digitalProductDocumentId,
       environment,
-      admin,
-      member,
+      admin: { subject: admin, userId: adminUserId },
+      member: { subject: member, userId: memberUserId },
       submodel1,
       submodelElementCollection1,
       property1,
@@ -412,19 +420,62 @@ describe("environmentService", () => {
     };
   }
 
+  it("should add submodel element", async () => {
+    const { digitalProductDocumentId, environment, admin, submodel1 } =
+      await createDefaultEnvironment();
+    const propertyPlain = {
+      idShort: "dataField1",
+      valueType: DataTypeDef.String,
+      value: "test",
+      modelType: KeyTypes.Property,
+      displayName: [],
+      description: [],
+      supplementalSemanticIds: [],
+      qualifiers: [],
+      embeddedDataSpecifications: [],
+    };
+
+    await environmentService.addSubmodelElement(
+      digitalProductDocumentId,
+      environment,
+      submodel1.id,
+      propertyPlain,
+      admin,
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelElementCreate,
+          payload: SubmodelBaseCreateActivityPayload.create({
+            submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+            fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }),
+            data: parseSubmodelElement(propertyPlain).toPlain(),
+          }),
+        },
+      ],
+    );
+  });
+
   it("should return submodels for subject", async () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const pagination = Pagination.create({ limit: 10 });
-    let submodels = await environmentService.getSubmodels(environment, pagination, admin);
+    let submodels = await environmentService.getSubmodels(environment, pagination, admin.subject);
     expect(submodels.result).toEqual([SubmodelJsonSchema.parse(submodel1.toPlain())]);
 
-    submodels = await environmentService.getSubmodels(environment, pagination, member);
+    submodels = await environmentService.getSubmodels(environment, pagination, member.subject);
     expect(submodels.result).toEqual([]);
   });
 
   it("should return submodel by id for subject", async () => {
     const { environment, admin, submodel1 } = await createDefaultEnvironment();
-    const result = await environmentService.getSubmodelById(environment, submodel1.id, admin);
+    const result = await environmentService.getSubmodelById(
+      environment,
+      submodel1.id,
+      admin.subject,
+    );
     expect(result).toEqual(SubmodelJsonSchema.parse(submodel1.toPlain()));
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -442,7 +493,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       pagination,
-      admin,
+      admin.subject,
     );
     expect(submodelElements.result).toEqual([
       SubmodelElementSchema.parse(submodelElementCollection1.toPlain()),
@@ -452,7 +503,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       pagination,
-      member,
+      member.subject,
     );
     expect(submodelElements.result).toEqual([]);
   });
@@ -467,7 +518,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       idShortPath,
-      admin,
+      admin.subject,
     );
     expect(submodelElement).toEqual(SubmodelElementSchema.parse(property1.toPlain()));
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -487,7 +538,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       idShortPath,
-      admin,
+      admin.subject,
     );
     expect(submodelElement).toEqual(property1.value);
 
@@ -505,7 +556,7 @@ describe("environmentService", () => {
     const submodelValue = await environmentService.getSubmodelValue(
       environment,
       submodel1.id,
-      admin,
+      admin.subject,
     );
     expect(submodelValue).toEqual({
       subSection1: {
@@ -523,10 +574,8 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel", async () => {
-    const digitalProductDocumentId = randomUUID();
-    const userId = randomUUID();
-
-    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const { digitalProductDocumentId, environment, admin, member, submodel1 } =
+      await createDefaultEnvironment();
     const modification = {
       idShort: submodel1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
@@ -536,10 +585,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       modification,
-      {
-        subject: admin,
-        userId,
-      },
+      admin,
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
@@ -550,7 +596,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}`,
             }),
@@ -567,16 +613,21 @@ describe("environmentService", () => {
         environment,
         submodel1.id,
         modification,
-        { subject: member, userId },
+        member,
       ),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));
   });
 
   it("should modify submodel element", async () => {
-    const digitalProductDocumentId = randomUUID();
-
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } =
-      await createDefaultEnvironment();
+    const {
+      digitalProductDocumentId,
+      environment,
+      admin,
+      member,
+      submodel1,
+      submodelElementCollection1,
+      property1,
+    } = await createDefaultEnvironment();
     const modification = {
       idShort: property1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
@@ -584,17 +635,14 @@ describe("environmentService", () => {
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
-    const userId = randomUUID();
     await environmentService.modifySubmodelElement(
       digitalProductDocumentId,
       environment,
       submodel1.id,
       modification,
       idShortPathToProperty1,
-      { subject: admin, userId },
+      admin,
     );
-    const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
-    expect(foundSubmodel.administration.version).toEqual("2");
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
@@ -603,7 +651,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelElementModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
@@ -620,7 +668,7 @@ describe("environmentService", () => {
         submodel1.id,
         modification,
         idShortPathToProperty1,
-        { subject: member, userId: randomUUID() },
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),
@@ -712,7 +760,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelColumnModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${listIdShortPath}.${col1.idShort}`,
             }),
@@ -795,8 +843,8 @@ describe("environmentService", () => {
   });
 
   it("should modify value of submodel element", async () => {
-    const digitalProductDocumentId = randomUUID();
     const {
+      digitalProductDocumentId,
       environment,
       admin,
       member,
@@ -809,14 +857,13 @@ describe("environmentService", () => {
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}`,
     });
-    const userId = randomUUID();
     await environmentService.modifyValueOfSubmodelElement(
       digitalProductDocumentId,
       environment,
       submodel1.id,
       modification,
       idShortPathToProperty1,
-      { subject: admin, userId },
+      admin,
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
@@ -827,7 +874,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelElementValueModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
@@ -845,7 +892,7 @@ describe("environmentService", () => {
         submodel1.id,
         modification,
         idShortPathToProperty1,
-        { subject: member, userId },
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),
@@ -855,16 +902,16 @@ describe("environmentService", () => {
   it("should delete policy", async () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     let foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
-    expect(foundAas.security.findPoliciesBySubject(member)).not.toEqual([]);
+    expect(foundAas.security.findPoliciesBySubject(member.subject)).not.toEqual([]);
 
     await environmentService.deletePolicyBySubjectAndObject(
       environment,
       IdShortPath.create({ path: submodel1.idShort }),
-      member,
-      admin,
+      member.subject,
+      admin.subject,
     );
     foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
-    expect(foundAas.security.findPoliciesBySubject(member)).toEqual([]);
+    expect(foundAas.security.findPoliciesBySubject(member.subject)).toEqual([]);
   });
 
   it("should delete submodel from environment", async () => {
@@ -876,7 +923,7 @@ describe("environmentService", () => {
         environment,
         submodel1.id,
         saveEnvironmentMock,
-        member,
+        member.subject,
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.`),
@@ -886,7 +933,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       saveEnvironmentMock,
-      admin,
+      admin.subject,
     );
     expect(environment.submodels).not.toContain(submodel1.id);
     //
@@ -900,14 +947,24 @@ describe("environmentService", () => {
     });
 
     await expect(
-      environmentService.deleteSubmodelElement(environment, submodel1.id, idShortPath, member),
+      environmentService.deleteSubmodelElement(
+        environment,
+        submodel1.id,
+        idShortPath,
+        member.subject,
+      ),
     ).rejects.toThrow(
       new ForbiddenError(
         `Missing permissions to delete element ${submodel1.idShort}.${idShortPath.toString()}.`,
       ),
     );
 
-    await environmentService.deleteSubmodelElement(environment, submodel1.id, idShortPath, admin);
+    await environmentService.deleteSubmodelElement(
+      environment,
+      submodel1.id,
+      idShortPath,
+      admin.subject,
+    );
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
     expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeUndefined();
     //

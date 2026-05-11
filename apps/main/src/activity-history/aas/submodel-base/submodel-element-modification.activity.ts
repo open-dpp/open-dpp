@@ -8,14 +8,16 @@ import {
 import { ActivityTypes } from "../../activity-types";
 import { createActivityHeader } from "../shared.activity";
 import { SubmodelBaseModificationActivityPayload } from "./submodel-base-modification.payload";
-import { SubmodelActivityCreateProps } from "./submodel-base.activity";
+import { SubmodelModificationActivityCreateProps } from "./submodel-base.activity";
 
 export class SubmodelElementModificationActivity implements IActivity {
   private constructor(
     public header: ActivityHeader,
     readonly payload: SubmodelBaseModificationActivityPayload,
   ) {}
-  static create(data: SubmodelActivityCreateProps): SubmodelElementModificationActivity {
+  static create(
+    data: SubmodelModificationActivityCreateProps,
+  ): SubmodelElementModificationActivity {
     return new SubmodelElementModificationActivity(
       createActivityHeader(ActivityTypes.SubmodelElementModification, data),
       data.payload,

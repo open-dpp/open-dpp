@@ -588,6 +588,7 @@ export class PassportController
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodelElement(
@@ -595,7 +596,7 @@ export class PassportController
       id,
       submodelId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -721,6 +722,7 @@ export class PassportController
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
@@ -729,7 +731,7 @@ export class PassportController
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
     );
   }
 

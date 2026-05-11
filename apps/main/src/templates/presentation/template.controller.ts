@@ -347,6 +347,7 @@ export class TemplateController
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElement(
@@ -354,7 +355,7 @@ export class TemplateController
       id,
       submodelId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -564,6 +565,7 @@ export class TemplateController
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
@@ -572,7 +574,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
     );
   }
 

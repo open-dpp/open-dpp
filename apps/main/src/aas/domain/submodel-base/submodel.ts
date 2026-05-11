@@ -39,6 +39,8 @@ import { SubmodelBaseModificationActivityPayload } from "../../../activity-histo
 import { SubmodelElementValueModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-value-modification.activity";
 import { SubmodelModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-modification.activity";
 import { SubmodelColumnModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-column-modification.activity";
+import { SubmodelElementCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-element-create.activity";
+import { SubmodelBaseCreateActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-create.payload";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -309,12 +311,32 @@ export class Submodel implements ISubmodelBase, IPersistable {
     submodelElement: ISubmodelElement,
     options: AddOptions,
   ): ISubmodelElement {
+    let addedSubmodelElement: ISubmodelElement;
+    let fullIdShortPath = this.getIdShortPath();
+
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       submodelElement.setParentIdShortPath(parent.getIdShortPath());
-      return parent.addSubmodelElement(submodelElement, options);
+      fullIdShortPath.concat(options.idShortPath);
+
+      addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
+    } else {
+      addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
     }
-    return addSubmodelElementOrFail(this, submodelElement, options);
+    this.publishActivity(
+      SubmodelElementCreateActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove ! after migration to new activity history
+        payload: SubmodelBaseCreateActivityPayload.create({
+          submodelId: this.id,
+          administration: this.administration,
+          fullIdShortPath: fullIdShortPath,
+          data: addedSubmodelElement.toPlain(),
+          position: options.position,
+        }),
+        userId: options.ability.userId ?? undefined,
+      }),
+    );
+    return addedSubmodelElement;
   }
 
   public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {

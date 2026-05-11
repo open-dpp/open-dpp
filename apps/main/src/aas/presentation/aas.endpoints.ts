@@ -146,6 +146,7 @@ export interface IAasCreateEndpoints {
     body: SubmodelElementRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   createSubmodelElementAtIdShortPath: (
     organizationId: string,
@@ -155,6 +156,7 @@ export interface IAasCreateEndpoints {
     body: SubmodelElementRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   addColumnToSubmodelElementList: (
     organizationId: string,

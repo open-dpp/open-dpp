@@ -16,6 +16,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
 import { SubmodelBaseModificationActivityPayload } from "../aas/submodel-base/submodel-base-modification.payload";
+import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -56,12 +57,14 @@ describe("activityRepository", () => {
         submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
         data: { idShort: "prop1", value: "20" },
+        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
       }),
     });
     const event2 = SubmodelElementModificationActivity.create({
       digitalProductDocumentId: passportId,
       payload: SubmodelBaseModificationActivityPayload.create({
         submodelId,
+        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
         fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
         data: { idShort: "prop1", value: "29" },
       }),
@@ -89,6 +92,7 @@ describe("activityRepository", () => {
         digitalProductDocumentId: passportId,
         payload: SubmodelBaseModificationActivityPayload.create({
           fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
+          administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
           submodelId,
           data: { idShort, value: "20" },
         }),
@@ -108,6 +112,7 @@ describe("activityRepository", () => {
         submodelId: randomUUID(),
         fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
         data: { idShort: "prop4", value: "20" },
+        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
       }),
       createdAt: date4,
     });
