@@ -450,21 +450,33 @@ export class EnvironmentService {
   }
 
   async addColumn(
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
     column: ISubmodelElement,
-    subject: SubjectAttributes,
+    userContext: UserContext,
     position?: number,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, {
       position,
       ability,
+      digitalProductDocumentId,
     });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+
+    const activities = submodel.pullActivities();
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany(activities, { session });
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+    } finally {
+      await session.endSession();
+    }
   }
 
   async modifyColumn(

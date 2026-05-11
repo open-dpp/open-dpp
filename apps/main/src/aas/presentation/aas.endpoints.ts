@@ -167,6 +167,7 @@ export interface IAasCreateEndpoints {
     position: number | undefined,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
     organizationId: string,

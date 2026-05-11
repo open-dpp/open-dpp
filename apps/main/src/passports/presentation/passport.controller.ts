@@ -480,6 +480,7 @@ export class PassportController
     @PositionQueryParam() position: number | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
@@ -489,7 +490,7 @@ export class PassportController
       idShortPath,
       body,
       position,
-      subject,
+      { subject, userId },
     );
   }
 

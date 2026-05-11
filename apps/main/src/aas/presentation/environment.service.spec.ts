@@ -459,6 +459,45 @@ describe("environmentService", () => {
     );
   });
 
+  it("should add column", async () => {
+    const { digitalProductDocumentId, listIdShortPath, environment, admin, submodel1 } =
+      await createEnvironmentWithList();
+    const column = Property.create({
+      idShort: "column1",
+      valueType: DataTypeDef.String,
+      value: "test",
+    });
+    const position = 3;
+
+    await environmentService.addColumn(
+      digitalProductDocumentId,
+      environment,
+      submodel1.id,
+      listIdShortPath,
+      column,
+      admin,
+      position,
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelColumnCreate,
+          payload: SubmodelBaseCreateActivityPayload.create({
+            submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+            fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(
+              listIdShortPath,
+            ),
+            data: column.toPlain(),
+            position,
+          }),
+        },
+      ],
+    );
+  });
+
   it("should return submodels for subject", async () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const pagination = Pagination.create({ limit: 10 });
@@ -683,12 +722,15 @@ describe("environmentService", () => {
   });
 
   async function createEnvironmentWithList() {
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const adminUserId = randomUUID();
     const member = SubjectAttributes.create({
       userRole: UserRole.USER,
       memberRole: MemberRole.MEMBER,
     });
+    const memberUserId = randomUUID();
     security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [
       Permission.create({
         permission: Permissions.Read,
@@ -722,10 +764,11 @@ describe("environmentService", () => {
       submodels: [submodel1.id],
     });
     return {
+      digitalProductDocumentId,
       security,
       environment,
-      admin,
-      member,
+      admin: { subject: admin, userId: adminUserId },
+      member: { subject: member, userId: memberUserId },
       submodel1,
       submodelElementList,
       row1,
@@ -735,10 +778,16 @@ describe("environmentService", () => {
   }
 
   it("should modify column", async () => {
-    const digitalProductDocumentId = randomUUID();
-    const userId = randomUUID();
-    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } =
-      await createEnvironmentWithList();
+    const {
+      digitalProductDocumentId,
+      environment,
+      admin,
+      member,
+      submodel1,
+      row1,
+      col1,
+      listIdShortPath,
+    } = await createEnvironmentWithList();
     const modification = {
       idShort: col1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
@@ -750,7 +799,7 @@ describe("environmentService", () => {
       listIdShortPath,
       col1.idShort,
       modification,
-      { subject: admin, userId },
+      admin,
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
@@ -760,7 +809,7 @@ describe("environmentService", () => {
           type: ActivityTypes.SubmodelColumnModification,
           payload: SubmodelBaseModificationActivityPayload.create({
             submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+            administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${listIdShortPath}.${col1.idShort}`,
             }),
@@ -778,7 +827,7 @@ describe("environmentService", () => {
         listIdShortPath,
         col1.idShort,
         modification,
-        { subject: member, userId },
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -796,7 +845,7 @@ describe("environmentService", () => {
         submodel1.id,
         listIdShortPath,
         col1.idShort,
-        member,
+        member.subject,
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -809,7 +858,7 @@ describe("environmentService", () => {
       submodel1.id,
       listIdShortPath,
       col1.idShort,
-      admin,
+      admin.subject,
     );
 
     expect(list.value[0].value.map((e: any) => e.idShort)).not.toContain(col1.idShort);
@@ -825,7 +874,7 @@ describe("environmentService", () => {
         submodel1.id,
         listIdShortPath,
         row1.idShort,
-        member,
+        member.subject,
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`),
@@ -836,7 +885,7 @@ describe("environmentService", () => {
       submodel1.id,
       listIdShortPath,
       row1.idShort,
-      admin,
+      admin.subject,
     );
 
     expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);

@@ -229,7 +229,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         undefined,
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 

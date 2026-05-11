@@ -41,6 +41,7 @@ import { SubmodelModificationActivity } from "../../../activity-history/aas/subm
 import { SubmodelColumnModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-column-modification.activity";
 import { SubmodelElementCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-element-create.activity";
 import { SubmodelBaseCreateActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-create.payload";
+import { SubmodelColumnCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-column-create.activity";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -233,6 +234,19 @@ export class Submodel implements ISubmodelBase, IPersistable {
   addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.addColumn(column, options);
+    this.publishActivity(
+      SubmodelColumnCreateActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove ! after migration to new activity history
+        payload: SubmodelBaseCreateActivityPayload.create({
+          submodelId: this.id,
+          administration: this.administration,
+          fullIdShortPath: this.getIdShortPath().concat(idShortPath),
+          data: column.toPlain(),
+          position: options.position,
+        }),
+        userId: options.ability.userId ?? undefined,
+      }),
+    );
     return tableExtension.getTableElement();
   }
 
