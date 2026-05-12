@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { PassportPermalinkBundleDtoSchema } from "./permalink.dto";
+import { PassportPermalinkBundleDtoSchema, PermalinkPublicDtoSchema } from "./permalink.dto";
 
 const isoNow = "2026-05-06T20:56:00.000Z";
 
@@ -71,5 +71,62 @@ describe("PassportPermalinkBundleDtoSchema", () => {
     const { publicUrl: _publicUrl, ...rest } = validBundle;
     const result = PassportPermalinkBundleDtoSchema.safeParse(rest);
     expect(result.success).toBe(false);
+  });
+});
+
+const permalinkId = "44444444-4444-4444-8444-444444444444";
+
+const validPublic = {
+  id: permalinkId,
+  slug: "acme-widget",
+  baseUrl: "https://override.example.com",
+  presentationConfigurationId: configId,
+  createdAt: isoNow,
+  updatedAt: isoNow,
+  publicUrl: "https://override.example.com/p/acme-widget",
+  fallbackBaseUrl: "https://branding.example.com",
+  fallbackBaseUrlSource: "branding",
+};
+
+describe("PermalinkPublicDtoSchema", () => {
+  it("parses a complete public DTO", () => {
+    const result = PermalinkPublicDtoSchema.safeParse(validPublic);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects when fallbackBaseUrl is missing", () => {
+    const { fallbackBaseUrl: _fallback, ...rest } = validPublic;
+    const result = PermalinkPublicDtoSchema.safeParse(rest);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects when fallbackBaseUrl is not a valid origin", () => {
+    const result = PermalinkPublicDtoSchema.safeParse({
+      ...validPublic,
+      fallbackBaseUrl: "https://branding.example.com/with-path",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects when fallbackBaseUrlSource is missing", () => {
+    const { fallbackBaseUrlSource: _source, ...rest } = validPublic;
+    const result = PermalinkPublicDtoSchema.safeParse(rest);
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects when fallbackBaseUrlSource is an unknown value", () => {
+    const result = PermalinkPublicDtoSchema.safeParse({
+      ...validPublic,
+      fallbackBaseUrlSource: "permalink",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts fallbackBaseUrlSource = 'instance'", () => {
+    const result = PermalinkPublicDtoSchema.safeParse({
+      ...validPublic,
+      fallbackBaseUrlSource: "instance",
+    });
+    expect(result.success).toBe(true);
   });
 });

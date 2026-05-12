@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { Branding } from "../../../branding/domain/branding";
 import { Permalink } from "../../domain/permalink";
-import { resolvePublicUrl } from "./permalink.application.service";
+import { resolveFallbackBaseUrl, resolvePublicUrl } from "./permalink.application.service";
 
 const ENV_FALLBACK = "https://instance.example.com";
 
@@ -79,5 +79,51 @@ describe("resolvePublicUrl", () => {
     const result = resolvePublicUrl(permalink, null, ENV_FALLBACK);
 
     expect(result).toEqual(`${ENV_FALLBACK}/p/acme-widget`);
+  });
+});
+
+describe("resolveFallbackBaseUrl", () => {
+  it("returns branding.permalinkBaseUrl when set, attributing source to 'branding'", () => {
+    const branding = Branding.create({
+      organizationId: "org",
+      permalinkBaseUrl: "https://branding.example.com",
+    });
+
+    const result = resolveFallbackBaseUrl(branding, ENV_FALLBACK);
+
+    expect(result).toEqual({ url: "https://branding.example.com", source: "branding" });
+  });
+
+  it("falls back to the env origin when branding has no permalinkBaseUrl", () => {
+    const branding = Branding.create({ organizationId: "org" });
+
+    const result = resolveFallbackBaseUrl(branding, ENV_FALLBACK);
+
+    expect(result).toEqual({ url: ENV_FALLBACK, source: "instance" });
+  });
+
+  it("falls back to the env origin when branding itself is null", () => {
+    const result = resolveFallbackBaseUrl(null, ENV_FALLBACK);
+
+    expect(result).toEqual({ url: ENV_FALLBACK, source: "instance" });
+  });
+
+  it("normalises the env URL to its origin (drops trailing slash and path)", () => {
+    const result = resolveFallbackBaseUrl(null, "https://instance.example.com/");
+
+    expect(result).toEqual({ url: "https://instance.example.com", source: "instance" });
+  });
+
+  it("ignores the per-permalink override (returns the post-override link in the chain)", () => {
+    // Sanity check: the fallback should reflect what would apply *if*
+    // `permalink.baseUrl` were null, regardless of whether it is set today.
+    const branding = Branding.create({
+      organizationId: "org",
+      permalinkBaseUrl: "https://branding.example.com",
+    });
+
+    const result = resolveFallbackBaseUrl(branding, ENV_FALLBACK);
+
+    expect(result.url).toEqual("https://branding.example.com");
   });
 });

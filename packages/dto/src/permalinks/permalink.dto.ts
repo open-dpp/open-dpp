@@ -51,11 +51,23 @@ export const PermalinkDtoSchema = z
 
 export type PermalinkDto = z.infer<typeof PermalinkDtoSchema>;
 
+// Source of the resolved `fallbackBaseUrl` — exposes which link of the chain
+// the client should attribute the base URL to when rendering a preview.
+export const PermalinkFallbackBaseUrlSourceSchema = z.enum(["branding", "instance"]);
+export type PermalinkFallbackBaseUrlSource = z.infer<typeof PermalinkFallbackBaseUrlSourceSchema>;
+
 // Wire shape for permalink list responses. Adds the server-resolved public URL
 // (`permalink.baseUrl ?? branding.permalinkBaseUrl ?? OPEN_DPP_URL`) so clients
 // don't reimplement the fallback chain when rendering QR codes / share links.
+// `fallbackBaseUrl` exposes the URL that would resolve if `permalink.baseUrl`
+// were cleared — the post-override link of the chain — so the settings dialog
+// can preview a base-URL clear without losing the fallback chain. Paired with
+// `fallbackBaseUrlSource` so the client can label the source (org branding vs
+// instance default) without re-deriving the chain.
 export const PermalinkPublicDtoSchema = PermalinkDtoSchema.extend({
   publicUrl: z.string().url(),
+  fallbackBaseUrl: PermalinkBaseUrlSchema,
+  fallbackBaseUrlSource: PermalinkFallbackBaseUrlSourceSchema,
 }).meta({ id: "PermalinkPublic" });
 
 export type PermalinkPublicDto = z.infer<typeof PermalinkPublicDtoSchema>;

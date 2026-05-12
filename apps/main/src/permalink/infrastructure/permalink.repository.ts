@@ -96,7 +96,11 @@ export class PermalinkRepository {
         {
           $match: {
             "config.referenceType": PresentationReferenceType.Passport,
-            "config.referenceId": passportId,
+            // `$eq` mirrors the slug lookup above: if a caller bypasses the
+            // controller-layer Zod pipe and hands us a non-string passportId
+            // (e.g. `{$gt: ""}` from a `qs`-parsed query string), it is
+            // compared as a literal value rather than treated as an operator.
+            "config.referenceId": { $eq: passportId },
           },
         },
         { $sort: { createdAt: 1, _id: 1 } },

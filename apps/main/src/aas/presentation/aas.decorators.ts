@@ -269,6 +269,15 @@ export const PositionQueryParamSchema = z.coerce
 export const PositionQueryParam = () =>
   Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
+export const PassportIdQueryParamSchema = z.uuid().meta({
+  description: "The passport id (UUID)",
+  example: "958b741c-c2ef-4366-a134-fafd30210ed4",
+  param: { in: "query", name: "passportId" },
+});
+
+export const PassportIdQueryParam = () =>
+  Query("passportId", new ZodValidationPipe(PassportIdQueryParamSchema));
+
 export const CursorQueryParam = () =>
   Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
 

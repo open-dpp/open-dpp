@@ -391,8 +391,8 @@
         "description": "This color will be used as a base color to generate a color palette."
       },
       "permalinkBaseUrl": {
-        "label": "Custom permalink domain",
-        "description": "Public passport URLs and QR codes will use this base. Leave blank to use the platform default. DNS for the domain must point at your open-dpp instance."
+        "label": "Base URL for passports",
+        "description": "Overrides the default base URL for passports of this instance."
       },
       "updateError": "Failed to update organization.",
       "updateSuccess": "Organization settings saved successfully."
@@ -683,13 +683,22 @@
       "slugInvalid": "Slug must be 2–64 characters of lowercase letters, digits, and hyphens.",
       "baseUrlInvalid": "Base URL must be a full origin (e.g. https://example.com), no path or query.",
       "slug": {
-        "label": "Slug",
-        "description": "Custom path segment for the public URL. Leave blank to use the auto-generated UUID.",
-        "placeholder": "acme-widget-v1"
+        "label": "Short name",
+        "placeholder": "Last path segment of the URL of this passport."
       },
       "baseUrl": {
         "label": "Custom base URL",
         "description": "Override the organization's default permalink domain for this passport. Leave blank to inherit."
+      },
+      "preview": {
+        "label": "Preview",
+        "invalid": "Preview unavailable until inputs are valid.",
+        "usingAutoId": "Using auto-generated ID.",
+        "source": {
+          "permalink": "Base URL set for this passport.",
+          "branding": "Base URL inherited from the organization.",
+          "instance": "Base URL inherited from the instance default."
+        }
       }
     }
   }

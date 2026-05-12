@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
+import { getModelToken } from "@nestjs/mongoose";
 import { PresentationReferenceType } from "@open-dpp/dto";
+import type { Model } from "mongoose";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -175,6 +177,34 @@ describe("PermalinkController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([]);
+  });
+
+  // Regression coverage for CodeQL alert #7 (js/sql-injection). Express's
+  // default `qs` query parser turns `passportId[$op]=...` into an object, so
+  // the Zod pipe on the controller param has to reject the request before
+  // any DB call. The repository helper hardens the same payload at the sink
+  // (see lib/repositories.spec.ts).
+  describe("GET /p?passportId=... — NoSQL injection hardening", () => {
+    it.each([
+      ["passportId[$gt]=", "$gt operator object"],
+      ["passportId[$ne]=", "$ne operator object"],
+      ["passportId[$regex]=.*", "$regex operator object"],
+      ["passportId=not-a-uuid", "non-UUID string"],
+      ["", "missing passportId"],
+    ])("rejects %s with 400 (%s)", async (queryString) => {
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/p${queryString.length > 0 ? `?${queryString}` : ""}`,
+      );
+      expect(response.status).toEqual(400);
+    });
+
+    it("returns 200 with empty list for a valid but unknown UUID", async () => {
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/p?passportId=${randomUUID()}`,
+      );
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual([]);
+    });
   });
 
   describe("GET /p?passportId=... — lazy backfill for pre-refactor passports", () => {
@@ -678,6 +708,8 @@ describe("PermalinkController", () => {
       expect(response.status).toEqual(200);
       expect(response.body.baseUrl).toEqual("https://passports.example.com");
       expect(response.body.publicUrl).toEqual(`https://passports.example.com/p/${permalink.id}`);
+      expect(typeof response.body.fallbackBaseUrl).toBe("string");
+      expect(["branding", "instance"]).toContain(response.body.fallbackBaseUrlSource);
 
       const refetched = await ctx
         .getModuleRef()
@@ -759,6 +791,66 @@ describe("PermalinkController", () => {
       expect(response.status).toEqual(200);
       expect(typeof response.body.publicUrl).toBe("string");
       expect(response.body.publicUrl).toMatch(new RegExp(`/p/${fixture.id}$`));
+    });
+  });
+
+  describe("GET /p — fallbackBaseUrl resolution", () => {
+    // Seed branding via the Mongoose model directly. The repository's `save`
+    // path requires a real org row (validated as a BSON ObjectId), but these
+    // anonymous GET tests use `createPassportWithPermalink` which mints
+    // synthetic UUID org ids. The controller resolves branding via
+    // `findOneByOrganizationId`, which only short-circuits to the
+    // "no-branding" path when the doc is missing — direct-seeded docs are
+    // returned as-is, exercising the same code path the real flow uses.
+    async function seedBranding(organizationId: string, permalinkBaseUrl: string) {
+      const model = ctx.getModuleRef().get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
+      await model.create({ organizationId, permalinkBaseUrl });
+    }
+
+    it("attributes to 'branding' and returns the branding value when the org has a permalinkBaseUrl", async () => {
+      const fixture = await createPassportWithPermalink();
+      await seedBranding(fixture.passport.organizationId, "https://branding.example.com");
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p`)
+        .query({ passportId: fixture.passport.id });
+
+      expect(response.status).toEqual(200);
+      expect(response.body[0].fallbackBaseUrl).toEqual("https://branding.example.com");
+      expect(response.body[0].fallbackBaseUrlSource).toEqual("branding");
+    });
+
+    it("attributes to 'instance' and returns the OPEN_DPP_URL origin when branding has no permalinkBaseUrl", async () => {
+      const fixture = await createPassportWithPermalink();
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p`)
+        .query({ passportId: fixture.passport.id });
+
+      expect(response.status).toEqual(200);
+      expect(response.body[0].fallbackBaseUrlSource).toEqual("instance");
+      expect(response.body[0].fallbackBaseUrl).toEqual(
+        new URL(process.env.OPEN_DPP_URL as string).origin,
+      );
+    });
+
+    it("returns the post-override fallback even when permalink.baseUrl is set", async () => {
+      // Critical: fallbackBaseUrl must reflect what would resolve *if* the
+      // per-permalink override were cleared, not the override itself.
+      const fixture = await createPassportWithPermalink();
+      await seedBranding(fixture.passport.organizationId, "https://branding.example.com");
+      const seeded = fixture.permalink.withBaseUrl("https://override.example.com");
+      await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p`)
+        .query({ passportId: fixture.passport.id });
+
+      expect(response.status).toEqual(200);
+      expect(response.body[0].baseUrl).toEqual("https://override.example.com");
+      expect(response.body[0].publicUrl).toEqual(`https://override.example.com/p/${fixture.id}`);
+      expect(response.body[0].fallbackBaseUrl).toEqual("https://branding.example.com");
+      expect(response.body[0].fallbackBaseUrlSource).toEqual("branding");
     });
   });
 

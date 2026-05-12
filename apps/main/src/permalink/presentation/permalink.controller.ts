@@ -1,7 +1,6 @@
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
-  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -11,7 +10,6 @@ import {
   Logger,
   Param,
   Patch,
-  Query,
 } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -46,6 +44,7 @@ import {
   IdOrSlugParam,
   IdShortPathParam,
   LimitQueryParam,
+  PassportIdQueryParam,
   SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
@@ -66,6 +65,7 @@ import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import {
   PermalinkApplicationService,
   isMemberOfPassportOrg,
+  resolveFallbackBaseUrl,
   resolvePublicUrl,
 } from "../application/services/permalink.application.service";
 
@@ -93,13 +93,10 @@ export class PermalinkController {
   @OptionalAuth()
   @Get("/p")
   async getByPassport(
-    @Query("passportId") passportId: string,
+    @PassportIdQueryParam() passportId: string,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
-    if (!passportId || passportId.length === 0) {
-      throw new BadRequestException("passportId query parameter is required");
-    }
     const permalinks = await this.permalinkRepository.findAllByPassportId(passportId);
     if (permalinks.length === 0) {
       // Lazy-backfill for pre-refactor passports that lack a config / permalink
@@ -227,9 +224,13 @@ export class PermalinkController {
   }
 
   private toPublicDto(permalink: Permalink, branding: Branding | null) {
+    const envUrl = this.envService.get("OPEN_DPP_URL");
+    const fallback = resolveFallbackBaseUrl(branding, envUrl);
     return {
       ...permalink.toPlain(),
-      publicUrl: resolvePublicUrl(permalink, branding, this.envService.get("OPEN_DPP_URL")),
+      publicUrl: resolvePublicUrl(permalink, branding, envUrl),
+      fallbackBaseUrl: fallback.url,
+      fallbackBaseUrlSource: fallback.source,
     };
   }
 

@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { PermalinkMetadataDtoSchema, PresentationReferenceType } from "@open-dpp/dto";
+import {
+  PermalinkFallbackBaseUrlSource,
+  PermalinkMetadataDtoSchema,
+  PresentationReferenceType,
+} from "@open-dpp/dto";
 import { z } from "zod/v4";
 import { Branding } from "../../../branding/domain/branding";
 import { DbSessionOptions } from "../../../database/query-options";
@@ -153,6 +157,22 @@ export function isMemberOfPassportOrg(
   return access.organizationId === passport.organizationId;
 }
 
+// Resolves the link in the base-URL fallback chain that applies *after* the
+// per-permalink override is removed: org-level white-label first, then the
+// instance env. Exposed alongside `resolvePublicUrl` so the controller can
+// ship the fallback to clients (settings dialog preview, QR re-rendering)
+// without re-deriving the chain. Returns the URL plus a discriminator so
+// the client can label the source.
+export function resolveFallbackBaseUrl(
+  branding: Branding | null,
+  fallbackEnvUrl: string,
+): { url: string; source: PermalinkFallbackBaseUrlSource } {
+  if (branding?.permalinkBaseUrl) {
+    return { url: branding.permalinkBaseUrl, source: "branding" };
+  }
+  return { url: new URL(fallbackEnvUrl).origin, source: "instance" };
+}
+
 // Pure resolver for the public URL of a permalink. Layered fallback:
 //   1. Per-permalink override (`Permalink.baseUrl`)
 //   2. Org-level white-label default (`Branding.permalinkBaseUrl`)
@@ -165,7 +185,7 @@ export function resolvePublicUrl(
   branding: Branding | null,
   fallbackEnvUrl: string,
 ): string {
-  const base = permalink.baseUrl ?? branding?.permalinkBaseUrl ?? new URL(fallbackEnvUrl).origin;
+  const base = permalink.baseUrl ?? resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
   const slugOrId = permalink.slug ?? permalink.id;
   return `${base}/p/${slugOrId}`;
 }

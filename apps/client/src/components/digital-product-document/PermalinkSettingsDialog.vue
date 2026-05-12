@@ -3,6 +3,7 @@ import type { PermalinkPublicDto } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client";
+import { usePermalinkPreview } from "../../composables/permalink-preview";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 
@@ -21,10 +22,8 @@ const saving = ref<boolean>(false);
 const slugError = ref<string | null>(null);
 const baseUrlError = ref<string | null>(null);
 
-// Reload when the dialog opens or the target passport changes. Loading on
-// open (rather than mount) keeps the dialog cheap when it isn't shown and
-// makes sure we always show the freshest server state when the user opens
-// it again after editing.
+const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
 watch(
   [() => props.passportId, model],
   async ([passportId, visible]) => {
@@ -44,11 +43,6 @@ watch(
   { immediate: true },
 );
 
-// Empty string → null so the server clears the field rather than failing
-// validation on a zero-length URL or slug. Untouched fields would also
-// arrive as `""` (we initialise from server state); when the user hasn't
-// changed them, sending null vs unchanged is equivalent because the
-// canonicalised value is identical.
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed.length === 0 ? null : trimmed;
@@ -73,8 +67,6 @@ async function save() {
     if (status === 409) {
       slugError.value = t("permalink.settings.slugConflict");
     } else if (status === 400) {
-      // Server-side validation surface; flag both fields so the user can
-      // fix whichever is wrong without us trying to guess from the message.
       slugError.value = t("permalink.settings.slugInvalid");
       baseUrlError.value = t("permalink.settings.baseUrlInvalid");
     } else {
@@ -104,7 +96,6 @@ function cancel() {
           <label for="permalink-slug" class="text-sm leading-6 font-medium text-gray-900">{{
             t("permalink.settings.slug.label")
           }}</label>
-          <small class="text-gray-700">{{ t("permalink.settings.slug.description") }}</small>
           <InputText
             id="permalink-slug"
             v-model="slug"
@@ -130,6 +121,19 @@ function cancel() {
             :invalid="!!baseUrlError"
           />
           <small v-if="baseUrlError" class="text-red-500">{{ baseUrlError }}</small>
+        </div>
+        <div class="rounded-md border border-gray-200 bg-gray-50 p-3">
+          <div class="text-xs font-medium tracking-wider text-gray-500 uppercase">
+            {{ t("permalink.settings.preview.label") }}
+          </div>
+          <code v-if="preview.previewValid.value" class="mt-2 block font-mono text-sm break-all">
+            <span class="text-gray-900">{{ preview.effectiveBase.value }}</span>
+            <span class="text-gray-400">/p/</span>
+            <span class="text-primary-600 font-medium">{{ preview.effectiveSlug.value }}</span>
+          </code>
+          <p v-else class="mt-2 text-sm text-gray-500 italic">
+            {{ t("permalink.settings.preview.invalid") }}
+          </p>
         </div>
       </template>
     </div>
