@@ -77,12 +77,6 @@ export class PermalinkRepository {
   }
 
   async findAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<Permalink[]> {
-    // Join through presentation_configurations to avoid pulling the
-    // PresentationConfigurationRepository as a dependency (would create a cycle:
-    // PermalinkModule imports PresentationConfigurationsModule; reverse would
-    // force PresentationConfigurationsModule to know about PermalinkModule).
-    // Sorted by createdAt so the first element is the canonical default
-    // permalink for the passport (mirrors PresentationConfigurationRepository.findByReference).
     const results = await this.permalinkDoc
       .aggregate([
         {
@@ -96,10 +90,6 @@ export class PermalinkRepository {
         {
           $match: {
             "config.referenceType": PresentationReferenceType.Passport,
-            // `$eq` mirrors the slug lookup above: if a caller bypasses the
-            // controller-layer Zod pipe and hands us a non-string passportId
-            // (e.g. `{$gt: ""}` from a `qs`-parsed query string), it is
-            // compared as a literal value rather than treated as an operator.
             "config.referenceId": { $eq: passportId },
           },
         },
@@ -120,10 +110,6 @@ export class PermalinkRepository {
       .session(options?.session ?? null);
   }
 
-  // Cascade-delete all permalinks for a passport — used during passport
-  // deletion so multi-config passports do not leave orphan permalinks.
-  // Resolves config ids first (within the same session) so the actual delete
-  // is a simple multi-id match.
   async deleteAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<number> {
     const configDocs = await this.presentationConfigurationDoc
       .find({

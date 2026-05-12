@@ -59,9 +59,6 @@ describe("PermalinkController", () => {
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
     PermalinkRepository,
-    // Use OWNER so the test context provisions an org for member-role tests
-    // (PATCH /p/:id/slug); anonymous-readable GET tests still work because
-    // their endpoints carry @OptionalAuth.
     SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
@@ -77,8 +74,6 @@ describe("PermalinkController", () => {
     });
 
     const organizationId = randomUUID();
-    // Default to Published so the existing GET tests resolve via the public
-    // anonymous path. Tests for draft visibility opt in with published: false.
     const lastStatusChange =
       options.published === false
         ? DigitalProductDocumentStatusChange.create({})
@@ -179,11 +174,6 @@ describe("PermalinkController", () => {
     expect(response.body).toEqual([]);
   });
 
-  // Regression coverage for CodeQL alert #7 (js/sql-injection). Express's
-  // default `qs` query parser turns `passportId[$op]=...` into an object, so
-  // the Zod pipe on the controller param has to reject the request before
-  // any DB call. The repository helper hardens the same payload at the sink
-  // (see lib/repositories.spec.ts).
   describe("GET /p?passportId=... — NoSQL injection hardening", () => {
     it.each([
       ["passportId[$gt]=", "$gt operator object"],
@@ -499,9 +489,6 @@ describe("PermalinkController", () => {
 
   describe("PATCH /p/:id/slug", () => {
     async function createPassportWithPermalinkInOrg(orgId: string, slug: string | null = null) {
-      // PATCH tests publish the passport so the draft 404 gate doesn't shadow
-      // the org-ownership check we want to exercise. Owner-of-draft is
-      // exercised separately in the "draft passports" describe block.
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: orgId,
@@ -648,8 +635,6 @@ describe("PermalinkController", () => {
       const { org, userCookie } = await ctx
         .globals()
         .betterAuthHelper.createOrganizationAndUserWithCookie();
-      // Build a draft passport directly so we exercise the privacy-gate
-      // interaction with PATCH (the helper publishes by default).
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: org.id,
@@ -795,13 +780,6 @@ describe("PermalinkController", () => {
   });
 
   describe("GET /p — fallbackBaseUrl resolution", () => {
-    // Seed branding via the Mongoose model directly. The repository's `save`
-    // path requires a real org row (validated as a BSON ObjectId), but these
-    // anonymous GET tests use `createPassportWithPermalink` which mints
-    // synthetic UUID org ids. The controller resolves branding via
-    // `findOneByOrganizationId`, which only short-circuits to the
-    // "no-branding" path when the doc is missing — direct-seeded docs are
-    // returned as-is, exercising the same code path the real flow uses.
     async function seedBranding(organizationId: string, permalinkBaseUrl: string) {
       const model = ctx.getModuleRef().get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
       await model.create({ organizationId, permalinkBaseUrl });
@@ -835,8 +813,6 @@ describe("PermalinkController", () => {
     });
 
     it("returns the post-override fallback even when permalink.baseUrl is set", async () => {
-      // Critical: fallbackBaseUrl must reflect what would resolve *if* the
-      // per-permalink override were cleared, not the override itself.
       const fixture = await createPassportWithPermalink();
       await seedBranding(fixture.passport.organizationId, "https://branding.example.com");
       const seeded = fixture.permalink.withBaseUrl("https://override.example.com");
@@ -874,8 +850,6 @@ describe("PermalinkController", () => {
     expect(response.body.presentationConfiguration.referenceType).toEqual("passport");
     expect(response.body.presentationConfiguration.referenceId).toEqual(fixture.passport.id);
 
-    // Anonymous read must NOT materialize a new row. The fixture already wrote one;
-    // the count must remain unchanged.
     const countAfter = await presentationConfigurationRepository.countByReference(referenceFilter);
     expect(countAfter).toEqual(1);
   });

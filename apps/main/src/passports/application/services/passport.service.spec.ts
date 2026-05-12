@@ -133,7 +133,6 @@ describe("passportService", () => {
       SubjectAttributes.create({ userRole: UserRole.ADMIN }),
     );
 
-    // getEffectiveForPassport seeds a default row on first access.
     expect(
       await presentationConfigurationRepository.findByReference({
         referenceType: PresentationReferenceType.Passport,
@@ -261,7 +260,6 @@ describe("passportService", () => {
     await service.getExpandedProductPassport(passport.id);
     await service.getExpandedProductPassport(passport.id);
 
-    // getEffectiveForPassport seeds a row on first access; subsequent calls reuse it.
     expect(
       await presentationConfigurationRepository.findByReference({
         referenceType: PresentationReferenceType.Passport,

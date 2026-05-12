@@ -20,9 +20,6 @@ const fullPath = computed(() =>
   parentPath ? `${parentPath}.${element.idShort}` : element.idShort,
 );
 
-// Suppress the external `<dt>` label when the resolved presentation component
-// renders its own caption (e.g. the BigNumber card). This keeps the label
-// visible exactly once instead of duplicating it next to the card.
 const { selfCaptioning } = usePresentationDispatch(
   () => element,
   () => fullPath.value,

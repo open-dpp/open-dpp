@@ -209,10 +209,6 @@ export class PresentationConfigurationService {
     return created;
   }
 
-  // Idempotent: returns the existing default config for the passport, or
-  // creates one if none exists. Used by the scratch-passport creation path
-  // (no template to snapshot from) and by the legacy UPI redirect to
-  // backfill missing rows on the fly.
   async ensureDefaultForPassport(
     passport: Passport,
     options?: DbSessionOptions,

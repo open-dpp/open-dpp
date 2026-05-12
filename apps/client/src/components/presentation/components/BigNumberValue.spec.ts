@@ -60,8 +60,6 @@ describe("BigNumberValue", () => {
     });
 
     it("preserves every fractional digit beyond Number's precision limit", () => {
-      // Number("1.23456789012345678") collapses to 1.2345678901234568 — this
-      // test fails under the old Number(raw) coercion.
       expect(renderValue("1.23456789012345678", "en-US")).toBe("1.23456789012345678");
     });
 

@@ -31,10 +31,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
   }): Permalink {
     let parsed;
     try {
-      // Capture the parsed (transformed) value so canonicalisation in
-      // `PermalinkBaseUrlSchema.transform` (lowercase host, drop trailing
-      // slash) actually reaches the constructor — earlier we discarded the
-      // result and passed the raw input through, defeating the transform.
       parsed = PermalinkInvariantsSchema.parse({
         presentationConfigurationId: data.presentationConfigurationId,
         slug: data.slug ?? null,

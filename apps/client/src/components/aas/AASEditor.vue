@@ -124,7 +124,6 @@ const {
 
 const presentationConfigStore = usePresentationConfigurationStore();
 
-// Sync URL ?config= → store activeConfigId
 watch(
   () => route.query.config,
   (next) => {
@@ -133,7 +132,6 @@ watch(
   { immediate: true },
 );
 
-// Sync store activeConfigId → URL ?config=
 watch(
   () => presentationConfigStore.activeConfigId,
   (next) => {
@@ -177,7 +175,6 @@ const isLeafEditor = computed(() => {
 
 const showPresentationTab = computed(() => {
   if (!isLeafEditor.value) return false;
-  // CREATE mode hides the Presentation tab (no idShortPathIncludingSubmodel yet).
   return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
 });
 

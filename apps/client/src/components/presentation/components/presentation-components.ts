@@ -9,22 +9,6 @@ import {
   sampleWhen,
 } from "./presentation-element-helpers";
 
-/**
- * Adding a new presentation component:
- *   1. Add the name to PresentationComponentName in
- *      packages/dto/src/presentation-configurations/presentation-configuration.dto.ts
- *   2. Create the .vue component in this folder.
- *   3. Add an entry to PRESENTATION_COMPONENTS below. Use the typed guards
- *      (isProperty, ...) and the sampleWhen() combinator from
- *      presentation-element-helpers.ts to avoid casts and boilerplate.
- *   4. (Optional) Add label translations under aasEditor.presentationTab.<name>
- *      in apps/client/src/locales/{en,de}.json. If omitted, the i18n key
- *      defaults to aasEditor.presentationTab.<camelCaseName>.
- *
- * The Record<PresentationComponentNameType, ...> type forces parity with the
- * DTO enum: TS errors here if you add a name to the enum without registering it.
- */
-
 export interface PresentationComponentProps {
   element: SubmodelElementResponseDto;
 }

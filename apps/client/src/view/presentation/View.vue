@@ -53,9 +53,6 @@ async function loadPassport(id: string): Promise<boolean> {
   }
   passportStore.shells = aas.data.result || [];
 
-  // Page-view tracking is best-effort. The analytics endpoint resolves the
-  // permalink without auth context, so it 404s for unpublished passports —
-  // which must not break the page render for an org-member previewing a draft.
   try {
     await analyticsStore.addPageView();
   } catch (error) {

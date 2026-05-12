@@ -46,8 +46,6 @@ describe("PermalinkRepository", () => {
     repository = module.get(PermalinkRepository);
     presentationConfigurationRepository = module.get(PresentationConfigurationRepository);
     connection = module.get<Connection>(getConnectionToken());
-    // Mongoose builds indexes lazily by default; wait so the unique-index
-    // tests observe enforcement on the very first duplicate insert.
     await module.get(getModelToken(PermalinkDoc.name)).syncIndexes();
   });
 

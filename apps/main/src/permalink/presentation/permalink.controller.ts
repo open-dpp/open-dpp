@@ -69,13 +69,6 @@ import {
   resolvePublicUrl,
 } from "../application/services/permalink.application.service";
 
-// Note: PermalinkController used to implement IAasReadEndpoints. The added
-// access-context parameter (organizationId) for the draft-passport gate
-// diverges the signatures from the canonical AAS read shape, so the marker
-// interface no longer fits. The controller still exposes the same public
-// surface; the implements clause is dropped to avoid forcing organizationId
-// into IAasReadEndpoints (which would propagate into every other AAS
-// controller).
 @Controller()
 export class PermalinkController {
   private readonly logger = new Logger(PermalinkController.name);
@@ -99,11 +92,6 @@ export class PermalinkController {
   ) {
     const permalinks = await this.permalinkRepository.findAllByPassportId(passportId);
     if (permalinks.length === 0) {
-      // Lazy-backfill for pre-refactor passports that lack a config / permalink
-      // row. Mirrors the legacy UPI redirect path so an admin can print a QR
-      // for an old passport from the backoffice without manual migration.
-      // Gate on owning-org membership so anonymous / cross-org traffic stays
-      // on the read-only path (no DoS / no information leak).
       const passport = await this.passportRepository.findOne(passportId);
       if (!passport) {
         return PermalinkListDtoSchema.parse([]);
@@ -120,9 +108,6 @@ export class PermalinkController {
       const branding = await this.loadBrandingOrDefault(passport.organizationId);
       return PermalinkListDtoSchema.parse([this.toPublicDto(created, branding)]);
     }
-    // Hide non-published passports from anonymous / cross-org callers — same
-    // gate as resolveToPassport so the listing endpoint can't enumerate
-    // draft permalinks. Members of the owning org keep full visibility.
     const { passport } = await this.permalinkApplicationService.resolveToPassport(
       permalinks[0].id,
       {
@@ -168,11 +153,6 @@ export class PermalinkController {
     return expanded.shells[0].security.defineAbilityForSubject(subject);
   }
 
-  // Authenticated partial update of a permalink. Permalink IDs are UUID-only
-  // (slugs aren't accepted because slug→slug rename via slug lookup would
-  // ambiguate the just-changed slug). Member-role on the owning passport's
-  // organization is required. Body fields are independent: omit a field to
-  // leave it untouched, send `null` to clear, send a value to set.
   @Patch("/p/:id")
   async update(
     @Param("id") id: string,
@@ -184,10 +164,6 @@ export class PermalinkController {
     if (memberRole === undefined) {
       throw new ForbiddenException();
     }
-    // Pass the caller's access context so the draft-passport gate inside
-    // `resolveToPassport` doesn't 404 a legitimate org member editing a
-    // not-yet-published permalink. Cross-org callers still hit the
-    // explicit organization check below.
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
       memberRole,
@@ -196,8 +172,6 @@ export class PermalinkController {
       throw new ForbiddenException();
     }
     try {
-      // Forward both fields verbatim — the service treats undefined as "skip"
-      // and null as "clear", matching the `.nullish()` wire contract.
       const update: { slug?: string | null; baseUrl?: string | null } = {};
       if (body.slug !== undefined) update.slug = body.slug;
       if (body.baseUrl !== undefined) update.baseUrl = body.baseUrl;
@@ -213,9 +187,6 @@ export class PermalinkController {
   }
 
   private async loadBrandingOrDefault(organizationId: string): Promise<Branding> {
-    // Branding is non-essential display data: any lookup failure (missing
-    // record, invalid org-id format, transient backend error) falls back to
-    // the default rather than 500-ing the public bundle endpoint.
     try {
       return await this.brandingRepository.findOneByOrganizationId(organizationId);
     } catch {

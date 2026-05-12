@@ -26,9 +26,7 @@ async function fetchDPD(id: string) {
     if (data) {
       model.value = data;
     }
-  } catch {
-    // toast already shown by composable; toolbar refresh failure is non-fatal
-  }
+  } catch {}
 }
 
 const qrCodeDialogVisible = ref<boolean>(false);
@@ -57,9 +55,6 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
 
 const status = computed(() => model.value?.lastStatusChange.currentStatus);
 
-// Secondary actions surfaced in the QR-code SplitButton's dropdown. Computed
-// so the labels react to locale changes; `command` is invoked when the menu
-// item is selected.
 const permalinkActions = computed(() => [
   {
     label: t("permalink.settings.open"),

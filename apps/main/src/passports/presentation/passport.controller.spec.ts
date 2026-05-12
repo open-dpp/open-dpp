@@ -368,9 +368,6 @@ describe("passportController", () => {
       .getModuleRef()
       .get(PresentationConfigurationRepository);
 
-    // createPassport (= POST /passports) eagerly creates a config row + permalink
-    // for newly-created passports. Delete that row to simulate a legacy passport
-    // that never had a config row.
     await presentationConfigurationRepository.deleteByReference({
       referenceType: PresentationReferenceType.Passport,
       referenceId: passport.id,
@@ -831,7 +828,6 @@ describe("passportController", () => {
     });
     await templateRepository.save(template);
 
-    // Seed + retrieve the default config (null label) via GET
     const listResponse = await request(app.getHttpServer())
       .get(`/templates/${templateId}/presentation-configurations`)
       .set(authHeaders)
@@ -839,21 +835,18 @@ describe("passportController", () => {
     expect(listResponse.status).toEqual(200);
     const defaultConfigId = listResponse.body[0].id;
 
-    // Patch the default config with an elementDesign override
     const patchResponse = await request(app.getHttpServer())
       .patch(`/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
       .set(authHeaders)
       .send({ elementDesign: { "DesignOfProduct.numericField": "BigNumber" } });
     expect(patchResponse.status).toEqual(200);
 
-    // Create a second variant config on the template
     const createVariantResponse = await request(app.getHttpServer())
       .post(`/templates/${templateId}/presentation-configurations`)
       .set(authHeaders)
       .send({ label: "Variant A" });
     expect(createVariantResponse.status).toEqual(201);
 
-    // Create a passport from this template
     const createPassportResponse = await request(app.getHttpServer())
       .post(basePath)
       .set(authHeaders)
@@ -861,7 +854,6 @@ describe("passportController", () => {
     expect(createPassportResponse.status).toEqual(201);
     const passportId = createPassportResponse.body.id;
 
-    // The passport should have 2 snapshot configs (not 1 auto-seeded default)
     const passportConfigsResponse = await request(app.getHttpServer())
       .get(`/passports/${passportId}/presentation-configurations`)
       .set(authHeaders)
@@ -872,7 +864,6 @@ describe("passportController", () => {
       [null, "Variant A"].sort(),
     );
 
-    // The default config snapshot should carry the elementDesign override
     const passportDefault = passportConfigsResponse.body.find((c: any) => c.label === null);
     expect(passportDefault.elementDesign["DesignOfProduct.numericField"]).toBe("BigNumber");
   });

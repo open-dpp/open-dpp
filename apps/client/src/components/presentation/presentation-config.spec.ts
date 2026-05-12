@@ -64,7 +64,6 @@ describe("resolveComponent", () => {
       resolveComponent(cfg, { path: "Metrics.Dimensions.weight", modelType: "Property" }),
     ).toBe(PresentationComponentName.BigNumber);
 
-    // A sibling path at the same depth with no override falls through to default.
     expect(
       resolveComponent(cfg, { path: "Metrics.Dimensions.height", modelType: "Property" }),
     ).toBeUndefined();

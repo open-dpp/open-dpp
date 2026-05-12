@@ -20,9 +20,6 @@ const parentId = computed(() => {
   return parentId || idShort;
 });
 
-// Preserve the ancestor path across the "view details" navigation so the
-// presentation-config resolver can still match fully-qualified keys like
-// "Metrics.Dimensions.weight" after drilling in.
 const linkQuery = computed(() => {
   const query: Record<string, string> = { submodelid: parentId.value };
   if (path) query.submodelPath = path;

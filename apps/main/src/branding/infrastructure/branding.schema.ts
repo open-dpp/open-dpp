@@ -25,10 +25,6 @@ export class BrandingDoc extends Document<string> {
   @Prop({ type: String })
   primaryColor: string;
 
-  // Org-level white-label base URL for public permalinks. Per-permalink
-  // overrides take precedence; otherwise this is used; otherwise OPEN_DPP_URL.
-  // Stored as a canonical origin URL (validated/transformed by
-  // PermalinkBaseUrlSchema in the DTO layer).
   @Prop({ type: String, required: false, default: null })
   permalinkBaseUrl: string | null;
 }

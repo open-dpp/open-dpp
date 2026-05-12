@@ -16,13 +16,6 @@ import {
 } from "../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { findOne, findOneOrFail } from "./repositories";
 
-// Black-box test of the generic `findOne`/`findOneOrFail` helpers in
-// `repositories.ts`. The helpers used to call `Model.findById(id)`, which lets
-// Mongoose forward a non-string `id` (e.g. an operator object produced by
-// Express's `qs` query parser) as a MongoDB filter — the NoSQL-injection sink
-// flagged by CodeQL alert #7. The current implementation uses
-// `findOne({ _id: { $eq: id } })`, so non-string ids are compared as literal
-// values and match nothing.
 describe("repositories generic helpers — NoSQL injection hardening", () => {
   let repository: PermalinkRepository;
   let permalinkModel: any;
@@ -64,8 +57,6 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
     await connection.collection("permalinkdocs").deleteMany({});
   });
 
-  // The mongoose model is private; bind a fromPlain that returns a plain
-  // marker so the assertions can rely on `id` being preserved end-to-end.
   const fromPlain = async (plain: any) => Permalink.fromPlain(plain);
 
   it("findOne returns the matching doc for a valid string _id", async () => {
@@ -83,12 +74,6 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
     expect(found).toBeUndefined();
   });
 
-  // Load-bearing: proves the CodeQL sink is closed. Casting through `unknown`
-  // is intentional — Express/qs defeats the TypeScript contract at runtime,
-  // so the helper must defend against object inputs even though the param is
-  // typed `string`. Wrapping the lookup in `$eq` forces Mongoose to cast the
-  // value as a literal against the String `_id` SchemaType — operator objects
-  // fail to cast and the call rejects, so no document data is returned.
   it.each([
     [{ $gt: "" }, "$gt empty"],
     [{ $ne: null }, "$ne null"],
@@ -111,9 +96,6 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
     ).rejects.toThrow();
   });
 
-  // Sanity check: when no documents match a valid string id, findOneOrFail
-  // surfaces the canonical NotFoundInDatabaseException (the same envelope
-  // every other repository relies on).
   it("findOneOrFail throws NotFoundInDatabaseException for a missing valid string _id", async () => {
     await expect(findOneOrFail(randomUUID(), permalinkModel, fromPlain)).rejects.toBeInstanceOf(
       NotFoundInDatabaseException,

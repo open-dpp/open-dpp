@@ -21,7 +21,6 @@ vi.mock("./PresentationPreviewFrame.vue", () => ({
   }),
 }));
 
-// PrimeVue's Select calls window.matchMedia in its mounted hook — polyfill it for jsdom.
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
@@ -61,9 +60,6 @@ function mountPanel(
     disabled: boolean;
   }> = {},
 ) {
-  // Reuse the active pinia (set by beforeEach) so that
-  // usePresentationConfigurationStore() in the test body and
-  // inside the component share the same store instance.
   const pinia = getActivePinia()!;
   return mount(ElementPresentationPanel, {
     global: {
@@ -96,7 +92,6 @@ describe("ElementPresentationPanel", () => {
     ];
     const wrapper = mountPanel();
     expect(wrapper.find('[data-cy="presentation-config-picker"]').exists()).toBe(true);
-    // Labels should appear in the rendered text (either as selected value or visible option)
     expect(wrapper.text()).toContain("Untitled");
   });
 
@@ -117,7 +112,6 @@ describe("ElementPresentationPanel", () => {
     const wrapper = mountPanel();
     const select = wrapper.find('[data-cy="presentation-component-select"]');
     expect(select.exists()).toBe(true);
-    // Call the component's internal handler directly via the exposed vm
     await (wrapper.vm as any).onComponentChange("BigNumber");
     expect(setSpy).toHaveBeenCalledWith("submodel.numericField", "BigNumber");
   });

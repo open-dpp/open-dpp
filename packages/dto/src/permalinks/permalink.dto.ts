@@ -5,13 +5,6 @@ import { PresentationConfigurationDtoSchema } from "../presentation-configuratio
 import { DateTimeSchema } from "../shared/digital-product-document.schemas";
 import { PermalinkBaseUrlSchema } from "../shared/permalink-base-url.schema";
 
-// Slugs that would collide with literal path segments under the public `/p`
-// namespace. Whenever a new literal child route is added to PRESENTATION_PARENT
-// in apps/client/src/router/routes/presentation/presentation.ts, add it here.
-// A frontend unit test asserts the two stay in sync — see the router spec.
-//
-// Note: numeric-only slugs (e.g. "404") are already rejected by a separate
-// refine, so they don't need to appear here.
 export const PERMALINK_RESERVED_SLUGS: readonly string[] = ["new", "edit"];
 
 const reservedSlugSet = new Set<string>(PERMALINK_RESERVED_SLUGS);
@@ -38,10 +31,6 @@ export const PermalinkDtoSchema = z
   .object({
     id: z.uuid(),
     slug: PermalinkSlugSchema.nullable(),
-    // Per-permalink override of the org-level white-label base URL. `null`
-    // means "fall back to the org default / instance env". `nullish()` (vs
-    // `nullable()`) accepts a missing key so legacy DB documents written
-    // before this field existed still rehydrate cleanly.
     baseUrl: PermalinkBaseUrlSchema.nullish(),
     presentationConfigurationId: z.uuid(),
     createdAt: DateTimeSchema,
@@ -51,19 +40,9 @@ export const PermalinkDtoSchema = z
 
 export type PermalinkDto = z.infer<typeof PermalinkDtoSchema>;
 
-// Source of the resolved `fallbackBaseUrl` — exposes which link of the chain
-// the client should attribute the base URL to when rendering a preview.
 export const PermalinkFallbackBaseUrlSourceSchema = z.enum(["branding", "instance"]);
 export type PermalinkFallbackBaseUrlSource = z.infer<typeof PermalinkFallbackBaseUrlSourceSchema>;
 
-// Wire shape for permalink list responses. Adds the server-resolved public URL
-// (`permalink.baseUrl ?? branding.permalinkBaseUrl ?? OPEN_DPP_URL`) so clients
-// don't reimplement the fallback chain when rendering QR codes / share links.
-// `fallbackBaseUrl` exposes the URL that would resolve if `permalink.baseUrl`
-// were cleared — the post-override link of the chain — so the settings dialog
-// can preview a base-URL clear without losing the fallback chain. Paired with
-// `fallbackBaseUrlSource` so the client can label the source (org branding vs
-// instance default) without re-deriving the chain.
 export const PermalinkPublicDtoSchema = PermalinkDtoSchema.extend({
   publicUrl: z.string().url(),
   fallbackBaseUrl: PermalinkBaseUrlSchema,
@@ -83,9 +62,6 @@ export const PermalinkMetadataDtoSchema = z.object({
 
 export type PermalinkMetadataDto = z.infer<typeof PermalinkMetadataDtoSchema>;
 
-// Request body for PATCH /p/:id. `undefined` (key absent) leaves a field
-// untouched; `null` clears it; a value sets it. Both fields are independent
-// so callers can update one without touching the other.
 export const PermalinkUpdateRequestSchema = z
   .object({
     slug: PermalinkSlugSchema.nullish(),
@@ -95,12 +71,6 @@ export const PermalinkUpdateRequestSchema = z
 
 export type PermalinkUpdateRequest = z.infer<typeof PermalinkUpdateRequestSchema>;
 
-// Unified response for `GET /p/:id` returning everything a public viewer needs
-// in a single round-trip: passport DTO, branding, the (filtered) effective
-// presentation configuration, and the resolved public URL the QR / share link
-// should point to. The server resolves `permalink.baseUrl ?? branding.permalinkBaseUrl
-// ?? OPEN_DPP_URL` and ships the final string so clients don't duplicate the
-// fallback chain.
 export const PassportPermalinkBundleDtoSchema = z
   .object({
     passport: PassportDtoSchema,

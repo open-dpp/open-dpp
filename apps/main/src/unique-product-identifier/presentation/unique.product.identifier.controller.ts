@@ -19,16 +19,6 @@ import { PermalinkRepository } from "../../permalink/infrastructure/permalink.re
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 
-/**
- * Legacy redirect surface. The public UPI endpoints moved to /p/:idOrSlug/*.
- * These routes 302 to the new permalink URLs for one release cycle so that
- * already-printed QR codes and bookmarks keep working. Follow-up issue:
- * remove after the deprecation window closes.
- *
- * Pre-refactor passports might lack a PresentationConfiguration / Permalink
- * row, so the redirect path lazily synthesises whichever rows are missing
- * (idempotent, transactional) before issuing the redirect.
- */
 @Controller()
 export class UniqueProductIdentifierController {
   private readonly logger = new Logger(UniqueProductIdentifierController.name);
@@ -88,14 +78,9 @@ export class UniqueProductIdentifierController {
     }
     const passport = await this.passportRepository.findOne(upi.referenceId);
     if (!passport) {
-      // UPI is dangling — the passport it pointed at is gone. Old QR codes
-      // for deleted passports cannot be resurrected.
       throw new NotFoundException();
     }
 
-    // Fast path: if both rows already exist, return without taking a write
-    // transaction. The vast majority of redirects after this branch ships
-    // hit this path; the lazy-create branch is only for pre-refactor data.
     const existingConfig = await this.presentationConfigurationRepository.findByReference({
       referenceType: PresentationReferenceType.Passport,
       referenceId: passport.id,

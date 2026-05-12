@@ -16,17 +16,11 @@ import { PresentationConfigurationRepository } from "../../../presentation-confi
 import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 
-// Caller's auth context for the resolver. Allows the resolver to gate access
-// to non-published passports without coupling the application service to
-// HTTP / decorator types.
 export interface PermalinkAccessContext {
   organizationId?: string;
   memberRole?: MemberRoleType;
 }
 
-// Partial update for a permalink. `undefined` (key absent) leaves the field
-// untouched; `null` clears it; a value sets it. Mirrors the wire schema so
-// the controller can pass the parsed body straight through.
 export interface PermalinkUpdate {
   slug?: string | null;
   baseUrl?: string | null;
@@ -66,10 +60,6 @@ export class PermalinkApplicationService {
     const passport = await this.passportRepository.findOneOrFail(
       presentationConfiguration.referenceId,
     );
-    // Hide non-published passports from anonymous and cross-org viewers.
-    // Members of the owning org keep access (preview for drafts, audit for
-    // archived). Returning 404 (not 403) avoids leaking the existence of
-    // an unpublished passport to outsiders.
     if (!passport.isPublished() && !isMemberOfPassportOrg(passport, access)) {
       throw new NotFoundException(`Permalink ${permalink.id} not found`);
     }
@@ -85,12 +75,6 @@ export class PermalinkApplicationService {
     });
   }
 
-  // Pure tail: given a list of presentation configs, return one permalink per
-  // config. Idempotent — if a permalink already exists for a config (the unique
-  // index on presentationConfigurationId guarantees at most one), return it
-  // instead of trying to create a duplicate. Order of the returned array
-  // mirrors the input order so callers can rely on configs[0] ↔ permalinks[0]
-  // for picking a canonical default.
   async createPermalinksForConfigs(
     configs: PresentationConfiguration[],
     options?: DbSessionOptions,
@@ -111,11 +95,6 @@ export class PermalinkApplicationService {
     return results;
   }
 
-  // Partial update. Each field is independent: pass undefined / omit the key
-  // to leave it alone; pass null to clear; pass a value to set. Validation
-  // (slug shape, base URL canonicalisation) lives in the domain `with*`
-  // methods and surfaces as ValueError; duplicate-slug collisions surface as
-  // a Mongo duplicate-key error from the unique index.
   async updatePermalink(
     permalinkId: string,
     update: PermalinkUpdate,
@@ -131,10 +110,6 @@ export class PermalinkApplicationService {
     return await this.permalinkRepository.save(next, options);
   }
 
-  // TODO: remove after the eager-migration script (Option a) backfills every
-  // pre-refactor passport. Once the lazy callers (legacy UPI redirect +
-  // backoffice GET /p?passportId=...) stop hitting the synthesise branch,
-  // delete this method and inline the eager flow into PassportController.create.
   async ensureDefaultForPassport(
     passport: Passport,
     options?: DbSessionOptions,
@@ -157,12 +132,6 @@ export function isMemberOfPassportOrg(
   return access.organizationId === passport.organizationId;
 }
 
-// Resolves the link in the base-URL fallback chain that applies *after* the
-// per-permalink override is removed: org-level white-label first, then the
-// instance env. Exposed alongside `resolvePublicUrl` so the controller can
-// ship the fallback to clients (settings dialog preview, QR re-rendering)
-// without re-deriving the chain. Returns the URL plus a discriminator so
-// the client can label the source.
 export function resolveFallbackBaseUrl(
   branding: Branding | null,
   fallbackEnvUrl: string,
@@ -173,13 +142,6 @@ export function resolveFallbackBaseUrl(
   return { url: new URL(fallbackEnvUrl).origin, source: "instance" };
 }
 
-// Pure resolver for the public URL of a permalink. Layered fallback:
-//   1. Per-permalink override (`Permalink.baseUrl`)
-//   2. Org-level white-label default (`Branding.permalinkBaseUrl`)
-//   3. Instance-wide env (`OPEN_DPP_URL`), normalised to its origin
-// The slug takes precedence over the UUID so customers' QR codes / share
-// links stay branded once a slug is assigned. Returns the full public URL
-// the QR code should encode.
 export function resolvePublicUrl(
   permalink: Permalink,
   branding: Branding | null,

@@ -23,9 +23,6 @@ export class PermalinkDoc extends Document<string> {
   @Prop({ type: String, required: false, default: null })
   slug: string | null;
 
-  // Per-permalink white-label override. Falls back to Branding.permalinkBaseUrl
-  // and finally OPEN_DPP_URL when null. Stored as a canonical origin URL
-  // (validated/transformed by PermalinkBaseUrlSchema in the domain layer).
   @Prop({ type: String, required: false, default: null })
   baseUrl: string | null;
 
@@ -42,9 +39,6 @@ export class PermalinkDoc extends Document<string> {
 export const PermalinkSchema = SchemaFactory.createForClass(PermalinkDoc);
 
 PermalinkSchema.index({ presentationConfigurationId: 1 }, { unique: true });
-// Partial unique index: enforces uniqueness only on documents whose `slug` is
-// a string. Rows with `slug: null` are excluded, so multiple permalinks may
-// exist without a slug set — uniqueness applies once a slug is assigned.
 PermalinkSchema.index(
   { slug: 1 },
   {

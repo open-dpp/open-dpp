@@ -23,9 +23,6 @@ export class PermalinksNamespace {
     return this.axiosInstance.get<PassportPermalinkBundleDto>(`/p/${encodeURIComponent(idOrSlug)}`);
   }
 
-  // Partial update of slug and/or baseUrl. Omit a field to leave it untouched;
-  // pass `null` to clear; pass a value to set. Server canonicalises the
-  // baseUrl (lowercase host, no trailing slash) and validates the slug shape.
   public async update(id: string, body: PermalinkUpdateRequest) {
     return this.axiosInstance.patch<PermalinkPublicDto>(`/p/${encodeURIComponent(id)}`, body);
   }

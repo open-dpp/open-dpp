@@ -25,10 +25,6 @@ export class UniqueProductIdentifierDoc extends Document {
   @Prop({ required: true })
   referenceId: string;
 
-  // Registry / scheme discriminator. Optional on existing rows (default
-  // applied at read time) so the field can be added without a one-shot data
-  // migration; new rows always carry it explicitly. See
-  // ExternalIdentifierType for the full set.
   @Prop({
     default: ExternalIdentifierType.OPEN_DPP_UUID,
     enum: Object.values(ExternalIdentifierType),

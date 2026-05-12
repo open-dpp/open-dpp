@@ -98,8 +98,6 @@ describe("PresentationConfigurationController", () => {
     );
   });
 
-  // ---- Helpers ----
-
   function makePassport(organizationId: string): Passport {
     return Passport.create({ organizationId, environment: Environment.create({}) });
   }
@@ -124,8 +122,6 @@ describe("PresentationConfigurationController", () => {
       elementDesign: overrides.elementDesign,
     });
   }
-
-  // ---- Plural endpoints — Passport ----
 
   describe("plural endpoints — passport", () => {
     it("listForPassport returns an array of DTOs", async () => {
@@ -284,8 +280,6 @@ describe("PresentationConfigurationController", () => {
       expect(service.getEffectiveForPassport).not.toHaveBeenCalled();
     });
   });
-
-  // ---- Plural endpoints — Template ----
 
   describe("plural endpoints — template", () => {
     it("listForTemplate returns an array of DTOs", async () => {
@@ -508,8 +502,6 @@ describe("PresentationConfigurationController", () => {
     });
   });
 
-  // ---- Element-level ability flow ----
-
   describe("element-level ability flow", () => {
     function buildShellAndAbility(): {
       expandedEnv: ExpandedEnvironment;
@@ -631,8 +623,6 @@ describe("PresentationConfigurationController", () => {
       expect(lastCall[3]).toBeInstanceOf(AasAbility);
     });
   });
-
-  // ---- defaultComponents coverage ----
 
   describe("defaultComponents in patch", () => {
     it("patchByIdForPassport forwards defaultComponents correctly", async () => {

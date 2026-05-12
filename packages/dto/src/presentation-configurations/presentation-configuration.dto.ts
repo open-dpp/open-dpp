@@ -19,14 +19,6 @@ export type PresentationComponentNameType = z.infer<typeof PresentationComponent
 
 const KEY_TYPES_SET: ReadonlySet<string> = new Set(Object.values(KeyTypes));
 
-// Silently discards entries whose value is not a currently-registered
-// PresentationComponentName (and, when `validKeys` is supplied, entries whose
-// key isn't in the allowed set). Used on the READ path — schema parse of
-// persisted configs and import bundles — so that rows written against an older
-// or extended component enum still load instead of failing the whole parse.
-// Intentional drop: the DTO package has no logger; callers that need
-// observability should diff sizes before/after parse. The WRITE path uses
-// `PresentationConfigurationPatchSchema` which is strict.
 function dropUnknownComponents(input: unknown, validKeys?: ReadonlySet<string>): unknown {
   if (input == null || typeof input !== "object") return input;
   const cleaned: Record<string, unknown> = {};

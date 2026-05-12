@@ -115,8 +115,6 @@ describe("resolveFallbackBaseUrl", () => {
   });
 
   it("ignores the per-permalink override (returns the post-override link in the chain)", () => {
-    // Sanity check: the fallback should reflect what would apply *if*
-    // `permalink.baseUrl` were null, regardless of whether it is set today.
     const branding = Branding.create({
       organizationId: "org",
       permalinkBaseUrl: "https://branding.example.com",

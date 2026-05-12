@@ -18,14 +18,12 @@ export class PresentationConfigurationNamespace {
     this.basePath = `/${scope}`;
   }
 
-  // Singular — kept for the public viewer.
   public async get(id: string) {
     return await this.axiosInstance.get<PresentationConfigurationDto>(
       `${this.basePath}/${id}/presentation-configuration`,
     );
   }
 
-  // Plural — editor surface.
   public async list(id: string) {
     return await this.axiosInstance.get<PresentationConfigurationListResponseDto>(
       `${this.basePath}/${id}/presentation-configurations`,

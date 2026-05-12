@@ -295,10 +295,6 @@ describe("DigitalProductDocumentService", () => {
       });
       await passportRepository.save(passport);
 
-      // If archiveGuard wrongly blocked non-archived statuses it would throw a
-      // ValueError("Cannot modify..."). Any other failure (e.g. schema validation,
-      // missing submodel) proves the guard passed and execution reached the
-      // downstream layer.
       const archiveError = new ValueError("Cannot modify an archived digital product document");
       await expect(
         service.modifySubmodel(

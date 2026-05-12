@@ -124,8 +124,6 @@ describe("passportMetricController", () => {
 
   it("/POST should create page view metric", async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    // Page-view metrics fire from the public viewer; publish the passport so
-    // the permalink resolver doesn't 404 the anonymous resolution path.
     const passport = Passport.create({
       templateId: randomUUID(),
       organizationId: org.id,

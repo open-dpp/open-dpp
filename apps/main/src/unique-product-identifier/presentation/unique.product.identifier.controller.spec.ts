@@ -45,9 +45,6 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
         PermalinkRepository,
         PresentationConfigurationRepository,
       ],
-      // Controllers come from UniqueProductIdentifierModule itself; declaring
-      // them at the test-root scope re-binds them without access to the
-      // module's own providers (PermalinkApplicationService etc.).
       controllers: [],
     },
     [
@@ -139,8 +136,6 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
       }),
     });
     const upi = passport.createUniqueProductIdentifier();
-    // Save the UPI but never save the passport — simulates a dangling
-    // legacy QR code whose passport has been deleted.
     await ctx.getRepositories().dppIdentifiableRepository.save(upi);
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
@@ -161,8 +156,6 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
       }),
     });
     const upi = passport.createUniqueProductIdentifier();
-    // Persist the UPI + passport but skip config/permalink creation, mirroring
-    // a passport written before the permalink module shipped.
     await ctx.getModuleRef().get(PassportRepository).save(passport);
     await ctx.getRepositories().dppIdentifiableRepository.save(upi);
 
@@ -173,8 +166,6 @@ describe("UniqueProductIdentifierController (legacy redirects)", () => {
     expect(response.status).toEqual(302);
     expect(response.headers.location).toMatch(/^\/p\/[0-9a-f-]{36}$/);
 
-    // The synthesised rows must exist after the redirect so subsequent
-    // /p/:id/* fetches resolve normally.
     const config = await ctx
       .getModuleRef()
       .get(PresentationConfigurationRepository)

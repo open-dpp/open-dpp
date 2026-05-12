@@ -28,7 +28,6 @@ const { t } = useI18n();
     {{ t("presentation.missingValue") }}
   </div>
   <PresentationComponentRenderer v-else :element="element" :path="path" :config="config">
-    <!-- Default rendering when no presentation component is configured. -->
     <dd v-if="element.modelType === 'Property'" class="mt-1 text-sm/6 text-gray-700 sm:mt-2">
       <template v-if="element.valueType === 'Date'">
         {{ formatDateValueForDisplay(element.value as string, DataTypeDef.Date) }}

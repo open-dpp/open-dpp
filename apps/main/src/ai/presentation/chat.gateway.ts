@@ -42,8 +42,6 @@ export class ChatGateway {
       const { passport } = await this.permalinkApplicationService.resolveToPassport(
         message.permalink,
         {
-          // Member-of-org chat clients can preview draft passports; anonymous
-          // viewers go through the same draft 404 as the HTTP resolver.
           organizationId: client.data.member?.organizationId,
           memberRole: client.data.member?.role,
         },

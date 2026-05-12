@@ -59,8 +59,6 @@ export class PresentationConfigurationController {
     return expanded.shells[0].security.defineAbilityForSubject(subject);
   }
 
-  // ---- Plural (editor surface) — Passport ----
-
   @Get("/passports/:id/presentation-configurations")
   async listForPassport(
     @OrganizationId() organizationId: string,
@@ -135,8 +133,6 @@ export class PresentationConfigurationController {
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
     await this.service.deleteByConfigIdForPassport(passport, configId);
   }
-
-  // ---- Plural (editor surface) — Template ----
 
   @Get("/templates/:id/presentation-configurations")
   async listForTemplate(
@@ -213,8 +209,6 @@ export class PresentationConfigurationController {
     await this.service.deleteByConfigIdForTemplate(template, configId);
   }
 
-  // ---- Singular (viewer surface) ----
-
   @Get("/passports/:id/presentation-configuration")
   async getForPassport(
     @OrganizationId() organizationId: string,
@@ -242,8 +236,6 @@ export class PresentationConfigurationController {
     const c = await this.service.getEffectiveForTemplate(template, ability);
     return this.toDto(c);
   }
-
-  // ---- Helpers ----
 
   private toDto(config: PresentationConfiguration): PresentationConfigurationDto {
     return PresentationConfigurationDtoSchema.parse(config.toPlain());

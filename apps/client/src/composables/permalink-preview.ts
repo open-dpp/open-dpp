@@ -21,9 +21,6 @@ function trimToNull(value: string): string | null {
   return trimmed.length === 0 ? null : trimmed;
 }
 
-// Canonicalises a user-typed base URL the same way `PermalinkBaseUrlSchema`
-// does on the server (lowercase host, origin only). The preview should match
-// what the server will persist on save.
 function canonicaliseBaseUrl(value: string): string {
   try {
     const url = new URL(value);
@@ -45,14 +42,6 @@ function isBaseUrlValid(value: string): boolean {
   return PermalinkBaseUrlSchema.safeParse(value).success;
 }
 
-// Defensive: derive a fallback base URL from the loaded permalink when the
-// server hasn't shipped `fallbackBaseUrl`. Same-version client + server pairs
-// always have the field, but a frontend running against an older backend (e.g.
-// during deploy, or before a backend restart picks up new code) shouldn't
-// crash into an "invalid preview" state — parsing the origin from the
-// resolved `publicUrl` is a correct approximation when the user hasn't set a
-// per-permalink override (because then the resolved origin *is* the
-// fallback).
 function deriveFallbackBaseUrl(permalink: PermalinkPublicDto): string {
   if (permalink.fallbackBaseUrl) return permalink.fallbackBaseUrl;
   try {
@@ -62,10 +51,6 @@ function deriveFallbackBaseUrl(permalink: PermalinkPublicDto): string {
   }
 }
 
-// Live preview derivation for the permalink settings dialog. Pure reactive
-// transformation of the two text inputs plus the loaded permalink — surfaces
-// the post-override fallback supplied by the server so clearing the base URL
-// updates the preview immediately rather than waiting for a round-trip.
 export function usePermalinkPreview(
   permalink: Ref<PermalinkPublicDto | undefined>,
   slugInput: Ref<string>,

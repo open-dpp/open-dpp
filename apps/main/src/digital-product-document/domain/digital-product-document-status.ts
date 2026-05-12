@@ -7,9 +7,6 @@ import {
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 
-// Re-exported from the DTO package to keep a single source of truth. Domain
-// callers used to import these names from this module; the aliases below
-// preserve those imports while the underlying values live in @open-dpp/dto.
 export const DigitalProductDocumentStatus = DigitalProductDocumentStatusDto;
 export const DigitalProductDocumentStatusEnum = DigitalProductDocumentStatusDtoEnum;
 export type DigitalProductDocumentStatusType = DigitalProductDocumentStatusDtoType;

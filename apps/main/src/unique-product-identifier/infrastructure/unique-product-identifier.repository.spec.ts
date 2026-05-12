@@ -130,8 +130,6 @@ describe("uniqueProductIdentifierRepository", () => {
   });
 
   it("loads legacy rows missing the type field with the OPEN_DPP_UUID default", async () => {
-    // Simulate a pre-1.1.0 row written without a `type` field by inserting
-    // directly with $unset after a normal save.
     const upi = UniqueProductIdentifier.create({ referenceId: uuid4() });
     await uniqueProductIdentifierRepository.save(upi);
     await uniqueProductIdentifierDoc.updateOne({ _id: upi.uuid }, { $unset: { type: 1 } });

@@ -87,7 +87,6 @@ describe("PresentationConfigurationService", () => {
       expect(list).toHaveLength(1);
       expect(list[0].label).toBeNull();
 
-      // Subsequent call returns the persisted one (no duplicates)
       const again = await service.listForPassport(passport);
       expect(again).toHaveLength(1);
       expect(again[0].id).toBe(list[0].id);
@@ -95,7 +94,7 @@ describe("PresentationConfigurationService", () => {
 
     it("returns existing configs sorted by createdAt", async () => {
       const passport = makePassport();
-      await service.listForPassport(passport); // seed default
+      await service.listForPassport(passport);
       await service.createForPassport(passport, { label: "Variant A" });
       const list = await service.listForPassport(passport);
       expect(list).toHaveLength(2);
@@ -132,7 +131,6 @@ describe("PresentationConfigurationService", () => {
         NotFoundError,
       );
 
-      // Confirm the config still exists on passport B
       const stillThere = await service.getByIdForPassport(passportB, configForB.id);
       expect(stillThere.id).toBe(configForB.id);
     });
@@ -149,12 +147,12 @@ describe("PresentationConfigurationService", () => {
       );
 
       const passport = makePassport({ templateId: template.id });
-      const list = await service.listForPassport(passport); // lazy-creates default
+      const list = await service.listForPassport(passport);
       expect(list[0].elementDesign.size).toBe(0);
 
       const effective = await service.getEffectiveForPassport(passport);
       expect(effective.id).toBe(list[0].id);
-      expect(effective.elementDesign.size).toBe(0); // NO template merge
+      expect(effective.elementDesign.size).toBe(0);
     });
   });
 
@@ -291,10 +289,8 @@ describe("PresentationConfigurationService", () => {
         permission: Permissions.Edit,
         kindOfPermission: PermissionKind.Allow,
       });
-      // Member: read + edit on Pub; read-only on Secret.
       security.addPolicy(memberSubject, IdShortPath.create({ path: "Pub" }), [readPerm, editPerm]);
       security.addPolicy(memberSubject, IdShortPath.create({ path: "Secret" }), [readPerm]);
-      // Anonymous: no rules → all paths denied for read.
       return {
         memberAbility: security.defineAbilityForSubject(memberSubject),
         anonymousAbility: security.defineAbilityForSubject(anonymousSubject),

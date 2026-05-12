@@ -796,7 +796,6 @@ describe("aasSerializationService", () => {
       const exportResult = await aasSerializationService.exportPassport(passport, subject);
 
       expect(exportResult.version).toBe(AasExportVersion.v3_0);
-      // getEffectiveForPassport seeds a default row on first access.
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",
@@ -869,8 +868,6 @@ describe("aasSerializationService", () => {
       const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const reExported = await aasSerializationService.exportPassport(imported, admin);
 
-      // getEffectiveForPassport seeds a default row on first access; the exported
-      // payload contains an empty config so the round trip remains stable.
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",

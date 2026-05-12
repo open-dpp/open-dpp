@@ -32,9 +32,6 @@ const colorPalette = computed(() => {
   return createColorPalette(branding.value?.primaryColor ?? defaultColor);
 });
 
-// Empty input → `null` so the server clears the field instead of trying to
-// validate "" as a URL. Non-empty strings flow through verbatim and are
-// canonicalised server-side (lowercase host, no trailing slash).
 function trimToNull(value: string | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   const trimmed = value.trim();

@@ -12,10 +12,6 @@ const props = defineProps<{ passportId: string | undefined }>();
 const permalinks = ref<PermalinkPublicDto[] | undefined>(undefined);
 const { t } = useI18n();
 
-// Refetch on every open (in addition to initial mount) so edits made via
-// PermalinkSettingsDialog propagate without forcing the user to re-navigate.
-// Watching both inputs keeps the dialog in sync if either the passport
-// changes or the user closes + reopens after an edit.
 watch(
   [() => props.passportId, model],
   async ([passportId, visible]) => {
@@ -28,9 +24,6 @@ watch(
 
 const toast = useToast();
 
-// `publicUrl` is the server-resolved white-label URL — falls back through
-// permalink override → org branding → OPEN_DPP_URL so the QR encodes
-// whatever the org has configured without the client duplicating that chain.
 const link = computed(() => permalinks.value?.[0]?.publicUrl);
 
 const { width: windowWidth, height: windowHeight } = useWindowSize();

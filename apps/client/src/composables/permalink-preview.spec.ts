@@ -183,9 +183,6 @@ describe("usePermalinkPreview", () => {
   });
 
   it("degrades gracefully when the server response lacks fallbackBaseUrl (older backend)", () => {
-    // Same-version pairs always populate `fallbackBaseUrl`. This guards
-    // against a frontend running against an older backend mid-deploy — the
-    // preview parses the origin from `publicUrl` so it stays usable.
     const permalink = ref<PermalinkPublicDto | undefined>(
       makePermalink({
         fallbackBaseUrl: undefined as unknown as string,

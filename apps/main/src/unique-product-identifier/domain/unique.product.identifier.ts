@@ -7,10 +7,6 @@ import {
 export class UniqueProductIdentifier {
   public readonly uuid: string;
   public readonly referenceId: string;
-  // Discriminator for the registry / scheme this identifier belongs to.
-  // Defaults to OPEN_DPP_UUID for server-generated identifiers and for any
-  // legacy row that predates the multi-registry design. See
-  // ExternalIdentifierType for the full set.
   public readonly type: ExternalIdentifierTypeValue;
 
   private constructor(uuid: string, referenceId: string, type: ExternalIdentifierTypeValue) {

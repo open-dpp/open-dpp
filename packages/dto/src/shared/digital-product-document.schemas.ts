@@ -27,10 +27,6 @@ export const DigitalProductDocumentStatusModificationDtoEnum = z.enum(
   DigitalProductDocumentStatusModificationMethodDto,
 );
 
-// `previousStatus == null` represents a loaded/created entity in its current
-// state — no transition has occurred, so there is nothing to validate. Only
-// when `previousStatus` is set do we enforce that `currentStatus` is a legal
-// successor.
 export const DigitalProductDocumentStatusChangeDtoSchema = z
   .object({
     previousStatus: DigitalProductDocumentStatusDtoEnum.nullish(),
