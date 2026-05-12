@@ -4,10 +4,10 @@ import {
   activityToDatabase,
   activityToPlain,
   IActivity,
-} from "../activity";
-import { ActivityTypes } from "../activity-types";
-import { createActivityHeader } from "./shared.activity";
-import { AssetAdministrationShellModificationActivityPayload } from "./submodel-base/asset-administration-shell-modification.payload";
+} from "../../activity";
+import { ActivityTypes } from "../../activity-types";
+import { createActivityHeader } from "../shared.activity";
+import { AssetAdministrationShellModificationActivityPayload } from "./asset-administration-shell-modification.payload";
 import { AssetAdministrationShellModificationActivityCreateProps } from "./asset-administration-shell-base.activity";
 
 export class AssetAdministrationShellModificationActivity implements IActivity {

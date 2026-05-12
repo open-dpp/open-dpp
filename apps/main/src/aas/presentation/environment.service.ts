@@ -221,26 +221,32 @@ export class EnvironmentService {
   }
 
   async addSubmodelToEnvironment(
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelPlain: SubmodelRequestDto,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
+    userContext: UserContext,
   ): Promise<SubmodelResponseDto> {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    aas.addSubmodel(submodel, {
+      ability,
+      digitalProductDocumentId,
+    });
+    // TODO: add submodel create activity to environment to
+    const activities = [...aas.pullActivities(), ...submodel.pullActivities()];
     const session = await this.connection.startSession();
-    let result: SubmodelResponseDto;
     try {
       await session.withTransaction(async () => {
         const options = { session };
-        const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
         await saveEnvironment(options);
         await this.submodelRepository.save(submodel, options);
 
-        const aas = await this.getFirstAssetAdministrationShell(environment);
-        aas.addSubmodel(submodel);
         await this.aasRepository.save(aas, options);
-
-        result = SubmodelJsonSchema.parse(submodel.toPlain());
+        await this.activityRepository.createMany(activities, options);
       });
-      return result!;
+      return SubmodelJsonSchema.parse(submodel.toPlain());
     } finally {
       await session.endSession();
     }

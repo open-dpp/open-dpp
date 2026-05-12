@@ -1,27 +1,21 @@
 import { IActivityPayload } from "../../activity";
-import { z } from "zod";
-import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
 import { AdministrativeInformation } from "../../../aas/domain/common/administrative-information";
+import {
+  SharedAasActivityPayloadCreateProps,
+  SharedAasActivityPayloadSchema,
+} from "./shared.payload";
 
-const AssetAdministrationShellModificationActivityPayloadSchema = z.object({
-  assetAdministrationShellId: z.string(),
-  administration: AdministrativeInformationJsonSchema,
-  data: z.unknown(),
-});
+const SubmodelCreateActivityPayloadSchema = SharedAasActivityPayloadSchema;
 
-export class AssetAdministrationShellModificationActivityPayload implements IActivityPayload {
+export class SubmodelCreateActivityPayload implements IActivityPayload {
   private constructor(
     public readonly assetAdministrationShellId: string,
     public readonly administration: AdministrativeInformation,
     public readonly data: unknown,
   ) {}
 
-  static create(data: {
-    assetAdministrationShellId: string;
-    administration: AdministrativeInformation;
-    data: unknown;
-  }) {
-    return new AssetAdministrationShellModificationActivityPayload(
+  static create(data: SharedAasActivityPayloadCreateProps) {
+    return new SubmodelCreateActivityPayload(
       data.assetAdministrationShellId,
       data.administration,
       data.data,
@@ -29,8 +23,8 @@ export class AssetAdministrationShellModificationActivityPayload implements IAct
   }
 
   static fromPlain(data: unknown) {
-    const parsed = AssetAdministrationShellModificationActivityPayloadSchema.parse(data);
-    return new AssetAdministrationShellModificationActivityPayload(
+    const parsed = SubmodelCreateActivityPayloadSchema.parse(data);
+    return new SubmodelCreateActivityPayload(
       parsed.assetAdministrationShellId,
       AdministrativeInformation.fromPlain(parsed.administration),
       parsed.data,

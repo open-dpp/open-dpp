@@ -138,6 +138,7 @@ export interface IAasCreateEndpoints {
     body: SubmodelRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
     organizationId: string,

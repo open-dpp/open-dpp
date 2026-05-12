@@ -41,18 +41,20 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     organizationId: string,
     id: string,
     body: SubmodelRequestDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelToEnvironment(
+      id,
       item.getEnvironment(),
       body,
       this.saveEnvironmentCallback(item),
+      userContext,
     );
   }
 

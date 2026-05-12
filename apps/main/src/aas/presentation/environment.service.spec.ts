@@ -57,12 +57,13 @@ import { ActivityHistoryModule } from "../../activity-history/activity-history.m
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { ActivityTypes } from "../../activity-history/activity-types";
-import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/submodel-base/asset-administration-shell-modification.payload";
+import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/asset-administration-shell/asset-administration-shell-modification.payload";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { SubmodelBaseCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-create.payload";
 import { parseSubmodelElement } from "../domain/submodel-base/submodel-base";
-import { SubmodelRowCreateActivity } from "../../activity-history/aas/submodel-base/submodel-row-create.activity";
 import { SubmodelRowCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-row-create.payload";
+import { DbSessionOptions } from "../../database/query-options";
+import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -390,7 +391,7 @@ describe("environmentService", () => {
         kindOfPermission: PermissionKind.Allow,
       }),
     ]);
-    const ability = security.defineAbilityForSubject(admin);
+    const ability = security.defineAbilityForSubject(admin, adminUserId);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
     const submodelElementCollection1 = SubmodelElementCollection.create({ idShort: "subSection1" });
@@ -403,7 +404,7 @@ describe("environmentService", () => {
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
-    assetAdministrationShell.addSubmodel(submodel1);
+    assetAdministrationShell.addSubmodel(submodel1, { digitalProductDocumentId, ability });
     await aasRepository.save(assetAdministrationShell);
 
     const environment = Environment.create({
@@ -421,6 +422,44 @@ describe("environmentService", () => {
       property2,
     };
   }
+
+  it("should add submodel", async () => {
+    const { digitalProductDocumentId, environment, admin } = await createDefaultEnvironment();
+    const submodelPlain = {
+      id: randomUUID(),
+      idShort: "submodel2",
+      modelType: KeyTypes.Submodel,
+      displayName: [],
+      description: [],
+      supplementalSemanticIds: [],
+      qualifiers: [],
+      embeddedDataSpecifications: [],
+    };
+
+    async function saveEnvironment(_options: DbSessionOptions) {}
+
+    await environmentService.addSubmodelToEnvironment(
+      digitalProductDocumentId,
+      environment,
+      submodelPlain,
+      saveEnvironment,
+      admin,
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelCreate,
+          payload: SubmodelCreateActivityPayload.create({
+            assetAdministrationShellId: environment.assetAdministrationShells[0],
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+            data: Submodel.fromPlain(submodelPlain).toPlain(),
+          }),
+        },
+      ],
+    );
+  });
 
   it("should add submodel element", async () => {
     const { digitalProductDocumentId, environment, admin, submodel1 } =
@@ -776,13 +815,13 @@ describe("environmentService", () => {
     ]);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
-    const ability = security.defineAbilityForSubject(admin);
+    const ability = security.defineAbilityForSubject(admin, adminUserId);
 
     const submodelElementList = SubmodelElementList.create({
       idShort: "list",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
-    submodel1.addSubmodelElement(submodelElementList, { ability });
+    submodel1.addSubmodelElement(submodelElementList, { ability, digitalProductDocumentId });
 
     const listIdShortPath = IdShortPath.create({ path: submodelElementList.idShort });
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
@@ -790,7 +829,7 @@ describe("environmentService", () => {
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
-    assetAdministrationShell.addSubmodel(submodel1);
+    assetAdministrationShell.addSubmodel(submodel1, { digitalProductDocumentId, ability });
     await aasRepository.save(assetAdministrationShell);
     const row1 = submodelElementList.getSubmodelElements()[0];
     const environment = Environment.create({

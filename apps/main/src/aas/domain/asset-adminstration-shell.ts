@@ -16,8 +16,11 @@ import { Security } from "./security/security";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 import { IActivity } from "../../activity-history/activity";
-import { AssetAdministrationShellModificationActivity } from "../../activity-history/aas/asset-administration-shell-modification.activity";
-import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/submodel-base/asset-administration-shell-modification.payload";
+import { AssetAdministrationShellModificationActivity } from "../../activity-history/aas/asset-administration-shell/asset-administration-shell-modification.activity";
+import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/asset-administration-shell/asset-administration-shell-modification.payload";
+import { AddOptions } from "./submodel-base/submodel-base";
+import { SubmodelCreateActivity } from "../../activity-history/aas/asset-administration-shell/submodel-create.activity";
+import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -131,11 +134,27 @@ export class AssetAdministrationShell
     this.submodels.push(reference);
   }
 
-  addSubmodel(submodel: Submodel): Reference {
+  addSubmodel(
+    submodel: Submodel,
+    options?: Pick<AddOptions, "ability" | "digitalProductDocumentId">,
+  ): Reference {
     const reference = submodelToReference(submodel);
 
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
+    if (options) {
+      this.publishActivity(
+        SubmodelCreateActivity.create({
+          digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove the !
+          userId: options.ability.userId ?? undefined,
+          payload: SubmodelCreateActivityPayload.create({
+            assetAdministrationShellId: this.id,
+            administration: this.administration,
+            data: submodel.toPlain(),
+          }),
+        }),
+      );
+    }
 
     return reference;
   }

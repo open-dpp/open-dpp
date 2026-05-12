@@ -210,7 +210,7 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
 
     await expect(
-      service.createSubmodel(passport.organizationId, passport.id, { idShort: "sub" }, subject),
+      service.createSubmodel(passport.organizationId, passport.id, { idShort: "sub" }, userContext),
     ).rejects.toThrow(exception);
 
     await expect(

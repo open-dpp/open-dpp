@@ -49,6 +49,7 @@ export class Environment implements IConvertableToPlain {
       throw new ValueError(`Submodel with id ${submodel.id} already exists`);
     }
     this.submodels.push(submodel.id);
+
     return submodel;
   }
 

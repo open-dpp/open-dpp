@@ -205,13 +205,14 @@ export class TemplateController
     @SubmodelRequestBody() body: SubmodelRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodel(
       organizationId,
       id,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
