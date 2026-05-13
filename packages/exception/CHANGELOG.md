@@ -1,5 +1,11 @@
 # @open-dpp/exception
 
+## 0.5.0
+
+### Minor Changes
+
+- [#572](https://github.com/open-dpp/open-dpp/pull/572) [`4d5c918`](https://github.com/open-dpp/open-dpp/commit/4d5c9182459b9d46793b88fbd6193c512a1c3b9c) Thanks [@mr42](https://github.com/mr42)! - Add endpoint to modify value of submodel.
+
 ## 0.4.4
 
 ### Patch Changes
