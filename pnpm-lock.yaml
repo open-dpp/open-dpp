@@ -78,6 +78,9 @@ importers:
       dompurify:
         specifier: ^3.4.0
         version: 3.4.0
+      language-tags:
+        specifier: ^2.1.0
+        version: 2.1.0
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -145,6 +148,9 @@ importers:
       '@types/dompurify':
         specifier: ^3.2.0
         version: 3.2.0
+      '@types/language-tags':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@types/lodash':
         specifier: ^4.17.24
         version: 4.17.24
@@ -3061,6 +3067,9 @@ packages:
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
 
+  '@types/language-tags@1.0.4':
+    resolution: {integrity: sha512-20PQbifv3v/djCT+KlXybv0KqO5ofoR1qD1wkinN59kfggTPVTWGmPFgL/1yWuDyRcsQP/POvkqK+fnl5nOwTg==}
+
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
 
@@ -5912,6 +5921,13 @@ packages:
         optional: true
       ws:
         optional: true
+
+  language-subtag-registry@0.3.23:
+    resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
+
+  language-tags@2.1.0:
+    resolution: {integrity: sha512-D4CgpyCt+61f6z2jHjJS1OmZPviAWM57iJ9OKdFFWSNgS7Udj9QVWqyGs/cveVNF57XpZmhSvMdVIV5mjLA7Vg==}
+    engines: {node: '>=22'}
 
   lazy-cache@2.0.2:
     resolution: {integrity: sha512-7vp2Acd2+Kz4XkzxGxaB1FWOi8KjWIWsgdfD5MCb86DWvlLqhRPM+d6Pro3iNEL5VT9mstz5hKAlcd+QR6H3aA==}
@@ -10685,6 +10701,8 @@ snapshots:
       '@types/ms': 2.1.0
       '@types/node': 25.6.0
 
+  '@types/language-tags@1.0.4': {}
+
   '@types/linkify-it@5.0.0': {}
 
   '@types/lodash@4.17.24': {}
@@ -13932,6 +13950,12 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       ws: 8.20.0
+
+  language-subtag-registry@0.3.23: {}
+
+  language-tags@2.1.0:
+    dependencies:
+      language-subtag-registry: 0.3.23
 
   lazy-cache@2.0.2:
     dependencies:
