@@ -359,6 +359,19 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
 
+  async modifyValueOfSubmodel(
+    environment: Environment,
+    submodelId: string,
+    modification: ValueRequestDto,
+    subject: SubjectAttributes,
+  ) {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, subject);
+    submodel.modifyValue(modification, { ability });
+    await this.submodelRepository.save(submodel);
+    return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
+  }
+
   async modifySubmodelElement(
     environment: Environment,
     submodelId: string,

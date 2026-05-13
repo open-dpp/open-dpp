@@ -104,6 +104,14 @@ export function aasHandlers(basePath: string) {
         });
       },
     ),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/$value`,
+      async () => {
+        return HttpResponse.json(submodelCarbonFootprintResponse, {
+          status: 200,
+        });
+      },
+    ),
     http.get(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`,
       async () => {

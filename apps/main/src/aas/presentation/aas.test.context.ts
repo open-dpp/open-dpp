@@ -640,6 +640,33 @@ export function createAasTestContext<T>(
     }).toEqual(modificationBody);
   }
 
+  async function assertModifyValueOfSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const submodel = Submodel.create({
+      idShort: submodelBillOfMaterialPlainFactory.build().idShort!,
+    });
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(property, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+
+    await saveEntity(entity);
+
+    const modificationBody = {
+      Property01: "value new",
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${submodel.id}/$value`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    expect((foundSubmodel.submodelElements[0] as Property).value).toEqual("value new");
+  }
+
   async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const entity = await createEntity(org.id);
@@ -1020,6 +1047,7 @@ export function createAasTestContext<T>(
       getSubmodelById: assertGetSubmodelById,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
+      modifyValueOfSubmodel: assertModifyValueOfSubmodel,
       modifySubmodelElement: assertModifySubmodelElement,
       modifySubmodelElementValue: assertModifySubmodelElementValue,
       addColumn: assertAddColumn,

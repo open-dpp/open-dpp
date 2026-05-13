@@ -169,6 +169,25 @@ export function createAasPaths(tag: string) {
       },
     },
     [`/${tag}${ApiGetSubmodelValuePath}`]: {
+      patch: {
+        operationId: "patchValueOfSubmodel",
+        tags: [tag],
+        summary: `Modify value of submodel with specified id`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: ValueSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelJsonSchema },
+            },
+          },
+        },
+        security,
+      },
       get: {
         tags: [tag],
         summary: `Returns Submodel value representation`,
