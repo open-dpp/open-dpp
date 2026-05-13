@@ -14,8 +14,8 @@ hero:
       link: /home/about
     - theme: alt
       text: Open-API v3 Documentation
-      link: https://app.cloud.open-dpp.de/api
+      link: https://cloud.open-dpp.de/api
     - theme: alt
       text: Download Open-API v3 Documentation
-      link: https://app.cloud.open-dpp.de/api.json
+      link: https://cloud.open-dpp.de/api.json
 ---

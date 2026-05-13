@@ -14,11 +14,11 @@ const document = createDocument({
   },
   servers: [
     {
-      url: "https://app.cloud.open-dpp.de/api",
+      url: "https://cloud.open-dpp.de/api",
       description: "Production server",
     },
     {
-      url: "https://app.demo1.open-dpp.de/api",
+      url: "https://demo.open-dpp.de/api",
       description: "Test server",
     },
     {
