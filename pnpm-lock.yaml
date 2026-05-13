@@ -313,6 +313,9 @@ importers:
       class-validator:
         specifier: ^0.14.4
         version: 0.14.4
+      clean-deep:
+        specifier: ^3.4.0
+        version: 3.4.0
       cpx:
         specifier: ^1.5.0
         version: 1.5.0
@@ -337,6 +340,9 @@ importers:
       http-proxy-3:
         specifier: ^1.23.2
         version: 1.23.2
+      json-diff-ts:
+        specifier: ^4.10.4
+        version: 4.10.4
       langchain:
         specifier: ^1.3.2
         version: 1.3.2(@langchain/core@1.1.39(@opentelemetry/api@1.9.1)(ws@8.20.0))(@opentelemetry/api@1.9.1)(vue@3.5.32(typescript@5.9.3))(ws@8.20.0)(zod-to-json-schema@3.25.2(zod@4.3.6))
@@ -2202,18 +2208,6 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
-
-  '@open-dpp/api-client@file:packages/api-client':
-    resolution: {directory: packages/api-client, type: directory}
-
-  '@open-dpp/dto@file:packages/dto':
-    resolution: {directory: packages/dto, type: directory}
-
-  '@open-dpp/env@file:packages/env':
-    resolution: {directory: packages/env, type: directory}
-
-  '@open-dpp/testing@file:packages/testing':
-    resolution: {directory: packages/testing, type: directory}
 
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
@@ -4284,6 +4278,10 @@ packages:
     resolution: {integrity: sha512-EJUDT7nDVFDvaQgAo2G/PJvxmp1o/c6iXLbswsBbUFXi1Nr+AjA2cKmfbKDMjMvzEe75g3P6JkaDDAKk96A85A==}
     engines: {node: '>= 4.0'}
 
+  clean-deep@3.4.0:
+    resolution: {integrity: sha512-Lo78NV5ItJL/jl+B5w0BycAisaieJGXK1qYi/9m4SjR8zbqmrUtO7Yhro40wEShGmmxs/aJLI/A+jNhdkXK8mw==}
+    engines: {node: '>=4'}
+
   cli-cursor@3.1.0:
     resolution: {integrity: sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw==}
     engines: {node: '>=8'}
@@ -5878,6 +5876,9 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  json-diff-ts@4.10.4:
+    resolution: {integrity: sha512-/Ipg6migsLtNQQz+I3jm+hnPGZx4x47cVXTr4tgvxepQJKIB5iDmyguxicZ/59wIg3OlGgIGwIMftn+LqT8lNQ==}
+
   json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
 
@@ -6082,6 +6083,9 @@ packages:
   lodash.isboolean@3.0.3:
     resolution: {integrity: sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg==}
 
+  lodash.isempty@4.4.0:
+    resolution: {integrity: sha512-oKMuF3xEeqDltrGMfDxAPGIVMSSRv8tbRSODbrs4KGsRRLEhrW8N8Rd4DRgB2+621hY8A8XwwrTVhXWpxFvMzg==}
+
   lodash.isinteger@4.0.4:
     resolution: {integrity: sha512-DBwtEWN2caHQ9/imiNeEA5ys1JoRtRfY3d7V9wkqtbycnAmTvRRmbHKDV4a0EYc678/dia0jrte4tjYwVBaZUA==}
 
@@ -6112,6 +6116,9 @@ packages:
 
   lodash.templatesettings@4.2.0:
     resolution: {integrity: sha512-stgLz+i3Aa9mZgnjr/O+v9ruKZsPsndy7qPZOchbqk2cnTU1ZaldKK+v7m54WoKIyxiuMZTKT2H81F8BeAc3ZQ==}
+
+  lodash.transform@4.6.0:
+    resolution: {integrity: sha512-LO37ZnhmBVx0GvOU/caQuipEh4GN82TcWv3yHlebGDgOxbxiwwzW5Pcx2AcvpIv2WmvmSMoC492yQFNhy/l/UQ==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -10089,55 +10096,6 @@ snapshots:
 
   '@one-ini/wasm@0.1.1': {}
 
-  '@open-dpp/api-client@file:packages/api-client':
-    dependencies:
-      '@open-dpp/dto': file:packages/dto
-      axios: 1.15.0
-    transitivePeerDependencies:
-      - debug
-
-  '@open-dpp/dto@file:packages/dto':
-    dependencies:
-      uuid: 13.0.0
-      zod: 4.3.6
-
-  '@open-dpp/env@file:packages/env(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
-    dependencies:
-      '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/config': 4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@nestjs/core': 11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      zod: 4.3.6
-    transitivePeerDependencies:
-      - '@nestjs/microservices'
-      - '@nestjs/platform-express'
-      - '@nestjs/websockets'
-      - class-transformer
-      - class-validator
-      - reflect-metadata
-      - rxjs
-      - supports-color
-
-  '@open-dpp/testing@file:packages/testing(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-validator@0.14.4)(mongoose@9.4.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
-    dependencies:
-      '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/config': 4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@nestjs/core': 11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/mongoose': 11.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(mongoose@9.4.1)(rxjs@7.8.2)
-      '@open-dpp/dto': file:packages/dto
-      '@open-dpp/env': file:packages/env(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      class-transformer: 0.5.1
-      fishery: 2.4.0
-      zod: 4.3.6
-    transitivePeerDependencies:
-      - '@nestjs/microservices'
-      - '@nestjs/platform-express'
-      - '@nestjs/websockets'
-      - class-validator
-      - mongoose
-      - reflect-metadata
-      - rxjs
-      - supports-color
-
   '@open-draft/deferred-promise@2.2.0': {}
 
   '@open-draft/logger@0.3.0':
@@ -11676,7 +11634,7 @@ snapshots:
 
   axios@1.15.0:
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -12106,6 +12064,12 @@ snapshots:
   clean-css@4.2.4:
     dependencies:
       source-map: 0.6.1
+
+  clean-deep@3.4.0:
+    dependencies:
+      lodash.isempty: 4.4.0
+      lodash.isplainobject: 4.0.6
+      lodash.transform: 4.6.0
 
   cli-cursor@3.1.0:
     dependencies:
@@ -12937,8 +12901,6 @@ snapshots:
   focus-trap@7.8.0:
     dependencies:
       tabbable: 6.4.0
-
-  follow-redirects@1.16.0: {}
 
   follow-redirects@1.16.0(debug@4.4.3):
     optionalDependencies:
@@ -14021,6 +13983,8 @@ snapshots:
 
   jsesc@3.1.0: {}
 
+  json-diff-ts@4.10.4: {}
+
   json-parse-even-better-errors@2.3.1: {}
 
   json-schema-traverse@0.4.1: {}
@@ -14204,6 +14168,8 @@ snapshots:
 
   lodash.isboolean@3.0.3: {}
 
+  lodash.isempty@4.4.0: {}
+
   lodash.isinteger@4.0.4: {}
 
   lodash.isnumber@3.0.3: {}
@@ -14228,6 +14194,8 @@ snapshots:
   lodash.templatesettings@4.2.0:
     dependencies:
       lodash._reinterpolate: 3.0.0
+
+  lodash.transform@4.6.0: {}
 
   lodash@4.18.1: {}
 

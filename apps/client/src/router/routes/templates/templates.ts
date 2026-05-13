@@ -32,6 +32,22 @@ export const TEMPLATE: RouteRecordRaw = {
   },
 };
 
+export const TEMPLATE_ACTIVITY_HISTORY: RouteRecordRaw = {
+  path: "activities",
+  name: "templateActivities",
+  component: () => import("../../../view/activity-history/TemplateActivityHistoryView.vue"),
+  beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = [
+      ...(await templateBreadcrumbs(to)),
+      {
+        name: localizedBreadcrumb("activityHistory.label"),
+        route: TEMPLATE_ACTIVITY_HISTORY,
+      },
+    ];
+  },
+};
+
 export async function templateBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   const text = to.params.templateId ? String(to.params.templateId) : "Editor";
   return [
@@ -49,7 +65,7 @@ export async function templateBreadcrumbs(to: RouteLocationNormalizedGeneric) {
 
 const TEMPLATE_PARENT: RouteRecordRaw = {
   path: ":templateId",
-  children: [TEMPLATE],
+  children: [TEMPLATE, TEMPLATE_ACTIVITY_HISTORY],
 };
 
 export const ORGANIZATION_TEMPLATES_PARENT: RouteRecordRaw = {

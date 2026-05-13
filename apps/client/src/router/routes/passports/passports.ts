@@ -34,7 +34,7 @@ export const PASSPORT: RouteRecordRaw = {
 
 export const PASSPORT_ACTIVITY_HISTORY: RouteRecordRaw = {
   path: "activities",
-  name: "activities",
+  name: "passportActivities",
   component: () => import("../../../view/activity-history/PassportActivityHistoryView.vue"),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
