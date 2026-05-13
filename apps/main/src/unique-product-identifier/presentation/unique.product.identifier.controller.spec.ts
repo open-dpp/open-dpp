@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
+import { PresentationReferenceType } from "@open-dpp/dto";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -8,146 +9,220 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
-
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
+import { Permalink } from "../../permalink/domain/permalink";
+import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
+import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
+import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import {
+  PresentationConfigurationDoc,
+  PresentationConfigurationSchema,
+} from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
-import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
-import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
 import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
 
-describe("uniqueProductIdentifierController", () => {
+describe("UniqueProductIdentifierController (legacy redirects)", () => {
   const basePath = "/unique-product-identifiers";
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [UniqueProductIdentifierModule],
+      imports: [UniqueProductIdentifierModule, PresentationConfigurationsModule],
       providers: [
         UniqueProductIdentifierRepository,
         PassportRepository,
         BrandingRepository,
-        UniqueProductIdentifierApplicationService,
+        PermalinkRepository,
+        PresentationConfigurationRepository,
       ],
-      controllers: [UniqueProductIdentifierController],
+      // Controllers come from UniqueProductIdentifierModule itself; declaring
+      // them at the test-root scope re-binds them without access to the
+      // module's own providers (PermalinkApplicationService etc.).
+      controllers: [],
     },
     [
-      {
-        name: PassportDoc.name,
-        schema: PassportSchema,
-      },
-      {
-        name: BrandingDoc.name,
-        schema: BrandingSchema,
-      },
-      {
-        name: UniqueProductIdentifierDoc.name,
-        schema: UniqueProductIdentifierSchema,
-      },
+      { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
+      { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
     UniqueProductIdentifierRepository,
     SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
   );
 
-  async function createPassportWithUniqueProductIdentifier() {
-    const { aas, submodels } = ctx.getAasObjects();
-
-    const environment = Environment.create({
-      assetAdministrationShells: [aas.id],
-      submodels: submodels.map((s) => s.id),
-      conceptDescriptions: [],
-    });
-
+  async function seedLegacyChain() {
+    const organizationId = randomUUID();
     const passport = Passport.create({
       id: randomUUID(),
-      organizationId: randomUUID(),
-      environment,
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
     });
+    const upi = passport.createUniqueProductIdentifier();
+    const config = PresentationConfiguration.create({
+      organizationId,
+      referenceId: passport.id,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    const permalink = Permalink.create({ presentationConfigurationId: config.id });
 
-    const upid = passport.createUniqueProductIdentifier();
-
-    await ctx.getRepositories().dppIdentifiableRepository.save(upid);
     await ctx.getModuleRef().get(PassportRepository).save(passport);
+    await ctx.getRepositories().dppIdentifiableRepository.save(upi);
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
 
-    const persistable = {
-      id: upid.uuid,
-      upid,
-      getOrganizationId: () => passport.organizationId,
-      getEnvironment: () => environment,
-      toPlain: () => ({ id: upid.uuid }),
-      passport,
-    };
-
-    return persistable;
+    return { upi, passport, config, permalink };
   }
 
-  it(`/GET passport from unique product identifier`, async () => {
-    const { userCookie } = await ctx
-      .globals()
-      .betterAuthHelper.getUserWithCookie(ctx.globals().userId);
-
-    const upid = await createPassportWithUniqueProductIdentifier();
-
+  it("302-redirects the ?reference query to /p", async () => {
+    const { passport } = await seedLegacyChain();
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/unique-product-identifiers/${upid.id}/passport`)
-      .set("Cookie", userCookie);
+      .get(`/unique-product-identifiers?reference=${passport.id}`)
+      .redirects(0);
 
-    expect(response.status).toEqual(200);
-    expect(response.body).toEqual({
-      ...upid.passport.toPlain(),
-      createdAt: upid.passport.createdAt.toISOString(),
-      updatedAt: upid.passport.updatedAt.toISOString(),
+    expect(response.status).toEqual(302);
+    expect(response.headers.location).toEqual(`/p?passportId=${passport.id}`);
+  });
+
+  it("302-redirects /passport to the permalink", async () => {
+    const { upi, permalink } = await seedLegacyChain();
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(`/unique-product-identifiers/${upi.uuid}/passport`)
+      .redirects(0);
+
+    expect(response.status).toEqual(302);
+    expect(response.headers.location).toEqual(`/p/${permalink.id}/passport`);
+  });
+
+  it("302-redirects nested submodel paths", async () => {
+    const { upi, permalink } = await seedLegacyChain();
+    const submodelId = "c3VibW9kZWwtMQ==";
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(`/unique-product-identifiers/${upi.uuid}/submodels/${submodelId}/$value`)
+      .redirects(0);
+
+    expect(response.status).toEqual(302);
+    expect(response.headers.location).toEqual(`/p/${permalink.id}/submodels/${submodelId}/$value`);
+  });
+
+  it("returns 404 for unknown UPI uuid", async () => {
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/unique-product-identifiers/${randomUUID()}/passport`,
+    );
+    expect(response.status).toEqual(404);
+  });
+
+  it("returns 404 when the UPI's passport no longer exists", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
     });
+    const upi = passport.createUniqueProductIdentifier();
+    // Save the UPI but never save the passport — simulates a dangling
+    // legacy QR code whose passport has been deleted.
+    await ctx.getRepositories().dppIdentifiableRepository.save(upi);
+
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/unique-product-identifiers/${upi.uuid}/passport`,
+    );
+    expect(response.status).toEqual(404);
   });
 
-  it(`/GET unique product identifier from reference`, async () => {
-    const { userCookie } = await ctx
-      .globals()
-      .betterAuthHelper.getUserWithCookie(ctx.globals().userId);
-
-    const upid = await createPassportWithUniqueProductIdentifier();
+  it("lazily creates a permalink when only the UPI exists (pre-refactor passport)", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    });
+    const upi = passport.createUniqueProductIdentifier();
+    // Persist the UPI + passport but skip config/permalink creation, mirroring
+    // a passport written before the permalink module shipped.
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
+    await ctx.getRepositories().dppIdentifiableRepository.save(upi);
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/unique-product-identifiers?reference=${upid.passport.id}`)
-      .set("Cookie", userCookie);
+      .get(`/unique-product-identifiers/${upi.uuid}`)
+      .redirects(0);
 
-    expect(response.status).toEqual(200);
-    expect(response.body).toEqual([upid.upid.toPlain()]);
+    expect(response.status).toEqual(302);
+    expect(response.headers.location).toMatch(/^\/p\/[0-9a-f-]{36}$/);
+
+    // The synthesised rows must exist after the redirect so subsequent
+    // /p/:id/* fetches resolve normally.
+    const config = await ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository)
+      .findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      });
+    expect(config).toBeDefined();
+    const permalink = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findByPresentationConfigurationId(config!.id);
+    expect(permalink).toBeDefined();
+    expect(response.headers.location).toEqual(`/p/${permalink!.id}`);
   });
 
-  it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier);
-  });
+  it("lazily creates a permalink when the config exists but no permalink does", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    });
+    const upi = passport.createUniqueProductIdentifier();
+    const config = PresentationConfiguration.create({
+      organizationId,
+      referenceId: passport.id,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
+    await ctx.getRepositories().dppIdentifiableRepository.save(upi);
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
 
-  it(`/GET submodels`, async () => {
-    await ctx.asserts.getSubmodels(createPassportWithUniqueProductIdentifier);
-  });
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(`/unique-product-identifiers/${upi.uuid}/passport`)
+      .redirects(0);
 
-  it(`/GET submodel by id`, async () => {
-    await ctx.asserts.getSubmodelById(createPassportWithUniqueProductIdentifier);
-  });
+    expect(response.status).toEqual(302);
 
-  it("/GET submodel value", async () => {
-    await ctx.asserts.getSubmodelValue(createPassportWithUniqueProductIdentifier);
-  });
-
-  it(`/GET submodel elements`, async () => {
-    await ctx.asserts.getSubmodelElements(createPassportWithUniqueProductIdentifier);
-  });
-
-  it(`/GET submodel element by id`, async () => {
-    await ctx.asserts.getSubmodelElementById(createPassportWithUniqueProductIdentifier);
-  });
-
-  it(`/GET submodel element value`, async () => {
-    await ctx.asserts.getSubmodelElementValue(createPassportWithUniqueProductIdentifier);
+    const permalink = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findByPresentationConfigurationId(config.id);
+    expect(permalink).toBeDefined();
+    expect(response.headers.location).toEqual(`/p/${permalink!.id}/passport`);
   });
 });

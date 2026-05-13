@@ -16,6 +16,7 @@ declare module 'vue' {
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
     BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
+    BigNumberValue: typeof import('./src/components/presentation/components/BigNumberValue.vue')['default']
     BrandingLogo: typeof import('./src/components/media/BrandingLogo.vue')['default']
     Breadcrumbs: typeof import('./src/components/navigation/Breadcrumbs.vue')['default']
     Button: typeof import('primevue/button')['default']
@@ -39,6 +40,7 @@ declare module 'vue' {
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
     DisplayNameRow: typeof import('./src/components/aas/form/DisplayNameRow.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
+    ElementPresentationPanel: typeof import('./src/components/aas/presentation/ElementPresentationPanel.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
     FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
@@ -88,7 +90,10 @@ declare module 'vue' {
     PassportHeader: typeof import('./src/components/presentation/PassportHeader.vue')['default']
     PassportQrCodeDialog: typeof import('./src/components/presentation/PassportQrCodeDialog.vue')['default']
     Password: typeof import('primevue/password')['default']
+    PermalinkSettingsDialog: typeof import('./src/components/digital-product-document/PermalinkSettingsDialog.vue')['default']
     PermissionsForm: typeof import('./src/components/aas/PermissionsForm.vue')['default']
+    PresentationComponentRenderer: typeof import('./src/components/presentation/components/PresentationComponentRenderer.vue')['default']
+    PresentationPreviewFrame: typeof import('./src/components/aas/presentation/PresentationPreviewFrame.vue')['default']
     ProductImageGalleria: typeof import('./src/components/media/ProductImageGalleria.vue')['default']
     ProfileDropdown: typeof import('./src/components/profile/ProfileDropdown.vue')['default']
     ProfileForm: typeof import('./src/components/profile/ProfileForm.vue')['default']
@@ -110,6 +115,7 @@ declare module 'vue' {
     SelectOrganization: typeof import('./src/components/organizations/SelectOrganization.vue')['default']
     SidebarContent: typeof import('./src/components/navigation/SidebarContent.vue')['default']
     SimpleTable: typeof import('./src/components/lists/SimpleTable.vue')['default']
+    SplitButton: typeof import('primevue/splitbutton')['default']
     Submodel: typeof import('./src/components/presentation/Submodel.vue')['default']
     SubmodelBaseForm: typeof import('./src/components/aas/SubmodelBaseForm.vue')['default']
     SubmodelCreateEditor: typeof import('./src/components/aas/SubmodelCreateEditor.vue')['default']
@@ -145,6 +151,7 @@ declare global {
   const AdminUsersList: (typeof import("./src/components/admin/AdminUsersList.vue"))["default"];
   const AssetAdministrationShellEditor: (typeof import("./src/components/aas/AssetAdministrationShellEditor.vue"))["default"];
   const BaseButton: (typeof import("./src/components/basics/BaseButton.vue"))["default"];
+  const BigNumberValue: (typeof import("./src/components/presentation/components/BigNumberValue.vue"))["default"];
   const BrandingLogo: (typeof import("./src/components/media/BrandingLogo.vue"))["default"];
   const Breadcrumbs: (typeof import("./src/components/navigation/Breadcrumbs.vue"))["default"];
   const Button: (typeof import("primevue/button"))["default"];
@@ -168,6 +175,7 @@ declare global {
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
   const DisplayNameRow: (typeof import("./src/components/aas/form/DisplayNameRow.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
+  const ElementPresentationPanel: (typeof import("./src/components/aas/presentation/ElementPresentationPanel.vue"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
   const FileCreateEditor: (typeof import("./src/components/aas/FileCreateEditor.vue"))["default"];
   const FileEditor: (typeof import("./src/components/aas/FileEditor.vue"))["default"];
@@ -217,7 +225,10 @@ declare global {
   const PassportHeader: (typeof import("./src/components/presentation/PassportHeader.vue"))["default"];
   const PassportQrCodeDialog: (typeof import("./src/components/presentation/PassportQrCodeDialog.vue"))["default"];
   const Password: (typeof import("primevue/password"))["default"];
+  const PermalinkSettingsDialog: (typeof import("./src/components/digital-product-document/PermalinkSettingsDialog.vue"))["default"];
   const PermissionsForm: (typeof import("./src/components/aas/PermissionsForm.vue"))["default"];
+  const PresentationComponentRenderer: (typeof import("./src/components/presentation/components/PresentationComponentRenderer.vue"))["default"];
+  const PresentationPreviewFrame: (typeof import("./src/components/aas/presentation/PresentationPreviewFrame.vue"))["default"];
   const ProductImageGalleria: (typeof import("./src/components/media/ProductImageGalleria.vue"))["default"];
   const ProfileDropdown: (typeof import("./src/components/profile/ProfileDropdown.vue"))["default"];
   const ProfileForm: (typeof import("./src/components/profile/ProfileForm.vue"))["default"];
@@ -239,6 +250,7 @@ declare global {
   const SelectOrganization: (typeof import("./src/components/organizations/SelectOrganization.vue"))["default"];
   const SidebarContent: (typeof import("./src/components/navigation/SidebarContent.vue"))["default"];
   const SimpleTable: (typeof import("./src/components/lists/SimpleTable.vue"))["default"];
+  const SplitButton: (typeof import("primevue/splitbutton"))["default"];
   const Submodel: (typeof import("./src/components/presentation/Submodel.vue"))["default"];
   const SubmodelBaseForm: (typeof import("./src/components/aas/SubmodelBaseForm.vue"))["default"];
   const SubmodelCreateEditor: (typeof import("./src/components/aas/SubmodelCreateEditor.vue"))["default"];

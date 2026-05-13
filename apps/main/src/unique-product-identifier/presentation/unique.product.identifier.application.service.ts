@@ -6,7 +6,7 @@ import { UniqueProductIdentifierMetadataDtoSchema } from "./dto/unique-product-i
 @Injectable()
 export class UniqueProductIdentifierApplicationService {
   constructor(
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportRepository: PassportRepository,
   ) {}
 
@@ -22,7 +22,7 @@ export class UniqueProductIdentifierApplicationService {
 
   async getMetadataByUniqueProductIdentifier(uniqueProductIdentifierId: string) {
     const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(uniqueProductIdentifierId);
+      await this.uniqueProductIdentifierRepository.findOneOrFail(uniqueProductIdentifierId);
     const passport = await this.passportRepository.findOne(uniqueProductIdentifier.referenceId);
 
     if (!passport) {

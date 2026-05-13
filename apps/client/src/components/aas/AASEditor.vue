@@ -5,18 +5,33 @@ import {
   DigitalProductDocumentStatusDto,
   type DigitalProductDocumentStatusDtoType,
   KeyTypes,
+  Permissions,
 } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
-import { computed, onMounted, ref, watch } from "vue";
+import Tabs from "primevue/tabs";
+import TabList from "primevue/tablist";
+import Tab from "primevue/tab";
+import TabPanels from "primevue/tabpanels";
+import TabPanel from "primevue/tabpanel";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import { usePresentationConfigurationStore } from "../../stores/presentation-configuration.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 import TablePagination from "../pagination/TablePagination.vue";
+import ElementPresentationPanel from "./presentation/ElementPresentationPanel.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
+import PropertyEditor from "./PropertyEditor.vue";
+import PropertyCreateEditor from "./PropertyCreateEditor.vue";
+import FileEditor from "./FileEditor.vue";
+import FileCreateEditor from "./FileCreateEditor.vue";
+import ReferenceElementEditor from "./ReferenceElementEditor.vue";
+import ReferenceElementCreateEditor from "./ReferenceElementCreateEditor.vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
@@ -52,10 +67,14 @@ const aasNamespace =
   props.type === DigitalProductDocumentType.Passport
     ? apiClient.dpp.passports.aas
     : apiClient.dpp.templates.aas;
+const presentationConfigurationNamespace =
+  props.type === DigitalProductDocumentType.Passport
+    ? apiClient.dpp.passports.presentationConfiguration
+    : apiClient.dpp.templates.presentationConfiguration;
 
 const confirm = useConfirm();
 
-const status = computed(() => model.value.lastStatusChange.currentStatus);
+const status = computed(() => model.value.lastStatusChange?.currentStatus);
 
 const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
 
@@ -103,6 +122,70 @@ const {
   deletePolicyBySubjectAndObject,
 } = aasEditor;
 
+const presentationConfigStore = usePresentationConfigurationStore();
+
+// Sync URL ?config= → store activeConfigId
+watch(
+  () => route.query.config,
+  (next) => {
+    presentationConfigStore.setActiveConfigId(typeof next === "string" ? next : null);
+  },
+  { immediate: true },
+);
+
+// Sync store activeConfigId → URL ?config=
+watch(
+  () => presentationConfigStore.activeConfigId,
+  (next) => {
+    const current = typeof route.query.config === "string" ? route.query.config : null;
+    if (current === next) return;
+    router.push({ query: { ...route.query, config: next ?? undefined } });
+  },
+);
+
+const { can: canForPath } = useAasAbility({ getAccessPermissionRules });
+
+function canEditPath(path: string): boolean {
+  return canForPath(Permissions.Edit, path);
+}
+
+const activeDrawerTab = ref<"data" | "presentation">("data");
+
+watch(
+  () => drawerVisible.value,
+  (visible) => {
+    if (visible) {
+      activeDrawerTab.value = "data";
+    }
+  },
+);
+
+const leafEditorComponents = [
+  PropertyEditor,
+  PropertyCreateEditor,
+  FileEditor,
+  FileCreateEditor,
+  ReferenceElementEditor,
+  ReferenceElementCreateEditor,
+];
+
+const isLeafEditor = computed(() => {
+  if (!editorVNode.value) return false;
+  const comp = editorVNode.value.component;
+  return leafEditorComponents.includes(comp as any);
+});
+
+const showPresentationTab = computed(() => {
+  if (!isLeafEditor.value) return false;
+  // CREATE mode hides the Presentation tab (no idShortPathIncludingSubmodel yet).
+  return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
+});
+
+const isOnDataTab = computed(() => activeDrawerTab.value === "data");
+const showSaveButton = computed(
+  () => saveButtonIsVisible.value && (!showPresentationTab.value || isOnDataTab.value),
+);
+
 watch(
   () => status.value,
   async () => {
@@ -112,6 +195,16 @@ watch(
 
 onMounted(async () => {
   await init();
+  await presentationConfigStore.fetch({
+    referenceId: model.value.id,
+    namespace: presentationConfigurationNamespace,
+    errorHandlingStore,
+    translate: t,
+  });
+});
+
+onUnmounted(() => {
+  presentationConfigStore.$reset();
 });
 
 const popover = ref();
@@ -310,7 +403,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
               @click="position = defaultPosition"
             />
             <Button
-              v-if="saveButtonIsVisible"
+              v-if="showSaveButton"
               :label="
                 editorVNode?.component === SubmodelElementListCreateEditor
                   ? t('aasEditor.table.saveAndAddEntries')
@@ -321,9 +414,49 @@ const isFullPosition = computed(() => position.value === fullPosition);
           </div>
         </div>
       </template>
+
+      <template v-if="showPresentationTab">
+        <Tabs v-model:value="activeDrawerTab">
+          <TabList>
+            <Tab data-cy="drawer-tab-data" value="data">{{ t("aasEditor.drawerTabs.data") }}</Tab>
+            <Tab data-cy="drawer-tab-presentation" value="presentation">
+              {{ t("aasEditor.drawerTabs.presentation") }}
+            </Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel value="data">
+              <component
+                :is="editorVNode.component"
+                v-if="editorVNode"
+                v-bind="editorVNode.props"
+                :id="model.id"
+                ref="componentRef"
+                :aas-namespace="aasNamespace"
+                :open-drawer="aasEditor.openDrawer"
+                :error-handling-store="errorHandlingStore"
+                :translate="t"
+                :get-access-permission-rules="getAccessPermissionRules"
+                :modify-shell="modifyShell"
+                :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
+                :is-archived="isArchived"
+              />
+            </TabPanel>
+            <TabPanel value="presentation">
+              <ElementPresentationPanel
+                :element="editorVNode!.props.data"
+                :path="editorVNode!.props.path.idShortPathIncludingSubmodel!"
+                :disabled="
+                  isArchived || !canEditPath(editorVNode!.props.path.idShortPathIncludingSubmodel!)
+                "
+              />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </template>
+
       <component
+        v-else-if="editorVNode"
         :is="editorVNode.component"
-        v-if="editorVNode"
         v-bind="editorVNode.props"
         :id="model.id"
         ref="componentRef"

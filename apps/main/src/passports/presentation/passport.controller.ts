@@ -22,9 +22,11 @@ import {
   Controller,
   Delete,
   ForbiddenException,
+  forwardRef,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Post,
@@ -101,8 +103,10 @@ import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
@@ -126,9 +130,12 @@ export class PassportController
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
+    @Inject(forwardRef(() => PermalinkApplicationService))
+    private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @Get()
@@ -165,10 +172,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Param("id") id: string,
   ): Promise<PassportDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
       await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
         id,
-        SubjectAttributes.create({ userRole, memberRole }),
+        subject,
         organizationId,
       );
     return PassportDtoSchema.parse(passport.toPlain());
@@ -187,7 +195,7 @@ export class PassportController
       subject,
       organizationId,
     );
-    const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(id);
+    const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(id);
     if (!upi) {
       throw new NotFoundException(`No UniqueProductIdentifier found for passport ${id}`);
     }
@@ -274,9 +282,29 @@ export class PassportController
     });
 
     const upid = passport.createUniqueProductIdentifier();
-    await this.uniqueProductIdentifierService.save(upid);
 
-    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
+    const saved = await this.environmentService.withTransaction(async (options) => {
+      await this.uniqueProductIdentifierRepository.save(upid, options);
+      const persisted = await this.passportRepository.save(passport, options);
+      const snapshotConfigs =
+        await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
+          persisted,
+          options,
+        );
+      const configs =
+        snapshotConfigs.length > 0
+          ? snapshotConfigs
+          : [
+              await this.presentationConfigurationService.ensureDefaultForPassport(
+                persisted,
+                options,
+              ),
+            ];
+      await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
+      return persisted;
+    });
+
+    return PassportDtoSchema.parse(saved.toPlain());
   }
 
   @ApiGetShells()
@@ -792,7 +820,18 @@ export class PassportController
       async (p, options) => {
         await this.passportRepository.save(p, options);
         const upid = p.createUniqueProductIdentifier();
-        await this.uniqueProductIdentifierService.save(upid, options);
+        await this.uniqueProductIdentifierRepository.save(upid, options);
+      },
+      async (p, options) => {
+        const importedConfigs = await this.presentationConfigurationService.findExistingForPassport(
+          p,
+          options,
+        );
+        const configs =
+          importedConfigs.length > 0
+            ? importedConfigs
+            : [await this.presentationConfigurationService.ensureDefaultForPassport(p, options)];
+        await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());

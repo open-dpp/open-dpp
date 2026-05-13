@@ -46,6 +46,7 @@
     "templateImportFailed": "Vorlage konnte nicht importiert werden.",
     "errorOccurred": "Ein Fehler ist aufgetreten",
     "unknownErrorOccurred": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "tryAgain": "Erneut versuchen",
     "failed": "fehlgeschlagen",
     "toHome": "Zur Startseite",
     "home": "Startseite",
@@ -68,6 +69,26 @@
     }
   },
   "aasEditor": {
+    "drawerTabs": {
+      "data": "Daten",
+      "presentation": "Darstellung"
+    },
+    "presentationTab": {
+      "title": "Darstellung",
+      "description": "Lege fest, wie numerische Eigenschaften angezeigt werden.",
+      "property": "Name",
+      "component": "Komponente",
+      "preview": "Vorschau",
+      "previewSampleBadge": "Beispielwert",
+      "default": "Standard",
+      "bigNumber": "BigNumber",
+      "emptyState": "Noch keine Submodelle. Lege eines im Tab \"Struktur\" an, um die Darstellung seiner Felder festzulegen.",
+      "empty": "Für diesen Feldtyp sind noch keine alternativen Darstellungskomponenten verfügbar.",
+      "configPicker": {
+        "label": "Darstellungskonfiguration",
+        "untitled": "Unbenannt"
+      }
+    },
     "security": {
       "missingPermission": "Fehlende Rechte",
       "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
@@ -369,6 +390,10 @@
         "palette": "Farbpalette",
         "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
       },
+      "permalinkBaseUrl": {
+        "label": "Basis-URL für Produktpässe",
+        "description": "Überschreibt die Standard-URL dieser Instanz für Produktpässe."
+      },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
@@ -488,6 +513,11 @@
     "create": "Neuen Produktpass erstellen",
     "delete": "Soll der Produktpass wirklich gelöscht werden? Damit ist dieser nicht mehr verfügbar.",
     "errorDelete": "Löschen des Produktpasses fehlgeschlagen",
+    "errorFetch": "Produktpass konnte nicht geladen werden",
+    "errorLoading": "Dieser Produktpass konnte nicht geladen werden. Bitte erneut versuchen.",
+    "notFoundTitle": "Produktpass nicht gefunden",
+    "notFoundDescription": "Dieser Produktpass existiert nicht oder wurde entfernt. Bitte Link prüfen.",
+    "loading": "Produktpass wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status des Produktpasses",
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage",
@@ -508,6 +538,11 @@
     "create": "Neue Passvorlage erstellen",
     "delete": "Soll die Passvorlage wirklich gelöscht werden? Damit ist diese nicht mehr verfügbar.",
     "errorDelete": "Löschen der Passvorlage fehlgeschlagen",
+    "errorFetch": "Passvorlage konnte nicht geladen werden",
+    "errorLoading": "Diese Passvorlage konnte nicht geladen werden. Bitte erneut versuchen.",
+    "notFoundTitle": "Passvorlage nicht gefunden",
+    "notFoundDescription": "Diese Passvorlage existiert nicht oder wurde entfernt. Bitte Link prüfen.",
+    "loading": "Passvorlage wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status der Passvorlage",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
@@ -615,6 +650,11 @@
     "askQuestion": "Stellen Sie Ihre Frage...",
     "answerPending": "Wird verarbeitet...",
     "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen.",
+    "loadPassportError": "Laden des Produktpasses fehlgeschlagen.",
+    "loadSubmodelsError": "Laden der Submodels fehlgeschlagen.",
+    "loadShellsError": "Laden der Shells fehlgeschlagen.",
+    "loadPresentationConfigError": "Laden der Darstellungskonfiguration fehlgeschlagen.",
+    "updatePresentationConfigError": "Aktualisieren der Darstellungskonfiguration fehlgeschlagen.",
     "emailGreeting": "Vielen Dank",
     "repairRequest": {
       "addAiChatDialog": {
@@ -631,7 +671,35 @@
     "passportNotFound": "Produktpass nicht gefunden",
     "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
   },
-  "uniqueproductidentifier": {
-    "notfound": "UniqueProductIdentifier konnte nicht gefunden werden, bitte Administrator kontaktieren."
+  "permalink": {
+    "notfound": "Permalink konnte nicht gefunden werden, bitte Administrator kontaktieren.",
+    "settings": {
+      "title": "Permalink-Einstellungen",
+      "open": "Permalink-Einstellungen",
+      "loadError": "Permalink-Einstellungen konnten nicht geladen werden.",
+      "saveError": "Permalink-Einstellungen konnten nicht gespeichert werden.",
+      "saveSuccess": "Permalink-Einstellungen gespeichert.",
+      "slugConflict": "Dieser Slug wird bereits von einem anderen Permalink verwendet.",
+      "slugInvalid": "Slug muss 2–64 Zeichen aus Kleinbuchstaben, Ziffern und Bindestrichen enthalten.",
+      "baseUrlInvalid": "Basis-URL muss ein vollständiger Origin sein (z. B. https://example.com), ohne Pfad oder Query.",
+      "slug": {
+        "label": "Kurzname",
+        "placeholder": "Ende der URL dieses Produktpasses"
+      },
+      "baseUrl": {
+        "label": "Eigene Basis-URL",
+        "description": "Überschreibt die Permalink-Domain der Organisation bzw. die Standard-URL dieser Instanz für diesen Pass."
+      },
+      "preview": {
+        "label": "Vorschau",
+        "invalid": "Vorschau nicht verfügbar, solange die Eingaben ungültig sind.",
+        "usingAutoId": "Automatisch generierte ID wird verwendet.",
+        "source": {
+          "permalink": "Basis-URL für diesen Pass gesetzt.",
+          "branding": "Basis-URL von der Organisation geerbt.",
+          "instance": "Basis-URL vom Instanz-Standard geerbt."
+        }
+      }
+    }
   }
 }

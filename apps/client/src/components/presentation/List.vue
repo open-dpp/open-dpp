@@ -7,8 +7,9 @@ import { computed } from "vue";
 import { useDisplayName } from "../../composables/display-name";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
-const { content } = defineProps<{
+const { content, path } = defineProps<{
   content: SubmodelElementCollectionResponseDto[];
+  path?: string;
 }>();
 
 const columns = computed(() => {
@@ -44,13 +45,17 @@ const rows = computed(() => {
 
   return result;
 });
+
+function cellPath(field: string): string | undefined {
+  return path ? `${path}.${field}` : undefined;
+}
 </script>
 
 <template>
   <DataTable :value="rows">
     <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header">
       <template #body="slotProps">
-        <SubmodelElementValue :element="slotProps.data[col.field]" />
+        <SubmodelElementValue :element="slotProps.data[col.field]" :path="cellPath(col.field)" />
       </template>
     </Column>
   </DataTable>

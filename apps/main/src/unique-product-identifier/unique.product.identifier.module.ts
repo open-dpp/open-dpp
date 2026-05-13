@@ -16,6 +16,8 @@ import { BrandingDoc, BrandingSchema } from "../branding/infrastructure/branding
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { PassportsModule } from "../passports/passports.module";
+import { PermalinkModule } from "../permalink/permalink.module";
+import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import { UniqueProductIdentifierRepository } from "./infrastructure/unique-product-identifier.repository";
 import {
@@ -46,6 +48,8 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
     TraceabilityEventsModule,
     PassportsModule,
     BrandingModule,
+    PresentationConfigurationsModule,
+    PermalinkModule,
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [UniqueProductIdentifierApplicationService, UniqueProductIdentifierRepository],

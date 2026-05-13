@@ -1,34 +1,37 @@
 <script lang="ts" setup>
-import type { UniqueProductIdentifierDto } from "@open-dpp/api-client";
+import type { PermalinkPublicDto } from "@open-dpp/api-client";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { VIEW_ROOT_URL } from "../../const";
 import apiClient from "../../lib/api-client";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/16/solid";
 import { useClipboard, useWindowSize } from "@vueuse/core";
 import { useToast } from "primevue/usetoast";
 
-const model = defineModel<boolean>();
-const props = defineProps<{ passportId: string }>();
-const upids = ref<UniqueProductIdentifierDto[] | undefined>(undefined);
+const model = defineModel<boolean>("visible");
+const props = defineProps<{ passportId: string | undefined }>();
+const permalinks = ref<PermalinkPublicDto[] | undefined>(undefined);
 const { t } = useI18n();
 
+// Refetch on every open (in addition to initial mount) so edits made via
+// PermalinkSettingsDialog propagate without forcing the user to re-navigate.
+// Watching both inputs keeps the dialog in sync if either the passport
+// changes or the user closes + reopens after an edit.
 watch(
-  () => props.passportId,
-  async (newValue) => {
-    const result = await apiClient.dpp.uniqueProductIdentifiers.getByReference(newValue);
-    upids.value = result.data;
+  [() => props.passportId, model],
+  async ([passportId, visible]) => {
+    if (!passportId || !visible) return;
+    const result = await apiClient.dpp.permalinks.getByPassport(String(passportId));
+    permalinks.value = result.data;
   },
   { immediate: true },
 );
 
 const toast = useToast();
 
-const link = computed(() =>
-  upids.value && upids.value[0]
-    ? `${VIEW_ROOT_URL}/presentation/${upids.value[0].uuid}`
-    : undefined,
-);
+// `publicUrl` is the server-resolved white-label URL — falls back through
+// permalink override → org branding → OPEN_DPP_URL so the QR encodes
+// whatever the org has configured without the client duplicating that chain.
+const link = computed(() => permalinks.value?.[0]?.publicUrl);
 
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { copy } = useClipboard();
@@ -64,11 +67,11 @@ async function onCopy() {
         <ArrowTopRightOnSquareIcon class="mt-auto w-5" />
       </div>
       <div
-        v-if="!upids || !upids[0]"
+        v-if="!permalinks || !permalinks[0]"
         class="flex w-full flex-col items-center justify-center gap-5 p-10"
       >
         <span>
-          {{ t("uniqueproductidentifier.notfound") }}
+          {{ t("permalink.notfound") }}
         </span>
       </div>
     </div>

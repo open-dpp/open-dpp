@@ -1,0 +1,249 @@
+import type { TestingModule } from "@nestjs/testing";
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import type { Connection } from "mongoose";
+
+import { generateMongoConfig } from "../../database/config";
+import { PresentationConfiguration } from "../domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "./presentation-configuration.repository";
+import {
+  PresentationConfigurationDoc,
+  PresentationConfigurationSchema,
+} from "./presentation-configuration.schema";
+
+describe("presentationConfigurationRepository", () => {
+  let repository: PresentationConfigurationRepository;
+  let connection: Connection;
+  let module: TestingModule;
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          {
+            name: PresentationConfigurationDoc.name,
+            schema: PresentationConfigurationSchema,
+          },
+        ]),
+      ],
+      providers: [PresentationConfigurationRepository],
+    }).compile();
+
+    repository = module.get<PresentationConfigurationRepository>(
+      PresentationConfigurationRepository,
+    );
+    connection = module.get<Connection>(getConnectionToken());
+  });
+
+  it("persists a presentation configuration and loads it back by id", async () => {
+    const config = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId: randomUUID(),
+      referenceType: PresentationReferenceType.Template,
+      elementDesign: { "submodel-1.prop-1": PresentationComponentName.BigNumber },
+      defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
+    });
+
+    await repository.save(config);
+    const found = await repository.findOneOrFail(config.id);
+
+    expect(found.id).toBe(config.id);
+    expect(Object.fromEntries(found.elementDesign)).toEqual({
+      "submodel-1.prop-1": PresentationComponentName.BigNumber,
+    });
+    expect(Object.fromEntries(found.defaultComponents)).toEqual({
+      [KeyTypes.Property]: PresentationComponentName.BigNumber,
+    });
+  });
+
+  it("finds a presentation configuration by reference", async () => {
+    const referenceId = randomUUID();
+    const config = PresentationConfiguration.create({
+      organizationId: "org-2",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    await repository.save(config);
+
+    const found = await repository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(found?.id).toBe(config.id);
+
+    const missing = await repository.findByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: randomUUID(),
+    });
+    expect(missing).toBeUndefined();
+  });
+
+  it("counts presentation configurations by reference", async () => {
+    const referenceId = randomUUID();
+    const missingBefore = await repository.countByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(missingBefore).toBe(0);
+
+    const config = PresentationConfiguration.create({
+      organizationId: "org-count",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+    });
+    await repository.save(config);
+
+    const count = await repository.countByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(count).toBe(1);
+  });
+
+  it("allows multiple configs for the same reference", async () => {
+    const referenceId = randomUUID();
+    const a = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+      label: null,
+    });
+    const b = PresentationConfiguration.create({
+      organizationId: "org-1",
+      referenceId,
+      referenceType: PresentationReferenceType.Passport,
+      label: "Variant A",
+    });
+    await repository.save(a);
+    await repository.save(b);
+
+    const list = await repository.findManyByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId,
+    });
+    expect(list).toHaveLength(2);
+  });
+
+  describe("findManyByReference", () => {
+    it("returns configs ordered by createdAt asc", async () => {
+      const referenceId = randomUUID();
+      const first = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: null,
+      });
+      await repository.save(first);
+      const second = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: "Later",
+      });
+      await repository.save(second);
+
+      const list = await repository.findManyByReference({
+        referenceType: "passport",
+        referenceId,
+      });
+      expect(list.map((c) => c.id)).toEqual([first.id, second.id]);
+    });
+
+    it("returns empty array when no configs exist", async () => {
+      const list = await repository.findManyByReference({
+        referenceType: "passport",
+        referenceId: randomUUID(),
+      });
+      expect(list).toEqual([]);
+    });
+  });
+
+  describe("deleteByReference", () => {
+    it("removes all configs for a reference, not just one", async () => {
+      const referenceId = randomUUID();
+      const a = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: null,
+      });
+      const b = PresentationConfiguration.create({
+        organizationId: "org-1",
+        referenceId,
+        referenceType: "passport",
+        label: "Variant A",
+      });
+      await repository.save(a);
+      await repository.save(b);
+
+      await repository.deleteByReference({
+        referenceType: "passport",
+        referenceId,
+      });
+
+      const remaining = await repository.findManyByReference({
+        referenceType: "passport",
+        referenceId,
+      });
+      expect(remaining).toEqual([]);
+    });
+  });
+
+  describe("deleteById", () => {
+    it("removes the config and returns true", async () => {
+      const c = PresentationConfiguration.createForPassport({
+        organizationId: "org-1",
+        referenceId: randomUUID(),
+      });
+      await repository.save(c);
+      const removed = await repository.deleteById(c.id);
+      expect(removed).toBe(true);
+      expect(await repository.findOne(c.id)).toBeUndefined();
+    });
+
+    it("returns false when nothing was deleted", async () => {
+      expect(await repository.deleteById(randomUUID())).toBe(false);
+    });
+  });
+
+  it("rolls back save inside an aborted session transaction", async () => {
+    const referenceId = randomUUID();
+    const session = await connection.startSession();
+    try {
+      session.startTransaction();
+      await repository.save(
+        PresentationConfiguration.create({
+          organizationId: "org-tx",
+          referenceId,
+          referenceType: PresentationReferenceType.Template,
+        }),
+        { session },
+      );
+      await session.abortTransaction();
+    } finally {
+      await session.endSession();
+    }
+
+    const found = await repository.findByReference({
+      referenceType: PresentationReferenceType.Template,
+      referenceId,
+    });
+    expect(found).toBeUndefined();
+  });
+
+  afterAll(async () => {
+    await module.close();
+  });
+});

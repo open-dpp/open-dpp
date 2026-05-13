@@ -30,7 +30,7 @@ import {
   ValueResponseDto,
   ValueSchema,
 } from "@open-dpp/dto";
-import { ForbiddenError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";
 
@@ -584,6 +584,19 @@ export class EnvironmentService {
     }
   }
 
+  async withTransaction<T>(work: (options: DbSessionOptions) => Promise<T>): Promise<T> {
+    const session = await this.connection.startSession();
+    try {
+      let result!: T;
+      await session.withTransaction(async () => {
+        result = await work({ session });
+      });
+      return result;
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async populateEnvironmentForPagingResult(
     pagingResult: PagingResult<Passport | Template>,
     populateOptions: PopulateOptions,
@@ -617,8 +630,10 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.aasRepository.save(aasCopy);
-        await Promise.all(submodelsCopy.map((model) => this.submodelRepository.save(model)));
+        await this.aasRepository.save(aasCopy, { session });
+        await Promise.all(
+          submodelsCopy.map((model) => this.submodelRepository.save(model, { session })),
+        );
       });
     } finally {
       await session.endSession();
@@ -646,7 +661,7 @@ export class EnvironmentService {
     environment: Environment,
   ): Promise<AssetAdministrationShell> {
     if (environment.assetAdministrationShells.length === 0) {
-      throw new Error("No asset administration shell for environment. Can't add submodel");
+      throw new ValueError("No asset administration shell for environment. Can't add submodel");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }

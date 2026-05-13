@@ -10,6 +10,8 @@ import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server, Socket } from "socket.io";
 import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/websocket-auth.guard";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ChatService } from "../chat.service";
 
 @UseGuards(WebsocketAuthGuard)
@@ -21,25 +23,42 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-  private chatService: ChatService;
-
-  constructor(chatService: ChatService) {
-    this.chatService = chatService;
-  }
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
+  ) {}
 
   @OptionalAuth()
   @SubscribeMessage("userMessage")
   async handleMessage(
-    @MessageBody() message: { msg: string; uniqueProductIdentifierUuid: string },
+    @MessageBody() message: { msg: string; permalink: string },
     @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
     this.logger.log("Start to process message:", message);
 
     try {
+      const { passport } = await this.permalinkApplicationService.resolveToPassport(
+        message.permalink,
+        {
+          // Member-of-org chat clients can preview draft passports; anonymous
+          // viewers go through the same draft 404 as the HTTP resolver.
+          organizationId: client.data.member?.organizationId,
+          memberRole: client.data.member?.role,
+        },
+      );
+      const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(passport.id);
+      if (!upi) {
+        this.logger.error(
+          `No UniqueProductIdentifier found for passport ${passport.id} (permalink=${message.permalink})`,
+        );
+        throw new Error("No product identifier found for the provided permalink");
+      }
+
       const reply = await this.chatService.askAgent(
         message.msg,
-        message.uniqueProductIdentifierUuid,
+        upi.uuid,
         client.data.user,
         client.data.member,
       );

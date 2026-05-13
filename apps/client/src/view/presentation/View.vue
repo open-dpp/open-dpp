@@ -1,40 +1,66 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
 import apiClient from "../../lib/api-client.ts";
 import { useAnalyticsStore } from "../../stores/analytics.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePassportStore } from "../../stores/passport.ts";
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const passportStore = usePassportStore();
 const analyticsStore = useAnalyticsStore();
+const errorHandlingStore = useErrorHandlingStore();
 const passportAvailable = ref(false);
 
 async function loadPassport(id: string): Promise<boolean> {
-  const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
+  const response = await apiClient.dpp.permalinks.getById(id);
   if (response.status === 404) {
     return false;
   }
+  if (response.status !== 200) {
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadPassportError"),
+      new Error(`Unexpected status ${response.status} while loading passport`),
+    );
+    return false;
+  }
 
-  passportStore.productPassport = response.data;
+  passportStore.productPassport = response.data.passport;
+  passportStore.presentationConfig = response.data.presentationConfiguration;
 
-  const submodels = await apiClient.dpp.uniqueProductIdentifiers.aas.getSubmodels(id, {});
+  const submodels = await apiClient.dpp.permalinks.aas.getSubmodels(id, {});
   if (submodels.status !== 200) {
-    console.error("Failed to load submodels");
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadSubmodelsError"),
+      new Error(`Unexpected status ${submodels.status} while loading submodels`),
+    );
     return false;
   }
   passportStore.submodels = submodels.data.result || [];
 
-  const aas = await apiClient.dpp.uniqueProductIdentifiers.aas.getShells(id, {});
+  const aas = await apiClient.dpp.permalinks.aas.getShells(id, {});
   if (aas.status !== 200) {
-    console.error("Failed to load shells");
+    errorHandlingStore.logErrorWithNotification(
+      t("presentation.loadShellsError"),
+      new Error(`Unexpected status ${aas.status} while loading shells`),
+    );
     return false;
   }
   passportStore.shells = aas.data.result || [];
-  await analyticsStore.addPageView();
+
+  // Page-view tracking is best-effort. The analytics endpoint resolves the
+  // permalink without auth context, so it 404s for unpublished passports —
+  // which must not break the page render for an org-member previewing a draft.
+  try {
+    await analyticsStore.addPageView();
+  } catch (error) {
+    errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportError"), error);
+  }
 
   return true;
 }
@@ -59,8 +85,8 @@ watch(
     passportAvailable.value = false;
     try {
       passportAvailable.value = await loadPassport(permalink);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportError"), error);
     }
 
     if (!cancelled && !passportAvailable.value) {

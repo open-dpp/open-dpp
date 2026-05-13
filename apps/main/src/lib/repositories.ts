@@ -28,8 +28,11 @@ export async function save<T extends Document<string>, V>(
   ValidationSchema?: ZodObject<any>,
   options?: DbSessionOptions,
 ): Promise<V> {
-  // 1. Try to find an existing document
-  let doc = await docModel.findById(domainObject.id).session(options?.session ?? null);
+  // 1. Try to find an existing document. `$eq` keeps the lookup safe even if
+  // a future caller hands us a non-string id (see findOne below).
+  let doc = await docModel
+    .findOne({ _id: { $eq: domainObject.id } })
+    .session(options?.session ?? null);
   // 2. If none exists, create a new discriminator document
   if (!doc) {
     doc = new docModel({
@@ -68,7 +71,11 @@ export async function findOne<T extends Document<string>, V>(
   docModel: MongooseModel<T>,
   fromPlain: (plain: unknown) => Promise<V>,
 ): Promise<V | undefined> {
-  const mongoDoc = await docModel.findById(id);
+  // Use `$eq` so any non-string `id` (e.g. an operator object like
+  // `{$gt: ""}` produced by Express's `qs` query parser) is compared as a
+  // literal value instead of being interpreted as a MongoDB query operator.
+  // Closes the NoSQL-injection sink that CodeQL flagged for the generic helper.
+  const mongoDoc = await docModel.findOne({ _id: { $eq: id } });
   if (!mongoDoc) {
     return undefined;
   }
@@ -92,8 +99,19 @@ export async function findByIds<T extends Document<string>, V>(
 
 export type FindOptions = {
   pagination?: Pagination;
-  filter?: { status: DigitalProductDocumentStatusType[] };
+  filter?: { status?: ReadonlyArray<DigitalProductDocumentStatusType> };
 };
+
+function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusType>) {
+  const includesDraft = statuses.includes(DigitalProductDocumentStatus.Draft);
+  const currentStatusClause =
+    statuses.length === 1
+      ? { "lastStatusChange.currentStatus": statuses[0] }
+      : { "lastStatusChange.currentStatus": { $in: [...statuses] } };
+  return {
+    $or: [currentStatusClause, ...(includesDraft ? [{ _schemaVersion: "1.0.0" }] : [])],
+  };
+}
 
 export async function findAllByOrganizationId<
   T extends Document<string>,
@@ -105,18 +123,11 @@ export async function findAllByOrganizationId<
   options?: FindOptions,
 ) {
   const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
-  const status = options?.filter?.status;
+  const statuses = options?.filter?.status;
   const docs = await docModel
     .find({
       organizationId,
-      ...(status && {
-        $or: [
-          { "lastStatusChange.currentStatus": { $in: status } },
-          ...(status.includes(DigitalProductDocumentStatus.Draft)
-            ? [{ _schemaVersion: "1.0.0" }]
-            : []),
-        ],
-      }),
+      ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
       ...(tmpPagination.cursor && {
         $or: [
           { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },

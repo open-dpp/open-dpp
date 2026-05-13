@@ -33,6 +33,12 @@ const submodels = computed(() => {
 
   return mapTreeElementsToSubmodels(selectedElement.children);
 });
+
+const parentPathOverride = computed(() => {
+  const raw = route.query.submodelPath;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+});
 </script>
 
 <template>
@@ -55,6 +61,7 @@ const submodels = computed(() => {
           :id-short="submodel.id"
           :title="submodel.title"
           :submodel-elements="submodel.submodelElements"
+          :parent-path-override="parentPathOverride"
         />
       </div>
     </div>

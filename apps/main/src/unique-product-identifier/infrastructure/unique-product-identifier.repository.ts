@@ -24,25 +24,31 @@ export class UniqueProductIdentifierRepository {
     return UniqueProductIdentifier.loadFromDb({
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
+      // Older rows may not have a `type` field — loadFromDb supplies the
+      // OPEN_DPP_UUID default so deserialisation never fails.
+      type: uniqueProductIdentifierDoc.type ?? null,
     });
   }
 
   async save(uniqueProductIdentifier: UniqueProductIdentifier, options?: DbSessionOptions) {
-    return this.convertToDomain(
-      await this.uniqueProductIdentifierDoc.findOneAndUpdate(
-        { _id: uniqueProductIdentifier.uuid },
-        {
-          _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
-          referenceId: uniqueProductIdentifier.referenceId,
-        },
-        {
-          new: true, // Return the updated document
-          upsert: true, // Create a new document if none found
-          runValidators: true,
-          session: options?.session ?? null,
-        },
-      ),
+    const doc = await this.uniqueProductIdentifierDoc.findOneAndUpdate(
+      { _id: uniqueProductIdentifier.uuid },
+      {
+        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_1_0,
+        referenceId: uniqueProductIdentifier.referenceId,
+        type: uniqueProductIdentifier.type,
+      },
+      {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if none found
+        runValidators: true,
+        session: options?.session ?? null,
+      },
     );
+    if (!doc) {
+      throw new Error("findOneAndUpdate with upsert did not return a document");
+    }
+    return this.convertToDomain(doc);
   }
 
   async findOne(uuid: string) {
@@ -85,6 +91,9 @@ export class UniqueProductIdentifierRepository {
   }
 
   async deleteByReferenceId(referenceId: string, options?: DbSessionOptions) {
-    await this.uniqueProductIdentifierDoc.findOneAndDelete({ referenceId }, options);
+    await this.uniqueProductIdentifierDoc.deleteMany(
+      { referenceId },
+      { session: options?.session },
+    );
   }
 }

@@ -1,7 +1,8 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { MediaModule } from "../media/media.module";
+import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { AasRepository } from "./infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "./infrastructure/concept-description.repository";
 import {
@@ -27,6 +28,7 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
     ]),
     OrganizationsModule,
     MediaModule,
+    forwardRef(() => PresentationConfigurationsModule),
   ],
   providers: [
     SubmodelRegistryInitializer,

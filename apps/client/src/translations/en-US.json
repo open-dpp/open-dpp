@@ -30,6 +30,7 @@
     "failed": "failed",
     "errorOccurred": "An error occurred",
     "unknownErrorOccurred": "An unexpected error occurred. Please try again.",
+    "tryAgain": "Try again",
     "toHome": "To home",
     "home": "Home",
     "backTo": "Back to { link }",
@@ -68,6 +69,26 @@
     "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
+    "drawerTabs": {
+      "data": "Data",
+      "presentation": "Presentation"
+    },
+    "presentationTab": {
+      "title": "Presentation",
+      "description": "Choose how numeric properties are displayed.",
+      "property": "Name",
+      "component": "Component",
+      "preview": "Preview",
+      "previewSampleBadge": "Using sample value",
+      "default": "Default",
+      "bigNumber": "BigNumber",
+      "emptyState": "No submodels yet. Add one in the Structure tab to configure how its fields are displayed.",
+      "empty": "No alternative presentation components available for this field type yet.",
+      "configPicker": {
+        "label": "Presentation configuration",
+        "untitled": "Untitled"
+      }
+    },
     "security": {
       "missingPermission": "Missing permissions",
       "inheritedPermission": "Inherits permissions of parent node",
@@ -369,6 +390,10 @@
         "palette": "Color palette",
         "description": "This color will be used as a base color to generate a color palette."
       },
+      "permalinkBaseUrl": {
+        "label": "Base URL for passports",
+        "description": "Overrides the default base URL for passports of this instance."
+      },
       "updateError": "Failed to update organization.",
       "updateSuccess": "Organization settings saved successfully."
     },
@@ -457,6 +482,11 @@
     "label": "Passport | Passports",
     "create": "Create passport",
     "errorDelete": "Failed to delete the product passport",
+    "errorFetch": "Failed to load the product passport",
+    "errorLoading": "We couldn't load this passport. Please try again.",
+    "notFoundTitle": "Passport not found",
+    "notFoundDescription": "This passport doesn't exist or has been removed. Check the link and try again.",
+    "loading": "Loading passport…",
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport status",
     "blank": "Blank",
@@ -477,6 +507,11 @@
     "label": "Passport templates",
     "create": "Create passport template",
     "errorDelete": "Failed to delete the passport template",
+    "errorFetch": "Failed to load the passport template",
+    "errorLoading": "We couldn't load this template. Please try again.",
+    "notFoundTitle": "Template not found",
+    "notFoundDescription": "This template doesn't exist or has been removed. Check the link and try again.",
+    "loading": "Loading template…",
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport template status",
     "createdAt": "Created at",
@@ -615,6 +650,11 @@
     "askQuestion": "Ask your question...",
     "answerPending": "Processing answer...",
     "loadPassportMediaError": "Failed to load product images.",
+    "loadPassportError": "Failed to load product passport.",
+    "loadSubmodelsError": "Failed to load submodels.",
+    "loadShellsError": "Failed to load shells.",
+    "loadPresentationConfigError": "Failed to load presentation configuration.",
+    "updatePresentationConfigError": "Failed to update presentation configuration.",
     "emailGreeting": "Thanks",
     "repairRequest": {
       "addAiChatDialog": {
@@ -631,7 +671,35 @@
     "passportNotFound": "Productpass passport not found",
     "passportNotFoundLong": "Your digital product passport could not be found. Please validate your data or contact support."
   },
-  "uniqueproductidentifier": {
-    "notfound": "Could not find unique product identifier. Please contact your administrator."
+  "permalink": {
+    "notfound": "Could not find permalink. Please contact your administrator.",
+    "settings": {
+      "title": "Permalink settings",
+      "open": "Permalink settings",
+      "loadError": "Could not load permalink settings.",
+      "saveError": "Could not save permalink settings.",
+      "saveSuccess": "Permalink settings saved.",
+      "slugConflict": "This slug is already in use by another permalink.",
+      "slugInvalid": "Slug must be 2–64 characters of lowercase letters, digits, and hyphens.",
+      "baseUrlInvalid": "Base URL must be a full origin (e.g. https://example.com), no path or query.",
+      "slug": {
+        "label": "Short name",
+        "placeholder": "Last path segment of the URL of this passport."
+      },
+      "baseUrl": {
+        "label": "Custom base URL",
+        "description": "Override the organization's default permalink domain for this passport. Leave blank to inherit."
+      },
+      "preview": {
+        "label": "Preview",
+        "invalid": "Preview unavailable until inputs are valid.",
+        "usingAutoId": "Using auto-generated ID.",
+        "source": {
+          "permalink": "Base URL set for this passport.",
+          "branding": "Base URL inherited from the organization.",
+          "instance": "Base URL inherited from the instance default."
+        }
+      }
+    }
   }
 }

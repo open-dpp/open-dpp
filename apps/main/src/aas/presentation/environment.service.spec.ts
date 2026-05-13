@@ -1,4 +1,5 @@
 import type { TestingModule } from "@nestjs/testing";
+import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
@@ -37,6 +38,7 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { IdShortPath } from "../domain/common/id-short-path";
 import { LanguageText } from "../domain/common/language-text";
+import { ConceptDescription } from "../domain/concept-description";
 import { Environment } from "../domain/environment";
 import { createAasObject } from "../domain/security/aas-object";
 import { Permission } from "../domain/security/permission";
@@ -783,8 +785,15 @@ describe("environmentService", () => {
     //
   });
 
-  it("should delete all resource of environment", async () => {
-    const { environment } = await createDefaultEnvironment();
+  it("should delete all resources of environment", async () => {
+    const { environment: defaultEnvironment } = await createDefaultEnvironment();
+    const conceptDescription = ConceptDescription.create({ id: randomUUID() });
+    await conceptDescriptionRepository.save(conceptDescription);
+    const environment = Environment.create({
+      assetAdministrationShells: defaultEnvironment.assetAdministrationShells,
+      submodels: defaultEnvironment.submodels,
+      conceptDescriptions: [conceptDescription.id],
+    });
     const session = await connection.startSession();
     await session.withTransaction(async () => {
       await environmentService.deleteEnvironment(environment, session);
@@ -796,6 +805,7 @@ describe("environmentService", () => {
     for (const submodelId of environment.submodels) {
       expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
     }
+    expect(environment.conceptDescriptions.length).toBeGreaterThan(0);
     for (const conceptDescriptionId of environment.conceptDescriptions) {
       expect(await conceptDescriptionRepository.findOne(conceptDescriptionId)).toBeUndefined();
     }

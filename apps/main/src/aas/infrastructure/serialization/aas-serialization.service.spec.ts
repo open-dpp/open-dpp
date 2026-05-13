@@ -16,6 +16,13 @@ import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../../passports/infrastructure/passport.schema";
+import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import {
+  PresentationConfigurationDoc,
+  PresentationConfigurationSchema,
+} from "../../../presentation-configurations/infrastructure/presentation-configuration.schema";
+import { Template } from "../../../templates/domain/template";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
 import { IdShortPath } from "../../domain/common/id-short-path";
@@ -27,6 +34,7 @@ import { PermissionPerObject } from "../../domain/security/permission-per-object
 import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { EnvironmentService } from "../../presentation/environment.service";
+import { BadRequestException, Logger } from "@nestjs/common";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import {
@@ -305,6 +313,10 @@ describe("aasSerializationService", () => {
             name: ConceptDescriptionDoc.name,
             schema: ConceptDescriptionSchema,
           },
+          {
+            name: PresentationConfigurationDoc.name,
+            schema: PresentationConfigurationSchema,
+          },
         ]),
         UsersModule,
         OrganizationsModule,
@@ -317,6 +329,8 @@ describe("aasSerializationService", () => {
         SubmodelRepository,
         AasSerializationService,
         ConceptDescriptionRepository,
+        PresentationConfigurationRepository,
+        PresentationConfigurationService,
         {
           provide: MediaService,
           useValue: mockMediaService,
@@ -750,6 +764,250 @@ describe("aasSerializationService", () => {
       expect(
         exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails,
       ).toEqual([]);
+    });
+  });
+
+  describe("presentation configuration", () => {
+    const orgId = "org-1";
+
+    it("seeds a default PresentationConfiguration row when exporting a passport with none", async () => {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      await passportRepository.save(passport);
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: passport.id,
+        }),
+      ).toBeUndefined();
+
+      const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+      const exportResult = await aasSerializationService.exportPassport(passport, subject);
+
+      expect(exportResult.version).toBe(AasExportVersion.v3_0);
+      // getEffectiveForPassport seeds a default row on first access.
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: passport.id,
+        }),
+      ).toBeDefined();
+    });
+
+    it("round-trips the PresentationConfiguration through v3 export/import", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber", File: "BigNumber" },
+      };
+
+      const imported = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
+      );
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      const stored = await presentationConfigurationRepository.findByReference({
+        referenceType: "passport",
+        referenceId: imported.id,
+      });
+      expect(stored).toBeDefined();
+      expect(Object.fromEntries(stored!.elementDesign)).toEqual({
+        "submodel-1.prop-1": "BigNumber",
+      });
+      expect(Object.fromEntries(stored!.defaultComponents)).toEqual({
+        Property: "BigNumber",
+        File: "BigNumber",
+      });
+
+      const loadedPassport = await passportRepository.findOneOrFail(imported.id);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+      const reExported = await aasSerializationService.exportPassport(loadedPassport, admin);
+      expect(reExported.presentationConfiguration).toEqual({
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber", File: "BigNumber" },
+      });
+    });
+
+    it("omits presentationConfiguration on v1/v2 import and seeds a default on subsequent export", async () => {
+      const data = buildExportData({ version: AasExportVersion.v2_0 });
+
+      const imported = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
+      );
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: imported.id,
+        }),
+      ).toBeUndefined();
+
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+      const reExported = await aasSerializationService.exportPassport(imported, admin);
+
+      // getEffectiveForPassport seeds a default row on first access; the exported
+      // payload contains an empty config so the round trip remains stable.
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: imported.id,
+        }),
+      ).toBeDefined();
+      expect(reExported.presentationConfiguration).toEqual({
+        elementDesign: {},
+        defaultComponents: {},
+      });
+    });
+
+    it("rolls back the whole import when the PresentationConfiguration save fails", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber" },
+      };
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      const aasRepository = module.get<AasRepository>(AasRepository);
+      const submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
+
+      const saveSpy = jest
+        .spyOn(presentationConfigurationRepository, "save")
+        .mockRejectedValueOnce(new Error("boom"));
+      const serviceLogger = (aasSerializationService as unknown as { logger: Logger }).logger;
+      const logSpy = jest.spyOn(serviceLogger, "error").mockImplementation(() => {});
+
+      let capturedPassport: Passport | undefined;
+      try {
+        await expect(
+          aasSerializationService.importPassport(data, orgId, async (p, options) => {
+            capturedPassport = p;
+            await passportRepository.save(p, options);
+          }),
+        ).rejects.toThrow("boom");
+
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(orgId), expect.anything());
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("passport"), expect.anything());
+      } finally {
+        saveSpy.mockRestore();
+        logSpy.mockRestore();
+      }
+
+      expect(capturedPassport).toBeDefined();
+      expect(await passportRepository.findOne(capturedPassport!.id)).toBeUndefined();
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "passport",
+          referenceId: capturedPassport!.id,
+        }),
+      ).toBeUndefined();
+      for (const shellId of capturedPassport!.environment!.assetAdministrationShells) {
+        expect(await aasRepository.findOne(shellId)).toBeUndefined();
+      }
+      for (const submodelId of capturedPassport!.environment!.submodels) {
+        expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
+      }
+    });
+
+    it("rolls back the whole importTemplate when the PresentationConfiguration save fails", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { Property: "BigNumber" },
+      };
+
+      const presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+        PresentationConfigurationRepository,
+      );
+      const aasRepository = module.get<AasRepository>(AasRepository);
+      const submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
+
+      const saveSpy = jest
+        .spyOn(presentationConfigurationRepository, "save")
+        .mockRejectedValueOnce(new Error("boom"));
+      const serviceLogger = (aasSerializationService as unknown as { logger: Logger }).logger;
+      const logSpy = jest.spyOn(serviceLogger, "error").mockImplementation(() => {});
+
+      let capturedTemplate: Template | undefined;
+      try {
+        await expect(
+          aasSerializationService.importTemplate(data, orgId, async (t, options) => {
+            capturedTemplate = t;
+            await templateRepository.save(t, options);
+          }),
+        ).rejects.toThrow("boom");
+
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(orgId), expect.anything());
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("template"), expect.anything());
+      } finally {
+        saveSpy.mockRestore();
+        logSpy.mockRestore();
+      }
+
+      expect(capturedTemplate).toBeDefined();
+      expect(await templateRepository.findOne(capturedTemplate!.id)).toBeUndefined();
+      expect(
+        await presentationConfigurationRepository.findByReference({
+          referenceType: "template",
+          referenceId: capturedTemplate!.id,
+        }),
+      ).toBeUndefined();
+      for (const shellId of capturedTemplate!.environment!.assetAdministrationShells) {
+        expect(await aasRepository.findOne(shellId)).toBeUndefined();
+      }
+      for (const submodelId of capturedTemplate!.environment!.submodels) {
+        expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
+      }
+    });
+
+    it("rejects a malformed v3 presentationConfiguration with a precise validation path", async () => {
+      const data = buildExportData({ version: AasExportVersion.v3_0 });
+      (data as any).presentationConfiguration = {
+        elementDesign: 42,
+        defaultComponents: { Property: "BigNumber" },
+      };
+
+      let capturedPassport: Passport | undefined;
+      let capturedError: unknown;
+      try {
+        await aasSerializationService.importPassport(data, orgId, async (p, options) => {
+          capturedPassport = p;
+          await passportRepository.save(p, options);
+        });
+      } catch (error) {
+        capturedError = error;
+      }
+
+      expect(capturedError).toBeInstanceOf(BadRequestException);
+      const message = (capturedError as BadRequestException).message;
+      expect(message).toContain("Invalid import data format:");
+      expect(message).toContain("presentationConfiguration.elementDesign");
+      expect(capturedPassport).toBeUndefined();
     });
   });
 

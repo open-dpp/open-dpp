@@ -706,10 +706,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Param("id") id: string,
   ): Promise<TemplateDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
       await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
         id,
-        SubjectAttributes.create({ userRole, memberRole }),
+        subject,
         organizationId,
       );
     return TemplateDtoSchema.parse(template.toPlain());

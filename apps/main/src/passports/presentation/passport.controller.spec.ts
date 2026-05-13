@@ -23,6 +23,15 @@ import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorat
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
+import { PresentationReferenceType } from "@open-dpp/dto";
+import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
+import { PermalinkModule } from "../../permalink/permalink.module";
+import {
+  PresentationConfigurationDoc,
+  PresentationConfigurationSchema,
+} from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
@@ -47,7 +56,7 @@ describe("passportController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [PassportsModule, AasModule],
+      imports: [PassportsModule, AasModule, PresentationConfigurationsModule, PermalinkModule],
       providers: [
         PassportRepository,
         TemplateRepository,
@@ -63,6 +72,8 @@ describe("passportController", () => {
         schema: TemplateSchema,
       },
       { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ],
     PassportRepository,
@@ -349,6 +360,51 @@ describe("passportController", () => {
     await ctx.asserts.getShells(createPassport);
   });
 
+  it(`/GET shells does not write a PresentationConfiguration row for an uncustomized passport`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const passport = await createPassport(org.id);
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    // createPassport (= POST /passports) eagerly creates a config row + permalink
+    // for newly-created passports. Delete that row to simulate a legacy passport
+    // that never had a config row.
+    await presentationConfigurationRepository.deleteByReference({
+      referenceType: PresentationReferenceType.Passport,
+      referenceId: passport.id,
+    });
+
+    const firstResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set("x-open-dpp-organization-id", org.id)
+      .send();
+    expect(firstResponse.status).toEqual(200);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
+
+    const secondResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set("x-open-dpp-organization-id", org.id)
+      .send();
+    expect(secondResponse.status).toEqual(200);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
+  });
+
   it(`/PATCH shell`, async () => {
     await ctx.asserts.modifyShell(createPassport, savePassport);
   });
@@ -506,7 +562,7 @@ describe("passportController", () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
 
-    const { dppIdentifiableRepository, uniqueProductIdentifierService } = ctx.getRepositories();
+    const { dppIdentifiableRepository, uniqueProductIdentifierRepository } = ctx.getRepositories();
 
     const passport = Passport.create({
       organizationId: org!.id,
@@ -517,7 +573,7 @@ describe("passportController", () => {
 
     const upi = passport.createUniqueProductIdentifier();
 
-    await uniqueProductIdentifierService.save(upi);
+    await uniqueProductIdentifierRepository.save(upi);
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
@@ -543,7 +599,7 @@ describe("passportController", () => {
       aasRepository,
       dppIdentifiableRepository,
       submodelRepository,
-      uniqueProductIdentifierService,
+      uniqueProductIdentifierRepository,
     } = ctx.getRepositories();
     await aasRepository.save(aas);
     await submodelRepository.save(submodel);
@@ -561,7 +617,7 @@ describe("passportController", () => {
 
     const upi = passport.createUniqueProductIdentifier();
 
-    await uniqueProductIdentifierService.save(upi);
+    await uniqueProductIdentifierRepository.save(upi);
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
@@ -572,7 +628,7 @@ describe("passportController", () => {
     expect(response.status).toEqual(204);
     expect(await aasRepository.findOne(aas.id)).toBeUndefined();
     expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
-    expect(await uniqueProductIdentifierService.findOne(upi.uuid)).toBeUndefined();
+    expect(await uniqueProductIdentifierRepository.findOne(upi.uuid)).toBeUndefined();
     expect(await dppIdentifiableRepository.findOne(passport.id)).toBeUndefined();
 
     const publishedPassport = Passport.create({
@@ -755,6 +811,74 @@ describe("passportController", () => {
       { language: "en", text: "Test Concept" },
     ]);
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
+  });
+
+  it(`/POST Create passport from template snapshots presentation configs`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const authHeaders = {
+      Cookie: userCookie,
+      "X-OPEN-DPP-ORGANIZATION-ID": org.id,
+    };
+
+    const templateRepository = ctx.getModuleRef().get(TemplateRepository);
+    const templateId = randomUUID().toString();
+    const { aas, submodels } = ctx.getAasObjects();
+    const template = Template.create({
+      id: templateId,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map((s) => s.id),
+        conceptDescriptions: [],
+      }),
+    });
+    await templateRepository.save(template);
+
+    // Seed + retrieve the default config (null label) via GET
+    const listResponse = await request(app.getHttpServer())
+      .get(`/templates/${templateId}/presentation-configurations`)
+      .set(authHeaders)
+      .send();
+    expect(listResponse.status).toEqual(200);
+    const defaultConfigId = listResponse.body[0].id;
+
+    // Patch the default config with an elementDesign override
+    const patchResponse = await request(app.getHttpServer())
+      .patch(`/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
+      .set(authHeaders)
+      .send({ elementDesign: { "DesignOfProduct.numericField": "BigNumber" } });
+    expect(patchResponse.status).toEqual(200);
+
+    // Create a second variant config on the template
+    const createVariantResponse = await request(app.getHttpServer())
+      .post(`/templates/${templateId}/presentation-configurations`)
+      .set(authHeaders)
+      .send({ label: "Variant A" });
+    expect(createVariantResponse.status).toEqual(201);
+
+    // Create a passport from this template
+    const createPassportResponse = await request(app.getHttpServer())
+      .post(basePath)
+      .set(authHeaders)
+      .send({ templateId });
+    expect(createPassportResponse.status).toEqual(201);
+    const passportId = createPassportResponse.body.id;
+
+    // The passport should have 2 snapshot configs (not 1 auto-seeded default)
+    const passportConfigsResponse = await request(app.getHttpServer())
+      .get(`/passports/${passportId}/presentation-configurations`)
+      .set(authHeaders)
+      .send();
+    expect(passportConfigsResponse.status).toEqual(200);
+    expect(passportConfigsResponse.body).toHaveLength(2);
+    expect(passportConfigsResponse.body.map((c: any) => c.label).sort()).toEqual(
+      [null, "Variant A"].sort(),
+    );
+
+    // The default config snapshot should carry the elementDesign override
+    const passportDefault = passportConfigsResponse.body.find((c: any) => c.label === null);
+    expect(passportDefault.elementDesign["DesignOfProduct.numericField"]).toBe("BigNumber");
   });
 
   describe("api key authentication", () => {
