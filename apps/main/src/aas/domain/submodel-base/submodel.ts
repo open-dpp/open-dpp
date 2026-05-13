@@ -128,6 +128,10 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.accept(new ModifierVisitor(options), { data });
   }
 
+  modifyValue(data: unknown, options: ValueModifierVisitorOptions) {
+    this.accept(new ValueModifierVisitor(options), { data });
+  }
+
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
 

@@ -14,8 +14,16 @@ const document = createDocument({
   },
   servers: [
     {
+      url: "https://app.cloud.open-dpp.de/api",
+      description: "Production server",
+    },
+    {
+      url: "https://app.demo1.open-dpp.de/api",
+      description: "Test server",
+    },
+    {
       url: "http://localhost:3000/api",
-      description: "Local test server",
+      description: "Local development server",
     },
   ],
   paths: {
