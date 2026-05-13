@@ -185,6 +185,60 @@ describe("value modifier visitor", () => {
     ).toThrow(new ForbiddenError(`${prefixPermissionError} ${submodel.idShort}.ref.`));
   });
 
+  it("should modify value of submodel", () => {
+    const submodel = Submodel.create({
+      id: "s1",
+      idShort: "s1",
+      displayName: existingDisplayNames,
+    });
+
+    const security = Security.create({});
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
+    const property = Property.create({
+      idShort: "prop1",
+      displayName: existingDisplayNames,
+      value: "first",
+      valueType: DataTypeDef.String,
+    });
+    submodel.addSubmodelElement(property, { ability });
+
+    const collection = SubmodelElementCollection.create({
+      idShort: "collection",
+      displayName: existingDisplayNames,
+    });
+    submodel.addSubmodelElement(collection, { ability });
+    const property2 = Property.create({
+      idShort: "prop2",
+      displayName: existingDisplayNames,
+      value: "first2",
+      valueType: DataTypeDef.String,
+    });
+    collection.addSubmodelElement(property2, { ability });
+
+    const modifications = { prop1: "second", collection: { prop2: "second2" } };
+    submodel.modifyValue(modifications, {
+      ability,
+    });
+
+    expect(property.value).toEqual("second");
+    expect(property2.value).toEqual("second2");
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const abilityAnonymous = security.defineAbilityForSubject(anonymous);
+    expect(() => submodel.modifyValue(modifications, { ability: abilityAnonymous })).toThrow(
+      new ForbiddenError(`${prefixPermissionError} ${submodel.idShort}.prop1.`),
+    );
+  });
+
   it("should modify value of submodel element list", () => {
     const submodel = Submodel.create({
       id: "s1",

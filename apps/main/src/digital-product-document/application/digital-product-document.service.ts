@@ -199,6 +199,27 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
   }
 
+  async modifyValueOfSubmodel(
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: ValueRequestDto,
+    subject: SubjectAttributes,
+  ): Promise<SubmodelResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.modifyValueOfSubmodel(
+      item.getEnvironment(),
+      submodelId,
+      body,
+      subject,
+    );
+  }
+
   async modifyColumnOfSubmodelElementList(
     organizationId: string,
     id: string,

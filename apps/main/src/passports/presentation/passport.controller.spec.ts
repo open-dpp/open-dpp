@@ -372,6 +372,10 @@ describe("passportController", () => {
     await ctx.asserts.modifySubmodel(createPassport, savePassport);
   });
 
+  it(`/PATCH submodel value`, async () => {
+    await ctx.asserts.modifyValueOfSubmodel(createPassport, savePassport);
+  });
+
   //
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createPassport);

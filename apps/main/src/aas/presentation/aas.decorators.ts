@@ -82,6 +82,10 @@ export function ApiGetSubmodelValue(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiGetSubmodelValuePath, prefix)));
 }
 
+export function ApiPatchSubmodelValue() {
+  return applyDecorators(Patch(ApiGetSubmodelValuePath));
+}
+
 export const ApiSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
 export function ApiGetSubmodelElements(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiSubmodelElementsPath, prefix)));
@@ -219,7 +223,6 @@ export const CursorQueryParamSchema = z
   .meta({
     description:
       "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
-    example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
     param: { in: "query", name: "cursor" },
   });
 
@@ -249,7 +252,6 @@ export const SubmodelModificationRequestBody = () =>
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
-export const SubmodelElementValueModificationRequestBody = () =>
-  Body(new ZodValidationPipe(ValueSchema));
+export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

@@ -730,6 +730,22 @@ describe("environmentService", () => {
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));
   });
 
+  it("should modify submodel value", async () => {
+    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const modification = {
+      subSection1: {
+        property1: "Test",
+      },
+    };
+    await environmentService.modifyValueOfSubmodel(environment, submodel1.id, modification, admin);
+    //
+    await expect(
+      environmentService.modifyValueOfSubmodel(environment, submodel1.id, modification, member),
+    ).rejects.toThrow(
+      new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),
+    );
+  });
+
   it("should modify submodel element", async () => {
     const {
       digitalProductDocumentId,

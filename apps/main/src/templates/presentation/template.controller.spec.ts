@@ -111,6 +111,10 @@ describe("templateController", () => {
     await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
 
+  it(`/PATCH submodel value`, async () => {
+    await ctx.asserts.modifyValueOfSubmodel(createTemplate, saveTemplate);
+  });
+
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createTemplate);
   });

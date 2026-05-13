@@ -14,8 +14,16 @@ const document = createDocument({
   },
   servers: [
     {
+      url: "https://app.cloud.open-dpp.de/api",
+      description: "Production server",
+    },
+    {
+      url: "https://app.demo1.open-dpp.de/api",
+      description: "Test server",
+    },
+    {
       url: "http://localhost:3000/api",
-      description: "Local test server",
+      description: "Local development server",
     },
   ],
   paths: {
@@ -33,6 +41,7 @@ const document = createDocument({
         schema: {
           type: "string",
         },
+        example: "690cf22459cdae7ce188c1f8",
         description: "Organization identifier",
       },
     },
@@ -52,5 +61,5 @@ export function buildOpenApiDocumentation(): OpenAPIObject {
 }
 
 export function addSwaggerToApp(app: INestApplication, openApiDoc: OpenAPIObject) {
-  SwaggerModule.setup("api", app, openApiDoc);
+  SwaggerModule.setup("api", app, openApiDoc, { jsonDocumentUrl: "api.json" });
 }
