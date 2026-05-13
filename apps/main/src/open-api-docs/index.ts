@@ -41,6 +41,7 @@ const document = createDocument({
         schema: {
           type: "string",
         },
+        example: "690cf22459cdae7ce188c1f8",
         description: "Organization identifier",
       },
     },
@@ -60,5 +61,5 @@ export function buildOpenApiDocumentation(): OpenAPIObject {
 }
 
 export function addSwaggerToApp(app: INestApplication, openApiDoc: OpenAPIObject) {
-  SwaggerModule.setup("api", app, openApiDoc);
+  SwaggerModule.setup("api", app, openApiDoc, { jsonDocumentUrl: "api.json" });
 }

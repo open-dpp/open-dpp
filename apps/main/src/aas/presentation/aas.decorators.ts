@@ -234,7 +234,6 @@ export const CursorQueryParamSchema = z
   .meta({
     description:
       "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
-    example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
     param: { in: "query", name: "cursor" },
   });
 

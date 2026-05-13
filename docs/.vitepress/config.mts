@@ -22,7 +22,7 @@ export default defineConfig({
     },
     nav: [
       { text: "Home", link: "/home" },
-      { text: "Rest API", link: "/api" },
+      { text: "Rest API", link: "https://app.cloud.open-dpp.de/api" },
       {
         text: `v${pkg.version}`,
         link: "https://github.com/open-dpp/open-dpp/releases",
