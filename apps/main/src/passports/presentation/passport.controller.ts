@@ -436,6 +436,7 @@ export class PassportController
     @ValueModificationRequestBody() body: ValueRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyValueOfSubmodel(
@@ -443,7 +444,7 @@ export class PassportController
       id,
       submodelId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 

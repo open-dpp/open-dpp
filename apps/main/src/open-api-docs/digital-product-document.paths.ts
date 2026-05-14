@@ -1,4 +1,5 @@
 import {
+  ActivityPaginationDtoSchema,
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
@@ -44,8 +45,12 @@ import {
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
 import {
+  ApiDownloadActivitiesPath,
+  ApiGetActivitiesPath,
+  EndDateQueryParamSchema,
   LimitQueryParamSchema,
   PopulateQueryParamSchema,
+  StartDateQueryParamSchema,
   StatusQueryParamSchema,
 } from "../digital-product-document/presentation/digital-product-document-decorators";
 import { HTTPCode } from "./http.codes";
@@ -54,6 +59,9 @@ import { convertPathToOpenApi } from "./utils";
 
 const security = [{ apiKeyAuth: [] }];
 const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };
+function singularOfTag(tag: string) {
+  return tag.slice(0, -1);
+}
 
 export function createAasPaths(tag: string) {
   return {
@@ -109,7 +117,7 @@ export function createAasPaths(tag: string) {
       post: {
         operationId: "createSubmodel",
         tags: [tag],
-        summary: `Creates submodel for ${tag.slice(0, -1)}`,
+        summary: `Creates submodel for ${singularOfTag(tag)}`,
         parameters: [IdParamSchema, orgaIdHeader],
         requestBody: {
           content: {
@@ -451,10 +459,63 @@ export function createAasPaths(tag: string) {
   };
 }
 
+export function createDigitalProductDocumentPaths(tag: string) {
+  return {
+    ...createAasPaths(tag),
+    [`/${tag}${convertPathToOpenApi(ApiGetActivitiesPath)}`]: {
+      get: {
+        tags: [tag],
+        summary: `Returns activities of the ${tag} with the specified id`,
+        parameters: [
+          IdParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
+          CursorQueryParamSchema,
+          LimitQueryParamSchema,
+          orgaIdHeader,
+        ],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: ActivityPaginationDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}${convertPathToOpenApi(ApiDownloadActivitiesPath)}`]: {
+      get: {
+        tags: [tag],
+        summary: `Download activities of the ${tag} with the specified id`,
+        parameters: [
+          IdParamSchema,
+          StartDateQueryParamSchema,
+          EndDateQueryParamSchema,
+          orgaIdHeader,
+        ],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.ZIP]: {
+                schema: {
+                  type: "string",
+                  format: "binary",
+                },
+              },
+            },
+          },
+        },
+        security,
+      },
+    },
+  };
+}
+
 function createTemplatePaths() {
   const tag = "templates";
   return {
-    ...createAasPaths(tag),
+    ...createDigitalProductDocumentPaths(tag),
     [`/${tag}`]: {
       get: {
         tags: [tag],
@@ -575,7 +636,7 @@ function createTemplatePaths() {
 function createPassportPaths() {
   const tag = "passports";
   return {
-    ...createAasPaths(tag),
+    ...createDigitalProductDocumentPaths(tag),
     [`/${tag}`]: {
       get: {
         tags: [tag],
@@ -693,7 +754,7 @@ function createPassportPaths() {
   };
 }
 
-export const aasPaths = {
+export const digitalProductDocumentPaths = {
   ...createPassportPaths(),
   ...createTemplatePaths(),
 };

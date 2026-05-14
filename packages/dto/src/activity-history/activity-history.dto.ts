@@ -30,7 +30,7 @@ export const ActivityPaginationDtoSchema = z
     ...PagingMetadataDtoSchema.shape,
     result: ActivityDtoSchema.array(),
   })
-  .meta({ id: "Passports" });
+  .meta({ id: "Activities" });
 
 export type ActivityPaginationDto = z.infer<typeof ActivityPaginationDtoSchema>;
 

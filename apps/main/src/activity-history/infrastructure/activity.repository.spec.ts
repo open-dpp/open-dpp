@@ -17,6 +17,8 @@ import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
 import { SubmodelBaseModificationActivityPayload } from "../aas/submodel-base/submodel-base-modification.payload";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
+import { SubmodelActivity } from "../aas/submodel.activity";
+import { OperationTypes } from "../operation-types";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -51,31 +53,31 @@ describe("activityRepository", () => {
   it("should save a activities", async () => {
     const passportId = randomUUID();
     const submodelId = randomUUID();
-    const event1 = SubmodelElementModificationActivity.create({
+    const event1 = SubmodelActivity.create({
       digitalProductDocumentId: passportId,
-      payload: SubmodelBaseModificationActivityPayload.create({
-        submodelId,
-        fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
-        data: { idShort: "prop1", value: "20" },
-        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      }),
+      submodelId,
+      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
+      oldData: { idShort: "prop1", value: "oldValue" },
+      newData: { idShort: "prop1", value: "newValue" },
+      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
+      operation: OperationTypes.SubmodelElementModification,
     });
-    const event2 = SubmodelElementModificationActivity.create({
+    const event2 = SubmodelActivity.create({
       digitalProductDocumentId: passportId,
-      payload: SubmodelBaseModificationActivityPayload.create({
-        submodelId,
-        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-        fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
-        data: { idShort: "prop1", value: "29" },
-      }),
+      submodelId,
+      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
+      oldData: { idShort: "prop2", value: "oldValue" },
+      newData: { idShort: "prop2", value: "newValue" },
+      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+      operation: OperationTypes.SubmodelElementModification,
     });
     await activityRepository.createMany([event1, event2]);
     const foundEvent = await activityRepository.findOneOrFail(event1.header.id);
     expect(foundEvent).toEqual(event1);
-    expect(foundEvent).toBeInstanceOf(SubmodelElementModificationActivity);
+    expect(foundEvent).toBeInstanceOf(SubmodelActivity);
 
     const foundEvents = await activityRepository.findByAggregateId(event1.header.aggregateId);
-    expect(foundEvents.items).toEqual([event1, event2]);
+    expect(foundEvents.items).toEqual([event2, event1]);
   });
 
   describe("should find activities", () => {
@@ -88,14 +90,14 @@ describe("activityRepository", () => {
     const submodelIdShort = "submodelIdShort";
     const passportId = randomUUID();
     const createActivity = (idShort: string, createdAt: Date) =>
-      SubmodelElementModificationActivity.create({
+      SubmodelActivity.create({
         digitalProductDocumentId: passportId,
-        payload: SubmodelBaseModificationActivityPayload.create({
-          fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
-          administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-          submodelId,
-          data: { idShort, value: "20" },
-        }),
+        submodelId,
+        fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
+        oldData: { idShort, value: "oldValue" },
+        newData: { idShort, value: "newValue" },
+        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+        operation: OperationTypes.SubmodelElementModification,
         createdAt,
       });
 

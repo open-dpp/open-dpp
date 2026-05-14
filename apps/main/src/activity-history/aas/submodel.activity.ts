@@ -6,13 +6,13 @@ import {
   IActivity,
   IActivityPayload,
 } from "../activity";
-import { ActivityTypesType } from "../activity-types";
+import { ActivityTypes } from "../activity-types";
 import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { diff } from "json-diff-ts";
+import { diff, IChange, Operation } from "json-diff-ts";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
-import { ICommand } from "../../commands/command.interface";
+import { OperationTypesEnum, OperationTypesType } from "../operation-types";
 
 export class SubmodelActivity implements IActivity {
   private constructor(
@@ -23,29 +23,30 @@ export class SubmodelActivity implements IActivity {
     digitalProductDocumentId: string;
     submodelId: string;
     administration: AdministrativeInformation;
-    type: ActivityTypesType;
     fullIdShortPath: IdShortPath;
     oldData: unknown;
     newData: unknown;
-    command: ICommand;
+    operation: OperationTypesType;
+    userId?: string;
+    createdAt?: Date;
   }) {
     const embeddedObjKeys = new Map();
     embeddedObjKeys.set(/.*value/, "idShort");
-    embeddedObjKeys.set("submodelElements", "idType");
+    embeddedObjKeys.set("submodelElements", "idShort");
     return new SubmodelActivity(
       ActivityHeader.create({
-        type: data.type,
+        type: ActivityTypes.SubmodelActivity,
         version: "1.0.0",
         aggregateId: data.digitalProductDocumentId,
-        userId: data.command.getUserId() ?? undefined,
-        createdAt: data.command.createdAt,
+        userId: data.userId,
+        createdAt: data.createdAt,
       }),
       SubmodelPayload.create({
         submodelId: data.submodelId,
         administration: data.administration,
         fullIdShortPath: data.fullIdShortPath,
         changes: diff(data.oldData, data.newData, { embeddedObjKeys }),
-        command: data.command,
+        operation: data.operation,
       }),
     );
   }
@@ -68,35 +69,48 @@ export class SubmodelActivity implements IActivity {
   }
 }
 
+const ChangeSchema = z.object({
+  type: z.enum(Operation),
+  key: z.string(),
+  embeddedKey: z.string().optional(),
+  /** When true, embeddedKey is a dot-separated nested path (e.g. "a.b" → @.a.b). */
+  embeddedKeyIsPath: z.boolean().optional(),
+  value: z.any().optional(),
+  oldValue: z.any().optional(),
+  get changes() {
+    return ChangeSchema.array().optional();
+  },
+});
+
 const SubmodelPayloadSchema = z.object({
   submodelId: z.string(),
   administration: AdministrativeInformationJsonSchema,
   fullIdShortPath: z.string(),
-  command: z.unknown(),
-  changes: z.unknown(),
+  operation: OperationTypesEnum,
+  changes: ChangeSchema.array(),
 });
 
-class SubmodelPayload implements IActivityPayload {
+export class SubmodelPayload implements IActivityPayload {
   private constructor(
     public readonly submodelId: string,
     public readonly administration: AdministrativeInformation,
     public readonly fullIdShortPath: IdShortPath,
-    public readonly command: unknown,
-    public readonly changes: unknown,
+    public readonly operation: OperationTypesType,
+    public readonly changes: IChange[],
   ) {}
 
   static create(data: {
     submodelId: string;
     administration: AdministrativeInformation;
     fullIdShortPath: IdShortPath;
-    command: ICommand;
-    changes: unknown;
+    operation: OperationTypesType;
+    changes: IChange[];
   }) {
     return new SubmodelPayload(
       data.submodelId,
       data.administration,
       data.fullIdShortPath,
-      data.command.toPlainForActivity(),
+      data.operation,
       data.changes,
     );
   }
@@ -107,7 +121,7 @@ class SubmodelPayload implements IActivityPayload {
       parsed.submodelId,
       AdministrativeInformation.fromPlain(parsed.administration),
       IdShortPath.create({ path: parsed.fullIdShortPath }),
-      parsed.command,
+      parsed.operation,
       parsed.changes,
     );
   }
@@ -117,7 +131,7 @@ class SubmodelPayload implements IActivityPayload {
       submodelId: this.submodelId,
       administration: this.administration.toPlain(),
       fullIdShortPath: this.fullIdShortPath.toString(),
-      command: this.command,
+      operation: this.operation,
       changes: this.changes,
     };
   }

@@ -64,6 +64,9 @@ import { parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { SubmodelRowCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-row-create.payload";
 import { DbSessionOptions } from "../../database/query-options";
 import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
+import { SubmodelPayload } from "../../activity-history/aas/submodel.activity";
+import { OperationTypes } from "../../activity-history/operation-types";
+import { Operation } from "json-diff-ts";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -705,14 +708,31 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelModification,
-          payload: SubmodelBaseModificationActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}`,
             }),
-            data: modification,
+            operation: OperationTypes.SubmodelModification,
+            changes: [
+              {
+                embeddedKey: "$index",
+                key: "displayName",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "0",
+                    type: Operation.ADD,
+                    value: {
+                      language: "en",
+                      text: "Test",
+                    },
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],
@@ -731,16 +751,86 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel value", async () => {
-    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const { digitalProductDocumentId, environment, admin, member, submodel1 } =
+      await createDefaultEnvironment();
     const modification = {
       subSection1: {
         property1: "Test",
       },
     };
-    await environmentService.modifyValueOfSubmodel(environment, submodel1.id, modification, admin);
-    //
+
+    await environmentService.modifyValueOfSubmodel(
+      digitalProductDocumentId,
+      environment,
+      submodel1.id,
+      modification,
+      admin,
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
+      [
+        {
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
+            submodelId: submodel1.id,
+            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+            fullIdShortPath: IdShortPath.create({
+              path: `${submodel1.idShort}`,
+            }),
+            operation: OperationTypes.SubmodelValueModification,
+            changes: [
+              {
+                embeddedKey: "idShort",
+                key: "submodelElements",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "subSection1",
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        embeddedKey: "idShort",
+                        key: "value",
+                        type: Operation.UPDATE,
+                        changes: [
+                          {
+                            key: "property1",
+                            type: Operation.UPDATE,
+                            changes: [
+                              {
+                                key: "value",
+                                type: Operation.REMOVE,
+                                value: null,
+                              },
+                              {
+                                key: "value",
+                                type: Operation.ADD,
+                                value: "Test",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+      ],
+    );
+
     await expect(
-      environmentService.modifyValueOfSubmodel(environment, submodel1.id, modification, member),
+      environmentService.modifyValueOfSubmodel(
+        digitalProductDocumentId,
+        environment,
+        submodel1.id,
+        modification,
+        member,
+      ),
     ).rejects.toThrow(
       new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."),
     );
@@ -776,14 +866,31 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelElementModification,
-          payload: SubmodelBaseModificationActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
-            data: modification,
+            operation: OperationTypes.SubmodelElementModification,
+            changes: [
+              {
+                type: Operation.UPDATE,
+                key: "displayName",
+                embeddedKey: "$index",
+                changes: [
+                  {
+                    key: "0",
+                    type: Operation.ADD,
+                    value: {
+                      language: "en",
+                      text: "Test",
+                    },
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],
