@@ -57,7 +57,6 @@ import { ActivityHistoryModule } from "../../activity-history/activity-history.m
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { ActivityTypes } from "../../activity-history/activity-types";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
-import { SubmodelRowCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-row-create.payload";
 import { DbSessionOptions } from "../../database/query-options";
 import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
 import { SubmodelPayload } from "../../activity-history/aas/submodel.activity";
@@ -690,14 +689,56 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelRowCreate,
-          payload: SubmodelRowCreateActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
             fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(
               listIdShortPath,
             ),
-            position,
+            changes: [
+              {
+                embeddedKey: "$index",
+                key: "value",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "1",
+                    type: Operation.ADD,
+                    value: {
+                      category: null,
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      idShort: expect.any(String),
+                      modelType: "SubmodelElementCollection",
+                      qualifiers: [],
+                      semanticId: null,
+                      supplementalSemanticIds: [],
+                      value: [
+                        {
+                          category: null,
+                          description: [],
+                          displayName: [],
+                          embeddedDataSpecifications: [],
+                          extensions: [],
+                          idShort: "col1",
+                          modelType: "Property",
+                          qualifiers: [],
+                          semanticId: null,
+                          supplementalSemanticIds: [],
+                          value: null,
+                          valueId: null,
+                          valueType: "Double",
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            ],
+            operation: SubmodelOperationTypes.SubmodelRowCreate,
           }),
         },
       ],

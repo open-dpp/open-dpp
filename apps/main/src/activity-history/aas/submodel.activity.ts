@@ -12,6 +12,7 @@ import { diff, IChange } from "json-diff-ts";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { z } from "zod";
 import {
+  SubmodelOperationTypes,
   SubmodelOperationTypesEnum,
   SubmodelOperationTypesType,
 } from "../submodel-operation-types";
@@ -36,7 +37,9 @@ export class SubmodelActivity implements IActivity {
     },
   ) {
     const embeddedObjKeys = new Map();
-    embeddedObjKeys.set(/(^|\.)value$/, "idShort");
+    const valueMatcher =
+      data.operation === SubmodelOperationTypes.SubmodelRowCreate ? /.+\.value$/ : /(^|\.)value$/;
+    embeddedObjKeys.set(valueMatcher, "idShort");
     embeddedObjKeys.set(/(^|\.)displayName$/, "language");
     embeddedObjKeys.set("submodelElements", "idShort");
     return new SubmodelActivity(

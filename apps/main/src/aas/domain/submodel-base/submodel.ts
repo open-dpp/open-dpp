@@ -34,8 +34,6 @@ import {
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 import { IActivity } from "../../../activity-history/activity";
-import { SubmodelRowCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-row-create.activity";
-import { SubmodelRowCreateActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-row-create.payload";
 import { SubmodelActivity } from "../../../activity-history/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../../activity-history/submodel-operation-types";
 
@@ -236,17 +234,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   addRow(idShortPath: IdShortPath, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    const oldData = tableExtension.getTableElement().toPlain();
     tableExtension.addRow(options);
     this.publishActivity(
-      SubmodelRowCreateActivity.create({
+      SubmodelActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove ! after migration to new activity history
-        payload: SubmodelRowCreateActivityPayload.create({
-          submodelId: this.id,
-          administration: this.administration,
-          fullIdShortPath: this.getIdShortPath().concat(idShortPath),
-          position: options.position,
-        }),
+        submodelId: this.id,
+        administration: this.administration,
+        fullIdShortPath: this.getIdShortPath().concat(idShortPath),
         userId: options.ability.userId ?? undefined,
+        operation: SubmodelOperationTypes.SubmodelRowCreate,
+        oldData,
+        newData: tableExtension.getTableElement().toPlain(),
       }),
     );
     return tableExtension.getTableElement();
