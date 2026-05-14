@@ -2,11 +2,7 @@ import { z } from "zod";
 
 export const ActivityTypes = {
   SubmodelActivity: "SubmodelActivity",
-  SubmodelModification: "SubmodelModification",
-  SubmodelElementModification: "SubmodelElementModification",
-  SubmodelElementValueModification: "SubmodelElementValueModification",
-  SubmodelColumnModification: "SubmodelColumnModification",
-  AssetAdministrationShellModification: "AssetAdministrationShellModification",
+  AssetAdministrationShellActivity: "AssetAdministrationShellActivity",
   SubmodelElementCreate: "SubmodelElementCreate",
   SubmodelColumnCreate: "SubmodelColumnCreate",
   SubmodelRowCreate: "SubmodelRowCreate",

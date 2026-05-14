@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OperationTypes = {
+export const SubmodelOperationTypes = {
   SubmodelActivity: "SubmodelActivity",
   SubmodelModification: "SubmodelModification",
   SubmodelValueModification: "SubmodelValueModification",
@@ -12,5 +12,5 @@ export const OperationTypes = {
   SubmodelColumnCreate: "SubmodelColumnCreate",
   SubmodelRowCreate: "SubmodelRowCreate",
 } as const;
-export const OperationTypesEnum = z.enum(OperationTypes);
-export type OperationTypesType = z.infer<typeof OperationTypesEnum>;
+export const SubmodelOperationTypesEnum = z.enum(SubmodelOperationTypes);
+export type SubmodelOperationTypesType = z.infer<typeof SubmodelOperationTypesEnum>;

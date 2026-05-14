@@ -9,12 +9,7 @@ import {
 import { ActivityTypes } from "../activity-types";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { diff, IChange } from "json-diff-ts";
-import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { z } from "zod/v4";
-import {
-  SubmodelOperationTypesEnum,
-  SubmodelOperationTypesType,
-} from "../submodel-operation-types";
+import { z } from "zod";
 import {
   ActivityCreateProps,
   ActivityPayloadCreateProps,
@@ -22,29 +17,30 @@ import {
   createActivityHeader,
   payloadToPlain,
 } from "./shared.activity";
+import {
+  AssetAdministrationShellOperationTypesEnum,
+  AssetAdministrationShellOperationTypesType,
+} from "../asset-administration-shell-operation-types";
 
-export class SubmodelActivity implements IActivity {
+export class AssetAdministrationShellActivity implements IActivity {
   private constructor(
     public header: ActivityHeader,
-    readonly payload: SubmodelPayload,
+    readonly payload: AssetAdministrationShellPayload,
   ) {}
   static create(
     data: ActivityCreateProps & {
-      submodelId: string;
-      operation: SubmodelOperationTypesType;
-      fullIdShortPath: IdShortPath;
+      assetAdministrationShellId: string;
+      operation: AssetAdministrationShellOperationTypesType;
     },
   ) {
     const embeddedObjKeys = new Map();
-    embeddedObjKeys.set(/(^|\.)value$/, "idShort");
-    embeddedObjKeys.set(/(^|\.)displayName$/, "language");
-    embeddedObjKeys.set("submodelElements", "idShort");
-    return new SubmodelActivity(
-      createActivityHeader(ActivityTypes.SubmodelActivity, data),
-      SubmodelPayload.create({
-        submodelId: data.submodelId,
+    embeddedObjKeys.set(/(^|\.)permissionsPerObject$/, "object.idShort");
+    embeddedObjKeys.set(/(^|\.)permissions$/, "permission");
+    return new AssetAdministrationShellActivity(
+      createActivityHeader(ActivityTypes.AssetAdministrationShellActivity, data),
+      AssetAdministrationShellPayload.create({
+        assetAdministrationShellId: data.assetAdministrationShellId,
         administration: data.administration,
-        fullIdShortPath: data.fullIdShortPath,
         changes: diff(data.oldData, data.newData, { embeddedObjKeys }),
         operation: data.operation,
       }),
@@ -54,9 +50,9 @@ export class SubmodelActivity implements IActivity {
   static fromPlain(data: unknown) {
     const parsed = ActivitySchema.parse(data);
 
-    return new SubmodelActivity(
+    return new AssetAdministrationShellActivity(
       ActivityHeader.fromPlain(parsed.header),
-      SubmodelPayload.fromPlain(parsed.payload),
+      AssetAdministrationShellPayload.fromPlain(parsed.payload),
     );
   }
 
@@ -69,44 +65,39 @@ export class SubmodelActivity implements IActivity {
   }
 }
 
-const SubmodelPayloadSchema = z.object({
+const AssetAdministrationShellPayloadSchema = z.object({
   ...ActivityPayloadSchema.shape,
-  submodelId: z.string(),
-  operation: SubmodelOperationTypesEnum,
-  fullIdShortPath: z.string(),
+  assetAdministrationShellId: z.string(),
+  operation: AssetAdministrationShellOperationTypesEnum,
 });
 
-export class SubmodelPayload implements IActivityPayload {
+export class AssetAdministrationShellPayload implements IActivityPayload {
   private constructor(
-    public readonly submodelId: string,
+    public readonly assetAdministrationShellId: string,
     public readonly administration: AdministrativeInformation,
-    public readonly fullIdShortPath: IdShortPath,
-    public readonly operation: SubmodelOperationTypesType,
+    public readonly operation: AssetAdministrationShellOperationTypesType,
     public readonly changes: IChange[],
   ) {}
 
   static create(
     data: ActivityPayloadCreateProps & {
-      submodelId: string;
-      operation: SubmodelOperationTypesType;
-      fullIdShortPath: IdShortPath;
+      assetAdministrationShellId: string;
+      operation: AssetAdministrationShellOperationTypesType;
     },
   ) {
-    return new SubmodelPayload(
-      data.submodelId,
+    return new AssetAdministrationShellPayload(
+      data.assetAdministrationShellId,
       data.administration,
-      data.fullIdShortPath,
       data.operation,
       data.changes,
     );
   }
 
   static fromPlain(data: unknown) {
-    const parsed = SubmodelPayloadSchema.parse(data);
-    return new SubmodelPayload(
-      parsed.submodelId,
+    const parsed = AssetAdministrationShellPayloadSchema.parse(data);
+    return new AssetAdministrationShellPayload(
+      parsed.assetAdministrationShellId,
       AdministrativeInformation.fromPlain(parsed.administration),
-      IdShortPath.create({ path: parsed.fullIdShortPath }),
       parsed.operation,
       parsed.changes,
     );
@@ -115,9 +106,8 @@ export class SubmodelPayload implements IActivityPayload {
   toPlain() {
     return {
       ...payloadToPlain(this),
-      submodelId: this.submodelId,
+      assetAdministrationShellId: this.assetAdministrationShellId,
       operation: this.operation,
-      fullIdShortPath: this.fullIdShortPath.toString(),
     };
   }
 }

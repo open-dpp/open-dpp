@@ -9,16 +9,14 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { ActivityRepository } from "./activity.repository";
 import { ActivityDbSchema, ActivityDoc } from "./activity.schema";
-import { SubmodelElementModificationActivity } from "../aas/submodel-base/submodel-element-modification.activity";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { ActivityRegistryInitializer } from "../presentation/activity-registry-initializer";
 import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
-import { SubmodelBaseModificationActivityPayload } from "../aas/submodel-base/submodel-base-modification.payload";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { SubmodelActivity } from "../aas/submodel.activity";
-import { OperationTypes } from "../operation-types";
+import { SubmodelOperationTypes } from "../submodel-operation-types";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -53,6 +51,8 @@ describe("activityRepository", () => {
   it("should save a activities", async () => {
     const passportId = randomUUID();
     const submodelId = randomUUID();
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
     const event1 = SubmodelActivity.create({
       digitalProductDocumentId: passportId,
       submodelId,
@@ -60,7 +60,8 @@ describe("activityRepository", () => {
       oldData: { idShort: "prop1", value: "oldValue" },
       newData: { idShort: "prop1", value: "newValue" },
       administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: OperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModification,
+      createdAt: date1,
     });
     const event2 = SubmodelActivity.create({
       digitalProductDocumentId: passportId,
@@ -69,7 +70,8 @@ describe("activityRepository", () => {
       oldData: { idShort: "prop2", value: "oldValue" },
       newData: { idShort: "prop2", value: "newValue" },
       administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: OperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModification,
+      createdAt: date2,
     });
     await activityRepository.createMany([event1, event2]);
     const foundEvent = await activityRepository.findOneOrFail(event1.header.id);
@@ -97,7 +99,7 @@ describe("activityRepository", () => {
         oldData: { idShort, value: "oldValue" },
         newData: { idShort, value: "newValue" },
         administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        operation: OperationTypes.SubmodelElementModification,
+        operation: SubmodelOperationTypes.SubmodelElementModification,
         createdAt,
       });
 
@@ -108,14 +110,14 @@ describe("activityRepository", () => {
 
     const event4 = createActivity("prop5", date5);
 
-    const eventOfOtherAggregate = SubmodelElementModificationActivity.create({
+    const eventOfOtherAggregate = SubmodelActivity.create({
       digitalProductDocumentId: randomUUID(),
-      payload: SubmodelBaseModificationActivityPayload.create({
-        submodelId: randomUUID(),
-        fullIdShortPath: IdShortPath.create({ path: `${randomUUID()}.prop4` }),
-        data: { idShort: "prop4", value: "20" },
-        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      }),
+      submodelId: randomUUID(),
+      fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.prop4` }),
+      oldData: { idShort: "prop4", value: "oldValue" },
+      newData: { idShort: "prop4", value: "newValue" },
+      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+      operation: SubmodelOperationTypes.SubmodelElementModification,
       createdAt: date4,
     });
 

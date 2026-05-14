@@ -39,13 +39,13 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { KeyTypes } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { SubmodelElementModificationActivity } from "../../activity-history/aas/submodel-base/submodel-element-modification.activity";
 
 import { Response } from "express";
 import { Archiver } from "archiver";
-import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
+import { SubmodelActivity } from "../../activity-history/aas/submodel.activity";
+import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -296,14 +296,14 @@ describe("DigitalProductDocumentService", () => {
     });
     await passportRepository.save(passport);
     const createActivity = (idShort: string, createdAt: Date) =>
-      SubmodelElementModificationActivity.create({
+      SubmodelActivity.create({
         digitalProductDocumentId: passport.id,
-        payload: SubmodelBaseModificationActivityPayload.create({
-          fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
-          submodelId,
-          data: { idShort, value: "20" },
-          administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        }),
+        submodelId,
+        fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
+        oldData: { idShort, value: "oldValue" },
+        newData: { idShort, value: "newValue" },
+        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+        operation: SubmodelOperationTypes.SubmodelElementModification,
         createdAt,
       });
 

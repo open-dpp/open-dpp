@@ -6,7 +6,7 @@ import {
   IActivity,
 } from "../../activity";
 import { ActivityTypes } from "../../activity-types";
-import { createActivityHeader, SharedActivityCreateProps } from "../shared.activity";
+import { createActivityHeaderOld, SharedActivityCreateProps } from "../shared.activity";
 import { SubmodelBaseCreateActivityPayload } from "./submodel-base-create.payload";
 import { SubmodelRowCreateActivityPayload } from "./submodel-row-create.payload";
 
@@ -21,7 +21,7 @@ export class SubmodelRowCreateActivity implements IActivity {
   ) {}
   static create(data: SubmodelRowCreateActivityCreateProps): SubmodelRowCreateActivity {
     return new SubmodelRowCreateActivity(
-      createActivityHeader(ActivityTypes.SubmodelRowCreate, data),
+      createActivityHeaderOld(ActivityTypes.SubmodelRowCreate, data),
       data.payload,
     );
   }

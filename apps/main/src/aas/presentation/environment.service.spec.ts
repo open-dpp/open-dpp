@@ -55,9 +55,7 @@ import { EnvironmentService } from "./environment.service";
 import { randomUUID } from "node:crypto";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { SubmodelBaseModificationActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-modification.payload";
 import { ActivityTypes } from "../../activity-history/activity-types";
-import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/asset-administration-shell/asset-administration-shell-modification.payload";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { SubmodelBaseCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-create.payload";
 import { parseSubmodelElement } from "../domain/submodel-base/submodel-base";
@@ -65,8 +63,10 @@ import { SubmodelRowCreateActivityPayload } from "../../activity-history/aas/sub
 import { DbSessionOptions } from "../../database/query-options";
 import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
 import { SubmodelPayload } from "../../activity-history/aas/submodel.activity";
-import { OperationTypes } from "../../activity-history/operation-types";
+import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
 import { Operation } from "json-diff-ts";
+import { AssetAdministrationShellPayload } from "../../activity-history/aas/asset-administration-shell.activity";
+import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -263,11 +263,75 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.AssetAdministrationShellModification,
-          payload: AssetAdministrationShellModificationActivityPayload.create({
+          type: ActivityTypes.AssetAdministrationShellActivity,
+          payload: AssetAdministrationShellPayload.create({
             assetAdministrationShellId: assetAdministrationShell.id,
             administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-            data: modification,
+            operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
+            changes: [
+              {
+                key: "security",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "localAccessControl",
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        embeddedKey: "$index",
+                        key: "accessPermissionRules",
+                        type: Operation.UPDATE,
+                        changes: [
+                          {
+                            key: "0",
+                            type: Operation.UPDATE,
+                            changes: [
+                              {
+                                embeddedKey: "object.idShort",
+                                key: "permissionsPerObject",
+                                type: Operation.UPDATE,
+                                embeddedKeyIsPath: true,
+                                changes: [
+                                  {
+                                    key: "section1",
+                                    type: Operation.UPDATE,
+                                    changes: [
+                                      {
+                                        embeddedKey: "permission",
+                                        key: "permissions",
+                                        type: Operation.UPDATE,
+                                        changes: [
+                                          {
+                                            key: "Create",
+                                            type: Operation.ADD,
+                                            value: {
+                                              kindOfPermission: "Allow",
+                                              permission: "Create",
+                                            },
+                                          },
+                                          {
+                                            key: "Edit",
+                                            type: Operation.ADD,
+                                            value: {
+                                              kindOfPermission: "Allow",
+                                              permission: "Edit",
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],
@@ -715,15 +779,15 @@ describe("environmentService", () => {
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}`,
             }),
-            operation: OperationTypes.SubmodelModification,
+            operation: SubmodelOperationTypes.SubmodelModification,
             changes: [
               {
-                embeddedKey: "$index",
+                embeddedKey: "language",
                 key: "displayName",
                 type: Operation.UPDATE,
                 changes: [
                   {
-                    key: "0",
+                    key: "en",
                     type: Operation.ADD,
                     value: {
                       language: "en",
@@ -779,7 +843,7 @@ describe("environmentService", () => {
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}`,
             }),
-            operation: OperationTypes.SubmodelValueModification,
+            operation: SubmodelOperationTypes.SubmodelValueModification,
             changes: [
               {
                 embeddedKey: "idShort",
@@ -873,15 +937,15 @@ describe("environmentService", () => {
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
-            operation: OperationTypes.SubmodelElementModification,
+            operation: SubmodelOperationTypes.SubmodelElementModification,
             changes: [
               {
                 type: Operation.UPDATE,
                 key: "displayName",
-                embeddedKey: "$index",
+                embeddedKey: "language",
                 changes: [
                   {
-                    key: "0",
+                    key: "en",
                     type: Operation.ADD,
                     value: {
                       language: "en",
@@ -1002,14 +1066,57 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelColumnModification,
-          payload: SubmodelBaseModificationActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${listIdShortPath}.${col1.idShort}`,
             }),
-            data: modification,
+            operation: SubmodelOperationTypes.SubmodelColumnModification,
+            changes: [
+              {
+                embeddedKey: "idShort",
+                key: "value",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: row1.idShort,
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        key: "value",
+                        type: Operation.UPDATE,
+                        embeddedKey: "idShort",
+                        changes: [
+                          {
+                            key: "col1",
+                            type: Operation.UPDATE,
+                            changes: [
+                              {
+                                embeddedKey: "language",
+                                key: "displayName",
+                                type: Operation.UPDATE,
+                                changes: [
+                                  {
+                                    key: "en",
+                                    type: Operation.ADD,
+                                    value: {
+                                      language: "en",
+                                      text: "Test",
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],
@@ -1123,7 +1230,7 @@ describe("environmentService", () => {
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
-            operation: OperationTypes.SubmodelElementValueModification,
+            operation: SubmodelOperationTypes.SubmodelElementValueModification,
             changes: [
               {
                 embeddedKey: "idShort",

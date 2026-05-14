@@ -34,16 +34,13 @@ import {
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 import { IActivity } from "../../../activity-history/activity";
-import { SubmodelBaseModificationActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-modification.payload";
-import { SubmodelElementValueModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-element-value-modification.activity";
-import { SubmodelColumnModificationActivity } from "../../../activity-history/aas/submodel-base/submodel-column-modification.activity";
 import { SubmodelElementCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-element-create.activity";
 import { SubmodelBaseCreateActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-base-create.payload";
 import { SubmodelColumnCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-column-create.activity";
 import { SubmodelRowCreateActivity } from "../../../activity-history/aas/submodel-base/submodel-row-create.activity";
 import { SubmodelRowCreateActivityPayload } from "../../../activity-history/aas/submodel-base/submodel-row-create.payload";
 import { SubmodelActivity } from "../../../activity-history/aas/submodel.activity";
-import { OperationTypes } from "../../../activity-history/operation-types";
+import { SubmodelOperationTypes } from "../../../activity-history/submodel-operation-types";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -147,7 +144,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: this.getIdShortPath(),
-        operation: OperationTypes.SubmodelModification,
+        operation: SubmodelOperationTypes.SubmodelModification,
         userId: options.ability.userId ?? undefined,
         oldData,
         newData: this.toPlain(),
@@ -182,7 +179,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         userId: options.ability.userId ?? undefined,
         oldData,
         newData: this.toPlain(),
-        operation: OperationTypes.SubmodelValueModification,
+        operation: SubmodelOperationTypes.SubmodelValueModification,
       }),
     );
   }
@@ -200,7 +197,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         userId: options.ability.userId ?? undefined,
         oldData,
         newData: submodelElement.toPlain(),
-        operation: OperationTypes.SubmodelElementModification,
+        operation: SubmodelOperationTypes.SubmodelElementModification,
       }),
     );
     return submodelElement;
@@ -221,7 +218,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         administration: this.administration,
         fullIdShortPath: submodelElement.getIdShortPath(),
         userId: options.ability.userId ?? undefined,
-        operation: OperationTypes.SubmodelElementValueModification,
+        operation: SubmodelOperationTypes.SubmodelElementValueModification,
         oldData,
         newData: submodelElement.toPlain(),
       }),
@@ -290,17 +287,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ModifierVisitorOptions,
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    const oldData = tableExtension.getTableElement().toPlain();
     tableExtension.modifyColumn(idShortOfColumn, data, options);
     this.publishActivity(
-      SubmodelColumnModificationActivity.create({
+      SubmodelActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId,
-        payload: SubmodelBaseModificationActivityPayload.create({
-          submodelId: this.id,
-          administration: this.administration,
-          fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
-          data,
-        }),
+        submodelId: this.id,
+        administration: this.administration,
+        fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
         userId: options.ability.userId ?? undefined,
+        operation: SubmodelOperationTypes.SubmodelColumnModification,
+        oldData,
+        newData: tableExtension.getTableElement().toPlain(),
       }),
     );
     return tableExtension.getTableElement();

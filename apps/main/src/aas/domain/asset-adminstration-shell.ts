@@ -16,11 +16,11 @@ import { Security } from "./security/security";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 import { IActivity } from "../../activity-history/activity";
-import { AssetAdministrationShellModificationActivity } from "../../activity-history/aas/asset-administration-shell/asset-administration-shell-modification.activity";
-import { AssetAdministrationShellModificationActivityPayload } from "../../activity-history/aas/asset-administration-shell/asset-administration-shell-modification.payload";
 import { AddOptions } from "./submodel-base/submodel-base";
 import { SubmodelCreateActivity } from "../../activity-history/aas/asset-administration-shell/submodel-create.activity";
 import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
+import { AssetAdministrationShellActivity } from "../../activity-history/aas/asset-administration-shell.activity";
+import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -116,16 +116,17 @@ export class AssetAdministrationShell
   }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
+    const oldData = this.toPlain();
     this.accept(new ModifierVisitor(options), { data });
     this.publishActivity(
-      AssetAdministrationShellModificationActivity.create({
+      AssetAdministrationShellActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId,
         userId: options.ability.userId ?? undefined,
-        payload: AssetAdministrationShellModificationActivityPayload.create({
-          assetAdministrationShellId: this.id,
-          administration: this.administration,
-          data: data,
-        }),
+        assetAdministrationShellId: this.id,
+        administration: this.administration,
+        oldData,
+        operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
+        newData: this.toPlain(),
       }),
     );
   }
