@@ -10,7 +10,7 @@ import { ActivityTypes } from "../activity-types";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { diff, IChange } from "json-diff-ts";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { z } from "zod/v4";
+import { z } from "zod";
 import {
   SubmodelOperationTypesEnum,
   SubmodelOperationTypesType,

@@ -57,8 +57,6 @@ import { ActivityHistoryModule } from "../../activity-history/activity-history.m
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { ActivityTypes } from "../../activity-history/activity-types";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
-import { SubmodelBaseCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-base-create.payload";
-import { parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { SubmodelRowCreateActivityPayload } from "../../activity-history/aas/submodel-base/submodel-row-create.payload";
 import { DbSessionOptions } from "../../database/query-options";
 import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
@@ -555,12 +553,40 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelElementCreate,
-          payload: SubmodelBaseCreateActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }),
-            data: parseSubmodelElement(propertyPlain).toPlain(),
+            operation: SubmodelOperationTypes.SubmodelElementCreate,
+            changes: [
+              {
+                embeddedKey: "idShort",
+                key: "submodelElements",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "dataField1",
+                    type: Operation.ADD,
+                    value: {
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      qualifiers: [],
+                      supplementalSemanticIds: [],
+                      category: null,
+                      idShort: "dataField1",
+                      modelType: "Property",
+                      semanticId: null,
+                      value: "test",
+                      valueId: null,
+                      valueType: "String",
+                    },
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],
@@ -568,7 +594,7 @@ describe("environmentService", () => {
   });
 
   it("should add column", async () => {
-    const { digitalProductDocumentId, listIdShortPath, environment, admin, submodel1 } =
+    const { digitalProductDocumentId, listIdShortPath, environment, admin, submodel1, row1 } =
       await createEnvironmentWithList();
     const column = Property.create({
       idShort: "column1",
@@ -591,15 +617,55 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelColumnCreate,
-          payload: SubmodelBaseCreateActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
             fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(
               listIdShortPath,
             ),
-            data: column.toPlain(),
-            position,
+            changes: [
+              {
+                embeddedKey: "idShort",
+                key: "value",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: row1.idShort,
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        embeddedKey: "idShort",
+                        key: "value",
+                        type: Operation.UPDATE,
+                        changes: [
+                          {
+                            key: "column1",
+                            type: Operation.ADD,
+                            value: {
+                              category: null,
+                              description: [],
+                              displayName: [],
+                              embeddedDataSpecifications: [],
+                              extensions: [],
+                              idShort: "column1",
+                              modelType: "Property",
+                              qualifiers: [],
+                              semanticId: null,
+                              supplementalSemanticIds: [],
+                              value: "test",
+                              valueId: null,
+                              valueType: "String",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            operation: SubmodelOperationTypes.SubmodelColumnCreate,
           }),
         },
       ],
