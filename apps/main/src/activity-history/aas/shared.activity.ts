@@ -30,11 +30,14 @@ export function createActivityHeaderOld(
 
 export interface ActivityCreateProps {
   digitalProductDocumentId: string;
-  administration: AdministrativeInformation;
-  oldData: unknown;
+  oldData?: unknown;
   newData: unknown;
   userId?: string;
   createdAt?: Date;
+}
+
+export interface ActivityCreatePropsWithAdministration extends ActivityCreateProps {
+  administration: AdministrativeInformation;
 }
 
 export function createActivityHeader(type: string, data: ActivityCreateProps, version?: string) {

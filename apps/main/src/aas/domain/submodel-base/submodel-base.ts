@@ -53,7 +53,7 @@ export interface AddOptions {
   idShortPath?: IdShortPath;
   position?: number;
   ability: AasAbility;
-  digitalProductDocumentId?: string;
+  digitalProductDocumentId: string;
 }
 
 export interface IHasIdShortPath {

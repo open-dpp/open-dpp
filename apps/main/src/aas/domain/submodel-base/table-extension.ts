@@ -87,7 +87,10 @@ export class TableExtension {
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
         const columnCopy = cloneSubmodelElement(column, { value: undefined });
-        newRow.addSubmodelElement(columnCopy, { ability: options.ability });
+        newRow.addSubmodelElement(columnCopy, {
+          ability: options.ability,
+          digitalProductDocumentId: options.digitalProductDocumentId,
+        });
       });
 
       if (options?.position === 0) {

@@ -17,8 +17,6 @@ import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 import { IActivity } from "../../activity-history/activity";
 import { AddOptions } from "./submodel-base/submodel-base";
-import { SubmodelCreateActivity } from "../../activity-history/aas/asset-administration-shell/submodel-create.activity";
-import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
 import { AssetAdministrationShellActivity } from "../../activity-history/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 
@@ -140,19 +138,19 @@ export class AssetAdministrationShell
     options?: Pick<AddOptions, "ability" | "digitalProductDocumentId">,
   ): Reference {
     const reference = submodelToReference(submodel);
-
+    const oldData = this.toPlain();
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
     if (options) {
       this.publishActivity(
-        SubmodelCreateActivity.create({
-          digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove the !
+        AssetAdministrationShellActivity.create({
+          digitalProductDocumentId: options.digitalProductDocumentId,
           userId: options.ability.userId ?? undefined,
-          payload: SubmodelCreateActivityPayload.create({
-            assetAdministrationShellId: this.id,
-            administration: this.administration,
-            data: submodel.toPlain(),
-          }),
+          assetAdministrationShellId: this.id,
+          administration: this.administration,
+          oldData,
+          newData: this.toPlain(),
+          operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
         }),
       );
     }

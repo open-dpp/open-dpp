@@ -58,12 +58,14 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { ActivityTypes } from "../../activity-history/activity-types";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { DbSessionOptions } from "../../database/query-options";
-import { SubmodelCreateActivityPayload } from "../../activity-history/aas/asset-administration-shell/submodel-create.payload";
 import { SubmodelPayload } from "../../activity-history/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
 import { Operation } from "json-diff-ts";
 import { AssetAdministrationShellPayload } from "../../activity-history/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
+import { EnvironmentPayload } from "../../activity-history/aas/environment.activity";
+import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
+import { DigitalProductDocumentPayload } from "../../activity-history/aas/digital-product-document.activity";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -514,11 +516,331 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelCreate,
-          payload: SubmodelCreateActivityPayload.create({
+          type: ActivityTypes.DigitalProductDocumentActivity,
+          payload: DigitalProductDocumentPayload.create({
+            operation: EnvironmentOperationTypes.SubmodelCreate,
+            changes: [
+              {
+                key: "$root",
+                type: Operation.ADD,
+                value: [
+                  {
+                    administration: {
+                      revision: "0",
+                      version: "1",
+                    },
+                    category: null,
+                    description: [],
+                    displayName: [],
+                    embeddedDataSpecifications: [],
+                    extensions: [],
+                    id: submodelPlain.id,
+                    idShort: "submodel2",
+                    kind: null,
+                    modelType: "Submodel",
+                    qualifiers: [],
+                    semanticId: null,
+                    submodelElements: [],
+                    supplementalSemanticIds: [],
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+        {
+          type: ActivityTypes.AssetAdministrationShellActivity,
+          payload: AssetAdministrationShellPayload.create({
             assetAdministrationShellId: environment.assetAdministrationShells[0],
             administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            data: Submodel.fromPlain(submodelPlain).toPlain(),
+            operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
+            changes: [
+              {
+                embeddedKey: "$index",
+                key: "submodels",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "1",
+                    type: Operation.ADD,
+                    value: {
+                      keys: [
+                        {
+                          type: "Submodel",
+                          value: submodelPlain.id,
+                        },
+                      ],
+                      referredSemanticId: null,
+                      type: "ModelReference",
+                    },
+                  },
+                ],
+              },
+              {
+                key: "security",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "localAccessControl",
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        embeddedKey: "$index",
+                        key: "accessPermissionRules",
+                        type: Operation.UPDATE,
+                        changes: [
+                          {
+                            key: "0",
+                            type: Operation.UPDATE,
+                            changes: [
+                              {
+                                embeddedKey: "object.idShort",
+                                embeddedKeyIsPath: true,
+                                key: "permissionsPerObject",
+                                type: Operation.UPDATE,
+                                changes: [
+                                  {
+                                    key: "submodel2",
+                                    type: Operation.ADD,
+                                    value: {
+                                      object: {
+                                        category: null,
+                                        description: [],
+                                        displayName: [],
+                                        embeddedDataSpecifications: [],
+                                        extensions: [],
+                                        idShort: "submodel2",
+                                        modelType: "ReferenceElement",
+                                        qualifiers: [],
+                                        semanticId: null,
+                                        supplementalSemanticIds: [],
+                                        value: null,
+                                      },
+                                      permissions: [
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Create",
+                                        },
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Read",
+                                        },
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Edit",
+                                        },
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Delete",
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            key: "1",
+                            type: Operation.UPDATE,
+                            changes: [
+                              {
+                                embeddedKey: "object.idShort",
+                                embeddedKeyIsPath: true,
+                                key: "permissionsPerObject",
+                                type: Operation.UPDATE,
+                                changes: [
+                                  {
+                                    key: "submodel2",
+                                    type: Operation.ADD,
+                                    value: {
+                                      object: {
+                                        category: null,
+                                        description: [],
+                                        displayName: [],
+                                        embeddedDataSpecifications: [],
+                                        extensions: [],
+                                        idShort: "submodel2",
+                                        modelType: "ReferenceElement",
+                                        qualifiers: [],
+                                        semanticId: null,
+                                        supplementalSemanticIds: [],
+                                        value: null,
+                                      },
+                                      permissions: [
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Create",
+                                        },
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Read",
+                                        },
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Edit",
+                                        },
+                                        {
+                                          kindOfPermission: "Allow",
+                                          permission: "Delete",
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            key: "2",
+                            type: Operation.ADD,
+                            value: {
+                              permissionsPerObject: [
+                                {
+                                  object: {
+                                    category: null,
+                                    description: [],
+                                    displayName: [],
+                                    embeddedDataSpecifications: [],
+                                    extensions: [],
+                                    idShort: "submodel2",
+                                    modelType: "ReferenceElement",
+                                    qualifiers: [],
+                                    semanticId: null,
+                                    supplementalSemanticIds: [],
+                                    value: null,
+                                  },
+                                  permissions: [
+                                    {
+                                      kindOfPermission: "Allow",
+                                      permission: "Create",
+                                    },
+                                    {
+                                      kindOfPermission: "Allow",
+                                      permission: "Read",
+                                    },
+                                    {
+                                      kindOfPermission: "Allow",
+                                      permission: "Edit",
+                                    },
+                                    {
+                                      kindOfPermission: "Allow",
+                                      permission: "Delete",
+                                    },
+                                  ],
+                                },
+                              ],
+                              targetSubjectAttributes: {
+                                subjectAttribute: [
+                                  {
+                                    category: null,
+                                    description: [],
+                                    displayName: [],
+                                    embeddedDataSpecifications: [],
+                                    extensions: [],
+                                    idShort: "userRole",
+                                    modelType: "Property",
+                                    qualifiers: [],
+                                    semanticId: null,
+                                    supplementalSemanticIds: [],
+                                    value: "user",
+                                    valueId: null,
+                                    valueType: "String",
+                                  },
+                                  {
+                                    category: null,
+                                    description: [],
+                                    displayName: [],
+                                    embeddedDataSpecifications: [],
+                                    extensions: [],
+                                    idShort: "memberRole",
+                                    modelType: "Property",
+                                    qualifiers: [],
+                                    semanticId: null,
+                                    supplementalSemanticIds: [],
+                                    value: "owner",
+                                    valueId: null,
+                                    valueType: "String",
+                                  },
+                                ],
+                              },
+                            },
+                          },
+                          {
+                            key: "3",
+                            type: Operation.ADD,
+                            value: {
+                              permissionsPerObject: [
+                                {
+                                  object: {
+                                    category: null,
+                                    description: [],
+                                    displayName: [],
+                                    embeddedDataSpecifications: [],
+                                    extensions: [],
+                                    idShort: "submodel2",
+                                    modelType: "ReferenceElement",
+                                    qualifiers: [],
+                                    semanticId: null,
+                                    supplementalSemanticIds: [],
+                                    value: null,
+                                  },
+                                  permissions: [
+                                    {
+                                      kindOfPermission: "Allow",
+                                      permission: "Read",
+                                    },
+                                  ],
+                                },
+                              ],
+                              targetSubjectAttributes: {
+                                subjectAttribute: [
+                                  {
+                                    category: null,
+                                    description: [],
+                                    displayName: [],
+                                    embeddedDataSpecifications: [],
+                                    extensions: [],
+                                    idShort: "userRole",
+                                    modelType: "Property",
+                                    qualifiers: [],
+                                    semanticId: null,
+                                    supplementalSemanticIds: [],
+                                    value: "anonymous",
+                                    valueId: null,
+                                    valueType: "String",
+                                  },
+                                ],
+                              },
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+        {
+          type: ActivityTypes.EnvironmentActivity,
+          payload: EnvironmentPayload.create({
+            operation: EnvironmentOperationTypes.SubmodelCreate,
+            changes: [
+              {
+                embeddedKey: "$index",
+                key: "submodels",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "1",
+                    type: Operation.ADD,
+                    value: submodelPlain.id,
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],

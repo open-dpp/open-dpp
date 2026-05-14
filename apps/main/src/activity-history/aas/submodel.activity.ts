@@ -17,7 +17,7 @@ import {
   SubmodelOperationTypesType,
 } from "../submodel-operation-types";
 import {
-  ActivityCreateProps,
+  ActivityCreatePropsWithAdministration,
   ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
@@ -30,7 +30,7 @@ export class SubmodelActivity implements IActivity {
     readonly payload: SubmodelPayload,
   ) {}
   static create(
-    data: ActivityCreateProps & {
+    data: ActivityCreatePropsWithAdministration & {
       submodelId: string;
       operation: SubmodelOperationTypesType;
       fullIdShortPath: IdShortPath;

@@ -3,8 +3,14 @@ import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { IConvertableToPlain } from "./convertable-to-plain";
 import { Submodel } from "./submodel-base/submodel";
+import { IActivity } from "../../activity-history/activity";
+import { EnvironmentActivity } from "../../activity-history/aas/environment.activity";
+import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
+import { AddOptions } from "./submodel-base/submodel-base";
 
 export class Environment implements IConvertableToPlain {
+  private _activities: Array<IActivity> = [];
+
   private constructor(
     public readonly assetAdministrationShells: Array<string>,
     public readonly submodels: Array<string>,
@@ -32,6 +38,20 @@ export class Environment implements IConvertableToPlain {
     );
   }
 
+  private publishActivity(activity: IActivity) {
+    this._activities.push(activity);
+  }
+
+  get activities(): Array<IActivity> {
+    return this._activities;
+  }
+
+  pullActivities(): Array<IActivity> {
+    const events = [...this._activities];
+    this._activities = [];
+    return events;
+  }
+
   addAssetAdministrationShell(
     assetAdministrationShell: AssetAdministrationShell,
   ): AssetAdministrationShell {
@@ -44,11 +64,24 @@ export class Environment implements IConvertableToPlain {
     return assetAdministrationShell;
   }
 
-  addSubmodel(submodel: Submodel) {
+  addSubmodel(
+    submodel: Submodel,
+    options: Pick<AddOptions, "ability" | "digitalProductDocumentId">,
+  ) {
     if (this.submodels.includes(submodel.id)) {
       throw new ValueError(`Submodel with id ${submodel.id} already exists`);
     }
+    const oldData = JSON.parse(JSON.stringify(this.toPlain()));
     this.submodels.push(submodel.id);
+    this.publishActivity(
+      EnvironmentActivity.create({
+        oldData,
+        newData: this.toPlain(),
+        operation: EnvironmentOperationTypes.SubmodelCreate,
+        userId: options?.ability.userId ?? undefined,
+        digitalProductDocumentId: options.digitalProductDocumentId,
+      }),
+    );
 
     return submodel;
   }

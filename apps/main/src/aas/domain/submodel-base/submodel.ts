@@ -238,7 +238,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     tableExtension.addRow(options);
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove ! after migration to new activity history
+        digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: this.getIdShortPath().concat(idShortPath),
@@ -263,7 +263,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     tableExtension.addColumn(column, options);
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove ! after migration to new activity history
+        digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: this.getIdShortPath().concat(idShortPath),
@@ -370,7 +370,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     }
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove ! after migration to new activity history
+        digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: fullIdShortPath,

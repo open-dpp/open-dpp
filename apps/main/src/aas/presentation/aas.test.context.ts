@@ -653,7 +653,7 @@ export function createAasTestContext<T>(
       idShort: submodelBillOfMaterialPlainFactory.build().idShort!,
     });
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property, { ability });
+    submodel.addSubmodelElement(property, { ability, digitalProductDocumentId: entity.id });
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
 
@@ -682,7 +682,7 @@ export function createAasTestContext<T>(
       submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property, { ability });
+    submodel.addSubmodelElement(property, { ability, digitalProductDocumentId: entity.id });
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
@@ -823,12 +823,18 @@ export function createAasTestContext<T>(
       submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
-    submodel.addSubmodelElement(submodelElementCollection, { ability });
+    submodel.addSubmodelElement(submodelElementCollection, {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
     const property = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }),
     );
 
-    submodelElementCollection.addSubmodelElement(property, { ability });
+    submodelElementCollection.addSubmodelElement(property, {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -866,12 +872,13 @@ export function createAasTestContext<T>(
     });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodelElementList.addSubmodelElement(row0, {
+    submodel.addSubmodelElement(submodelElementList, {
       ability,
+      digitalProductDocumentId: entity.id,
     });
+    submodelElementList.addSubmodelElement(row0, { ability, digitalProductDocumentId: entity.id });
 
-    row0.addSubmodelElement(col1, { ability });
+    row0.addSubmodelElement(col1, { ability, digitalProductDocumentId: entity.id });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -908,10 +915,13 @@ export function createAasTestContext<T>(
     });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodelElementList.addSubmodelElement(row0, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
+    submodelElementList.addSubmodelElement(row0, { ability, digitalProductDocumentId: entity.id });
 
-    row0.addSubmodelElement(col1, { ability });
+    row0.addSubmodelElement(col1, { ability, digitalProductDocumentId: entity.id });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -957,10 +967,13 @@ export function createAasTestContext<T>(
     });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodelElementList.addSubmodelElement(row0, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
+    submodelElementList.addSubmodelElement(row0, { ability, digitalProductDocumentId: entity.id });
 
-    row0.addSubmodelElement(col1, { ability });
+    row0.addSubmodelElement(col1, { ability, digitalProductDocumentId: entity.id });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -998,10 +1011,13 @@ export function createAasTestContext<T>(
     });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodelElementList.addSubmodelElement(row1, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
+    submodelElementList.addSubmodelElement(row1, { ability, digitalProductDocumentId: entity.id });
 
-    row1.addSubmodelElement(col1, { ability });
+    row1.addSubmodelElement(col1, { ability, digitalProductDocumentId: entity.id });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -1037,10 +1053,13 @@ export function createAasTestContext<T>(
     });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodelElementList.addSubmodelElement(row1, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+      digitalProductDocumentId: entity.id,
+    });
+    submodelElementList.addSubmodelElement(row1, { ability, digitalProductDocumentId: entity.id });
 
-    row1.addSubmodelElement(col1, { ability });
+    row1.addSubmodelElement(col1, { ability, digitalProductDocumentId: entity.id });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -1079,7 +1098,7 @@ export function createAasTestContext<T>(
       keys: [Key.create({ type: KeyTypes.Submodel, value: submodel.id })],
     });
 
-    entity.getEnvironment().addSubmodel(submodel);
+    entity.getEnvironment().addSubmodel(submodel, { ability, digitalProductDocumentId: entity.id });
     const aasId = entity.getEnvironment().assetAdministrationShells[0]!;
     const assetAdministrationShell = await aasRepository.findOneOrFail(aasId);
     assetAdministrationShell.addSubmodelReference(submodelRef);
@@ -1110,8 +1129,8 @@ export function createAasTestContext<T>(
     const submodelElement = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "Property01" }),
     );
-    submodel.addSubmodelElement(submodelElement, { ability });
-    entity.getEnvironment().addSubmodel(submodel);
+    submodel.addSubmodelElement(submodelElement, { ability, digitalProductDocumentId: entity.id });
+    entity.getEnvironment().addSubmodel(submodel, { ability, digitalProductDocumentId: entity.id });
     await saveEntity(entity);
 
     const path = submodelElement.idShort;

@@ -7,6 +7,10 @@ import { AdministrativeInformation } from "./common/administrative-information";
 import { LanguageText } from "./common/language-text";
 import { Environment } from "./environment";
 import { Submodel } from "./submodel-base/submodel";
+import { Security } from "./security/security";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
+import { SubjectAttributes } from "./security/subject-attributes";
+import { randomUUID } from "node:crypto";
 
 describe("environment", () => {
   it("should add aas", () => {
@@ -39,21 +43,42 @@ describe("environment", () => {
     const environment = Environment.create({});
     const id = "sub1";
     const newSubmodel = Submodel.create({ id, idShort: id });
-    const submodel = environment.addSubmodel(newSubmodel);
+    const security = Security.create({});
+    const ability = security.defineAbilityForSubject(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+    );
+    const submodel = environment.addSubmodel(newSubmodel, {
+      ability,
+      digitalProductDocumentId: randomUUID(),
+    });
     expect(environment.submodels).toEqual([submodel.id]);
     expect(submodel).toEqual(newSubmodel);
-    expect(() => environment.addSubmodel(newSubmodel)).toThrow(
-      new ValueError(`Submodel with id sub1 already exists`),
-    );
+    expect(() =>
+      environment.addSubmodel(newSubmodel, {
+        ability,
+        digitalProductDocumentId: randomUUID(),
+      }),
+    ).toThrow(new ValueError(`Submodel with id sub1 already exists`));
   });
 
   it("should delete submodel", () => {
     const environment = Environment.create({});
     const id = "sub1";
+    const security = Security.create({});
+    const ability = security.defineAbilityForSubject(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+    );
     const submodelToDelete = Submodel.create({ id, idShort: id });
     const otherSubmodel = Submodel.create({ id: "sub2", idShort: "sub2" });
-    environment.addSubmodel(submodelToDelete);
-    environment.addSubmodel(otherSubmodel);
+    const digitalProductDocumentId = randomUUID();
+    environment.addSubmodel(submodelToDelete, {
+      ability,
+      digitalProductDocumentId,
+    });
+    environment.addSubmodel(otherSubmodel, {
+      ability,
+      digitalProductDocumentId,
+    });
     expect(environment.submodels).toEqual([submodelToDelete.id, otherSubmodel.id]);
     environment.deleteSubmodel(submodelToDelete);
     expect(environment.submodels).toEqual([otherSubmodel.id]);

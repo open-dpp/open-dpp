@@ -11,7 +11,7 @@ import { AdministrativeInformation } from "../../aas/domain/common/administrativ
 import { diff, IChange } from "json-diff-ts";
 import { z } from "zod";
 import {
-  ActivityCreateProps,
+  ActivityCreatePropsWithAdministration,
   ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
@@ -28,7 +28,7 @@ export class AssetAdministrationShellActivity implements IActivity {
     readonly payload: AssetAdministrationShellPayload,
   ) {}
   static create(
-    data: ActivityCreateProps & {
+    data: ActivityCreatePropsWithAdministration & {
       assetAdministrationShellId: string;
       operation: AssetAdministrationShellOperationTypesType;
     },
