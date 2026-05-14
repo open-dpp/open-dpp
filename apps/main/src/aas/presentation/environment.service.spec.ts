@@ -1116,14 +1116,55 @@ describe("environmentService", () => {
     expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
       [
         {
-          type: ActivityTypes.SubmodelElementValueModification,
-          payload: SubmodelBaseModificationActivityPayload.create({
+          type: ActivityTypes.SubmodelActivity,
+          payload: SubmodelPayload.create({
             submodelId: submodel1.id,
             administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
             fullIdShortPath: IdShortPath.create({
               path: `${submodel1.idShort}.${idShortPathToProperty1}`,
             }),
-            data: modification,
+            operation: OperationTypes.SubmodelElementValueModification,
+            changes: [
+              {
+                embeddedKey: "idShort",
+                key: "value",
+                type: Operation.UPDATE,
+                changes: [
+                  {
+                    key: "property1",
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        key: "value",
+                        type: Operation.REMOVE,
+                        value: null,
+                      },
+                      {
+                        key: "value",
+                        type: Operation.ADD,
+                        value: "new value 1",
+                      },
+                    ],
+                  },
+                  {
+                    key: "property2",
+                    type: Operation.UPDATE,
+                    changes: [
+                      {
+                        key: "value",
+                        type: Operation.REMOVE,
+                        value: null,
+                      },
+                      {
+                        key: "value",
+                        type: Operation.ADD,
+                        value: "new value 2",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
           }),
         },
       ],

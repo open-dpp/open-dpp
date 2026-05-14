@@ -212,17 +212,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ValueModifierVisitorOptions,
   ) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
+    const oldData = submodelElement.toPlain();
     submodelElement.accept(new ValueModifierVisitor(options), { data });
     this.publishActivity(
-      SubmodelElementValueModificationActivity.create({
+      SubmodelActivity.create({
         digitalProductDocumentId: options.digitalProductDocumentId,
-        payload: SubmodelBaseModificationActivityPayload.create({
-          submodelId: this.id,
-          administration: this.administration,
-          fullIdShortPath: submodelElement.getIdShortPath(),
-          data,
-        }),
+        submodelId: this.id,
+        administration: this.administration,
+        fullIdShortPath: submodelElement.getIdShortPath(),
         userId: options.ability.userId ?? undefined,
+        operation: OperationTypes.SubmodelElementValueModification,
+        oldData,
+        newData: submodelElement.toPlain(),
       }),
     );
     return submodelElement;
