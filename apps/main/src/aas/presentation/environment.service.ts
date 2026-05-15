@@ -57,7 +57,7 @@ import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { DigitalProductPassportIdentifiableEnvironmentPopulateDecorator } from "./digital-product-passport-identifiable-environment-populate-decorator";
 import { PopulateOptions } from "./environment-populate-decorator";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { DigitalProductDocumentActivity } from "../../activity-history/aas/digital-product-document.activity";
+import { DigitalProductDocumentActivity } from "../../activity-history/domain/digital-product-document.activity";
 import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-types";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {

@@ -3,6 +3,7 @@ import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { ActivityTypesEnum } from "./activity-types";
 import { getActivityClass } from "./activity-registry";
 import { randomUUID } from "node:crypto";
+import { LatestAasExportVersion } from "../aas/infrastructure/serialization/export-schemas/aas-export-shared";
 
 export const ActivityHeaderSchema = z.object({
   id: z.string(),
@@ -12,6 +13,7 @@ export const ActivityHeaderSchema = z.object({
   type: z.string(),
   userId: z.string().nullable(),
   version: z.string(),
+  exportVersion: z.string(),
 });
 
 export const ActivitySchema = z.object({
@@ -20,6 +22,7 @@ export const ActivitySchema = z.object({
 });
 
 export class ActivityHeader {
+  public readonly exportVersion: string = LatestAasExportVersion;
   private constructor(
     public readonly id: string,
     public readonly aggregateId: string,
@@ -80,6 +83,7 @@ export class ActivityHeader {
       type: this.type,
       userId: this.userId,
       version: this.version,
+      exportVersion: this.exportVersion,
     };
   }
 }

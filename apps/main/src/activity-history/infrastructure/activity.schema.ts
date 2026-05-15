@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
+import { AasExportVersion } from "../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
 
 export const ActivityDocVersion = {
   v1_0_0: "1.0.0",
@@ -21,8 +22,8 @@ export class ActivityDoc extends Document<string> {
   @Prop({ type: String, required: true })
   aggregateId: string;
 
-  @Prop({ type: String, required: false })
-  correlationId: string | null;
+  @Prop({ type: String, required: true })
+  correlationId: string;
 
   @Prop({ required: true, immutable: true })
   createdAt: Date;
@@ -35,6 +36,10 @@ export class ActivityDoc extends Document<string> {
 
   @Prop({ type: String, required: true })
   version: string;
+
+  @Prop({ enum: Object.values(AasExportVersion), type: String, required: true })
+  exportVersion: string;
+
   @Prop({ type: MongooseSchema.Types.Mixed })
   payload: unknown;
 }

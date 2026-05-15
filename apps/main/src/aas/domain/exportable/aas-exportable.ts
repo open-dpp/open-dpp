@@ -2,14 +2,14 @@ import { randomUUID } from "node:crypto";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
-import { AasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
+import { LatestAasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
 import { ExpandedEnvironment } from "../expanded-environment";
 import { SubjectAttributes } from "../security/subject-attributes";
 import { DigitalProductDocumentStatusChange } from "../../../digital-product-document/domain/digital-product-document-status";
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
-  private readonly EXPORT_VERSION = AasExportVersion.v3_0;
+  private readonly EXPORT_VERSION = LatestAasExportVersion;
 
   private constructor(
     public readonly id: string,

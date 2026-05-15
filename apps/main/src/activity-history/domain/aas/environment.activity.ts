@@ -5,8 +5,8 @@ import {
   activityToPlain,
   IActivity,
   IActivityPayload,
-} from "../activity";
-import { ActivityTypes } from "../activity-types";
+} from "../../activity";
+import { ActivityTypes } from "../../activity-types";
 import { z } from "zod";
 import {
   ActivityCreateProps,
@@ -14,8 +14,11 @@ import {
   ActivityPayloadSchema,
   createActivityHeader,
   diff,
-} from "./shared.activity";
-import { EnvironmentOperationTypesEnum, EnvironmentOperationTypesType } from "../environment-types";
+} from "../shared.activity";
+import {
+  EnvironmentOperationTypesEnum,
+  EnvironmentOperationTypesType,
+} from "../../environment-types";
 import { Operation } from "fast-json-patch/module/core";
 
 export class EnvironmentActivity implements IActivity {

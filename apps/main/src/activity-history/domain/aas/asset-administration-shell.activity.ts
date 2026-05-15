@@ -5,9 +5,9 @@ import {
   activityToPlain,
   IActivity,
   IActivityPayload,
-} from "../activity";
-import { ActivityTypes } from "../activity-types";
-import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
+} from "../../activity";
+import { ActivityTypes } from "../../activity-types";
+import { AdministrativeInformation } from "../../../aas/domain/common/administrative-information";
 import { z } from "zod";
 import {
   ActivityCreatePropsWithAdministration,
@@ -16,11 +16,11 @@ import {
   createActivityHeader,
   diff,
   payloadToPlain,
-} from "./shared.activity";
+} from "../shared.activity";
 import {
   AssetAdministrationShellOperationTypesEnum,
   AssetAdministrationShellOperationTypesType,
-} from "../asset-administration-shell-operation-types";
+} from "../../asset-administration-shell-operation-types";
 import { Operation } from "fast-json-patch/module/core";
 
 export class AssetAdministrationShellActivity implements IActivity {

@@ -44,7 +44,7 @@ import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { SubmodelActivity } from "../../activity-history/aas/submodel.activity";
+import { SubmodelActivity } from "../../activity-history/domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
 
 describe("DigitalProductDocumentService", () => {

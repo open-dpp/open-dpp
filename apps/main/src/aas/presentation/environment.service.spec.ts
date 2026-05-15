@@ -58,13 +58,13 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { ActivityTypes } from "../../activity-history/activity-types";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { DbSessionOptions } from "../../database/query-options";
-import { SubmodelPayload } from "../../activity-history/aas/submodel.activity";
+import { SubmodelPayload } from "../../activity-history/domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
-import { AssetAdministrationShellPayload } from "../../activity-history/aas/asset-administration-shell.activity";
+import { AssetAdministrationShellPayload } from "../../activity-history/domain/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
-import { EnvironmentPayload } from "../../activity-history/aas/environment.activity";
+import { EnvironmentPayload } from "../../activity-history/domain/aas/environment.activity";
 import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
-import { DigitalProductDocumentPayload } from "../../activity-history/aas/digital-product-document.activity";
+import { DigitalProductDocumentPayload } from "../../activity-history/domain/digital-product-document.activity";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;

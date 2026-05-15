@@ -82,7 +82,7 @@ import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
-import { SubmodelActivity } from "../../activity-history/aas/submodel.activity";
+import { SubmodelActivity } from "../../activity-history/domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
 import { CorrelationIdService } from "../../common/middleware/correlation-id.service";
 

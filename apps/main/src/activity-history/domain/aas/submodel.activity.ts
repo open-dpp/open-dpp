@@ -5,15 +5,15 @@ import {
   activityToPlain,
   IActivity,
   IActivityPayload,
-} from "../activity";
-import { ActivityTypes } from "../activity-types";
-import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { IdShortPath } from "../../aas/domain/common/id-short-path";
+} from "../../activity";
+import { ActivityTypes } from "../../activity-types";
+import { AdministrativeInformation } from "../../../aas/domain/common/administrative-information";
+import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod";
 import {
   SubmodelOperationTypesEnum,
   SubmodelOperationTypesType,
-} from "../submodel-operation-types";
+} from "../../submodel-operation-types";
 import {
   ActivityCreatePropsWithAdministration,
   ActivityPayloadCreateProps,
@@ -21,7 +21,7 @@ import {
   createActivityHeader,
   diff,
   payloadToPlain,
-} from "./shared.activity";
+} from "../shared.activity";
 import { Operation } from "fast-json-patch/module/core";
 
 export class SubmodelActivity implements IActivity {

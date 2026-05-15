@@ -34,7 +34,7 @@ import {
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 import { IActivity } from "../../../activity-history/activity";
-import { SubmodelActivity } from "../../../activity-history/aas/submodel.activity";
+import { SubmodelActivity } from "../../../activity-history/domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../../activity-history/submodel-operation-types";
 
 export class Submodel implements ISubmodelBase, IPersistable {

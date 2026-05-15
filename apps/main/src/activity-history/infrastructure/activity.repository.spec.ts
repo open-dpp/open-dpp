@@ -15,7 +15,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { SubmodelActivity } from "../aas/submodel.activity";
+import { SubmodelActivity } from "../domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../submodel-operation-types";
 
 describe("activityRepository", () => {

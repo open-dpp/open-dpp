@@ -10,4 +10,5 @@ export const AasExportVersion = {
 } as const;
 
 export const AasExportVersionEnum = z.enum(AasExportVersion);
+export const LatestAasExportVersion = AasExportVersion.v3_0;
 export type AasExportVersionType = z.infer<typeof AasExportVersionEnum>;

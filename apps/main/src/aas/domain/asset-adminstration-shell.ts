@@ -17,7 +17,7 @@ import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 import { IActivity } from "../../activity-history/activity";
 import { AddOptions } from "./submodel-base/submodel-base";
-import { AssetAdministrationShellActivity } from "../../activity-history/aas/asset-administration-shell.activity";
+import { AssetAdministrationShellActivity } from "../../activity-history/domain/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 
 export interface AssetAdministrationShellCreateProps {

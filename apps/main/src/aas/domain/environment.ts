@@ -4,7 +4,7 @@ import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { IConvertableToPlain } from "./convertable-to-plain";
 import { Submodel } from "./submodel-base/submodel";
 import { IActivity } from "../../activity-history/activity";
-import { EnvironmentActivity } from "../../activity-history/aas/environment.activity";
+import { EnvironmentActivity } from "../../activity-history/domain/aas/environment.activity";
 import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
 import { AddOptions } from "./submodel-base/submodel-base";
 
