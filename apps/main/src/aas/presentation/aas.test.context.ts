@@ -84,6 +84,7 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { SubmodelActivity } from "../../activity-history/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
+import { CorrelationIdService } from "../../common/middleware/correlation-id.service";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -136,6 +137,7 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
+        CorrelationIdService,
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,

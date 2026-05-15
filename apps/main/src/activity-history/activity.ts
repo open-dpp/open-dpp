@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 export const ActivityHeaderSchema = z.object({
   id: z.string(),
   aggregateId: z.string(),
-  correlationId: z.string(),
+  correlationId: z.string().nullable(),
   createdAt: z.date(),
   type: z.string(),
   userId: z.string().nullable(),
@@ -23,12 +23,16 @@ export class ActivityHeader {
   private constructor(
     public readonly id: string,
     public readonly aggregateId: string,
-    public readonly correlationId: string,
+    private _correlationId: string | null,
     public readonly createdAt: Date,
     public readonly type: string,
     public readonly userId: string | null,
     public readonly version: string,
   ) {}
+
+  get correlationId(): string | null {
+    return this._correlationId;
+  }
 
   static create(data: {
     id?: string;
@@ -42,7 +46,7 @@ export class ActivityHeader {
     return new ActivityHeader(
       data.id ?? randomUUID(),
       data.aggregateId,
-      data.correlationId ?? randomUUID(),
+      data.correlationId ?? null,
       data.createdAt ?? new Date(),
       data.type,
       data.userId ?? null,
@@ -61,6 +65,10 @@ export class ActivityHeader {
       parsed.userId,
       parsed.version,
     );
+  }
+
+  assignCorrelationId(correlationId: string) {
+    this._correlationId = correlationId;
   }
 
   toPlain(): Record<string, unknown> {

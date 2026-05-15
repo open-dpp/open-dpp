@@ -21,8 +21,8 @@ export class ActivityDoc extends Document<string> {
   @Prop({ type: String, required: true })
   aggregateId: string;
 
-  @Prop({ type: String, required: true })
-  correlationId: string;
+  @Prop({ type: String, required: false })
+  correlationId: string | null;
 
   @Prop({ required: true, immutable: true })
   createdAt: Date;

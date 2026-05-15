@@ -163,6 +163,7 @@ export class EnvironmentService {
   }
 
   async modifyAasShell(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     aasId: string,
@@ -173,6 +174,8 @@ export class EnvironmentService {
     const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     aas.modify(modification, { subject: userContext.subject, ability, digitalProductDocumentId });
     const activities = aas.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -199,6 +202,7 @@ export class EnvironmentService {
   }
 
   async modifySubmodel(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -210,6 +214,7 @@ export class EnvironmentService {
     submodel.modify(modification, { ability, digitalProductDocumentId });
 
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -223,6 +228,7 @@ export class EnvironmentService {
   }
 
   async addSubmodelToEnvironment(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelPlain: SubmodelRequestDto,
@@ -252,6 +258,7 @@ export class EnvironmentService {
       ...submodel.pullActivities(),
       ...environment.pullActivities(),
     ];
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -391,6 +398,7 @@ export class EnvironmentService {
   }
 
   async addSubmodelElement(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -405,6 +413,7 @@ export class EnvironmentService {
       { idShortPath, ability, digitalProductDocumentId },
     );
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -418,6 +427,7 @@ export class EnvironmentService {
   }
 
   async modifyValueOfSubmodel(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -429,6 +439,8 @@ export class EnvironmentService {
     submodel.modifyValue(modification, { ability, digitalProductDocumentId });
 
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -442,6 +454,7 @@ export class EnvironmentService {
   }
 
   async modifySubmodelElement(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -456,6 +469,7 @@ export class EnvironmentService {
       digitalProductDocumentId,
     });
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -469,6 +483,7 @@ export class EnvironmentService {
   }
 
   async modifyValueOfSubmodelElement(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -483,6 +498,7 @@ export class EnvironmentService {
       digitalProductDocumentId,
     });
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -496,6 +512,7 @@ export class EnvironmentService {
   }
 
   async addColumn(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -513,6 +530,7 @@ export class EnvironmentService {
     });
 
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -526,6 +544,7 @@ export class EnvironmentService {
   }
 
   async modifyColumn(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -544,6 +563,7 @@ export class EnvironmentService {
     );
 
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -583,6 +603,7 @@ export class EnvironmentService {
   }
 
   async addRow(
+    correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
@@ -598,6 +619,7 @@ export class EnvironmentService {
       digitalProductDocumentId,
     });
     const activities = submodel.pullActivities();
+    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {

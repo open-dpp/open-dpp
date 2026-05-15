@@ -95,6 +95,7 @@ describe("DigitalProductDocumentService", () => {
   });
 
   it("should fail on modifications of archived passports", async () => {
+    const correlationId = randomUUID();
     const userId = randomUUID();
     const passport = Passport.create({
       organizationId: "organizationId",
@@ -112,11 +113,19 @@ describe("DigitalProductDocumentService", () => {
     await passportRepository.save(passport);
     const exception = new BadRequestException("Archived passport/ template cannot be modified");
     await expect(
-      service.modifyShell(passport.organizationId, passport.id, randomUUID(), {}, userContext),
+      service.modifyShell(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        {},
+        userContext,
+      ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.modifySubmodel(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -127,6 +136,7 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.modifyColumnOfSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -139,6 +149,7 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.modifySubmodelElement(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -150,6 +161,7 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.modifySubmodelElementValue(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -210,11 +222,18 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
 
     await expect(
-      service.createSubmodel(passport.organizationId, passport.id, { idShort: "sub" }, userContext),
+      service.createSubmodel(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        { idShort: "sub" },
+        userContext,
+      ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.addColumnToSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -235,6 +254,7 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.addRowToSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -246,6 +266,7 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.createSubmodelElement(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -263,6 +284,7 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
     await expect(
       service.createSubmodelElementAtIdShortPath(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),

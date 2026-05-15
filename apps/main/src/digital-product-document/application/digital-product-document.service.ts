@@ -38,6 +38,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   ) {}
 
   async createSubmodel(
+    correlationId: string,
     organizationId: string,
     id: string,
     body: SubmodelRequestDto,
@@ -50,6 +51,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelToEnvironment(
+      correlationId,
       id,
       item.getEnvironment(),
       body,
@@ -59,6 +61,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async addColumnToSubmodelElementList(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -75,6 +78,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     this.archiveGuard(item);
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -86,6 +90,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async addRowToSubmodelElementList(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -100,6 +105,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.addRow(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -110,6 +116,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async createSubmodelElement(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -123,6 +130,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelElement(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -132,6 +140,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async createSubmodelElementAtIdShortPath(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -146,6 +155,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelElement(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -156,6 +166,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async modifyShell(
+    correlationId: string,
     organizationId: string,
     id: string,
     aasId: string,
@@ -169,6 +180,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.modifyAasShell(
+      correlationId,
       id,
       item.getEnvironment(),
       aasId,
@@ -178,6 +190,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async modifySubmodel(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -191,6 +204,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.modifySubmodel(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -200,6 +214,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async modifyValueOfSubmodel(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -213,6 +228,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.modifyValueOfSubmodel(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -222,6 +238,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async modifyColumnOfSubmodelElementList(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -237,6 +254,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.modifyColumn(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -248,6 +266,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async modifySubmodelElement(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -262,6 +281,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.modifySubmodelElement(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,
@@ -381,6 +401,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async modifySubmodelElementValue(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -395,6 +416,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
     this.archiveGuard(item);
     return await this.environmentService.modifyValueOfSubmodelElement(
+      correlationId,
       id,
       item.getEnvironment(),
       submodelId,

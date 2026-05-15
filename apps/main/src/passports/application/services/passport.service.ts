@@ -13,6 +13,7 @@ import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
+import { CorrelationIdService } from "../../../common/middleware/correlation-id.service";
 
 @Injectable()
 export class PassportService {

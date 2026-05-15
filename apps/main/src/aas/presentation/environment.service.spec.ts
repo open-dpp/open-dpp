@@ -207,6 +207,7 @@ describe("environmentService", () => {
 
   it("should modify asset administration shell", async () => {
     const digitalProductDocumentId = randomUUID();
+    const correlationId = randomUUID();
     const userId = randomUUID();
     const security = Security.create({});
     security.addPolicy(
@@ -250,6 +251,7 @@ describe("environmentService", () => {
     };
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     await environmentService.modifyAasShell(
+      correlationId,
       digitalProductDocumentId,
       environment,
       assetAdministrationShell.id,
@@ -259,82 +261,87 @@ describe("environmentService", () => {
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
 
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.AssetAdministrationShellActivity,
-          payload: AssetAdministrationShellPayload.create({
-            assetAdministrationShellId: assetAdministrationShell.id,
-            administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-            operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
-            changes: [
-              {
-                key: "security",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "localAccessControl",
-                    type: Operation.UPDATE,
-                    changes: [
-                      {
-                        embeddedKey: "$index",
-                        key: "accessPermissionRules",
-                        type: Operation.UPDATE,
-                        changes: [
-                          {
-                            key: "0",
-                            type: Operation.UPDATE,
-                            changes: [
-                              {
-                                embeddedKey: "object.idShort",
-                                key: "permissionsPerObject",
-                                type: Operation.UPDATE,
-                                embeddedKeyIsPath: true,
-                                changes: [
-                                  {
-                                    key: "section1",
-                                    type: Operation.UPDATE,
-                                    changes: [
-                                      {
-                                        embeddedKey: "permission",
-                                        key: "permissions",
-                                        type: Operation.UPDATE,
-                                        changes: [
-                                          {
-                                            key: "Create",
-                                            type: Operation.ADD,
-                                            value: {
-                                              kindOfPermission: "Allow",
-                                              permission: "Create",
-                                            },
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: assetAdministrationShell.id,
+          administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
+          changes: [
+            {
+              key: "security",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "localAccessControl",
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      embeddedKey: "$index",
+                      key: "accessPermissionRules",
+                      type: Operation.UPDATE,
+                      changes: [
+                        {
+                          key: "0",
+                          type: Operation.UPDATE,
+                          changes: [
+                            {
+                              embeddedKey: "object.idShort",
+                              key: "permissionsPerObject",
+                              type: Operation.UPDATE,
+                              embeddedKeyIsPath: true,
+                              changes: [
+                                {
+                                  key: "section1",
+                                  type: Operation.UPDATE,
+                                  changes: [
+                                    {
+                                      embeddedKey: "permission",
+                                      key: "permissions",
+                                      type: Operation.UPDATE,
+                                      changes: [
+                                        {
+                                          key: "Create",
+                                          type: Operation.ADD,
+                                          value: {
+                                            kindOfPermission: "Allow",
+                                            permission: "Create",
                                           },
-                                          {
-                                            key: "Edit",
-                                            type: Operation.ADD,
-                                            value: {
-                                              kindOfPermission: "Allow",
-                                              permission: "Edit",
-                                            },
+                                        },
+                                        {
+                                          key: "Edit",
+                                          type: Operation.ADD,
+                                          value: {
+                                            kindOfPermission: "Allow",
+                                            permission: "Edit",
                                           },
-                                        ],
-                                      },
-                                    ],
-                                  },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          }),
-        },
-      ],
-    );
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
 
     const foundAas = await aasRepository.findOneOrFail(assetAdministrationShell.id);
     expect(
@@ -372,6 +379,7 @@ describe("environmentService", () => {
 
   it("should modify asset administration shell fails due to insufficient permissions", async () => {
     const digitalProductDocumentId = randomUUID();
+    const correlationId = randomUUID();
     const userId = randomUUID();
     const security = Security.create({});
     security.addPolicy(
@@ -414,6 +422,7 @@ describe("environmentService", () => {
 
     await expect(
       environmentService.modifyAasShell(
+        correlationId,
         digitalProductDocumentId,
         environment,
         assetAdministrationShell.id,
@@ -433,6 +442,7 @@ describe("environmentService", () => {
 
   async function createDefaultEnvironment() {
     const digitalProductDocumentId = randomUUID();
+    const correlationId = randomUUID();
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const adminUserId = randomUUID();
@@ -478,6 +488,7 @@ describe("environmentService", () => {
       submodels: [submodel1.id],
     });
     return {
+      correlationId,
       digitalProductDocumentId,
       environment,
       admin: { subject: admin, userId: adminUserId },
@@ -490,7 +501,8 @@ describe("environmentService", () => {
   }
 
   it("should add submodel", async () => {
-    const { digitalProductDocumentId, environment, admin } = await createDefaultEnvironment();
+    const { correlationId, digitalProductDocumentId, environment, admin } =
+      await createDefaultEnvironment();
     const submodelPlain = {
       id: randomUUID(),
       idShort: "submodel2",
@@ -505,6 +517,7 @@ describe("environmentService", () => {
     async function saveEnvironment(_options: DbSessionOptions) {}
 
     await environmentService.addSubmodelToEnvironment(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodelPlain,
@@ -513,342 +526,349 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.DigitalProductDocumentActivity,
-          payload: DigitalProductDocumentPayload.create({
-            operation: EnvironmentOperationTypes.SubmodelCreate,
-            changes: [
-              {
-                key: "$root",
-                type: Operation.ADD,
-                value: [
-                  {
-                    administration: {
-                      revision: "0",
-                      version: "1",
-                    },
-                    category: null,
-                    description: [],
-                    displayName: [],
-                    embeddedDataSpecifications: [],
-                    extensions: [],
-                    id: submodelPlain.id,
-                    idShort: "submodel2",
-                    kind: null,
-                    modelType: "Submodel",
-                    qualifiers: [],
-                    semanticId: null,
-                    submodelElements: [],
-                    supplementalSemanticIds: [],
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        type: ActivityTypes.DigitalProductDocumentActivity,
+        correlationId,
+        payload: DigitalProductDocumentPayload.create({
+          operation: EnvironmentOperationTypes.SubmodelCreate,
+          changes: [
+            {
+              key: "$root",
+              type: Operation.ADD,
+              value: [
+                {
+                  administration: {
+                    revision: "0",
+                    version: "1",
                   },
-                ],
-              },
-            ],
-          }),
-        },
-        {
-          type: ActivityTypes.AssetAdministrationShellActivity,
-          payload: AssetAdministrationShellPayload.create({
-            assetAdministrationShellId: environment.assetAdministrationShells[0],
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
-            changes: [
-              {
-                embeddedKey: "$index",
-                key: "submodels",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "1",
-                    type: Operation.ADD,
-                    value: {
-                      keys: [
-                        {
-                          type: "Submodel",
-                          value: submodelPlain.id,
-                        },
-                      ],
-                      referredSemanticId: null,
-                      type: "ModelReference",
-                    },
-                  },
-                ],
-              },
-              {
-                key: "security",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "localAccessControl",
-                    type: Operation.UPDATE,
-                    changes: [
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  id: submodelPlain.id,
+                  idShort: "submodel2",
+                  kind: null,
+                  modelType: "Submodel",
+                  qualifiers: [],
+                  semanticId: null,
+                  submodelElements: [],
+                  supplementalSemanticIds: [],
+                },
+              ],
+            },
+          ],
+        }),
+      },
+      {
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        correlationId,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: environment.assetAdministrationShells[0],
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
+          changes: [
+            {
+              embeddedKey: "$index",
+              key: "submodels",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "1",
+                  type: Operation.ADD,
+                  value: {
+                    keys: [
                       {
-                        embeddedKey: "$index",
-                        key: "accessPermissionRules",
-                        type: Operation.UPDATE,
-                        changes: [
-                          {
-                            key: "0",
-                            type: Operation.UPDATE,
-                            changes: [
-                              {
-                                embeddedKey: "object.idShort",
-                                embeddedKeyIsPath: true,
-                                key: "permissionsPerObject",
-                                type: Operation.UPDATE,
-                                changes: [
-                                  {
-                                    key: "submodel2",
-                                    type: Operation.ADD,
-                                    value: {
-                                      object: {
-                                        category: null,
-                                        description: [],
-                                        displayName: [],
-                                        embeddedDataSpecifications: [],
-                                        extensions: [],
-                                        idShort: "submodel2",
-                                        modelType: "ReferenceElement",
-                                        qualifiers: [],
-                                        semanticId: null,
-                                        supplementalSemanticIds: [],
-                                        value: null,
-                                      },
-                                      permissions: [
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Create",
-                                        },
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Read",
-                                        },
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Edit",
-                                        },
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Delete",
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            ],
-                          },
-                          {
-                            key: "1",
-                            type: Operation.UPDATE,
-                            changes: [
-                              {
-                                embeddedKey: "object.idShort",
-                                embeddedKeyIsPath: true,
-                                key: "permissionsPerObject",
-                                type: Operation.UPDATE,
-                                changes: [
-                                  {
-                                    key: "submodel2",
-                                    type: Operation.ADD,
-                                    value: {
-                                      object: {
-                                        category: null,
-                                        description: [],
-                                        displayName: [],
-                                        embeddedDataSpecifications: [],
-                                        extensions: [],
-                                        idShort: "submodel2",
-                                        modelType: "ReferenceElement",
-                                        qualifiers: [],
-                                        semanticId: null,
-                                        supplementalSemanticIds: [],
-                                        value: null,
-                                      },
-                                      permissions: [
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Create",
-                                        },
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Read",
-                                        },
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Edit",
-                                        },
-                                        {
-                                          kindOfPermission: "Allow",
-                                          permission: "Delete",
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            ],
-                          },
-                          {
-                            key: "2",
-                            type: Operation.ADD,
-                            value: {
-                              permissionsPerObject: [
-                                {
-                                  object: {
-                                    category: null,
-                                    description: [],
-                                    displayName: [],
-                                    embeddedDataSpecifications: [],
-                                    extensions: [],
-                                    idShort: "submodel2",
-                                    modelType: "ReferenceElement",
-                                    qualifiers: [],
-                                    semanticId: null,
-                                    supplementalSemanticIds: [],
-                                    value: null,
-                                  },
-                                  permissions: [
-                                    {
-                                      kindOfPermission: "Allow",
-                                      permission: "Create",
-                                    },
-                                    {
-                                      kindOfPermission: "Allow",
-                                      permission: "Read",
-                                    },
-                                    {
-                                      kindOfPermission: "Allow",
-                                      permission: "Edit",
-                                    },
-                                    {
-                                      kindOfPermission: "Allow",
-                                      permission: "Delete",
-                                    },
-                                  ],
-                                },
-                              ],
-                              targetSubjectAttributes: {
-                                subjectAttribute: [
-                                  {
-                                    category: null,
-                                    description: [],
-                                    displayName: [],
-                                    embeddedDataSpecifications: [],
-                                    extensions: [],
-                                    idShort: "userRole",
-                                    modelType: "Property",
-                                    qualifiers: [],
-                                    semanticId: null,
-                                    supplementalSemanticIds: [],
-                                    value: "user",
-                                    valueId: null,
-                                    valueType: "String",
-                                  },
-                                  {
-                                    category: null,
-                                    description: [],
-                                    displayName: [],
-                                    embeddedDataSpecifications: [],
-                                    extensions: [],
-                                    idShort: "memberRole",
-                                    modelType: "Property",
-                                    qualifiers: [],
-                                    semanticId: null,
-                                    supplementalSemanticIds: [],
-                                    value: "owner",
-                                    valueId: null,
-                                    valueType: "String",
-                                  },
-                                ],
-                              },
-                            },
-                          },
-                          {
-                            key: "3",
-                            type: Operation.ADD,
-                            value: {
-                              permissionsPerObject: [
-                                {
-                                  object: {
-                                    category: null,
-                                    description: [],
-                                    displayName: [],
-                                    embeddedDataSpecifications: [],
-                                    extensions: [],
-                                    idShort: "submodel2",
-                                    modelType: "ReferenceElement",
-                                    qualifiers: [],
-                                    semanticId: null,
-                                    supplementalSemanticIds: [],
-                                    value: null,
-                                  },
-                                  permissions: [
-                                    {
-                                      kindOfPermission: "Allow",
-                                      permission: "Read",
-                                    },
-                                  ],
-                                },
-                              ],
-                              targetSubjectAttributes: {
-                                subjectAttribute: [
-                                  {
-                                    category: null,
-                                    description: [],
-                                    displayName: [],
-                                    embeddedDataSpecifications: [],
-                                    extensions: [],
-                                    idShort: "userRole",
-                                    modelType: "Property",
-                                    qualifiers: [],
-                                    semanticId: null,
-                                    supplementalSemanticIds: [],
-                                    value: "anonymous",
-                                    valueId: null,
-                                    valueType: "String",
-                                  },
-                                ],
-                              },
-                            },
-                          },
-                        ],
+                        type: "Submodel",
+                        value: submodelPlain.id,
                       },
                     ],
+                    referredSemanticId: null,
+                    type: "ModelReference",
                   },
-                ],
-              },
-            ],
-          }),
-        },
-        {
-          type: ActivityTypes.EnvironmentActivity,
-          payload: EnvironmentPayload.create({
-            operation: EnvironmentOperationTypes.SubmodelCreate,
-            changes: [
-              {
-                embeddedKey: "$index",
-                key: "submodels",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "1",
-                    type: Operation.ADD,
-                    value: submodelPlain.id,
-                  },
-                ],
-              },
-            ],
-          }),
-        },
-      ],
-    );
+                },
+              ],
+            },
+            {
+              key: "security",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "localAccessControl",
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      embeddedKey: "$index",
+                      key: "accessPermissionRules",
+                      type: Operation.UPDATE,
+                      changes: [
+                        {
+                          key: "0",
+                          type: Operation.UPDATE,
+                          changes: [
+                            {
+                              embeddedKey: "object.idShort",
+                              embeddedKeyIsPath: true,
+                              key: "permissionsPerObject",
+                              type: Operation.UPDATE,
+                              changes: [
+                                {
+                                  key: "submodel2",
+                                  type: Operation.ADD,
+                                  value: {
+                                    object: {
+                                      category: null,
+                                      description: [],
+                                      displayName: [],
+                                      embeddedDataSpecifications: [],
+                                      extensions: [],
+                                      idShort: "submodel2",
+                                      modelType: "ReferenceElement",
+                                      qualifiers: [],
+                                      semanticId: null,
+                                      supplementalSemanticIds: [],
+                                      value: null,
+                                    },
+                                    permissions: [
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Create",
+                                      },
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Read",
+                                      },
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Edit",
+                                      },
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Delete",
+                                      },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          key: "1",
+                          type: Operation.UPDATE,
+                          changes: [
+                            {
+                              embeddedKey: "object.idShort",
+                              embeddedKeyIsPath: true,
+                              key: "permissionsPerObject",
+                              type: Operation.UPDATE,
+                              changes: [
+                                {
+                                  key: "submodel2",
+                                  type: Operation.ADD,
+                                  value: {
+                                    object: {
+                                      category: null,
+                                      description: [],
+                                      displayName: [],
+                                      embeddedDataSpecifications: [],
+                                      extensions: [],
+                                      idShort: "submodel2",
+                                      modelType: "ReferenceElement",
+                                      qualifiers: [],
+                                      semanticId: null,
+                                      supplementalSemanticIds: [],
+                                      value: null,
+                                    },
+                                    permissions: [
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Create",
+                                      },
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Read",
+                                      },
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Edit",
+                                      },
+                                      {
+                                        kindOfPermission: "Allow",
+                                        permission: "Delete",
+                                      },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          key: "2",
+                          type: Operation.ADD,
+                          value: {
+                            permissionsPerObject: [
+                              {
+                                object: {
+                                  category: null,
+                                  description: [],
+                                  displayName: [],
+                                  embeddedDataSpecifications: [],
+                                  extensions: [],
+                                  idShort: "submodel2",
+                                  modelType: "ReferenceElement",
+                                  qualifiers: [],
+                                  semanticId: null,
+                                  supplementalSemanticIds: [],
+                                  value: null,
+                                },
+                                permissions: [
+                                  {
+                                    kindOfPermission: "Allow",
+                                    permission: "Create",
+                                  },
+                                  {
+                                    kindOfPermission: "Allow",
+                                    permission: "Read",
+                                  },
+                                  {
+                                    kindOfPermission: "Allow",
+                                    permission: "Edit",
+                                  },
+                                  {
+                                    kindOfPermission: "Allow",
+                                    permission: "Delete",
+                                  },
+                                ],
+                              },
+                            ],
+                            targetSubjectAttributes: {
+                              subjectAttribute: [
+                                {
+                                  category: null,
+                                  description: [],
+                                  displayName: [],
+                                  embeddedDataSpecifications: [],
+                                  extensions: [],
+                                  idShort: "userRole",
+                                  modelType: "Property",
+                                  qualifiers: [],
+                                  semanticId: null,
+                                  supplementalSemanticIds: [],
+                                  value: "user",
+                                  valueId: null,
+                                  valueType: "String",
+                                },
+                                {
+                                  category: null,
+                                  description: [],
+                                  displayName: [],
+                                  embeddedDataSpecifications: [],
+                                  extensions: [],
+                                  idShort: "memberRole",
+                                  modelType: "Property",
+                                  qualifiers: [],
+                                  semanticId: null,
+                                  supplementalSemanticIds: [],
+                                  value: "owner",
+                                  valueId: null,
+                                  valueType: "String",
+                                },
+                              ],
+                            },
+                          },
+                        },
+                        {
+                          key: "3",
+                          type: Operation.ADD,
+                          value: {
+                            permissionsPerObject: [
+                              {
+                                object: {
+                                  category: null,
+                                  description: [],
+                                  displayName: [],
+                                  embeddedDataSpecifications: [],
+                                  extensions: [],
+                                  idShort: "submodel2",
+                                  modelType: "ReferenceElement",
+                                  qualifiers: [],
+                                  semanticId: null,
+                                  supplementalSemanticIds: [],
+                                  value: null,
+                                },
+                                permissions: [
+                                  {
+                                    kindOfPermission: "Allow",
+                                    permission: "Read",
+                                  },
+                                ],
+                              },
+                            ],
+                            targetSubjectAttributes: {
+                              subjectAttribute: [
+                                {
+                                  category: null,
+                                  description: [],
+                                  displayName: [],
+                                  embeddedDataSpecifications: [],
+                                  extensions: [],
+                                  idShort: "userRole",
+                                  modelType: "Property",
+                                  qualifiers: [],
+                                  semanticId: null,
+                                  supplementalSemanticIds: [],
+                                  value: "anonymous",
+                                  valueId: null,
+                                  valueType: "String",
+                                },
+                              ],
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      },
+      {
+        type: ActivityTypes.EnvironmentActivity,
+        correlationId,
+        payload: EnvironmentPayload.create({
+          operation: EnvironmentOperationTypes.SubmodelCreate,
+          changes: [
+            {
+              embeddedKey: "$index",
+              key: "submodels",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "1",
+                  type: Operation.ADD,
+                  value: submodelPlain.id,
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
   });
 
   it("should add submodel element", async () => {
-    const { digitalProductDocumentId, environment, admin, submodel1 } =
+    const { correlationId, digitalProductDocumentId, environment, admin, submodel1 } =
       await createDefaultEnvironment();
     const propertyPlain = {
       idShort: "dataField1",
@@ -861,8 +881,8 @@ describe("environmentService", () => {
       qualifiers: [],
       embeddedDataSpecifications: [],
     };
-
     await environmentService.addSubmodelElement(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -871,52 +891,64 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }),
-            operation: SubmodelOperationTypes.SubmodelElementCreate,
-            changes: [
-              {
-                embeddedKey: "idShort",
-                key: "submodelElements",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "dataField1",
-                    type: Operation.ADD,
-                    value: {
-                      description: [],
-                      displayName: [],
-                      embeddedDataSpecifications: [],
-                      extensions: [],
-                      qualifiers: [],
-                      supplementalSemanticIds: [],
-                      category: null,
-                      idShort: "dataField1",
-                      modelType: "Property",
-                      semanticId: null,
-                      value: "test",
-                      valueId: null,
-                      valueType: "String",
-                    },
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }),
+          operation: SubmodelOperationTypes.SubmodelElementCreate,
+          changes: [
+            {
+              embeddedKey: "idShort",
+              key: "submodelElements",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "dataField1",
+                  type: Operation.ADD,
+                  value: {
+                    description: [],
+                    displayName: [],
+                    embeddedDataSpecifications: [],
+                    extensions: [],
+                    qualifiers: [],
+                    supplementalSemanticIds: [],
+                    category: null,
+                    idShort: "dataField1",
+                    modelType: "Property",
+                    semanticId: null,
+                    value: "test",
+                    valueId: null,
+                    valueType: "String",
                   },
-                ],
-              },
-            ],
-          }),
-        },
-      ],
-    );
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
   });
 
   it("should add column", async () => {
-    const { digitalProductDocumentId, listIdShortPath, environment, admin, submodel1, row1 } =
-      await createEnvironmentWithList();
+    const {
+      correlationId,
+      digitalProductDocumentId,
+      listIdShortPath,
+      environment,
+      admin,
+      submodel1,
+      row1,
+    } = await createEnvironmentWithList();
     const column = Property.create({
       idShort: "column1",
       valueType: DataTypeDef.String,
@@ -925,6 +957,7 @@ describe("environmentService", () => {
     const position = 3;
 
     await environmentService.addColumn(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -935,70 +968,80 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(
-              listIdShortPath,
-            ),
-            changes: [
-              {
-                embeddedKey: "idShort",
-                key: "value",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: row1.idShort,
-                    type: Operation.UPDATE,
-                    changes: [
-                      {
-                        embeddedKey: "idShort",
-                        key: "value",
-                        type: Operation.UPDATE,
-                        changes: [
-                          {
-                            key: "column1",
-                            type: Operation.ADD,
-                            value: {
-                              category: null,
-                              description: [],
-                              displayName: [],
-                              embeddedDataSpecifications: [],
-                              extensions: [],
-                              idShort: "column1",
-                              modelType: "Property",
-                              qualifiers: [],
-                              semanticId: null,
-                              supplementalSemanticIds: [],
-                              value: "test",
-                              valueId: null,
-                              valueType: "String",
-                            },
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+          changes: [
+            {
+              embeddedKey: "idShort",
+              key: "value",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: row1.idShort,
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      embeddedKey: "idShort",
+                      key: "value",
+                      type: Operation.UPDATE,
+                      changes: [
+                        {
+                          key: "column1",
+                          type: Operation.ADD,
+                          value: {
+                            category: null,
+                            description: [],
+                            displayName: [],
+                            embeddedDataSpecifications: [],
+                            extensions: [],
+                            idShort: "column1",
+                            modelType: "Property",
+                            qualifiers: [],
+                            semanticId: null,
+                            supplementalSemanticIds: [],
+                            value: "test",
+                            valueId: null,
+                            valueType: "String",
                           },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-            operation: SubmodelOperationTypes.SubmodelColumnCreate,
-          }),
-        },
-      ],
-    );
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          operation: SubmodelOperationTypes.SubmodelColumnCreate,
+        }),
+      },
+    ]);
   });
 
   it("should add row", async () => {
-    const { digitalProductDocumentId, listIdShortPath, environment, admin, submodel1 } =
-      await createEnvironmentWithList();
+    const {
+      correlationId,
+      digitalProductDocumentId,
+      listIdShortPath,
+      environment,
+      admin,
+      submodel1,
+    } = await createEnvironmentWithList();
     const position = 3;
 
     await environmentService.addRow(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -1008,63 +1051,66 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(
-              listIdShortPath,
-            ),
-            changes: [
-              {
-                embeddedKey: "$index",
-                key: "value",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "1",
-                    type: Operation.ADD,
-                    value: {
-                      category: null,
-                      description: [],
-                      displayName: [],
-                      embeddedDataSpecifications: [],
-                      extensions: [],
-                      idShort: expect.any(String),
-                      modelType: "SubmodelElementCollection",
-                      qualifiers: [],
-                      semanticId: null,
-                      supplementalSemanticIds: [],
-                      value: [
-                        {
-                          category: null,
-                          description: [],
-                          displayName: [],
-                          embeddedDataSpecifications: [],
-                          extensions: [],
-                          idShort: "col1",
-                          modelType: "Property",
-                          qualifiers: [],
-                          semanticId: null,
-                          supplementalSemanticIds: [],
-                          value: null,
-                          valueId: null,
-                          valueType: "Double",
-                        },
-                      ],
-                    },
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+          changes: [
+            {
+              embeddedKey: "$index",
+              key: "value",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "1",
+                  type: Operation.ADD,
+                  value: {
+                    category: null,
+                    description: [],
+                    displayName: [],
+                    embeddedDataSpecifications: [],
+                    extensions: [],
+                    idShort: expect.any(String),
+                    modelType: "SubmodelElementCollection",
+                    qualifiers: [],
+                    semanticId: null,
+                    supplementalSemanticIds: [],
+                    value: [
+                      {
+                        category: null,
+                        description: [],
+                        displayName: [],
+                        embeddedDataSpecifications: [],
+                        extensions: [],
+                        idShort: "col1",
+                        modelType: "Property",
+                        qualifiers: [],
+                        semanticId: null,
+                        supplementalSemanticIds: [],
+                        value: null,
+                        valueId: null,
+                        valueType: "Double",
+                      },
+                    ],
                   },
-                ],
-              },
-            ],
-            operation: SubmodelOperationTypes.SubmodelRowCreate,
-          }),
-        },
-      ],
-    );
+                },
+              ],
+            },
+          ],
+          operation: SubmodelOperationTypes.SubmodelRowCreate,
+        }),
+      },
+    ]);
   });
 
   it("should return submodels for subject", async () => {
@@ -1182,13 +1228,14 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel", async () => {
-    const { digitalProductDocumentId, environment, admin, member, submodel1 } =
+    const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
       await createDefaultEnvironment();
     const modification = {
       idShort: submodel1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
     await environmentService.modifySubmodel(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -1198,42 +1245,48 @@ describe("environmentService", () => {
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
 
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({
-              path: `${submodel1.idShort}`,
-            }),
-            operation: SubmodelOperationTypes.SubmodelModification,
-            changes: [
-              {
-                embeddedKey: "language",
-                key: "displayName",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "en",
-                    type: Operation.ADD,
-                    value: {
-                      language: "en",
-                      text: "Test",
-                    },
-                  },
-                ],
-              },
-            ],
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${submodel1.idShort}`,
           }),
-        },
-      ],
-    );
+          operation: SubmodelOperationTypes.SubmodelModification,
+          changes: [
+            {
+              embeddedKey: "language",
+              key: "displayName",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "en",
+                  type: Operation.ADD,
+                  value: {
+                    language: "en",
+                    text: "Test",
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
 
     //
     await expect(
       environmentService.modifySubmodel(
+        correlationId,
         digitalProductDocumentId,
         environment,
         submodel1.id,
@@ -1244,7 +1297,7 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel value", async () => {
-    const { digitalProductDocumentId, environment, admin, member, submodel1 } =
+    const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
       await createDefaultEnvironment();
     const modification = {
       subSection1: {
@@ -1253,6 +1306,7 @@ describe("environmentService", () => {
     };
 
     await environmentService.modifyValueOfSubmodel(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -1262,62 +1316,68 @@ describe("environmentService", () => {
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
 
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({
-              path: `${submodel1.idShort}`,
-            }),
-            operation: SubmodelOperationTypes.SubmodelValueModification,
-            changes: [
-              {
-                embeddedKey: "idShort",
-                key: "submodelElements",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "subSection1",
-                    type: Operation.UPDATE,
-                    changes: [
-                      {
-                        embeddedKey: "idShort",
-                        key: "value",
-                        type: Operation.UPDATE,
-                        changes: [
-                          {
-                            key: "property1",
-                            type: Operation.UPDATE,
-                            changes: [
-                              {
-                                key: "value",
-                                type: Operation.REMOVE,
-                                value: null,
-                              },
-                              {
-                                key: "value",
-                                type: Operation.ADD,
-                                value: "Test",
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${submodel1.idShort}`,
           }),
-        },
-      ],
-    );
+          operation: SubmodelOperationTypes.SubmodelValueModification,
+          changes: [
+            {
+              embeddedKey: "idShort",
+              key: "submodelElements",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "subSection1",
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      embeddedKey: "idShort",
+                      key: "value",
+                      type: Operation.UPDATE,
+                      changes: [
+                        {
+                          key: "property1",
+                          type: Operation.UPDATE,
+                          changes: [
+                            {
+                              key: "value",
+                              type: Operation.REMOVE,
+                              value: null,
+                            },
+                            {
+                              key: "value",
+                              type: Operation.ADD,
+                              value: "Test",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
 
     await expect(
       environmentService.modifyValueOfSubmodel(
+        correlationId,
         digitalProductDocumentId,
         environment,
         submodel1.id,
@@ -1331,6 +1391,7 @@ describe("environmentService", () => {
 
   it("should modify submodel element", async () => {
     const {
+      correlationId,
       digitalProductDocumentId,
       environment,
       admin,
@@ -1347,6 +1408,7 @@ describe("environmentService", () => {
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
     await environmentService.modifySubmodelElement(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -1356,41 +1418,47 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({
-              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
-            }),
-            operation: SubmodelOperationTypes.SubmodelElementModification,
-            changes: [
-              {
-                type: Operation.UPDATE,
-                key: "displayName",
-                embeddedKey: "language",
-                changes: [
-                  {
-                    key: "en",
-                    type: Operation.ADD,
-                    value: {
-                      language: "en",
-                      text: "Test",
-                    },
-                  },
-                ],
-              },
-            ],
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${submodel1.idShort}.${idShortPathToProperty1}`,
           }),
-        },
-      ],
-    );
+          operation: SubmodelOperationTypes.SubmodelElementModification,
+          changes: [
+            {
+              type: Operation.UPDATE,
+              key: "displayName",
+              embeddedKey: "language",
+              changes: [
+                {
+                  key: "en",
+                  type: Operation.ADD,
+                  value: {
+                    language: "en",
+                    text: "Test",
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
     //
     await expect(
       environmentService.modifySubmodelElement(
+        correlationId,
         digitalProductDocumentId,
         environment,
         submodel1.id,
@@ -1412,6 +1480,7 @@ describe("environmentService", () => {
 
   async function createEnvironmentWithList() {
     const digitalProductDocumentId = randomUUID();
+    const correlationId = randomUUID();
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const adminUserId = randomUUID();
@@ -1441,7 +1510,7 @@ describe("environmentService", () => {
 
     const listIdShortPath = IdShortPath.create({ path: submodelElementList.idShort });
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
-    submodel1.addColumn(listIdShortPath, col1, { ability });
+    submodel1.addColumn(listIdShortPath, col1, { ability, digitalProductDocumentId });
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
@@ -1453,6 +1522,7 @@ describe("environmentService", () => {
       submodels: [submodel1.id],
     });
     return {
+      correlationId,
       digitalProductDocumentId,
       security,
       environment,
@@ -1468,6 +1538,7 @@ describe("environmentService", () => {
 
   it("should modify column", async () => {
     const {
+      correlationId,
       digitalProductDocumentId,
       environment,
       admin,
@@ -1482,6 +1553,7 @@ describe("environmentService", () => {
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
     await environmentService.modifyColumn(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -1492,67 +1564,73 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({
-              path: `${listIdShortPath}.${col1.idShort}`,
-            }),
-            operation: SubmodelOperationTypes.SubmodelColumnModification,
-            changes: [
-              {
-                embeddedKey: "idShort",
-                key: "value",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: row1.idShort,
-                    type: Operation.UPDATE,
-                    changes: [
-                      {
-                        key: "value",
-                        type: Operation.UPDATE,
-                        embeddedKey: "idShort",
-                        changes: [
-                          {
-                            key: "col1",
-                            type: Operation.UPDATE,
-                            changes: [
-                              {
-                                embeddedKey: "language",
-                                key: "displayName",
-                                type: Operation.UPDATE,
-                                changes: [
-                                  {
-                                    key: "en",
-                                    type: Operation.ADD,
-                                    value: {
-                                      language: "en",
-                                      text: "Test",
-                                    },
-                                  },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${listIdShortPath}.${col1.idShort}`,
           }),
-        },
-      ],
-    );
+          operation: SubmodelOperationTypes.SubmodelColumnModification,
+          changes: [
+            {
+              embeddedKey: "idShort",
+              key: "value",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: row1.idShort,
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      key: "value",
+                      type: Operation.UPDATE,
+                      embeddedKey: "idShort",
+                      changes: [
+                        {
+                          key: "col1",
+                          type: Operation.UPDATE,
+                          changes: [
+                            {
+                              embeddedKey: "language",
+                              key: "displayName",
+                              type: Operation.UPDATE,
+                              changes: [
+                                {
+                                  key: "en",
+                                  type: Operation.ADD,
+                                  value: {
+                                    language: "en",
+                                    text: "Test",
+                                  },
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
     //
     await expect(
       environmentService.modifyColumn(
+        correlationId,
         digitalProductDocumentId,
         environment,
         submodel1.id,
@@ -1625,6 +1703,7 @@ describe("environmentService", () => {
 
   it("should modify value of submodel element", async () => {
     const {
+      correlationId,
       digitalProductDocumentId,
       environment,
       admin,
@@ -1639,6 +1718,7 @@ describe("environmentService", () => {
       path: `${submodelElementCollection1.idShort}`,
     });
     await environmentService.modifyValueOfSubmodelElement(
+      correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
@@ -1649,66 +1729,72 @@ describe("environmentService", () => {
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
 
-    expect(foundActivities.items.map((e) => ({ type: e.header.type, payload: e.payload }))).toEqual(
-      [
-        {
-          type: ActivityTypes.SubmodelActivity,
-          payload: SubmodelPayload.create({
-            submodelId: submodel1.id,
-            administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-            fullIdShortPath: IdShortPath.create({
-              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
-            }),
-            operation: SubmodelOperationTypes.SubmodelElementValueModification,
-            changes: [
-              {
-                embeddedKey: "idShort",
-                key: "value",
-                type: Operation.UPDATE,
-                changes: [
-                  {
-                    key: "property1",
-                    type: Operation.UPDATE,
-                    changes: [
-                      {
-                        key: "value",
-                        type: Operation.REMOVE,
-                        value: null,
-                      },
-                      {
-                        key: "value",
-                        type: Operation.ADD,
-                        value: "new value 1",
-                      },
-                    ],
-                  },
-                  {
-                    key: "property2",
-                    type: Operation.UPDATE,
-                    changes: [
-                      {
-                        key: "value",
-                        type: Operation.REMOVE,
-                        value: null,
-                      },
-                      {
-                        key: "value",
-                        type: Operation.ADD,
-                        value: "new value 2",
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${submodel1.idShort}.${idShortPathToProperty1}`,
           }),
-        },
-      ],
-    );
+          operation: SubmodelOperationTypes.SubmodelElementValueModification,
+          changes: [
+            {
+              embeddedKey: "idShort",
+              key: "value",
+              type: Operation.UPDATE,
+              changes: [
+                {
+                  key: "property1",
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      key: "value",
+                      type: Operation.REMOVE,
+                      value: null,
+                    },
+                    {
+                      key: "value",
+                      type: Operation.ADD,
+                      value: "new value 1",
+                    },
+                  ],
+                },
+                {
+                  key: "property2",
+                  type: Operation.UPDATE,
+                  changes: [
+                    {
+                      key: "value",
+                      type: Operation.REMOVE,
+                      value: null,
+                    },
+                    {
+                      key: "value",
+                      type: Operation.ADD,
+                      value: "new value 2",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
 
     //
     await expect(
       environmentService.modifyValueOfSubmodelElement(
+        correlationId,
         digitalProductDocumentId,
         environment,
         submodel1.id,

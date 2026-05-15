@@ -11,7 +11,7 @@ export type ActivityDtoTypesType = z.infer<typeof ActivityDtoTypesEnum>;
 export const ActivityHeaderDtoSchema = z.object({
   id: z.string(),
   aggregateId: z.string(),
-  correlationId: z.string(),
+  correlationId: z.string().nullable(),
   createdAt: z.date(),
   type: z.string(),
   userId: z.string().nullable(),

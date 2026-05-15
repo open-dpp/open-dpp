@@ -133,6 +133,7 @@ export interface IAasReadEndpoints {
 
 export interface IAasCreateEndpoints {
   createSubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     body: SubmodelRequestDto,
@@ -141,6 +142,7 @@ export interface IAasCreateEndpoints {
     userId: string,
   ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -150,6 +152,7 @@ export interface IAasCreateEndpoints {
     userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   createSubmodelElementAtIdShortPath: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -160,6 +163,7 @@ export interface IAasCreateEndpoints {
     userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   addColumnToSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -171,6 +175,7 @@ export interface IAasCreateEndpoints {
     userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -184,6 +189,7 @@ export interface IAasCreateEndpoints {
 
 export interface IAasModifyEndpoints {
   modifyShell: (
+    correlationId: string,
     organizationId: string,
     id: string,
     aasId: string,
@@ -193,6 +199,7 @@ export interface IAasModifyEndpoints {
     userId: string,
   ) => Promise<AssetAdministrationShellResponseDto>;
   modifySubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -202,6 +209,7 @@ export interface IAasModifyEndpoints {
     userId: string,
   ) => Promise<SubmodelResponseDto>;
   modifyValueOfSubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -211,6 +219,7 @@ export interface IAasModifyEndpoints {
     userId: string,
   ) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -221,6 +230,7 @@ export interface IAasModifyEndpoints {
     userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   modifySubmodelElementValue: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -231,6 +241,7 @@ export interface IAasModifyEndpoints {
     userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   modifyColumnOfSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,

@@ -28,6 +28,8 @@ import { StatusModule } from "./status/status.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
+import { CorrelationIdService } from "./common/middleware/correlation-id.service";
+import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 
 @Module({
   imports: [
@@ -68,6 +70,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
   ],
   controllers: [],
   providers: [
+    CorrelationIdService,
     ChatGateway,
     {
       provide: APP_GUARD,
@@ -81,6 +84,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
     consumer.apply(LoggerMiddleware).forRoutes("*");
   }
 }
