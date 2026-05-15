@@ -187,12 +187,13 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.deleteColumnFromSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "demolist" }),
         "col1",
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -325,7 +326,7 @@ describe("DigitalProductDocumentService", () => {
         oldData: { idShort, value: "oldValue" },
         newData: { idShort, value: "newValue" },
         administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        operation: SubmodelOperationTypes.SubmodelElementModification,
+        operation: SubmodelOperationTypes.SubmodelElementModified,
         createdAt,
       });
 

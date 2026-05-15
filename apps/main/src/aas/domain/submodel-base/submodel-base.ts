@@ -87,6 +87,7 @@ export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
 
 export interface DeleteOptions {
   ability: AasAbility;
+  digitalProductDocumentId?: string;
   onDelete: (submodelElement: ISubmodelElement) => void;
 }
 export function deleteSubmodelElementOrFail(

@@ -131,7 +131,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
   }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
-    const oldData = this.toPlain();
+    const oldData = structuredClone(this.toPlain());
     this.accept(new ModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelActivity.create({
@@ -139,10 +139,10 @@ export class Submodel implements ISubmodelBase, IPersistable {
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: this.getIdShortPath(),
-        operation: SubmodelOperationTypes.SubmodelModification,
+        operation: SubmodelOperationTypes.SubmodelModified,
         userId: options.ability.userId ?? undefined,
         oldData,
-        newData: this.toPlain(),
+        newData: structuredClone(this.toPlain()),
       }),
     );
   }
@@ -156,14 +156,17 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return this._activities;
   }
 
-  pullActivities(): Array<IActivity> {
+  pullActivities(correlationId: string): Array<IActivity> {
     const events = [...this._activities];
+
+    events.forEach((event) => event.header.assignCorrelationId(correlationId));
+
     this._activities = [];
     return events;
   }
 
   modifyValue(data: unknown, options: ValueModifierVisitorOptions) {
-    const oldData = this.toPlain();
+    const oldData = structuredClone(this.toPlain());
     this.accept(new ValueModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelActivity.create({
@@ -173,15 +176,15 @@ export class Submodel implements ISubmodelBase, IPersistable {
         fullIdShortPath: this.getIdShortPath(),
         userId: options.ability.userId ?? undefined,
         oldData,
-        newData: this.toPlain(),
-        operation: SubmodelOperationTypes.SubmodelValueModification,
+        newData: structuredClone(this.toPlain()),
+        operation: SubmodelOperationTypes.SubmodelValueModified,
       }),
     );
   }
 
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    const oldData = submodelElement.toPlain();
+    const oldData = structuredClone(this.toPlain());
     submodelElement.accept(new ModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelActivity.create({
@@ -191,8 +194,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
         fullIdShortPath: submodelElement.getIdShortPath(),
         userId: options.ability.userId ?? undefined,
         oldData,
-        newData: submodelElement.toPlain(),
-        operation: SubmodelOperationTypes.SubmodelElementModification,
+        newData: structuredClone(this.toPlain()),
+        operation: SubmodelOperationTypes.SubmodelElementModified,
       }),
     );
     return submodelElement;
@@ -204,7 +207,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ValueModifierVisitorOptions,
   ) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    const oldData = submodelElement.toPlain();
+    const oldData = structuredClone(this.toPlain());
     submodelElement.accept(new ValueModifierVisitor(options), { data });
     this.publishActivity(
       SubmodelActivity.create({
@@ -213,9 +216,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
         administration: this.administration,
         fullIdShortPath: submodelElement.getIdShortPath(),
         userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelElementValueModification,
+        operation: SubmodelOperationTypes.SubmodelElementValueModified,
         oldData,
-        newData: submodelElement.toPlain(),
+        newData: structuredClone(this.toPlain()),
       }),
     );
     return submodelElement;
@@ -234,7 +237,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   addRow(idShortPath: IdShortPath, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = tableExtension.getTableElement().toPlain();
+    const oldData = structuredClone(this.toPlain());
     tableExtension.addRow(options);
     this.publishActivity(
       SubmodelActivity.create({
@@ -243,9 +246,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
         administration: this.administration,
         fullIdShortPath: this.getIdShortPath().concat(idShortPath),
         userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelRowCreate,
+        operation: SubmodelOperationTypes.SubmodelRowAdded,
         oldData,
-        newData: tableExtension.getTableElement().toPlain(),
+        newData: structuredClone(this.toPlain()),
       }),
     );
     return tableExtension.getTableElement();
@@ -259,7 +262,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = tableExtension.getTableElement().toPlain();
+    const oldData = structuredClone(this.toPlain());
     tableExtension.addColumn(column, options);
     this.publishActivity(
       SubmodelActivity.create({
@@ -268,9 +271,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
         administration: this.administration,
         fullIdShortPath: this.getIdShortPath().concat(idShortPath),
         oldData,
-        newData: tableExtension.getTableElement().toPlain(),
+        newData: structuredClone(this.toPlain()),
         userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelColumnCreate,
+        operation: SubmodelOperationTypes.SubmodelColumnAdded,
       }),
     );
     return tableExtension.getTableElement();
@@ -283,7 +286,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ModifierVisitorOptions,
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = tableExtension.getTableElement().toPlain();
+    const oldData = structuredClone(this.toPlain());
     tableExtension.modifyColumn(idShortOfColumn, data, options);
     this.publishActivity(
       SubmodelActivity.create({
@@ -292,9 +295,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
         administration: this.administration,
         fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
         userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelColumnModification,
+        operation: SubmodelOperationTypes.SubmodelColumnModified,
         oldData,
-        newData: tableExtension.getTableElement().toPlain(),
+        newData: structuredClone(this.toPlain()),
       }),
     );
     return tableExtension.getTableElement();
@@ -302,7 +305,20 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    const oldData = structuredClone(this.toPlain());
     tableExtension.deleteColumn(idShortOfColumn, options);
+    this.publishActivity(
+      SubmodelActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!,
+        submodelId: this.id,
+        administration: this.administration,
+        fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
+        oldData,
+        newData: structuredClone(this.toPlain()),
+        userId: options.ability.userId ?? undefined,
+        operation: SubmodelOperationTypes.SubmodelColumnDeleted,
+      }),
+    );
     return tableExtension.getTableElement();
   }
 
@@ -354,19 +370,14 @@ export class Submodel implements ISubmodelBase, IPersistable {
   ): ISubmodelElement {
     let addedSubmodelElement: ISubmodelElement;
     let fullIdShortPath = this.getIdShortPath();
-    let oldData: unknown;
-    let newData: unknown;
+    const oldData = structuredClone(this.toPlain());
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       submodelElement.setParentIdShortPath(parent.getIdShortPath());
       fullIdShortPath.concat(options.idShortPath);
-      oldData = parent.toPlain();
       addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
-      newData = parent.toPlain();
     } else {
-      oldData = this.toPlain();
       addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
-      newData = this.toPlain();
     }
     this.publishActivity(
       SubmodelActivity.create({
@@ -375,8 +386,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
         administration: this.administration,
         fullIdShortPath: fullIdShortPath,
         oldData,
-        newData,
-        operation: SubmodelOperationTypes.SubmodelElementCreate,
+        newData: structuredClone(this.toPlain()),
+        operation: SubmodelOperationTypes.SubmodelElementAdded,
         userId: options.ability.userId ?? undefined,
       }),
     );

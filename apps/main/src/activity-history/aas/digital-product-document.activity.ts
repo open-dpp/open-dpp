@@ -7,18 +7,19 @@ import {
   IActivityPayload,
 } from "../activity";
 import { ActivityTypes } from "../activity-types";
-import { diff, IChange } from "json-diff-ts";
 import { z } from "zod";
 import {
   ActivityCreateProps,
   ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
+  diff,
 } from "./shared.activity";
 import {
   DigitalProductDocumentOperationTypesEnum,
   DigitalProductDocumentOperationTypesType,
 } from "../digital-product-document-types";
+import { Operation } from "fast-json-patch/module/core";
 
 export class DigitalProductDocumentActivity implements IActivity {
   private constructor(
@@ -65,7 +66,7 @@ const DigitalProductDocumentPayloadSchema = z.object({
 export class DigitalProductDocumentPayload implements IActivityPayload {
   private constructor(
     public readonly operation: DigitalProductDocumentOperationTypesType,
-    public readonly changes: IChange[],
+    public readonly changes: Operation[],
   ) {}
 
   static create(

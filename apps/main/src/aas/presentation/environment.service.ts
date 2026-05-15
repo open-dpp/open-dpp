@@ -173,8 +173,7 @@ export class EnvironmentService {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
     const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     aas.modify(modification, { subject: userContext.subject, ability, digitalProductDocumentId });
-    const activities = aas.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = aas.pullActivities(correlationId);
 
     const session = await this.connection.startSession();
     try {
@@ -213,8 +212,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     submodel.modify(modification, { ability, digitalProductDocumentId });
 
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -246,19 +244,19 @@ export class EnvironmentService {
       ability,
       digitalProductDocumentId,
     });
-
+    const submodelAddedActivity = DigitalProductDocumentActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      operation: DigitalProductDocumentOperationTypes.SubmodelCreate,
+      newData: [submodel.toPlain()],
+    });
+    submodelAddedActivity.header.assignCorrelationId(correlationId);
     const activities = [
-      DigitalProductDocumentActivity.create({
-        digitalProductDocumentId,
-        userId: userContext.userId,
-        operation: DigitalProductDocumentOperationTypes.SubmodelCreate,
-        newData: [submodel.toPlain()],
-      }),
-      ...aas.pullActivities(),
-      ...submodel.pullActivities(),
-      ...environment.pullActivities(),
+      submodelAddedActivity,
+      ...aas.pullActivities(correlationId),
+      ...submodel.pullActivities(correlationId),
+      ...environment.pullActivities(correlationId),
     ];
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -412,8 +410,7 @@ export class EnvironmentService {
       parseSubmodelElement(submodelElementPlain),
       { idShortPath, ability, digitalProductDocumentId },
     );
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -438,8 +435,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject);
     submodel.modifyValue(modification, { ability, digitalProductDocumentId });
 
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
 
     const session = await this.connection.startSession();
     try {
@@ -468,8 +464,7 @@ export class EnvironmentService {
       ability,
       digitalProductDocumentId,
     });
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -497,8 +492,7 @@ export class EnvironmentService {
       ability,
       digitalProductDocumentId,
     });
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -529,8 +523,7 @@ export class EnvironmentService {
       digitalProductDocumentId,
     });
 
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -562,8 +555,7 @@ export class EnvironmentService {
       { ability, digitalProductDocumentId },
     );
 
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
@@ -577,24 +569,28 @@ export class EnvironmentService {
   }
 
   async deleteColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfColumn: string,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(subject);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject);
     const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn, {
       ability,
+      digitalProductDocumentId,
       onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
     });
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.aasRepository.save(aas, { session });
+        await this.activityRepository.createMany(activities, { session });
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     } finally {
@@ -618,8 +614,7 @@ export class EnvironmentService {
       ability,
       digitalProductDocumentId,
     });
-    const activities = submodel.pullActivities();
-    activities.forEach((a) => a.header.assignCorrelationId(correlationId));
+    const activities = submodel.pullActivities(correlationId);
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {

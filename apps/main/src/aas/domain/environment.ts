@@ -46,8 +46,10 @@ export class Environment implements IConvertableToPlain {
     return this._activities;
   }
 
-  pullActivities(): Array<IActivity> {
+  pullActivities(correlationId: string): Array<IActivity> {
     const events = [...this._activities];
+    events.forEach((event) => event.header.assignCorrelationId(correlationId));
+
     this._activities = [];
     return events;
   }
@@ -71,12 +73,12 @@ export class Environment implements IConvertableToPlain {
     if (this.submodels.includes(submodel.id)) {
       throw new ValueError(`Submodel with id ${submodel.id} already exists`);
     }
-    const oldData = JSON.parse(JSON.stringify(this.toPlain()));
+    const oldData = structuredClone(this.toPlain());
     this.submodels.push(submodel.id);
     this.publishActivity(
       EnvironmentActivity.create({
         oldData,
-        newData: this.toPlain(),
+        newData: structuredClone(this.toPlain()),
         operation: EnvironmentOperationTypes.SubmodelCreate,
         userId: options?.ability.userId ?? undefined,
         digitalProductDocumentId: options.digitalProductDocumentId,

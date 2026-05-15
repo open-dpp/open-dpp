@@ -16,7 +16,6 @@ import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
 import { PassportController } from "./presentation/passport.controller";
 import { ActivityHistoryModule } from "../activity-history/activity-history.module";
-import { CorrelationIdService } from "../common/middleware/correlation-id.service";
 
 @Module({
   imports: [

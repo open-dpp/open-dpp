@@ -555,6 +555,7 @@ export class PassportController
 
   @ApiDeleteColumn()
   async deleteColumnFromSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -562,15 +563,17 @@ export class PassportController
     @ColumnParam() idShortOfColumn: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       idShortOfColumn,
-      subject,
+      { subject, userId },
     );
   }
 

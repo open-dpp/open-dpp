@@ -1,39 +1,24 @@
 import { ActivityHeader } from "../activity";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { IChange, Operation } from "json-diff-ts";
 import { z } from "zod";
 import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
-
-export interface SharedActivityCreateProps {
-  digitalProductDocumentId: string;
-  userId?: string;
-  createdAt?: Date;
-}
+import { Operation } from "fast-json-patch/module/core";
+import { compare } from "fast-json-patch/module/duplex";
 
 const Version = {
   v1_0_0: "1.0.0",
 } as const;
 
-export function createActivityHeaderOld(
-  type: string,
-  data: SharedActivityCreateProps,
-  version?: string,
-) {
-  return ActivityHeader.create({
-    type,
-    version: version ?? Version.v1_0_0,
-    aggregateId: data.digitalProductDocumentId,
-    userId: data.userId,
-    createdAt: data.createdAt,
-  });
-}
-
 export interface ActivityCreateProps {
   digitalProductDocumentId: string;
-  oldData?: unknown;
-  newData: unknown;
+  oldData?: object | any[];
+  newData: object | any[];
   userId?: string;
   createdAt?: Date;
+}
+
+export function diff(oldData: object | any[] | undefined, newData: object | any[]): Operation[] {
+  return compare(oldData ?? {}, newData);
 }
 
 export interface ActivityCreatePropsWithAdministration extends ActivityCreateProps {
@@ -52,25 +37,27 @@ export function createActivityHeader(type: string, data: ActivityCreateProps, ve
 
 export interface ActivityPayloadCreateProps {
   administration: AdministrativeInformation;
-  changes: IChange[];
+  changes: Operation[]; // JSON Patch is specified in RFC 6902 from the IETF (https://jsonpatch.com/)
 }
 
-export const ActivityChangeSchema = z.object({
-  type: z.enum(Operation),
-  key: z.string(),
-  embeddedKey: z.string().optional(),
-  /** When true, embeddedKey is a dot-separated nested path (e.g. "a.b" → @.a.b). */
-  embeddedKeyIsPath: z.boolean().optional(),
+// Allowed operation types in RFC 6902
+const OperationType = z.enum(["add", "remove", "replace", "move", "copy", "test"]);
+
+// Base schema
+export const OperationSchema: z.ZodType<Operation> = z.object({
+  op: OperationType,
+  path: z.string(),
+
+  // "from" is only required for move/copy
+  from: z.string().optional(),
+
+  // value is optional depending on op
   value: z.any().optional(),
-  oldValue: z.any().optional(),
-  get changes() {
-    return ActivityChangeSchema.array().optional();
-  },
-});
+}) as z.ZodType<Operation>;
 
 export const ActivityPayloadSchema = z.object({
   administration: AdministrativeInformationJsonSchema,
-  changes: ActivityChangeSchema.array(),
+  changes: OperationSchema.array(),
 });
 
 export function payloadToPlain(payload: ActivityPayloadCreateProps) {

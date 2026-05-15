@@ -60,7 +60,7 @@ describe("activityRepository", () => {
       oldData: { idShort: "prop1", value: "oldValue" },
       newData: { idShort: "prop1", value: "newValue" },
       administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       createdAt: date1,
     });
     const event2 = SubmodelActivity.create({
@@ -70,7 +70,7 @@ describe("activityRepository", () => {
       oldData: { idShort: "prop2", value: "oldValue" },
       newData: { idShort: "prop2", value: "newValue" },
       administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       createdAt: date2,
     });
     await activityRepository.createMany([event1, event2]);
@@ -99,7 +99,7 @@ describe("activityRepository", () => {
         oldData: { idShort, value: "oldValue" },
         newData: { idShort, value: "newValue" },
         administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        operation: SubmodelOperationTypes.SubmodelElementModification,
+        operation: SubmodelOperationTypes.SubmodelElementModified,
         createdAt,
       });
 
@@ -117,7 +117,7 @@ describe("activityRepository", () => {
       oldData: { idShort: "prop4", value: "oldValue" },
       newData: { idShort: "prop4", value: "newValue" },
       administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       createdAt: date4,
     });
 

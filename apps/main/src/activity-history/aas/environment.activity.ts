@@ -7,15 +7,16 @@ import {
   IActivityPayload,
 } from "../activity";
 import { ActivityTypes } from "../activity-types";
-import { diff, IChange } from "json-diff-ts";
 import { z } from "zod";
 import {
   ActivityCreateProps,
   ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
+  diff,
 } from "./shared.activity";
 import { EnvironmentOperationTypesEnum, EnvironmentOperationTypesType } from "../environment-types";
+import { Operation } from "fast-json-patch/module/core";
 
 export class EnvironmentActivity implements IActivity {
   private constructor(
@@ -62,7 +63,7 @@ const EnvironmentPayloadSchema = z.object({
 export class EnvironmentPayload implements IActivityPayload {
   private constructor(
     public readonly operation: EnvironmentOperationTypesType,
-    public readonly changes: IChange[],
+    public readonly changes: Operation[],
   ) {}
 
   static create(

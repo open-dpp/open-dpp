@@ -8,11 +8,9 @@ import {
 } from "../activity";
 import { ActivityTypes } from "../activity-types";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { diff, IChange } from "json-diff-ts";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { z } from "zod";
 import {
-  SubmodelOperationTypes,
   SubmodelOperationTypesEnum,
   SubmodelOperationTypesType,
 } from "../submodel-operation-types";
@@ -21,8 +19,10 @@ import {
   ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
+  diff,
   payloadToPlain,
 } from "./shared.activity";
+import { Operation } from "fast-json-patch/module/core";
 
 export class SubmodelActivity implements IActivity {
   private constructor(
@@ -36,19 +36,13 @@ export class SubmodelActivity implements IActivity {
       fullIdShortPath: IdShortPath;
     },
   ) {
-    const embeddedObjKeys = new Map();
-    const valueMatcher =
-      data.operation === SubmodelOperationTypes.SubmodelRowCreate ? /.+\.value$/ : /(^|\.)value$/;
-    embeddedObjKeys.set(valueMatcher, "idShort");
-    embeddedObjKeys.set(/(^|\.)displayName$/, "language");
-    embeddedObjKeys.set("submodelElements", "idShort");
     return new SubmodelActivity(
       createActivityHeader(ActivityTypes.SubmodelActivity, data),
       SubmodelPayload.create({
         submodelId: data.submodelId,
         administration: data.administration,
         fullIdShortPath: data.fullIdShortPath,
-        changes: diff(data.oldData, data.newData, { embeddedObjKeys }),
+        changes: diff(data.oldData, data.newData),
         operation: data.operation,
       }),
     );
@@ -85,7 +79,7 @@ export class SubmodelPayload implements IActivityPayload {
     public readonly administration: AdministrativeInformation,
     public readonly fullIdShortPath: IdShortPath,
     public readonly operation: SubmodelOperationTypesType,
-    public readonly changes: IChange[],
+    public readonly changes: Operation[],
   ) {}
 
   static create(

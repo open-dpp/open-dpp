@@ -87,8 +87,10 @@ export class AssetAdministrationShell
     return this._activities;
   }
 
-  pullActivities(): Array<IActivity> {
+  pullActivities(correlationId: string): Array<IActivity> {
     const events = [...this._activities];
+    events.forEach((event) => event.header.assignCorrelationId(correlationId));
+
     this._activities = [];
     return events;
   }
@@ -114,7 +116,7 @@ export class AssetAdministrationShell
   }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
-    const oldData = this.toPlain();
+    const oldData = structuredClone(this.toPlain());
     this.accept(new ModifierVisitor(options), { data });
     this.publishActivity(
       AssetAdministrationShellActivity.create({
@@ -124,7 +126,7 @@ export class AssetAdministrationShell
         administration: this.administration,
         oldData,
         operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
-        newData: this.toPlain(),
+        newData: structuredClone(this.toPlain()),
       }),
     );
   }
@@ -138,7 +140,7 @@ export class AssetAdministrationShell
     options?: Pick<AddOptions, "ability" | "digitalProductDocumentId">,
   ): Reference {
     const reference = submodelToReference(submodel);
-    const oldData = this.toPlain();
+    const oldData = structuredClone(this.toPlain());
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
     if (options) {
@@ -149,7 +151,7 @@ export class AssetAdministrationShell
           assetAdministrationShellId: this.id,
           administration: this.administration,
           oldData,
-          newData: this.toPlain(),
+          newData: structuredClone(this.toPlain()),
           operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
         }),
       );

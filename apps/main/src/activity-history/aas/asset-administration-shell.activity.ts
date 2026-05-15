@@ -8,19 +8,20 @@ import {
 } from "../activity";
 import { ActivityTypes } from "../activity-types";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { diff, IChange } from "json-diff-ts";
 import { z } from "zod";
 import {
   ActivityCreatePropsWithAdministration,
   ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
+  diff,
   payloadToPlain,
 } from "./shared.activity";
 import {
   AssetAdministrationShellOperationTypesEnum,
   AssetAdministrationShellOperationTypesType,
 } from "../asset-administration-shell-operation-types";
+import { Operation } from "fast-json-patch/module/core";
 
 export class AssetAdministrationShellActivity implements IActivity {
   private constructor(
@@ -33,15 +34,12 @@ export class AssetAdministrationShellActivity implements IActivity {
       operation: AssetAdministrationShellOperationTypesType;
     },
   ) {
-    const embeddedObjKeys = new Map();
-    embeddedObjKeys.set(/(^|\.)permissionsPerObject$/, "object.idShort");
-    embeddedObjKeys.set(/(^|\.)permissions$/, "permission");
     return new AssetAdministrationShellActivity(
       createActivityHeader(ActivityTypes.AssetAdministrationShellActivity, data),
       AssetAdministrationShellPayload.create({
         assetAdministrationShellId: data.assetAdministrationShellId,
         administration: data.administration,
-        changes: diff(data.oldData, data.newData, { embeddedObjKeys }),
+        changes: diff(data.oldData, data.newData),
         operation: data.operation,
       }),
     );
@@ -76,7 +74,7 @@ export class AssetAdministrationShellPayload implements IActivityPayload {
     public readonly assetAdministrationShellId: string,
     public readonly administration: AdministrativeInformation,
     public readonly operation: AssetAdministrationShellOperationTypesType,
-    public readonly changes: IChange[],
+    public readonly changes: Operation[],
   ) {}
 
   static create(

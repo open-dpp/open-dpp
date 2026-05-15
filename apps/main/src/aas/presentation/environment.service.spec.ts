@@ -60,7 +60,6 @@ import { AdministrativeInformation } from "../domain/common/administrative-infor
 import { DbSessionOptions } from "../../database/query-options";
 import { SubmodelPayload } from "../../activity-history/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
-import { Operation } from "json-diff-ts";
 import { AssetAdministrationShellPayload } from "../../activity-history/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 import { EnvironmentPayload } from "../../activity-history/aas/environment.activity";
@@ -277,66 +276,20 @@ describe("environmentService", () => {
           operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
           changes: [
             {
-              key: "security",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "localAccessControl",
-                  type: Operation.UPDATE,
-                  changes: [
-                    {
-                      embeddedKey: "$index",
-                      key: "accessPermissionRules",
-                      type: Operation.UPDATE,
-                      changes: [
-                        {
-                          key: "0",
-                          type: Operation.UPDATE,
-                          changes: [
-                            {
-                              embeddedKey: "object.idShort",
-                              key: "permissionsPerObject",
-                              type: Operation.UPDATE,
-                              embeddedKeyIsPath: true,
-                              changes: [
-                                {
-                                  key: "section1",
-                                  type: Operation.UPDATE,
-                                  changes: [
-                                    {
-                                      embeddedKey: "permission",
-                                      key: "permissions",
-                                      type: Operation.UPDATE,
-                                      changes: [
-                                        {
-                                          key: "Create",
-                                          type: Operation.ADD,
-                                          value: {
-                                            kindOfPermission: "Allow",
-                                            permission: "Create",
-                                          },
-                                        },
-                                        {
-                                          key: "Edit",
-                                          type: Operation.ADD,
-                                          value: {
-                                            kindOfPermission: "Allow",
-                                            permission: "Edit",
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  ],
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
+              op: "add",
+              path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/1",
+              value: {
+                kindOfPermission: "Allow",
+                permission: "Create",
+              },
+            },
+            {
+              op: "add",
+              path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/2",
+              value: {
+                kindOfPermission: "Allow",
+                permission: "Edit",
+              },
             },
           ],
         }),
@@ -534,35 +487,33 @@ describe("environmentService", () => {
       })),
     ).toEqual([
       {
-        type: ActivityTypes.DigitalProductDocumentActivity,
         correlationId,
+        type: ActivityTypes.DigitalProductDocumentActivity,
         payload: DigitalProductDocumentPayload.create({
           operation: EnvironmentOperationTypes.SubmodelCreate,
           changes: [
             {
-              key: "$root",
-              type: Operation.ADD,
-              value: [
-                {
-                  administration: {
-                    revision: "0",
-                    version: "1",
-                  },
-                  category: null,
-                  description: [],
-                  displayName: [],
-                  embeddedDataSpecifications: [],
-                  extensions: [],
-                  id: submodelPlain.id,
-                  idShort: "submodel2",
-                  kind: null,
-                  modelType: "Submodel",
-                  qualifiers: [],
-                  semanticId: null,
-                  submodelElements: [],
-                  supplementalSemanticIds: [],
+              op: "add",
+              path: "/0",
+              value: {
+                administration: {
+                  revision: "0",
+                  version: "1",
                 },
-              ],
+                category: null,
+                description: [],
+                displayName: [],
+                embeddedDataSpecifications: [],
+                extensions: [],
+                id: submodelPlain.id,
+                idShort: "submodel2",
+                kind: null,
+                modelType: "Submodel",
+                qualifiers: [],
+                semanticId: null,
+                submodelElements: [],
+                supplementalSemanticIds: [],
+              },
             },
           ],
         }),
@@ -576,269 +527,215 @@ describe("environmentService", () => {
           operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
           changes: [
             {
-              embeddedKey: "$index",
-              key: "submodels",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "1",
-                  type: Operation.ADD,
-                  value: {
-                    keys: [
-                      {
-                        type: "Submodel",
-                        value: submodelPlain.id,
-                      },
-                    ],
-                    referredSemanticId: null,
-                    type: "ModelReference",
-                  },
+              op: "add",
+              path: "/security/localAccessControl/accessPermissionRules/1/permissionsPerObject/1",
+              value: {
+                object: {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "submodel2",
+                  modelType: "ReferenceElement",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: null,
                 },
-              ],
+                permissions: [
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Create",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Read",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Edit",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Delete",
+                  },
+                ],
+              },
             },
             {
-              key: "security",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "localAccessControl",
-                  type: Operation.UPDATE,
-                  changes: [
+              op: "add",
+              path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/1",
+              value: {
+                object: {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "submodel2",
+                  modelType: "ReferenceElement",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: null,
+                },
+                permissions: [
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Create",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Read",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Edit",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Delete",
+                  },
+                ],
+              },
+            },
+            {
+              op: "add",
+              path: "/security/localAccessControl/accessPermissionRules/2",
+              value: {
+                permissionsPerObject: [
+                  {
+                    object: {
+                      category: null,
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      idShort: "submodel2",
+                      modelType: "ReferenceElement",
+                      qualifiers: [],
+                      semanticId: null,
+                      supplementalSemanticIds: [],
+                      value: null,
+                    },
+                    permissions: [
+                      {
+                        kindOfPermission: "Allow",
+                        permission: "Create",
+                      },
+                      {
+                        kindOfPermission: "Allow",
+                        permission: "Read",
+                      },
+                      {
+                        kindOfPermission: "Allow",
+                        permission: "Edit",
+                      },
+                      {
+                        kindOfPermission: "Allow",
+                        permission: "Delete",
+                      },
+                    ],
+                  },
+                ],
+                targetSubjectAttributes: {
+                  subjectAttribute: [
                     {
-                      embeddedKey: "$index",
-                      key: "accessPermissionRules",
-                      type: Operation.UPDATE,
-                      changes: [
-                        {
-                          key: "0",
-                          type: Operation.UPDATE,
-                          changes: [
-                            {
-                              embeddedKey: "object.idShort",
-                              embeddedKeyIsPath: true,
-                              key: "permissionsPerObject",
-                              type: Operation.UPDATE,
-                              changes: [
-                                {
-                                  key: "submodel2",
-                                  type: Operation.ADD,
-                                  value: {
-                                    object: {
-                                      category: null,
-                                      description: [],
-                                      displayName: [],
-                                      embeddedDataSpecifications: [],
-                                      extensions: [],
-                                      idShort: "submodel2",
-                                      modelType: "ReferenceElement",
-                                      qualifiers: [],
-                                      semanticId: null,
-                                      supplementalSemanticIds: [],
-                                      value: null,
-                                    },
-                                    permissions: [
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Create",
-                                      },
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Read",
-                                      },
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Edit",
-                                      },
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Delete",
-                                      },
-                                    ],
-                                  },
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                        {
-                          key: "1",
-                          type: Operation.UPDATE,
-                          changes: [
-                            {
-                              embeddedKey: "object.idShort",
-                              embeddedKeyIsPath: true,
-                              key: "permissionsPerObject",
-                              type: Operation.UPDATE,
-                              changes: [
-                                {
-                                  key: "submodel2",
-                                  type: Operation.ADD,
-                                  value: {
-                                    object: {
-                                      category: null,
-                                      description: [],
-                                      displayName: [],
-                                      embeddedDataSpecifications: [],
-                                      extensions: [],
-                                      idShort: "submodel2",
-                                      modelType: "ReferenceElement",
-                                      qualifiers: [],
-                                      semanticId: null,
-                                      supplementalSemanticIds: [],
-                                      value: null,
-                                    },
-                                    permissions: [
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Create",
-                                      },
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Read",
-                                      },
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Edit",
-                                      },
-                                      {
-                                        kindOfPermission: "Allow",
-                                        permission: "Delete",
-                                      },
-                                    ],
-                                  },
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                        {
-                          key: "2",
-                          type: Operation.ADD,
-                          value: {
-                            permissionsPerObject: [
-                              {
-                                object: {
-                                  category: null,
-                                  description: [],
-                                  displayName: [],
-                                  embeddedDataSpecifications: [],
-                                  extensions: [],
-                                  idShort: "submodel2",
-                                  modelType: "ReferenceElement",
-                                  qualifiers: [],
-                                  semanticId: null,
-                                  supplementalSemanticIds: [],
-                                  value: null,
-                                },
-                                permissions: [
-                                  {
-                                    kindOfPermission: "Allow",
-                                    permission: "Create",
-                                  },
-                                  {
-                                    kindOfPermission: "Allow",
-                                    permission: "Read",
-                                  },
-                                  {
-                                    kindOfPermission: "Allow",
-                                    permission: "Edit",
-                                  },
-                                  {
-                                    kindOfPermission: "Allow",
-                                    permission: "Delete",
-                                  },
-                                ],
-                              },
-                            ],
-                            targetSubjectAttributes: {
-                              subjectAttribute: [
-                                {
-                                  category: null,
-                                  description: [],
-                                  displayName: [],
-                                  embeddedDataSpecifications: [],
-                                  extensions: [],
-                                  idShort: "userRole",
-                                  modelType: "Property",
-                                  qualifiers: [],
-                                  semanticId: null,
-                                  supplementalSemanticIds: [],
-                                  value: "user",
-                                  valueId: null,
-                                  valueType: "String",
-                                },
-                                {
-                                  category: null,
-                                  description: [],
-                                  displayName: [],
-                                  embeddedDataSpecifications: [],
-                                  extensions: [],
-                                  idShort: "memberRole",
-                                  modelType: "Property",
-                                  qualifiers: [],
-                                  semanticId: null,
-                                  supplementalSemanticIds: [],
-                                  value: "owner",
-                                  valueId: null,
-                                  valueType: "String",
-                                },
-                              ],
-                            },
-                          },
-                        },
-                        {
-                          key: "3",
-                          type: Operation.ADD,
-                          value: {
-                            permissionsPerObject: [
-                              {
-                                object: {
-                                  category: null,
-                                  description: [],
-                                  displayName: [],
-                                  embeddedDataSpecifications: [],
-                                  extensions: [],
-                                  idShort: "submodel2",
-                                  modelType: "ReferenceElement",
-                                  qualifiers: [],
-                                  semanticId: null,
-                                  supplementalSemanticIds: [],
-                                  value: null,
-                                },
-                                permissions: [
-                                  {
-                                    kindOfPermission: "Allow",
-                                    permission: "Read",
-                                  },
-                                ],
-                              },
-                            ],
-                            targetSubjectAttributes: {
-                              subjectAttribute: [
-                                {
-                                  category: null,
-                                  description: [],
-                                  displayName: [],
-                                  embeddedDataSpecifications: [],
-                                  extensions: [],
-                                  idShort: "userRole",
-                                  modelType: "Property",
-                                  qualifiers: [],
-                                  semanticId: null,
-                                  supplementalSemanticIds: [],
-                                  value: "anonymous",
-                                  valueId: null,
-                                  valueType: "String",
-                                },
-                              ],
-                            },
-                          },
-                        },
-                      ],
+                      category: null,
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      idShort: "userRole",
+                      modelType: "Property",
+                      qualifiers: [],
+                      semanticId: null,
+                      supplementalSemanticIds: [],
+                      value: "user",
+                      valueId: null,
+                      valueType: "String",
+                    },
+                    {
+                      category: null,
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      idShort: "memberRole",
+                      modelType: "Property",
+                      qualifiers: [],
+                      semanticId: null,
+                      supplementalSemanticIds: [],
+                      value: "owner",
+                      valueId: null,
+                      valueType: "String",
                     },
                   ],
                 },
-              ],
+              },
+            },
+            {
+              op: "add",
+              path: "/security/localAccessControl/accessPermissionRules/3",
+              value: {
+                permissionsPerObject: [
+                  {
+                    object: {
+                      category: null,
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      idShort: "submodel2",
+                      modelType: "ReferenceElement",
+                      qualifiers: [],
+                      semanticId: null,
+                      supplementalSemanticIds: [],
+                      value: null,
+                    },
+                    permissions: [
+                      {
+                        kindOfPermission: "Allow",
+                        permission: "Read",
+                      },
+                    ],
+                  },
+                ],
+                targetSubjectAttributes: {
+                  subjectAttribute: [
+                    {
+                      category: null,
+                      description: [],
+                      displayName: [],
+                      embeddedDataSpecifications: [],
+                      extensions: [],
+                      idShort: "userRole",
+                      modelType: "Property",
+                      qualifiers: [],
+                      semanticId: null,
+                      supplementalSemanticIds: [],
+                      value: "anonymous",
+                      valueId: null,
+                      valueType: "String",
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              op: "add",
+              path: "/submodels/1",
+              value: {
+                keys: [
+                  {
+                    type: "Submodel",
+                    value: submodelPlain.id,
+                  },
+                ],
+                referredSemanticId: null,
+                type: "ModelReference",
+              },
             },
           ],
         }),
@@ -850,16 +747,9 @@ describe("environmentService", () => {
           operation: EnvironmentOperationTypes.SubmodelCreate,
           changes: [
             {
-              embeddedKey: "$index",
-              key: "submodels",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "1",
-                  type: Operation.ADD,
-                  value: submodelPlain.id,
-                },
-              ],
+              op: "add",
+              path: "/submodels/1",
+              value: submodelPlain.id,
             },
           ],
         }),
@@ -905,33 +795,26 @@ describe("environmentService", () => {
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
           fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }),
-          operation: SubmodelOperationTypes.SubmodelElementCreate,
+          operation: SubmodelOperationTypes.SubmodelElementAdded,
           changes: [
             {
-              embeddedKey: "idShort",
-              key: "submodelElements",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "dataField1",
-                  type: Operation.ADD,
-                  value: {
-                    description: [],
-                    displayName: [],
-                    embeddedDataSpecifications: [],
-                    extensions: [],
-                    qualifiers: [],
-                    supplementalSemanticIds: [],
-                    category: null,
-                    idShort: "dataField1",
-                    modelType: "Property",
-                    semanticId: null,
-                    value: "test",
-                    valueId: null,
-                    valueType: "String",
-                  },
-                },
-              ],
+              op: "add",
+              path: "/submodelElements/1",
+              value: {
+                category: null,
+                description: [],
+                displayName: [],
+                embeddedDataSpecifications: [],
+                extensions: [],
+                idShort: "dataField1",
+                modelType: "Property",
+                qualifiers: [],
+                semanticId: null,
+                supplementalSemanticIds: [],
+                value: "test",
+                valueId: null,
+                valueType: "String",
+              },
             },
           ],
         }),
@@ -947,7 +830,6 @@ describe("environmentService", () => {
       environment,
       admin,
       submodel1,
-      row1,
     } = await createEnvironmentWithList();
     const column = Property.create({
       idShort: "column1",
@@ -984,46 +866,26 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
           changes: [
             {
-              embeddedKey: "idShort",
-              key: "value",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: row1.idShort,
-                  type: Operation.UPDATE,
-                  changes: [
-                    {
-                      embeddedKey: "idShort",
-                      key: "value",
-                      type: Operation.UPDATE,
-                      changes: [
-                        {
-                          key: "column1",
-                          type: Operation.ADD,
-                          value: {
-                            category: null,
-                            description: [],
-                            displayName: [],
-                            embeddedDataSpecifications: [],
-                            extensions: [],
-                            idShort: "column1",
-                            modelType: "Property",
-                            qualifiers: [],
-                            semanticId: null,
-                            supplementalSemanticIds: [],
-                            value: "test",
-                            valueId: null,
-                            valueType: "String",
-                          },
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
+              op: "add",
+              path: "/submodelElements/0/value/0/value/1",
+              value: {
+                category: null,
+                description: [],
+                displayName: [],
+                embeddedDataSpecifications: [],
+                extensions: [],
+                idShort: "column1",
+                modelType: "Property",
+                qualifiers: [],
+                semanticId: null,
+                supplementalSemanticIds: [],
+                value: "test",
+                valueId: null,
+                valueType: "String",
+              },
             },
           ],
-          operation: SubmodelOperationTypes.SubmodelColumnCreate,
+          operation: SubmodelOperationTypes.SubmodelColumnAdded,
         }),
       },
     ]);
@@ -1067,47 +929,40 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
           changes: [
             {
-              embeddedKey: "$index",
-              key: "value",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "1",
-                  type: Operation.ADD,
-                  value: {
+              op: "add",
+              path: "/submodelElements/0/value/1",
+              value: {
+                category: null,
+                description: [],
+                displayName: [],
+                embeddedDataSpecifications: [],
+                extensions: [],
+                idShort: expect.any(String),
+                modelType: "SubmodelElementCollection",
+                qualifiers: [],
+                semanticId: null,
+                supplementalSemanticIds: [],
+                value: [
+                  {
                     category: null,
                     description: [],
                     displayName: [],
                     embeddedDataSpecifications: [],
                     extensions: [],
-                    idShort: expect.any(String),
-                    modelType: "SubmodelElementCollection",
+                    idShort: "col1",
+                    modelType: "Property",
                     qualifiers: [],
                     semanticId: null,
                     supplementalSemanticIds: [],
-                    value: [
-                      {
-                        category: null,
-                        description: [],
-                        displayName: [],
-                        embeddedDataSpecifications: [],
-                        extensions: [],
-                        idShort: "col1",
-                        modelType: "Property",
-                        qualifiers: [],
-                        semanticId: null,
-                        supplementalSemanticIds: [],
-                        value: null,
-                        valueId: null,
-                        valueType: "Double",
-                      },
-                    ],
+                    value: null,
+                    valueId: null,
+                    valueType: "Double",
                   },
-                },
-              ],
+                ],
+              },
             },
           ],
-          operation: SubmodelOperationTypes.SubmodelRowCreate,
+          operation: SubmodelOperationTypes.SubmodelRowAdded,
         }),
       },
     ]);
@@ -1261,22 +1116,15 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({
             path: `${submodel1.idShort}`,
           }),
-          operation: SubmodelOperationTypes.SubmodelModification,
+          operation: SubmodelOperationTypes.SubmodelModified,
           changes: [
             {
-              embeddedKey: "language",
-              key: "displayName",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "en",
-                  type: Operation.ADD,
-                  value: {
-                    language: "en",
-                    text: "Test",
-                  },
-                },
-              ],
+              op: "add",
+              path: "/displayName/0",
+              value: {
+                language: "en",
+                text: "Test",
+              },
             },
           ],
         }),
@@ -1332,43 +1180,12 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({
             path: `${submodel1.idShort}`,
           }),
-          operation: SubmodelOperationTypes.SubmodelValueModification,
+          operation: SubmodelOperationTypes.SubmodelValueModified,
           changes: [
             {
-              embeddedKey: "idShort",
-              key: "submodelElements",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "subSection1",
-                  type: Operation.UPDATE,
-                  changes: [
-                    {
-                      embeddedKey: "idShort",
-                      key: "value",
-                      type: Operation.UPDATE,
-                      changes: [
-                        {
-                          key: "property1",
-                          type: Operation.UPDATE,
-                          changes: [
-                            {
-                              key: "value",
-                              type: Operation.REMOVE,
-                              value: null,
-                            },
-                            {
-                              key: "value",
-                              type: Operation.ADD,
-                              value: "Test",
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
+              op: "replace",
+              path: "/submodelElements/0/value/0/value",
+              value: "Test",
             },
           ],
         }),
@@ -1434,22 +1251,15 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({
             path: `${submodel1.idShort}.${idShortPathToProperty1}`,
           }),
-          operation: SubmodelOperationTypes.SubmodelElementModification,
+          operation: SubmodelOperationTypes.SubmodelElementModified,
           changes: [
             {
-              type: Operation.UPDATE,
-              key: "displayName",
-              embeddedKey: "language",
-              changes: [
-                {
-                  key: "en",
-                  type: Operation.ADD,
-                  value: {
-                    language: "en",
-                    text: "Test",
-                  },
-                },
-              ],
+              op: "add",
+              path: "/submodelElements/0/value/0/displayName/0",
+              value: {
+                language: "en",
+                text: "Test",
+              },
             },
           ],
         }),
@@ -1580,48 +1390,15 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({
             path: `${listIdShortPath}.${col1.idShort}`,
           }),
-          operation: SubmodelOperationTypes.SubmodelColumnModification,
+          operation: SubmodelOperationTypes.SubmodelColumnModified,
           changes: [
             {
-              embeddedKey: "idShort",
-              key: "value",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: row1.idShort,
-                  type: Operation.UPDATE,
-                  changes: [
-                    {
-                      key: "value",
-                      type: Operation.UPDATE,
-                      embeddedKey: "idShort",
-                      changes: [
-                        {
-                          key: "col1",
-                          type: Operation.UPDATE,
-                          changes: [
-                            {
-                              embeddedKey: "language",
-                              key: "displayName",
-                              type: Operation.UPDATE,
-                              changes: [
-                                {
-                                  key: "en",
-                                  type: Operation.ADD,
-                                  value: {
-                                    language: "en",
-                                    text: "Test",
-                                  },
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
+              op: "add",
+              path: "/submodelElements/0/value/0/value/0/displayName/0",
+              value: {
+                language: "en",
+                text: "Test",
+              },
             },
           ],
         }),
@@ -1647,15 +1424,26 @@ describe("environmentService", () => {
   });
 
   it("should delete column", async () => {
-    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } =
-      await createEnvironmentWithList();
+    const {
+      digitalProductDocumentId,
+      correlationId,
+      environment,
+      admin,
+      member,
+      submodel1,
+      row1,
+      col1,
+      listIdShortPath,
+    } = await createEnvironmentWithList();
     await expect(
       environmentService.deleteColumn(
+        correlationId,
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         listIdShortPath,
         col1.idShort,
-        member.subject,
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -1664,14 +1452,44 @@ describe("environmentService", () => {
     );
 
     const list: any = await environmentService.deleteColumn(
+      correlationId,
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       listIdShortPath,
       col1.idShort,
-      admin.subject,
+      admin,
     );
 
     expect(list.value[0].value.map((e: any) => e.idShort)).not.toContain(col1.idShort);
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${listIdShortPath}.${col1.idShort}`,
+          }),
+          operation: SubmodelOperationTypes.SubmodelColumnDeleted,
+          changes: [
+            {
+              op: "remove",
+              path: "/submodelElements/0/value/0/value/0",
+            },
+          ],
+        }),
+      },
+    ]);
   });
 
   it("should delete row", async () => {
@@ -1745,46 +1563,17 @@ describe("environmentService", () => {
           fullIdShortPath: IdShortPath.create({
             path: `${submodel1.idShort}.${idShortPathToProperty1}`,
           }),
-          operation: SubmodelOperationTypes.SubmodelElementValueModification,
+          operation: SubmodelOperationTypes.SubmodelElementValueModified,
           changes: [
             {
-              embeddedKey: "idShort",
-              key: "value",
-              type: Operation.UPDATE,
-              changes: [
-                {
-                  key: "property1",
-                  type: Operation.UPDATE,
-                  changes: [
-                    {
-                      key: "value",
-                      type: Operation.REMOVE,
-                      value: null,
-                    },
-                    {
-                      key: "value",
-                      type: Operation.ADD,
-                      value: "new value 1",
-                    },
-                  ],
-                },
-                {
-                  key: "property2",
-                  type: Operation.UPDATE,
-                  changes: [
-                    {
-                      key: "value",
-                      type: Operation.REMOVE,
-                      value: null,
-                    },
-                    {
-                      key: "value",
-                      type: Operation.ADD,
-                      value: "new value 2",
-                    },
-                  ],
-                },
-              ],
+              op: "replace",
+              path: "/submodelElements/0/value/1/value",
+              value: "new value 2",
+            },
+            {
+              op: "replace",
+              path: "/submodelElements/0/value/0/value",
+              value: "new value 1",
             },
           ],
         }),

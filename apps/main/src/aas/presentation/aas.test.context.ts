@@ -711,6 +711,8 @@ export function createAasTestContext<T>(
   async function assertGetActivities(createEntity: CreateEntity) {
     const { org, userCookie, user } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
 
     const activity1 = SubmodelActivity.create({
       digitalProductDocumentId: entity.id,
@@ -718,7 +720,7 @@ export function createAasTestContext<T>(
       submodelId: submodels[0].id,
       fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
       administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       oldData: {
         idShort: "Author",
         displayName: [],
@@ -727,6 +729,7 @@ export function createAasTestContext<T>(
         idShort: "Author",
         displayName: [{ language: "en", text: "Author" }],
       },
+      createdAt: date1,
     });
 
     const activity2 = SubmodelActivity.create({
@@ -735,7 +738,7 @@ export function createAasTestContext<T>(
       submodelId: submodels[0].id,
       fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
       administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       oldData: {
         idShort: "Model",
         displayName: [],
@@ -744,6 +747,7 @@ export function createAasTestContext<T>(
         idShort: "Model",
         displayName: [{ language: "en", text: "Model" }],
       },
+      createdAt: date2,
     });
 
     await activityRepository.createMany([activity1, activity2]);
@@ -755,7 +759,7 @@ export function createAasTestContext<T>(
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.result).toEqual(
-      [activity1.toPlain(), activity2.toPlain()].map((a) => ({
+      [activity2.toPlain(), activity1.toPlain()].map((a) => ({
         ...a,
         header: { ...a.header, createdAt: (a.header.createdAt as any).toISOString() },
       })),
@@ -773,7 +777,7 @@ export function createAasTestContext<T>(
       submodelId: submodels[0].id,
       fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
       administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       oldData: {
         idShort: "Author",
         displayName: [],
@@ -790,7 +794,7 @@ export function createAasTestContext<T>(
       submodelId: submodels[0].id,
       fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
       administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModification,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
       oldData: {
         idShort: "Model",
         displayName: [],
