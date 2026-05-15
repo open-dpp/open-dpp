@@ -1,4 +1,4 @@
-FROM node:25-slim AS build
+FROM node:26-slim AS build
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -27,7 +27,7 @@ RUN pnpm build
 
 RUN pnpm deploy --filter=@open-dpp/main --prod ./prod/main
 
-FROM node:25-slim AS production
+FROM node:26-slim AS production
 
 ARG APP_VERSION=unknown
 
