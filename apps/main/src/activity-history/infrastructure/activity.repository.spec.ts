@@ -73,7 +73,9 @@ describe("activityRepository", () => {
       operation: SubmodelOperationTypes.SubmodelElementModified,
       createdAt: date2,
     });
-    await activityRepository.createMany([event1, event2]);
+    const activities = [event1, event2];
+    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
+    await activityRepository.createMany(activities);
     const foundEvent = await activityRepository.findOneOrFail(event1.header.id);
     expect(foundEvent).toEqual(event1);
     expect(foundEvent).toBeInstanceOf(SubmodelActivity);
@@ -122,7 +124,9 @@ describe("activityRepository", () => {
     });
 
     beforeAll(async () => {
-      await activityRepository.createMany([event1, event2, event3, eventOfOtherAggregate, event4]);
+      const activities = [event1, event2, event3, eventOfOtherAggregate, event4];
+      activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
+      await activityRepository.createMany(activities);
     });
 
     it("using pagination", async () => {

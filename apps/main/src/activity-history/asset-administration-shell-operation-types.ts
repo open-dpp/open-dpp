@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 export const AssetAdministrationShellOperationTypes = {
-  AssetAdministrationShellModification: "AssetAdministrationShellModification",
-  SubmodelCreate: "SubmodelCreate",
+  AssetAdministrationShellModified: "AssetAdministrationShellModified",
+  SubmodelCreated: "SubmodelCreated",
+  SubmodelDeleted: "SubmodelDeleted",
+  PolicyDeleted: "PolicyDeleted",
 } as const;
 export const AssetAdministrationShellOperationTypesEnum = z.enum(
   AssetAdministrationShellOperationTypes,

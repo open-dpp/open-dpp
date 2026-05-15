@@ -273,7 +273,7 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: assetAdministrationShell.id,
           administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
+          operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
           changes: [
             {
               op: "add",
@@ -524,7 +524,7 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
+          operation: AssetAdministrationShellOperationTypes.SubmodelCreated,
           changes: [
             {
               op: "add",
@@ -1493,30 +1493,79 @@ describe("environmentService", () => {
   });
 
   it("should delete row", async () => {
-    const { environment, admin, member, submodel1, row1, listIdShortPath } =
-      await createEnvironmentWithList();
+    const {
+      digitalProductDocumentId,
+      correlationId,
+      environment,
+      admin,
+      member,
+      submodel1,
+      row1,
+      listIdShortPath,
+    } = await createEnvironmentWithList();
 
     await expect(
       environmentService.deleteRow(
+        correlationId,
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         listIdShortPath,
         row1.idShort,
-        member.subject,
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`),
     );
 
     const list: any = await environmentService.deleteRow(
+      correlationId,
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       listIdShortPath,
       row1.idShort,
-      admin.subject,
+      admin,
     );
 
     expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${listIdShortPath}.${row1.idShort}`,
+          }),
+          operation: SubmodelOperationTypes.SubmodelRowDeleted,
+          changes: [
+            {
+              op: "remove",
+              path: "/submodelElements/0/value/0",
+            },
+          ],
+        }),
+      },
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: environment.assetAdministrationShells[0],
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          changes: [],
+        }),
+      },
+    ]);
   });
 
   it("should modify value of submodel element", async () => {

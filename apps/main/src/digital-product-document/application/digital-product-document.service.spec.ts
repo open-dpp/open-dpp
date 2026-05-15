@@ -198,12 +198,13 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
     await expect(
       service.deleteRowFromSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "demolist" }),
         "row1",
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
@@ -336,7 +337,9 @@ describe("DigitalProductDocumentService", () => {
     const event3 = createActivity("prop3", date3);
 
     const event4 = createActivity("prop4", date4);
-    await activityRepository.createMany([event1, event2, event3, event4]);
+    const activities = [event1, event2, event3, event4];
+    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
+    await activityRepository.createMany(activities);
     const res = {
       set: jest.fn(),
     } as unknown as Response;

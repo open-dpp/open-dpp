@@ -16,6 +16,7 @@ export const ActivityHeaderDtoSchema = z.object({
   type: z.string(),
   userId: z.string().nullable(),
   version: z.string(),
+  exportVersion: z.string(),
 });
 
 export const ActivityDtoSchema = z.object({

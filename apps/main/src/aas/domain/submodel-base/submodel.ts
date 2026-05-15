@@ -256,7 +256,20 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    const oldData = structuredClone(this.toPlain());
     tableExtension.deleteRow(idShortOfRow, options);
+    this.publishActivity(
+      SubmodelActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove
+        submodelId: this.id,
+        administration: this.administration,
+        fullIdShortPath: idShortPath.addPathSegment(idShortOfRow),
+        userId: options.ability.userId ?? undefined,
+        operation: SubmodelOperationTypes.SubmodelRowDeleted,
+        oldData,
+        newData: structuredClone(this.toPlain()),
+      }),
+    );
     return tableExtension.getTableElement();
   }
 
@@ -309,7 +322,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     tableExtension.deleteColumn(idShortOfColumn, options);
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!,
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),

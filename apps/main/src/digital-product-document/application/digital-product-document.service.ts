@@ -381,25 +381,28 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async deleteRowFromSubmodelElementList(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfRow: string,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     return await this.environmentService.deleteRow(
+      correlationId,
+      id,
       item.getEnvironment(),
       submodelId,
       idShortPath,
       idShortOfRow,
-      subject,
+      userContext,
     );
   }
 

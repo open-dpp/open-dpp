@@ -628,24 +628,34 @@ export class EnvironmentService {
   }
 
   async deleteRow(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfRow: string,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(subject);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow, {
       ability,
-      onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      onDelete: (s) =>
+        aas.deletePoliciesByObjectPath(s.getIdShortPath(), { ability, digitalProductDocumentId }),
+      digitalProductDocumentId,
     });
     const session = await this.connection.startSession();
+    const activities = [
+      ...submodel.pullActivities(correlationId),
+      ...aas.pullActivities(correlationId),
+    ];
+
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
+        await this.activityRepository.createMany(activities, { session });
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     } finally {

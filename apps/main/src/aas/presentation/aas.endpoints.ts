@@ -282,6 +282,7 @@ export interface IAasDeleteEndpoints {
     userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   deleteRowFromSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -289,6 +290,7 @@ export interface IAasDeleteEndpoints {
     idShortOfRow: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   deletePolicyBySubjectAndObject: (
     organizationId: string,

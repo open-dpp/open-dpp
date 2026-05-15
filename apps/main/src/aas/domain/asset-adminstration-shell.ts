@@ -16,9 +16,10 @@ import { Security } from "./security/security";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 import { IActivity } from "../../activity-history/activity";
-import { AddOptions } from "./submodel-base/submodel-base";
+import { AddOptions, DeleteOptions } from "./submodel-base/submodel-base";
 import { AssetAdministrationShellActivity } from "../../activity-history/domain/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
+import { IdShortPath } from "./common/id-short-path";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -125,7 +126,7 @@ export class AssetAdministrationShell
         assetAdministrationShellId: this.id,
         administration: this.administration,
         oldData,
-        operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModification,
+        operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
         newData: structuredClone(this.toPlain()),
       }),
     );
@@ -152,12 +153,31 @@ export class AssetAdministrationShell
           administration: this.administration,
           oldData,
           newData: structuredClone(this.toPlain()),
-          operation: AssetAdministrationShellOperationTypes.SubmodelCreate,
+          operation: AssetAdministrationShellOperationTypes.SubmodelCreated,
         }),
       );
     }
 
     return reference;
+  }
+
+  deletePoliciesByObjectPath(
+    objectPath: IdShortPath,
+    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
+  ): void {
+    const oldData = structuredClone(this.toPlain());
+    this.security.deletePoliciesByObjectPath(objectPath);
+    this.publishActivity(
+      AssetAdministrationShellActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove
+        userId: options.ability.userId ?? undefined,
+        assetAdministrationShellId: this.id,
+        administration: this.administration,
+        oldData,
+        newData: structuredClone(this.toPlain()),
+        operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+      }),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

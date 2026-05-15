@@ -749,8 +749,9 @@ export function createAasTestContext<T>(
       },
       createdAt: date2,
     });
-
-    await activityRepository.createMany([activity1, activity2]);
+    const activities = [activity1, activity2];
+    activities.forEach((a) => a.header.assignCorrelationId(randomUUID()));
+    await activityRepository.createMany(activities);
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/activities`)
@@ -805,7 +806,9 @@ export function createAasTestContext<T>(
       },
     });
 
-    await activityRepository.createMany([activity1, activity2]);
+    const activities = [activity1, activity2];
+    activities.forEach((a) => a.header.assignCorrelationId(randomUUID()));
+    await activityRepository.createMany(activities);
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/activities/download`)
