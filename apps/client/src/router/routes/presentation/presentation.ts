@@ -59,14 +59,4 @@ export const PRESENTATION_PARENT: RouteRecordRaw = {
   children: [PRESENTATION_404, PRESENTATION_VIEW, PRESENTATION_VIEW_CHAT],
 };
 
-export const PRESENTATION_LEGACY_REDIRECT: RouteRecordRaw = {
-  path: "/presentation/:legacyPath(.*)*",
-  name: "PRESENTATION_LEGACY_REDIRECT",
-  component: () => import("../../../view/presentation/LegacyPresentationRedirect.vue"),
-  meta: {
-    layout: "none",
-    public: true,
-  },
-};
-
-export const PRESENTATION_ROUTES = [PRESENTATION_LEGACY_REDIRECT, PRESENTATION_PARENT];
+export const PRESENTATION_ROUTES = [PRESENTATION_PARENT];
