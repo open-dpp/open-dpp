@@ -1489,6 +1489,16 @@ describe("environmentService", () => {
           ],
         }),
       },
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: environment.assetAdministrationShells[0],
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          changes: [],
+        }),
+      },
     ]);
   });
 
@@ -1686,18 +1696,28 @@ describe("environmentService", () => {
   });
 
   it("should delete submodel element", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } =
-      await createDefaultEnvironment();
+    const {
+      correlationId,
+      digitalProductDocumentId,
+      environment,
+      admin,
+      member,
+      submodel1,
+      submodelElementCollection1,
+      property1,
+    } = await createDefaultEnvironment();
     const idShortPath = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
 
     await expect(
       environmentService.deleteSubmodelElement(
+        correlationId,
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         idShortPath,
-        member.subject,
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -1706,13 +1726,59 @@ describe("environmentService", () => {
     );
 
     await environmentService.deleteSubmodelElement(
+      correlationId,
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       idShortPath,
-      admin.subject,
+      admin,
     );
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
     expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeUndefined();
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelActivity,
+        payload: SubmodelPayload.create({
+          submodelId: submodel1.id,
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          fullIdShortPath: IdShortPath.create({
+            path: `${submodel1.idShort}.${idShortPath}`,
+          }),
+          operation: SubmodelOperationTypes.SubmodelElementDeleted,
+          changes: [
+            {
+              op: "remove",
+              path: "/submodelElements/0/value/1",
+            },
+            {
+              op: "replace",
+              path: "/submodelElements/0/value/0/idShort",
+              value: "property2",
+            },
+          ],
+        }),
+      },
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: environment.assetAdministrationShells[0],
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          changes: [],
+        }),
+      },
+    ]);
     //
   });
 

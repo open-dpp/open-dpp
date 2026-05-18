@@ -409,6 +409,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {
     const parent = this.findSubmodelElementParent(idShortPath);
+    const oldData = structuredClone(this.toPlain());
     if (idShortPath.last) {
       if (!parent) {
         deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last, options);
@@ -416,6 +417,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
         parent.deleteSubmodelElement(idShortPath.last, options);
       }
     }
+    this.publishActivity(
+      SubmodelActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove
+        submodelId: this.id,
+        administration: this.administration,
+        fullIdShortPath: IdShortPath.create({ path: `${this.idShort}.${idShortPath.toString()}` }),
+        userId: options.ability.userId ?? undefined,
+        operation: SubmodelOperationTypes.SubmodelElementDeleted,
+        oldData,
+        newData: structuredClone(this.toPlain()),
+      }),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

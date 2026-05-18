@@ -649,20 +649,23 @@ export class PassportController
 
   @ApiDeleteSubmodelElementById()
   async deleteSubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.deleteSubmodelElement(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
-      subject,
+      { subject, userId },
     );
   }
 

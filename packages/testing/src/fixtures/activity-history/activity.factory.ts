@@ -11,6 +11,7 @@ export const activitiesPlainFactory = Factory.define<ActivityDto>(() => ({
     type: ActivityDtoTypes.SubmodelElementModification,
     userId: randomUUID(),
     version: "1.0.0",
+    exportVersion: "1.0.0",
   },
   payload: {
     submodelId: randomUUID(),

@@ -12,6 +12,7 @@ export const SubmodelOperationTypes = {
   SubmodelRowAdded: "SubmodelRowAdded",
   SubmodelColumnDeleted: "SubmodelColumnDeleted",
   SubmodelRowDeleted: "SubmodelRowDeleted",
+  SubmodelElementDeleted: "SubmodelElementDeleted",
 } as const;
 export const SubmodelOperationTypesEnum = z.enum(SubmodelOperationTypes);
 export type SubmodelOperationTypesType = z.infer<typeof SubmodelOperationTypesEnum>;

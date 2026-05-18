@@ -303,23 +303,32 @@ export class EnvironmentService {
   }
 
   async deleteSubmodelElement(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(subject);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     submodel.deleteSubmodelElement(idShortPath, {
       ability,
-      onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      digitalProductDocumentId,
+      onDelete: (s) =>
+        aas.deletePoliciesByObjectPath(s.getIdShortPath(), { ability, digitalProductDocumentId }),
     });
+    const activities = [
+      ...submodel.pullActivities(correlationId),
+      ...aas.pullActivities(correlationId),
+    ];
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
+        await this.activityRepository.createMany(activities, { session });
       });
     } finally {
       await session.endSession();
@@ -583,9 +592,13 @@ export class EnvironmentService {
     const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn, {
       ability,
       digitalProductDocumentId,
-      onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      onDelete: (s) =>
+        aas.deletePoliciesByObjectPath(s.getIdShortPath(), { ability, digitalProductDocumentId }),
     });
-    const activities = submodel.pullActivities(correlationId);
+    const activities = [
+      ...submodel.pullActivities(correlationId),
+      ...aas.pullActivities(correlationId),
+    ];
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {

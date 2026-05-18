@@ -263,12 +263,14 @@ export interface IAasDeleteEndpoints {
     memberRole: MemberRoleType | undefined,
   ) => Promise<void>;
   deleteSubmodelElement: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<void>;
   deleteColumnFromSubmodelElementList: (
     correlationId: string,

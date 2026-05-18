@@ -177,11 +177,12 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.deleteSubmodelElement(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "sub1" }),
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
