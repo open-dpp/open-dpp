@@ -30,12 +30,14 @@ import { Pagination } from "../../pagination/pagination";
 import archiver, { Archiver } from "archiver";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { Period } from "../../time/period";
+import type { Connection } from "mongoose";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly digitalProductDocRepository: IDigitalProductDocumentRepository<T>,
     private readonly activityRepository: ActivityRepository,
+    private connection: Connection,
   ) {}
 
   async createSubmodel(
@@ -61,7 +63,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
   }
 
-  async handleDppStatusChangeRequest(
+  async modifyStatus(
     correlationId: string,
     organizationId: string,
     id: string,
@@ -82,7 +84,18 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     } else {
       throw new BadRequestException("Invalid method");
     }
-    await this.digitalProductDocRepository.save(item);
+
+    const activities = item.pullActivities(correlationId);
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.digitalProductDocRepository.save(item);
+        await this.activityRepository.createMany(activities, { session });
+      });
+    } finally {
+      await session.endSession();
+    }
     return item;
   }
 

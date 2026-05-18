@@ -4,6 +4,7 @@ import { SubmodelActivity } from "./domain/aas/submodel.activity";
 import { AssetAdministrationShellActivity } from "./domain/aas/asset-administration-shell.activity";
 import { EnvironmentActivity } from "./domain/aas/environment.activity";
 import { SubmodelRepositoryActivity } from "./domain/submodel-repository.activity";
+import { DigitalProductDocumentActivity } from "./domain/digital-product-document.activity";
 
 export function registerActivityEventClasses(): void {
   registerActivity(ActivityTypes.SubmodelActivity, SubmodelActivity);
@@ -13,4 +14,5 @@ export function registerActivityEventClasses(): void {
   );
   registerActivity(ActivityTypes.EnvironmentActivity, EnvironmentActivity);
   registerActivity(ActivityTypes.SubmodelRepositoryActivity, SubmodelRepositoryActivity);
+  registerActivity(ActivityTypes.DigitalProductDocumentActivity, DigitalProductDocumentActivity);
 }

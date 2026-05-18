@@ -5,6 +5,7 @@ export const ActivityTypes = {
   AssetAdministrationShellActivity: "AssetAdministrationShellActivity",
   EnvironmentActivity: "EnvironmentActivity",
   SubmodelRepositoryActivity: "SubmodelRepositoryActivity",
+  DigitalProductDocumentActivity: "DigitalProductDocumentActivity",
 } as const;
 export const ActivityTypesEnum = z.enum(ActivityTypes);
 export type ActivityTypesType = z.infer<typeof ActivityTypesEnum>;

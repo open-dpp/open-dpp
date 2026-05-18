@@ -1,7 +1,5 @@
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod";
-import { BadRequestException } from "@nestjs/common";
-import { DigitalProductDocumentStatusModificationDto } from "@open-dpp/dto";
 
 export const DigitalProductDocumentStatus = {
   Draft: "Draft",

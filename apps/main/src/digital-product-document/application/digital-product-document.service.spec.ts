@@ -1,4 +1,4 @@
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../aas/aas.module";
@@ -37,7 +37,7 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import { KeyTypes } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusModificationMethodDto, KeyTypes } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 import { Response } from "express";
@@ -46,12 +46,17 @@ import { ActivityHistoryModule } from "../../activity-history/activity-history.m
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { SubmodelActivity } from "../../activity-history/domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
+import { ActivityTypes } from "../../activity-history/activity-types";
+import { DigitalProductDocumentPayload } from "../../activity-history/domain/digital-product-document.activity";
+import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-operation-types";
+import { Connection } from "mongoose";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
   let module: TestingModule;
   let passportRepository: PassportRepository;
   let activityRepository: ActivityRepository;
+  let connection: Connection;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -87,10 +92,13 @@ describe("DigitalProductDocumentService", () => {
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
+    connection = module.get<Connection>(getConnectionToken());
+
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
       activityRepository,
+      connection,
     );
   });
 
@@ -311,6 +319,65 @@ describe("DigitalProductDocumentService", () => {
         userContext,
       ),
     ).rejects.toThrow(exception);
+  });
+
+  it("should change status of passport", async () => {
+    const correlationId = randomUUID();
+    const userId = randomUUID();
+    const passport = Passport.create({
+      organizationId: "organizationId",
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        currentStatus: DigitalProductDocumentStatus.Draft,
+      }),
+    });
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const userContext = { subject, userId };
+    await passportRepository.save(passport);
+    await service.modifyStatus(
+      correlationId,
+      passport.organizationId,
+      passport.id,
+      { method: DigitalProductDocumentStatusModificationMethodDto.Archive },
+      userContext,
+    );
+    const foundPassport = await passportRepository.findOneOrFail(passport.id);
+    expect(foundPassport.getLastStatusChange().currentStatus).toBe(
+      DigitalProductDocumentStatus.Archived,
+    );
+
+    const foundActivities = await activityRepository.findByAggregateId(foundPassport.id);
+
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.DigitalProductDocumentActivity,
+        payload: DigitalProductDocumentPayload.create({
+          operation: DigitalProductDocumentOperationTypes.StatusModified,
+          changes: [
+            {
+              op: "replace",
+              path: "/lastStatusChange/currentStatus",
+              value: "Archived",
+            },
+            {
+              op: "replace",
+              path: "/lastStatusChange/previousStatus",
+              value: "Draft",
+            },
+          ],
+        }),
+      },
+    ]);
   });
 
   it("should download activities", async () => {

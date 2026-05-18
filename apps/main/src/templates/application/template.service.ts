@@ -25,6 +25,7 @@ export class TemplateService {
       this.environmentService,
       this.templateRepository,
       this.activityRepository,
+      this.connection,
     );
   }
 
@@ -35,7 +36,7 @@ export class TemplateService {
     body: DigitalProductDocumentStatusModificationDto,
     userContext: UserContext,
   ) {
-    const template = await this.digitalProductDocumentService.handleDppStatusChangeRequest(
+    const template = await this.digitalProductDocumentService.modifyStatus(
       correlationId,
       organizationId,
       id,

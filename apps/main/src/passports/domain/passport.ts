@@ -15,6 +15,9 @@ import { DigitalProductDocumentSchema } from "../../digital-product-document/dom
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import { IActivity } from "../../activity-history/activity";
+import { DigitalProductDocumentActivity } from "../../activity-history/domain/digital-product-document.activity";
+import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-operation-types";
 
 const PassportSchema = DigitalProductDocumentSchema.extend({
   templateId: z.string().nullable(),
@@ -29,6 +32,8 @@ export class Passport
     HasCreatedAt,
     IDigitalProductDocumentStatusChangeable
 {
+  private _activities: Array<IActivity> = [];
+
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,
@@ -74,14 +79,30 @@ export class Passport
     );
   }
 
+  private publishActivity(activity: IActivity) {
+    this._activities.push(activity);
+  }
+
+  get activities(): Array<IActivity> {
+    return this._activities;
+  }
+
+  pullActivities(correlationId: string): Array<IActivity> {
+    const events = [...this._activities];
+    events.forEach((event) => event.header.assignCorrelationId(correlationId));
+
+    this._activities = [];
+    return events;
+  }
+
   toPlain() {
     return {
       id: this.id,
       organizationId: this.organizationId,
       environment: this.environment.toPlain(),
       templateId: this.templateId,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
       lastStatusChange: this.lastStatusChange.toPlain(),
     };
   }
@@ -105,15 +126,15 @@ export class Passport
   }
 
   publish() {
-    this.lastStatusChange = publishDpp(this.lastStatusChange);
+    this.setLastStatusChange(publishDpp(this.lastStatusChange));
   }
 
   archive() {
-    this.lastStatusChange = archiveDpp(this.lastStatusChange);
+    this.setLastStatusChange(archiveDpp(this.lastStatusChange));
   }
 
   restore() {
-    this.lastStatusChange = restoreDpp(this.lastStatusChange);
+    this.setLastStatusChange(restoreDpp(this.lastStatusChange));
   }
 
   isPublished(): boolean {
@@ -126,5 +147,18 @@ export class Passport
 
   isDraft(): boolean {
     return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
+  }
+
+  private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
+    const oldData = structuredClone(this.toPlain());
+    this.lastStatusChange = lastStatusChange;
+    this.publishActivity(
+      DigitalProductDocumentActivity.create({
+        digitalProductDocumentId: this.id,
+        oldData,
+        newData: structuredClone(this.toPlain()),
+        operation: DigitalProductDocumentOperationTypes.StatusModified,
+      }),
+    );
   }
 }

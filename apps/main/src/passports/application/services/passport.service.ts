@@ -28,6 +28,7 @@ export class PassportService {
       this.environmentService,
       this.passportRepository,
       this.activityRepository,
+      this.connection,
     );
   }
 
@@ -67,7 +68,7 @@ export class PassportService {
     body: DigitalProductDocumentStatusModificationDto,
     userContext: UserContext,
   ) {
-    const passport = await this.digitalProductDocumentService.handleDppStatusChangeRequest(
+    const passport = await this.digitalProductDocumentService.modifyStatus(
       correlationId,
       organizationId,
       id,
