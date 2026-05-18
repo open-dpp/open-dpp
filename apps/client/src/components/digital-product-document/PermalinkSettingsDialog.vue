@@ -92,6 +92,12 @@ function cancel() {
     <div class="flex flex-col gap-4">
       <div v-if="!permalink" class="text-gray-500">{{ t("permalink.notfound") }}</div>
       <template v-else>
+        <div
+          v-if="preview.locked.value"
+          class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+        >
+          {{ t("permalink.settings.locked") }}
+        </div>
         <div class="flex flex-col gap-2">
           <label for="permalink-slug" class="text-sm leading-6 font-medium text-gray-900">{{
             t("permalink.settings.slug.label")
@@ -101,6 +107,7 @@ function cancel() {
             v-model="slug"
             :placeholder="t('permalink.settings.slug.placeholder')"
             :invalid="!!slugError"
+            :disabled="preview.locked.value"
             autocomplete="off"
             spellcheck="false"
           />
@@ -119,6 +126,7 @@ function cancel() {
             autocomplete="off"
             spellcheck="false"
             :invalid="!!baseUrlError"
+            :disabled="preview.locked.value"
           />
           <small v-if="baseUrlError" class="text-red-500">{{ baseUrlError }}</small>
         </div>
@@ -145,7 +153,11 @@ function cancel() {
         @click="cancel"
         :disabled="saving"
       />
-      <Button :label="t('common.save')" @click="save" :disabled="saving || !permalink" />
+      <Button
+        :label="t('common.save')"
+        @click="save"
+        :disabled="saving || !permalink || preview.locked.value"
+      />
     </template>
   </Dialog>
 </template>

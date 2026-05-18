@@ -21,6 +21,8 @@ import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../../identity/users/users.module";
+import { Permalink } from "../../../permalink/domain/permalink";
+import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
 import { PermalinkModule } from "../../../permalink/permalink.module";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
@@ -80,6 +82,59 @@ describe("passportService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  it("modifyPassportStatus Publish freezes the passport's permalinks", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const passport = Passport.create({ organizationId, environment: Environment.create({}) });
+    await passportRepository.save(passport);
+    const config = PresentationConfiguration.createForPassport({
+      organizationId,
+      referenceId: passport.id,
+    });
+    await presentationConfigurationRepository.save(config);
+    const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
+    const permalink = Permalink.create({
+      presentationConfigurationId: config.id,
+      slug: "frozen-on-publish",
+    });
+    await permalinkRepository.save(permalink);
+
+    await service.modifyPassportStatus(passport.id, organizationId, subject, {
+      method: "Publish",
+    });
+
+    const frozen = await permalinkRepository.findOneOrFail(permalink.id);
+    expect(frozen.publishedUrl).toBe("http://localhost:3000/p/frozen-on-publish");
+  });
+
+  it("modifyPassportStatus Archive (from draft) does not freeze permalinks", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const passport = Passport.create({ organizationId, environment: Environment.create({}) });
+    await passportRepository.save(passport);
+    const config = PresentationConfiguration.createForPassport({
+      organizationId,
+      referenceId: passport.id,
+    });
+    await presentationConfigurationRepository.save(config);
+    const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
+    const permalink = Permalink.create({ presentationConfigurationId: config.id });
+    await permalinkRepository.save(permalink);
+
+    await service.modifyPassportStatus(passport.id, organizationId, subject, {
+      method: "Archive",
+    });
+
+    const stillDynamic = await permalinkRepository.findOneOrFail(permalink.id);
+    expect(stillDynamic.publishedUrl).toBeNull();
   });
 
   it("threads the stored presentationConfiguration into the exported passport", async () => {

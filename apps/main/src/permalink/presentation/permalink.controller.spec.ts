@@ -830,6 +830,79 @@ describe("PermalinkController", () => {
     });
   });
 
+  describe("GET — lazy freeze on resolve (rule c)", () => {
+    it("freezes and persists publishedUrl on first public resolve of a published passport", async () => {
+      const slug = `lazy-${randomUUID().slice(0, 8)}`;
+      const fixture = await createPassportWithPermalink({ slug });
+      const repo = ctx.getModuleRef().get(PermalinkRepository);
+      expect((await repo.findOneOrFail(fixture.id)).publishedUrl).toBeNull();
+
+      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+
+      expect(response.status).toEqual(200);
+      const persisted = (await repo.findOneOrFail(fixture.id)).publishedUrl;
+      expect(persisted).toEqual(response.body.publicUrl);
+      expect(persisted).toEqual(`http://localhost:3000/p/${slug}`);
+    });
+
+    it("keeps the frozen URL even after the org branding base URL changes (immutability)", async () => {
+      const slug = `imm-${randomUUID().slice(0, 8)}`;
+      const fixture = await createPassportWithPermalink({ slug });
+      await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      const repo = ctx.getModuleRef().get(PermalinkRepository);
+      const frozenUrl = (await repo.findOneOrFail(fixture.id)).publishedUrl;
+
+      const brandingModel = ctx
+        .getModuleRef()
+        .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
+      await brandingModel.create({
+        organizationId: fixture.passport.organizationId,
+        permalinkBaseUrl: "https://changed.example.com",
+      });
+
+      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body.publicUrl).toEqual(frozenUrl);
+      expect(response.body.publicUrl).toEqual(`http://localhost:3000/p/${slug}`);
+    });
+
+    it("does not freeze a draft passport's permalink on resolve", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: org.id,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/p/${permalink.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      const refetched = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(permalink.id);
+      expect(refetched.publishedUrl).toBeNull();
+    });
+  });
+
   it(`/GET bundle is anonymous readable and never materializes a row`, async () => {
     const fixture = await createPassportWithPermalink();
     const presentationConfigurationRepository = ctx

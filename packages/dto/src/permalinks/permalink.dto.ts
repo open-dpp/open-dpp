@@ -21,10 +21,14 @@ export type PermalinkSlug = z.infer<typeof PermalinkSlugSchema>;
 
 export const PermalinkSchema = z.union([z.uuid(), PermalinkSlugSchema]);
 
+export const PermalinkPublishedUrlSchema = z.string().url().max(2048);
+export type PermalinkPublishedUrl = z.infer<typeof PermalinkPublishedUrlSchema>;
+
 export const PermalinkInvariantsSchema = z.object({
   presentationConfigurationId: z.uuid(),
   slug: PermalinkSlugSchema.nullable(),
   baseUrl: PermalinkBaseUrlSchema.nullable().optional(),
+  publishedUrl: PermalinkPublishedUrlSchema.nullable().optional(),
 });
 
 export const PermalinkDtoSchema = z
@@ -32,6 +36,7 @@ export const PermalinkDtoSchema = z
     id: z.uuid(),
     slug: PermalinkSlugSchema.nullable(),
     baseUrl: PermalinkBaseUrlSchema.nullish(),
+    publishedUrl: PermalinkPublishedUrlSchema.nullish(),
     presentationConfigurationId: z.uuid(),
     createdAt: DateTimeSchema,
     updatedAt: DateTimeSchema,

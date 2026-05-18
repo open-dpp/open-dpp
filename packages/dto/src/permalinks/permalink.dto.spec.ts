@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
-import { PassportPermalinkBundleDtoSchema, PermalinkPublicDtoSchema } from "./permalink.dto";
+import {
+  PassportPermalinkBundleDtoSchema,
+  PermalinkDtoSchema,
+  PermalinkPublishedUrlSchema,
+  PermalinkPublicDtoSchema,
+} from "./permalink.dto";
 
 const isoNow = "2026-05-06T20:56:00.000Z";
 
@@ -128,5 +133,66 @@ describe("PermalinkPublicDtoSchema", () => {
       fallbackBaseUrlSource: "instance",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("PermalinkPublishedUrlSchema", () => {
+  it("accepts a full URL that includes the /p/ path", () => {
+    const result = PermalinkPublishedUrlSchema.safeParse(
+      "https://passports.example.com/p/acme-widget",
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a full URL whose path segment is a uuid", () => {
+    const result = PermalinkPublishedUrlSchema.safeParse(
+      `https://passports.example.com/p/${permalinkId}`,
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a non-URL string", () => {
+    expect(PermalinkPublishedUrlSchema.safeParse("not-a-url").success).toBe(false);
+  });
+
+  it("rejects an empty string", () => {
+    expect(PermalinkPublishedUrlSchema.safeParse("").success).toBe(false);
+  });
+});
+
+describe("PermalinkDtoSchema publishedUrl", () => {
+  const validPermalink = {
+    id: permalinkId,
+    slug: "acme-widget",
+    baseUrl: null,
+    presentationConfigurationId: configId,
+    createdAt: isoNow,
+    updatedAt: isoNow,
+  };
+
+  it("parses a permalink without publishedUrl (draft, never published)", () => {
+    const result = PermalinkDtoSchema.safeParse(validPermalink);
+    expect(result.success).toBe(true);
+  });
+
+  it("parses a permalink with a frozen publishedUrl", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...validPermalink,
+      publishedUrl: "https://passports.example.com/p/acme-widget",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts publishedUrl = null", () => {
+    const result = PermalinkDtoSchema.safeParse({ ...validPermalink, publishedUrl: null });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a publishedUrl that is not a URL", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...validPermalink,
+      publishedUrl: "nope",
+    });
+    expect(result.success).toBe(false);
   });
 });

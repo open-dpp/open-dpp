@@ -14,6 +14,7 @@ export interface PermalinkPreview {
   previewUrl: ComputedRef<string>;
   previewSource: ComputedRef<PermalinkPreviewSource>;
   previewValid: ComputedRef<boolean>;
+  locked: ComputedRef<boolean>;
 }
 
 function trimToNull(value: string): string | null {
@@ -59,7 +60,12 @@ export function usePermalinkPreview(
   const trimmedBase = computed(() => trimToNull(baseUrlInput.value));
   const trimmedSlug = computed(() => trimToNull(slugInput.value));
 
+  const locked = computed(() => Boolean(permalink.value?.publishedUrl));
+
   const effectiveBase = computed(() => {
+    if (locked.value && permalink.value?.publishedUrl) {
+      return canonicaliseBaseUrl(permalink.value.publishedUrl);
+    }
     if (trimmedBase.value !== null) {
       return canonicaliseBaseUrl(trimmedBase.value);
     }
@@ -69,7 +75,12 @@ export function usePermalinkPreview(
 
   const effectiveSlug = computed(() => trimmedSlug.value ?? permalink.value?.id ?? "");
 
-  const previewUrl = computed(() => `${effectiveBase.value}/p/${effectiveSlug.value}`);
+  const previewUrl = computed(() => {
+    if (locked.value && permalink.value?.publishedUrl) {
+      return permalink.value.publishedUrl;
+    }
+    return `${effectiveBase.value}/p/${effectiveSlug.value}`;
+  });
 
   const previewSource = computed<PermalinkPreviewSource>(() => {
     if (trimmedBase.value !== null) return "permalink";
@@ -78,6 +89,7 @@ export function usePermalinkPreview(
 
   const previewValid = computed(() => {
     if (!permalink.value) return false;
+    if (locked.value) return true;
     if (trimmedBase.value !== null && !isBaseUrlValid(trimmedBase.value)) {
       return false;
     }
@@ -87,5 +99,5 @@ export function usePermalinkPreview(
     return effectiveBase.value.length > 0 && effectiveSlug.value.length > 0;
   });
 
-  return { effectiveBase, effectiveSlug, previewUrl, previewSource, previewValid };
+  return { effectiveBase, effectiveSlug, previewUrl, previewSource, previewValid, locked };
 }

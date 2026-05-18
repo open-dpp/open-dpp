@@ -32,7 +32,7 @@ export class PermalinkRepository {
     return await save(
       permalink,
       this.permalinkDoc,
-      PermalinkDocVersion.v1_1_0,
+      PermalinkDocVersion.v1_2_0,
       this.fromPlain.bind(this),
       undefined,
       options,

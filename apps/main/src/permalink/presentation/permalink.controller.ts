@@ -59,6 +59,7 @@ import {
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
@@ -66,7 +67,6 @@ import {
   PermalinkApplicationService,
   isMemberOfPassportOrg,
   resolveFallbackBaseUrl,
-  resolvePublicUrl,
 } from "../application/services/permalink.application.service";
 
 @Controller()
@@ -106,7 +106,7 @@ export class PermalinkController {
         `Lazy-backfilled permalink for backoffice passportId=${passport.id} → permalink=${created.id}`,
       );
       const branding = await this.loadBrandingOrDefault(passport.organizationId);
-      return PermalinkListDtoSchema.parse([this.toPublicDto(created, branding)]);
+      return PermalinkListDtoSchema.parse([await this.toPublicDto(created, branding, passport)]);
     }
     const { passport } = await this.permalinkApplicationService.resolveToPassport(
       permalinks[0].id,
@@ -116,7 +116,9 @@ export class PermalinkController {
       },
     );
     const branding = await this.loadBrandingOrDefault(passport.organizationId);
-    return PermalinkListDtoSchema.parse(permalinks.map((p) => this.toPublicDto(p, branding)));
+    return PermalinkListDtoSchema.parse(
+      await Promise.all(permalinks.map((p) => this.toPublicDto(p, branding, passport))),
+    );
   }
 
   @OptionalAuth()
@@ -136,11 +138,17 @@ export class PermalinkController {
     const presentationConfiguration =
       await this.presentationConfigurationService.getEffectiveForPassport(passport, ability);
     const branding = await this.loadBrandingOrDefault(passport.organizationId);
+    const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      branding,
+      this.envService.get("OPEN_DPP_URL"),
+    );
     return PassportPermalinkBundleDtoSchema.parse({
       passport: passport.toPlain(),
       branding: branding.toPlain(),
       presentationConfiguration: presentationConfiguration.toPlain(),
-      publicUrl: resolvePublicUrl(permalink, branding, this.envService.get("OPEN_DPP_URL")),
+      publicUrl,
     });
   }
 
@@ -177,7 +185,7 @@ export class PermalinkController {
       if (body.baseUrl !== undefined) update.baseUrl = body.baseUrl;
       const next = await this.permalinkApplicationService.updatePermalink(id, update);
       const branding = await this.loadBrandingOrDefault(passport.organizationId);
-      return PermalinkPublicDtoSchema.parse(this.toPublicDto(next, branding));
+      return PermalinkPublicDtoSchema.parse(await this.toPublicDto(next, branding, passport));
     } catch (error) {
       if (isDuplicateKeyError(error)) {
         throw new ConflictException("Slug is already taken");
@@ -194,12 +202,18 @@ export class PermalinkController {
     }
   }
 
-  private toPublicDto(permalink: Permalink, branding: Branding | null) {
+  private async toPublicDto(permalink: Permalink, branding: Branding | null, passport: Passport) {
     const envUrl = this.envService.get("OPEN_DPP_URL");
     const fallback = resolveFallbackBaseUrl(branding, envUrl);
+    const resolved = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      branding,
+      envUrl,
+    );
     return {
-      ...permalink.toPlain(),
-      publicUrl: resolvePublicUrl(permalink, branding, envUrl),
+      ...resolved.permalink.toPlain(),
+      publicUrl: resolved.publicUrl,
       fallbackBaseUrl: fallback.url,
       fallbackBaseUrlSource: fallback.source,
     };

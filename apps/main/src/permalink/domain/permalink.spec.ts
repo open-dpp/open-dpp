@@ -196,4 +196,77 @@ describe("Permalink", () => {
     const permalink = Permalink.create(baseInput());
     expect(() => permalink.withBaseUrl("not-a-url")).toThrow(ValueError);
   });
+
+  it("creates with null publishedUrl by default", () => {
+    const permalink = Permalink.create(baseInput());
+    expect(permalink.publishedUrl).toBeNull();
+  });
+
+  it("withPublishedUrl sets the frozen URL, returns a new instance, bumps updatedAt", () => {
+    const permalink = Permalink.create(baseInput());
+    const originalUpdatedAt = permalink.updatedAt.getTime();
+
+    const frozen = permalink.withPublishedUrl("https://passports.example.com/p/acme-widget");
+
+    expect(frozen).not.toBe(permalink);
+    expect(frozen.publishedUrl).toBe("https://passports.example.com/p/acme-widget");
+    expect(frozen.updatedAt.getTime()).toBeGreaterThanOrEqual(originalUpdatedAt);
+    expect(frozen.createdAt.getTime()).toBe(permalink.createdAt.getTime());
+  });
+
+  it("withPublishedUrl throws ValueError when the URL is invalid", () => {
+    const permalink = Permalink.create(baseInput());
+    expect(() => permalink.withPublishedUrl("not-a-url")).toThrow(ValueError);
+  });
+
+  it("withPublishedUrl throws ValueError when publishedUrl is already set (immutable once frozen)", () => {
+    const frozen = Permalink.create(baseInput()).withPublishedUrl(
+      "https://passports.example.com/p/acme-widget",
+    );
+    expect(() => frozen.withPublishedUrl("https://other.example.com/p/acme-widget")).toThrow(
+      ValueError,
+    );
+  });
+
+  it("withSlug throws ValueError once the permalink is published (slug locked)", () => {
+    const frozen = Permalink.create({ ...baseInput(), slug: "acme-widget" }).withPublishedUrl(
+      "https://passports.example.com/p/acme-widget",
+    );
+    expect(() => frozen.withSlug("renamed")).toThrow(ValueError);
+  });
+
+  it("withBaseUrl throws ValueError once the permalink is published (baseUrl locked)", () => {
+    const frozen = Permalink.create(baseInput()).withPublishedUrl(
+      "https://passports.example.com/p/acme-widget",
+    );
+    expect(() => frozen.withBaseUrl("https://other.example.com")).toThrow(ValueError);
+  });
+
+  it("round-trips publishedUrl through toPlain/fromPlain", () => {
+    const original = Permalink.create({ ...baseInput(), slug: "acme-widget" }).withPublishedUrl(
+      "https://passports.example.com/p/acme-widget",
+    );
+
+    const plain = original.toPlain();
+    const restored = Permalink.fromPlain({
+      ...plain,
+      createdAt: plain.createdAt.toISOString(),
+      updatedAt: plain.updatedAt.toISOString(),
+    });
+
+    expect(restored.publishedUrl).toBe(original.publishedUrl);
+  });
+
+  it("fromPlain rehydrates legacy DB documents that lack publishedUrl as null", () => {
+    const isoNow = new Date().toISOString();
+    const restored = Permalink.fromPlain({
+      id: randomUUID(),
+      slug: null,
+      presentationConfigurationId: randomUUID(),
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    });
+
+    expect(restored.publishedUrl).toBeNull();
+  });
 });

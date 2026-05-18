@@ -3,6 +3,7 @@ import {
   PermalinkBaseUrlSchema,
   PermalinkDtoSchema,
   PermalinkInvariantsSchema,
+  PermalinkPublishedUrlSchema,
   PermalinkSlugSchema,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -16,6 +17,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
     public readonly id: string,
     public readonly slug: string | null,
     public readonly baseUrl: string | null,
+    public readonly publishedUrl: string | null,
     public readonly presentationConfigurationId: string,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
@@ -51,6 +53,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
       data.id ?? randomUUID(),
       parsed.slug,
       parsed.baseUrl ?? null,
+      null,
       parsed.presentationConfigurationId,
       data.createdAt ?? now,
       data.updatedAt ?? now,
@@ -72,6 +75,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
       parsed.id,
       parsed.slug,
       parsed.baseUrl ?? null,
+      parsed.publishedUrl ?? null,
       parsed.presentationConfigurationId,
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
@@ -83,6 +87,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
       id: this.id,
       slug: this.slug,
       baseUrl: this.baseUrl,
+      publishedUrl: this.publishedUrl,
       presentationConfigurationId: this.presentationConfigurationId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
@@ -90,6 +95,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
   }
 
   withSlug(slug: string | null): Permalink {
+    this.assertNotPublished();
     let validated: string | null = null;
     if (slug !== null) {
       const result = PermalinkSlugSchema.safeParse(slug);
@@ -105,6 +111,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
       this.id,
       validated,
       this.baseUrl,
+      this.publishedUrl,
       this.presentationConfigurationId,
       this.createdAt,
       DateTime.now(),
@@ -112,6 +119,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
   }
 
   withBaseUrl(baseUrl: string | null): Permalink {
+    this.assertNotPublished();
     let validated: string | null = null;
     if (baseUrl !== null) {
       const result = PermalinkBaseUrlSchema.safeParse(baseUrl);
@@ -127,9 +135,38 @@ export class Permalink implements IPersistable, HasCreatedAt {
       this.id,
       this.slug,
       validated,
+      this.publishedUrl,
       this.presentationConfigurationId,
       this.createdAt,
       DateTime.now(),
     );
+  }
+
+  withPublishedUrl(url: string): Permalink {
+    if (this.publishedUrl !== null) {
+      throw new ValueError("Permalink publishedUrl is immutable once set and cannot be changed.");
+    }
+    const result = PermalinkPublishedUrlSchema.safeParse(url);
+    if (!result.success) {
+      const details = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+      throw new ValueError(`Invalid Permalink published URL: ${details.join("; ")}`, {
+        cause: result.error,
+      });
+    }
+    return new Permalink(
+      this.id,
+      this.slug,
+      this.baseUrl,
+      result.data,
+      this.presentationConfigurationId,
+      this.createdAt,
+      DateTime.now(),
+    );
+  }
+
+  private assertNotPublished(): void {
+    if (this.publishedUrl !== null) {
+      throw new ValueError("Cannot modify a published permalink; slug and baseUrl are locked.");
+    }
   }
 }

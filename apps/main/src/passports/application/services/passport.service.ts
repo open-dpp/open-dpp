@@ -6,6 +6,7 @@ import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
 import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
@@ -32,6 +33,7 @@ export class PassportService {
     private readonly presentationConfigurationService: PresentationConfigurationService,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly permalinkRepository: PermalinkRepository,
+    private readonly permalinkApplicationService: PermalinkApplicationService,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
@@ -88,7 +90,14 @@ export class PassportService {
         organizationId,
       );
     const updatedPassport = handleDppStatusChangeRequest(passport, body);
-    return PassportDtoSchema.parse((await this.passportRepository.save(updatedPassport)).toPlain());
+    const saved = await this.environmentService.withTransaction(async (options) => {
+      const persisted = await this.passportRepository.save(updatedPassport, options);
+      if (body.method === "Publish") {
+        await this.permalinkApplicationService.freezeAllForPassport(persisted, options);
+      }
+      return persisted;
+    });
+    return PassportDtoSchema.parse(saved.toPlain());
   }
 
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {

@@ -67,6 +67,26 @@ describe("PermalinkRepository", () => {
     expect(found.presentationConfigurationId).toBe(permalink.presentationConfigurationId);
   });
 
+  it("persists and loads a frozen publishedUrl", async () => {
+    const permalink = Permalink.create({
+      presentationConfigurationId: randomUUID(),
+      slug: `slug-${randomUUID().slice(0, 8)}`,
+    }).withPublishedUrl("https://passports.example.com/p/acme-widget");
+
+    await repository.save(permalink);
+    const found = await repository.findOneOrFail(permalink.id);
+
+    expect(found.publishedUrl).toBe("https://passports.example.com/p/acme-widget");
+  });
+
+  it("loads publishedUrl as null when never frozen", async () => {
+    const permalink = Permalink.create({ presentationConfigurationId: randomUUID() });
+    await repository.save(permalink);
+
+    const found = await repository.findOneOrFail(permalink.id);
+    expect(found.publishedUrl).toBeNull();
+  });
+
   it("finds a permalink by slug", async () => {
     const permalink = Permalink.create({
       presentationConfigurationId: randomUUID(),

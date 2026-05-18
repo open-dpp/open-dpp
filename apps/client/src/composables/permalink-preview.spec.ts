@@ -182,6 +182,33 @@ describe("usePermalinkPreview", () => {
     expect(preview.previewValid.value).toBe(false);
   });
 
+  it("locks and shows the frozen publishedUrl verbatim, ignoring input edits", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makePermalink({
+        slug: "acme-widget",
+        publishedUrl: "https://passports.example.com/p/acme-widget",
+      }),
+    );
+    const slug = ref("changed-after-publish");
+    const baseUrl = ref("https://changed.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.locked.value).toBe(true);
+    expect(preview.previewUrl.value).toBe("https://passports.example.com/p/acme-widget");
+    expect(preview.previewValid.value).toBe(true);
+  });
+
+  it("is not locked when publishedUrl is absent", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.locked.value).toBe(false);
+  });
+
   it("degrades gracefully when the server response lacks fallbackBaseUrl (older backend)", () => {
     const permalink = ref<PermalinkPublicDto | undefined>(
       makePermalink({

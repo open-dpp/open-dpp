@@ -4,8 +4,10 @@ import {
   PermalinkMetadataDtoSchema,
   PresentationReferenceType,
 } from "@open-dpp/dto";
+import { EnvService } from "@open-dpp/env";
 import { z } from "zod/v4";
 import { Branding } from "../../../branding/domain/branding";
+import { BrandingRepository } from "../../../branding/infrastructure/branding.repository";
 import { DbSessionOptions } from "../../../database/query-options";
 import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
 import { Passport } from "../../../passports/domain/passport";
@@ -33,6 +35,8 @@ export class PermalinkApplicationService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly presentationConfigurationService: PresentationConfigurationService,
     private readonly passportRepository: PassportRepository,
+    private readonly brandingRepository: BrandingRepository,
+    private readonly envService: EnvService,
   ) {}
 
   async resolvePermalink(idOrSlug: string): Promise<Permalink> {
@@ -90,9 +94,81 @@ export class PermalinkApplicationService {
         continue;
       }
       const created = Permalink.create({ presentationConfigurationId: config.id });
-      results.push(await this.permalinkRepository.save(created, options));
+      const saved = await this.permalinkRepository.save(created, options);
+      results.push(await this.freezeNewPermalinkIfPublished(config, saved, options));
     }
     return results;
+  }
+
+  private async freezeNewPermalinkIfPublished(
+    config: PresentationConfiguration,
+    permalink: Permalink,
+    options?: DbSessionOptions,
+  ): Promise<Permalink> {
+    if (config.referenceType !== PresentationReferenceType.Passport) {
+      return permalink;
+    }
+    const passport = await this.passportRepository.findOne(config.referenceId);
+    if (!passport || !passport.isPublished()) {
+      return permalink;
+    }
+    const branding = await this.loadBranding(passport.organizationId);
+    return this.freezePermalink(permalink, branding, this.envService.get("OPEN_DPP_URL"), options);
+  }
+
+  async freezePermalink(
+    permalink: Permalink,
+    branding: Branding | null,
+    fallbackEnvUrl: string,
+    options?: DbSessionOptions,
+  ): Promise<Permalink> {
+    if (permalink.publishedUrl !== null) {
+      return permalink;
+    }
+    const frozen = permalink.withPublishedUrl(
+      resolvePublicUrl(permalink, branding, fallbackEnvUrl),
+    );
+    return await this.permalinkRepository.save(frozen, options);
+  }
+
+  async resolvePublicUrlWithFreeze(
+    permalink: Permalink,
+    passport: Passport,
+    branding: Branding | null,
+    fallbackEnvUrl: string,
+    options?: DbSessionOptions,
+  ): Promise<{ permalink: Permalink; publicUrl: string }> {
+    if (permalink.publishedUrl !== null) {
+      return { permalink, publicUrl: permalink.publishedUrl };
+    }
+    if (!passport.isPublished()) {
+      return {
+        permalink,
+        publicUrl: resolvePublicUrl(permalink, branding, fallbackEnvUrl),
+      };
+    }
+    const frozen = await this.freezePermalink(permalink, branding, fallbackEnvUrl, options);
+    return { permalink: frozen, publicUrl: frozen.publishedUrl as string };
+  }
+
+  async freezeAllForPassport(passport: Passport, options?: DbSessionOptions): Promise<void> {
+    const permalinks = await this.permalinkRepository.findAllByPassportId(passport.id, options);
+    if (permalinks.length === 0) {
+      return;
+    }
+    const branding = await this.loadBranding(passport.organizationId);
+    const fallbackEnvUrl = this.envService.get("OPEN_DPP_URL");
+    for (const permalink of permalinks) {
+      await this.freezePermalink(permalink, branding, fallbackEnvUrl, options);
+    }
+  }
+
+  private async loadBranding(organizationId: string): Promise<Branding> {
+    try {
+      return await this.brandingRepository.findOneByOrganizationId(organizationId);
+    } catch {
+      return Branding.getDefault();
+    }
   }
 
   async updatePermalink(

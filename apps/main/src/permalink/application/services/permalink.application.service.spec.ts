@@ -140,4 +140,95 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(allPermalinks).toHaveLength(1);
     expect(allPermalinks[0].id).toEqual(existingPermalink.id);
   });
+
+  async function seedPublishedPassport() {
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    }).publish();
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
+    return passport;
+  }
+
+  async function seedConfigWithPermalink(passport: Passport, slug?: string) {
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    const permalink = Permalink.create({ presentationConfigurationId: config.id, slug });
+    await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
+    return { config, permalink };
+  }
+
+  it("freezeAllForPassport freezes every permalink with the resolved public URL", async () => {
+    const passport = await seedPublishedPassport();
+    const { permalink: withSlug } = await seedConfigWithPermalink(passport, "acme-widget");
+    const { permalink: noSlug } = await seedConfigWithPermalink(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await service.freezeAllForPassport(passport);
+
+    const repo = ctx.getModuleRef().get(PermalinkRepository);
+    expect((await repo.findOneOrFail(withSlug.id)).publishedUrl).toBe(
+      "http://localhost:3000/p/acme-widget",
+    );
+    expect((await repo.findOneOrFail(noSlug.id)).publishedUrl).toBe(
+      `http://localhost:3000/p/${noSlug.id}`,
+    );
+  });
+
+  it("freezeAllForPassport leaves an already-frozen permalink untouched (idempotent)", async () => {
+    const passport = await seedPublishedPassport();
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    const frozen = Permalink.create({
+      presentationConfigurationId: config.id,
+      slug: "already-frozen",
+    }).withPublishedUrl("https://locked.example.com/p/already-frozen");
+    await ctx.getModuleRef().get(PermalinkRepository).save(frozen);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await service.freezeAllForPassport(passport);
+
+    expect(
+      (await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(frozen.id)).publishedUrl,
+    ).toBe("https://locked.example.com/p/already-frozen");
+  });
+
+  it("createPermalinksForConfigs freezes a new permalink when the passport is already published", async () => {
+    const passport = await seedPublishedPassport();
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [created] = await service.createPermalinksForConfigs([config]);
+
+    expect(created.publishedUrl).toBe(`http://localhost:3000/p/${created.id}`);
+  });
+
+  it("createPermalinksForConfigs does NOT freeze when the passport is still a draft", async () => {
+    const passport = await seedPassport();
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [created] = await service.createPermalinksForConfigs([config]);
+
+    expect(created.publishedUrl).toBeNull();
+  });
 });

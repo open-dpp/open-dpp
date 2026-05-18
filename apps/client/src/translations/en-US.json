@@ -682,6 +682,7 @@
       "slugConflict": "This slug is already in use by another permalink.",
       "slugInvalid": "Slug must be 2–64 characters of lowercase letters, digits, and hyphens.",
       "baseUrlInvalid": "Base URL must be a full origin (e.g. https://example.com), no path or query.",
+      "locked": "This passport is published. Its permalink is permanent and can no longer be changed.",
       "slug": {
         "label": "Short name",
         "placeholder": "Last path segment of the URL of this passport."
