@@ -37,8 +37,8 @@ export class UniqueProductIdentifierRepository {
         type: uniqueProductIdentifier.type,
       },
       {
-        new: true, // Return the updated document
-        upsert: true, // Create a new document if none found
+        new: true,
+        upsert: true,
         runValidators: true,
         session: options?.session ?? null,
       },

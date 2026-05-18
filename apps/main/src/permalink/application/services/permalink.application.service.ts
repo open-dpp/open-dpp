@@ -10,6 +10,7 @@ import { Branding } from "../../../branding/domain/branding";
 import { BrandingRepository } from "../../../branding/infrastructure/branding.repository";
 import { DbSessionOptions } from "../../../database/query-options";
 import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
+import { isDuplicateKeyError } from "../../../lib/mongo-errors";
 import { Passport } from "../../../passports/domain/passport";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
@@ -94,7 +95,19 @@ export class PermalinkApplicationService {
         continue;
       }
       const created = Permalink.create({ presentationConfigurationId: config.id });
-      const saved = await this.permalinkRepository.save(created, options);
+      let saved: Permalink;
+      try {
+        saved = await this.permalinkRepository.save(created, options);
+      } catch (error) {
+        if (!isDuplicateKeyError(error)) throw error;
+        const recovered = await this.permalinkRepository.findByPresentationConfigurationId(
+          config.id,
+          options,
+        );
+        if (!recovered) throw error;
+        results.push(recovered);
+        continue;
+      }
       results.push(await this.freezeNewPermalinkIfPublished(config, saved, options));
     }
     return results;
@@ -141,7 +154,7 @@ export class PermalinkApplicationService {
     if (permalink.publishedUrl !== null) {
       return { permalink, publicUrl: permalink.publishedUrl };
     }
-    if (!passport.isPublished()) {
+    if (!passport.isPublished() || branding === null) {
       return {
         permalink,
         publicUrl: resolvePublicUrl(permalink, branding, fallbackEnvUrl),
@@ -163,12 +176,8 @@ export class PermalinkApplicationService {
     }
   }
 
-  private async loadBranding(organizationId: string): Promise<Branding> {
-    try {
-      return await this.brandingRepository.findOneByOrganizationId(organizationId);
-    } catch {
-      return Branding.getDefault();
-    }
+  async loadBranding(organizationId: string): Promise<Branding> {
+    return await this.brandingRepository.findOneByOrganizationId(organizationId);
   }
 
   async updatePermalink(

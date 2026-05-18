@@ -65,10 +65,14 @@ export const useAnalyticsStore = defineStore("analytics", () => {
   const addPageView = async () => {
     const permalink = String(route.params.permalink);
     const location = window.location;
-    await apiClient.analytics.passportMetric.addPageView({
-      permalink,
-      page: location.href,
-    });
+    try {
+      await apiClient.analytics.passportMetric.addPageView({
+        permalink,
+        page: location.href,
+      });
+    } catch (error) {
+      console.warn("Failed to record passport page view", error);
+    }
   };
 
   const getXLabel = (isoDateString: string) => {

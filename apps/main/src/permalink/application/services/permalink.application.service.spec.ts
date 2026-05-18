@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
+import { getModelToken } from "@nestjs/mongoose";
 import { PresentationReferenceType } from "@open-dpp/dto";
+import type { Model } from "mongoose";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import {
@@ -141,6 +143,11 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(allPermalinks[0].id).toEqual(existingPermalink.id);
   });
 
+  async function seedBranding(organizationId: string) {
+    const model = ctx.getModuleRef().get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
+    await model.create({ organizationId });
+  }
+
   async function seedPublishedPassport() {
     const passport = Passport.create({
       id: randomUUID(),
@@ -168,6 +175,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
 
   it("freezeAllForPassport freezes every permalink with the resolved public URL", async () => {
     const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
     const { permalink: withSlug } = await seedConfigWithPermalink(passport, "acme-widget");
     const { permalink: noSlug } = await seedConfigWithPermalink(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
@@ -185,6 +193,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
 
   it("freezeAllForPassport leaves an already-frozen permalink untouched (idempotent)", async () => {
     const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
     const config = PresentationConfiguration.createForPassport({
       organizationId: passport.organizationId,
       referenceId: passport.id,
@@ -206,6 +215,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
 
   it("createPermalinksForConfigs freezes a new permalink when the passport is already published", async () => {
     const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
     const config = PresentationConfiguration.createForPassport({
       organizationId: passport.organizationId,
       referenceId: passport.id,
@@ -216,6 +226,63 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const [created] = await service.createPermalinksForConfigs([config]);
 
     expect(created.publishedUrl).toBe(`http://localhost:3000/p/${created.id}`);
+  });
+
+  it("freezeAllForPassport fails loudly when branding cannot be loaded instead of pinning a default URL", async () => {
+    const passport = await seedPublishedPassport();
+    const { permalink } = await seedConfigWithPermalink(passport, "branding-down");
+    const brandingRepo = ctx.getModuleRef().get(BrandingRepository);
+    const spy = jest
+      .spyOn(brandingRepo, "findOneByOrganizationId")
+      .mockRejectedValue(new Error("branding db unavailable"));
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await expect(service.freezeAllForPassport(passport)).rejects.toThrow("branding db unavailable");
+
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
+    expect(persisted.publishedUrl).toBeNull();
+    spy.mockRestore();
+  });
+
+  it("resolvePublicUrlWithFreeze does NOT pin a published permalink when branding could not be loaded", async () => {
+    const passport = await seedPublishedPassport();
+    const { permalink } = await seedConfigWithPermalink(passport, "needs-branding");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const { publicUrl } = await service.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      null,
+      "http://localhost:3000",
+    );
+
+    expect(publicUrl).toBe("http://localhost:3000/p/needs-branding");
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
+    expect(persisted.publishedUrl).toBeNull();
+  });
+
+  it("createPermalinksForConfigs recovers idempotently when a concurrent create wins the unique-index race", async () => {
+    const passport = await seedPassport();
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    const winner = Permalink.create({ presentationConfigurationId: config.id });
+    await ctx.getModuleRef().get(PermalinkRepository).save(winner);
+
+    const permalinkRepo = ctx.getModuleRef().get(PermalinkRepository);
+    const lookupSpy = jest
+      .spyOn(permalinkRepo, "findByPresentationConfigurationId")
+      .mockResolvedValueOnce(null);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [result] = await service.createPermalinksForConfigs([config]);
+
+    expect(result.id).toEqual(winner.id);
+    const all = await ctx.getModuleRef().get(PermalinkRepository).findAllByPassportId(passport.id);
+    expect(all).toHaveLength(1);
+    lookupSpy.mockRestore();
   });
 
   it("createPermalinksForConfigs does NOT freeze when the passport is still a draft", async () => {

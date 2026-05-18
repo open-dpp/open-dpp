@@ -53,11 +53,7 @@ async function loadPassport(id: string): Promise<boolean> {
   }
   passportStore.shells = aas.data.result || [];
 
-  try {
-    await analyticsStore.addPageView();
-  } catch (error) {
-    errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportError"), error);
-  }
+  await analyticsStore.addPageView();
 
   return true;
 }

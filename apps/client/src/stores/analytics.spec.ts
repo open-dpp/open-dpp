@@ -68,6 +68,18 @@ describe("analyticsStore", () => {
     });
   });
 
+  it("does not throw when the page-view request fails (non-fatal analytics)", async () => {
+    mocks.route.mockReturnValueOnce({
+      params: {
+        permalink: passportUUID,
+      },
+    });
+    const analyticsStore = useAnalyticsStore();
+    mocks.addPageView.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(analyticsStore.addPageView()).resolves.toBeUndefined();
+  });
+
   it("should query metric", async () => {
     mocks.getCurrentTimezone.mockReturnValue("Europe/Berlin");
     const measurements: PassportMeasurementDto[] = [

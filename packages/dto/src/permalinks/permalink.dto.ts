@@ -28,7 +28,6 @@ export const PermalinkInvariantsSchema = z.object({
   presentationConfigurationId: z.uuid(),
   slug: PermalinkSlugSchema.nullable(),
   baseUrl: PermalinkBaseUrlSchema.nullable().optional(),
-  publishedUrl: PermalinkPublishedUrlSchema.nullable().optional(),
 });
 
 export const PermalinkDtoSchema = z

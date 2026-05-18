@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { ForbiddenException } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import type { Model } from "mongoose";
 import { AasModule } from "../../../aas/aas.module";
+import { BrandingDoc } from "../../../branding/infrastructure/branding.schema";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import {
@@ -97,6 +99,9 @@ describe("passportService", () => {
       referenceId: passport.id,
     });
     await presentationConfigurationRepository.save(config);
+    await module
+      .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name), { strict: false })
+      .create({ organizationId });
     const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
     const permalink = Permalink.create({
       presentationConfigurationId: config.id,

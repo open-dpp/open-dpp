@@ -24,8 +24,10 @@ import { MemberRole } from "../../identity/organizations/domain/member-role.enum
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { PresentationReferenceType } from "@open-dpp/dto";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
 import { PermalinkModule } from "../../permalink/permalink.module";
+import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
 import {
   PresentationConfigurationDoc,
   PresentationConfigurationSchema,
@@ -354,6 +356,50 @@ describe("passportController", () => {
 
     const upids = await upidService.findAllByReferencedId(response.body.id);
     expect(upids).toHaveLength(1);
+  });
+
+  it(`/POST rolls back the whole transaction when permalink creation fails mid-create`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const permalinkAppService = ctx.getModuleRef().get(PermalinkApplicationService);
+    let capturedPassportId: string | undefined;
+    const spy = jest
+      .spyOn(permalinkAppService, "createPermalinksForConfigs")
+      .mockImplementation(async (configs: PresentationConfiguration[]) => {
+        capturedPassportId = configs[0]?.referenceId;
+        throw new Error("permalink creation failed");
+      });
+
+    const response = await request(app.getHttpServer())
+      .post(basePath)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send({
+        environment: {
+          assetAdministrationShells: [{ displayName: [{ language: "en", text: "rollback" }] }],
+        },
+      });
+
+    expect(response.status).toBeGreaterThanOrEqual(500);
+    expect(capturedPassportId).toBeDefined();
+    const passportId = capturedPassportId as string;
+
+    expect(await ctx.getModuleRef().get(PassportRepository).findOne(passportId)).toBeFalsy();
+    expect(
+      await ctx
+        .getModuleRef()
+        .get(UniqueProductIdentifierRepository)
+        .findAllByReferencedId(passportId),
+    ).toHaveLength(0);
+    expect(
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).findManyByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passportId,
+      }),
+    ).toHaveLength(0);
+
+    spy.mockRestore();
   });
 
   it(`/GET shells`, async () => {

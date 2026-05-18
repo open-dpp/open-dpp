@@ -174,6 +174,17 @@ describe("PermalinkController", () => {
     expect(response.body).toEqual([]);
   });
 
+  it(`/GET by passport id stays consistent for a non-member of a draft passport that has permalinks`, async () => {
+    const fixture = await createPassportWithPermalink({ published: false });
+
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/p?passportId=${fixture.passport.id}`,
+    );
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual([]);
+  });
+
   describe("GET /p?passportId=... — NoSQL injection hardening", () => {
     it.each([
       ["passportId[$gt]=", "$gt operator object"],
@@ -834,6 +845,10 @@ describe("PermalinkController", () => {
     it("freezes and persists publishedUrl on first public resolve of a published passport", async () => {
       const slug = `lazy-${randomUUID().slice(0, 8)}`;
       const fixture = await createPassportWithPermalink({ slug });
+      await ctx
+        .getModuleRef()
+        .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name))
+        .create({ organizationId: fixture.passport.organizationId });
       const repo = ctx.getModuleRef().get(PermalinkRepository);
       expect((await repo.findOneOrFail(fixture.id)).publishedUrl).toBeNull();
 
@@ -848,17 +863,19 @@ describe("PermalinkController", () => {
     it("keeps the frozen URL even after the org branding base URL changes (immutability)", async () => {
       const slug = `imm-${randomUUID().slice(0, 8)}`;
       const fixture = await createPassportWithPermalink({ slug });
+      const brandingModel = ctx
+        .getModuleRef()
+        .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
+      await brandingModel.create({ organizationId: fixture.passport.organizationId });
+
       await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
       const repo = ctx.getModuleRef().get(PermalinkRepository);
       const frozenUrl = (await repo.findOneOrFail(fixture.id)).publishedUrl;
 
-      const brandingModel = ctx
-        .getModuleRef()
-        .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
-      await brandingModel.create({
-        organizationId: fixture.passport.organizationId,
-        permalinkBaseUrl: "https://changed.example.com",
-      });
+      await brandingModel.updateOne(
+        { organizationId: fixture.passport.organizationId },
+        { $set: { permalinkBaseUrl: "https://changed.example.com" } },
+      );
 
       const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
 
