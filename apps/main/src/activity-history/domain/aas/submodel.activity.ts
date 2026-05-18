@@ -23,6 +23,8 @@ import {
   payloadToPlain,
 } from "../shared.activity";
 import { Operation } from "fast-json-patch/module/core";
+import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
+import { Permissions } from "@open-dpp/dto";
 
 export class SubmodelActivity implements IActivity {
   private constructor(
@@ -34,6 +36,7 @@ export class SubmodelActivity implements IActivity {
       submodelId: string;
       operation: SubmodelOperationTypesType;
       fullIdShortPath: IdShortPath;
+      additionalIdShort?: string;
     },
   ) {
     return new SubmodelActivity(
@@ -42,6 +45,7 @@ export class SubmodelActivity implements IActivity {
         submodelId: data.submodelId,
         administration: data.administration,
         fullIdShortPath: data.fullIdShortPath,
+        additionalIdShort: data.additionalIdShort,
         changes: diff(data.oldData, data.newData),
         operation: data.operation,
       }),
@@ -61,7 +65,20 @@ export class SubmodelActivity implements IActivity {
     return activityToDatabase(this);
   }
 
-  toPlain() {
+  toPlain(options?: ConvertToPlainOptions) {
+    if (options?.ability) {
+      if (!options.ability.can(Permissions.Read, this.payload.fullIdShortPath)) {
+        return {
+          ...activityToPlain(this),
+          payload: {
+            error: {
+              status: 403,
+              message: `Missing read permission to access activity payload for resource with idShort path ${this.payload.fullIdShortPath}`,
+            },
+          },
+        };
+      }
+    }
     return activityToPlain(this);
   }
 }
@@ -71,6 +88,7 @@ const SubmodelPayloadSchema = z.object({
   submodelId: z.string(),
   operation: SubmodelOperationTypesEnum,
   fullIdShortPath: z.string(),
+  additionalIdShort: z.string().nullable(),
 });
 
 export class SubmodelPayload implements IActivityPayload {
@@ -78,6 +96,7 @@ export class SubmodelPayload implements IActivityPayload {
     public readonly submodelId: string,
     public readonly administration: AdministrativeInformation,
     public readonly fullIdShortPath: IdShortPath,
+    public readonly additionalIdShort: string | null,
     public readonly operation: SubmodelOperationTypesType,
     public readonly changes: Operation[],
   ) {}
@@ -87,12 +106,14 @@ export class SubmodelPayload implements IActivityPayload {
       submodelId: string;
       operation: SubmodelOperationTypesType;
       fullIdShortPath: IdShortPath;
+      additionalIdShort?: string;
     },
   ) {
     return new SubmodelPayload(
       data.submodelId,
       data.administration,
       data.fullIdShortPath,
+      data.additionalIdShort ?? null,
       data.operation,
       data.changes,
     );
@@ -104,6 +125,7 @@ export class SubmodelPayload implements IActivityPayload {
       parsed.submodelId,
       AdministrativeInformation.fromPlain(parsed.administration),
       IdShortPath.create({ path: parsed.fullIdShortPath }),
+      parsed.additionalIdShort ?? null,
       parsed.operation,
       parsed.changes,
     );
@@ -115,6 +137,7 @@ export class SubmodelPayload implements IActivityPayload {
       submodelId: this.submodelId,
       operation: this.operation,
       fullIdShortPath: this.fullIdShortPath.toString(),
+      additionalIdShort: this.additionalIdShort,
     };
   }
 }

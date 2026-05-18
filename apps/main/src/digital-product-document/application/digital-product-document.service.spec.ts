@@ -37,7 +37,12 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import { DigitalProductDocumentStatusModificationMethodDto, KeyTypes } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusModificationMethodDto,
+  KeyTypes,
+  PermissionKind,
+  Permissions,
+} from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 import { Response } from "express";
@@ -50,12 +55,17 @@ import { ActivityTypes } from "../../activity-history/activity-types";
 import { DigitalProductDocumentPayload } from "../../activity-history/domain/digital-product-document.activity";
 import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-operation-types";
 import { Connection } from "mongoose";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
+import { AasRepository } from "../../aas/infrastructure/aas.repository";
+import { Security } from "../../aas/domain/security/security";
+import { Permission } from "../../aas/domain/security/permission";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
   let module: TestingModule;
   let passportRepository: PassportRepository;
   let activityRepository: ActivityRepository;
+  let assetAdministrationShellRepository: AasRepository;
   let connection: Connection;
 
   beforeAll(async () => {
@@ -92,6 +102,7 @@ describe("DigitalProductDocumentService", () => {
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
+    assetAdministrationShellRepository = module.get<AasRepository>(AasRepository);
     connection = module.get<Connection>(getConnectionToken());
 
     service = new DigitalProductDocumentService(
@@ -389,9 +400,23 @@ describe("DigitalProductDocumentService", () => {
     const submodelId = randomUUID();
     const submodelIdShort = "submodelIdShort";
 
+    const security = Security.create({});
+    const admin = SubjectAttributes.create({
+      userRole: UserRole.ADMIN,
+      memberRole: MemberRole.MEMBER,
+    });
+    security.addPolicy(admin, IdShortPath.create({ path: submodelIdShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    await assetAdministrationShellRepository.save(assetAdministrationShell);
+
     const passport = Passport.create({
       organizationId,
-      environment: Environment.create({}),
+      environment: Environment.create({
+        assetAdministrationShells: [assetAdministrationShell.id],
+      }),
     });
     await passportRepository.save(passport);
     const createActivity = (idShort: string, createdAt: Date) =>
@@ -419,11 +444,6 @@ describe("DigitalProductDocumentService", () => {
       set: jest.fn(),
     } as unknown as Response;
 
-    const subject = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-
     const mockArchive = {
       pipe: jest.fn(),
       append: jest.fn(),
@@ -434,7 +454,7 @@ describe("DigitalProductDocumentService", () => {
       res,
       organizationId,
       passport.id,
-      subject,
+      admin,
       date1.toISOString(),
       date4.toISOString(),
       2,
@@ -462,6 +482,81 @@ describe("DigitalProductDocumentService", () => {
     expect(mockArchive.pipe).toHaveBeenCalledWith(res);
     expect(mockArchive.append).toHaveBeenCalledTimes(2);
     expect(mockArchive.finalize).toHaveBeenCalledTimes(1);
+  });
+
+  it("should get activities", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const date3 = new Date("2022-03-01T00:00:00.000Z");
+    const date4 = new Date("2022-03-03T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const submodelId = randomUUID();
+    const submodelIdShort = "submodelIdShort";
+
+    const security = Security.create({});
+    const admin = SubjectAttributes.create({
+      userRole: UserRole.ADMIN,
+      memberRole: MemberRole.MEMBER,
+    });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    security.addPolicy(admin, IdShortPath.create({ path: submodelIdShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    await assetAdministrationShellRepository.save(assetAdministrationShell);
+
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [assetAdministrationShell.id],
+      }),
+    });
+    await passportRepository.save(passport);
+    const createActivity = (idShort: string, createdAt: Date) =>
+      SubmodelActivity.create({
+        digitalProductDocumentId: passport.id,
+        submodelId,
+        fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
+        oldData: { idShort, value: "oldValue" },
+        newData: { idShort, value: "newValue" },
+        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+        operation: SubmodelOperationTypes.SubmodelElementModified,
+        createdAt,
+      });
+
+    const event1 = createActivity("prop1", date1);
+
+    const event2 = createActivity("prop2", date2);
+    const event3 = createActivity("prop3", date3);
+
+    const event4 = createActivity("prop4", date4);
+    const activities = [event1, event2, event3, event4];
+    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
+    await activityRepository.createMany(activities);
+
+    const result = await service.getActivities(
+      organizationId,
+      passport.id,
+      member,
+      date1.toISOString(),
+      date4.toISOString(),
+      2,
+      undefined,
+    );
+    const missingPermissionsPayload = (prop: string) => ({
+      error: {
+        status: 403,
+        message: `Missing read permission to access activity payload for resource with idShort path submodelIdShort.${prop}`,
+      },
+    });
+    expect(result.result).toEqual([
+      { ...event4.toPlain(), payload: missingPermissionsPayload("prop4") },
+      { ...event3.toPlain(), payload: missingPermissionsPayload("prop3") },
+    ]);
   });
 
   afterAll(async () => {

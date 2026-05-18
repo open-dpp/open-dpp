@@ -507,6 +507,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       subject,
       organizationId,
     );
+    const ability = await this.environmentService.loadAbility(item.getEnvironment(), subject);
     const period =
       startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
     const pagination = Pagination.create({ limit, cursor });
@@ -517,7 +518,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
           period,
           ascending,
         })
-      ).toPlain(),
+      ).toPlain({ ability }),
     );
   }
 

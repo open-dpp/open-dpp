@@ -244,7 +244,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: this.getIdShortPath().concat(idShortPath),
+        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
         userId: options.ability.userId ?? undefined,
         operation: SubmodelOperationTypes.SubmodelRowAdded,
         oldData,
@@ -263,7 +263,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: idShortPath.addPathSegment(idShortOfRow),
+        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
+        additionalIdShort: idShortOfRow,
         userId: options.ability.userId ?? undefined,
         operation: SubmodelOperationTypes.SubmodelRowDeleted,
         oldData,
@@ -282,7 +283,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: this.getIdShortPath().concat(idShortPath),
+        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
         oldData,
         newData: structuredClone(this.toPlain()),
         userId: options.ability.userId ?? undefined,
@@ -306,7 +307,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
+        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
+        additionalIdShort: idShortOfColumn,
         userId: options.ability.userId ?? undefined,
         operation: SubmodelOperationTypes.SubmodelColumnModified,
         oldData,
@@ -325,7 +327,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
+        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
+        additionalIdShort: idShortOfColumn,
         oldData,
         newData: structuredClone(this.toPlain()),
         userId: options.ability.userId ?? undefined,
@@ -387,7 +390,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       submodelElement.setParentIdShortPath(parent.getIdShortPath());
-      fullIdShortPath.concat(options.idShortPath);
+      fullIdShortPath = parent.getIdShortPath();
       addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
     } else {
       addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
@@ -397,7 +400,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: fullIdShortPath,
+        fullIdShortPath,
         oldData,
         newData: structuredClone(this.toPlain()),
         operation: SubmodelOperationTypes.SubmodelElementAdded,
@@ -410,10 +413,12 @@ export class Submodel implements ISubmodelBase, IPersistable {
   public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {
     const parent = this.findSubmodelElementParent(idShortPath);
     const oldData = structuredClone(this.toPlain());
+    let fullIdShortPath = this.getIdShortPath();
     if (idShortPath.last) {
       if (!parent) {
         deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last, options);
       } else {
+        fullIdShortPath = parent.getIdShortPath();
         parent.deleteSubmodelElement(idShortPath.last, options);
       }
     }
@@ -422,7 +427,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
         digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
-        fullIdShortPath: IdShortPath.create({ path: `${this.idShort}.${idShortPath.toString()}` }),
+        fullIdShortPath,
+        additionalIdShort: idShortPath.last,
         userId: options.ability.userId ?? undefined,
         operation: SubmodelOperationTypes.SubmodelElementDeleted,
         oldData,

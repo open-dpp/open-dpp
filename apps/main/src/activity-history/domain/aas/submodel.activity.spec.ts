@@ -1,0 +1,63 @@
+import { SubmodelActivity } from "./submodel.activity";
+import { SubmodelOperationTypes } from "../../submodel-operation-types";
+import { AdministrativeInformation } from "../../../aas/domain/common/administrative-information";
+import { IdShortPath } from "../../../aas/domain/common/id-short-path";
+import { Security } from "../../../aas/domain/security/security";
+import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { Permission } from "../../../aas/domain/security/permission";
+import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { diff } from "../shared.activity";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+
+describe("SubmodelActivity", () => {
+  it("should return plain", () => {
+    const digitalProductDocumentId = "digitalProductDocumentId";
+    const userId = "userId";
+    const submodelId = "submodelId";
+    const oldData = { idShort: "prop1", value: "oldValue" };
+    const newData = { idShort: "prop1", value: "newValue" };
+    const administration = AdministrativeInformation.create({ version: "1", revision: "0" });
+    const fullIdShortPath = IdShortPath.create({ path: "section1.prop1" });
+
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const security = Security.create({});
+    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    const activity = SubmodelActivity.create({
+      digitalProductDocumentId,
+      administration,
+      submodelId,
+      fullIdShortPath,
+      userId: userId,
+      oldData,
+      newData,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+    });
+
+    let ability = security.defineAbilityForSubject(admin, userId);
+
+    expect(activity.toPlain({ ability }).payload).toEqual({
+      administration: administration.toPlain(),
+      additionalIdShort: null,
+      submodelId,
+      fullIdShortPath: fullIdShortPath.toString(),
+      changes: diff(oldData, newData),
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+    });
+
+    ability = security.defineAbilityForSubject(member, userId);
+    expect(activity.toPlain({ ability }).payload).toEqual({
+      error: {
+        status: 403,
+        message: `Missing read permission to access activity payload for resource with idShort path ${fullIdShortPath.toString()}`,
+      },
+    });
+  });
+});

@@ -1334,6 +1334,7 @@ describe("environmentService", () => {
       row1,
       col1,
       listIdShortPath,
+      submodelElementList,
     } = await createEnvironmentWithList();
     const modification = {
       idShort: col1.idShort,
@@ -1364,9 +1365,8 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${listIdShortPath}.${col1.idShort}`,
-          }),
+          fullIdShortPath: submodelElementList.getIdShortPath(),
+          additionalIdShort: col1.idShort,
           operation: SubmodelOperationTypes.SubmodelColumnModified,
           changes: [
             {
@@ -1411,6 +1411,7 @@ describe("environmentService", () => {
       row1,
       col1,
       listIdShortPath,
+      submodelElementList,
     } = await createEnvironmentWithList();
     await expect(
       environmentService.deleteColumn(
@@ -1454,9 +1455,8 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${listIdShortPath}.${col1.idShort}`,
-          }),
+          fullIdShortPath: submodelElementList.getIdShortPath(),
+          additionalIdShort: col1.idShort,
           operation: SubmodelOperationTypes.SubmodelColumnDeleted,
           changes: [
             {
@@ -1489,6 +1489,7 @@ describe("environmentService", () => {
       submodel1,
       row1,
       listIdShortPath,
+      submodelElementList,
     } = await createEnvironmentWithList();
 
     await expect(
@@ -1530,9 +1531,8 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${listIdShortPath}.${row1.idShort}`,
-          }),
+          fullIdShortPath: submodelElementList.getIdShortPath(),
+          additionalIdShort: row1.idShort,
           operation: SubmodelOperationTypes.SubmodelRowDeleted,
           changes: [
             {
@@ -1817,9 +1817,8 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${submodel1.idShort}.${idShortPath}`,
-          }),
+          fullIdShortPath: submodelElementCollection1.getIdShortPath(),
+          additionalIdShort: property1.idShort,
           operation: SubmodelOperationTypes.SubmodelElementDeleted,
           changes: [
             {
