@@ -57,8 +57,8 @@ import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { DigitalProductPassportIdentifiableEnvironmentPopulateDecorator } from "./digital-product-passport-identifiable-environment-populate-decorator";
 import { PopulateOptions } from "./environment-populate-decorator";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { DigitalProductDocumentActivity } from "../../activity-history/domain/digital-product-document.activity";
-import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-types";
+import { SubmodelRepositoryActivity } from "../../activity-history/domain/submodel-repository.activity";
+import { SubmodelRepositoryOperationTypes } from "../../activity-history/submodel-repository-operation-types";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -244,11 +244,11 @@ export class EnvironmentService {
       ability,
       digitalProductDocumentId,
     });
-    const submodelAddedActivity = DigitalProductDocumentActivity.create({
+    const submodelAddedActivity = SubmodelRepositoryActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,
-      operation: DigitalProductDocumentOperationTypes.SubmodelCreate,
-      newData: [submodel.toPlain()],
+      operation: SubmodelRepositoryOperationTypes.SubmodelCreated,
+      submodel,
     });
     submodelAddedActivity.header.assignCorrelationId(correlationId);
     const activities = [
@@ -274,28 +274,48 @@ export class EnvironmentService {
   }
 
   async deleteSubmodelFromEnvironment(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<void> {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+
+    if (!ability.can(Permissions.Delete, IdShortPath.create({ path: submodel.idShort }))) {
+      throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
+    }
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         const options = { session };
-        const aas = await this.getFirstAssetAdministrationShell(environment);
-        const ability = aas.security.defineAbilityForSubject(subject);
-        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
-        if (!ability.can(Permissions.Delete, IdShortPath.create({ path: submodel.idShort }))) {
-          throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
-        }
+        const deletedActivity = SubmodelRepositoryActivity.create({
+          digitalProductDocumentId,
+          userId: userContext.userId,
+          operation: SubmodelRepositoryOperationTypes.SubmodelDeleted,
+          submodel,
+        });
+        deletedActivity.header.assignCorrelationId(correlationId);
         await this.submodelRepository.deleteById(submodel.id, options);
 
-        aas.deleteSubmodel(submodel);
+        aas.deleteSubmodel(submodel, { ability, digitalProductDocumentId });
         await this.aasRepository.save(aas, options);
-        environment.deleteSubmodel(submodel);
+        environment.deleteSubmodel(submodel, { ability, digitalProductDocumentId });
         await saveEnvironment(options);
+        await this.activityRepository.createMany(
+          [
+            deletedActivity,
+            ...aas.pullActivities(correlationId),
+            ...environment.pullActivities(correlationId),
+          ],
+          {
+            session,
+          },
+        );
       });
     } finally {
       await session.endSession();

@@ -292,22 +292,25 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async deleteSubmodel(
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      subject,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     await this.environmentService.deleteSubmodelFromEnvironment(
+      correlationId,
+      id,
       item.getEnvironment(),
       submodelId,
       this.saveEnvironmentCallback(item),
-      subject,
+      userContext,
     );
   }
 

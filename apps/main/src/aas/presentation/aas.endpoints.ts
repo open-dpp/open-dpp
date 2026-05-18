@@ -256,11 +256,13 @@ export interface IAasModifyEndpoints {
 
 export interface IAasDeleteEndpoints {
   deleteSubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<void>;
   deleteSubmodelElement: (
     correlationId: string,

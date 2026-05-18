@@ -6,7 +6,7 @@ import { Submodel } from "./submodel-base/submodel";
 import { IActivity } from "../../activity-history/activity";
 import { EnvironmentActivity } from "../../activity-history/domain/aas/environment.activity";
 import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
-import { AddOptions } from "./submodel-base/submodel-base";
+import { AddOptions, DeleteOptions } from "./submodel-base/submodel-base";
 
 export class Environment implements IConvertableToPlain {
   private _activities: Array<IActivity> = [];
@@ -79,7 +79,7 @@ export class Environment implements IConvertableToPlain {
       EnvironmentActivity.create({
         oldData,
         newData: structuredClone(this.toPlain()),
-        operation: EnvironmentOperationTypes.SubmodelCreate,
+        operation: EnvironmentOperationTypes.SubmodelCreated,
         userId: options?.ability.userId ?? undefined,
         digitalProductDocumentId: options.digitalProductDocumentId,
       }),
@@ -88,12 +88,25 @@ export class Environment implements IConvertableToPlain {
     return submodel;
   }
 
-  deleteSubmodel(submodel: Submodel) {
+  deleteSubmodel(
+    submodel: Submodel,
+    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
+  ) {
+    const oldData = structuredClone(this.toPlain());
     const index = this.submodels.indexOf(submodel.id);
     if (index === -1) {
       throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
     }
     this.submodels.splice(index, 1);
+    this.publishActivity(
+      EnvironmentActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove
+        oldData,
+        newData: structuredClone(this.toPlain()),
+        operation: EnvironmentOperationTypes.SubmodelDeleted,
+        userId: options?.ability.userId ?? undefined,
+      }),
+    );
   }
 
   toPlain(): Record<string, any> {

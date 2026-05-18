@@ -9,23 +9,30 @@ const Version = {
   v1_0_0: "1.0.0",
 } as const;
 
-export interface ActivityCreateProps {
+export interface ActivityHeaderCreateProps {
   digitalProductDocumentId: string;
-  oldData?: object | any[];
-  newData: object | any[];
   userId?: string;
   createdAt?: Date;
 }
 
-export function diff(oldData: object | any[] | undefined, newData: object | any[]): Operation[] {
-  return compare(oldData ?? {}, newData);
+export interface ActivityCreateProps extends ActivityHeaderCreateProps {
+  oldData: object | any[];
+  newData: object | any[];
+}
+
+export function diff(oldData: object | any[], newData: object | any[]): Operation[] {
+  return compare(oldData, newData);
 }
 
 export interface ActivityCreatePropsWithAdministration extends ActivityCreateProps {
   administration: AdministrativeInformation;
 }
 
-export function createActivityHeader(type: string, data: ActivityCreateProps, version?: string) {
+export function createActivityHeader(
+  type: string,
+  data: ActivityHeaderCreateProps,
+  version?: string,
+) {
   return ActivityHeader.create({
     type,
     version: version ?? Version.v1_0_0,

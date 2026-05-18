@@ -64,7 +64,8 @@ import { AssetAdministrationShellPayload } from "../../activity-history/domain/a
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 import { EnvironmentPayload } from "../../activity-history/domain/aas/environment.activity";
 import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
-import { DigitalProductDocumentPayload } from "../../activity-history/domain/digital-product-document.activity";
+import { SubmodelRepositoryPayload } from "../../activity-history/domain/submodel-repository.activity";
+import { SubmodelRepositoryOperationTypes } from "../../activity-history/submodel-repository-operation-types";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -488,34 +489,10 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityTypes.DigitalProductDocumentActivity,
-        payload: DigitalProductDocumentPayload.create({
-          operation: EnvironmentOperationTypes.SubmodelCreate,
-          changes: [
-            {
-              op: "add",
-              path: "/0",
-              value: {
-                administration: {
-                  revision: "0",
-                  version: "1",
-                },
-                category: null,
-                description: [],
-                displayName: [],
-                embeddedDataSpecifications: [],
-                extensions: [],
-                id: submodelPlain.id,
-                idShort: "submodel2",
-                kind: null,
-                modelType: "Submodel",
-                qualifiers: [],
-                semanticId: null,
-                submodelElements: [],
-                supplementalSemanticIds: [],
-              },
-            },
-          ],
+        type: ActivityTypes.SubmodelRepositoryActivity,
+        payload: SubmodelRepositoryPayload.create({
+          operation: EnvironmentOperationTypes.SubmodelCreated,
+          submodel: Submodel.fromPlain(submodelPlain),
         }),
       },
       {
@@ -744,7 +721,7 @@ describe("environmentService", () => {
         type: ActivityTypes.EnvironmentActivity,
         correlationId,
         payload: EnvironmentPayload.create({
-          operation: EnvironmentOperationTypes.SubmodelCreate,
+          operation: EnvironmentOperationTypes.SubmodelCreated,
           changes: [
             {
               op: "add",
@@ -1671,27 +1648,87 @@ describe("environmentService", () => {
   });
 
   it("should delete submodel from environment", async () => {
-    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
+      await createDefaultEnvironment();
     const saveEnvironmentMock = jest.fn<() => Promise<void>>();
 
     await expect(
       environmentService.deleteSubmodelFromEnvironment(
+        correlationId,
+        digitalProductDocumentId,
         environment,
         submodel1.id,
         saveEnvironmentMock,
-        member.subject,
+        member,
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.`),
     );
 
     await environmentService.deleteSubmodelFromEnvironment(
+      correlationId,
+      digitalProductDocumentId,
       environment,
       submodel1.id,
       saveEnvironmentMock,
-      admin.subject,
+      admin,
     );
     expect(environment.submodels).not.toContain(submodel1.id);
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.EnvironmentActivity,
+        payload: EnvironmentPayload.create({
+          operation: EnvironmentOperationTypes.SubmodelDeleted,
+          changes: [
+            {
+              op: "remove",
+              path: "/submodels/0",
+            },
+          ],
+        }),
+      },
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: environment.assetAdministrationShells[0],
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.SubmodelDeleted,
+          changes: [
+            {
+              op: "remove",
+              path: "/security/localAccessControl/accessPermissionRules/1",
+            },
+            {
+              op: "remove",
+              path: "/security/localAccessControl/accessPermissionRules/0",
+            },
+            {
+              op: "remove",
+              path: "/submodels/0",
+            },
+          ],
+        }),
+      },
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelRepositoryActivity,
+        payload: SubmodelRepositoryPayload.create({
+          operation: SubmodelRepositoryOperationTypes.SubmodelDeleted,
+          submodel: submodel1,
+        }),
+      },
+    ]);
     //
   });
 

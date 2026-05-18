@@ -85,13 +85,14 @@ describe("assetAdministrationShell", () => {
       IdShortPath.create({ path: submodelId2 }),
       allPermissionsAllow.map(Permission.fromPlain),
     );
+    const ability = security.defineAbilityForSubject(admin);
 
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
       submodels: [submodelRef1, submodelRef2],
       security,
     });
-    aas.deleteSubmodel(submodelToDelete);
+    aas.deleteSubmodel(submodelToDelete, { ability, digitalProductDocumentId: randomUUID() });
     expect(aas.submodels).toEqual([submodelRef2]);
     expect(aas.security.localAccessControl.accessPermissionRules).toEqual([
       AccessPermissionRule.create({
@@ -227,7 +228,7 @@ describe("assetAdministrationShell", () => {
     const ability = security.defineAbilityForSubject(subject);
     aas.modify(
       { displayName, description, assetInformation: { defaultThumbnails } },
-      { subject, ability },
+      { subject, ability, digitalProductDocumentId: randomUUID() },
     );
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));

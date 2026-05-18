@@ -249,7 +249,11 @@ export class AssetAdministrationShell
     );
   }
 
-  deleteSubmodel(submodel: Submodel) {
+  deleteSubmodel(
+    submodel: Submodel,
+    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
+  ) {
+    const oldData = structuredClone(this.toPlain());
     const foundSubmodelIndex = this.submodels.findIndex((sm) =>
       sm.keys.some((k) => k.value === submodel.id),
     );
@@ -257,6 +261,17 @@ export class AssetAdministrationShell
       this.submodels.splice(foundSubmodelIndex, 1);
       this.security.deletePoliciesByObjectPath(submodel.getIdShortPath());
     }
+    this.publishActivity(
+      AssetAdministrationShellActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove
+        userId: options.ability.userId ?? undefined,
+        assetAdministrationShellId: this.id,
+        administration: this.administration,
+        oldData,
+        newData: structuredClone(this.toPlain()),
+        operation: AssetAdministrationShellOperationTypes.SubmodelDeleted,
+      }),
+    );
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {

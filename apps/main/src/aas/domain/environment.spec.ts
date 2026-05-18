@@ -80,7 +80,10 @@ describe("environment", () => {
       digitalProductDocumentId,
     });
     expect(environment.submodels).toEqual([submodelToDelete.id, otherSubmodel.id]);
-    environment.deleteSubmodel(submodelToDelete);
+    environment.deleteSubmodel(submodelToDelete, {
+      ability,
+      digitalProductDocumentId,
+    });
     expect(environment.submodels).toEqual([otherSubmodel.id]);
   });
 });

@@ -241,18 +241,21 @@ export class TemplateController
 
   @ApiDeleteSubmodelById()
   async deleteSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.templateService.digitalProductDocumentService.deleteSubmodel(
+      correlationId,
       organizationId,
       id,
       submodelId,
-      subject,
+      { subject, userId },
     );
   }
 

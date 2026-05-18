@@ -172,7 +172,13 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
 
     await expect(
-      service.deleteSubmodel(passport.organizationId, passport.id, randomUUID(), subject),
+      service.deleteSubmodel(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        userContext,
+      ),
     ).rejects.toThrow(exception);
 
     await expect(
