@@ -3,11 +3,10 @@ import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { DigitalProductDocumentStatusModificationDto, TemplateDtoSchema } from "@open-dpp/dto";
-import { handleDppStatusChangeRequest } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
@@ -30,19 +29,20 @@ export class TemplateService {
   }
 
   async modifyTemplateStatus(
-    id: string,
+    correlationId: string,
     organizationId: string,
-    subject: SubjectAttributes,
+    id: string,
     body: DigitalProductDocumentStatusModificationDto,
+    userContext: UserContext,
   ) {
-    const template =
-      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    handleDppStatusChangeRequest(template, body);
-    return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+    const template = await this.digitalProductDocumentService.handleDppStatusChangeRequest(
+      correlationId,
+      organizationId,
+      id,
+      body,
+      userContext,
+    );
+    return TemplateDtoSchema.parse(template.toPlain());
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {

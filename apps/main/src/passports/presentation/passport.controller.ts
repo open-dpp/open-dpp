@@ -218,15 +218,20 @@ export class PassportController
   // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
   @Put(":id/status")
   async modifyPassportStatus(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
     @Body(new ZodValidationPipe(DigitalProductDocumentStatusModificationDtoSchema))
     body: DigitalProductDocumentStatusModificationDto,
   ): Promise<PassportDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return this.passportService.modifyPassportStatus(id, organizationId, subject, body);
+    return this.passportService.modifyPassportStatus(correlationId, organizationId, id, body, {
+      subject,
+      userId,
+    });
   }
 
   @Post()

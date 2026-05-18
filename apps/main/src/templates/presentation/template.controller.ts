@@ -667,15 +667,20 @@ export class TemplateController
   // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
   @Put(":id/status")
   async modifyTemplateStatus(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
     @Body(new ZodValidationPipe(DigitalProductDocumentStatusModificationDtoSchema))
     body: DigitalProductDocumentStatusModificationDto,
   ): Promise<TemplateDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return this.templateService.modifyTemplateStatus(id, organizationId, subject, body);
+    return this.templateService.modifyTemplateStatus(correlationId, organizationId, id, body, {
+      subject,
+      userId,
+    });
   }
 
   @ApiGetActivities()

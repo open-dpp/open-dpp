@@ -5,12 +5,11 @@ import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
-import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { EnvironmentService, UserContext } from "../../../aas/presentation/environment.service";
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
-import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
 
@@ -62,19 +61,21 @@ export class PassportService {
   }
 
   async modifyPassportStatus(
-    id: string,
+    correlationId: string,
     organizationId: string,
-    subject: SubjectAttributes,
+    id: string,
     body: DigitalProductDocumentStatusModificationDto,
+    userContext: UserContext,
   ) {
-    const passport =
-      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    handleDppStatusChangeRequest(passport, body);
-    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
+    const passport = await this.digitalProductDocumentService.handleDppStatusChangeRequest(
+      correlationId,
+      organizationId,
+      id,
+      body,
+      userContext,
+    );
+
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {

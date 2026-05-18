@@ -8,6 +8,7 @@ import {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  DigitalProductDocumentStatusModificationDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   type SubmodelElementRequestDto,
@@ -58,6 +59,31 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       this.saveEnvironmentCallback(item),
       userContext,
     );
+  }
+
+  async handleDppStatusChangeRequest(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    body: DigitalProductDocumentStatusModificationDto,
+    userContext: UserContext,
+  ) {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    if (body.method === "Publish") {
+      item.publish();
+    } else if (body.method === "Archive") {
+      item.archive();
+    } else if (body.method === "Restore") {
+      item.restore();
+    } else {
+      throw new BadRequestException("Invalid method");
+    }
+    await this.digitalProductDocRepository.save(item);
+    return item;
   }
 
   async addColumnToSubmodelElementList(

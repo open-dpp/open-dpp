@@ -62,21 +62,6 @@ export function restoreDpp(lastStatusChange: DigitalProductDocumentStatusChange)
   });
 }
 
-export function handleDppStatusChangeRequest(
-  changeable: IDigitalProductDocumentStatusChangeable,
-  body: DigitalProductDocumentStatusModificationDto,
-) {
-  if (body.method === "Publish") {
-    changeable.publish();
-  } else if (body.method === "Archive") {
-    changeable.archive();
-  } else if (body.method === "Restore") {
-    changeable.restore();
-  } else {
-    throw new BadRequestException("Invalid method");
-  }
-}
-
 export class DigitalProductDocumentStatusChange {
   private constructor(
     public readonly previousStatus: DigitalProductDocumentStatusType | null,
