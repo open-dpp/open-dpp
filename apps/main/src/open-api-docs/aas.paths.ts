@@ -51,13 +51,14 @@ import {
 } from "../digital-product-document/presentation/digital-product-document-decorators";
 import { HTTPCode } from "./http.codes";
 import { ContentType } from "./content.types";
+import { convertPathToOpenApi } from "./utils";
 
 const security = [{ apiKeyAuth: [] }];
 const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };
 
 export function createAasPaths(tag: string) {
   return {
-    [`/${tag}${ApiGetShellsPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiGetShellsPath)}`]: {
       get: {
         tags: [tag],
         summary: "Returns all Asset Administration Shells",
@@ -72,7 +73,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiPatchShellPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiPatchShellPath)}`]: {
       patch: {
         tags: [tag],
         summary: "Modifies a Asset Administration Shell with specified id",
@@ -92,7 +93,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiSubmodelsPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiSubmodelsPath)}`]: {
       get: {
         tags: [tag],
         summary: `Returns all Submodels of the ${tag}`,
@@ -126,7 +127,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiGetSubmodelByIdPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiGetSubmodelByIdPath)}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel by id`,
@@ -169,7 +170,26 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiGetSubmodelValuePath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiGetSubmodelValuePath)}`]: {
+      patch: {
+        operationId: "patchValueOfSubmodel",
+        tags: [tag],
+        summary: `Modify value of submodel with specified id`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: ValueSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelJsonSchema },
+            },
+          },
+        },
+        security,
+      },
       get: {
         tags: [tag],
         summary: `Returns Submodel value representation`,
@@ -184,7 +204,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiSubmodelElementsPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiSubmodelElementsPath)}`]: {
       get: {
         tags: [tag],
         summary: `Returns all Submodel Elements of the given Submodel`,
@@ -223,7 +243,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiPostColumnPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiPostColumnPath)}`]: {
       post: {
         tags: [tag],
         summary: `Add column to Submodel Element List with specified idShortPath. Column is itself a Submodel Element.`,
@@ -249,7 +269,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiGetColumnByIdShortPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiGetColumnByIdShortPath)}`]: {
       delete: {
         tags: [tag],
         summary:
@@ -296,7 +316,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiPostRowPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiPostRowPath)}`]: {
       post: {
         tags: [tag],
         summary: `Add row to Submodel Element List with specified idShortPath.`,
@@ -317,7 +337,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiDeletePolicyPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiDeletePolicyPath)}`]: {
       delete: {
         tags: [tag],
         summary: `Deletes policy for specified subject and object.`,
@@ -333,7 +353,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiDeleteRowPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiDeleteRowPath)}`]: {
       delete: {
         tags: [tag],
         summary: `Deletes row with specified idShort from Submodel Element List with specified idShortPath.`,
@@ -354,7 +374,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiGetSubmodelElementByIdPath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiGetSubmodelElementByIdPath)}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel Element by idShortPath`,
@@ -414,7 +434,7 @@ export function createAasPaths(tag: string) {
         security,
       },
     },
-    [`/${tag}${ApiGetSubmodelElementValuePath}`]: {
+    [`/${tag}${convertPathToOpenApi(ApiGetSubmodelElementValuePath)}`]: {
       get: {
         tags: [tag],
         summary: `Returns value representation of Submodel Element`,

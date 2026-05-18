@@ -81,10 +81,11 @@ import {
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
-  SubmodelElementValueModificationRequestBody,
+  ValueModificationRequestBody,
   SubmodelIdParam,
   SubmodelModificationRequestBody,
   SubmodelRequestBody,
+  ApiPatchSubmodelValue,
 } from "../../aas/presentation/aas.decorators";
 import {
   IAasCreateEndpoints,
@@ -251,6 +252,25 @@ export class TemplateController
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodel(
+      organizationId,
+      id,
+      submodelId,
+      body,
+      subject,
+    );
+  }
+
+  @ApiPatchSubmodelValue()
+  async modifyValueOfSubmodel(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @ValueModificationRequestBody() body: ValueRequestDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.modifyValueOfSubmodel(
       organizationId,
       id,
       submodelId,
@@ -503,7 +523,7 @@ export class TemplateController
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
-    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @ValueModificationRequestBody() body: ValueRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {

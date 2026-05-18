@@ -70,6 +70,7 @@ import {
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
+  ApiPatchSubmodelValue,
   ApiPostColumn,
   ApiPostRow,
   ApiPostSubmodel,
@@ -87,7 +88,7 @@ import {
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
-  SubmodelElementValueModificationRequestBody,
+  ValueModificationRequestBody,
   SubmodelIdParam,
   SubmodelModificationRequestBody,
   SubmodelRequestBody,
@@ -444,6 +445,25 @@ export class PassportController
     );
   }
 
+  @ApiPatchSubmodelValue()
+  async modifyValueOfSubmodel(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @ValueModificationRequestBody() body: ValueRequestDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.modifyValueOfSubmodel(
+      organizationId,
+      id,
+      submodelId,
+      body,
+      subject,
+    );
+  }
+
   @ApiGetSubmodelById()
   async getSubmodelById(
     @OrganizationId() organizationId: string,
@@ -662,7 +682,7 @@ export class PassportController
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
-    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @ValueModificationRequestBody() body: ValueRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {

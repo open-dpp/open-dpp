@@ -119,6 +119,13 @@ export class AasNamespace {
     );
   }
 
+  public async modifyValueOfSubmodel(id: string, submodelId: string, data: ValueRequestDto) {
+    return this.axiosInstance.patch<SubmodelResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/$value`,
+      data,
+    );
+  }
+
   public async createSubmodelElement(
     id: string,
     submodelId: string,
