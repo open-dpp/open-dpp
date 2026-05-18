@@ -97,4 +97,8 @@ export class ActivityRepository {
   async findOne(id: string): Promise<IActivity | undefined> {
     return await findOne(id, this.activityDoc, this.fromPlain.bind(this));
   }
+
+  async deleteByAggregateId(aggregateId: string, options?: DbSessionOptions) {
+    await this.activityDoc.deleteMany({ aggregateId }, options);
+  }
 }

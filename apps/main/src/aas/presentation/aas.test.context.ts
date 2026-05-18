@@ -1176,6 +1176,7 @@ export function createAasTestContext<T>(
       aasRepository,
       submodelRepository,
       uniqueProductIdentifierService: uniqueProductIdentifierRepository,
+      activityRepository,
     }),
     getAasObjects: () => ({ aas, submodels }),
     getModuleRef: () => moduleRef,

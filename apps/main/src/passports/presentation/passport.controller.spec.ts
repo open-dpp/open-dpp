@@ -602,7 +602,7 @@ describe("passportController", () => {
 
     expect(responseForPublishedPassport.status).toEqual(403);
     expect(responseForPublishedPassport.body.message).toEqual(
-      'Only passports with the status "Draft" can be deleted',
+      'Only passports/ templates with the status "Draft" can be deleted',
     );
   });
 

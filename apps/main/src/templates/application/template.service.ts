@@ -1,5 +1,5 @@
 import type { Connection } from "mongoose";
-import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -47,24 +47,10 @@ export class TemplateService {
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {
-    const template =
-      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        subject,
-        organizationId,
-      );
-    if (!template.isDraft()) {
-      throw new ForbiddenException('Only templates with the status "Draft" can be deleted');
-    }
-
-    const session = await this.connection.startSession();
-    try {
-      await session.withTransaction(async () => {
-        await this.environmentService.deleteEnvironment(template.environment, session);
-        await this.templateRepository.deleteById(template.id, { session });
-      });
-    } finally {
-      await session.endSession();
-    }
+    await this.digitalProductDocumentService.deleteDigitalProductDocument(
+      organizationId,
+      id,
+      subject,
+    );
   }
 }

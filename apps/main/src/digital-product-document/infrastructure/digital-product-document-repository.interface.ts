@@ -13,4 +13,5 @@ export interface IDigitalProductDocumentRepository<T extends DigitalProductDocum
   save: (document: T, options?: DbSessionOptions) => Promise<T>;
   findOneOrFail: (id: string) => Promise<T>;
   findOne: (id: string) => Promise<T | undefined>;
+  deleteById: (id: string, options?: DbSessionOptions) => Promise<void>;
 }

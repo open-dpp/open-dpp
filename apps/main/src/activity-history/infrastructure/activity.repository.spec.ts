@@ -84,6 +84,42 @@ describe("activityRepository", () => {
     expect(foundEvents.items).toEqual([event2, event1]);
   });
 
+  it("should delete a activities by aggregation id", async () => {
+    const passportId = randomUUID();
+    const submodelId = randomUUID();
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const event1 = SubmodelActivity.create({
+      digitalProductDocumentId: passportId,
+      submodelId,
+      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
+      oldData: { idShort: "prop1", value: "oldValue" },
+      newData: { idShort: "prop1", value: "newValue" },
+      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+      createdAt: date1,
+    });
+    const event2 = SubmodelActivity.create({
+      digitalProductDocumentId: passportId,
+      submodelId,
+      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
+      oldData: { idShort: "prop2", value: "oldValue" },
+      newData: { idShort: "prop2", value: "newValue" },
+      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+      createdAt: date2,
+    });
+    const activities = [event1, event2];
+    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
+    await activityRepository.createMany(activities);
+    await activityRepository.deleteByAggregateId(passportId);
+    const foundEvent1 = await activityRepository.findOne(event1.header.id);
+    expect(foundEvent1).toBeUndefined();
+
+    const foundEvent2 = await activityRepository.findOne(event2.header.id);
+    expect(foundEvent2).toBeUndefined();
+  });
+
   describe("should find activities", () => {
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");

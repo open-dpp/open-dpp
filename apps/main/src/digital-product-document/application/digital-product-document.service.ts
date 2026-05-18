@@ -593,6 +593,38 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
   }
 
+  async deleteDigitalProductDocument(
+    organizationId: string,
+    id: string,
+    subject: SubjectAttributes,
+    onDeleteCallback?: (options: DbSessionOptions) => Promise<void>,
+  ) {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    if (!item.isDraft()) {
+      throw new ForbiddenException(
+        'Only passports/ templates with the status "Draft" can be deleted',
+      );
+    }
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.environmentService.deleteEnvironment(item.getEnvironment(), session);
+        await this.digitalProductDocRepository.deleteById(item.id, { session });
+        await this.activityRepository.deleteByAggregateId(item.id, { session });
+        if (onDeleteCallback) {
+          await onDeleteCallback({ session });
+        }
+      });
+    } finally {
+      await session.endSession();
+    }
+  }
+
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {
     if (item.isArchived()) {
       throw new BadRequestException("Archived passport/ template cannot be modified");
