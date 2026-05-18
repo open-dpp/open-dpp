@@ -260,7 +260,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     tableExtension.deleteRow(idShortOfRow, options);
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove
+        digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: idShortPath.addPathSegment(idShortOfRow),
@@ -322,7 +322,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     tableExtension.deleteColumn(idShortOfColumn, options);
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove
+        digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: idShortPath.addPathSegment(idShortOfColumn),
@@ -419,7 +419,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     }
     this.publishActivity(
       SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: remove
+        digitalProductDocumentId: options.digitalProductDocumentId,
         submodelId: this.id,
         administration: this.administration,
         fullIdShortPath: IdShortPath.create({ path: `${this.idShort}.${idShortPath.toString()}` }),

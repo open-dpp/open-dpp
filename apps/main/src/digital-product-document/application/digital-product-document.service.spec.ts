@@ -217,6 +217,7 @@ describe("DigitalProductDocumentService", () => {
 
     await expect(
       service.deletePolicyBySubjectAndObject(
+        correlationId,
         passport.organizationId,
         passport.id,
         {
@@ -226,7 +227,7 @@ describe("DigitalProductDocumentService", () => {
           }),
           object: "policy1",
         },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 

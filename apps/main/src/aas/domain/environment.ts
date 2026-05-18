@@ -100,7 +100,7 @@ export class Environment implements IConvertableToPlain {
     this.submodels.splice(index, 1);
     this.publishActivity(
       EnvironmentActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove
+        digitalProductDocumentId: options.digitalProductDocumentId,
         oldData,
         newData: structuredClone(this.toPlain()),
         operation: EnvironmentOperationTypes.SubmodelDeleted,

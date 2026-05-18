@@ -134,14 +134,28 @@ export class EnvironmentService {
   }
 
   async deletePolicyBySubjectAndObject(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     object: IdShortPath,
     subject: SubjectAttributes,
-    administrator: SubjectAttributes,
+    userContext: UserContext,
   ) {
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    aas.security.withAdministrator(administrator).deletePolicyBySubjectAndObject(subject, object);
-    await this.aasRepository.save(aas);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    aas.deletePolicyBySubjectAndObject(object, subject, { ability, digitalProductDocumentId });
+
+    const activities = aas.pullActivities(correlationId);
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.aasRepository.save(aas);
+        await this.activityRepository.createMany(activities, { session });
+      });
+    } finally {
+      await session.endSession();
+    }
   }
 
   async getAasShells(

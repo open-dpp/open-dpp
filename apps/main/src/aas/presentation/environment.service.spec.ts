@@ -1633,18 +1633,47 @@ describe("environmentService", () => {
   });
 
   it("should delete policy", async () => {
-    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
+      await createDefaultEnvironment();
     let foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(foundAas.security.findPoliciesBySubject(member.subject)).not.toEqual([]);
 
     await environmentService.deletePolicyBySubjectAndObject(
+      correlationId,
+      digitalProductDocumentId,
       environment,
       IdShortPath.create({ path: submodel1.idShort }),
       member.subject,
-      admin.subject,
+      admin,
     );
     foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(foundAas.security.findPoliciesBySubject(member.subject)).toEqual([]);
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellActivity,
+        payload: AssetAdministrationShellPayload.create({
+          assetAdministrationShellId: environment.assetAdministrationShells[0],
+          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
+          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          changes: [
+            {
+              op: "remove",
+              path: "/security/localAccessControl/accessPermissionRules/1",
+            },
+          ],
+        }),
+      },
+    ]);
   });
 
   it("should delete submodel from environment", async () => {

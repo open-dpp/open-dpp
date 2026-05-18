@@ -297,10 +297,12 @@ export interface IAasDeleteEndpoints {
     userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   deletePolicyBySubjectAndObject: (
+    correlationId: string,
     organizationId: string,
     id: string,
     body: DeletePolicyDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<void>;
 }

@@ -224,18 +224,21 @@ export class TemplateController
 
   @ApiDeletePolicy()
   async deletePolicyBySubjectAndObject(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @DeletePolicyRequestBody() body: DeletePolicyDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<void> {
-    const administrator = SubjectAttributes.create({ userRole, memberRole });
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.templateService.digitalProductDocumentService.deletePolicyBySubjectAndObject(
+      correlationId,
       organizationId,
       id,
       body,
-      administrator,
+      { subject, userId },
     );
   }
 

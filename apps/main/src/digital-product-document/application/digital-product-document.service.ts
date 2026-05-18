@@ -365,24 +365,27 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
   }
 
   async deletePolicyBySubjectAndObject(
+    correlationId: string,
     organizationId: string,
     id: string,
     body: DeletePolicyDto,
-    administrator: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<void> {
     const subject = SubjectAttributes.fromPlain(body.subject);
     const object = IdShortPath.create({ path: body.object });
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
-      administrator,
+      userContext.subject,
       organizationId,
     );
     this.archiveGuard(item);
     await this.environmentService.deletePolicyBySubjectAndObject(
+      correlationId,
+      id,
       item.getEnvironment(),
       object,
       subject,
-      administrator,
+      userContext,
     );
   }
 

@@ -20,6 +20,7 @@ import { AddOptions, DeleteOptions } from "./submodel-base/submodel-base";
 import { AssetAdministrationShellActivity } from "../../activity-history/domain/aas/asset-administration-shell.activity";
 import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
 import { IdShortPath } from "./common/id-short-path";
+import { SubjectAttributes } from "./security/subject-attributes";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -161,6 +162,28 @@ export class AssetAdministrationShell
     return reference;
   }
 
+  deletePolicyBySubjectAndObject(
+    object: IdShortPath,
+    subject: SubjectAttributes,
+    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
+  ): void {
+    const oldData = structuredClone(this.toPlain());
+    this.security
+      .withAdministrator(options.ability.getSubject())
+      .deletePolicyBySubjectAndObject(subject, object);
+    this.publishActivity(
+      AssetAdministrationShellActivity.create({
+        digitalProductDocumentId: options.digitalProductDocumentId,
+        userId: options.ability.userId ?? undefined,
+        assetAdministrationShellId: this.id,
+        administration: this.administration,
+        oldData,
+        newData: structuredClone(this.toPlain()),
+        operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+      }),
+    );
+  }
+
   deletePoliciesByObjectPath(
     objectPath: IdShortPath,
     options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
@@ -169,7 +192,7 @@ export class AssetAdministrationShell
     this.security.deletePoliciesByObjectPath(objectPath);
     this.publishActivity(
       AssetAdministrationShellActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove
+        digitalProductDocumentId: options.digitalProductDocumentId,
         userId: options.ability.userId ?? undefined,
         assetAdministrationShellId: this.id,
         administration: this.administration,
@@ -263,7 +286,7 @@ export class AssetAdministrationShell
     }
     this.publishActivity(
       AssetAdministrationShellActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId!, // TODO: Remove
+        digitalProductDocumentId: options.digitalProductDocumentId,
         userId: options.ability.userId ?? undefined,
         assetAdministrationShellId: this.id,
         administration: this.administration,
