@@ -91,7 +91,7 @@ test("template → BigNumber assignment → passport → viewer renders BigNumbe
   await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/p/${permalinkSlug ?? permalinkId}`);
   const bigNumber = viewerPage.locator('[data-cy="bignumber"]');
   await expect(bigNumber).toBeVisible();
-  await expect(bigNumber).toHaveText(PROPERTY_VALUE);
+  await expect(bigNumber.locator('[data-cy="bignumber-value"]')).toHaveText(PROPERTY_VALUE);
   await anonymous.close();
 });
 
@@ -195,6 +195,6 @@ test("BigNumber on a Property nested inside a SubmodelElementCollection", async 
 
   const bigNumber = viewerPage.locator('[data-cy="bignumber"]');
   await expect(bigNumber).toBeVisible();
-  await expect(bigNumber).toHaveText(PROPERTY_VALUE);
+  await expect(bigNumber.locator('[data-cy="bignumber-value"]')).toHaveText(PROPERTY_VALUE);
   await anonymous.close();
 });
