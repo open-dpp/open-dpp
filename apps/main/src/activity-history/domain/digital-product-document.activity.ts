@@ -12,9 +12,9 @@ import {
   ActivityCreateProps,
   createActivityHeader,
   diff,
+  JsonPatchOperation,
   OperationSchema,
 } from "./shared.activity";
-import { Operation } from "fast-json-patch/module/core";
 import {
   DigitalProductDocumentOperationTypesEnum,
   DigitalProductDocumentOperationTypesType,
@@ -65,12 +65,12 @@ const DigitalProductDocumentPayloadSchema = z.object({
 export class DigitalProductDocumentPayload implements IActivityPayload {
   private constructor(
     public readonly operation: DigitalProductDocumentOperationTypesType,
-    public readonly changes: Operation[],
+    public readonly changes: JsonPatchOperation[],
   ) {}
 
   static create(data: {
     operation: DigitalProductDocumentOperationTypesType;
-    changes: Operation[];
+    changes: JsonPatchOperation[];
   }) {
     return new DigitalProductDocumentPayload(data.operation, data.changes);
   }

@@ -7,7 +7,6 @@ import { SubjectAttributes } from "../../../aas/domain/security/subject-attribut
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { Permission } from "../../../aas/domain/security/permission";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
-import { diff } from "../shared.activity";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 
 describe("SubmodelActivity", () => {
@@ -48,7 +47,14 @@ describe("SubmodelActivity", () => {
       additionalIdShort: null,
       submodelId,
       fullIdShortPath: fullIdShortPath.toString(),
-      changes: diff(oldData, newData),
+      changes: [
+        {
+          aas: "",
+          op: "replace",
+          path: "/value",
+          value: "newValue",
+        },
+      ],
       operation: SubmodelOperationTypes.SubmodelElementModified,
     });
 

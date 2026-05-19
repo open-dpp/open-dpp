@@ -16,15 +16,15 @@ import {
 } from "../../submodel-operation-types";
 import {
   ActivityCreatePropsWithAdministration,
-  ActivityPayloadCreateProps,
-  ActivityPayloadSchema,
   createActivityHeader,
   diff,
-  payloadToPlain,
+  JsonPatchOperationWithAas,
+  OperationWithAasSchema,
+  JsonPatchOperation,
 } from "../shared.activity";
-import { Operation } from "fast-json-patch/module/core";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
-import { Permissions } from "@open-dpp/dto";
+import { AdministrativeInformationJsonSchema, Permissions } from "@open-dpp/dto";
+import { unescapePathComponent } from "fast-json-patch/module/helpers";
 
 export class SubmodelActivity implements IActivity {
   private constructor(
@@ -46,7 +46,9 @@ export class SubmodelActivity implements IActivity {
         administration: data.administration,
         fullIdShortPath: data.fullIdShortPath,
         additionalIdShort: data.additionalIdShort,
-        changes: diff(data.oldData, data.newData),
+        changes: diff(data.oldData, data.newData).map((op) =>
+          extendOperationBySubmodelInformation(op, data.oldData, data.newData),
+        ),
         operation: data.operation,
       }),
     );
@@ -84,7 +86,8 @@ export class SubmodelActivity implements IActivity {
 }
 
 const SubmodelPayloadSchema = z.object({
-  ...ActivityPayloadSchema.shape,
+  administration: AdministrativeInformationJsonSchema,
+  changes: OperationWithAasSchema.array(),
   submodelId: z.string(),
   operation: SubmodelOperationTypesEnum,
   fullIdShortPath: z.string(),
@@ -98,17 +101,17 @@ export class SubmodelPayload implements IActivityPayload {
     public readonly fullIdShortPath: IdShortPath,
     public readonly additionalIdShort: string | null,
     public readonly operation: SubmodelOperationTypesType,
-    public readonly changes: Operation[],
+    public readonly changes: Array<JsonPatchOperationWithAas>,
   ) {}
 
-  static create(
-    data: ActivityPayloadCreateProps & {
-      submodelId: string;
-      operation: SubmodelOperationTypesType;
-      fullIdShortPath: IdShortPath;
-      additionalIdShort?: string;
-    },
-  ) {
+  static create(data: {
+    administration: AdministrativeInformation;
+    changes: Array<JsonPatchOperationWithAas>;
+    submodelId: string;
+    operation: SubmodelOperationTypesType;
+    fullIdShortPath: IdShortPath;
+    additionalIdShort?: string;
+  }) {
     return new SubmodelPayload(
       data.submodelId,
       data.administration,
@@ -133,11 +136,33 @@ export class SubmodelPayload implements IActivityPayload {
 
   toPlain() {
     return {
-      ...payloadToPlain(this),
+      administration: this.administration.toPlain(),
+      changes: this.changes,
       submodelId: this.submodelId,
       operation: this.operation,
       fullIdShortPath: this.fullIdShortPath.toString(),
       additionalIdShort: this.additionalIdShort,
     };
   }
+}
+
+function extendOperationBySubmodelInformation(
+  operation: JsonPatchOperation,
+  oldData: any,
+  newData: any,
+): JsonPatchOperationWithAas {
+  const tokens = operation.path.split("/").slice(1).map(unescapePathComponent);
+  const aasSegments: string[] = [];
+  let current = operation.op === "add" ? newData : oldData;
+
+  for (const token of tokens) {
+    current = current[token];
+    if (current && typeof current === "object" && current.idShort) {
+      aasSegments.push(current.idShort);
+    }
+  }
+  return {
+    ...operation,
+    aas: aasSegments.join("."),
+  };
 }

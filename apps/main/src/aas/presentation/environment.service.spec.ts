@@ -279,6 +279,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/1",
+              aas: "o=section1&u=user&m=member",
               value: {
                 kindOfPermission: "Allow",
                 permission: "Create",
@@ -287,6 +288,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/2",
+              aas: "o=section1&u=user&m=member",
               value: {
                 kindOfPermission: "Allow",
                 permission: "Edit",
@@ -421,6 +423,7 @@ describe("environmentService", () => {
         kindOfPermission: PermissionKind.Allow,
       }),
     ]);
+
     const ability = security.defineAbilityForSubject(admin, adminUserId);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
@@ -506,6 +509,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/1/permissionsPerObject/1",
+              aas: "o=submodel2&u=user&m=member",
               value: {
                 object: {
                   category: null,
@@ -543,6 +547,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/1",
+              aas: "o=submodel2&u=admin",
               value: {
                 object: {
                   category: null,
@@ -579,6 +584,7 @@ describe("environmentService", () => {
             },
             {
               op: "add",
+              aas: "u=user&m=owner",
               path: "/security/localAccessControl/accessPermissionRules/2",
               value: {
                 permissionsPerObject: [
@@ -654,6 +660,7 @@ describe("environmentService", () => {
             },
             {
               op: "add",
+              aas: "u=anonymous",
               path: "/security/localAccessControl/accessPermissionRules/3",
               value: {
                 permissionsPerObject: [
@@ -701,6 +708,7 @@ describe("environmentService", () => {
               },
             },
             {
+              aas: "",
               op: "add",
               path: "/submodels/1",
               value: {
@@ -777,6 +785,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/submodelElements/1",
+              aas: "dataField1",
               value: {
                 category: null,
                 description: [],
@@ -807,6 +816,7 @@ describe("environmentService", () => {
       environment,
       admin,
       submodel1,
+      row1,
     } = await createEnvironmentWithList();
     const column = Property.create({
       idShort: "column1",
@@ -845,6 +855,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/submodelElements/0/value/0/value/1",
+              aas: `list.${row1.idShort}.column1`,
               value: {
                 category: null,
                 description: [],
@@ -879,7 +890,7 @@ describe("environmentService", () => {
     } = await createEnvironmentWithList();
     const position = 3;
 
-    await environmentService.addRow(
+    const changedList = await environmentService.addRow(
       correlationId,
       digitalProductDocumentId,
       environment,
@@ -888,6 +899,7 @@ describe("environmentService", () => {
       admin,
       position,
     );
+    const row2IdShort = changedList.value[1].idShort;
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
     expect(
@@ -908,6 +920,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/submodelElements/0/value/1",
+              aas: `list.${row2IdShort}`,
               value: {
                 category: null,
                 description: [],
@@ -1098,6 +1111,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/displayName/0",
+              aas: "",
               value: {
                 language: "en",
                 text: "Test",
@@ -1162,6 +1176,7 @@ describe("environmentService", () => {
             {
               op: "replace",
               path: "/submodelElements/0/value/0/value",
+              aas: "subSection1.property1",
               value: "Test",
             },
           ],
@@ -1233,6 +1248,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/submodelElements/0/value/0/displayName/0",
+              aas: "subSection1.property1",
               value: {
                 language: "en",
                 text: "Test",
@@ -1372,6 +1388,7 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/submodelElements/0/value/0/value/0/displayName/0",
+              aas: `list.${row1.idShort}.col1`,
               value: {
                 language: "en",
                 text: "Test",
@@ -1381,6 +1398,7 @@ describe("environmentService", () => {
         }),
       },
     ]);
+
     //
     await expect(
       environmentService.modifyColumn(
@@ -1462,6 +1480,7 @@ describe("environmentService", () => {
             {
               op: "remove",
               path: "/submodelElements/0/value/0/value/0",
+              aas: `list.${row1.idShort}.col1`,
             },
           ],
         }),
@@ -1538,6 +1557,7 @@ describe("environmentService", () => {
             {
               op: "remove",
               path: "/submodelElements/0/value/0",
+              aas: `list.${row1.idShort}`,
             },
           ],
         }),
@@ -1604,11 +1624,13 @@ describe("environmentService", () => {
             {
               op: "replace",
               path: "/submodelElements/0/value/1/value",
+              aas: "subSection1.property2",
               value: "new value 2",
             },
             {
               op: "replace",
               path: "/submodelElements/0/value/0/value",
+              aas: "subSection1.property1",
               value: "new value 1",
             },
           ],
@@ -1669,6 +1691,7 @@ describe("environmentService", () => {
             {
               op: "remove",
               path: "/security/localAccessControl/accessPermissionRules/1",
+              aas: "u=user&m=member",
             },
           ],
         }),
@@ -1736,14 +1759,17 @@ describe("environmentService", () => {
           changes: [
             {
               op: "remove",
+              aas: "u=user&m=member",
               path: "/security/localAccessControl/accessPermissionRules/1",
             },
             {
               op: "remove",
+              aas: "u=admin",
               path: "/security/localAccessControl/accessPermissionRules/0",
             },
             {
               op: "remove",
+              aas: "",
               path: "/submodels/0",
             },
           ],
@@ -1824,11 +1850,13 @@ describe("environmentService", () => {
             {
               op: "remove",
               path: "/submodelElements/0/value/1",
+              aas: "subSection1.property2",
             },
             {
               op: "replace",
               path: "/submodelElements/0/value/0/idShort",
               value: "property2",
+              aas: "subSection1.property1",
             },
           ],
         }),

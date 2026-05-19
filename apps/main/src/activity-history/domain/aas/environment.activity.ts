@@ -10,16 +10,15 @@ import { ActivityTypes } from "../../activity-types";
 import { z } from "zod";
 import {
   ActivityCreateProps,
-  ActivityPayloadCreateProps,
   ActivityPayloadSchema,
   createActivityHeader,
   diff,
+  JsonPatchOperation,
 } from "../shared.activity";
 import {
   EnvironmentOperationTypesEnum,
   EnvironmentOperationTypesType,
 } from "../../environment-types";
-import { Operation } from "fast-json-patch/module/core";
 
 export class EnvironmentActivity implements IActivity {
   private constructor(
@@ -66,14 +65,10 @@ const EnvironmentPayloadSchema = z.object({
 export class EnvironmentPayload implements IActivityPayload {
   private constructor(
     public readonly operation: EnvironmentOperationTypesType,
-    public readonly changes: Operation[],
+    public readonly changes: JsonPatchOperation[],
   ) {}
 
-  static create(
-    data: Omit<ActivityPayloadCreateProps, "administration"> & {
-      operation: EnvironmentOperationTypesType;
-    },
-  ) {
+  static create(data: { changes: JsonPatchOperation[]; operation: EnvironmentOperationTypesType }) {
     return new EnvironmentPayload(data.operation, data.changes);
   }
 

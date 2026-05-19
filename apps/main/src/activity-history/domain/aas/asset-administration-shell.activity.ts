@@ -11,17 +11,19 @@ import { AdministrativeInformation } from "../../../aas/domain/common/administra
 import { z } from "zod";
 import {
   ActivityCreatePropsWithAdministration,
-  ActivityPayloadCreateProps,
-  ActivityPayloadSchema,
   createActivityHeader,
   diff,
-  payloadToPlain,
+  JsonPatchOperation,
+  JsonPatchOperationWithAas,
+  OperationWithAasSchema,
 } from "../shared.activity";
 import {
   AssetAdministrationShellOperationTypesEnum,
   AssetAdministrationShellOperationTypesType,
 } from "../../asset-administration-shell-operation-types";
-import { Operation } from "fast-json-patch/module/core";
+import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
+import { unescapePathComponent } from "fast-json-patch/module/helpers";
+import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 
 export class AssetAdministrationShellActivity implements IActivity {
   private constructor(
@@ -39,7 +41,9 @@ export class AssetAdministrationShellActivity implements IActivity {
       AssetAdministrationShellPayload.create({
         assetAdministrationShellId: data.assetAdministrationShellId,
         administration: data.administration,
-        changes: diff(data.oldData, data.newData),
+        changes: diff(data.oldData, data.newData).map((op) =>
+          extendOperationByAasInformation(op, data.oldData, data.newData),
+        ),
         operation: data.operation,
       }),
     );
@@ -64,7 +68,8 @@ export class AssetAdministrationShellActivity implements IActivity {
 }
 
 const AssetAdministrationShellPayloadSchema = z.object({
-  ...ActivityPayloadSchema.shape,
+  administration: AdministrativeInformationJsonSchema,
+  changes: OperationWithAasSchema.array(),
   assetAdministrationShellId: z.string(),
   operation: AssetAdministrationShellOperationTypesEnum,
 });
@@ -74,15 +79,15 @@ export class AssetAdministrationShellPayload implements IActivityPayload {
     public readonly assetAdministrationShellId: string,
     public readonly administration: AdministrativeInformation,
     public readonly operation: AssetAdministrationShellOperationTypesType,
-    public readonly changes: Operation[],
+    public readonly changes: JsonPatchOperationWithAas[],
   ) {}
 
-  static create(
-    data: ActivityPayloadCreateProps & {
-      assetAdministrationShellId: string;
-      operation: AssetAdministrationShellOperationTypesType;
-    },
-  ) {
+  static create(data: {
+    administration: AdministrativeInformation;
+    assetAdministrationShellId: string;
+    operation: AssetAdministrationShellOperationTypesType;
+    changes: JsonPatchOperationWithAas[];
+  }) {
     return new AssetAdministrationShellPayload(
       data.assetAdministrationShellId,
       data.administration,
@@ -103,9 +108,68 @@ export class AssetAdministrationShellPayload implements IActivityPayload {
 
   toPlain() {
     return {
-      ...payloadToPlain(this),
+      administration: this.administration.toPlain(),
+      changes: this.changes,
       assetAdministrationShellId: this.assetAdministrationShellId,
       operation: this.operation,
     };
   }
+}
+
+function extendOperationByAasInformation(
+  operation: JsonPatchOperation,
+  oldData: any,
+  newData: any,
+): JsonPatchOperationWithAas {
+  if (!operation.path.startsWith("/security")) {
+    return {
+      ...operation,
+      aas: "",
+    };
+  }
+  const encodePart = (value: string) => encodeURIComponent(value);
+  const getSubjectAttributeValue = (
+    attributes: Array<{ idShort: string; value: string }>,
+    key: string,
+  ): string | undefined => {
+    return attributes.find((attribute) => attribute.idShort === key)?.value;
+  };
+
+  const tokens = operation.path.split("/").slice(1).map(unescapePathComponent);
+  let objectIdShort: string | undefined;
+  let userRole: string | undefined;
+  let memberRole: string | undefined;
+  let current = operation.op === "add" ? newData : oldData;
+
+  for (const token of tokens) {
+    current = current[token];
+
+    if (!current || typeof current !== "object") {
+      continue;
+    }
+
+    if (current.object?.idShort) {
+      objectIdShort = current.object.idShort;
+    }
+
+    const attributes = current.targetSubjectAttributes?.subjectAttribute;
+    if (!Array.isArray(attributes)) {
+      continue;
+    }
+
+    userRole = getSubjectAttributeValue(attributes, SubjectAttributes.UserRoleKey);
+    memberRole = getSubjectAttributeValue(attributes, SubjectAttributes.MemberRoleKey);
+  }
+
+  const aas = [
+    objectIdShort ? `o=${encodePart(objectIdShort)}` : undefined,
+    userRole ? `u=${encodePart(userRole)}` : undefined,
+    memberRole ? `m=${encodePart(memberRole)}` : undefined,
+  ]
+    .filter(Boolean)
+    .join("&");
+  return {
+    ...operation,
+    aas,
+  };
 }

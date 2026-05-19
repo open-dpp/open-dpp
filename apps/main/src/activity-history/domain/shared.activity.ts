@@ -2,7 +2,6 @@ import { ActivityHeader } from "../activity";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { z } from "zod";
 import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
-import { Operation } from "fast-json-patch/module/core";
 import { compare } from "fast-json-patch/module/duplex";
 
 const Version = {
@@ -20,8 +19,8 @@ export interface ActivityCreateProps extends ActivityHeaderCreateProps {
   newData: object | any[];
 }
 
-export function diff(oldData: object | any[], newData: object | any[]): Operation[] {
-  return compare(oldData, newData);
+export function diff(oldData: object | any[], newData: object | any[]): JsonPatchOperation[] {
+  return OperationSchema.array().parse(compare(oldData, newData));
 }
 
 export interface ActivityCreatePropsWithAdministration extends ActivityCreateProps {
@@ -44,32 +43,28 @@ export function createActivityHeader(
 
 export interface ActivityPayloadCreateProps {
   administration: AdministrativeInformation;
-  changes: Operation[]; // JSON Patch is specified in RFC 6902 from the IETF (https://jsonpatch.com/)
+  changes: JsonPatchOperation[]; // JSON Patch is specified in RFC 6902 from the IETF (https://jsonpatch.com/)
 }
 
 // Allowed operation types in RFC 6902
 const OperationType = z.enum(["add", "remove", "replace", "move", "copy", "test"]);
 
 // Base schema
-export const OperationSchema: z.ZodType<Operation> = z.object({
+export const OperationSchema = z.object({
   op: OperationType,
   path: z.string(),
-
   // "from" is only required for move/copy
   from: z.string().optional(),
 
   // value is optional depending on op
   value: z.any().optional(),
-}) as z.ZodType<Operation>;
+});
+export type JsonPatchOperation = z.infer<typeof OperationSchema>;
+
+export const OperationWithAasSchema = OperationSchema.extend({ aas: z.string() });
+export type JsonPatchOperationWithAas = z.infer<typeof OperationWithAasSchema>;
 
 export const ActivityPayloadSchema = z.object({
   administration: AdministrativeInformationJsonSchema,
   changes: OperationSchema.array(),
 });
-
-export function payloadToPlain(payload: ActivityPayloadCreateProps) {
-  return {
-    administration: payload.administration.toPlain(),
-    changes: payload.changes,
-  };
-}
