@@ -36,7 +36,6 @@ import type {
 } from "./aas-drawer.ts";
 import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
 import { match, P } from "ts-pattern";
-import { getCurrentTimezone } from "../lib/date-value.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { formatPropertyValue } from "../lib/property-value.ts";
 
@@ -116,7 +115,6 @@ export function useAasTableExtension({
   disableColumnEditing,
   timezone,
 }: AasTableExtensionProps): IAasTableExtension {
-  const viewerTimezone = timezone ?? getCurrentTimezone();
   const translatePrefix = "aasEditor";
   const translateTablePrefix = `${translatePrefix}.table`;
   const columnMenu = ref<MenuItem[]>([]);
@@ -718,7 +716,7 @@ export function useAasTableExtension({
   }
 
   function formatCellValue(value: Value, column: Column) {
-    return formatPropertyValue(value, column.plain.valueType, selectedLanguage, viewerTimezone);
+    return formatPropertyValue(value, column.plain.valueType, selectedLanguage, timezone);
   }
 
   function init() {

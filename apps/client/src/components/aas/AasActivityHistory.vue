@@ -12,7 +12,6 @@ import {
 } from "@open-dpp/dto";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import localizedFormat from "dayjs/plugin/localizedFormat";
 import { useI18n } from "vue-i18n";
 import { useActivityHistory } from "../../composables/activity-history.ts";
 import { usePagination } from "../../composables/pagination.ts";
@@ -20,7 +19,6 @@ import { useRoute } from "vue-router";
 import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import { formatPropertyValue } from "../../lib/property-value.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
-import { getCurrentTimezone } from "../../lib/date-value.ts";
 
 dayjs.extend(utc);
 const props = defineProps<{ id: string; path: AasEditorPath; valueType: DataTypeDefType }>();

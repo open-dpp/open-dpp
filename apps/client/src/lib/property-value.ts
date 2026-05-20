@@ -7,7 +7,7 @@ export function formatPropertyValue(
   value: PropertyValue,
   type: DataTypeDefType,
   selectedLanguage: LanguageType,
-  options: { showTimeZone: string },
+  timezone?: string,
 ) {
   if (value === null) {
     return "N/A";
@@ -19,7 +19,7 @@ export function formatPropertyValue(
       }).format(Number(value));
     case DataTypeDef.Date:
     case DataTypeDef.DateTime:
-      return formatDateValueForDisplay(String(value), type) ?? String(value);
+      return formatDateValueForDisplay(String(value), type, timezone) ?? String(value);
     default:
       return value;
   }
