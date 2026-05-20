@@ -12,7 +12,6 @@ import TablePagination from "../pagination/TablePagination.vue";
 import { useRoute, useRouter } from "vue-router";
 
 dayjs.extend(utc);
-dayjs.extend(localizedFormat);
 const props = defineProps<{ id: string; type: DigitalProductDocumentTypeType }>();
 
 const { period, changePeriod, activities, fetchActivities, downloadActivities } =

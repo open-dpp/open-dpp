@@ -14,6 +14,7 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 import AasActivityHistory from "./AasActivityHistory.vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
@@ -32,6 +33,7 @@ const { handleSubmit, submitCount, errors } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: { ...props.data },
 });
+const { t } = useI18n();
 
 const showErrors = computed(() => submitCount.value > 0);
 
@@ -62,8 +64,8 @@ defineExpose<{
   <div class="card">
     <Tabs value="0">
       <TabList>
-        <Tab value="0">Header I</Tab>
-        <Tab value="1">Header II</Tab>
+        <Tab value="0">{{ t("aasEditor.data") }}</Tab>
+        <Tab value="1">{{ t("activityHistory.label") }}</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="0">
@@ -87,7 +89,11 @@ defineExpose<{
           </FormContainer>
         </TabPanel>
         <TabPanel value="1">
-          <AasActivityHistory :id="props.id" :path="props.path" />
+          <AasActivityHistory
+            :id="props.id"
+            :path="props.path"
+            :value-type="props.data.valueType"
+          />
         </TabPanel>
       </TabPanels>
     </Tabs>

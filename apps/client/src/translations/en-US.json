@@ -107,6 +107,7 @@
       "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.row",
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
+    "data": "Data",
     "link": "Link",
     "errorLoading": "Loading @:common.failed",
     "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
@@ -457,7 +458,13 @@
     "errorLoading": "Failed to load activity history",
     "errorDownloading": "Failed to download activity history",
     "label": "Activity history",
-    "createdAt": "Date"
+    "createdAt": "Date",
+    "value": "Value:",
+    "operations": {
+      "replace": "modified",
+      "remove": "deleted",
+      "add": "added"
+    }
   },
   "passports": {
     "select": "Select passport",

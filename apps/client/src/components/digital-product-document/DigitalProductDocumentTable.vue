@@ -37,7 +37,6 @@ const emits = defineEmits<{
 }>();
 
 dayjs.extend(utc);
-dayjs.extend(localizedFormat);
 
 const { t, locale } = useI18n();
 const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));

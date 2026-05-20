@@ -12,16 +12,6 @@ import type {
   TableModificationParamsDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
-import type { Ref } from "vue";
-import type { IErrorHandlingStore } from "../stores/error.handling.ts";
-import type {
-  AasEditorPath,
-  EditorType,
-  OpenDrawerCallback,
-  SubmodelElementListEditorProps,
-} from "./aas-drawer.ts";
 import {
   AasSubmodelElements,
   DataTypeDef,
@@ -33,11 +23,22 @@ import {
   SubmodelElementSchema,
   ValueSchema,
 } from "@open-dpp/dto";
-import { match, P } from "ts-pattern";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
+import type { Ref } from "vue";
 import { ref, toRaw } from "vue";
-import { formatDateValueForDisplay, getCurrentTimezone } from "../lib/date-value.ts";
-import { HTTPCode } from "../stores/http-codes.ts";
+import type { IErrorHandlingStore } from "../stores/error.handling.ts";
+import type {
+  AasEditorPath,
+  EditorType,
+  OpenDrawerCallback,
+  SubmodelElementListEditorProps,
+} from "./aas-drawer.ts";
 import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
+import { match, P } from "ts-pattern";
+import { getCurrentTimezone } from "../lib/date-value.ts";
+import { HTTPCode } from "../stores/http-codes.ts";
+import { formatPropertyValue } from "../lib/property-value.ts";
 
 interface AasTableExtensionProps {
   id: string;
@@ -717,23 +718,7 @@ export function useAasTableExtension({
   }
 
   function formatCellValue(value: Value, column: Column) {
-    if (value === null) {
-      return "N/A";
-    }
-    switch (column.plain.valueType) {
-      case DataTypeDef.Double:
-        return new Intl.NumberFormat(selectedLanguage, {
-          style: "decimal",
-        }).format(Number(value));
-      case DataTypeDef.Date:
-      case DataTypeDef.DateTime:
-        return (
-          formatDateValueForDisplay(String(value), column.plain.valueType, viewerTimezone) ??
-          String(value)
-        );
-      default:
-        return value;
-    }
+    return formatPropertyValue(value, column.plain.valueType, selectedLanguage, viewerTimezone);
   }
 
   function init() {

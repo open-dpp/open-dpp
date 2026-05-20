@@ -6,7 +6,7 @@ import type {
 } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import { formatDateValueForDisplay } from "../../lib/date-value.ts";
+import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import List from "./List.vue";
 import Reference from "./Reference.vue";
