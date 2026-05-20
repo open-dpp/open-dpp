@@ -1,12 +1,7 @@
 import { ActivityHeader } from "../activity";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { z } from "zod";
-import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
-import { compare } from "fast-json-patch/module/duplex";
-
-const Version = {
-  v1_0_0: "1.0.0",
-} as const;
+import { compare } from "fast-json-patch/commonjs/duplex";
 
 export interface ActivityHeaderCreateProps {
   digitalProductDocumentId: string;
@@ -20,7 +15,7 @@ export interface ActivityCreateProps extends ActivityHeaderCreateProps {
 }
 
 export function diff(oldData: object | any[], newData: object | any[]): JsonPatchOperation[] {
-  return OperationSchema.array().parse(compare(oldData, newData));
+  return JsonPatchOperationSchema.array().parse(compare(oldData, newData));
 }
 
 export interface ActivityCreatePropsWithAdministration extends ActivityCreateProps {
@@ -30,28 +25,31 @@ export interface ActivityCreatePropsWithAdministration extends ActivityCreatePro
 export function createActivityHeader(
   type: string,
   data: ActivityHeaderCreateProps,
-  version?: string,
+  version: string,
 ) {
   return ActivityHeader.create({
     type,
-    version: version ?? Version.v1_0_0,
+    version: version,
     aggregateId: data.digitalProductDocumentId,
     userId: data.userId,
     createdAt: data.createdAt,
   });
 }
 
-export interface ActivityPayloadCreateProps {
-  administration: AdministrativeInformation;
-  changes: JsonPatchOperation[]; // JSON Patch is specified in RFC 6902 from the IETF (https://jsonpatch.com/)
-}
+export const OperationTypes = {
+  Add: "add",
+  Remove: "remove",
+  Replace: "replace",
+  Move: "move",
+  Copy: "copy",
+  Test: "test",
+} as const;
+export const OperationTypeEnum = z.enum(OperationTypes);
+export type OperationTypesType = z.infer<typeof OperationTypeEnum>;
 
-// Allowed operation types in RFC 6902
-const OperationType = z.enum(["add", "remove", "replace", "move", "copy", "test"]);
-
-// Base schema
-export const OperationSchema = z.object({
-  op: OperationType,
+// Base schema JsonPatch operation specified by RFC 6902 from the IETF (https://jsonpatch.com/)
+export const JsonPatchOperationSchema = z.object({
+  op: OperationTypeEnum,
   path: z.string(),
   // "from" is only required for move/copy
   from: z.string().optional(),
@@ -59,12 +57,10 @@ export const OperationSchema = z.object({
   // value is optional depending on op
   value: z.any().optional(),
 });
-export type JsonPatchOperation = z.infer<typeof OperationSchema>;
+export type JsonPatchOperation = z.infer<typeof JsonPatchOperationSchema>;
 
-export const OperationWithAasSchema = OperationSchema.extend({ aas: z.string() });
-export type JsonPatchOperationWithAas = z.infer<typeof OperationWithAasSchema>;
-
-export const ActivityPayloadSchema = z.object({
-  administration: AdministrativeInformationJsonSchema,
-  changes: OperationSchema.array(),
+// Extended JsonPatch operation with the dpp field which contains relevant dpp identifiers like the idShortPath
+export const ExtendedJsonPatchOperationSchema = JsonPatchOperationSchema.extend({
+  dpp: z.string(),
 });
+export type ExtendedJsonPatchOperation = z.infer<typeof ExtendedJsonPatchOperationSchema>;

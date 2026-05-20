@@ -12,6 +12,7 @@ export {};
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AasActivityHistory: typeof import('./src/components/aas/AasActivityHistory.vue')['default']
     AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
     ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
@@ -122,12 +123,17 @@ declare module 'vue' {
     SubmodelElementListCreateEditor: typeof import('./src/components/aas/SubmodelElementListCreateEditor.vue')['default']
     SubmodelElementListEditor: typeof import('./src/components/aas/SubmodelElementListEditor.vue')['default']
     SubmodelElementValue: typeof import('./src/components/presentation/SubmodelElementValue.vue')['default']
+    Tab: typeof import('primevue/tab')['default']
     TablePagination: typeof import('./src/components/pagination/TablePagination.vue')['default']
-    Tabs: typeof import('./src/components/lists/Tabs.vue')['default']
+    TabList: typeof import('primevue/tablist')['default']
+    TabPanel: typeof import('primevue/tabpanel')['default']
+    TabPanels: typeof import('primevue/tabpanels')['default']
+    Tabs: typeof import('primevue/tabs')['default']
     Tag: typeof import('primevue/tag')['default']
     TemplateCreateDialog: typeof import('./src/components/template/TemplateCreateDialog.vue')['default']
     Textarea: typeof import('primevue/textarea')['default']
     TextFieldWithValidation: typeof import('./src/components/basics/TextFieldWithValidation.vue')['default']
+    Timeline: typeof import('primevue/timeline')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     Toolbar: typeof import('primevue/toolbar')['default']
     Tree: typeof import('primevue/tree')['default']
@@ -142,6 +148,7 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const AasActivityHistory: (typeof import("./src/components/aas/AasActivityHistory.vue"))["default"];
   const AASEditor: (typeof import("./src/components/aas/AASEditor.vue"))["default"];
   const ActivityHistory: (typeof import("./src/components/activity-history/ActivityHistory.vue"))["default"];
   const AdminUsersList: (typeof import("./src/components/admin/AdminUsersList.vue"))["default"];
@@ -252,12 +259,17 @@ declare global {
   const SubmodelElementListCreateEditor: (typeof import("./src/components/aas/SubmodelElementListCreateEditor.vue"))["default"];
   const SubmodelElementListEditor: (typeof import("./src/components/aas/SubmodelElementListEditor.vue"))["default"];
   const SubmodelElementValue: (typeof import("./src/components/presentation/SubmodelElementValue.vue"))["default"];
+  const Tab: (typeof import("primevue/tab"))["default"];
   const TablePagination: (typeof import("./src/components/pagination/TablePagination.vue"))["default"];
-  const Tabs: (typeof import("./src/components/lists/Tabs.vue"))["default"];
+  const TabList: (typeof import("primevue/tablist"))["default"];
+  const TabPanel: (typeof import("primevue/tabpanel"))["default"];
+  const TabPanels: (typeof import("primevue/tabpanels"))["default"];
+  const Tabs: (typeof import("primevue/tabs"))["default"];
   const Tag: (typeof import("primevue/tag"))["default"];
   const TemplateCreateDialog: (typeof import("./src/components/template/TemplateCreateDialog.vue"))["default"];
   const Textarea: (typeof import("primevue/textarea"))["default"];
   const TextFieldWithValidation: (typeof import("./src/components/basics/TextFieldWithValidation.vue"))["default"];
+  const Timeline: (typeof import("primevue/timeline"))["default"];
   const ToggleSwitch: (typeof import("primevue/toggleswitch"))["default"];
   const Toolbar: (typeof import("primevue/toolbar"))["default"];
   const Tree: (typeof import("primevue/tree"))["default"];

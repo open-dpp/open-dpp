@@ -4,6 +4,12 @@ import { ActivityTypesEnum } from "./activity-types";
 import { getActivityClass } from "./activity-registry";
 import { randomUUID } from "node:crypto";
 import { LatestAasExportVersion } from "../aas/infrastructure/serialization/export-schemas/aas-export-shared";
+import { ExtendedJsonPatchOperation } from "./domain/shared.activity";
+import { SubmodelOperationTypesType } from "./submodel-operation-types";
+import { AssetAdministrationShellOperationTypesType } from "./asset-administration-shell-operation-types";
+import { EnvironmentOperationTypesType } from "./environment-types";
+import { DigitalProductDocumentOperationTypesType } from "./digital-product-document-operation-types";
+import { SubmodelRepositoryOperationTypesType } from "./submodel-repository-operation-types";
 
 export const ActivityHeaderSchema = z.object({
   id: z.string(),
@@ -79,7 +85,7 @@ export class ActivityHeader {
       id: this.id,
       aggregateId: this.aggregateId,
       correlationId: this.correlationId,
-      createdAt: this.createdAt,
+      createdAt: this.createdAt.toISOString(),
       type: this.type,
       userId: this.userId,
       version: this.version,
@@ -87,8 +93,6 @@ export class ActivityHeader {
     };
   }
 }
-
-export interface IActivityPayload extends IConvertableToPlain {}
 
 export function activityToDatabase(event: IActivity) {
   return {
@@ -103,6 +107,16 @@ export function activityToPlain(event: IActivity) {
     header: event.header.toPlain(),
     payload: event.payload.toPlain(),
   };
+}
+
+export interface IActivityPayload extends IConvertableToPlain {
+  operation:
+    | SubmodelOperationTypesType
+    | AssetAdministrationShellOperationTypesType
+    | EnvironmentOperationTypesType
+    | DigitalProductDocumentOperationTypesType
+    | SubmodelRepositoryOperationTypesType;
+  changes: Array<ExtendedJsonPatchOperation>;
 }
 
 export interface IActivity extends IConvertableToPlain {

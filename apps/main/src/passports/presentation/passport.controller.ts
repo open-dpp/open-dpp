@@ -112,6 +112,8 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
+  ActivityDppKeyQueryParam,
+  ActivityTypeQueryParam,
   ApiDownloadActivities,
   ApiGetActivities,
   EndDateQueryParam,
@@ -122,6 +124,7 @@ import {
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
+import { ActivityTypesType } from "../../activity-history/activity-types";
 
 @Controller("/passports")
 export class PassportController
@@ -834,6 +837,8 @@ export class PassportController
     @EndDateQueryParam() endDate: string | undefined,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
+    @ActivityDppKeyQueryParam() dppKeyFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
@@ -846,6 +851,8 @@ export class PassportController
       endDate,
       limit,
       cursor,
+      activityType,
+      dppKeyFilter,
     );
   }
 

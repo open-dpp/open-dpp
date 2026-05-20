@@ -759,12 +759,7 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
     expect(response.status).toEqual(200);
-    expect(response.body.result).toEqual(
-      [activity2.toPlain(), activity1.toPlain()].map((a) => ({
-        ...a,
-        header: { ...a.header, createdAt: (a.header.createdAt as any).toISOString() },
-      })),
-    );
+    expect(response.body.result).toEqual([activity2.toPlain(), activity1.toPlain()]);
   }
 
   async function assertDownloadActivities(createEntity: CreateEntity) {

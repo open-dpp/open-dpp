@@ -7,15 +7,24 @@ export const activitiesPlainFactory = Factory.define<ActivityDto>(() => ({
     id: randomUUID(),
     aggregateId: randomUUID(),
     correlationId: randomUUID(),
-    createdAt: new Date(),
-    type: ActivityDtoTypes.SubmodelElementModification,
+    createdAt: new Date().toISOString(),
+    type: ActivityDtoTypes.SubmodelActivity,
     userId: randomUUID(),
     version: "1.0.0",
     exportVersion: "1.0.0",
   },
   payload: {
     submodelId: randomUUID(),
-    fullIdShortPath: "some-path",
-    data: { idShort: "some-id-short", value: "some-value" },
+    fullIdShortPath: "section1.list",
+    additionalIdShort: "col1",
+    administration: { version: "1", revision: "0" },
+    operation: "SubmodelColumnDeleted",
+    changes: [
+      {
+        op: "remove",
+        path: "/submodelElements/0/value/0/value/0",
+        dpp: `list.row1.col1`,
+      },
+    ],
   },
 }));

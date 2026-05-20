@@ -10,7 +10,76 @@ import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 
 describe("SubmodelActivity", () => {
-  it("should return plain", () => {
+  it("should return plain filtered by dppKey", () => {
+    const digitalProductDocumentId = "digitalProductDocumentId";
+    const userId = "userId";
+    const submodelId = "submodelId";
+    const oldData = {
+      submodelElements: [
+        { idShort: "prop1", value: "oldValue" },
+        { idShort: "prop2", value: "oldValue" },
+      ],
+    };
+    const newData = {
+      submodelElements: [
+        { idShort: "prop1", value: "newValue" },
+        { idShort: "prop2", value: "newValue" },
+      ],
+    };
+    const administration = AdministrativeInformation.create({ version: "1", revision: "0" });
+    const fullIdShortPath = IdShortPath.create({ path: "section1.prop1" });
+
+    const activity = SubmodelActivity.create({
+      digitalProductDocumentId,
+      administration,
+      submodelId,
+      fullIdShortPath,
+      userId: userId,
+      oldData,
+      newData,
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+    });
+
+    expect(activity.toPlain({ filter: { dppKey: "prop1" } }).payload).toEqual({
+      administration: administration.toPlain(),
+      additionalIdShort: null,
+      submodelId,
+      fullIdShortPath: fullIdShortPath.toString(),
+      changes: [
+        {
+          dpp: "prop1",
+          op: "replace",
+          path: "/submodelElements/0/value",
+          value: "newValue",
+        },
+      ],
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+    });
+
+    expect(activity.toPlain({ filter: { dppKey: "sw:prop" } }).payload).toEqual({
+      administration: administration.toPlain(),
+      additionalIdShort: null,
+      submodelId,
+      fullIdShortPath: fullIdShortPath.toString(),
+      changes: [
+        {
+          dpp: "prop2",
+          op: "replace",
+          path: "/submodelElements/1/value",
+          value: "newValue",
+        },
+        {
+          dpp: "prop1",
+          op: "replace",
+          path: "/submodelElements/0/value",
+          value: "newValue",
+        },
+      ],
+      operation: SubmodelOperationTypes.SubmodelElementModified,
+    });
+  });
+
+  it("should return plain with different roles", () => {
     const digitalProductDocumentId = "digitalProductDocumentId";
     const userId = "userId";
     const submodelId = "submodelId";
@@ -49,7 +118,7 @@ describe("SubmodelActivity", () => {
       fullIdShortPath: fullIdShortPath.toString(),
       changes: [
         {
-          aas: "",
+          dpp: "",
           op: "replace",
           path: "/value",
           value: "newValue",

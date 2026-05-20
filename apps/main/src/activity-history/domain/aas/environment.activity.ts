@@ -10,15 +10,19 @@ import { ActivityTypes } from "../../activity-types";
 import { z } from "zod";
 import {
   ActivityCreateProps,
-  ActivityPayloadSchema,
   createActivityHeader,
   diff,
-  JsonPatchOperation,
+  ExtendedJsonPatchOperation,
+  ExtendedJsonPatchOperationSchema,
 } from "../shared.activity";
 import {
   EnvironmentOperationTypesEnum,
   EnvironmentOperationTypesType,
 } from "../../environment-types";
+
+const EnvironmentActivityVersion = {
+  v1_0_0: "1.0.0",
+} as const;
 
 export class EnvironmentActivity implements IActivity {
   private constructor(
@@ -31,9 +35,13 @@ export class EnvironmentActivity implements IActivity {
     },
   ) {
     return new EnvironmentActivity(
-      createActivityHeader(ActivityTypes.EnvironmentActivity, data),
+      createActivityHeader(
+        ActivityTypes.EnvironmentActivity,
+        data,
+        EnvironmentActivityVersion.v1_0_0,
+      ),
       EnvironmentPayload.create({
-        changes: diff(data.oldData, data.newData),
+        changes: diff(data.oldData, data.newData).map((op) => ({ ...op, dpp: "" })),
         operation: data.operation,
       }),
     );
@@ -58,17 +66,20 @@ export class EnvironmentActivity implements IActivity {
 }
 
 const EnvironmentPayloadSchema = z.object({
-  ...ActivityPayloadSchema.omit({ administration: true }).shape,
+  changes: ExtendedJsonPatchOperationSchema.array(),
   operation: EnvironmentOperationTypesEnum,
 });
 
 export class EnvironmentPayload implements IActivityPayload {
   private constructor(
     public readonly operation: EnvironmentOperationTypesType,
-    public readonly changes: JsonPatchOperation[],
+    public readonly changes: ExtendedJsonPatchOperation[],
   ) {}
 
-  static create(data: { changes: JsonPatchOperation[]; operation: EnvironmentOperationTypesType }) {
+  static create(data: {
+    changes: ExtendedJsonPatchOperation[];
+    operation: EnvironmentOperationTypesType;
+  }) {
     return new EnvironmentPayload(data.operation, data.changes);
   }
 

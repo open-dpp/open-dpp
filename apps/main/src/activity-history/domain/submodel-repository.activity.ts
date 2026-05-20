@@ -15,6 +15,10 @@ import {
 } from "../submodel-repository-operation-types";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
 
+const SubmodelRepositoryActivityVersion = {
+  v1_0_0: "1.0.0",
+} as const;
+
 export class SubmodelRepositoryActivity implements IActivity {
   private constructor(
     public header: ActivityHeader,
@@ -27,7 +31,11 @@ export class SubmodelRepositoryActivity implements IActivity {
     },
   ) {
     return new SubmodelRepositoryActivity(
-      createActivityHeader(ActivityTypes.SubmodelRepositoryActivity, data),
+      createActivityHeader(
+        ActivityTypes.SubmodelRepositoryActivity,
+        data,
+        SubmodelRepositoryActivityVersion.v1_0_0,
+      ),
       SubmodelRepositoryPayload.create({
         submodel: data.submodel,
         operation: data.operation,
@@ -55,7 +63,7 @@ export class SubmodelRepositoryActivity implements IActivity {
 
 const SubmodelRepositoryPayloadSchema = z.object({
   operation: SubmodelRepositoryOperationTypesEnum,
-  changes: z.any(),
+  changes: z.json(),
 });
 
 export class SubmodelRepositoryPayload implements IActivityPayload {

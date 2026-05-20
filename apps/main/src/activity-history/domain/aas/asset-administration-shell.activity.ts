@@ -14,16 +14,20 @@ import {
   createActivityHeader,
   diff,
   JsonPatchOperation,
-  JsonPatchOperationWithAas,
-  OperationWithAasSchema,
+  ExtendedJsonPatchOperation,
+  ExtendedJsonPatchOperationSchema,
 } from "../shared.activity";
 import {
   AssetAdministrationShellOperationTypesEnum,
   AssetAdministrationShellOperationTypesType,
 } from "../../asset-administration-shell-operation-types";
 import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
-import { unescapePathComponent } from "fast-json-patch/module/helpers";
+import { unescapePathComponent } from "fast-json-patch/commonjs/helpers";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
+
+const AssetAdministrationShellActivityVersion = {
+  v1_0_0: "1.0.0",
+} as const;
 
 export class AssetAdministrationShellActivity implements IActivity {
   private constructor(
@@ -37,7 +41,11 @@ export class AssetAdministrationShellActivity implements IActivity {
     },
   ) {
     return new AssetAdministrationShellActivity(
-      createActivityHeader(ActivityTypes.AssetAdministrationShellActivity, data),
+      createActivityHeader(
+        ActivityTypes.AssetAdministrationShellActivity,
+        data,
+        AssetAdministrationShellActivityVersion.v1_0_0,
+      ),
       AssetAdministrationShellPayload.create({
         assetAdministrationShellId: data.assetAdministrationShellId,
         administration: data.administration,
@@ -69,7 +77,7 @@ export class AssetAdministrationShellActivity implements IActivity {
 
 const AssetAdministrationShellPayloadSchema = z.object({
   administration: AdministrativeInformationJsonSchema,
-  changes: OperationWithAasSchema.array(),
+  changes: ExtendedJsonPatchOperationSchema.array(),
   assetAdministrationShellId: z.string(),
   operation: AssetAdministrationShellOperationTypesEnum,
 });
@@ -79,14 +87,14 @@ export class AssetAdministrationShellPayload implements IActivityPayload {
     public readonly assetAdministrationShellId: string,
     public readonly administration: AdministrativeInformation,
     public readonly operation: AssetAdministrationShellOperationTypesType,
-    public readonly changes: JsonPatchOperationWithAas[],
+    public readonly changes: ExtendedJsonPatchOperation[],
   ) {}
 
   static create(data: {
     administration: AdministrativeInformation;
     assetAdministrationShellId: string;
     operation: AssetAdministrationShellOperationTypesType;
-    changes: JsonPatchOperationWithAas[];
+    changes: ExtendedJsonPatchOperation[];
   }) {
     return new AssetAdministrationShellPayload(
       data.assetAdministrationShellId,
@@ -120,11 +128,11 @@ function extendOperationByAasInformation(
   operation: JsonPatchOperation,
   oldData: any,
   newData: any,
-): JsonPatchOperationWithAas {
+): ExtendedJsonPatchOperation {
   if (!operation.path.startsWith("/security")) {
     return {
       ...operation,
-      aas: "",
+      dpp: "",
     };
   }
   const encodePart = (value: string) => encodeURIComponent(value);
@@ -161,7 +169,7 @@ function extendOperationByAasInformation(
     memberRole = getSubjectAttributeValue(attributes, SubjectAttributes.MemberRoleKey);
   }
 
-  const aas = [
+  const dpp = [
     objectIdShort ? `o=${encodePart(objectIdShort)}` : undefined,
     userRole ? `u=${encodePart(userRole)}` : undefined,
     memberRole ? `m=${encodePart(memberRole)}` : undefined,
@@ -170,6 +178,6 @@ function extendOperationByAasInformation(
     .join("&");
   return {
     ...operation,
-    aas,
+    dpp,
   };
 }

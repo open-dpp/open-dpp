@@ -13,6 +13,7 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
+import AasActivityHistory from "./AasActivityHistory.vue";
 
 const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
@@ -58,22 +59,37 @@ defineExpose<{
 </script>
 
 <template>
-  <FormContainer>
-    <PropertyForm
-      :data="props.data"
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.EDIT"
-      :disabled="disableEdit"
-    />
-    <PermissionsForm
-      ref="permissionsFormRef"
-      :disabled="disableEdit"
-      :ignored-permission-options="[Permissions.Create]"
-      :path="props.path"
-      :modify-shell="props.modifyShell"
-      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-      :get-access-permission-rules="props.getAccessPermissionRules"
-    />
-  </FormContainer>
+  <div class="card">
+    <Tabs value="0">
+      <TabList>
+        <Tab value="0">Header I</Tab>
+        <Tab value="1">Header II</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel value="0">
+          <FormContainer>
+            <PropertyForm
+              :data="props.data"
+              :show-errors="showErrors"
+              :errors="errors"
+              :editor-mode="EditorMode.EDIT"
+              :disabled="disableEdit"
+            />
+            <PermissionsForm
+              ref="permissionsFormRef"
+              :disabled="disableEdit"
+              :ignored-permission-options="[Permissions.Create]"
+              :path="props.path"
+              :modify-shell="props.modifyShell"
+              :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+              :get-access-permission-rules="props.getAccessPermissionRules"
+            />
+          </FormContainer>
+        </TabPanel>
+        <TabPanel value="1">
+          <AasActivityHistory :id="props.id" :path="props.path" />
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
+  </div>
 </template>

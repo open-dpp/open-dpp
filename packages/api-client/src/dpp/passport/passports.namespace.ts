@@ -65,7 +65,7 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     return this.axiosInstance.get<ActivityPaginationDto>(
       `${this.passportEndpoint}/${id}/activities`,
       {
-        params: { ...params.pagination, ...params.period },
+        params: { ...params.pagination, ...params.period, ...params.filter },
       },
     );
   }

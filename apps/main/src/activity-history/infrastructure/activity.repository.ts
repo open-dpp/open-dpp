@@ -9,6 +9,8 @@ import { ActivityHeaderSchema, IActivity, parseActivity } from "../activity";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Period } from "../../time/period";
+import { ActivityTypesType } from "../activity-types";
+import { RegexFilter } from "../domain/aas/regex-filter";
 
 @Injectable()
 export class ActivityRepository {
@@ -40,7 +42,12 @@ export class ActivityRepository {
 
   async findByAggregateId(
     aggregateId: string,
-    options?: { pagination?: Pagination; period?: Period; ascending?: boolean },
+    options?: {
+      pagination?: Pagination;
+      period?: Period;
+      ascending?: boolean;
+      filter?: { activityType?: ActivityTypesType; dppKey?: string };
+    },
   ): Promise<PagingResult<IActivity>> {
     const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
     const period = options?.period ?? Period.create({ end: new Date() });
@@ -54,6 +61,16 @@ export class ActivityRepository {
         ...(period.end && { $lte: period.end }),
       },
     };
+
+    const headerFilter = options?.filter?.activityType
+      ? {
+          type: options.filter.activityType,
+        }
+      : {};
+
+    let payloadFilter = options?.filter?.dppKey
+      ? { "payload.changes.dpp": RegexFilter.create(options.filter.dppKey).toMongoFilter() }
+      : {};
 
     const decodedCursor = tmpPagination.cursor ? decodeCursor(tmpPagination.cursor) : undefined;
     const cursorFilter = decodedCursor
@@ -71,6 +88,8 @@ export class ActivityRepository {
     const documents = await this.activityDoc
       .find({
         aggregateId,
+        ...headerFilter,
+        ...payloadFilter,
         ...(periodFilter || cursorFilter
           ? {
               $and: [periodFilter, cursorFilter].filter((f) => f !== undefined),

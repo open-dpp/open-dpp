@@ -1,6 +1,6 @@
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useI18n } from "vue-i18n";
-import type { ActivityDto, PagingParamsDto } from "@open-dpp/dto";
+import type { ActivityDto, ActivityFilterDto, PagingParamsDto } from "@open-dpp/dto";
 import type { PagingResult } from "./pagination.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { type DigitalProductDocumentTypeType } from "../lib/digital-product-document.ts";
@@ -52,6 +52,7 @@ export function useActivityHistory(type: DigitalProductDocumentTypeType) {
   async function fetchActivities(
     id: string,
     pagination: PagingParamsDto = { limit: 10 },
+    filter?: ActivityFilterDto,
   ): Promise<PagingResult> {
     const errorMessage = t(`${prefix}.errorLoading`);
     let pagingResult: PagingResult = { paging_metadata: { cursor: null }, result: [] };
@@ -59,6 +60,7 @@ export function useActivityHistory(type: DigitalProductDocumentTypeType) {
       const response = await digitalProductDocNamespace.getActivities(id, {
         pagination,
         period: periodToQueryParams(),
+        filter: filter ?? undefined,
       });
       if (response.status === HTTPCode.OK) {
         pagingResult = response.data;

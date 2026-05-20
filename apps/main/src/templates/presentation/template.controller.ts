@@ -104,6 +104,8 @@ import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
+  ActivityDppKeyQueryParam,
+  ActivityTypeQueryParam,
   ApiDownloadActivities,
   ApiGetActivities,
   EndDateQueryParam,
@@ -115,6 +117,7 @@ import {
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import type { Response } from "express";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
+import { ActivityTypesType } from "../../activity-history/activity-types";
 
 @Controller("/templates")
 export class TemplateController
@@ -691,6 +694,8 @@ export class TemplateController
     @EndDateQueryParam() endDate: string | undefined,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
+    @ActivityDppKeyQueryParam() dppKeyFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
@@ -703,6 +708,8 @@ export class TemplateController
       endDate,
       limit,
       cursor,
+      activityType,
+      dppKeyFilter,
     );
   }
 

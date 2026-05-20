@@ -379,11 +379,13 @@ describe("DigitalProductDocumentService", () => {
               op: "replace",
               path: "/lastStatusChange/currentStatus",
               value: "Archived",
+              dpp: "",
             },
             {
               op: "replace",
               path: "/lastStatusChange/previousStatus",
               value: "Draft",
+              dpp: "",
             },
           ],
         }),
@@ -460,21 +462,21 @@ describe("DigitalProductDocumentService", () => {
       2,
       mockArchive,
     );
-    expect(mockArchive.append).toHaveBeenNthCalledWith(
-      1,
-      JSON.stringify([event1.toPlain(), event2.toPlain()], null, 2),
-      {
-        name: `${date1.toISOString()}-${date2.toISOString()}.json`,
-      },
-    );
 
-    expect(mockArchive.append).toHaveBeenNthCalledWith(
-      2,
-      JSON.stringify([event3.toPlain(), event4.toPlain()], null, 2),
-      {
-        name: `${date3.toISOString()}-${date4.toISOString()}.json`,
-      },
-    );
+    const appendMock = mockArchive.append as jest.Mock;
+
+    let [arg1, arg2] = appendMock.mock.calls[0];
+    expect(JSON.parse(arg1 as string)).toEqual([event1.toPlain(), event2.toPlain()]);
+    expect(arg2).toEqual({
+      name: `${date1.toISOString()}-${date2.toISOString()}.json`,
+    });
+
+    [arg1, arg2] = appendMock.mock.calls[1];
+    expect(JSON.parse(arg1 as string)).toEqual([event3.toPlain(), event4.toPlain()]);
+    expect(arg2).toEqual({
+      name: `${date3.toISOString()}-${date4.toISOString()}.json`,
+    });
+
     expect(res.set).toHaveBeenCalledWith({
       "Content-Type": "application/zip",
       "Content-Disposition": 'attachment; filename="activities.zip"',
@@ -545,6 +547,8 @@ describe("DigitalProductDocumentService", () => {
       date1.toISOString(),
       date4.toISOString(),
       2,
+      undefined,
+      undefined,
       undefined,
     );
     const missingPermissionsPayload = (prop: string) => ({

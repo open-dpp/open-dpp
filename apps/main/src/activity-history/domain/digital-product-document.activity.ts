@@ -12,13 +12,17 @@ import {
   ActivityCreateProps,
   createActivityHeader,
   diff,
-  JsonPatchOperation,
-  OperationSchema,
+  ExtendedJsonPatchOperation,
+  ExtendedJsonPatchOperationSchema,
 } from "./shared.activity";
 import {
   DigitalProductDocumentOperationTypesEnum,
   DigitalProductDocumentOperationTypesType,
 } from "../digital-product-document-operation-types";
+
+const DigitalProductDocumentActivityVersion = {
+  v1_0_0: "1.0.0",
+} as const;
 
 export class DigitalProductDocumentActivity implements IActivity {
   private constructor(
@@ -31,9 +35,13 @@ export class DigitalProductDocumentActivity implements IActivity {
     },
   ) {
     return new DigitalProductDocumentActivity(
-      createActivityHeader(ActivityTypes.DigitalProductDocumentActivity, data),
+      createActivityHeader(
+        ActivityTypes.DigitalProductDocumentActivity,
+        data,
+        DigitalProductDocumentActivityVersion.v1_0_0,
+      ),
       DigitalProductDocumentPayload.create({
-        changes: diff(data.oldData, data.newData),
+        changes: diff(data.oldData, data.newData).map((op) => ({ ...op, dpp: "" })),
         operation: data.operation,
       }),
     );
@@ -58,19 +66,19 @@ export class DigitalProductDocumentActivity implements IActivity {
 }
 
 const DigitalProductDocumentPayloadSchema = z.object({
-  changes: OperationSchema.array(),
+  changes: ExtendedJsonPatchOperationSchema.array(),
   operation: DigitalProductDocumentOperationTypesEnum,
 });
 
 export class DigitalProductDocumentPayload implements IActivityPayload {
   private constructor(
     public readonly operation: DigitalProductDocumentOperationTypesType,
-    public readonly changes: JsonPatchOperation[],
+    public readonly changes: ExtendedJsonPatchOperation[],
   ) {}
 
   static create(data: {
     operation: DigitalProductDocumentOperationTypesType;
-    changes: JsonPatchOperation[];
+    changes: ExtendedJsonPatchOperation[];
   }) {
     return new DigitalProductDocumentPayload(data.operation, data.changes);
   }

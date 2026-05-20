@@ -1,6 +1,10 @@
 import { applyDecorators, Get, Query } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { DigitalProductDocumentStatusDtoEnum, PopulateSchema } from "@open-dpp/dto";
+import {
+  ActivityDtoTypesEnum,
+  DigitalProductDocumentStatusDtoEnum,
+  PopulateSchema,
+} from "@open-dpp/dto";
 import { z } from "zod/v4";
 
 export const ApiGetActivitiesPath = "/:id/activities";
@@ -65,3 +69,21 @@ export const StartDateQueryParam = () =>
   Query("startDate", new ZodValidationPipe(StartDateQueryParamSchema));
 export const EndDateQueryParam = () =>
   Query("endDate", new ZodValidationPipe(EndDateQueryParamSchema));
+
+export const ActivityTypeQueryParamSchema = ActivityDtoTypesEnum.optional().meta({
+  description: "Filter activities by type.",
+  param: { in: "query", name: "type" },
+});
+
+export const ActivityTypeQueryParam = () =>
+  Query("type", new ZodValidationPipe(ActivityTypeQueryParamSchema));
+
+export const ActivityDppKeyQueryParamSchema = z
+  .string()
+  .optional()
+  .meta({
+    description: "Filter the payload of the activities for the given dpp key.",
+    param: { in: "query", name: "dppKey" },
+  });
+export const ActivityDppKeyQueryParam = () =>
+  Query("dppKey", new ZodValidationPipe(ActivityDppKeyQueryParamSchema));

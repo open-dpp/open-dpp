@@ -17,6 +17,9 @@ import { Period } from "../../time/period";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { SubmodelActivity } from "../domain/aas/submodel.activity";
 import { SubmodelOperationTypes } from "../submodel-operation-types";
+import { AssetAdministrationShellActivity } from "../domain/aas/asset-administration-shell.activity";
+import { AssetAdministrationShellOperationTypes } from "../asset-administration-shell-operation-types";
+import { ActivityTypes } from "../activity-types";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -126,6 +129,8 @@ describe("activityRepository", () => {
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-02T00:00:00.000Z");
     const date5 = new Date("2022-03-03T00:00:00.000Z");
+    const date6 = new Date("2022-04-03T00:00:00.000Z");
+
     const submodelId = randomUUID();
     const submodelIdShort = "submodelIdShort";
     const passportId = randomUUID();
@@ -134,8 +139,8 @@ describe("activityRepository", () => {
         digitalProductDocumentId: passportId,
         submodelId,
         fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
-        oldData: { idShort, value: "oldValue" },
-        newData: { idShort, value: "newValue" },
+        oldData: { submodelElements: [{ idShort, value: "oldValue" }] },
+        newData: { submodelElements: [{ idShort, value: "newValue" }] },
         administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
         operation: SubmodelOperationTypes.SubmodelElementModified,
         createdAt,
@@ -159,10 +164,61 @@ describe("activityRepository", () => {
       createdAt: date4,
     });
 
+    const aasActivity = AssetAdministrationShellActivity.create({
+      digitalProductDocumentId: passportId,
+      assetAdministrationShellId: randomUUID(),
+      oldData: { value: "oldValue" },
+      newData: { value: "newValue" },
+      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+      operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
+      createdAt: date6,
+    });
+
     beforeAll(async () => {
-      const activities = [event1, event2, event3, eventOfOtherAggregate, event4];
+      const activities = [event1, event2, event3, eventOfOtherAggregate, event4, aasActivity];
       activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
       await activityRepository.createMany(activities);
+    });
+
+    it("using filter", async () => {
+      let foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: { activityType: ActivityTypes.SubmodelActivity },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+            limit: 100,
+          }),
+          items: [event4, event3, event2, event1],
+        }),
+      );
+
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: { activityType: ActivityTypes.SubmodelActivity, dppKey: "prop1" },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+            limit: 100,
+          }),
+          items: [event1],
+        }),
+      );
+
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: { activityType: ActivityTypes.SubmodelActivity, dppKey: "sw:prop" },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+            limit: 100,
+          }),
+          items: [event4, event3, event2, event1],
+        }),
+      );
     });
 
     it("using pagination", async () => {
@@ -173,7 +229,7 @@ describe("activityRepository", () => {
             cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
             limit: 100,
           }),
-          items: [event4, event3, event2, event1],
+          items: [aasActivity, event4, event3, event2, event1],
         }),
       );
 

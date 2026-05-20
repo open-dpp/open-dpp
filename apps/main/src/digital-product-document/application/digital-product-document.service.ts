@@ -31,6 +31,7 @@ import archiver, { Archiver } from "archiver";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
+import { ActivityTypesType } from "../../activity-history/activity-types";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -500,6 +501,8 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     endDate: string | undefined,
     limit: number = 10,
     cursor: string | undefined,
+    filterByActivityType: ActivityTypesType | undefined,
+    dppKeyFilter: string | undefined,
     ascending: boolean = false,
   ) {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
@@ -510,6 +513,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     const ability = await this.environmentService.loadAbility(item.getEnvironment(), subject);
     const period =
       startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
+
     const pagination = Pagination.create({ limit, cursor });
     return ActivityPaginationDtoSchema.parse(
       (
@@ -517,8 +521,9 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
           pagination,
           period,
           ascending,
+          filter: { activityType: filterByActivityType, dppKey: dppKeyFilter },
         })
-      ).toPlain({ ability }),
+      ).toPlain({ ability, ...(dppKeyFilter ? { filter: { dppKey: dppKeyFilter } } : {}) }),
     );
   }
 
@@ -549,6 +554,8 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
         endDate,
         limit,
         currentCursor,
+        undefined,
+        undefined,
         true,
       );
       if (activities.result.length === 0) {
@@ -558,9 +565,9 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
 
       archive.append(JSON.stringify(payload, null, 2), {
         name:
-          activities.result[0].header.createdAt.toISOString() +
+          activities.result[0].header.createdAt +
           "-" +
-          activities.result[activities.result.length - 1].header.createdAt.toISOString() +
+          activities.result[activities.result.length - 1].header.createdAt +
           ".json",
       });
 

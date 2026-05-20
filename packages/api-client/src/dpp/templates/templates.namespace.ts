@@ -71,7 +71,7 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
     return this.axiosInstance.get<ActivityPaginationDto>(
       `${this.templatesEndpoint}/${id}/activities`,
       {
-        params: { ...params.pagination, ...params.period },
+        params: { ...params.pagination, ...params.period, ...params.filter },
       },
     );
   }
