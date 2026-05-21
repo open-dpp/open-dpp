@@ -13,8 +13,9 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
-import AasActivityHistory from "./AasActivityHistory.vue";
+import PropertyActivityHistory from "./PropertyActivityHistory.vue";
 import { useI18n } from "vue-i18n";
+import EditorTabs from "./EditorTabs.vue";
 
 const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
@@ -62,40 +63,34 @@ defineExpose<{
 
 <template>
   <div class="card">
-    <Tabs value="0">
-      <TabList>
-        <Tab value="0">{{ t("aasEditor.data") }}</Tab>
-        <Tab value="1">{{ t("activityHistory.label") }}</Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel value="0">
-          <FormContainer>
-            <PropertyForm
-              :data="props.data"
-              :show-errors="showErrors"
-              :errors="errors"
-              :editor-mode="EditorMode.EDIT"
-              :disabled="disableEdit"
-            />
-            <PermissionsForm
-              ref="permissionsFormRef"
-              :disabled="disableEdit"
-              :ignored-permission-options="[Permissions.Create]"
-              :path="props.path"
-              :modify-shell="props.modifyShell"
-              :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-              :get-access-permission-rules="props.getAccessPermissionRules"
-            />
-          </FormContainer>
-        </TabPanel>
-        <TabPanel value="1">
-          <AasActivityHistory
-            :id="props.id"
-            :path="props.path"
-            :value-type="props.data.valueType"
+    <EditorTabs>
+      <template #data>
+        <FormContainer>
+          <PropertyForm
+            :data="props.data"
+            :show-errors="showErrors"
+            :errors="errors"
+            :editor-mode="EditorMode.EDIT"
+            :disabled="disableEdit"
           />
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+          <PermissionsForm
+            ref="permissionsFormRef"
+            :disabled="disableEdit"
+            :ignored-permission-options="[Permissions.Create]"
+            :path="props.path"
+            :modify-shell="props.modifyShell"
+            :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+            :get-access-permission-rules="props.getAccessPermissionRules"
+          />
+        </FormContainer>
+      </template>
+      <template #activityHistory>
+        <PropertyActivityHistory
+          :id="props.id"
+          :path="props.path"
+          :value-type="props.data.valueType"
+        />
+      </template>
+    </EditorTabs>
   </div>
 </template>

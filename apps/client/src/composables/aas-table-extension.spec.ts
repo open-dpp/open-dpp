@@ -19,6 +19,10 @@ import { HTTPCode } from "../stores/http-codes.ts";
 import { generatedErrorHandlingStoreMock } from "../testing-utils/error-handling-store-mock.ts";
 import { useAasDrawer } from "./aas-drawer.ts";
 import { useAasTableExtension } from "./aas-table-extension.ts";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
 
 const mocks = vi.hoisted(() => {
   return {

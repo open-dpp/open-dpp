@@ -21,10 +21,14 @@ import { formatPropertyValue } from "../../lib/property-value.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
 dayjs.extend(utc);
-const props = defineProps<{ id: string; path: AasEditorPath; valueType: DataTypeDefType }>();
+const props = defineProps<{
+  id: string;
+  path: AasEditorPath;
+  createTimelineItem: (activity: ActivityDto, change: JsonPatchOperationDto) => TimelineItem;
+}>();
 
 const { activities, fetchActivities } = useActivityHistory(DigitalProductDocumentType.Passport);
-const { t, locale } = useI18n();
+const { t } = useI18n();
 
 const route = useRoute();
 
@@ -37,53 +41,11 @@ type TimelineItem = {
   icon: string;
 };
 
-function createTimelineItem(activity: ActivityDto, change: JsonPatchOperationDto): TimelineItem {
-  const id = activity.header.id;
-  const timestamp = dayjs(activity.header.createdAt).format("LLL");
-  const operation = t(`activityHistory.operations.${change.op}`);
-  const valueAttr = t("aasEditor.formLabels.value");
-  const nameAttr = t("aasEditor.formLabels.name");
-
-  if (change.op === OperationDtoTypes.Remove) {
-    return {
-      id,
-      timestamp,
-      attribute: change.path.endsWith("value") ? valueAttr : nameAttr,
-      operation,
-      value: undefined,
-      icon: "pi pi-trash",
-    };
-  } else if (change.op === OperationDtoTypes.Add) {
-    const nameParsingResult = LanguageTextJsonSchema.safeParse(change.value);
-    const value = nameParsingResult.success ? nameParsingResult.data.text : change.value;
-    return {
-      id,
-      timestamp,
-      attribute: valueAttr,
-      operation,
-      value,
-      icon: "pi pi-plus",
-    };
-  } else {
-    return {
-      id,
-      timestamp,
-      attribute: change.path.endsWith("value") ? valueAttr : nameAttr,
-      operation,
-      value: formatPropertyValue(
-        change.value,
-        props.valueType,
-        convertLocaleToLanguage(locale.value),
-      ),
-      icon: "pi pi-pencil",
-    };
-  }
-}
 const timelineItems = computed<TimelineItem[]>(() => {
   const result = [];
   for (const activity of activities.value) {
     for (const change of activity.payload.changes) {
-      result.push(createTimelineItem(activity, change));
+      result.push(props.createTimelineItem(activity, change));
     }
   }
   return result;
@@ -120,7 +82,7 @@ onMounted(async () => {
     </template>
     <template #content="slotProps">
       <Card class="mt-4">
-        <template #title>{{ slotProps.item.attribute }} {{ slotProps.item.operation }} </template>
+        <template #title>{{ slotProps.item.attribute }} {{ slotProps.item.operation }}</template>
         <template #subtitle>
           {{ slotProps.item.timestamp }}
         </template>
