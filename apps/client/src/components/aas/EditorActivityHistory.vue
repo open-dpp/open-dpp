@@ -20,11 +20,12 @@ import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import { formatPropertyValue } from "../../lib/property-value.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
+import type { TimelineItem } from "../../composables/activity-timeline.ts";
 
 dayjs.extend(utc);
 const props = defineProps<{
   id: string;
-  path: AasEditorPath;
+  dppKey: string;
   createTimelineItem: (
     activity: ActivityDto,
     change: JsonPatchOperationDto,
@@ -35,16 +36,6 @@ const { activities, fetchActivities } = useActivityHistory(DigitalProductDocumen
 const { t } = useI18n();
 
 const route = useRoute();
-
-type TimelineItem = {
-  id: string;
-  timestamp: string;
-  attribute: string;
-  operation: string;
-  renderValueAsFile?: boolean;
-  value: string | undefined;
-  icon: string;
-};
 
 const timelineItems = computed<TimelineItem[]>(() => {
   const result = [];
@@ -62,7 +53,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
 async function fetchCallback(pagingParams: PagingParamsDto) {
   const response = await fetchActivities(props.id, pagingParams, {
     type: ActivityDtoTypes.SubmodelActivity,
-    dppKey: props.path.idShortPath,
+    dppKey: props.dppKey,
   });
 
   activities.value = response.result;

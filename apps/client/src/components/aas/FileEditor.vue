@@ -1,22 +1,19 @@
 <script setup lang="ts">
 import type { FileModificationDto } from "@open-dpp/dto";
-import type { FileEditorProps } from "../../composables/aas-drawer.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { FileModificationSchema, Permissions } from "@open-dpp/dto";
+import type { FileEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
-import ReferenceElementForm from "./ReferenceElementForm.vue";
-import ReferenceElementActivityHistory from "./ReferenceElementActivityHistory.vue";
 import EditorTabs from "./EditorTabs.vue";
-import FormContainer from "./form/FormContainer.vue";
-import FileActivityHistory from "./FileActivityHistory.vue";
+import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
@@ -27,6 +24,7 @@ const formSchema = z.object({
 });
 export type FormValues = z.infer<typeof formSchema>;
 
+const { createTimelineItemForFile } = useActivityTimeline();
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
 });
@@ -83,7 +81,12 @@ defineExpose<{
       </div>
     </template>
     <template #activityHistory>
-      <FileActivityHistory :id="props.id" :path="props.path" />
+      <EditorActivityHistory
+        v-if="props.path.idShortPath"
+        :id="props.id"
+        :dppKey="props.path.idShortPath"
+        :createTimelineItem="createTimelineItemForFile"
+      />
     </template>
   </EditorTabs>
 </template>

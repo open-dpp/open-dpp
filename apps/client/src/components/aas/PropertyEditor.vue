@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import type { PropertyModificationDto } from "@open-dpp/dto";
-import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { Permissions, PropertyModificationSchema } from "@open-dpp/dto";
+import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
 
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
-import PropertyActivityHistory from "./PropertyActivityHistory.vue";
-import { useI18n } from "vue-i18n";
 import EditorTabs from "./EditorTabs.vue";
+import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
@@ -23,7 +22,6 @@ const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
   value: z.nullish(z.string()),
 });
-
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;
 } | null>(null);
@@ -34,7 +32,8 @@ const { handleSubmit, submitCount, errors } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: { ...props.data },
 });
-const { t } = useI18n();
+
+const { createTimelineItemForProperty } = useActivityTimeline();
 
 const showErrors = computed(() => submitCount.value > 0);
 
@@ -85,10 +84,14 @@ defineExpose<{
         </FormContainer>
       </template>
       <template #activityHistory>
-        <PropertyActivityHistory
+        <EditorActivityHistory
+          v-if="props.path.idShortPath"
           :id="props.id"
-          :path="props.path"
-          :value-type="props.data.valueType"
+          :dppKey="props.path.idShortPath"
+          :createTimelineItem="
+            (activity, change) =>
+              createTimelineItemForProperty(activity, change, props.data.valueType)
+          "
         />
       </template>
     </EditorTabs>

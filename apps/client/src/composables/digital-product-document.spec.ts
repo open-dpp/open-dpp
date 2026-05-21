@@ -7,7 +7,7 @@ import { passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useDigitalProductDocument } from "./digital-product-document.ts";

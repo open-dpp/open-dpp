@@ -1,27 +1,25 @@
 <script setup lang="ts">
 import type { ReferenceElementModificationDto } from "@open-dpp/dto";
-import type { ReferenceElementEditorProps } from "../../composables/aas-drawer.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import {
   KeyTypes,
   Permissions,
   ReferenceElementModificationSchema,
   ReferenceTypes,
 } from "@open-dpp/dto";
+import type { ReferenceElementEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 
 import { useForm } from "vee-validate";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
-import PropertyActivityHistory from "./PropertyActivityHistory.vue";
 import EditorTabs from "./EditorTabs.vue";
-import PropertyForm from "./PropertyForm.vue";
-import ReferenceElementActivityHistory from "./ReferenceElementActivityHistory.vue";
+import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props =
   defineProps<SharedEditorProps<ReferenceElementEditorProps, ReferenceElementModificationDto>>();
@@ -39,6 +37,7 @@ const { handleSubmit, errors, submitCount } = useForm<FormValues>({
       props.data.value && props.data.value.keys.length > 0 ? props.data.value.keys[0].value : null,
   },
 });
+const { createTimelineItemForReferenceElement } = useActivityTimeline();
 
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
@@ -107,7 +106,12 @@ defineExpose<{
       </FormContainer>
     </template>
     <template #activityHistory>
-      <ReferenceElementActivityHistory :id="props.id" :path="props.path" />
+      <EditorActivityHistory
+        v-if="props.path.idShortPath"
+        :id="props.id"
+        :dppKey="props.path.idShortPath"
+        :createTimelineItem="createTimelineItemForReferenceElement"
+      />
     </template>
   </EditorTabs>
 </template>
