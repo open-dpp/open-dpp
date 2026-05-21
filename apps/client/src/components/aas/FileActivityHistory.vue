@@ -18,19 +18,19 @@ const props = defineProps<{ id: string; path: AasEditorPath }>();
 const activityTimelineRendering = useActivityTimelineRendering();
 
 function formatValue(value: any) {
-  const parsedResult = ReferenceJsonSchema.safeParse(value);
-  if (parsedResult.success) {
-    return parsedResult.data.keys.find((key: KeyDto) => key.type === KeyTypes.GlobalReference)
-      ?.value;
-  } else if (z.string().safeParse(value).success) {
+  if (z.string().safeParse(value).success) {
     return value;
   }
   return undefined;
 }
 
 function createTimelineItem(activity: ActivityDto, change: JsonPatchOperationDto) {
+  if (change.path.endsWith("/contentType")) {
+    return undefined;
+  }
   return activityTimelineRendering.createTimelineItem(activity, change, (value) => ({
     value: formatValue(value),
+    renderValueAsFile: true,
   }));
 }
 </script>

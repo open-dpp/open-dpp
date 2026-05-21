@@ -19,12 +19,16 @@ import { useRoute } from "vue-router";
 import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import { formatPropertyValue } from "../../lib/property-value.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import MediaFieldView from "../media/MediaFieldView.vue";
 
 dayjs.extend(utc);
 const props = defineProps<{
   id: string;
   path: AasEditorPath;
-  createTimelineItem: (activity: ActivityDto, change: JsonPatchOperationDto) => TimelineItem;
+  createTimelineItem: (
+    activity: ActivityDto,
+    change: JsonPatchOperationDto,
+  ) => TimelineItem | undefined;
 }>();
 
 const { activities, fetchActivities } = useActivityHistory(DigitalProductDocumentType.Passport);
@@ -37,6 +41,7 @@ type TimelineItem = {
   timestamp: string;
   attribute: string;
   operation: string;
+  renderValueAsFile?: boolean;
   value: string | undefined;
   icon: string;
 };
@@ -45,7 +50,10 @@ const timelineItems = computed<TimelineItem[]>(() => {
   const result = [];
   for (const activity of activities.value) {
     for (const change of activity.payload.changes) {
-      result.push(props.createTimelineItem(activity, change));
+      const timelineItem = props.createTimelineItem(activity, change);
+      if (timelineItem) {
+        result.push(timelineItem);
+      }
     }
   }
   return result;
@@ -87,7 +95,11 @@ onMounted(async () => {
           {{ slotProps.item.timestamp }}
         </template>
         <template #content v-if="slotProps.item.value">
-          <p>{{ t("activityHistory.value") }} {{ slotProps.item.value }}</p>
+          <MediaFieldView
+            v-if="slotProps.item.renderValueAsFile"
+            :media-id="slotProps.item.value"
+          />
+          <p v-else>{{ t("activityHistory.value") }} {{ slotProps.item.value }}</p>
         </template>
       </Card>
     </template>

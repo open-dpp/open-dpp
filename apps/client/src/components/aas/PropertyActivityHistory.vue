@@ -22,9 +22,9 @@ const { locale } = useI18n();
 const activityTimelineRendering = useActivityTimelineRendering();
 
 function createTimelineItem(activity: ActivityDto, change: JsonPatchOperationDto) {
-  return activityTimelineRendering.createTimelineItem(activity, change, (value) =>
-    formatPropertyValue(value, props.valueType, convertLocaleToLanguage(locale.value)),
-  );
+  return activityTimelineRendering.createTimelineItem(activity, change, (value) => ({
+    value: formatPropertyValue(value, props.valueType, convertLocaleToLanguage(locale.value)),
+  }));
 }
 </script>
 

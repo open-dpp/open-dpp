@@ -15,7 +15,7 @@ export function useActivityTimelineRendering() {
   function createTimelineItem(
     activity: ActivityDto,
     change: JsonPatchOperationDto,
-    valueFormater: (value: any) => string | undefined,
+    valueFormater: (value: any) => { value: string | undefined; renderValueAsFile?: boolean },
   ) {
     const id = activity.header.id;
     const timestamp = dayjs(activity.header.createdAt).format("LLL");
@@ -44,12 +44,12 @@ export function useActivityTimelineRendering() {
       };
     } else {
       return {
+        ...valueFormater(change.value),
         id,
         timestamp,
         attribute: change.path.endsWith("value") ? valueAttr : nameAttr,
         operation,
-        value: valueFormater(change.value),
-        icon: "pi pi-pencil",
+        icon: "pi pi-user-edit",
       };
     }
   }

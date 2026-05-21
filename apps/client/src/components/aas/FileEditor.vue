@@ -12,6 +12,11 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
+import ReferenceElementForm from "./ReferenceElementForm.vue";
+import ReferenceElementActivityHistory from "./ReferenceElementActivityHistory.vue";
+import EditorTabs from "./EditorTabs.vue";
+import FormContainer from "./form/FormContainer.vue";
+import FileActivityHistory from "./FileActivityHistory.vue";
 
 const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
@@ -58,16 +63,27 @@ defineExpose<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-2">
-    <FileForm :show-errors="showErrors" :editor-mode="EditorMode.EDIT" :disabled="disableEdit" />
-    <PermissionsForm
-      ref="permissionsFormRef"
-      :disabled="disableEdit"
-      :ignored-permission-options="[Permissions.Create]"
-      :path="props.path"
-      :modify-shell="props.modifyShell"
-      :get-access-permission-rules="props.getAccessPermissionRules"
-      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-    />
-  </div>
+  <EditorTabs>
+    <template #data>
+      <div class="flex flex-col gap-4 p-2">
+        <FileForm
+          :show-errors="showErrors"
+          :editor-mode="EditorMode.EDIT"
+          :disabled="disableEdit"
+        />
+        <PermissionsForm
+          ref="permissionsFormRef"
+          :disabled="disableEdit"
+          :ignored-permission-options="[Permissions.Create]"
+          :path="props.path"
+          :modify-shell="props.modifyShell"
+          :get-access-permission-rules="props.getAccessPermissionRules"
+          :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+        />
+      </div>
+    </template>
+    <template #activityHistory>
+      <FileActivityHistory :id="props.id" :path="props.path" />
+    </template>
+  </EditorTabs>
 </template>
