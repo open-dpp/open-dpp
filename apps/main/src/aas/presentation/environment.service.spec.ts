@@ -888,6 +888,7 @@ describe("environmentService", () => {
           command: {
             op: SubmodelOperationTypes.SubmodelColumnAdded,
             path: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+            value: { pos: position },
           },
           changes: [
             {
@@ -959,6 +960,7 @@ describe("environmentService", () => {
           command: {
             op: SubmodelOperationTypes.SubmodelRowAdded,
             path: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+            value: { pos: position },
           },
           changes: [
             {
@@ -1542,6 +1544,7 @@ describe("environmentService", () => {
             path: submodelElementList.getIdShortPath(),
             value: {
               aId: col1.idShort,
+              pos: 0,
             },
           },
           changes: [
@@ -1629,6 +1632,7 @@ describe("environmentService", () => {
             path: submodelElementList.getIdShortPath(),
             value: {
               aId: row1.idShort,
+              pos: 0,
             },
           },
           changes: [

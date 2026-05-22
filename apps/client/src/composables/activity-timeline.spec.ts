@@ -83,10 +83,20 @@ describe("activity timeline", () => {
       },
     };
 
+    const replaceDisplayName = {
+      op: OperationDtoTypes.Replace,
+      path: "/submodelElements/0/displayName/1/text",
+      value: "Carbon footprint per lifecycle staged New",
+      dpp: {
+        p: "carbonFootprintPerLifecycleStage",
+        m: KeyTypes.SubmodelElementList,
+      },
+    };
+
     const activity = activitiesPlainFactory.build({
       header: { createdAt },
       payload: {
-        changes: [addDisplayName, removeDisplayName],
+        changes: [addDisplayName, removeDisplayName, replaceDisplayName],
         command: { op: SubmodelOperationDtoTypes.SubmodelElementModified },
       },
     });
@@ -95,6 +105,7 @@ describe("activity timeline", () => {
       createTimelineItemForProperty,
       createTimelineItemForFile,
       createTimelineItemForReferenceElement,
+      createTimelineItemForList,
     } = mountHarness();
     const expectedAdd = {
       id: activity.header.id,
@@ -118,6 +129,14 @@ describe("activity timeline", () => {
     expect(createTimelineItemForReferenceElement(activity, removeDisplayName)).toEqual(
       expectedRemove,
     );
+    const expectedReplace = {
+      id: activity.header.id,
+      timestamp: createdAtFormatted,
+      title: `${displayName} ${editOperation}`,
+      icon: editIcon,
+      content: [{ value: "Carbon footprint per lifecycle staged New" }],
+    };
+    expect(createTimelineItemForList(activity, replaceDisplayName)).toEqual(expectedReplace);
   });
 
   it("should create timeline items for Property", async () => {
@@ -308,6 +327,7 @@ describe("activity timeline", () => {
         changes: [rowAdded, rowMoved],
         command: {
           op: SubmodelOperationDtoTypes.SubmodelRowAdded,
+          value: { pos: 3 },
         },
       },
     });
@@ -318,7 +338,7 @@ describe("activity timeline", () => {
       timestamp: createdAtFormatted,
       title: `${rowTrans} ${addOperation}`,
       icon: addIcon,
-      content: [{ value: `${positionTrans}: 5` }],
+      content: [{ value: `${positionTrans}: 4` }],
     };
     expect(createTimelineItemForList(activity, rowAdded)).toEqual(expectedResult);
     expect(createTimelineItemForList(activity, rowMoved)).toBeUndefined();
@@ -336,6 +356,7 @@ describe("activity timeline", () => {
         changes: [rowDeleted],
         command: {
           op: SubmodelOperationDtoTypes.SubmodelRowDeleted,
+          value: { pos: 3 },
         },
       },
     });
@@ -346,7 +367,7 @@ describe("activity timeline", () => {
       timestamp: createdAtFormatted,
       title: `${rowTrans} ${removeOperation}`,
       icon: removeIcon,
-      content: [{ value: `${positionTrans}: 5` }],
+      content: [{ value: `${positionTrans}: 4` }],
     };
     expect(createTimelineItemForList(activity, rowDeleted)).toEqual(expectedResult);
   });
@@ -368,6 +389,7 @@ describe("activity timeline", () => {
         changes: [columnAdded0, columnAdded1],
         command: {
           op: SubmodelOperationDtoTypes.SubmodelColumnAdded,
+          value: { pos: 3 },
         },
       },
     });
@@ -378,7 +400,7 @@ describe("activity timeline", () => {
       timestamp: createdAtFormatted,
       title: `${columnTrans} ${addOperation}`,
       icon: addIcon,
-      content: [{ value: `${positionTrans}: 5` }],
+      content: [{ value: `${positionTrans}: 4` }],
     };
     expect(createTimelineItemForList(activity, columnAdded0)).toEqual(expectedResult);
     expect(createTimelineItemForList(activity, columnAdded1)).toBeUndefined();
@@ -401,6 +423,7 @@ describe("activity timeline", () => {
         changes: [columnDeleted0, columnDeleted1],
         command: {
           op: SubmodelOperationDtoTypes.SubmodelColumnDeleted,
+          value: { pos: 3 },
         },
       },
     });
@@ -411,7 +434,7 @@ describe("activity timeline", () => {
       timestamp: createdAtFormatted,
       title: `${columnTrans} ${removeOperation}`,
       icon: removeIcon,
-      content: [{ value: `${positionTrans}: 5` }],
+      content: [{ value: `${positionTrans}: 4` }],
     };
     expect(createTimelineItemForList(activity, columnDeleted0)).toEqual(expectedResult);
   });

@@ -164,7 +164,7 @@ describe("apiClient", () => {
         expect(response.data.result).toEqual(
           [activity1, activity2].map((a) => ({
             ...a,
-            header: { ...a.header, createdAt: a.header.createdAt.toISOString() },
+            header: { ...a.header, createdAt: a.header.createdAt },
           })),
         );
       });

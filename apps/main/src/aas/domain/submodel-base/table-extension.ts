@@ -100,6 +100,14 @@ export class TableExtension {
     }
   }
 
+  getRowPosition(idShort: string) {
+    return this.rows.findIndex((row) => row.idShort === idShort);
+  }
+
+  getColumnPosition(idShort: string) {
+    return this.columns.findIndex((column) => column.idShort === idShort);
+  }
+
   deleteRow(idShort: string, options: DeleteOptions) {
     this.data.deleteSubmodelElement(idShort, options);
     if (this.headerRow && this.headerRow.idShort === idShort) {

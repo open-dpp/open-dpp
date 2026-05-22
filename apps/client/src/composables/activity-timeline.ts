@@ -52,6 +52,11 @@ export function useActivityTimeline() {
 
   function createSubmodelBaseMatcher(activity: ActivityDto, change: ExtendedJsonPatchDtoOperation) {
     const { id, timestamp, operation, nameAttr } = createTranslations(activity, change);
+    const SubmodelBaseModification = P.union(
+      SubmodelOperationDtoTypes.SubmodelValueModified,
+      SubmodelOperationDtoTypes.SubmodelElementValueModified,
+      SubmodelOperationDtoTypes.SubmodelElementModified,
+    );
     return match({ activity, change })
       .returnType<TimelineItem | undefined>()
       .with(
@@ -63,11 +68,7 @@ export function useActivityTimeline() {
           activity: {
             payload: {
               command: {
-                op: P.union(
-                  SubmodelOperationDtoTypes.SubmodelValueModified,
-                  SubmodelOperationDtoTypes.SubmodelElementValueModified,
-                  SubmodelOperationDtoTypes.SubmodelElementModified,
-                ),
+                op: SubmodelBaseModification,
               },
             },
           },
@@ -89,11 +90,7 @@ export function useActivityTimeline() {
           activity: {
             payload: {
               command: {
-                op: P.union(
-                  SubmodelOperationDtoTypes.SubmodelValueModified,
-                  SubmodelOperationDtoTypes.SubmodelElementValueModified,
-                  SubmodelOperationDtoTypes.SubmodelElementModified,
-                ),
+                op: SubmodelBaseModification,
               },
             },
           },
@@ -104,6 +101,28 @@ export function useActivityTimeline() {
           title: createTitle(nameAttr, operation),
           content: [{ value: change.value.text }],
           icon: addIcon,
+        }),
+      )
+      .with(
+        {
+          change: {
+            op: OperationDtoTypes.Replace,
+            path: P.string.regex("\\/displayName\\/\\d+\\/text$"),
+          },
+          activity: {
+            payload: {
+              command: {
+                op: SubmodelBaseModification,
+              },
+            },
+          },
+        },
+        () => ({
+          id,
+          timestamp,
+          title: createTitle(nameAttr, operation),
+          content: [{ value: change.value }],
+          icon: replaceIcon,
         }),
       );
   }
@@ -234,11 +253,6 @@ export function useActivityTimeline() {
     return [...path.matchAll(regex)].map((match) => match.groups?.number);
   }
 
-  function positionFromPath(path: string): string {
-    const numbers = getNumberPartsFromPath(path);
-    return `${Number(numbers[numbers.length - 1]) + 1}`;
-  }
-
   function cellPositionAsContentFromPath(change: ExtendedJsonPatchDtoOperation) {
     const numbers = getNumberPartsFromPath(change.path);
     return [
@@ -261,14 +275,21 @@ export function useActivityTimeline() {
           change: {
             op: OperationDtoTypes.Add,
           },
-          activity: { payload: { command: { op: SubmodelOperationDtoTypes.SubmodelRowAdded } } },
+          activity: {
+            payload: {
+              command: {
+                op: SubmodelOperationDtoTypes.SubmodelRowAdded,
+                value: { pos: P.number.select() },
+              },
+            },
+          },
         },
-        () => ({
+        (pos) => ({
           id,
           timestamp,
           title: createTitle(rowTrans, operation),
           icon: addIcon,
-          content: [{ value: createContent(positionTrans, positionFromPath(change.path)) }],
+          content: [{ value: createContent(positionTrans, z.coerce.string().parse(pos + 1)) }],
         }),
       )
       .with(
@@ -276,48 +297,67 @@ export function useActivityTimeline() {
           change: {
             op: OperationDtoTypes.Remove,
           },
-          activity: { payload: { command: { op: SubmodelOperationDtoTypes.SubmodelRowDeleted } } },
+          activity: {
+            payload: {
+              command: {
+                op: SubmodelOperationDtoTypes.SubmodelRowDeleted,
+                value: { pos: P.number.select() },
+              },
+            },
+          },
         },
-        () => ({
+        (pos) => ({
           id,
           timestamp,
           title: createTitle(rowTrans, operation),
           icon: removeIcon,
-          content: [{ value: createContent(positionTrans, positionFromPath(change.path)) }],
+          content: [{ value: createContent(positionTrans, z.coerce.string().parse(pos + 1)) }],
         }),
       )
       .with(
         {
           activity: {
-            payload: { command: { op: SubmodelOperationDtoTypes.SubmodelColumnDeleted } },
+            payload: {
+              command: {
+                op: SubmodelOperationDtoTypes.SubmodelColumnDeleted,
+                value: { pos: P.number.select() },
+              },
+            },
           },
           change: {
             op: OperationDtoTypes.Remove,
             path: P.string.regex("\\/value\\/0\\/value\\/\\d+$"),
           },
         },
-        () => ({
+        (pos) => ({
           id,
           timestamp,
           title: createTitle(colTrans, operation),
           icon: removeIcon,
-          content: [{ value: createContent(positionTrans, positionFromPath(change.path)) }],
+          content: [{ value: createContent(positionTrans, z.coerce.string().parse(pos + 1)) }],
         }),
       )
       .with(
         {
-          activity: { payload: { command: { op: SubmodelOperationDtoTypes.SubmodelColumnAdded } } },
+          activity: {
+            payload: {
+              command: {
+                op: SubmodelOperationDtoTypes.SubmodelColumnAdded,
+                value: { pos: P.number.select() },
+              },
+            },
+          },
           change: {
             op: OperationDtoTypes.Add,
             path: P.string.regex("\\/value\\/0\\/value\\/\\d+$"),
           },
         },
-        () => ({
+        (pos) => ({
           id,
           timestamp,
           title: createTitle(colTrans, operation),
           icon: addIcon,
-          content: [{ value: createContent(positionTrans, positionFromPath(change.path)) }],
+          content: [{ value: createContent(positionTrans, z.coerce.string().parse(pos + 1)) }],
         }),
       )
       .with(

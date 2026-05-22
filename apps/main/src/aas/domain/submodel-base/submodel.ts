@@ -249,6 +249,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         operation: SubmodelOperationTypes.SubmodelRowAdded,
         oldData,
         newData: structuredClone(this.toPlain()),
+        position: options.position ?? tableExtension.rows.length - 1,
       }),
     );
     return tableExtension.getTableElement();
@@ -257,6 +258,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
   deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     const oldData = structuredClone(this.toPlain());
+    const position = tableExtension.getRowPosition(idShortOfRow);
     tableExtension.deleteRow(idShortOfRow, options);
     this.publishActivity(
       SubmodelActivity.create({
@@ -269,6 +271,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         operation: SubmodelOperationTypes.SubmodelRowDeleted,
         oldData,
         newData: structuredClone(this.toPlain()),
+        position,
       }),
     );
     return tableExtension.getTableElement();
@@ -288,6 +291,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         newData: structuredClone(this.toPlain()),
         userId: options.ability.userId ?? undefined,
         operation: SubmodelOperationTypes.SubmodelColumnAdded,
+        position: options.position ?? tableExtension.columns.length - 1,
       }),
     );
     return tableExtension.getTableElement();
@@ -321,6 +325,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
   deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     const oldData = structuredClone(this.toPlain());
+    const position = tableExtension.getColumnPosition(idShortOfColumn);
+
     tableExtension.deleteColumn(idShortOfColumn, options);
     this.publishActivity(
       SubmodelActivity.create({
@@ -333,6 +339,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
         newData: structuredClone(this.toPlain()),
         userId: options.ability.userId ?? undefined,
         operation: SubmodelOperationTypes.SubmodelColumnDeleted,
+        position,
       }),
     );
     return tableExtension.getTableElement();
