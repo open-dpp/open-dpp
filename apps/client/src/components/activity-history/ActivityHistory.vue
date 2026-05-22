@@ -47,7 +47,7 @@ const {
   reloadCurrentPage,
 } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-  limit: 10,
+  limit: 20,
   fetchCallback,
   changeQueryParams,
 });
@@ -57,7 +57,7 @@ const downloadZip = async () => {
 };
 
 const downloadJson = (activityDto: ActivityDto) => {
-  const dataStr = JSON.stringify(activityDto.payload, null, 2);
+  const dataStr = JSON.stringify(activityDto, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
@@ -104,20 +104,19 @@ onMounted(async () => {
         <Button icon="pi pi-download" :label="t('common.download')" raised @click="downloadZip" />
       </div>
     </template>
-    <Column
-      field="header.createdAt"
-      filterField="header.createdAt"
-      :header="t('activityHistory.createdAt')"
-    >
+    <Column field="header.createdAt" :header="t('activityHistory.createdAt')">
       <template #body="slotProps">
         <p>
-          {{ dayjs(slotProps.data.header.createdAt).format("LLL") }}
+          {{ dayjs(slotProps.data.header.createdAt).format("L LTS") }}
         </p>
       </template>
     </Column>
+    <Column field="header.id" header="ID" />
+    <Column field="header.correlationId" :header="t('activityHistory.correlationId')" />
+    <Column field="header.userId" :header="t('activityHistory.userId')" />
     <Column>
       <template #body="{ data }">
-        <Button label="Download" @click="downloadJson(data)" />
+        <Button :label="t('common.download')" @click="downloadJson(data)" />
       </template>
     </Column>
     <template #paginatorcontainer>

@@ -622,7 +622,7 @@ export class EnvironmentService {
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(userContext.subject);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn, {
       ability,
       digitalProductDocumentId,

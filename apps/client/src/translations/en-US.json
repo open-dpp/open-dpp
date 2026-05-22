@@ -460,6 +460,8 @@
     "label": "Activity history",
     "createdAt": "Date",
     "position": "Position",
+    "userId": "User ID",
+    "correlationId": "Correlation ID",
     "operations": {
       "replace": "modified",
       "remove": "deleted",

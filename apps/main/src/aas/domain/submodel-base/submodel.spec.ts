@@ -79,6 +79,7 @@ describe("submodel", () => {
     expect(element).toBeUndefined();
   });
   it("should add submodel element", () => {
+    const digitalProductDocumentId = randomUUID();
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const submodel = Submodel.fromPlain(
       submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
@@ -95,7 +96,7 @@ describe("submodel", () => {
       value: "10",
       valueType: DataTypeDef.Double,
     });
-    submodel.addSubmodelElement(submodelElement, { ability });
+    submodel.addSubmodelElement(submodelElement, { ability, digitalProductDocumentId });
     expect(
       submodel.findSubmodelElementOrFail(IdShortPath.create({ path: submodelElement.idShort })),
     ).toEqual(submodelElement);
@@ -103,12 +104,16 @@ describe("submodel", () => {
     const submodelElement0 = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "submodelElement0" }),
     );
-    submodel.addSubmodelElement(submodelElement0, { position: 0, ability });
+    submodel.addSubmodelElement(submodelElement0, {
+      position: 0,
+      ability,
+      digitalProductDocumentId,
+    });
     expect(submodel.getSubmodelElements()[0]).toEqual(submodelElement0);
 
-    expect(() => submodel.addSubmodelElement(submodelElement, { ability })).toThrow(
-      new ValueError(`Submodel element with idShort prop1 already exists`),
-    );
+    expect(() =>
+      submodel.addSubmodelElement(submodelElement, { ability, digitalProductDocumentId }),
+    ).toThrow(new ValueError(`Submodel element with idShort prop1 already exists`));
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
@@ -119,11 +124,16 @@ describe("submodel", () => {
     });
 
     expect(() =>
-      submodel.addSubmodelElement(newSubmodelElement, { ability: anonymousAbility }),
+      submodel.addSubmodelElement(newSubmodelElement, {
+        ability: anonymousAbility,
+        digitalProductDocumentId,
+      }),
     ).toThrow(new ForbiddenError(`${prefixCreateMessage} ${submodel.idShort}.`));
   });
 
   it("should add column", () => {
+    const digitalProductDocumentId = randomUUID();
+
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const submodel = Submodel.fromPlain(
       submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
@@ -138,10 +148,11 @@ describe("submodel", () => {
       idShort: "tableList",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, { ability, digitalProductDocumentId });
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1, {
       ability,
+      digitalProductDocumentId,
     });
     const row0 = submodelElementList.getSubmodelElements()[0];
     col1.setParentIdShortPath(row0.getIdShortPath());
@@ -157,6 +168,7 @@ describe("submodel", () => {
     expect(() =>
       submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), newCol, {
         ability: anonymousAbility,
+        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(
@@ -166,6 +178,8 @@ describe("submodel", () => {
   });
 
   it("should modify column", () => {
+    const digitalProductDocumentId = randomUUID();
+
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const security = Security.create({});
     const submodel = Submodel.fromPlain(
@@ -183,10 +197,11 @@ describe("submodel", () => {
       idShort: "tableList",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, { ability, digitalProductDocumentId });
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1, {
       ability,
+      digitalProductDocumentId,
     });
 
     const newDisplayNames = [
@@ -199,7 +214,7 @@ describe("submodel", () => {
       IdShortPath.create({ path: submodelElementList.idShort }),
       col1.idShort,
       { displayName: newDisplayNames },
-      { ability },
+      { ability, digitalProductDocumentId },
     );
     expect(list.value[0].getSubmodelElements()[0].displayName).toEqual(
       newDisplayNames.map(LanguageText.fromPlain),
@@ -207,6 +222,8 @@ describe("submodel", () => {
   });
 
   it("should delete column", () => {
+    const digitalProductDocumentId = randomUUID();
+
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -225,10 +242,11 @@ describe("submodel", () => {
       idShort: "tableList",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, { ability, digitalProductDocumentId });
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1, {
       ability,
+      digitalProductDocumentId,
     });
     let tableExtension = new TableExtension(submodelElementList);
     col1.setParentIdShortPath(tableExtension.rows[0].getIdShortPath());
@@ -242,7 +260,7 @@ describe("submodel", () => {
       submodel.deleteColumn(
         IdShortPath.create({ path: submodelElementList.idShort }),
         col1.idShort,
-        { ability: anonymousAbility, onDelete },
+        { ability: anonymousAbility, onDelete, digitalProductDocumentId },
       ),
     ).toThrow(
       new ForbiddenError(
@@ -253,6 +271,7 @@ describe("submodel", () => {
     submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, {
       ability,
       onDelete,
+      digitalProductDocumentId,
     });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.columns).toEqual([]);
@@ -260,6 +279,8 @@ describe("submodel", () => {
   });
 
   it("should add row", () => {
+    const digitalProductDocumentId = randomUUID();
+
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -278,13 +299,21 @@ describe("submodel", () => {
       idShort: "tableList",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
+    submodel.addSubmodelElement(submodelElementList, { ability, digitalProductDocumentId });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+      digitalProductDocumentId,
+    });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+      digitalProductDocumentId,
+    });
     expect(new TableExtension(submodelElementList).rows).toHaveLength(2);
   });
 
   it("should delete row", () => {
+    const digitalProductDocumentId = randomUUID();
+
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -303,9 +332,15 @@ describe("submodel", () => {
       idShort: "tableList",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
+    submodel.addSubmodelElement(submodelElementList, { ability, digitalProductDocumentId });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+      digitalProductDocumentId,
+    });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+      digitalProductDocumentId,
+    });
     let tableExtension = new TableExtension(submodelElementList);
     const [row0, row1] = tableExtension.rows;
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -316,6 +351,7 @@ describe("submodel", () => {
       submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
         ability: anonymousAbility,
         onDelete,
+        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(
@@ -325,6 +361,7 @@ describe("submodel", () => {
     submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
       ability,
       onDelete,
+      digitalProductDocumentId,
     });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.rows).toEqual([row1]);
@@ -332,6 +369,7 @@ describe("submodel", () => {
   });
 
   it("should add submodel element by idShortPath", () => {
+    const digitalProductDocumentId = randomUUID();
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const submodel = Submodel.fromPlain(
       submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
@@ -352,6 +390,7 @@ describe("submodel", () => {
     submodel.addSubmodelElement(submodelElement, {
       idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }),
       ability,
+      digitalProductDocumentId,
     });
     expect(
       submodel.findSubmodelElementOrFail(
@@ -362,6 +401,7 @@ describe("submodel", () => {
       submodel.addSubmodelElement(submodelElement, {
         idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }),
         ability,
+        digitalProductDocumentId,
       }),
     ).toThrow(
       new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`),
@@ -378,6 +418,7 @@ describe("submodel", () => {
       submodel.addSubmodelElement(submodelElement2, {
         idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }),
         ability: anonymousAbility,
+        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(`${prefixCreateMessage} ${submodel.idShort}.ProductCarbonFootprint_A1A3.`),
@@ -385,6 +426,7 @@ describe("submodel", () => {
   });
 
   it("should delete submodel element by idShortPath", () => {
+    const digitalProductDocumentId = randomUUID();
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -411,6 +453,7 @@ describe("submodel", () => {
     submodel.addSubmodelElement(submodelElement, {
       idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }),
       ability,
+      digitalProductDocumentId,
     });
     const path = IdShortPath.create({
       path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}`,
@@ -420,7 +463,11 @@ describe("submodel", () => {
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
     const onDelete = jest.fn();
     expect(() =>
-      submodel.deleteSubmodelElement(path, { ability: anonymousAbility, onDelete }),
+      submodel.deleteSubmodelElement(path, {
+        ability: anonymousAbility,
+        onDelete,
+        digitalProductDocumentId,
+      }),
     ).toThrow(
       new ForbiddenError(
         `${prefixDeleteMessage} ${submodel.idShort}.ProductCarbonFootprint_A1A3.${submodelElement.idShort}.`,
@@ -428,7 +475,7 @@ describe("submodel", () => {
     );
     expect(onDelete).not.toHaveBeenCalled();
 
-    submodel.deleteSubmodelElement(path, { ability, onDelete });
+    submodel.deleteSubmodelElement(path, { ability, onDelete, digitalProductDocumentId });
     expect(
       submodel.findSubmodelElement(
         IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }),
@@ -524,6 +571,7 @@ describe("submodel", () => {
   });
 
   it("should get values readable by specified subject", () => {
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const submodel = Submodel.create({ idShort: "section1" });
 
@@ -540,8 +588,8 @@ describe("submodel", () => {
 
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
-    submodel.addSubmodelElement(prop1, { ability });
-    submodel.addSubmodelElement(prop2, { ability });
+    submodel.addSubmodelElement(prop1, { ability, digitalProductDocumentId });
+    submodel.addSubmodelElement(prop2, { ability, digitalProductDocumentId });
 
     expect(submodel.toPlain({ ability })).toEqual({
       ...submodel.toPlain(),
@@ -560,6 +608,7 @@ describe("submodel", () => {
   });
 
   it("should copy values readable by specified subject", () => {
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const submodel = Submodel.create({ idShort: "section1" });
 
@@ -576,8 +625,8 @@ describe("submodel", () => {
 
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
-    submodel.addSubmodelElement(prop1, { ability });
-    submodel.addSubmodelElement(prop2, { ability });
+    submodel.addSubmodelElement(prop1, { ability, digitalProductDocumentId });
+    submodel.addSubmodelElement(prop2, { ability, digitalProductDocumentId });
 
     expect(submodel.copy({ ability })!.submodelElements).toEqual([prop1]);
     ability = security.defineAbilityForSubject(anonymous);
@@ -706,6 +755,7 @@ describe("submodel", () => {
   });
 
   it("should be modified", () => {
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
@@ -742,7 +792,7 @@ describe("submodel", () => {
         displayName: [newGermanDisplayName],
         description: newDescriptions,
       },
-      { ability },
+      { ability, digitalProductDocumentId },
     );
     expect(submodel.displayName).toEqual([LanguageText.fromPlain(newGermanDisplayName)]);
     expect(submodel.description).toEqual(
@@ -751,6 +801,7 @@ describe("submodel", () => {
   });
 
   it("should return value representation of submodel with protected fields", () => {
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const submodel = Submodel.create({ idShort: "section1" });
@@ -773,7 +824,7 @@ describe("submodel", () => {
     const submodelElementCollection = SubmodelElementCollection.create({
       idShort: "subSection1",
     });
-    submodel.addSubmodelElement(submodelElementCollection, { ability });
+    submodel.addSubmodelElement(submodelElementCollection, { ability, digitalProductDocumentId });
 
     const property1 = Property.create({
       idShort: "prop1",
@@ -785,8 +836,8 @@ describe("submodel", () => {
       valueType: DataTypeDef.String,
       value: "blub2",
     });
-    submodelElementCollection.addSubmodelElement(property1, { ability });
-    submodelElementCollection.addSubmodelElement(property2, { ability });
+    submodelElementCollection.addSubmodelElement(property1, { ability, digitalProductDocumentId });
+    submodelElementCollection.addSubmodelElement(property2, { ability, digitalProductDocumentId });
 
     const property3 = Property.create({
       idShort: "prop3",
@@ -798,8 +849,8 @@ describe("submodel", () => {
       valueType: DataTypeDef.String,
       value: "blub4",
     });
-    submodel.addSubmodelElement(property3, { ability });
-    submodel.addSubmodelElement(property4, { ability });
+    submodel.addSubmodelElement(property3, { ability, digitalProductDocumentId });
+    submodel.addSubmodelElement(property4, { ability, digitalProductDocumentId });
 
     expect(submodel.getValueRepresentation({ options: { ability } })).toEqual({
       subSection1: { prop1: "blub1" },

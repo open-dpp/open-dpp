@@ -8,7 +8,7 @@ import {
 } from "../../lib/digital-product-document.ts";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { useRouterUtils } from "../../composables/router-utils.ts";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const { t } = useI18n();
 
@@ -20,6 +20,7 @@ const props = defineProps<{
 const { goToParent } = useRouterUtils();
 const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 const route = useRoute();
+const router = useRouter();
 
 async function fetchDPD(id: string) {
   const response = await fetchById(id);
@@ -49,6 +50,10 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
 async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await publish(item.id);
   await fetchDPD(item.id);
+}
+
+async function navigateToActivityHistory() {
+  await router.push(`${route.path}/activities`);
 }
 
 const status = computed(() => model.value?.lastStatusChange.currentStatus);
@@ -98,11 +103,14 @@ const status = computed(() => model.value?.lastStatusChange.currentStatus);
             v-tooltip.bottom="t('status.publish')"
             @click="onPublishButtonClicked(model)"
           />
-          <Button asChild v-slot="slotProps">
-            <RouterLink :to="`${route.path}/activities`" :class="slotProps.class">{{
-              t("activityHistory.label")
-            }}</RouterLink>
-          </Button>
+          <Button
+            icon="pi pi-history"
+            text
+            severity="secondary"
+            :aria-label="t('activityHistory.label')"
+            v-tooltip.bottom="t('activityHistory.label')"
+            @click="navigateToActivityHistory"
+          />
         </div>
       </template>
       <template #center>

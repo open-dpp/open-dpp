@@ -490,6 +490,8 @@
     "label": "Aktivitätsverlauf",
     "createdAt": "Datum",
     "position": "Position",
+    "userId": "Benutzer ID",
+    "correlationId": "Korrelations ID",
     "operations": {
       "replace": "geändert",
       "remove": "gelöscht",
