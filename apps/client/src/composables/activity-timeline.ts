@@ -114,16 +114,21 @@ export function useActivityTimeline() {
               command: {
                 op: SubmodelBaseModification,
               },
+              changes: P.array(
+                P.not({ op: OperationDtoTypes.Remove, path: P.string.includes("/displayName/") }),
+              ),
             },
           },
         },
-        () => ({
-          id,
-          timestamp,
-          title: createTitle(nameAttr, operation),
-          content: [{ value: change.value }],
-          icon: replaceIcon,
-        }),
+        () => {
+          return {
+            id,
+            timestamp,
+            title: createTitle(nameAttr, operation),
+            content: [{ value: change.value }],
+            icon: replaceIcon,
+          };
+        },
       );
   }
 
@@ -138,13 +143,20 @@ export function useActivityTimeline() {
     const { id, timestamp, operation, valueAttr } = createTranslations(activity, change);
 
     const submodelBaseMatcher = createSubmodelBaseMatcher(activity, change);
-    return submodelBaseMatcher.otherwise(() => ({
-      id,
-      timestamp,
-      title: createTitle(valueAttr, operation),
-      content: createContentFromChange(change),
-      icon: replaceIcon,
-    }));
+    return submodelBaseMatcher
+      .with(
+        {
+          change: { path: P.string.endsWith("value"), dpp: { m: KeyTypes.Property } },
+        },
+        () => ({
+          id,
+          timestamp,
+          title: createTitle(valueAttr, operation),
+          content: createContentFromChange(change),
+          icon: replaceIcon,
+        }),
+      )
+      .otherwise(() => undefined);
   }
 
   function createContentFromChange(change: ExtendedJsonPatchDtoOperation) {
@@ -152,6 +164,7 @@ export function useActivityTimeline() {
       .returnType<TimelineContentType[]>()
       .with(
         {
+          path: P.string.endsWith("value"),
           dpp: { m: KeyTypes.Property, v: P.select() },
         },
         (v) => [
@@ -207,7 +220,13 @@ export function useActivityTimeline() {
 
     return submodelBaseMatcher
       .with(
-        { change: { op: OperationDtoTypes.Replace, path: P.string.endsWith("value") } },
+        {
+          change: {
+            op: OperationDtoTypes.Replace,
+            path: P.string.endsWith("value"),
+            dpp: { m: KeyTypes.File },
+          },
+        },
         () => ({
           content: createContentFromChange(change),
           id,
@@ -238,13 +257,20 @@ export function useActivityTimeline() {
       return undefined;
     }
 
-    return submodelBaseMatcher.otherwise(() => ({
-      content: [{ value: createContent(valueAttr, formatValue(change.value)) }],
-      id,
-      timestamp,
-      title: createTitle(valueAttr, operation),
-      icon: replaceIcon,
-    }));
+    return submodelBaseMatcher
+      .with(
+        {
+          change: { path: P.string.endsWith("value"), dpp: { m: KeyTypes.ReferenceElement } },
+        },
+        () => ({
+          content: [{ value: createContent(valueAttr, formatValue(change.value)) }],
+          id,
+          timestamp,
+          title: createTitle(valueAttr, operation),
+          icon: replaceIcon,
+        }),
+      )
+      .otherwise(() => undefined);
   }
 
   function getNumberPartsFromPath(path: string) {

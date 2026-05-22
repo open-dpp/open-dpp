@@ -595,7 +595,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       subject,
       startDate,
       endDate,
-      100,
+      20,
       archive,
     );
   }
