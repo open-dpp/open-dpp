@@ -91,7 +91,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.digitalProductDocRepository.save(item);
+        await this.digitalProductDocRepository.save(item, { session });
         await this.activityRepository.createMany(activities, { session });
       });
     } finally {

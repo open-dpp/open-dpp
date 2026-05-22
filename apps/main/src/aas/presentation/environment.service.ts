@@ -150,7 +150,7 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.aasRepository.save(aas);
+        await this.aasRepository.save(aas, { session });
         await this.activityRepository.createMany(activities, { session });
       });
     } finally {
