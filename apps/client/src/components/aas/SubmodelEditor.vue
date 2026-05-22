@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import type { SubmodelModificationDto } from "@open-dpp/dto";
-import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { Permissions } from "@open-dpp/dto";
+import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
+import EditorTabs from "./EditorTabs.vue";
+import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props = defineProps<SharedEditorProps<SubmodelEditorProps, SubmodelModificationDto>>();
 
@@ -41,6 +43,8 @@ async function submit() {
   })();
 }
 
+const { createTimelineItemForSubmodel } = useActivityTimeline();
+
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
 });
@@ -57,20 +61,33 @@ defineExpose<{
 </script>
 
 <template>
-  <FormContainer>
-    <SubmodelBaseForm
-      :disabled="disableEdit"
-      :show-errors="showErrors"
-      :editor-mode="EditorMode.EDIT"
-    />
-    <PermissionsForm
-      ref="permissionsFormRef"
-      :disabled="disableEdit"
-      :path="props.path"
-      :modify-shell="props.modifyShell"
-      :get-access-permission-rules="props.getAccessPermissionRules"
-      hide-inheritance-toggle
-      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-    />
-  </FormContainer>
+  <EditorTabs>
+    <template #data>
+      <FormContainer>
+        <SubmodelBaseForm
+          :disabled="disableEdit"
+          :show-errors="showErrors"
+          :editor-mode="EditorMode.EDIT"
+        />
+        <PermissionsForm
+          ref="permissionsFormRef"
+          :disabled="disableEdit"
+          :path="props.path"
+          :modify-shell="props.modifyShell"
+          :get-access-permission-rules="props.getAccessPermissionRules"
+          hide-inheritance-toggle
+          :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+        />
+      </FormContainer>
+    </template>
+    <template #activityHistory>
+      <EditorActivityHistory
+        v-if="props.data.idShort"
+        :id="props.id"
+        :changePath="props.data.idShort"
+        :type="props.type"
+        :createTimelineItem="(activity, change) => createTimelineItemForSubmodel(activity, change)"
+      />
+    </template>
+  </EditorTabs>
 </template>

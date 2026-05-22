@@ -22,7 +22,8 @@ import type { TimelineItem } from "../../composables/activity-timeline.ts";
 dayjs.extend(utc);
 const props = defineProps<{
   id: string;
-  dppPath: string;
+  dppPath?: string;
+  changePath?: string;
   type: DigitalProductDocumentTypeType;
   createTimelineItem: (
     activity: ActivityDto,
@@ -51,9 +52,11 @@ const timelineItems = computed<TimelineItem[]>(() => {
 });
 
 async function fetchCallback(pagingParams: PagingParamsDto) {
+  console.log("fetchCallback", pagingParams);
   const response = await fetchActivities(props.id, pagingParams, {
     type: ActivityDtoTypes.SubmodelActivity,
     dppPath: props.dppPath,
+    changePath: props.changePath,
   });
 
   activities.value = response.result;

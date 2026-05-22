@@ -46,7 +46,7 @@ export class ActivityRepository {
       pagination?: Pagination;
       period?: Period;
       ascending?: boolean;
-      filter?: { activityType?: ActivityTypesType; dppPath?: string };
+      filter?: { activityType?: ActivityTypesType; dppPath?: string; commandPath?: string };
     },
   ): Promise<PagingResult<IActivity>> {
     const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
@@ -68,9 +68,17 @@ export class ActivityRepository {
         }
       : {};
 
-    let payloadFilter = options?.filter?.dppPath
-      ? { "payload.changes.dpp.p": RegexFilter.create(options.filter.dppPath).toMongoFilter() }
-      : {};
+    let payloadFilter: any = {};
+    if (options?.filter?.dppPath) {
+      payloadFilter["payload.changes.dpp.p"] = RegexFilter.create(
+        options.filter.dppPath,
+      ).toMongoFilter();
+    }
+    if (options?.filter?.commandPath) {
+      payloadFilter["payload.changes.command.path"] = RegexFilter.create(
+        options.filter.commandPath,
+      ).toMongoFilter();
+    }
 
     const decodedCursor = tmpPagination.cursor ? decodeCursor(tmpPagination.cursor) : undefined;
     const cursorFilter = decodedCursor

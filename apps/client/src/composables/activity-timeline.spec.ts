@@ -129,14 +129,24 @@ describe("activity timeline", () => {
     expect(createTimelineItemForReferenceElement(activity, removeDisplayName)).toEqual(
       expectedRemove,
     );
+
+    expect(createTimelineItemForList(activity, replaceDisplayName)).toBeUndefined();
+
+    const activity2 = activitiesPlainFactory.build({
+      header: { createdAt },
+      payload: {
+        changes: [replaceDisplayName],
+        command: { op: SubmodelOperationDtoTypes.SubmodelElementModified },
+      },
+    });
     const expectedReplace = {
-      id: activity.header.id,
+      id: activity2.header.id,
       timestamp: createdAtFormatted,
       title: `${displayName} ${editOperation}`,
       icon: editIcon,
       content: [{ value: "Carbon footprint per lifecycle staged New" }],
     };
-    expect(createTimelineItemForList(activity, replaceDisplayName)).toEqual(expectedReplace);
+    expect(createTimelineItemForList(activity2, replaceDisplayName)).toEqual(expectedReplace);
   });
 
   it("should create timeline items for Property", async () => {
@@ -215,6 +225,37 @@ describe("activity timeline", () => {
       expectedResult,
     );
     expect(createTimelineItemForReferenceElement(activity, linkModified)).toEqual(expectedResult);
+  });
+
+  it("should create timeline items for Submodel", async () => {
+    const addTextField = {
+      op: OperationDtoTypes.Add,
+      path: "/submodelElements/0",
+      value: {},
+      dpp: {
+        p: "356b588a-28f9-4714-894d-1347c5ee68f0",
+        m: KeyTypes.Property,
+        v: "String",
+      },
+    };
+
+    const activity = activitiesPlainFactory.build({
+      header: { createdAt },
+      payload: {
+        command: { op: SubmodelOperationDtoTypes.SubmodelElementAdded },
+        changes: [addTextField],
+      },
+    });
+
+    const { createTimelineItemForSubmodel } = mountHarness();
+    const expectedResult = {
+      id: activity.header.id,
+      timestamp: createdAtFormatted,
+      title: `aasEditor.textField ${addOperation}`,
+      icon: addIcon,
+      content: [],
+    };
+    expect(createTimelineItemForSubmodel(activity, addTextField)).toEqual(expectedResult);
   });
 
   it("should create timeline items for File", async () => {

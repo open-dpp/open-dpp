@@ -5,6 +5,7 @@ import {
   type ExtendedJsonPatchDtoOperation,
   type KeyDto,
   KeyTypes,
+  KeyTypesEnum,
   OperationDtoTypes,
   ReferenceJsonSchema,
   SubmodelOperationDtoTypes,
@@ -15,6 +16,7 @@ import { match, P } from "ts-pattern";
 import { formatPropertyValue } from "../lib/property-value.ts";
 import { convertLocaleToLanguage } from "../translations/i18n.ts";
 import { z } from "zod";
+import { getVisualType } from "../lib/aas-editor.ts";
 
 dayjs.extend(utc);
 type TimelineContentType = { value: string; renderContentAsFile?: boolean };
@@ -50,20 +52,29 @@ export function useActivityTimeline() {
     return `${attribute} ${operation}`;
   }
 
-  function createSubmodelBaseMatcher(activity: ActivityDto, change: ExtendedJsonPatchDtoOperation) {
+  function createSubmodelBaseMatcher(
+    activity: ActivityDto,
+    change: ExtendedJsonPatchDtoOperation,
+    isSubmodel: boolean = false,
+  ) {
     const { id, timestamp, operation, nameAttr } = createTranslations(activity, change);
-    const SubmodelBaseModification = P.union(
-      SubmodelOperationDtoTypes.SubmodelValueModified,
-      SubmodelOperationDtoTypes.SubmodelElementValueModified,
-      SubmodelOperationDtoTypes.SubmodelElementModified,
-    );
+    const SubmodelBaseModification = isSubmodel
+      ? SubmodelOperationDtoTypes.SubmodelModified
+      : P.union(
+          SubmodelOperationDtoTypes.SubmodelValueModified,
+          SubmodelOperationDtoTypes.SubmodelElementValueModified,
+          SubmodelOperationDtoTypes.SubmodelElementModified,
+        );
+    const containsDisplayName = P.string.includes("/displayName/");
+    const containsDisplayNameText = P.string.regex("\\/displayName\\/\\d+\\/text$");
+
     return match({ activity, change })
       .returnType<TimelineItem | undefined>()
       .with(
         {
           change: {
             op: OperationDtoTypes.Remove,
-            path: P.string.includes("/displayName/"),
+            path: containsDisplayName,
           },
           activity: {
             payload: {
@@ -85,7 +96,7 @@ export function useActivityTimeline() {
         {
           change: {
             op: OperationDtoTypes.Add,
-            path: P.string.includes("/displayName/"),
+            path: containsDisplayName,
           },
           activity: {
             payload: {
@@ -107,7 +118,7 @@ export function useActivityTimeline() {
         {
           change: {
             op: OperationDtoTypes.Replace,
-            path: P.string.regex("\\/displayName\\/\\d+\\/text$"),
+            path: containsDisplayNameText,
           },
           activity: {
             payload: {
@@ -134,6 +145,41 @@ export function useActivityTimeline() {
 
   function createContent(key: string, value: string) {
     return `${key}: ${value}`;
+  }
+
+  function createTimelineItemForSubmodel(
+    activity: ActivityDto,
+    change: ExtendedJsonPatchDtoOperation,
+  ) {
+    const { id, timestamp, operation } = createTranslations(activity, change);
+
+    const submodelBaseMatcher = createSubmodelBaseMatcher(activity, change, true);
+    return submodelBaseMatcher
+      .with(
+        {
+          activity: {
+            payload: { command: { op: SubmodelOperationDtoTypes.SubmodelElementAdded } },
+          },
+          change: {
+            dpp: { m: P.string.select("modelType"), v: P.string.select("valueType") },
+          },
+        },
+        ({ modelType, valueType }) => {
+          const visualType = getVisualType(
+            KeyTypesEnum.parse(modelType),
+            DataTypeDefEnum.parse(valueType),
+            t,
+          );
+          return {
+            id,
+            timestamp,
+            title: createTitle(visualType, operation),
+            content: [],
+            icon: addIcon,
+          };
+        },
+      )
+      .otherwise(() => undefined);
   }
 
   function createTimelineItemForProperty(
@@ -419,5 +465,6 @@ export function useActivityTimeline() {
     createTimelineItemForReferenceElement,
     createTimelineItemForFile,
     createTimelineItemForList,
+    createTimelineItemForSubmodel,
   };
 }

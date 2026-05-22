@@ -100,6 +100,7 @@ export type ActivityPaginationDto = z.infer<typeof ActivityPaginationDtoSchema>;
 export const ActivityFilterDtoSchema = z.object({
   type: ActivityDtoTypesEnum,
   dppPath: z.string().optional(),
+  changePath: z.string().optional(),
 });
 
 export type ActivityFilterDto = z.infer<typeof ActivityFilterDtoSchema>;
