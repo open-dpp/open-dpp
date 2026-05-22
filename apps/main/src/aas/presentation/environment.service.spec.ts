@@ -274,12 +274,18 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: assetAdministrationShell.id,
           administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
+          command: {
+            op: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
+          },
           changes: [
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/1",
-              dpp: "o=section1&u=user&m=member",
+              dpp: {
+                o: "section1",
+                u: "user",
+                m: "member",
+              },
               value: {
                 kindOfPermission: "Allow",
                 permission: "Create",
@@ -288,7 +294,11 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/2",
-              dpp: "o=section1&u=user&m=member",
+              dpp: {
+                o: "section1",
+                u: "user",
+                m: "member",
+              },
               value: {
                 kindOfPermission: "Allow",
                 permission: "Edit",
@@ -494,7 +504,9 @@ describe("environmentService", () => {
         correlationId,
         type: ActivityTypes.SubmodelRepositoryActivity,
         payload: SubmodelRepositoryPayload.create({
-          operation: EnvironmentOperationTypes.SubmodelCreated,
+          command: {
+            op: SubmodelRepositoryOperationTypes.SubmodelCreated,
+          },
           submodel: Submodel.fromPlain(submodelPlain),
         }),
       },
@@ -504,12 +516,18 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.SubmodelCreated,
+          command: {
+            op: AssetAdministrationShellOperationTypes.SubmodelCreated,
+          },
           changes: [
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/1/permissionsPerObject/1",
-              dpp: "o=submodel2&u=user&m=member",
+              dpp: {
+                o: "submodel2",
+                u: "user",
+                m: "member",
+              },
               value: {
                 object: {
                   category: null,
@@ -547,7 +565,10 @@ describe("environmentService", () => {
             {
               op: "add",
               path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/1",
-              dpp: "o=submodel2&u=admin",
+              dpp: {
+                o: "submodel2",
+                u: "admin",
+              },
               value: {
                 object: {
                   category: null,
@@ -584,7 +605,10 @@ describe("environmentService", () => {
             },
             {
               op: "add",
-              dpp: "u=user&m=owner",
+              dpp: {
+                u: "user",
+                m: "owner",
+              },
               path: "/security/localAccessControl/accessPermissionRules/2",
               value: {
                 permissionsPerObject: [
@@ -660,7 +684,9 @@ describe("environmentService", () => {
             },
             {
               op: "add",
-              dpp: "u=anonymous",
+              dpp: {
+                u: "anonymous",
+              },
               path: "/security/localAccessControl/accessPermissionRules/3",
               value: {
                 permissionsPerObject: [
@@ -708,7 +734,7 @@ describe("environmentService", () => {
               },
             },
             {
-              dpp: "",
+              dpp: {},
               op: "add",
               path: "/submodels/1",
               value: {
@@ -729,13 +755,15 @@ describe("environmentService", () => {
         type: ActivityTypes.EnvironmentActivity,
         correlationId,
         payload: EnvironmentPayload.create({
-          operation: EnvironmentOperationTypes.SubmodelCreated,
+          command: {
+            op: EnvironmentOperationTypes.SubmodelCreated,
+          },
           changes: [
             {
               op: "add",
               path: "/submodels/1",
               value: submodelPlain.id,
-              dpp: "",
+              dpp: {},
             },
           ],
         }),
@@ -780,13 +808,19 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }),
-          operation: SubmodelOperationTypes.SubmodelElementAdded,
+          command: {
+            op: SubmodelOperationTypes.SubmodelElementAdded,
+            path: IdShortPath.create({ path: submodel1.idShort }),
+          },
           changes: [
             {
               op: "add",
               path: "/submodelElements/1",
-              dpp: "dataField1",
+              dpp: {
+                p: "dataField1",
+                m: "Property",
+                v: "String",
+              },
               value: {
                 category: null,
                 description: [],
@@ -851,12 +885,19 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+          command: {
+            op: SubmodelOperationTypes.SubmodelColumnAdded,
+            path: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+          },
           changes: [
             {
               op: "add",
               path: "/submodelElements/0/value/0/value/1",
-              dpp: `list.${row1.idShort}.column1`,
+              dpp: {
+                p: `list.${row1.idShort}.column1`,
+                m: "Property",
+                v: "String",
+              },
               value: {
                 category: null,
                 description: [],
@@ -874,7 +915,6 @@ describe("environmentService", () => {
               },
             },
           ],
-          operation: SubmodelOperationTypes.SubmodelColumnAdded,
         }),
       },
     ]);
@@ -916,12 +956,18 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+          command: {
+            op: SubmodelOperationTypes.SubmodelRowAdded,
+            path: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
+          },
           changes: [
             {
               op: "add",
               path: "/submodelElements/0/value/1",
-              dpp: `list.${row2IdShort}`,
+              dpp: {
+                p: `list.${row2IdShort}`,
+                m: "SubmodelElementCollection",
+              },
               value: {
                 category: null,
                 description: [],
@@ -953,7 +999,6 @@ describe("environmentService", () => {
               },
             },
           ],
-          operation: SubmodelOperationTypes.SubmodelRowAdded,
         }),
       },
     ]);
@@ -1104,15 +1149,15 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${submodel1.idShort}`,
-          }),
-          operation: SubmodelOperationTypes.SubmodelModified,
+          command: {
+            op: SubmodelOperationTypes.SubmodelModified,
+            path: IdShortPath.create({ path: submodel1.idShort }),
+          },
           changes: [
             {
               op: "add",
               path: "/displayName/0",
-              dpp: "",
+              dpp: {},
               value: {
                 language: "en",
                 text: "Test",
@@ -1169,15 +1214,19 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${submodel1.idShort}`,
-          }),
-          operation: SubmodelOperationTypes.SubmodelValueModified,
+          command: {
+            op: SubmodelOperationTypes.SubmodelValueModified,
+            path: IdShortPath.create({ path: submodel1.idShort }),
+          },
           changes: [
             {
               op: "replace",
               path: "/submodelElements/0/value/0/value",
-              dpp: "subSection1.property1",
+              dpp: {
+                p: "subSection1.property1",
+                m: "Property",
+                v: "String",
+              },
               value: "Test",
             },
           ],
@@ -1241,15 +1290,21 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${submodel1.idShort}.${idShortPathToProperty1}`,
-          }),
-          operation: SubmodelOperationTypes.SubmodelElementModified,
+          command: {
+            op: SubmodelOperationTypes.SubmodelElementModified,
+            path: IdShortPath.create({
+              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
+            }),
+          },
           changes: [
             {
               op: "add",
               path: "/submodelElements/0/value/0/displayName/0",
-              dpp: "subSection1.property1",
+              dpp: {
+                p: "subSection1.property1",
+                m: "Property",
+                v: "String",
+              },
               value: {
                 language: "en",
                 text: "Test",
@@ -1382,14 +1437,22 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: submodelElementList.getIdShortPath(),
-          additionalIdShort: col1.idShort,
-          operation: SubmodelOperationTypes.SubmodelColumnModified,
+          command: {
+            op: SubmodelOperationTypes.SubmodelColumnModified,
+            path: submodelElementList.getIdShortPath(),
+            value: {
+              aId: col1.idShort,
+            },
+          },
           changes: [
             {
               op: "add",
               path: "/submodelElements/0/value/0/value/0/displayName/0",
-              dpp: `list.${row1.idShort}.col1`,
+              dpp: {
+                p: `list.${row1.idShort}.col1`,
+                m: "Property",
+                v: "Double",
+              },
               value: {
                 language: "en",
                 text: "Test",
@@ -1474,14 +1537,22 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: submodelElementList.getIdShortPath(),
-          additionalIdShort: col1.idShort,
-          operation: SubmodelOperationTypes.SubmodelColumnDeleted,
+          command: {
+            op: SubmodelOperationTypes.SubmodelColumnDeleted,
+            path: submodelElementList.getIdShortPath(),
+            value: {
+              aId: col1.idShort,
+            },
+          },
           changes: [
             {
               op: "remove",
               path: "/submodelElements/0/value/0/value/0",
-              dpp: `list.${row1.idShort}.col1`,
+              dpp: {
+                p: `list.${row1.idShort}.col1`,
+                m: "Property",
+                v: "Double",
+              },
             },
           ],
         }),
@@ -1492,7 +1563,9 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          command: {
+            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          },
           changes: [],
         }),
       },
@@ -1551,14 +1624,21 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          fullIdShortPath: submodelElementList.getIdShortPath(),
-          additionalIdShort: row1.idShort,
-          operation: SubmodelOperationTypes.SubmodelRowDeleted,
+          command: {
+            op: SubmodelOperationTypes.SubmodelRowDeleted,
+            path: submodelElementList.getIdShortPath(),
+            value: {
+              aId: row1.idShort,
+            },
+          },
           changes: [
             {
               op: "remove",
               path: "/submodelElements/0/value/0",
-              dpp: `list.${row1.idShort}`,
+              dpp: {
+                p: `list.${row1.idShort}`,
+                m: "SubmodelElementCollection",
+              },
             },
           ],
         }),
@@ -1569,7 +1649,9 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          command: {
+            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          },
           changes: [],
         }),
       },
@@ -1617,21 +1699,31 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: IdShortPath.create({
-            path: `${submodel1.idShort}.${idShortPathToProperty1}`,
-          }),
-          operation: SubmodelOperationTypes.SubmodelElementValueModified,
+          command: {
+            op: SubmodelOperationTypes.SubmodelElementValueModified,
+            path: IdShortPath.create({
+              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
+            }),
+          },
           changes: [
             {
               op: "replace",
               path: "/submodelElements/0/value/1/value",
-              dpp: "subSection1.property2",
+              dpp: {
+                p: "subSection1.property2",
+                m: "Property",
+                v: "String",
+              },
               value: "new value 2",
             },
             {
               op: "replace",
               path: "/submodelElements/0/value/0/value",
-              dpp: "subSection1.property1",
+              dpp: {
+                p: "subSection1.property1",
+                m: "Property",
+                v: "String",
+              },
               value: "new value 1",
             },
           ],
@@ -1687,12 +1779,17 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          command: {
+            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          },
           changes: [
             {
               op: "remove",
               path: "/security/localAccessControl/accessPermissionRules/1",
-              dpp: "u=user&m=member",
+              dpp: {
+                u: "user",
+                m: "member",
+              },
             },
           ],
         }),
@@ -1741,12 +1838,14 @@ describe("environmentService", () => {
         correlationId,
         type: ActivityTypes.EnvironmentActivity,
         payload: EnvironmentPayload.create({
-          operation: EnvironmentOperationTypes.SubmodelDeleted,
+          command: {
+            op: EnvironmentOperationTypes.SubmodelDeleted,
+          },
           changes: [
             {
               op: "remove",
               path: "/submodels/0",
-              dpp: "",
+              dpp: {},
             },
           ],
         }),
@@ -1757,21 +1856,28 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.SubmodelDeleted,
+          command: {
+            op: AssetAdministrationShellOperationTypes.SubmodelDeleted,
+          },
           changes: [
             {
               op: "remove",
-              dpp: "u=user&m=member",
+              dpp: {
+                u: "user",
+                m: "member",
+              },
               path: "/security/localAccessControl/accessPermissionRules/1",
             },
             {
               op: "remove",
-              dpp: "u=admin",
+              dpp: {
+                u: "admin",
+              },
               path: "/security/localAccessControl/accessPermissionRules/0",
             },
             {
               op: "remove",
-              dpp: "",
+              dpp: {},
               path: "/submodels/0",
             },
           ],
@@ -1781,7 +1887,9 @@ describe("environmentService", () => {
         correlationId,
         type: ActivityTypes.SubmodelRepositoryActivity,
         payload: SubmodelRepositoryPayload.create({
-          operation: SubmodelRepositoryOperationTypes.SubmodelDeleted,
+          command: {
+            op: SubmodelRepositoryOperationTypes.SubmodelDeleted,
+          },
           submodel: submodel1,
         }),
       },
@@ -1845,20 +1953,32 @@ describe("environmentService", () => {
         payload: SubmodelPayload.create({
           submodelId: submodel1.id,
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          fullIdShortPath: submodelElementCollection1.getIdShortPath(),
-          additionalIdShort: property1.idShort,
-          operation: SubmodelOperationTypes.SubmodelElementDeleted,
+          command: {
+            op: SubmodelOperationTypes.SubmodelElementDeleted,
+            path: submodelElementCollection1.getIdShortPath(),
+            value: {
+              aId: property1.idShort,
+            },
+          },
           changes: [
             {
               op: "remove",
               path: "/submodelElements/0/value/1",
-              dpp: "subSection1.property2",
+              dpp: {
+                p: "subSection1.property2",
+                m: "Property",
+                v: "String",
+              },
             },
             {
               op: "replace",
               path: "/submodelElements/0/value/0/idShort",
               value: "property2",
-              dpp: "subSection1.property1",
+              dpp: {
+                p: `subSection1.property1`,
+                m: "Property",
+                v: "String",
+              },
             },
           ],
         }),
@@ -1869,7 +1989,9 @@ describe("environmentService", () => {
         payload: AssetAdministrationShellPayload.create({
           assetAdministrationShellId: environment.assetAdministrationShells[0],
           administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          command: {
+            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
+          },
           changes: [],
         }),
       },

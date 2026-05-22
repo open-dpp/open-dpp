@@ -13,9 +13,9 @@ import {
   ActivityCreatePropsWithAdministration,
   createActivityHeader,
   diff,
-  JsonPatchOperation,
   ExtendedJsonPatchOperation,
   ExtendedJsonPatchOperationSchema,
+  JsonPatchOperation,
 } from "../shared.activity";
 import {
   AssetAdministrationShellOperationTypesEnum,
@@ -52,7 +52,7 @@ export class AssetAdministrationShellActivity implements IActivity {
         changes: diff(data.oldData, data.newData).map((op) =>
           extendOperationByAasInformation(op, data.oldData, data.newData),
         ),
-        operation: data.operation,
+        command: { op: data.operation },
       }),
     );
   }
@@ -75,31 +75,37 @@ export class AssetAdministrationShellActivity implements IActivity {
   }
 }
 
+const CommandSchema = z.object({
+  op: AssetAdministrationShellOperationTypesEnum,
+});
+
 const AssetAdministrationShellPayloadSchema = z.object({
   administration: AdministrativeInformationJsonSchema,
+  command: CommandSchema,
   changes: ExtendedJsonPatchOperationSchema.array(),
   assetAdministrationShellId: z.string(),
-  operation: AssetAdministrationShellOperationTypesEnum,
 });
+
+type Command = z.infer<typeof CommandSchema>;
 
 export class AssetAdministrationShellPayload implements IActivityPayload {
   private constructor(
     public readonly assetAdministrationShellId: string,
     public readonly administration: AdministrativeInformation,
-    public readonly operation: AssetAdministrationShellOperationTypesType,
+    public readonly command: Command,
     public readonly changes: ExtendedJsonPatchOperation[],
   ) {}
 
   static create(data: {
     administration: AdministrativeInformation;
     assetAdministrationShellId: string;
-    operation: AssetAdministrationShellOperationTypesType;
+    command: Command;
     changes: ExtendedJsonPatchOperation[];
   }) {
     return new AssetAdministrationShellPayload(
       data.assetAdministrationShellId,
       data.administration,
-      data.operation,
+      data.command,
       data.changes,
     );
   }
@@ -109,7 +115,7 @@ export class AssetAdministrationShellPayload implements IActivityPayload {
     return new AssetAdministrationShellPayload(
       parsed.assetAdministrationShellId,
       AdministrativeInformation.fromPlain(parsed.administration),
-      parsed.operation,
+      parsed.command,
       parsed.changes,
     );
   }
@@ -119,7 +125,7 @@ export class AssetAdministrationShellPayload implements IActivityPayload {
       administration: this.administration.toPlain(),
       changes: this.changes,
       assetAdministrationShellId: this.assetAdministrationShellId,
-      operation: this.operation,
+      command: this.command,
     };
   }
 }
@@ -132,10 +138,9 @@ function extendOperationByAasInformation(
   if (!operation.path.startsWith("/security")) {
     return {
       ...operation,
-      dpp: "",
+      dpp: {},
     };
   }
-  const encodePart = (value: string) => encodeURIComponent(value);
   const getSubjectAttributeValue = (
     attributes: Array<{ idShort: string; value: string }>,
     key: string,
@@ -169,15 +174,23 @@ function extendOperationByAasInformation(
     memberRole = getSubjectAttributeValue(attributes, SubjectAttributes.MemberRoleKey);
   }
 
-  const dpp = [
-    objectIdShort ? `o=${encodePart(objectIdShort)}` : undefined,
-    userRole ? `u=${encodePart(userRole)}` : undefined,
-    memberRole ? `m=${encodePart(memberRole)}` : undefined,
-  ]
-    .filter(Boolean)
-    .join("&");
+  const dppKey: {
+    o?: string;
+    u?: string;
+    m?: string;
+  } = {};
+  if (objectIdShort) {
+    dppKey.o = objectIdShort;
+  }
+  if (userRole) {
+    dppKey.u = userRole;
+  }
+  if (memberRole) {
+    dppKey.m = memberRole;
+  }
+
   return {
     ...operation,
-    dpp,
+    dpp: dppKey,
   };
 }

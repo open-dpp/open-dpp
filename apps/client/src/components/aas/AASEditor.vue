@@ -327,6 +327,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         v-bind="editorVNode.props"
         :id="model.id"
         ref="componentRef"
+        :type="props.type"
         :aas-namespace="aasNamespace"
         :open-drawer="aasEditor.openDrawer"
         :error-handling-store="errorHandlingStore"

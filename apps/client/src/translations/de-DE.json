@@ -489,7 +489,7 @@
     "errorDownloading": "Fehler beim Herunterladen des Aktivitätsverlaufs",
     "label": "Aktivitätsverlauf",
     "createdAt": "Datum",
-    "value": "Wert:",
+    "position": "Position",
     "operations": {
       "replace": "geändert",
       "remove": "gelöscht",

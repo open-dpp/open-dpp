@@ -10,6 +10,7 @@ import { AssetAdministrationShellOperationTypesType } from "./asset-administrati
 import { EnvironmentOperationTypesType } from "./environment-types";
 import { DigitalProductDocumentOperationTypesType } from "./digital-product-document-operation-types";
 import { SubmodelRepositoryOperationTypesType } from "./submodel-repository-operation-types";
+import { IdShortPath } from "../aas/domain/common/id-short-path";
 
 export const ActivityHeaderSchema = z.object({
   id: z.string(),
@@ -110,12 +111,16 @@ export function activityToPlain(event: IActivity) {
 }
 
 export interface IActivityPayload extends IConvertableToPlain {
-  operation:
-    | SubmodelOperationTypesType
-    | AssetAdministrationShellOperationTypesType
-    | EnvironmentOperationTypesType
-    | DigitalProductDocumentOperationTypesType
-    | SubmodelRepositoryOperationTypesType;
+  command: {
+    op:
+      | SubmodelOperationTypesType
+      | AssetAdministrationShellOperationTypesType
+      | EnvironmentOperationTypesType
+      | DigitalProductDocumentOperationTypesType
+      | SubmodelRepositoryOperationTypesType;
+    path?: IdShortPath | string;
+    value?: Record<string, any>;
+  };
   changes: Array<ExtendedJsonPatchOperation>;
 }
 

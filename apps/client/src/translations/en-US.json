@@ -459,7 +459,7 @@
     "errorDownloading": "Failed to download activity history",
     "label": "Activity history",
     "createdAt": "Date",
-    "value": "Value:",
+    "position": "Position",
     "operations": {
       "replace": "modified",
       "remove": "deleted",

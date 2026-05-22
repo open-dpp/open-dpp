@@ -41,8 +41,8 @@ export class EnvironmentActivity implements IActivity {
         EnvironmentActivityVersion.v1_0_0,
       ),
       EnvironmentPayload.create({
-        changes: diff(data.oldData, data.newData).map((op) => ({ ...op, dpp: "" })),
-        operation: data.operation,
+        changes: diff(data.oldData, data.newData).map((op) => ({ ...op, dpp: {} })),
+        command: { op: data.operation },
       }),
     );
   }
@@ -65,33 +65,36 @@ export class EnvironmentActivity implements IActivity {
   }
 }
 
+const CommandSchema = z.object({
+  op: EnvironmentOperationTypesEnum,
+});
+
+export type Command = z.infer<typeof CommandSchema>;
+
 const EnvironmentPayloadSchema = z.object({
   changes: ExtendedJsonPatchOperationSchema.array(),
-  operation: EnvironmentOperationTypesEnum,
+  command: CommandSchema,
 });
 
 export class EnvironmentPayload implements IActivityPayload {
   private constructor(
-    public readonly operation: EnvironmentOperationTypesType,
+    public readonly command: Command,
     public readonly changes: ExtendedJsonPatchOperation[],
   ) {}
 
-  static create(data: {
-    changes: ExtendedJsonPatchOperation[];
-    operation: EnvironmentOperationTypesType;
-  }) {
-    return new EnvironmentPayload(data.operation, data.changes);
+  static create(data: { changes: ExtendedJsonPatchOperation[]; command: Command }) {
+    return new EnvironmentPayload(data.command, data.changes);
   }
 
   static fromPlain(data: unknown) {
     const parsed = EnvironmentPayloadSchema.parse(data);
-    return new EnvironmentPayload(parsed.operation, parsed.changes);
+    return new EnvironmentPayload(parsed.command, parsed.changes);
   }
 
   toPlain() {
     return {
       changes: this.changes,
-      operation: this.operation,
+      command: this.command,
     };
   }
 }

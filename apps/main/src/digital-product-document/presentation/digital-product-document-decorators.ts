@@ -82,8 +82,8 @@ export const ActivityDppKeyQueryParamSchema = z
   .string()
   .optional()
   .meta({
-    description: "Filter the payload of the activities for the given dpp key.",
-    param: { in: "query", name: "dppKey" },
+    description: "Filter the payload of the activities for the given dpp path.",
+    param: { in: "query", name: "dppPath" },
   });
 export const ActivityDppKeyQueryParam = () =>
-  Query("dppKey", new ZodValidationPipe(ActivityDppKeyQueryParamSchema));
+  Query("dppPath", new ZodValidationPipe(ActivityDppKeyQueryParamSchema));

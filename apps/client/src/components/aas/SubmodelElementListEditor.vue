@@ -21,6 +21,7 @@ import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 import EditorTabs from "./EditorTabs.vue";
+import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props =
   defineProps<
@@ -44,6 +45,7 @@ const { handleSubmit, submitCount } = useForm<FormValues>({
 });
 
 const { t, locale } = useI18n();
+const { createTimelineItemForList } = useActivityTimeline();
 
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;
@@ -322,6 +324,14 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         />
       </div>
     </template>
-    <template #activityHistory> </template>
+    <template #activityHistory>
+      <EditorActivityHistory
+        v-if="props.path.idShortPath"
+        :id="props.id"
+        :type="props.type"
+        :dppPath="`sw:${props.path.idShortPath}`"
+        :createTimelineItem="createTimelineItemForList"
+      />
+    </template>
   </EditorTabs>
 </template>

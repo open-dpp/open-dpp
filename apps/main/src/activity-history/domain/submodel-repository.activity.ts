@@ -38,7 +38,9 @@ export class SubmodelRepositoryActivity implements IActivity {
       ),
       SubmodelRepositoryPayload.create({
         submodel: data.submodel,
-        operation: data.operation,
+        command: {
+          op: data.operation,
+        },
       }),
     );
   }
@@ -61,30 +63,36 @@ export class SubmodelRepositoryActivity implements IActivity {
   }
 }
 
+const CommandSchema = z.object({
+  op: SubmodelRepositoryOperationTypesEnum,
+});
+
+export type Command = z.infer<typeof CommandSchema>;
+
 const SubmodelRepositoryPayloadSchema = z.object({
-  operation: SubmodelRepositoryOperationTypesEnum,
+  command: CommandSchema,
   changes: z.json(),
 });
 
 export class SubmodelRepositoryPayload implements IActivityPayload {
   private constructor(
-    public readonly operation: SubmodelRepositoryOperationTypesType,
+    public readonly command: Command,
     public readonly changes: any,
   ) {}
 
-  static create(data: { operation: SubmodelRepositoryOperationTypesType; submodel: Submodel }) {
-    return new SubmodelRepositoryPayload(data.operation, data.submodel.toPlain());
+  static create(data: { command: Command; submodel: Submodel }) {
+    return new SubmodelRepositoryPayload(data.command, data.submodel.toPlain());
   }
 
   static fromPlain(data: unknown) {
     const parsed = SubmodelRepositoryPayloadSchema.parse(data);
-    return new SubmodelRepositoryPayload(parsed.operation, parsed.changes);
+    return new SubmodelRepositoryPayload(parsed.command, parsed.changes);
   }
 
   toPlain() {
     return {
       changes: this.changes,
-      operation: this.operation,
+      command: this.command,
     };
   }
 }

@@ -502,7 +502,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     limit: number = 10,
     cursor: string | undefined,
     filterByActivityType: ActivityTypesType | undefined,
-    dppKeyFilter: string | undefined,
+    dppPathFilter: string | undefined,
     ascending: boolean = false,
   ) {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
@@ -521,9 +521,9 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
           pagination,
           period,
           ascending,
-          filter: { activityType: filterByActivityType, dppKey: dppKeyFilter },
+          filter: { activityType: filterByActivityType, dppPath: dppPathFilter },
         })
-      ).toPlain({ ability, ...(dppKeyFilter ? { filter: { dppKey: dppKeyFilter } } : {}) }),
+      ).toPlain({ ability, ...(dppPathFilter ? { filter: { dppKey: dppPathFilter } } : {}) }),
     );
   }
 

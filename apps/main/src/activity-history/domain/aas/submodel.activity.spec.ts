@@ -40,42 +40,44 @@ describe("SubmodelActivity", () => {
       operation: SubmodelOperationTypes.SubmodelElementModified,
     });
 
-    expect(activity.toPlain({ filter: { dppKey: "prop1" } }).payload).toEqual({
+    expect(activity.toPlain({ filter: { dppPath: "prop1" } }).payload).toEqual({
       administration: administration.toPlain(),
-      additionalIdShort: null,
       submodelId,
-      fullIdShortPath: fullIdShortPath.toString(),
+      command: {
+        op: SubmodelOperationTypes.SubmodelElementModified,
+        path: fullIdShortPath.toString(),
+      },
       changes: [
         {
-          dpp: "prop1",
+          dpp: { p: "prop1" },
           op: "replace",
           path: "/submodelElements/0/value",
           value: "newValue",
         },
       ],
-      operation: SubmodelOperationTypes.SubmodelElementModified,
     });
 
-    expect(activity.toPlain({ filter: { dppKey: "sw:prop" } }).payload).toEqual({
+    expect(activity.toPlain({ filter: { dppPath: "sw:prop" } }).payload).toEqual({
       administration: administration.toPlain(),
-      additionalIdShort: null,
       submodelId,
-      fullIdShortPath: fullIdShortPath.toString(),
+      command: {
+        op: SubmodelOperationTypes.SubmodelElementModified,
+        path: fullIdShortPath.toString(),
+      },
       changes: [
         {
-          dpp: "prop2",
+          dpp: { p: "prop2" },
           op: "replace",
           path: "/submodelElements/1/value",
           value: "newValue",
         },
         {
-          dpp: "prop1",
+          dpp: { p: "prop1" },
           op: "replace",
           path: "/submodelElements/0/value",
           value: "newValue",
         },
       ],
-      operation: SubmodelOperationTypes.SubmodelElementModified,
     });
   });
 
@@ -113,18 +115,19 @@ describe("SubmodelActivity", () => {
 
     expect(activity.toPlain({ ability }).payload).toEqual({
       administration: administration.toPlain(),
-      additionalIdShort: null,
       submodelId,
-      fullIdShortPath: fullIdShortPath.toString(),
+      command: {
+        op: SubmodelOperationTypes.SubmodelElementModified,
+        path: fullIdShortPath.toString(),
+      },
       changes: [
         {
-          dpp: "",
+          dpp: {},
           op: "replace",
           path: "/value",
           value: "newValue",
         },
       ],
-      operation: SubmodelOperationTypes.SubmodelElementModified,
     });
 
     ability = security.defineAbilityForSubject(member, userId);

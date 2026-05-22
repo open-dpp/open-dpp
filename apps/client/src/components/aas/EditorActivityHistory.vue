@@ -1,49 +1,49 @@
 <script setup lang="ts">
-import { DigitalProductDocumentType } from "../../lib/digital-product-document.ts";
+import {
+  DigitalProductDocumentType,
+  type DigitalProductDocumentTypeType,
+} from "../../lib/digital-product-document.ts";
 import { computed, onMounted } from "vue";
 import {
   type ActivityDto,
   ActivityDtoTypes,
-  type DataTypeDefType,
-  type JsonPatchOperationDto,
-  LanguageTextJsonSchema,
-  OperationDtoTypes,
+  ActivityPayloadDtoSchema,
+  type ExtendedJsonPatchDtoOperation,
   type PagingParamsDto,
 } from "@open-dpp/dto";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useI18n } from "vue-i18n";
 import { useActivityHistory } from "../../composables/activity-history.ts";
 import { usePagination } from "../../composables/pagination.ts";
 import { useRoute } from "vue-router";
-import type { AasEditorPath } from "../../composables/aas-drawer.ts";
-import { formatPropertyValue } from "../../lib/property-value.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import type { TimelineItem } from "../../composables/activity-timeline.ts";
 
 dayjs.extend(utc);
 const props = defineProps<{
   id: string;
-  dppKey: string;
+  dppPath: string;
+  type: DigitalProductDocumentTypeType;
   createTimelineItem: (
     activity: ActivityDto,
-    change: JsonPatchOperationDto,
+    change: ExtendedJsonPatchDtoOperation,
   ) => TimelineItem | undefined;
 }>();
 
-const { activities, fetchActivities } = useActivityHistory(DigitalProductDocumentType.Passport);
-const { t } = useI18n();
+const { activities, fetchActivities } = useActivityHistory(props.type);
 
 const route = useRoute();
 
 const timelineItems = computed<TimelineItem[]>(() => {
   const result = [];
   for (const activity of activities.value) {
-    for (const change of activity.payload.changes) {
-      const timelineItem = props.createTimelineItem(activity, change);
-      if (timelineItem) {
-        result.push(timelineItem);
+    const payloadParsing = ActivityPayloadDtoSchema.safeParse(activity.payload);
+    if (payloadParsing.success) {
+      for (const change of payloadParsing.data.changes) {
+        const timelineItem = props.createTimelineItem(activity, change);
+        if (timelineItem) {
+          result.push(timelineItem);
+        }
       }
     }
   }
@@ -53,7 +53,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
 async function fetchCallback(pagingParams: PagingParamsDto) {
   const response = await fetchActivities(props.id, pagingParams, {
     type: ActivityDtoTypes.SubmodelActivity,
-    dppKey: props.dppKey,
+    dppPath: props.dppPath,
   });
 
   activities.value = response.result;
@@ -81,16 +81,19 @@ onMounted(async () => {
     </template>
     <template #content="slotProps">
       <Card class="mt-4">
-        <template #title>{{ slotProps.item.attribute }} {{ slotProps.item.operation }}</template>
+        <template #title>{{ slotProps.item.title }}</template>
         <template #subtitle>
           {{ slotProps.item.timestamp }}
         </template>
-        <template #content v-if="slotProps.item.value">
-          <MediaFieldView
-            v-if="slotProps.item.renderValueAsFile"
-            :media-id="slotProps.item.value"
-          />
-          <p v-else>{{ t("activityHistory.value") }} {{ slotProps.item.value }}</p>
+        <template #content>
+          <div
+            v-for="(item, index) in slotProps.item.content"
+            :key="index"
+            class="flex flex-col gap-2"
+          >
+            <MediaFieldView v-if="item.renderContentAsFile" :media-id="item.value" />
+            <p v-else>{{ item.value }}</p>
+          </div>
         </template>
       </Card>
     </template>

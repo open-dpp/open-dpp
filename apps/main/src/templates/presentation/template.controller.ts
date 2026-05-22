@@ -695,7 +695,7 @@ export class TemplateController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
-    @ActivityDppKeyQueryParam() dppKeyFilter: string | undefined,
+    @ActivityDppKeyQueryParam() dppPathFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
@@ -709,7 +709,7 @@ export class TemplateController
       limit,
       cursor,
       activityType,
-      dppKeyFilter,
+      dppPathFilter,
     );
   }
 

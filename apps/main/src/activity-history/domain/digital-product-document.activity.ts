@@ -41,8 +41,8 @@ export class DigitalProductDocumentActivity implements IActivity {
         DigitalProductDocumentActivityVersion.v1_0_0,
       ),
       DigitalProductDocumentPayload.create({
-        changes: diff(data.oldData, data.newData).map((op) => ({ ...op, dpp: "" })),
-        operation: data.operation,
+        changes: diff(data.oldData, data.newData).map((op) => ({ ...op, dpp: {} })),
+        command: { op: data.operation },
       }),
     );
   }
@@ -65,33 +65,36 @@ export class DigitalProductDocumentActivity implements IActivity {
   }
 }
 
+const CommandSchema = z.object({
+  op: DigitalProductDocumentOperationTypesEnum,
+});
+
+export type Command = z.infer<typeof CommandSchema>;
+
 const DigitalProductDocumentPayloadSchema = z.object({
   changes: ExtendedJsonPatchOperationSchema.array(),
-  operation: DigitalProductDocumentOperationTypesEnum,
+  command: CommandSchema,
 });
 
 export class DigitalProductDocumentPayload implements IActivityPayload {
   private constructor(
-    public readonly operation: DigitalProductDocumentOperationTypesType,
+    public readonly command: Command,
     public readonly changes: ExtendedJsonPatchOperation[],
   ) {}
 
-  static create(data: {
-    operation: DigitalProductDocumentOperationTypesType;
-    changes: ExtendedJsonPatchOperation[];
-  }) {
-    return new DigitalProductDocumentPayload(data.operation, data.changes);
+  static create(data: { command: Command; changes: ExtendedJsonPatchOperation[] }) {
+    return new DigitalProductDocumentPayload(data.command, data.changes);
   }
 
   static fromPlain(data: unknown) {
     const parsed = DigitalProductDocumentPayloadSchema.parse(data);
-    return new DigitalProductDocumentPayload(parsed.operation, parsed.changes);
+    return new DigitalProductDocumentPayload(parsed.command, parsed.changes);
   }
 
   toPlain() {
     return {
       changes: this.changes,
-      operation: this.operation,
+      command: this.command,
     };
   }
 }

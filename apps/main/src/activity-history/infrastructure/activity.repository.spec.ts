@@ -195,7 +195,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelActivity, dppKey: "prop1" },
+        filter: { activityType: ActivityTypes.SubmodelActivity, dppPath: "prop1" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -208,7 +208,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelActivity, dppKey: "sw:prop" },
+        filter: { activityType: ActivityTypes.SubmodelActivity, dppPath: "sw:prop" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({

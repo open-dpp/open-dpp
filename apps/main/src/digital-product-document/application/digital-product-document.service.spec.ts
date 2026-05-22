@@ -373,19 +373,21 @@ describe("DigitalProductDocumentService", () => {
         correlationId,
         type: ActivityTypes.DigitalProductDocumentActivity,
         payload: DigitalProductDocumentPayload.create({
-          operation: DigitalProductDocumentOperationTypes.StatusModified,
+          command: {
+            op: DigitalProductDocumentOperationTypes.StatusModified,
+          },
           changes: [
             {
               op: "replace",
               path: "/lastStatusChange/currentStatus",
               value: "Archived",
-              dpp: "",
+              dpp: {},
             },
             {
               op: "replace",
               path: "/lastStatusChange/previousStatus",
               value: "Draft",
-              dpp: "",
+              dpp: {},
             },
           ],
         }),

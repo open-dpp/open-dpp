@@ -61,6 +61,6 @@ export type JsonPatchOperation = z.infer<typeof JsonPatchOperationSchema>;
 
 // Extended JsonPatch operation with the dpp field which contains relevant dpp identifiers like the idShortPath
 export const ExtendedJsonPatchOperationSchema = JsonPatchOperationSchema.extend({
-  dpp: z.string(),
+  dpp: z.record(z.string(), z.string()).default({}),
 });
 export type ExtendedJsonPatchOperation = z.infer<typeof ExtendedJsonPatchOperationSchema>;

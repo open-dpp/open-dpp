@@ -109,7 +109,8 @@ defineExpose<{
       <EditorActivityHistory
         v-if="props.path.idShortPath"
         :id="props.id"
-        :dppKey="props.path.idShortPath"
+        :type="props.type"
+        :dppPath="props.path.idShortPath"
         :createTimelineItem="createTimelineItemForReferenceElement"
       />
     </template>

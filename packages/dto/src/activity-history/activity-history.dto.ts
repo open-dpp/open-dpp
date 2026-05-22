@@ -1,6 +1,11 @@
 import { PagingMetadataDtoSchema, PagingParamsDtoSchema } from "../shared/pagination.dto";
 import { z } from "zod";
 import { PeriodDtoSchema } from "../shared/time.dto";
+import { SubmodelOperationDtoTypesEnum } from "./submodel-operation-types.dto";
+import { AssetAdministrationShellOperationDtoTypesEnum } from "./asset-administration-shell-operation-types.dto";
+import { EnvironmentOperationDtoTypesEnum } from "./environment-types.dto";
+import { DigitalProductDocumentOperationDtoTypesEnum } from "./digital-product-document-operation-types.dto";
+import { SubmodelRepositoryOperationDtoTypesEnum } from "./submodel-repository-operation-types.dto";
 
 export const ActivityDtoTypes = {
   SubmodelActivity: "SubmodelActivity",
@@ -48,15 +53,37 @@ export type JsonPatchOperationDto = z.infer<typeof JsonPatchOperationDtoSchema>;
 
 // Extended JsonPatch operation with the dpp field which contains relevant dpp identifiers like the idShortPath
 export const ExtendedJsonPatchOperationDtoSchema = JsonPatchOperationDtoSchema.extend({
-  dpp: z.string(),
+  dpp: z.record(z.string(), z.string()),
 });
 export type ExtendedJsonPatchDtoOperation = z.infer<typeof ExtendedJsonPatchOperationDtoSchema>;
 
+const CommandDtoSchema = z.object({
+  op: z.union([
+    SubmodelOperationDtoTypesEnum,
+    AssetAdministrationShellOperationDtoTypesEnum,
+    EnvironmentOperationDtoTypesEnum,
+    DigitalProductDocumentOperationDtoTypesEnum,
+    SubmodelRepositoryOperationDtoTypesEnum,
+  ]),
+  path: z.string().optional(),
+  value: z.record(z.string(), z.any()).optional(),
+});
+
+const ErrorPayloadDtoSchema = z.object({
+  error: z.object({
+    status: z.number(),
+    message: z.string(),
+  }),
+});
+
+export const ActivityPayloadDtoSchema = z.looseObject({
+  command: CommandDtoSchema,
+  changes: z.union([ExtendedJsonPatchOperationDtoSchema.array(), z.any()]),
+});
+
 export const ActivityDtoSchema = z.object({
   header: ActivityHeaderDtoSchema,
-  payload: z.looseObject({
-    changes: z.union([ExtendedJsonPatchOperationDtoSchema.array(), z.any()]),
-  }),
+  payload: z.union([ActivityPayloadDtoSchema, ErrorPayloadDtoSchema]),
 });
 
 export type ActivityDto = z.infer<typeof ActivityDtoSchema>;
@@ -72,7 +99,7 @@ export type ActivityPaginationDto = z.infer<typeof ActivityPaginationDtoSchema>;
 
 export const ActivityFilterDtoSchema = z.object({
   type: ActivityDtoTypesEnum,
-  dppKey: z.string().optional(),
+  dppPath: z.string().optional(),
 });
 
 export type ActivityFilterDto = z.infer<typeof ActivityFilterDtoSchema>;
