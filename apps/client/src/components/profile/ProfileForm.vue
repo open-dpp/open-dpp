@@ -495,10 +495,18 @@ function handleEmailKeydown(event: KeyboardEvent) {
               class="w-full"
               :invalid="!!currentPasswordError"
               :disabled="emailSubmitting"
+              :aria-describedby="
+                currentPasswordError ? 'profile-current-password-error' : undefined
+              "
               data-testid="current-password"
-              @keydown="handleEmailKeydown"
             />
-            <Message v-if="currentPasswordError" severity="error" variant="simple" size="small">
+            <Message
+              v-if="currentPasswordError"
+              id="profile-current-password-error"
+              severity="error"
+              variant="simple"
+              size="small"
+            >
               {{ currentPasswordError }}
             </Message>
           </div>

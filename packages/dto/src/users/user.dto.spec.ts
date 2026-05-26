@@ -50,6 +50,11 @@ describe("userDto", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects an invalid email", () => {
+    const result = UserDtoSchema.safeParse({ ...validBase, email: "not-an-email" });
+    expect(result.success).toBe(false);
+  });
+
   it("coerces ISO date strings to Date objects", () => {
     const result = UserDtoSchema.safeParse({
       ...validBase,

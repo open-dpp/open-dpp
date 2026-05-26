@@ -50,7 +50,10 @@ export class EmailChangeRequestsRepository {
   }
 
   async findByUserId(userId: string): Promise<EmailChangeRequest | null> {
-    const doc = await this.model.findOne({ userId: { $eq: userId } }).lean().exec();
+    const doc = await this.model
+      .findOne({ userId: { $eq: userId } })
+      .lean()
+      .exec();
     if (!doc) {
       return null;
     }

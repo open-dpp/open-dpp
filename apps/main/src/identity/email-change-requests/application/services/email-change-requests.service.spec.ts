@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
+import { APIError } from "better-auth";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
@@ -18,6 +19,7 @@ describe("EmailChangeRequestsService", () => {
       save: jest.fn(),
       findByUserId: jest.fn(),
       deleteByUserId: jest.fn(),
+      upsertByUserId: jest.fn(),
     };
     mockAuth = {
       api: {
@@ -86,8 +88,7 @@ describe("EmailChangeRequestsService", () => {
     });
 
     it("creates a new request when none exists", async () => {
-      mockRepo.findByUserId.mockResolvedValue(null);
-      mockRepo.save.mockImplementation(async (r: EmailChangeRequest) => r);
+      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
 
       const result = await service.request(
         "user-1",
@@ -100,27 +101,41 @@ describe("EmailChangeRequestsService", () => {
       expect(mockAuth.api.signInEmail).toHaveBeenCalledWith({
         body: { email: "current@x.com", password: "hunter2" },
       });
-      expect(mockRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
       expect(mockAuth.api.changeEmail).toHaveBeenCalledTimes(1);
       expect(result.newEmail).toBe("new@x.com");
     });
 
-    it("rejects when password is wrong", async () => {
-      mockRepo.findByUserId.mockResolvedValue(null);
-      mockAuth.api.signInEmail.mockRejectedValue(new Error("bad password"));
+    it("rejects with ValueError when password is wrong", async () => {
+      mockAuth.api.signInEmail.mockRejectedValue(
+        new APIError("UNAUTHORIZED", {
+          message: "Invalid email or password",
+          code: "INVALID_EMAIL_OR_PASSWORD",
+        }),
+      );
 
       await expect(
         service.request("user-1", "new@x.com", "current@x.com", "wrong", headers),
       ).rejects.toThrow(ValueError);
 
-      expect(mockRepo.save).not.toHaveBeenCalled();
+      expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
     });
 
-    it("hard-cancels existing pending and replaces it", async () => {
-      const existing = EmailChangeRequest.create({ userId: "user-1", newEmail: "old@x.com" });
-      mockRepo.findByUserId.mockResolvedValue(existing);
-      mockRepo.save.mockImplementation(async (r: EmailChangeRequest) => r);
+    it("re-throws non-credential errors from signInEmail without wrapping", async () => {
+      const networkError = new Error("network down");
+      mockAuth.api.signInEmail.mockRejectedValue(networkError);
+
+      await expect(
+        service.request("user-1", "new@x.com", "current@x.com", "hunter2", headers),
+      ).rejects.toBe(networkError);
+
+      expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
+      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+    });
+
+    it("replaces an existing pending request atomically", async () => {
+      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
 
       const result = await service.request(
         "user-1",
@@ -130,32 +145,31 @@ describe("EmailChangeRequestsService", () => {
         headers,
       );
 
-      expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
+      expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
+      expect(mockRepo.upsertByUserId.mock.calls[0][0].newEmail).toBe("new@x.com");
+      expect(mockRepo.deleteByUserId).not.toHaveBeenCalled();
       expect(result.newEmail).toBe("new@x.com");
     });
 
     it("rolls back the row when better-auth.changeEmail fails", async () => {
-      mockRepo.findByUserId.mockResolvedValue(null);
-      mockRepo.save.mockImplementation(async (r: EmailChangeRequest) => r);
+      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
       mockAuth.api.changeEmail.mockRejectedValue(new Error("auth boom"));
 
       await expect(
         service.request("user-1", "new@x.com", "current@x.com", "hunter2", headers),
       ).rejects.toThrow();
 
-      expect(mockRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
     });
 
     it("rejects when newEmail equals currentEmail", async () => {
-      mockRepo.findByUserId.mockResolvedValue(null);
-
       await expect(
         service.request("user-1", "same@x.com", "same@x.com", "hunter2", headers),
       ).rejects.toThrow(ValueError);
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
-      expect(mockRepo.save).not.toHaveBeenCalled();
+      expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
     });
   });
 });

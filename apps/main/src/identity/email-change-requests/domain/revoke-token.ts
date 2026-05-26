@@ -52,5 +52,8 @@ export function verifyRevokeToken(
   if (typeof payload.exp !== "number" || payload.exp < now.getTime()) {
     throw new ValueError("Revoke token expired");
   }
+  if (typeof payload.userId !== "string" || typeof payload.requestId !== "string") {
+    throw new ValueError("Malformed revoke token payload");
+  }
   return { userId: payload.userId, requestId: payload.requestId };
 }

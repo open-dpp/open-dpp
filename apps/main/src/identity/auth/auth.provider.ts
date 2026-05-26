@@ -238,9 +238,7 @@ export const AuthProvider: Provider = {
                       userId: { $eq: sessionUserId },
                     }
                   : { newEmail: { $eq: newEmail } };
-              const pending = await db
-                .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
-                .findOne(query);
+              const pending = await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).findOne(query);
               if (!pending) {
                 logger.warn(
                   `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest (revoked or unknown)`,

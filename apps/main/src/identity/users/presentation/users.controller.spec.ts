@@ -374,6 +374,34 @@ describe("UsersController", () => {
       const after = await usersRepository.findOneById(user.id);
       expect(after!.emailVerified).toBe(before!.emailVerified);
     });
+
+    it("rolls back the pending change and returns 500 when the notification email fails", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+      emailSendMock.mockImplementation(async (mail: { type: string }) => {
+        if (mail.type === "EMAIL_CHANGE_NOTIFICATION") {
+          throw new Error("SMTP unavailable");
+        }
+      });
+
+      try {
+        const response = await request(app.getHttpServer())
+          .post("/users/me/email-change")
+          .set("Cookie", userCookie)
+          .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+        expect(response.status).toBe(500);
+
+        const meResponse = await request(app.getHttpServer())
+          .get("/users/me")
+          .set("Cookie", userCookie);
+        expect(meResponse.body.pendingEmailChange).toBeNull();
+      } finally {
+        emailSendMock.mockReset();
+      }
+    });
   });
 
   describe("DELETE /users/me/email-change", () => {
@@ -476,6 +504,64 @@ describe("UsersController", () => {
 
       const persisted = await usersRepository.findOneById(user.id);
       expect(persisted!.email).toBe(user.email);
+    });
+
+    it("does not let one user's pending shadow row authorize another user's email update", async () => {
+      // Asymmetry between before- and after-hooks would let user B complete a JWT-driven
+      // email change to X using user A's pending shadow row. The before-hook must bind the
+      // lookup to the session user, matching the after-hook's (userId, newEmail) filter.
+      const auth = moduleRef.get<Auth>(AUTH);
+      const sharedNewEmail = `${randomUUID()}@test.test`;
+
+      const { user: userA } = await betterAuthHelper.createUser();
+      const userACookie = await betterAuthHelper.signAsUser(userA.id);
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userACookie)
+        .send({ newEmail: sharedNewEmail, currentPassword: TEST_PASSWORD });
+
+      const { user: userB } = await betterAuthHelper.createUser();
+      const userBCookie = await betterAuthHelper.signAsUser(userB.id);
+      emailSendMock.mockClear();
+
+      try {
+        await (auth.api as any).changeEmail({
+          body: { newEmail: sharedNewEmail, callbackURL: "/" },
+          headers: { cookie: userBCookie },
+        });
+      } catch {
+        // If better-auth refuses the request outright, the test premise no longer holds
+        // and the assertion below is the real check.
+      }
+
+      const userBVerifyCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      const userBToken = userBVerifyCall
+        ? new URL(
+            (userBVerifyCall[0] as { templateProperties: { link: string } }).templateProperties
+              .link,
+          ).searchParams.get("token")
+        : null;
+
+      if (typeof userBToken === "string") {
+        try {
+          await (auth.api as any).verifyEmail({
+            query: { token: userBToken, callbackURL: "/" },
+            headers: { cookie: userBCookie },
+            asResponse: true,
+          });
+        } catch {
+          // Hook veto can surface as an error from parseUserOutput on null — expected.
+        }
+      }
+
+      const persistedB = await usersRepository.findOneById(userB.id);
+      expect(persistedB!.email).toBe(userB.email);
     });
   });
 

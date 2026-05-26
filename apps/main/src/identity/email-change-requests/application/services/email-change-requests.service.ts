@@ -1,4 +1,5 @@
 import type { Auth } from "better-auth";
+import { APIError } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
@@ -45,17 +46,20 @@ export class EmailChangeRequestsService {
       await this.auth.api.signInEmail({
         body: { email: currentEmail, password: currentPassword },
       });
-    } catch {
-      throw new ValueError("Current password is incorrect");
-    }
-
-    const existing = await this.repository.findByUserId(userId);
-    if (existing) {
-      await this.hardCancel(userId);
+    } catch (error) {
+      if (
+        error instanceof APIError &&
+        (error as APIError & { body?: { code?: string } }).body?.code ===
+          "INVALID_EMAIL_OR_PASSWORD"
+      ) {
+        throw new ValueError("Current password is incorrect");
+      }
+      this.logger.error(`request: better-auth.signInEmail failed for ${userId}`, error);
+      throw error;
     }
 
     const next = EmailChangeRequest.create({ userId, newEmail });
-    await this.repository.save(next);
+    await this.repository.upsertByUserId(next);
 
     try {
       await this.auth.api.changeEmail({

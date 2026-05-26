@@ -223,9 +223,7 @@ describe("MembersRepository", () => {
       await expectNoLeak(() =>
         repository.findOneByUserIdAndOrganizationId(malicious, organizationId),
       );
-      await expectNoLeak(() =>
-        repository.findOneByUserIdAndOrganizationId(userId, malicious),
-      );
+      await expectNoLeak(() => repository.findOneByUserIdAndOrganizationId(userId, malicious));
     });
   });
 

@@ -32,12 +32,10 @@ z.config({
 });
 
 export function convertLocaleToLanguage(locale: string): LanguageType {
-  switch (locale) {
-    case "de-DE":
-      return Language.de;
-    default:
-      return Language.en;
+  if (locale.toLowerCase().startsWith("de")) {
+    return Language.de;
   }
+  return Language.en;
 }
 
 export function convertLanguageToLocale(language: LanguageType): "en-US" | "de-DE" {

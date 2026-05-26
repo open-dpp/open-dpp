@@ -262,6 +262,36 @@ describe("ProfileForm.vue", () => {
     expect(wrapper.text()).toContain("user.emailChangeRateLimited");
   });
 
+  it("calls requestEmailChange exactly once when Enter is pressed in the password field", async () => {
+    (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: { user: baseUser, pendingEmailChange: null },
+    });
+    (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: {
+        user: baseUser,
+        pendingEmailChange: {
+          newEmail: "new@example.com",
+          requestedAt: new Date("2026-02-01T12:00:00Z"),
+        },
+      },
+    });
+    const wrapper = makeMount();
+    await flushPromises();
+
+    await wrapper.find('[data-testid="change-email"]').trigger("click");
+    await flushPromises();
+
+    await wrapper.find('[data-testid="new-email"]').setValue("new@example.com");
+    await wrapper.find('[data-testid="current-password"]').setValue("hunter2");
+
+    await wrapper.find('[data-testid="current-password"]').trigger("keydown", { key: "Enter" });
+    await flushPromises();
+
+    expect(
+      (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
+    ).toBe(1);
+  });
+
   it("opens the confirm dialog before cancelling a pending change", async () => {
     (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: {

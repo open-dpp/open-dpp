@@ -33,7 +33,7 @@ export class UsersService {
       });
     } catch (error) {
       this.logger.error(
-        `User ${saved.id} (${saved.email}) was created but the password-reset email failed to send. The user cannot log in until an admin re-triggers the reset email.`,
+        `User ${saved.id} was created but the password-reset email failed to send. The user cannot log in until an admin re-triggers the reset email.`,
         error,
       );
     }

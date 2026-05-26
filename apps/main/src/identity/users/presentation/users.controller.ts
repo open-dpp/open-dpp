@@ -6,6 +6,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Logger,
   Param,
   Patch,
@@ -136,8 +137,12 @@ export class UsersController {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to send email-change notification to ${user.email} for user ${user.id}`,
+        `Failed to send email-change notification to ${user.email} for user ${user.id}; rolling back pending change`,
         error,
+      );
+      await this.emailChangeRequestsService.hardCancel(session.userId);
+      throw new InternalServerErrorException(
+        "Failed to send email-change notification. Please try again.",
       );
     }
 
