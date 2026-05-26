@@ -26,6 +26,7 @@ import { PresentationConfigurationsModule } from "../../../presentation-configur
 import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../infrastructure/permalink.schema";
+import { InstanceSettingsModule } from "../../../instance-settings/instance-settings.module";
 import { PermalinkModule } from "../../permalink.module";
 import { PermalinkApplicationService } from "./permalink.application.service";
 
@@ -33,7 +34,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
   const ctx = createAasTestContext(
     "/p",
     {
-      imports: [PermalinkModule, PresentationConfigurationsModule],
+      imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [
         PermalinkRepository,
         PermalinkApplicationService,
@@ -253,7 +254,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
       permalink,
       passport,
       null,
-      "http://localhost:3000",
+      "http://localhost:3000/p",
     );
 
     expect(publicUrl).toBe("http://localhost:3000/p/needs-branding");

@@ -32,7 +32,7 @@ export class InstanceSettingsRepository {
     return await save(
       settings,
       this.model,
-      InstanceSettingsDocVersion.v1_1_0,
+      InstanceSettingsDocVersion.v1_2_0,
       this.fromPlain.bind(this),
     );
   }

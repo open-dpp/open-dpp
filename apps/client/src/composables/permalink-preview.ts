@@ -1,5 +1,6 @@
 import type { PermalinkFallbackBaseUrlSource, PermalinkPublicDto } from "@open-dpp/dto";
 import {
+  canonicaliseBaseUrl,
   PERMALINK_RESERVED_SLUGS,
   PermalinkBaseUrlSchema,
   PermalinkSlugSchema,
@@ -22,16 +23,6 @@ function trimToNull(value: string): string | null {
   return trimmed.length === 0 ? null : trimmed;
 }
 
-function canonicaliseBaseUrl(value: string): string {
-  try {
-    const url = new URL(value);
-    url.hostname = url.hostname.toLowerCase();
-    return url.origin;
-  } catch {
-    return value;
-  }
-}
-
 const reservedSlugs = new Set<string>(PERMALINK_RESERVED_SLUGS);
 
 function isSlugValid(value: string): boolean {
@@ -46,7 +37,11 @@ function isBaseUrlValid(value: string): boolean {
 function deriveFallbackBaseUrl(permalink: PermalinkPublicDto): string {
   if (permalink.fallbackBaseUrl) return permalink.fallbackBaseUrl;
   try {
-    return new URL(permalink.publicUrl).origin;
+    const url = new URL(permalink.publicUrl);
+    const segments = url.pathname.split("/").filter(Boolean);
+    segments.pop();
+    const path = segments.length ? `/${segments.join("/")}` : "";
+    return canonicaliseBaseUrl(`${url.protocol}//${url.host}${path}`);
   } catch {
     return "";
   }
@@ -79,7 +74,7 @@ export function usePermalinkPreview(
     if (locked.value && permalink.value?.publishedUrl) {
       return permalink.value.publishedUrl;
     }
-    return `${effectiveBase.value}/p/${effectiveSlug.value}`;
+    return `${effectiveBase.value}/${effectiveSlug.value}`;
   });
 
   const previewSource = computed<PermalinkPreviewSource>(() => {

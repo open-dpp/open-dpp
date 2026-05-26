@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import {
+  canonicaliseBaseUrl,
   PermalinkFallbackBaseUrlSource,
   PermalinkMetadataDtoSchema,
   PresentationReferenceType,
@@ -10,6 +11,8 @@ import { Branding } from "../../../branding/domain/branding";
 import { BrandingRepository } from "../../../branding/infrastructure/branding.repository";
 import { DbSessionOptions } from "../../../database/query-options";
 import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
+import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
+import { computePermalinkBaseUrlFallback } from "../../../lib/permalink-fallback";
 import { isDuplicateKeyError } from "../../../lib/mongo-errors";
 import { Passport } from "../../../passports/domain/passport";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
@@ -38,6 +41,7 @@ export class PermalinkApplicationService {
     private readonly passportRepository: PassportRepository,
     private readonly brandingRepository: BrandingRepository,
     private readonly envService: EnvService,
+    private readonly instanceSettingsService: InstanceSettingsService,
   ) {}
 
   async resolvePermalink(idOrSlug: string): Promise<Permalink> {
@@ -126,7 +130,15 @@ export class PermalinkApplicationService {
       return permalink;
     }
     const branding = await this.loadBranding(passport.organizationId);
-    return this.freezePermalink(permalink, branding, this.envService.get("OPEN_DPP_URL"), options);
+    return this.freezePermalink(permalink, branding, await this.getPermalinkBaseUrl(), options);
+  }
+
+  async getPermalinkBaseUrl(): Promise<string> {
+    const settings = await this.instanceSettingsService.getSettings();
+    if (settings.permalinkBaseUrl.value !== null) {
+      return settings.permalinkBaseUrl.value;
+    }
+    return computePermalinkBaseUrlFallback(this.envService.get("OPEN_DPP_URL"));
   }
 
   async freezePermalink(
@@ -170,7 +182,7 @@ export class PermalinkApplicationService {
       return;
     }
     const branding = await this.loadBranding(passport.organizationId);
-    const fallbackEnvUrl = this.envService.get("OPEN_DPP_URL");
+    const fallbackEnvUrl = await this.getPermalinkBaseUrl();
     for (const permalink of permalinks) {
       await this.freezePermalink(permalink, branding, fallbackEnvUrl, options);
     }
@@ -224,7 +236,7 @@ export function resolveFallbackBaseUrl(
   if (branding?.permalinkBaseUrl) {
     return { url: branding.permalinkBaseUrl, source: "branding" };
   }
-  return { url: new URL(fallbackEnvUrl).origin, source: "instance" };
+  return { url: canonicaliseBaseUrl(fallbackEnvUrl), source: "instance" };
 }
 
 export function resolvePublicUrl(
@@ -234,5 +246,5 @@ export function resolvePublicUrl(
 ): string {
   const base = permalink.baseUrl ?? resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
   const slugOrId = permalink.slug ?? permalink.id;
-  return `${base}/p/${slugOrId}`;
+  return `${base}/${slugOrId}`;
 }

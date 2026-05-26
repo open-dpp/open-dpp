@@ -105,10 +105,18 @@ describe("PermalinkPublicDtoSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects when fallbackBaseUrl is not a valid origin", () => {
+  it("accepts a fallbackBaseUrl that includes a path", () => {
     const result = PermalinkPublicDtoSchema.safeParse({
       ...validPublic,
-      fallbackBaseUrl: "https://branding.example.com/with-path",
+      fallbackBaseUrl: "https://branding.example.com/p",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects when fallbackBaseUrl includes a query string", () => {
+    const result = PermalinkPublicDtoSchema.safeParse({
+      ...validPublic,
+      fallbackBaseUrl: "https://branding.example.com?q=1",
     });
     expect(result.success).toBe(false);
   });

@@ -4,18 +4,18 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
-import { type BooleanSettingsResponseDto } from "@open-dpp/dto";
+import { type BooleanSettingsResponseDto, type StringSettingsResponseDto } from "@open-dpp/dto";
 import { authClient } from "../../auth-client.ts";
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const toast = useToast();
-type InstanceSetting = {
+type BooleanInstanceSetting = {
   key: "signupEnabled" | "organizationCreationEnabled";
   setting: BooleanSettingsResponseDto;
 };
 
-const instanceSettings = ref<InstanceSetting[]>([
+const instanceSettings = ref<BooleanInstanceSetting[]>([
   {
     key: "signupEnabled",
     setting: { value: true },
@@ -25,6 +25,9 @@ const instanceSettings = ref<InstanceSetting[]>([
     setting: { value: true },
   },
 ]);
+
+const permalinkBaseUrl = ref<StringSettingsResponseDto>({ value: null });
+const effectiveFallback = ref<string>("");
 
 const isSaving = ref(false);
 const loading = ref(true);
@@ -36,6 +39,8 @@ async function fetchSettings() {
     for (const setting of instanceSettings.value) {
       setting.setting = res.data[setting.key];
     }
+    permalinkBaseUrl.value = res.data.permalinkBaseUrl;
+    effectiveFallback.value = res.data.effectiveFallback;
   } catch (error) {
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
@@ -73,6 +78,30 @@ async function toggleInstanceSetting(settingKey: string) {
   }
 }
 
+async function commitPermalinkBaseUrl(value: string | null) {
+  if (permalinkBaseUrl.value.locked || isSaving.value) return;
+  const previous = permalinkBaseUrl.value;
+  isSaving.value = true;
+  try {
+    const res = await apiClient.dpp.instanceSettings.update({ permalinkBaseUrl: value });
+    permalinkBaseUrl.value = res.data.permalinkBaseUrl;
+    effectiveFallback.value = res.data.effectiveFallback;
+    toast.add({
+      severity: "success",
+      summary: t("organizations.admin.instanceSettings.saved"),
+      life: 3000,
+    });
+  } catch (error) {
+    permalinkBaseUrl.value = previous;
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.admin.instanceSettings.error"),
+      error,
+    );
+  } finally {
+    isSaving.value = false;
+  }
+}
+
 onMounted(async () => {
   await fetchSettings();
 });
@@ -93,6 +122,15 @@ onMounted(async () => {
         :isSaving="isSaving"
         :isLocked="!!setting.setting.locked"
         :translationKey="setting.key"
+      />
+      <InstanceSettingUrlInput
+        :model-value="permalinkBaseUrl.value"
+        :loading="loading"
+        :isSaving="isSaving"
+        :isLocked="!!permalinkBaseUrl.locked"
+        translationKey="permalinkBaseUrl"
+        :effective-fallback="effectiveFallback"
+        @commit="commitPermalinkBaseUrl"
       />
     </div>
   </section>

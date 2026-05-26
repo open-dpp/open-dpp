@@ -5,6 +5,7 @@ import { AasModule } from "../aas/aas.module";
 import { BrandingModule } from "../branding/branding.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
+import { InstanceSettingsModule } from "../instance-settings/instance-settings.module";
 import { PassportsModule } from "../passports/passports.module";
 import {
   PresentationConfigurationDoc,
@@ -26,6 +27,7 @@ import { PermalinkController } from "./presentation/permalink.controller";
     EnvModule,
     OrganizationsModule,
     UsersModule,
+    InstanceSettingsModule,
     forwardRef(() => PassportsModule),
     BrandingModule,
     PresentationConfigurationsModule,

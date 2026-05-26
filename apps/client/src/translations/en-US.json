@@ -467,6 +467,13 @@
           "title": "Public creation of organizations enabled",
           "description": "When disabled, only admins can create new organizations."
         },
+        "permalinkBaseUrl": {
+          "title": "Passport URL",
+          "description": "URL where published passport pages are served via their permanent links.",
+          "placeholder": "https://dpp.example.com",
+          "effectiveFallback": "Currently effective: {url}",
+          "invalid": "Must be a valid http(s) URL without a query or fragment."
+        },
         "saved": "Settings saved successfully",
         "error": "Error saving settings",
         "errorLoading": "Error loading settings",
@@ -681,7 +688,7 @@
       "saveSuccess": "Permalink settings saved.",
       "slugConflict": "This slug is already in use by another permalink.",
       "slugInvalid": "Slug must be 2–64 characters of lowercase letters, digits, and hyphens.",
-      "baseUrlInvalid": "Base URL must be a full origin (e.g. https://example.com), no path or query.",
+      "baseUrlInvalid": "Base URL must be a valid http(s) URL without a query or fragment (e.g. https://example.com or https://example.com/p).",
       "locked": "This passport is published. Its permalink is permanent and can no longer be changed.",
       "slug": {
         "label": "Short name",
@@ -689,7 +696,7 @@
       },
       "baseUrl": {
         "label": "Custom base URL",
-        "description": "Override the organization's default permalink domain for this passport. Leave blank to inherit."
+        "description": "Override the organization's default permalink URL for this passport. Include the path prefix if your deployment uses one (e.g. https://example.com/p). Leave blank to inherit."
       },
       "preview": {
         "label": "Preview",

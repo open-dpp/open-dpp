@@ -467,6 +467,13 @@
           "title": "Öffentliche Erstellung von Organisationen aktiviert",
           "description": "Wenn deaktiviert, können nur Administrator*innen neue Organisationen hinzufügen."
         },
+        "permalinkBaseUrl": {
+          "title": "Produktpass URL",
+          "description": "URL, unter den permanente Links zu veröffentlichten Produktpässen bereitgestellt werden.",
+          "placeholder": "https://dpp.example.com",
+          "effectiveFallback": "Aktuell wirksam: {url}",
+          "invalid": "Muss eine gültige http(s)-URL ohne Query oder Fragment sein."
+        },
         "saved": "Einstellungen erfolgreich gespeichert",
         "error": "Fehler beim Speichern der Einstellungen",
         "errorLoading": "Fehler beim Laden der Einstellungen",
@@ -681,7 +688,7 @@
       "saveSuccess": "Permalink-Einstellungen gespeichert.",
       "slugConflict": "Dieser Slug wird bereits von einem anderen Permalink verwendet.",
       "slugInvalid": "Slug muss 2–64 Zeichen aus Kleinbuchstaben, Ziffern und Bindestrichen enthalten.",
-      "baseUrlInvalid": "Basis-URL muss ein vollständiger Origin sein (z. B. https://example.com), ohne Pfad oder Query.",
+      "baseUrlInvalid": "Basis-URL muss eine gültige http(s)-URL ohne Query oder Fragment sein (z. B. https://example.com oder https://example.com/p).",
       "locked": "Dieser Pass ist veröffentlicht. Sein Permalink ist dauerhaft und kann nicht mehr geändert werden.",
       "slug": {
         "label": "Kurzname",
@@ -689,7 +696,7 @@
       },
       "baseUrl": {
         "label": "Eigene Basis-URL",
-        "description": "Überschreibt die Permalink-Domain der Organisation bzw. die Standard-URL dieser Instanz für diesen Pass."
+        "description": "Überschreibt die Permalink-URL der Organisation für diesen Pass. Falls dein Deployment einen Pfad-Präfix verwendet, ihn mit angeben (z. B. https://example.com/p). Leer lassen, um zu erben."
       },
       "preview": {
         "label": "Vorschau",

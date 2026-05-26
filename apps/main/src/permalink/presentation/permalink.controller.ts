@@ -136,7 +136,7 @@ export class PermalinkController {
       permalink,
       passport,
       branding.forPin,
-      this.envService.get("OPEN_DPP_URL"),
+      await this.permalinkApplicationService.getPermalinkBaseUrl(),
     );
     return PassportPermalinkBundleDtoSchema.parse({
       passport: passport.toPlain(),
@@ -208,7 +208,7 @@ export class PermalinkController {
     branding: { display: Branding; forPin: Branding | null },
     passport: Passport,
   ) {
-    const envUrl = this.envService.get("OPEN_DPP_URL");
+    const envUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();
     const fallback = resolveFallbackBaseUrl(branding.display, envUrl);
     const resolved = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
       permalink,

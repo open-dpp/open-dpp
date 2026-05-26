@@ -34,6 +34,7 @@ import { PresentationConfigurationsModule } from "../../presentation-configurati
 import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schema";
+import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
 import { PermalinkModule } from "../permalink.module";
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
 
@@ -42,7 +43,7 @@ describe("PermalinkController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [PermalinkModule, PresentationConfigurationsModule],
+      imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [
         PermalinkRepository,
         PermalinkApplicationService,
@@ -703,7 +704,7 @@ describe("PermalinkController", () => {
 
       expect(response.status).toEqual(200);
       expect(response.body.baseUrl).toEqual("https://passports.example.com");
-      expect(response.body.publicUrl).toEqual(`https://passports.example.com/p/${permalink.id}`);
+      expect(response.body.publicUrl).toEqual(`https://passports.example.com/${permalink.id}`);
       expect(typeof response.body.fallbackBaseUrl).toBe("string");
       expect(["branding", "instance"]).toContain(response.body.fallbackBaseUrlSource);
 
@@ -742,7 +743,7 @@ describe("PermalinkController", () => {
         .patch(`/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({ baseUrl: "https://example.com/with/path" });
+        .send({ baseUrl: "https://example.com?q=1" });
 
       expect(response.status).toEqual(400);
     });
@@ -763,7 +764,7 @@ describe("PermalinkController", () => {
       expect(response.status).toEqual(200);
       expect(response.body.slug).toEqual(slug);
       expect(response.body.baseUrl).toEqual("https://passports.example.com");
-      expect(response.body.publicUrl).toEqual(`https://passports.example.com/p/${slug}`);
+      expect(response.body.publicUrl).toEqual(`https://passports.example.com/${slug}`);
     });
   });
 
@@ -776,7 +777,7 @@ describe("PermalinkController", () => {
       const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
 
       expect(response.status).toEqual(200);
-      expect(response.body.publicUrl).toEqual(`https://override.example.com/p/${fixture.id}`);
+      expect(response.body.publicUrl).toEqual(`https://override.example.com/${fixture.id}`);
     });
 
     it("falls back to OPEN_DPP_URL when neither permalink nor branding has a base URL", async () => {
@@ -818,9 +819,7 @@ describe("PermalinkController", () => {
 
       expect(response.status).toEqual(200);
       expect(response.body[0].fallbackBaseUrlSource).toEqual("instance");
-      expect(response.body[0].fallbackBaseUrl).toEqual(
-        new URL(process.env.OPEN_DPP_URL as string).origin,
-      );
+      expect(response.body[0].fallbackBaseUrl).toEqual(process.env.OPEN_DPP_PERMALINK_BASE_URL);
     });
 
     it("returns the post-override fallback even when permalink.baseUrl is set", async () => {
@@ -835,7 +834,7 @@ describe("PermalinkController", () => {
 
       expect(response.status).toEqual(200);
       expect(response.body[0].baseUrl).toEqual("https://override.example.com");
-      expect(response.body[0].publicUrl).toEqual(`https://override.example.com/p/${fixture.id}`);
+      expect(response.body[0].publicUrl).toEqual(`https://override.example.com/${fixture.id}`);
       expect(response.body[0].fallbackBaseUrl).toEqual("https://branding.example.com");
       expect(response.body[0].fallbackBaseUrlSource).toEqual("branding");
     });

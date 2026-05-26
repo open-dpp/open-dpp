@@ -166,7 +166,7 @@ describe("Permalink", () => {
 
   it("rejects an invalid baseUrl with ValueError", () => {
     expect(() =>
-      Permalink.create({ ...baseInput(), baseUrl: "https://example.com/with/path" }),
+      Permalink.create({ ...baseInput(), baseUrl: "https://example.com?query=1" }),
     ).toThrow(ValueError);
   });
 

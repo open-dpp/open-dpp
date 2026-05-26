@@ -136,7 +136,7 @@ function cancel() {
           </div>
           <code v-if="preview.previewValid.value" class="mt-2 block font-mono text-sm break-all">
             <span class="text-gray-900">{{ preview.effectiveBase.value }}</span>
-            <span class="text-gray-400">/p/</span>
+            <span class="text-gray-400">/</span>
             <span class="text-primary-600 font-medium">{{ preview.effectiveSlug.value }}</span>
           </code>
           <p v-else class="mt-2 text-sm text-gray-500 italic">

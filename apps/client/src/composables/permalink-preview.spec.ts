@@ -32,7 +32,7 @@ describe("usePermalinkPreview", () => {
 
     expect(preview.effectiveBase.value).toBe("https://override.example.com");
     expect(preview.effectiveSlug.value).toBe("acme-widget");
-    expect(preview.previewUrl.value).toBe("https://override.example.com/p/acme-widget");
+    expect(preview.previewUrl.value).toBe("https://override.example.com/acme-widget");
     expect(preview.previewSource.value).toBe("permalink");
     expect(preview.previewValid.value).toBe(true);
   });
@@ -50,7 +50,7 @@ describe("usePermalinkPreview", () => {
     const preview = usePermalinkPreview(permalink, slug, baseUrl);
 
     expect(preview.effectiveBase.value).toBe("https://branding.example.com");
-    expect(preview.previewUrl.value).toBe("https://branding.example.com/p/acme-widget");
+    expect(preview.previewUrl.value).toBe("https://branding.example.com/acme-widget");
     expect(preview.previewSource.value).toBe("branding");
     expect(preview.previewValid.value).toBe(true);
   });
@@ -80,7 +80,7 @@ describe("usePermalinkPreview", () => {
     const preview = usePermalinkPreview(permalink, slug, baseUrl);
 
     expect(preview.effectiveSlug.value).toBe(permalinkId);
-    expect(preview.previewUrl.value).toBe(`https://override.example.com/p/${permalinkId}`);
+    expect(preview.previewUrl.value).toBe(`https://override.example.com/${permalinkId}`);
   });
 
   it("treats whitespace-only input as empty (trim semantics)", () => {
@@ -102,10 +102,10 @@ describe("usePermalinkPreview", () => {
 
     const preview = usePermalinkPreview(permalink, slug, baseUrl);
 
-    expect(preview.previewUrl.value).toBe(`${permalink.value!.fallbackBaseUrl}/p/${permalinkId}`);
+    expect(preview.previewUrl.value).toBe(`${permalink.value!.fallbackBaseUrl}/${permalinkId}`);
 
     slug.value = "new-slug";
-    expect(preview.previewUrl.value).toBe(`${permalink.value!.fallbackBaseUrl}/p/new-slug`);
+    expect(preview.previewUrl.value).toBe(`${permalink.value!.fallbackBaseUrl}/new-slug`);
   });
 
   it("reacts to base URL input changes (and switches source)", () => {
@@ -132,10 +132,10 @@ describe("usePermalinkPreview", () => {
     expect(preview.effectiveBase.value).toBe("https://override.example.com");
   });
 
-  it("marks the preview invalid when the base URL input has a path", () => {
+  it("marks the preview invalid when the base URL input has a query string", () => {
     const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
     const slug = ref("acme-widget");
-    const baseUrl = ref("https://example.com/with-path");
+    const baseUrl = ref("https://example.com?q=1");
 
     const preview = usePermalinkPreview(permalink, slug, baseUrl);
 
@@ -221,7 +221,7 @@ describe("usePermalinkPreview", () => {
 
     const preview = usePermalinkPreview(permalink, slug, baseUrl);
 
-    expect(preview.effectiveBase.value).toBe("https://instance.example.com");
+    expect(preview.effectiveBase.value).toBe("https://instance.example.com/p");
     expect(preview.previewValid.value).toBe(true);
   });
 });

@@ -37,6 +37,38 @@ describe("PermalinkBaseUrlSchema", () => {
         expect(result.data).toBe("https://example.com:8443");
       }
     });
+
+    it("accepts a path component and preserves it", () => {
+      const result = PermalinkBaseUrlSchema.safeParse("https://example.com/p");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("https://example.com/p");
+      }
+    });
+
+    it("accepts a nested path and preserves it", () => {
+      const result = PermalinkBaseUrlSchema.safeParse("https://example.com/dpp/v1");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("https://example.com/dpp/v1");
+      }
+    });
+
+    it("strips a trailing slash from a path", () => {
+      const result = PermalinkBaseUrlSchema.safeParse("https://example.com/p/");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("https://example.com/p");
+      }
+    });
+
+    it("lowercases the host but preserves path case", () => {
+      const result = PermalinkBaseUrlSchema.safeParse("https://Example.COM/MyPath");
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBe("https://example.com/MyPath");
+      }
+    });
   });
 
   describe("rejects", () => {
@@ -45,10 +77,10 @@ describe("PermalinkBaseUrlSchema", () => {
       ["bare hostname (no scheme)", "passports.example.com"],
       ["non-http scheme", "ftp://example.com"],
       ["data URL", "data:text/plain,hi"],
-      ["path component", "https://example.com/p"],
       ["query string", "https://example.com?q=1"],
       ["fragment", "https://example.com#h"],
-      ["nested path", "https://example.com/passports/foo"],
+      ["double slash in path", "https://example.com//p"],
+      ["double slash mid-path", "https://example.com/dpp//v1"],
     ])("rejects %s ('%s')", (_label, input) => {
       const result = PermalinkBaseUrlSchema.safeParse(input);
       expect(result.success).toBe(false);
