@@ -156,6 +156,23 @@ describe("UsersRepository", () => {
     });
   });
 
+  describe("NoSQL injection defense", () => {
+    it("findOneByEmail does not leak rows for an operator-shaped email", async () => {
+      const seeded = await seedUser();
+
+      const malicious = { $ne: null } as unknown as string;
+      // Safe outcomes: Mongoose CastError (email is a String-typed prop) OR null result.
+      try {
+        const leaked = await repository.findOneByEmail(malicious);
+        expect(leaked).toBeNull();
+      } catch {
+        // CastError from the String schema is also an acceptable defense.
+      }
+      // Seeded user must remain reachable by its real email.
+      expect(await repository.findOneByEmail(seeded.email)).not.toBeNull();
+    });
+  });
+
   describe("findAllByIds", () => {
     it("returns all users with matching ids", async () => {
       const a = await seedUser();

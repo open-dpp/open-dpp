@@ -77,6 +77,31 @@ describe("EmailChangeRequestsRepository", () => {
     ).rejects.toThrow();
   });
 
+  it("upserts by userId: inserts when no row exists", async () => {
+    const request = EmailChangeRequest.create({ userId: "user-1", newEmail: "first@example.com" });
+    await repository.upsertByUserId(request);
+
+    const found = await repository.findByUserId("user-1");
+    expect(found?.id).toBe(request.id);
+    expect(found?.newEmail).toBe("first@example.com");
+  });
+
+  it("upserts by userId: replaces an existing row atomically", async () => {
+    await repository.save(
+      EmailChangeRequest.create({ userId: "user-1", newEmail: "first@example.com" }),
+    );
+
+    const replacement = EmailChangeRequest.create({
+      userId: "user-1",
+      newEmail: "second@example.com",
+    });
+    await repository.upsertByUserId(replacement);
+
+    const found = await repository.findByUserId("user-1");
+    expect(found?.id).toBe(replacement.id);
+    expect(found?.newEmail).toBe("second@example.com");
+  });
+
   it("deletes by userId", async () => {
     await repository.save(
       EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" }),
@@ -87,5 +112,28 @@ describe("EmailChangeRequestsRepository", () => {
 
   it("delete is idempotent for missing userId", async () => {
     await expect(repository.deleteByUserId("does-not-exist")).resolves.not.toThrow();
+  });
+
+  describe("NoSQL injection defense", () => {
+    it("findByUserId rejects an operator-shaped userId (Mongoose cast error from $eq + schema)", async () => {
+      await repository.save(
+        EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" }),
+      );
+
+      const malicious = { $ne: null } as unknown as string;
+      await expect(repository.findByUserId(malicious)).rejects.toThrow();
+      // Seeded row must remain unmatched/untouched.
+      expect(await repository.findByUserId("user-1")).not.toBeNull();
+    });
+
+    it("deleteByUserId rejects an operator-shaped userId without deleting any rows", async () => {
+      await repository.save(
+        EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" }),
+      );
+
+      const malicious = { $ne: null } as unknown as string;
+      await expect(repository.deleteByUserId(malicious)).rejects.toThrow();
+      expect(await repository.findByUserId("user-1")).not.toBeNull();
+    });
   });
 });

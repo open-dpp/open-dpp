@@ -4,6 +4,12 @@ import { HydratedDocument } from "mongoose";
 
 export const EMAIL_CHANGE_REQUEST_COLLECTION = "email_change_request";
 
+export const EmailChangeRequestSchemaVersion = {
+  v1_0_0: "1.0.0",
+} as const;
+export type EmailChangeRequestSchemaVersionType =
+  (typeof EmailChangeRequestSchemaVersion)[keyof typeof EmailChangeRequestSchemaVersion];
+
 export type EmailChangeRequestDocument = HydratedDocument<EmailChangeRequest>;
 
 @Schema({
@@ -22,6 +28,14 @@ export class EmailChangeRequest {
 
   @Prop({ required: true })
   requestedAt: Date;
+
+  @Prop({
+    required: true,
+    default: EmailChangeRequestSchemaVersion.v1_0_0,
+    enum: Object.values(EmailChangeRequestSchemaVersion),
+    type: String,
+  })
+  _schemaVersion: EmailChangeRequestSchemaVersionType;
 }
 
 export const EmailChangeRequestSchema = SchemaFactory.createForClass(EmailChangeRequest);

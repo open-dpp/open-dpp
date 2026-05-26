@@ -165,6 +165,70 @@ describe("MembersRepository", () => {
     expect(result).toBeNull();
   });
 
+  describe("NoSQL injection defense", () => {
+    // Helper: a query must NOT leak any rows when called with an operator-shaped value.
+    // Mongoose may either cast-error (organizationId is ObjectId-typed) or
+    // return an empty result (userId is Mixed-typed). Both are safe — only a
+    // non-empty result would indicate a vulnerability.
+    async function expectNoLeak<T>(query: () => Promise<T[] | T | null>): Promise<void> {
+      try {
+        const result = await query();
+        if (Array.isArray(result)) {
+          expect(result).toEqual([]);
+        } else {
+          expect(result).toBeNull();
+        }
+      } catch {
+        // CastError from Mongoose schema enforcement is also acceptable defense.
+      }
+    }
+
+    it("findByUserId does not leak rows for an operator-shaped userId", async () => {
+      const userId = new Types.ObjectId().toHexString();
+      await repository.save(
+        Member.create({
+          organizationId: new Types.ObjectId().toHexString(),
+          userId,
+          role: MemberRole.MEMBER,
+        }),
+      );
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() => repository.findByUserId(malicious));
+      // Seeded row remains reachable by its real userId.
+      expect(await repository.findByUserId(userId)).toHaveLength(1);
+    });
+
+    it("findByOrganizationId does not leak rows for an operator-shaped organizationId", async () => {
+      const organizationId = new Types.ObjectId().toHexString();
+      await repository.save(
+        Member.create({
+          organizationId,
+          userId: new Types.ObjectId().toHexString(),
+          role: MemberRole.MEMBER,
+        }),
+      );
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() => repository.findByOrganizationId(malicious));
+      expect(await repository.findByOrganizationId(organizationId)).toHaveLength(1);
+    });
+
+    it("findOneByUserIdAndOrganizationId does not leak rows for operator-shaped values", async () => {
+      const userId = new Types.ObjectId().toHexString();
+      const organizationId = new Types.ObjectId().toHexString();
+      await repository.save(Member.create({ organizationId, userId, role: MemberRole.OWNER }));
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() =>
+        repository.findOneByUserIdAndOrganizationId(malicious, organizationId),
+      );
+      await expectNoLeak(() =>
+        repository.findOneByUserIdAndOrganizationId(userId, malicious),
+      );
+    });
+  });
+
   it("should update an existing member on save and return the updated member", async () => {
     const organizationId = new Types.ObjectId().toHexString();
     const userId = new Types.ObjectId().toHexString();

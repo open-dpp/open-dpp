@@ -190,7 +190,7 @@ export const AuthProvider: Provider = {
                   : session.userId;
                 const member = await db
                   .collection("member")
-                  .findOne({ userId: userIdQuery }, { sort: { createdAt: 1 } });
+                  .findOne({ userId: { $eq: userIdQuery } }, { sort: { createdAt: 1 } });
 
                 let organizationId;
                 if (member) {
@@ -213,7 +213,7 @@ export const AuthProvider: Provider = {
         },
         user: {
           update: {
-            before: async (data) => {
+            before: async (data, context) => {
               // Better-auth's change-email flow is JWT-based: the verification link in the
               // user's new inbox is a stateless, signed token that is not stored in the
               // database, so it cannot be invalidated by deleting any row. To make `revoke`
@@ -224,9 +224,23 @@ export const AuthProvider: Provider = {
               if (typeof newEmail !== "string") {
                 return;
               }
+              // Also bind the lookup to the session user so another user's pending shadow
+              // row for the same newEmail cannot authorize this update. Mirrors the
+              // after-hook's (userId, newEmail) filter.
+              const sessionUserId = context?.context?.session?.user?.id;
+              const query: {
+                newEmail: { $eq: string };
+                userId?: { $eq: string };
+              } =
+                typeof sessionUserId === "string"
+                  ? {
+                      newEmail: { $eq: newEmail },
+                      userId: { $eq: sessionUserId },
+                    }
+                  : { newEmail: { $eq: newEmail } };
               const pending = await db
                 .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
-                .findOne({ newEmail });
+                .findOne(query);
               if (!pending) {
                 logger.warn(
                   `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest (revoked or unknown)`,
@@ -241,8 +255,8 @@ export const AuthProvider: Provider = {
               // user.email unchanged, so no row matches).
               try {
                 await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).deleteOne({
-                  userId: user.id,
-                  newEmail: user.email,
+                  userId: { $eq: user.id },
+                  newEmail: { $eq: user.email },
                 });
               } catch (error) {
                 logger.error("Failed to clear EmailChangeRequest after user.email update", error);

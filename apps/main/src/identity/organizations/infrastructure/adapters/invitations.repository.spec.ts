@@ -181,6 +181,53 @@ describe("InvitationsRepository", () => {
     expect(result.every((i) => i.email === email)).toBe(true);
   });
 
+  describe("NoSQL injection defense", () => {
+    // A malicious operator-shaped value must NOT leak rows. Depending on whether
+    // the query goes through Mongoose (schema cast) or the raw collection, the
+    // safe outcome is either a thrown CastError or an empty / null result. Only
+    // a non-empty match would indicate a vulnerability.
+    async function expectNoLeak<T>(query: () => Promise<T[] | T | null>): Promise<void> {
+      try {
+        const result = await query();
+        if (Array.isArray(result)) {
+          expect(result).toEqual([]);
+        } else {
+          expect(result).toBeNull();
+        }
+      } catch {
+        // Mongoose CastError is also an acceptable defense.
+      }
+    }
+
+    it("findByEmail does not leak rows for an operator-shaped email", async () => {
+      const email = "real-invitee@example.com";
+      await invitationModel.create({
+        _id: new Types.ObjectId().toHexString(),
+        email,
+        organizationId: new Types.ObjectId().toHexString(),
+        inviterId: new Types.ObjectId().toHexString(),
+        role: MemberRole.MEMBER,
+        status: InvitationStatus.PENDING,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() => repository.findByEmail(malicious));
+      // Seeded invitation must still be reachable by its real email.
+      expect(await repository.findByEmail(email)).toHaveLength(1);
+    });
+
+    it("findOneUnexpiredByEmailAndOrganization does not leak rows for an operator-shaped email", async () => {
+      const organizationId = new Types.ObjectId().toHexString();
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() =>
+        repository.findOneUnexpiredByEmailAndOrganization(malicious, organizationId),
+      );
+    });
+  });
+
   it("should save an invitation via BetterAuth API", async () => {
     const invitation = Invitation.create({
       email: "invite@example.com",

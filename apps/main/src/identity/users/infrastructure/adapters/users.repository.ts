@@ -70,7 +70,7 @@ export class UsersRepository {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
-    const document = await this.userModel.findOne({ email });
+    const document = await this.userModel.findOne({ email: { $eq: email } });
     if (!document) return null;
     return UserMapper.toDomain(document);
   }
