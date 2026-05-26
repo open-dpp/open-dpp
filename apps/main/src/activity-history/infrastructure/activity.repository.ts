@@ -75,7 +75,7 @@ export class ActivityRepository {
       ).toMongoFilter();
     }
     if (options?.filter?.commandPath) {
-      payloadFilter["payload.changes.command.path"] = RegexFilter.create(
+      payloadFilter["payload.command.path"] = RegexFilter.create(
         options.filter.commandPath,
       ).toMongoFilter();
     }

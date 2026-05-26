@@ -84,7 +84,7 @@ defineExpose<{
       <EditorActivityHistory
         v-if="props.data.idShort"
         :id="props.id"
-        :changePath="props.data.idShort"
+        :commandPath="props.data.idShort"
         :type="props.type"
         :createTimelineItem="(activity, change) => createTimelineItemForSubmodel(activity, change)"
       />

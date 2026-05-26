@@ -51,6 +51,7 @@ export type OperationTypesType = z.infer<typeof OperationTypeEnum>;
 export const JsonPatchOperationSchema = z.object({
   op: OperationTypeEnum,
   path: z.string(),
+
   // "from" is only required for move/copy
   from: z.string().optional(),
 

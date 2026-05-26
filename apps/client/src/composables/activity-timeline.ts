@@ -154,6 +154,10 @@ export function useActivityTimeline() {
     const { id, timestamp, operation } = createTranslations(activity, change);
 
     const submodelBaseMatcher = createSubmodelBaseMatcher(activity, change, true);
+    const dppMatcher = {
+      m: P.string.select("modelType"),
+    };
+
     return submodelBaseMatcher
       .with(
         {
@@ -161,13 +165,15 @@ export function useActivityTimeline() {
             payload: { command: { op: SubmodelOperationDtoTypes.SubmodelElementAdded } },
           },
           change: {
-            dpp: { m: P.string.select("modelType"), v: P.string.select("valueType") },
+            dpp: dppMatcher,
+            op: OperationDtoTypes.Add,
           },
         },
-        ({ modelType, valueType }) => {
+        ({ modelType }) => {
+          const valueType = change.dpp?.v;
           const visualType = getVisualType(
             KeyTypesEnum.parse(modelType),
-            DataTypeDefEnum.parse(valueType),
+            DataTypeDefEnum.optional().parse(valueType),
             t,
           );
           return {
@@ -176,6 +182,36 @@ export function useActivityTimeline() {
             title: createTitle(visualType, operation),
             content: [],
             icon: addIcon,
+          };
+        },
+      )
+      .with(
+        {
+          activity: {
+            payload: {
+              command: {
+                op: SubmodelOperationDtoTypes.SubmodelElementDeleted,
+              },
+            },
+          },
+          change: {
+            dpp: dppMatcher,
+            op: OperationDtoTypes.Remove,
+          },
+        },
+        ({ modelType }) => {
+          const valueType = change.dpp?.v;
+          const visualType = getVisualType(
+            KeyTypesEnum.parse(modelType),
+            DataTypeDefEnum.optional().parse(valueType),
+            t,
+          );
+          return {
+            id,
+            timestamp,
+            title: createTitle(visualType, operation),
+            content: [],
+            icon: removeIcon,
           };
         },
       )

@@ -239,11 +239,21 @@ describe("activity timeline", () => {
       },
     };
 
+    const addSubsection = {
+      op: OperationDtoTypes.Add,
+      path: "/submodelElements/0/value/4",
+      value: {},
+      dpp: {
+        p: "batteryTechicalProperties.670d56d4-1b7d-4985-ab7d-29df82e70faf",
+        m: KeyTypes.SubmodelElementCollection,
+      },
+    };
+
     const activity = activitiesPlainFactory.build({
       header: { createdAt },
       payload: {
         command: { op: SubmodelOperationDtoTypes.SubmodelElementAdded },
-        changes: [addTextField],
+        changes: [addTextField, addSubsection],
       },
     });
 
@@ -256,6 +266,44 @@ describe("activity timeline", () => {
       content: [],
     };
     expect(createTimelineItemForSubmodel(activity, addTextField)).toEqual(expectedResult);
+
+    const expectedResult2 = {
+      id: activity.header.id,
+      timestamp: createdAtFormatted,
+      title: `aasEditor.submodelElementCollection ${addOperation}`,
+      icon: addIcon,
+      content: [],
+    };
+    expect(createTimelineItemForSubmodel(activity, addSubsection)).toEqual(expectedResult2);
+
+    const removeTextField = {
+      op: OperationDtoTypes.Remove,
+      path: "/submodelElements/0",
+      dpp: {
+        p: "356b588a-28f9-4714-894d-1347c5ee68f0",
+        m: KeyTypes.Property,
+        v: "String",
+      },
+    };
+
+    const removeActivity = activitiesPlainFactory.build({
+      header: { createdAt },
+      payload: {
+        command: { op: SubmodelOperationDtoTypes.SubmodelElementDeleted },
+        changes: [removeTextField],
+      },
+    });
+
+    const expectedRemoveResult = {
+      id: removeActivity.header.id,
+      timestamp: createdAtFormatted,
+      title: `aasEditor.textField ${removeOperation}`,
+      icon: removeIcon,
+      content: [],
+    };
+    expect(createTimelineItemForSubmodel(removeActivity, removeTextField)).toEqual(
+      expectedRemoveResult,
+    );
   });
 
   it("should create timeline items for File", async () => {

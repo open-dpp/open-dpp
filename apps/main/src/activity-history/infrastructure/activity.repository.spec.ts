@@ -219,6 +219,54 @@ describe("activityRepository", () => {
           items: [event4, event3, event2, event1],
         }),
       );
+
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: {
+          activityType: ActivityTypes.SubmodelActivity,
+          commandPath: `${submodelIdShort}.prop2`,
+        },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event2.header.createdAt.toISOString(), event2.header.id),
+            limit: 100,
+          }),
+          items: [event2],
+        }),
+      );
+
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: {
+          activityType: ActivityTypes.SubmodelActivity,
+          commandPath: `${submodelIdShort}.prop2`,
+          dppPath: "sw:prop",
+        },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event2.header.createdAt.toISOString(), event2.header.id),
+            limit: 100,
+          }),
+          items: [event2],
+        }),
+      );
+
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: {
+          activityType: ActivityTypes.SubmodelActivity,
+          commandPath: `${submodelIdShort}`,
+        },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            limit: 100,
+          }),
+          items: [],
+        }),
+      );
     });
 
     it("using pagination", async () => {
