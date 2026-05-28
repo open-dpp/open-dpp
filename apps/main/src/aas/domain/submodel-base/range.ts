@@ -127,7 +127,7 @@ export class Range implements ISubmodelElement {
     throw new ValueError("Range cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("Range does not support to delete submodel elements");
   }
 

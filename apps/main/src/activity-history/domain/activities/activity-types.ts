@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SubmodelOperationTypes = {
+export const ActivityTypes = {
   SubmodelModified: "SubmodelModified",
   SubmodelValueModified: "SubmodelValueModified",
   SubmodelElementModified: "SubmodelElementModified",
@@ -9,10 +9,10 @@ export const SubmodelOperationTypes = {
   AssetAdministrationShellModified: "AssetAdministrationShellModified",
   SubmodelElementAdded: "SubmodelElementAdded",
   SubmodelColumnAdded: "SubmodelColumnAdded",
-  SubmodelRowAdded: "SubmodelRowAdded",
+  RowAdded: "RowAdded",
   SubmodelColumnDeleted: "SubmodelColumnDeleted",
   SubmodelRowDeleted: "SubmodelRowDeleted",
   SubmodelElementDeleted: "SubmodelElementDeleted",
 } as const;
-export const SubmodelOperationTypesEnum = z.enum(SubmodelOperationTypes);
-export type SubmodelOperationTypesType = z.infer<typeof SubmodelOperationTypesEnum>;
+export const ActivityTypesEnum = z.enum(ActivityTypes);
+export type ActivityTypesType = z.infer<typeof ActivityTypesEnum>;

@@ -5,9 +5,12 @@ import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
+import { EventQueue, ITrackable } from "../../../activity-history/domain/activities/trackable";
 
-export class TableExtension {
+export class TableExtension implements ITrackable {
   private headerRow: ISubmodelElement | undefined;
+  readonly eventQueue = EventQueue.create();
+
   constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
       throw new Error(
@@ -80,24 +83,29 @@ export class TableExtension {
   }
 
   addRow(options: AddOptions) {
+    let newRow: ISubmodelElement;
     if (!this.headerRow) {
-      return this.addHeaderRow(options);
+      newRow = this.addHeaderRow(options);
     } else {
-      const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
+      newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
         const columnCopy = cloneSubmodelElement(column, { value: undefined });
         newRow.addSubmodelElement(columnCopy, {
           ability: options.ability,
-          digitalProductDocumentId: options.digitalProductDocumentId,
         });
       });
 
       if (options?.position === 0) {
         this.setHeaderRow();
       }
-      return newRow;
     }
+    // this.eventQueue.publishChanges({
+    //   path: this.data.getIdShortPath().toString(),
+    //   type: ChangeEventTypes.RowAdded,
+    //   position: options.position ?? this.rows.length - 1,
+    // });
+    return newRow;
   }
 
   getRowPosition(idShort: string) {

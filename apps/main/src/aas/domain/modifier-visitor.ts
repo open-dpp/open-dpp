@@ -42,29 +42,60 @@ import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
+import { EventQueue, ITrackable } from "../../activity-history/domain/activities/trackable";
+import {
+  DescriptionChanged,
+  DisplayNameChanged,
+} from "../../activity-history/domain/change-events/language-text-collection-changed";
+import { IdShortPath } from "./common/id-short-path";
+import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
+import { FileValueChanged } from "../../activity-history/domain/change-events/file-value-changed";
+import { ReferenceElementValueChanged } from "../../activity-history/domain/change-events/reference-element-value-changed";
 
 export interface ModifierVisitorOptions {
   subject?: SubjectAttributes;
   ability: AasAbility;
-  digitalProductDocumentId: string;
 }
 export interface ModifierVisitorContextType {
   data: unknown;
 }
-export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, void> {
+export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, void>, ITrackable {
+  readonly eventQueue = EventQueue.create();
   constructor(private readonly options: ModifierVisitorOptions) {}
 
   private modifyNameAndDescription<
-    T extends { displayName: LanguageText[]; description: LanguageText[] },
+    T extends {
+      displayName: LanguageText[];
+      description: LanguageText[];
+      getIdShortPath: () => IdShortPath;
+    },
   >(generalInfoDto: T, data: unknown): void {
     const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
 
-    generalInfoDto.displayName =
-      displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
-    generalInfoDto.description =
-      description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
-    hasUniqueLanguagesOrFail(generalInfoDto.displayName);
-    hasUniqueLanguagesOrFail(generalInfoDto.description);
+    if (displayName) {
+      const oldValue = generalInfoDto.displayName;
+      generalInfoDto.displayName = displayName.map(LanguageText.fromPlain);
+      hasUniqueLanguagesOrFail(generalInfoDto.displayName);
+      this.eventQueue.publishChanges(
+        DisplayNameChanged.create({
+          path: generalInfoDto.getIdShortPath(),
+          oldValue: oldValue,
+          newValue: generalInfoDto.displayName,
+        }),
+      );
+    }
+    if (description) {
+      const oldValue = generalInfoDto.description;
+      generalInfoDto.description = description.map(LanguageText.fromPlain);
+      hasUniqueLanguagesOrFail(generalInfoDto.description);
+      this.eventQueue.publishChanges(
+        DescriptionChanged.create({
+          path: generalInfoDto.getIdShortPath(),
+          oldValue,
+          newValue: generalInfoDto.description,
+        }),
+      );
+    }
   }
 
   private modificationGuard(element: ISubmodelBase) {
@@ -140,12 +171,29 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     this.modificationGuard(element);
     const parsed = FileModificationSchema.parse(context?.data);
     this.modifyNameAndDescription(element, parsed);
+
+    const oldValue = {
+      value: element.value,
+      contentType: element.contentType,
+    };
+
     if (parsed.value !== undefined) {
       element.value = parsed.value;
     }
     if (parsed.contentType != null) {
       element.contentType = parsed.contentType;
     }
+
+    this.eventQueue.publishChanges(
+      FileValueChanged.create({
+        path: element.getIdShortPath(),
+        oldValue,
+        newValue: {
+          value: element.value,
+          contentType: element.contentType,
+        },
+      }),
+    );
   }
 
   visitKey(_element: Key, _context: unknown): void {
@@ -165,7 +213,16 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     const parsed = PropertyModificationSchema.parse(context?.data);
     this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
+      const oldValue = element.value;
       element.value = parsed.value;
+      this.eventQueue.publishChanges(
+        PropertyValueChanged.create({
+          valueType: element.valueType,
+          path: element.getIdShortPath(),
+          oldValue,
+          newValue: parsed.value,
+        }),
+      );
     }
   }
 
@@ -203,6 +260,8 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     if (parsed.description || parsed.displayName) {
       this.modifyNameAndDescription(element, parsed);
     }
+    const oldValue = element.value;
+
     if (parsed.value === null) {
       element.value = parsed.value;
     } else if (parsed.value !== undefined) {
@@ -212,6 +271,13 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
         element.value = Reference.fromPlain(parsed.value);
       }
     }
+    this.eventQueue.publishChanges(
+      ReferenceElementValueChanged.create({
+        path: element.getIdShortPath(),
+        oldValue,
+        newValue: element.value,
+      }),
+    );
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {

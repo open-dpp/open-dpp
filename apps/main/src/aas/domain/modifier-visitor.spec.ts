@@ -24,6 +24,13 @@ import { registerSubmodelElementClasses } from "./submodel-base/register-submode
 import { Submodel } from "./submodel-base/submodel";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
+import {
+  DescriptionChanged,
+  DisplayNameChanged,
+} from "../../activity-history/domain/change-events/language-text-collection-changed";
+import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
+import { FileValueChanged } from "../../activity-history/domain/change-events/file-value-changed";
+import { ReferenceElementValueChanged } from "../../activity-history/domain/change-events/reference-element-value-changed";
 
 describe("modifier visitor", () => {
   const existingDisplayNames = () => [
@@ -83,6 +90,19 @@ describe("modifier visitor", () => {
     submodel.modify({ idShort: "s1", ...sharedModifications }, { ability });
     expect(submodel.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
     expect(submodel.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
+    const changes = submodel.eventQueue.pullChanges();
+    expect(changes).toEqual([
+      DisplayNameChanged.create({
+        path: IdShortPath.create({ path: submodel.idShort }),
+        oldValue: existingDisplayNames(),
+        newValue: newDisplayNames.map(LanguageText.fromPlain),
+      }),
+      DescriptionChanged.create({
+        path: IdShortPath.create({ path: submodel.idShort }),
+        oldValue: existingDescriptions(),
+        newValue: newDescriptions.map(LanguageText.fromPlain),
+      }),
+    ]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const abilityAnonymous = security.defineAbilityForSubject(anonymous);
@@ -101,6 +121,12 @@ describe("modifier visitor", () => {
         valueType: DataTypeDef.String,
       }),
       modifications: { ...sharedModifications, value: "prop New" },
+      expValueChange: PropertyValueChanged.create({
+        path: IdShortPath.create({ path: "s1.prop1" }),
+        oldValue: null,
+        newValue: "prop New",
+        valueType: DataTypeDef.String,
+      }),
     },
     {
       type: AasSubmodelElements.File,
@@ -111,6 +137,11 @@ describe("modifier visitor", () => {
         contentType: "image/png",
       }),
       modifications: { ...sharedModifications, value: "path New", contentType: "image/jpeg" },
+      expValueChange: FileValueChanged.create({
+        path: IdShortPath.create({ path: "s1.prop1" }),
+        oldValue: { value: null, contentType: "image/png" },
+        newValue: { value: "path New", contentType: "image/jpeg" },
+      }),
     },
     {
       type: AasSubmodelElements.SubmodelElementCollection,
@@ -121,49 +152,82 @@ describe("modifier visitor", () => {
       }),
       modifications: { ...sharedModifications, value: [] },
     },
-  ])("should modify submodel element with type $type", ({ item, modifications }) => {
-    const security = Security.create({});
-    const submodel = Submodel.create({
-      id: "s1",
-      idShort: "s1",
-      displayName: existingDisplayNames(),
-      description: existingDescriptions(),
-    });
+  ])(
+    "should modify submodel element with type $type",
+    ({ item, modifications, expValueChange }) => {
+      const security = Security.create({});
+      const submodel = Submodel.create({
+        id: "s1",
+        idShort: "s1",
+        displayName: existingDisplayNames(),
+        description: existingDescriptions(),
+      });
 
-    security.addPolicy(member, IdShortPath.create({ path: `${submodel.idShort}` }), [
-      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-    ]);
-
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: `${submodel.idShort}.${item.idShort}` }),
-      [
+      security.addPolicy(member, IdShortPath.create({ path: `${submodel.idShort}` }), [
         Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
-      ],
-    );
+        Permission.create({
+          permission: Permissions.Create,
+          kindOfPermission: PermissionKind.Allow,
+        }),
+      ]);
 
-    const ability = security.defineAbilityForSubject(member);
-    submodel.addSubmodelElement(item, { ability });
-    submodel.modifySubmodelElement(
-      { idShort: item.idShort, ...modifications },
-      IdShortPath.create({ path: item.idShort }),
-      { ability },
-    );
-    expect(item.toPlain()).toMatchObject({
-      ...modifications,
-    });
-    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const abilityAnonymous = security.defineAbilityForSubject(anonymous);
-    expect(() =>
+      security.addPolicy(
+        member,
+        IdShortPath.create({ path: `${submodel.idShort}.${item.idShort}` }),
+        [
+          Permission.create({
+            permission: Permissions.Read,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+          Permission.create({
+            permission: Permissions.Edit,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+        ],
+      );
+
+      const ability = security.defineAbilityForSubject(member);
+      submodel.addSubmodelElement(item, { ability });
       submodel.modifySubmodelElement(
         { idShort: item.idShort, ...modifications },
         IdShortPath.create({ path: item.idShort }),
-        { ability: abilityAnonymous },
-      ),
-    ).toThrow(new ForbiddenError(`${prefixPermissionError} ${submodel.idShort}.${item.idShort}.`));
-  });
+        { ability },
+      );
+      expect(item.toPlain()).toMatchObject({
+        ...modifications,
+      });
+      const changes = submodel.eventQueue.pullChanges();
+      expect(changes).toContainEqual(
+        DisplayNameChanged.create({
+          path: IdShortPath.create({ path: `${submodel.idShort}.${item.idShort}` }),
+          oldValue: existingDisplayNames(),
+          newValue: newDisplayNames.map(LanguageText.fromPlain),
+        }),
+      );
+      expect(changes).toContainEqual(
+        DescriptionChanged.create({
+          path: IdShortPath.create({ path: `${submodel.idShort}.${item.idShort}` }),
+          oldValue: existingDescriptions(),
+          newValue: newDescriptions.map(LanguageText.fromPlain),
+        }),
+      );
+      if (expValueChange) {
+        expect(changes).toContainEqual(expValueChange);
+      }
+
+      const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+      const abilityAnonymous = security.defineAbilityForSubject(anonymous);
+      expect(() =>
+        submodel.modifySubmodelElement(
+          { idShort: item.idShort, ...modifications },
+          IdShortPath.create({ path: item.idShort }),
+          { ability: abilityAnonymous },
+        ),
+      ).toThrow(
+        new ForbiddenError(`${prefixPermissionError} ${submodel.idShort}.${item.idShort}.`),
+      );
+    },
+  );
 
   it("should modify submodel element list", () => {
     const submodel = Submodel.create({
@@ -238,19 +302,20 @@ describe("modifier visitor", () => {
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
     const ability = security.defineAbilityForSubject(member);
+    const initialValue = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [
+        Key.create({
+          type: KeyTypes.GlobalReference,
+          value: "https://example.com/ref/1234567890",
+        }),
+      ],
+    });
     const referenceElement = ReferenceElement.create({
       idShort: "ref",
       displayName: existingDisplayNames(),
       description: existingDescriptions(),
-      value: Reference.create({
-        type: ReferenceTypes.ExternalReference,
-        keys: [
-          Key.create({
-            type: KeyTypes.GlobalReference,
-            value: "https://example.com/ref/1234567890",
-          }),
-        ],
-      }),
+      value: initialValue,
     });
     submodel.addSubmodelElement(referenceElement, { ability });
     const modifications = {
@@ -272,6 +337,24 @@ describe("modifier visitor", () => {
     expect(referenceElement.value?.type).toEqual(ReferenceTypes.ModelReference);
     expect(referenceElement.value?.keys[0].type).toEqual(KeyTypes.AssetAdministrationShell);
     expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
+
+    const changes = submodel.eventQueue.pullChanges();
+    expect(changes).toContainEqual(
+      ReferenceElementValueChanged.create({
+        path: IdShortPath.create({ path: "s1.ref" }),
+        oldValue: initialValue,
+        newValue: Reference.create({
+          type: ReferenceTypes.ModelReference,
+          keys: [
+            Key.create({
+              type: KeyTypes.AssetAdministrationShell,
+              value: "https://example.com/aas/1234567890",
+            }),
+          ],
+        }),
+      }),
+    );
+
     submodel.modifySubmodelElement(
       {
         idShort: "ref",

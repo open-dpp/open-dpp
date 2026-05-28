@@ -53,7 +53,6 @@ export interface AddOptions {
   idShortPath?: IdShortPath;
   position?: number;
   ability: AasAbility;
-  digitalProductDocumentId: string;
 }
 
 export interface IHasIdShortPath {
@@ -75,7 +74,7 @@ export interface ISubmodelBase
 
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
-  deleteSubmodelElement: (idShort: string, options: DeleteOptions) => void;
+  deleteSubmodelElement: (idShort: string, options: DeleteOptions) => ISubmodelElement;
   setParentIdShortPath: (parentIdShortPath: IdShortPath) => void;
 }
 
@@ -94,7 +93,7 @@ export function deleteSubmodelElementOrFail(
   submodelElements: ISubmodelElement[],
   idShort: string,
   { ability, onDelete }: DeleteOptions,
-): void {
+): ISubmodelElement {
   const foundIndex = submodelElements.findIndex((e) => e.idShort === idShort);
   if (foundIndex === -1) {
     throw new ValueError(
@@ -110,6 +109,7 @@ export function deleteSubmodelElementOrFail(
 
   submodelElements.splice(foundIndex, 1);
   onDelete(submodelElementToDelete);
+  return submodelElementToDelete;
 }
 
 export function setParentIdShortPaths(

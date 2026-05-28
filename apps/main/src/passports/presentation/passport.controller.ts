@@ -125,7 +125,7 @@ import {
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
-import { ActivityTypesType } from "../../activity-history/activity-types";
+import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 
 @Controller("/passports")
 export class PassportController

@@ -49,11 +49,11 @@ import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { SubmodelActivity } from "../../activity-history/domain/aas/submodel.activity";
-import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
-import { ActivityTypes } from "../../activity-history/activity-types";
-import { DigitalProductDocumentPayload } from "../../activity-history/domain/digital-product-document.activity";
-import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-operation-types";
+import { SubmodelActivity } from "../../activity-history/domain/activities/submodel.activity";
+import { SubmodelOperationTypes } from "../../activity-history/domain/activities/submodel-operation-types";
+import { ActivityOldTypes } from "../../activity-history/domain/activities/activity-types";
+import { DigitalProductDocumentPayload } from "../../activity-history/domain/activities/digital-product-document.activity";
+import { DigitalProductDocumentOperationTypes } from "../../activity-history/domain/activities/digital-product-document-operation-types";
 import { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
@@ -371,7 +371,7 @@ describe("DigitalProductDocumentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityTypes.DigitalProductDocumentActivity,
+        type: ActivityOldTypes.DigitalProductDocumentActivity,
         payload: DigitalProductDocumentPayload.create({
           command: {
             op: DigitalProductDocumentOperationTypes.StatusModified,

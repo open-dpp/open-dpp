@@ -9,7 +9,7 @@ export const SubmodelOperationDtoTypes = {
   AssetAdministrationShellModified: "AssetAdministrationShellModified",
   SubmodelElementAdded: "SubmodelElementAdded",
   SubmodelColumnAdded: "SubmodelColumnAdded",
-  SubmodelRowAdded: "SubmodelRowAdded",
+  RowAdded: "RowAdded",
   SubmodelColumnDeleted: "SubmodelColumnDeleted",
   SubmodelRowDeleted: "SubmodelRowDeleted",
   SubmodelElementDeleted: "SubmodelElementDeleted",

@@ -33,14 +33,13 @@ import {
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
-import { IActivity } from "../../../activity-history/activity";
-import { SubmodelActivity } from "../../../activity-history/domain/aas/submodel.activity";
-import { SubmodelOperationTypes } from "../../../activity-history/submodel-operation-types";
+import { SubmodelElementAdded } from "../../../activity-history/domain/change-events/submodel-element-added";
+import { EventQueue, ITrackable } from "../../../activity-history/domain/activities/trackable";
 
-export class Submodel implements ISubmodelBase, IPersistable {
+export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _activities: Array<IActivity> = [];
+  public readonly eventQueue;
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -59,6 +58,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.displayName = displayName;
     this.description = description;
     setParentIdShortPaths(this, this.idShort);
+    this.eventQueue = EventQueue.create({
+      onPublishCallback: () => this.administration.increaseVersion(),
+    });
   }
 
   getIdShortPath(): IdShortPath {
@@ -131,73 +133,22 @@ export class Submodel implements ISubmodelBase, IPersistable {
   }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
-    const oldData = structuredClone(this.toPlain());
-    this.accept(new ModifierVisitor(options), { data });
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: this.getIdShortPath(),
-        operation: SubmodelOperationTypes.SubmodelModified,
-        userId: options.ability.userId ?? undefined,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-      }),
-    );
-  }
-
-  private publishActivity(activity: IActivity) {
-    this._activities.push(activity);
-    this.administration.increaseVersion();
-  }
-
-  get activities(): Array<IActivity> {
-    return this._activities;
-  }
-
-  pullActivities(correlationId: string): Array<IActivity> {
-    const events = [...this._activities];
-
-    events.forEach((event) => event.header.assignCorrelationId(correlationId));
-
-    this._activities = [];
-    return events;
+    const modifierVisitor = new ModifierVisitor(options);
+    this.accept(modifierVisitor, { data });
+    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
   }
 
   modifyValue(data: unknown, options: ValueModifierVisitorOptions) {
-    const oldData = structuredClone(this.toPlain());
-    this.accept(new ValueModifierVisitor(options), { data });
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        administration: this.administration,
-        submodelId: this.id,
-        fullIdShortPath: this.getIdShortPath(),
-        userId: options.ability.userId ?? undefined,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: SubmodelOperationTypes.SubmodelValueModified,
-      }),
-    );
+    const modifierVisitor = new ValueModifierVisitor(options);
+    this.accept(modifierVisitor, { data });
+    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
   }
 
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
-    submodelElement.accept(new ModifierVisitor(options), { data });
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        administration: this.administration,
-        submodelId: this.id,
-        fullIdShortPath: submodelElement.getIdShortPath(),
-        userId: options.ability.userId ?? undefined,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: SubmodelOperationTypes.SubmodelElementModified,
-      }),
-    );
+    const modifierVisitor = new ModifierVisitor(options);
+    submodelElement.accept(modifierVisitor, { data });
+    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
     return submodelElement;
   }
 
@@ -207,20 +158,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ValueModifierVisitorOptions,
   ) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
-    submodelElement.accept(new ValueModifierVisitor(options), { data });
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: submodelElement.getIdShortPath(),
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelElementValueModified,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-      }),
-    );
+    const modifierVisitor = new ValueModifierVisitor(options);
+    submodelElement.accept(modifierVisitor, { data });
+    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
     return submodelElement;
   }
 
@@ -237,63 +177,22 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   addRow(idShortPath: IdShortPath, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
     tableExtension.addRow(options);
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelRowAdded,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        position: options.position ?? tableExtension.rows.length - 1,
-      }),
-    );
+    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
     return tableExtension.getTableElement();
   }
 
   deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
-    const position = tableExtension.getRowPosition(idShortOfRow);
     tableExtension.deleteRow(idShortOfRow, options);
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
-        additionalIdShort: idShortOfRow,
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelRowDeleted,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        position,
-      }),
-    );
+    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
     return tableExtension.getTableElement();
   }
 
   addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
     tableExtension.addColumn(column, options);
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelColumnAdded,
-        position: options.position ?? tableExtension.columns.length - 1,
-      }),
-    );
+    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
     return tableExtension.getTableElement();
   }
 
@@ -304,44 +203,16 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ModifierVisitorOptions,
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
     tableExtension.modifyColumn(idShortOfColumn, data, options);
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
-        additionalIdShort: idShortOfColumn,
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelColumnModified,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-      }),
-    );
+    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
     return tableExtension.getTableElement();
   }
 
   deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const oldData = structuredClone(this.toPlain());
-    const position = tableExtension.getColumnPosition(idShortOfColumn);
 
     tableExtension.deleteColumn(idShortOfColumn, options);
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath: tableExtension.getTableElement().getIdShortPath(),
-        additionalIdShort: idShortOfColumn,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelColumnDeleted,
-        position,
-      }),
-    );
+    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
     return tableExtension.getTableElement();
   }
 
@@ -392,56 +263,41 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: AddOptions,
   ): ISubmodelElement {
     let addedSubmodelElement: ISubmodelElement;
-    let fullIdShortPath = this.getIdShortPath();
-    const oldData = structuredClone(this.toPlain());
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       submodelElement.setParentIdShortPath(parent.getIdShortPath());
-      fullIdShortPath = parent.getIdShortPath();
       addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
     } else {
       addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
     }
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: SubmodelOperationTypes.SubmodelElementAdded,
-        userId: options.ability.userId ?? undefined,
+    this.eventQueue.publishChanges(
+      SubmodelElementAdded.create({
+        path: addedSubmodelElement.getIdShortPath(),
+        submodelElement: addedSubmodelElement,
       }),
     );
     return addedSubmodelElement;
   }
 
-  public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {
+  public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions): ISubmodelElement {
     const parent = this.findSubmodelElementParent(idShortPath);
-    const oldData = structuredClone(this.toPlain());
-    let fullIdShortPath = this.getIdShortPath();
+    let deletedSubmodelElement: ISubmodelElement;
     if (idShortPath.last) {
       if (!parent) {
-        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last, options);
+        deletedSubmodelElement = deleteSubmodelElementOrFail(
+          this.submodelElements,
+          idShortPath.last,
+          options,
+        );
       } else {
-        fullIdShortPath = parent.getIdShortPath();
-        parent.deleteSubmodelElement(idShortPath.last, options);
+        deletedSubmodelElement = parent.deleteSubmodelElement(idShortPath.last, options);
       }
+      return deletedSubmodelElement;
+    } else {
+      throw new ValueError(
+        `Cannot delete submodel element with idShortPath ${idShortPath.toString()}`,
+      );
     }
-    this.publishActivity(
-      SubmodelActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        submodelId: this.id,
-        administration: this.administration,
-        fullIdShortPath,
-        additionalIdShort: idShortPath.last,
-        userId: options.ability.userId ?? undefined,
-        operation: SubmodelOperationTypes.SubmodelElementDeleted,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-      }),
-    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

@@ -131,7 +131,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return AasSubmodelElements.SubmodelElementCollection;
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.value, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.value, idShort, options);
   }
 }

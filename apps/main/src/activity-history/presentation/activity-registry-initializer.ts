@@ -1,9 +1,11 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { registerActivityEventClasses } from "../register-activity-event-classes";
+import { registerChangeEventClasses } from "../domain/change-events/register-change-event-classes";
+import { registerActivityClasses } from "../domain/activities/register-activity-classes";
 
 @Injectable()
-export class ActivityRegistryInitializer implements OnModuleInit {
+export class ActivityRegistriesInitializer implements OnModuleInit {
   onModuleInit() {
-    registerActivityEventClasses();
+    registerActivityClasses();
+    registerChangeEventClasses();
   }
 }

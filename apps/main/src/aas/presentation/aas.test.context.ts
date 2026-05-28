@@ -82,8 +82,6 @@ import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
-import { SubmodelActivity } from "../../activity-history/domain/aas/submodel.activity";
-import { SubmodelOperationTypes } from "../../activity-history/submodel-operation-types";
 import { CorrelationIdService } from "../../common/middleware/correlation-id.service";
 
 export function createAasTestContext<T>(
@@ -655,7 +653,7 @@ export function createAasTestContext<T>(
       idShort: submodelBillOfMaterialPlainFactory.build().idShort!,
     });
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property, { ability, digitalProductDocumentId: entity.id });
+    submodel.addSubmodelElement(property, { ability });
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
 
@@ -684,7 +682,7 @@ export function createAasTestContext<T>(
       submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property, { ability, digitalProductDocumentId: entity.id });
+    submodel.addSubmodelElement(property, { ability });
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
@@ -714,41 +712,41 @@ export function createAasTestContext<T>(
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
 
-    const activity1 = SubmodelActivity.create({
-      digitalProductDocumentId: entity.id,
-      userId: user.id,
-      submodelId: submodels[0].id,
-      fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
-      oldData: {
-        idShort: "Author",
-        displayName: [],
-      },
-      newData: {
-        idShort: "Author",
-        displayName: [{ language: "en", text: "Author" }],
-      },
-      createdAt: date1,
-    });
-
-    const activity2 = SubmodelActivity.create({
-      digitalProductDocumentId: entity.id,
-      userId: user.id,
-      submodelId: submodels[0].id,
-      fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
-      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
-      oldData: {
-        idShort: "Model",
-        displayName: [],
-      },
-      newData: {
-        idShort: "Model",
-        displayName: [{ language: "en", text: "Model" }],
-      },
-      createdAt: date2,
-    });
+    // const activity1 = SubmodelActivity.create({
+    //   digitalProductDocumentId: entity.id,
+    //   userId: user.id,
+    //   submodelId: submodels[0].id,
+    //   fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+    //   administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
+    //   operation: SubmodelOperationTypes.SubmodelElementModified,
+    //   oldData: {
+    //     idShort: "Author",
+    //     displayName: [],
+    //   },
+    //   newData: {
+    //     idShort: "Author",
+    //     displayName: [{ language: "en", text: "Author" }],
+    //   },
+    //   createdAt: date1,
+    // });
+    //
+    // const activity2 = SubmodelActivity.create({
+    //   digitalProductDocumentId: entity.id,
+    //   userId: user.id,
+    //   submodelId: submodels[0].id,
+    //   fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+    //   administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+    //   operation: SubmodelOperationTypes.SubmodelElementModified,
+    //   oldData: {
+    //     idShort: "Model",
+    //     displayName: [],
+    //   },
+    //   newData: {
+    //     idShort: "Model",
+    //     displayName: [{ language: "en", text: "Model" }],
+    //   },
+    //   createdAt: date2,
+    // });
     const activities = [activity1, activity2];
     activities.forEach((a) => a.header.assignCorrelationId(randomUUID()));
     await activityRepository.createMany(activities);
@@ -767,39 +765,39 @@ export function createAasTestContext<T>(
 
     const entity = await createEntity(org!.id);
 
-    const activity1 = SubmodelActivity.create({
-      digitalProductDocumentId: entity.id,
-      userId: user.id,
-      submodelId: submodels[0].id,
-      fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
-      oldData: {
-        idShort: "Author",
-        displayName: [],
-      },
-      newData: {
-        idShort: "Author",
-        displayName: [{ language: "en", text: "Author" }],
-      },
-    });
-
-    const activity2 = SubmodelActivity.create({
-      digitalProductDocumentId: entity.id,
-      userId: user.id,
-      submodelId: submodels[0].id,
-      fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
-      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
-      oldData: {
-        idShort: "Model",
-        displayName: [],
-      },
-      newData: {
-        idShort: "Model",
-        displayName: [{ language: "en", text: "Model" }],
-      },
-    });
+    // const activity1 = SubmodelActivity.create({
+    //   digitalProductDocumentId: entity.id,
+    //   userId: user.id,
+    //   submodelId: submodels[0].id,
+    //   fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+    //   administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
+    //   operation: SubmodelOperationTypes.SubmodelElementModified,
+    //   oldData: {
+    //     idShort: "Author",
+    //     displayName: [],
+    //   },
+    //   newData: {
+    //     idShort: "Author",
+    //     displayName: [{ language: "en", text: "Author" }],
+    //   },
+    // });
+    //
+    // const activity2 = SubmodelActivity.create({
+    //   digitalProductDocumentId: entity.id,
+    //   userId: user.id,
+    //   submodelId: submodels[0].id,
+    //   fullIdShortPath: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+    //   administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
+    //   operation: SubmodelOperationTypes.SubmodelElementModified,
+    //   oldData: {
+    //     idShort: "Model",
+    //     displayName: [],
+    //   },
+    //   newData: {
+    //     idShort: "Model",
+    //     displayName: [{ language: "en", text: "Model" }],
+    //   },
+    // });
 
     const activities = [activity1, activity2];
     activities.forEach((a) => a.header.assignCorrelationId(randomUUID()));

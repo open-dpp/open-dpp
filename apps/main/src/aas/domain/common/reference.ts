@@ -28,6 +28,14 @@ export class Reference implements IVisitable {
     });
   }
 
+  toPlain(): Record<string, any> {
+    return {
+      type: this.type,
+      referredSemanticId: this.referredSemanticId?.toPlain(),
+      keys: this.keys.map((k) => k.toPlain()),
+    };
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitReference(this, context);
   }

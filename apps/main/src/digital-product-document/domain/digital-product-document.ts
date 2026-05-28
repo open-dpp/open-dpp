@@ -1,5 +1,5 @@
 import { Environment } from "../../aas/domain/environment";
-import { IActivity } from "../../activity-history/activity";
+import { IActivity } from "../../activity-history/domain/activities/activity";
 
 export interface IDigitalProductDocument {
   id: string;

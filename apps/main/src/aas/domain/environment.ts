@@ -3,10 +3,7 @@ import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { IConvertableToPlain } from "./convertable-to-plain";
 import { Submodel } from "./submodel-base/submodel";
-import { IActivity } from "../../activity-history/activity";
-import { EnvironmentActivity } from "../../activity-history/domain/aas/environment.activity";
-import { EnvironmentOperationTypes } from "../../activity-history/environment-types";
-import { AddOptions, DeleteOptions } from "./submodel-base/submodel-base";
+import { IActivity } from "../../activity-history/domain/activities/activity";
 
 export class Environment implements IConvertableToPlain {
   private _activities: Array<IActivity> = [];
@@ -66,47 +63,21 @@ export class Environment implements IConvertableToPlain {
     return assetAdministrationShell;
   }
 
-  addSubmodel(
-    submodel: Submodel,
-    options: Pick<AddOptions, "ability" | "digitalProductDocumentId">,
-  ) {
+  addSubmodel(submodel: Submodel) {
     if (this.submodels.includes(submodel.id)) {
       throw new ValueError(`Submodel with id ${submodel.id} already exists`);
     }
-    const oldData = structuredClone(this.toPlain());
     this.submodels.push(submodel.id);
-    this.publishActivity(
-      EnvironmentActivity.create({
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: EnvironmentOperationTypes.SubmodelCreated,
-        userId: options?.ability.userId ?? undefined,
-        digitalProductDocumentId: options.digitalProductDocumentId,
-      }),
-    );
 
     return submodel;
   }
 
-  deleteSubmodel(
-    submodel: Submodel,
-    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
-  ) {
-    const oldData = structuredClone(this.toPlain());
+  deleteSubmodel(submodel: Submodel) {
     const index = this.submodels.indexOf(submodel.id);
     if (index === -1) {
       throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
     }
     this.submodels.splice(index, 1);
-    this.publishActivity(
-      EnvironmentActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: EnvironmentOperationTypes.SubmodelDeleted,
-        userId: options?.ability.userId ?? undefined,
-      }),
-    );
   }
 
   toPlain(): Record<string, any> {

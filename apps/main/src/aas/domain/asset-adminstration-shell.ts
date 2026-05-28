@@ -15,12 +15,11 @@ import { IPersistable } from "./persistable";
 import { Security } from "./security/security";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
-import { IActivity } from "../../activity-history/activity";
-import { AddOptions, DeleteOptions } from "./submodel-base/submodel-base";
-import { AssetAdministrationShellActivity } from "../../activity-history/domain/aas/asset-administration-shell.activity";
-import { AssetAdministrationShellOperationTypes } from "../../activity-history/asset-administration-shell-operation-types";
+import { DeleteOptions } from "./submodel-base/submodel-base";
 import { IdShortPath } from "./common/id-short-path";
 import { SubjectAttributes } from "./security/subject-attributes";
+import { SubmodelReferenceAdded } from "../../activity-history/domain/change-events/submodel-reference-added";
+import { EventQueue, ITrackable } from "../../activity-history/domain/activities/trackable";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -38,11 +37,11 @@ export interface AssetAdministrationShellCreateProps {
 }
 
 export class AssetAdministrationShell
-  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable, ITrackable
 {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _activities: Array<IActivity> = [];
+  readonly eventQueue;
 
   private constructor(
     public readonly id: string,
@@ -60,6 +59,9 @@ export class AssetAdministrationShell
   ) {
     this.displayName = displayName;
     this.description = description;
+    this.eventQueue = EventQueue.create({
+      onPublishCallback: () => this.administration.increaseVersion(),
+    });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -80,21 +82,8 @@ export class AssetAdministrationShell
     return this._description;
   }
 
-  private publishActivity(activity: IActivity) {
-    this._activities.push(activity);
-    this.administration.increaseVersion();
-  }
-
-  get activities(): Array<IActivity> {
-    return this._activities;
-  }
-
-  pullActivities(correlationId: string): Array<IActivity> {
-    const events = [...this._activities];
-    events.forEach((event) => event.header.assignCorrelationId(correlationId));
-
-    this._activities = [];
-    return events;
+  getIdShortPath(): IdShortPath {
+    return IdShortPath.create({ path: this.idShort ?? this.id });
   }
 
   static create(data: AssetAdministrationShellCreateProps) {
@@ -118,46 +107,19 @@ export class AssetAdministrationShell
   }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
-    const oldData = structuredClone(this.toPlain());
-    this.accept(new ModifierVisitor(options), { data });
-    this.publishActivity(
-      AssetAdministrationShellActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        userId: options.ability.userId ?? undefined,
-        assetAdministrationShellId: this.id,
-        administration: this.administration,
-        oldData,
-        operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
-        newData: structuredClone(this.toPlain()),
-      }),
-    );
+    const modifier = new ModifierVisitor(options);
+    this.accept(modifier, { data });
   }
 
   addSubmodelReference(reference: Reference) {
     this.submodels.push(reference);
   }
 
-  addSubmodel(
-    submodel: Submodel,
-    options?: Pick<AddOptions, "ability" | "digitalProductDocumentId">,
-  ): Reference {
+  addSubmodel(submodel: Submodel): Reference {
     const reference = submodelToReference(submodel);
-    const oldData = structuredClone(this.toPlain());
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
-    if (options) {
-      this.publishActivity(
-        AssetAdministrationShellActivity.create({
-          digitalProductDocumentId: options.digitalProductDocumentId,
-          userId: options.ability.userId ?? undefined,
-          assetAdministrationShellId: this.id,
-          administration: this.administration,
-          oldData,
-          newData: structuredClone(this.toPlain()),
-          operation: AssetAdministrationShellOperationTypes.SubmodelCreated,
-        }),
-      );
-    }
+    this.eventQueue.publishChanges(SubmodelReferenceAdded.create({ submodelRef: reference }));
 
     return reference;
   }
@@ -167,40 +129,13 @@ export class AssetAdministrationShell
     subject: SubjectAttributes,
     options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
   ): void {
-    const oldData = structuredClone(this.toPlain());
     this.security
       .withAdministrator(options.ability.getSubject())
       .deletePolicyBySubjectAndObject(subject, object);
-    this.publishActivity(
-      AssetAdministrationShellActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        userId: options.ability.userId ?? undefined,
-        assetAdministrationShellId: this.id,
-        administration: this.administration,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
-      }),
-    );
   }
 
-  deletePoliciesByObjectPath(
-    objectPath: IdShortPath,
-    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
-  ): void {
-    const oldData = structuredClone(this.toPlain());
+  deletePoliciesByObjectPath(objectPath: IdShortPath): void {
     this.security.deletePoliciesByObjectPath(objectPath);
-    this.publishActivity(
-      AssetAdministrationShellActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        userId: options.ability.userId ?? undefined,
-        assetAdministrationShellId: this.id,
-        administration: this.administration,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: AssetAdministrationShellOperationTypes.PolicyDeleted,
-      }),
-    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
@@ -272,11 +207,7 @@ export class AssetAdministrationShell
     );
   }
 
-  deleteSubmodel(
-    submodel: Submodel,
-    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
-  ) {
-    const oldData = structuredClone(this.toPlain());
+  deleteSubmodel(submodel: Submodel) {
     const foundSubmodelIndex = this.submodels.findIndex((sm) =>
       sm.keys.some((k) => k.value === submodel.id),
     );
@@ -284,17 +215,6 @@ export class AssetAdministrationShell
       this.submodels.splice(foundSubmodelIndex, 1);
       this.security.deletePoliciesByObjectPath(submodel.getIdShortPath());
     }
-    this.publishActivity(
-      AssetAdministrationShellActivity.create({
-        digitalProductDocumentId: options.digitalProductDocumentId,
-        userId: options.ability.userId ?? undefined,
-        assetAdministrationShellId: this.id,
-        administration: this.administration,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: AssetAdministrationShellOperationTypes.SubmodelDeleted,
-      }),
-    );
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {

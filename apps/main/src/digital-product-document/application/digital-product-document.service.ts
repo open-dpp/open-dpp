@@ -31,7 +31,7 @@ import archiver, { Archiver } from "archiver";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
-import { ActivityTypesType } from "../../activity-history/activity-types";
+import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(

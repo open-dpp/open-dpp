@@ -14,9 +14,8 @@ import {
 import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
-import { IActivity } from "../../activity-history/activity";
-import { DigitalProductDocumentActivity } from "../../activity-history/domain/digital-product-document.activity";
-import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-operation-types";
+import { IActivity } from "../../activity-history/domain/activities/activity";
+import { DigitalProductDocumentOperationTypes } from "../../activity-history/domain/activities/digital-product-document-operation-types";
 
 export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
   environment: ExpandedEnvironmentPlain;
@@ -135,15 +134,6 @@ export class Template
     return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
   }
   private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
-    const oldData = structuredClone(this.toPlain());
     this.lastStatusChange = lastStatusChange;
-    this.publishActivity(
-      DigitalProductDocumentActivity.create({
-        digitalProductDocumentId: this.id,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: DigitalProductDocumentOperationTypes.StatusModified,
-      }),
-    );
   }
 }

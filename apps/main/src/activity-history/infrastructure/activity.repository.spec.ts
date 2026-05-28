@@ -10,16 +10,16 @@ import { generateMongoConfig } from "../../database/config";
 import { ActivityRepository } from "./activity.repository";
 import { ActivityDbSchema, ActivityDoc } from "./activity.schema";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { ActivityRegistryInitializer } from "../presentation/activity-registry-initializer";
+import { ActivityRegistriesInitializer } from "../presentation/activity-registry-initializer";
 import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { SubmodelActivity } from "../domain/aas/submodel.activity";
-import { SubmodelOperationTypes } from "../submodel-operation-types";
-import { AssetAdministrationShellActivity } from "../domain/aas/asset-administration-shell.activity";
-import { AssetAdministrationShellOperationTypes } from "../asset-administration-shell-operation-types";
-import { ActivityTypes } from "../activity-types";
+import { SubmodelActivity } from "../domain/activities/submodel.activity";
+import { SubmodelOperationTypes } from "../domain/activities/submodel-operation-types";
+import { AssetAdministrationShellActivity } from "../domain/activities/asset-administration-shell.activity";
+import { AssetAdministrationShellOperationTypes } from "../domain/activities/asset-administration-shell-operation-types";
+import { ActivityOldTypes } from "../domain/activities/activity-types";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -43,7 +43,7 @@ describe("activityRepository", () => {
           },
         ]),
       ],
-      providers: [ActivityRegistryInitializer, ActivityRepository],
+      providers: [ActivityRegistriesInitializer, ActivityRepository],
     }).compile();
 
     await module.init();
@@ -182,7 +182,7 @@ describe("activityRepository", () => {
 
     it("using filter", async () => {
       let foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelActivity },
+        filter: { activityType: ActivityOldTypes.SubmodelActivity },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -195,7 +195,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelActivity, dppPath: "prop1" },
+        filter: { activityType: ActivityOldTypes.SubmodelActivity, dppPath: "prop1" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -208,7 +208,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelActivity, dppPath: "sw:prop" },
+        filter: { activityType: ActivityOldTypes.SubmodelActivity, dppPath: "sw:prop" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -222,7 +222,7 @@ describe("activityRepository", () => {
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: {
-          activityType: ActivityTypes.SubmodelActivity,
+          activityType: ActivityOldTypes.SubmodelActivity,
           commandPath: `${submodelIdShort}.prop2`,
         },
       });
@@ -238,7 +238,7 @@ describe("activityRepository", () => {
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: {
-          activityType: ActivityTypes.SubmodelActivity,
+          activityType: ActivityOldTypes.SubmodelActivity,
           commandPath: `${submodelIdShort}.prop2`,
           dppPath: "sw:prop",
         },
@@ -255,7 +255,7 @@ describe("activityRepository", () => {
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: {
-          activityType: ActivityTypes.SubmodelActivity,
+          activityType: ActivityOldTypes.SubmodelActivity,
           commandPath: `${submodelIdShort}`,
         },
       });

@@ -1,16 +1,10 @@
 import { z } from "zod";
-import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
+import { IConvertableToPlain } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypesEnum } from "./activity-types";
 import { getActivityClass } from "./activity-registry";
 import { randomUUID } from "node:crypto";
-import { LatestAasExportVersion } from "../aas/infrastructure/serialization/export-schemas/aas-export-shared";
-import { ExtendedJsonPatchOperation } from "./domain/shared.activity";
-import { SubmodelOperationTypesType } from "./submodel-operation-types";
-import { AssetAdministrationShellOperationTypesType } from "./asset-administration-shell-operation-types";
-import { EnvironmentOperationTypesType } from "./environment-types";
-import { DigitalProductDocumentOperationTypesType } from "./digital-product-document-operation-types";
-import { SubmodelRepositoryOperationTypesType } from "./submodel-repository-operation-types";
-import { IdShortPath } from "../aas/domain/common/id-short-path";
+import { LatestAasExportVersion } from "../../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
+import { IChangeEvent } from "../change-events/change-event";
 
 export const ActivityHeaderSchema = z.object({
   id: z.string(),
@@ -111,17 +105,7 @@ export function activityToPlain(event: IActivity) {
 }
 
 export interface IActivityPayload extends IConvertableToPlain {
-  command: {
-    op:
-      | SubmodelOperationTypesType
-      | AssetAdministrationShellOperationTypesType
-      | EnvironmentOperationTypesType
-      | DigitalProductDocumentOperationTypesType
-      | SubmodelRepositoryOperationTypesType;
-    path?: IdShortPath | string;
-    value?: Record<string, any>;
-  };
-  changes: Array<ExtendedJsonPatchOperation>;
+  changes: Array<IChangeEvent>;
 }
 
 export interface IActivity extends IConvertableToPlain {

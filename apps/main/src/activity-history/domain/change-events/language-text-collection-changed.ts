@@ -1,0 +1,91 @@
+import { Language, LanguageEnum } from "@open-dpp/dto";
+import { IChangeEvent } from "./change-event";
+import { IdShortPath } from "../../../aas/domain/common/id-short-path";
+import { z } from "zod/v4";
+import { ChangeEventTypes } from "./change-event-types";
+import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
+import { LanguageText } from "../../../aas/domain/common/language-text";
+
+const LanguageTextChangedSchema = z.object({
+  lng: LanguageEnum,
+  op: z.literal(["replace", "add", "remove"]),
+  oldValue: z.string().nullable(),
+  newValue: z.string().nullable(),
+});
+
+const LanguageTextCollectionChangedSchema = z.object({
+  path: z.string(),
+  values: LanguageTextChangedSchema.array(),
+});
+
+type LanguageTextChanged = z.infer<typeof LanguageTextChangedSchema>;
+
+abstract class LanguageTextCollectionChanged {
+  protected constructor(
+    public readonly path: IdShortPath,
+    public readonly values: LanguageTextChanged[],
+  ) {}
+  toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
+    return {
+      path: this.path.toString(),
+      values: this.values,
+    };
+  }
+}
+
+type LanguageTextChangedCreateProps = {
+  path: IdShortPath;
+  oldValue: LanguageText[];
+  newValue: LanguageText[];
+};
+
+function createLanguageTextChanges({ oldValue, newValue }: LanguageTextChangedCreateProps) {
+  return Object.values(Language)
+    .map((language) => {
+      const oldText = oldValue.find((oldLng) => oldLng.language === language);
+      const newText = newValue.find((newLng) => newLng.language === language);
+      let op: "replace" | "add" | "remove";
+      if (oldText && newText) {
+        op = "replace";
+      } else if (oldText) {
+        op = "remove";
+      } else if (newText) {
+        op = "add";
+      } else {
+        return undefined;
+      }
+      return LanguageTextChangedSchema.parse({
+        lng: language,
+        op,
+        oldValue: oldText?.text ?? null,
+        newValue: newText?.text ?? null,
+      });
+    })
+    .filter((change) => change !== undefined);
+}
+
+export class DisplayNameChanged extends LanguageTextCollectionChanged implements IChangeEvent {
+  public readonly type = ChangeEventTypes.DisplayNameChanged;
+
+  static create(data: LanguageTextChangedCreateProps) {
+    return new DisplayNameChanged(data.path, createLanguageTextChanges(data));
+  }
+
+  static fromPlain(data: unknown): IChangeEvent {
+    const parsed = LanguageTextCollectionChangedSchema.parse(data);
+    return new DisplayNameChanged(IdShortPath.create({ path: parsed.path }), parsed.values);
+  }
+}
+
+export class DescriptionChanged extends LanguageTextCollectionChanged implements IChangeEvent {
+  public readonly type = ChangeEventTypes.DescriptionChanged;
+
+  static create(data: LanguageTextChangedCreateProps) {
+    return new DescriptionChanged(data.path, createLanguageTextChanges(data));
+  }
+
+  static fromPlain(data: unknown): IChangeEvent {
+    const parsed = LanguageTextCollectionChangedSchema.parse(data);
+    return new DescriptionChanged(IdShortPath.create({ path: parsed.path }), parsed.values);
+  }
+}

@@ -15,6 +15,13 @@ export class Key implements IVisitable {
     return Key.create(KeyJsonSchema.parse(json));
   }
 
+  toPlain(): Record<string, any> {
+    return {
+      type: this.type,
+      value: this.value,
+    };
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitKey(this, context);
   }

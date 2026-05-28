@@ -15,9 +15,7 @@ import { DigitalProductDocumentSchema } from "../../digital-product-document/dom
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
-import { IActivity } from "../../activity-history/activity";
-import { DigitalProductDocumentActivity } from "../../activity-history/domain/digital-product-document.activity";
-import { DigitalProductDocumentOperationTypes } from "../../activity-history/digital-product-document-operation-types";
+import { IActivity } from "../../activity-history/domain/activities/activity";
 
 const PassportSchema = DigitalProductDocumentSchema.extend({
   templateId: z.string().nullable(),
@@ -150,15 +148,6 @@ export class Passport
   }
 
   private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
-    const oldData = structuredClone(this.toPlain());
     this.lastStatusChange = lastStatusChange;
-    this.publishActivity(
-      DigitalProductDocumentActivity.create({
-        digitalProductDocumentId: this.id,
-        oldData,
-        newData: structuredClone(this.toPlain()),
-        operation: DigitalProductDocumentOperationTypes.StatusModified,
-      }),
-    );
   }
 }

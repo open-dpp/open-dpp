@@ -118,7 +118,7 @@ import {
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import type { Response } from "express";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
-import { ActivityTypesType } from "../../activity-history/activity-types";
+import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 
 @Controller("/templates")
 export class TemplateController
