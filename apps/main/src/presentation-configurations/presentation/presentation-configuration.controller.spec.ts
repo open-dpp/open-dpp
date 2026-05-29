@@ -12,7 +12,6 @@ import {
 import { ForbiddenError } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { Environment } from "../../aas/domain/environment";
-import { ExpandedEnvironment } from "../../aas/domain/expanded-environment";
 import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { Permission } from "../../aas/domain/security/permission";
 import { Security } from "../../aas/domain/security/security";
@@ -24,29 +23,23 @@ import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import { PresentationConfigurationService } from "../application/services/presentation-configuration.service";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "../application/services/presentation-configuration.service";
 import { PresentationConfiguration } from "../domain/presentation-configuration";
 import { PresentationConfigurationController } from "./presentation-configuration.controller";
+import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 
 describe("PresentationConfigurationController", () => {
   let controller: PresentationConfigurationController;
   let service: {
-    listForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration[]>>;
-    createForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    getByIdForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    applyPatchByConfigIdForPassport: jest.Mock<
-      (...args: never[]) => Promise<PresentationConfiguration>
-    >;
-    deleteByConfigIdForPassport: jest.Mock<(...args: never[]) => Promise<void>>;
-    getEffectiveForPassport: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    listForTemplate: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration[]>>;
-    createForTemplate: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    getByIdForTemplate: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    applyPatchByConfigIdForTemplate: jest.Mock<
-      (...args: never[]) => Promise<PresentationConfiguration>
-    >;
-    deleteByConfigIdForTemplate: jest.Mock<(...args: never[]) => Promise<void>>;
-    getEffectiveForTemplate: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
+    list: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration[]>>;
+    create: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
+    getById: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
+    applyPatch: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
+    delete: jest.Mock<(...args: never[]) => Promise<void>>;
+    getEffective: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
   };
   let templateRepository: {
     findOneOrFail: jest.Mock<(...args: never[]) => Promise<Template>>;
@@ -55,23 +48,17 @@ describe("PresentationConfigurationController", () => {
     findOneOrFail: jest.Mock<(...args: never[]) => Promise<Passport>>;
   };
   let environmentService: {
-    loadExpandedEnvironment: jest.Mock<(...args: never[]) => Promise<ExpandedEnvironment>>;
+    loadAbility: jest.Mock<(...args: never[]) => Promise<AasAbility>>;
   };
 
   beforeEach(async () => {
     service = {
-      listForPassport: jest.fn(),
-      createForPassport: jest.fn(),
-      getByIdForPassport: jest.fn(),
-      applyPatchByConfigIdForPassport: jest.fn(),
-      deleteByConfigIdForPassport: jest.fn(),
-      getEffectiveForPassport: jest.fn(),
-      listForTemplate: jest.fn(),
-      createForTemplate: jest.fn(),
-      getByIdForTemplate: jest.fn(),
-      applyPatchByConfigIdForTemplate: jest.fn(),
-      deleteByConfigIdForTemplate: jest.fn(),
-      getEffectiveForTemplate: jest.fn(),
+      list: jest.fn(),
+      create: jest.fn(),
+      getById: jest.fn(),
+      applyPatch: jest.fn(),
+      delete: jest.fn(),
+      getEffective: jest.fn(),
     };
     templateRepository = {
       findOneOrFail: jest.fn(),
@@ -79,8 +66,13 @@ describe("PresentationConfigurationController", () => {
     passportRepository = {
       findOneOrFail: jest.fn(),
     };
+    const defaultSubject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.OWNER,
+    });
+    const defaultAbility = Security.create({}).defineAbilityForSubject(defaultSubject);
     environmentService = {
-      loadExpandedEnvironment: jest.fn(async () => ExpandedEnvironment.empty()),
+      loadAbility: jest.fn(async () => defaultAbility),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -123,13 +115,29 @@ describe("PresentationConfigurationController", () => {
     });
   }
 
+  function expectedPassportHolder(passport: Passport): PresentationReferenceHolder {
+    return {
+      id: passport.id,
+      organizationId: passport.organizationId,
+      referenceType: PresentationReferenceType.Passport,
+    };
+  }
+
+  function expectedTemplateHolder(template: Template): PresentationReferenceHolder {
+    return {
+      id: template.id,
+      organizationId: template.organizationId,
+      referenceType: PresentationReferenceType.Template,
+    };
+  }
+
   describe("plural endpoints — passport", () => {
     it("listForPassport returns an array of DTOs", async () => {
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
       const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.listForPassport.mockResolvedValue([config]);
+      service.list.mockResolvedValue([config]);
 
       const result = await controller.listForPassport(
         organizationId,
@@ -141,7 +149,14 @@ describe("PresentationConfigurationController", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(config.id);
-      expect(service.listForPassport).toHaveBeenCalledWith(passport, undefined);
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        passport.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.list).toHaveBeenCalledWith(
+        expectedPassportHolder(passport),
+        expect.any(AasAbility),
+      );
     });
 
     it("listForPassport throws ForbiddenException for cross-organization passport", async () => {
@@ -151,7 +166,7 @@ describe("PresentationConfigurationController", () => {
       await expect(
         controller.listForPassport("intruder-org", passport.id, UserRole.USER, MemberRole.OWNER),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.listForPassport).not.toHaveBeenCalled();
+      expect(service.list).not.toHaveBeenCalled();
     });
 
     it("listForPassport throws ForbiddenException when memberRole is missing", async () => {
@@ -171,7 +186,7 @@ describe("PresentationConfigurationController", () => {
         label: "Variant A",
       });
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.createForPassport.mockResolvedValue(created);
+      service.create.mockResolvedValue(created);
 
       const result = await controller.createForPassport(
         organizationId,
@@ -181,7 +196,9 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.createForPassport).toHaveBeenCalledWith(passport, { label: "Variant A" });
+      expect(service.create).toHaveBeenCalledWith(expectedPassportHolder(passport), {
+        label: "Variant A",
+      });
       expect(result.label).toBe("Variant A");
     });
 
@@ -190,7 +207,7 @@ describe("PresentationConfigurationController", () => {
       const passport = makePassport(organizationId);
       const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.getByIdForPassport.mockResolvedValue(config);
+      service.getById.mockResolvedValue(config);
 
       const result = await controller.getByIdForPassport(
         organizationId,
@@ -200,7 +217,15 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getByIdForPassport).toHaveBeenCalledWith(passport, config.id, undefined);
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        passport.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.getById).toHaveBeenCalledWith(
+        expectedPassportHolder(passport),
+        config.id,
+        expect.any(AasAbility),
+      );
       expect(result.id).toBe(config.id);
     });
 
@@ -211,7 +236,7 @@ describe("PresentationConfigurationController", () => {
         elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
       });
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.applyPatchByConfigIdForPassport.mockResolvedValue(patched);
+      service.applyPatch.mockResolvedValue(patched);
 
       const result = await controller.patchByIdForPassport(
         organizationId,
@@ -222,11 +247,15 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.applyPatchByConfigIdForPassport).toHaveBeenCalledWith(
-        passport,
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        passport.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.applyPatch).toHaveBeenCalledWith(
+        expectedPassportHolder(passport),
         patched.id,
         { elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber } },
-        undefined,
+        expect.any(AasAbility),
       );
       expect(result.elementDesign).toEqual({
         "submodel.numericField": PresentationComponentName.BigNumber,
@@ -238,7 +267,7 @@ describe("PresentationConfigurationController", () => {
       const passport = makePassport(organizationId);
       const configId = randomUUID();
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.deleteByConfigIdForPassport.mockResolvedValue(undefined);
+      service.delete.mockResolvedValue(undefined);
 
       const result = await controller.deleteByIdForPassport(
         organizationId,
@@ -248,7 +277,7 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.deleteByConfigIdForPassport).toHaveBeenCalledWith(passport, configId);
+      expect(service.delete).toHaveBeenCalledWith(expectedPassportHolder(passport), configId);
       expect(result).toBeUndefined();
     });
 
@@ -257,7 +286,7 @@ describe("PresentationConfigurationController", () => {
       const passport = makePassport(organizationId);
       const effective = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.getEffectiveForPassport.mockResolvedValue(effective);
+      service.getEffective.mockResolvedValue(effective);
 
       const result = await controller.getForPassport(
         organizationId,
@@ -266,7 +295,14 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getEffectiveForPassport).toHaveBeenCalledWith(passport, undefined);
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        passport.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.getEffective).toHaveBeenCalledWith(
+        expectedPassportHolder(passport),
+        expect.any(AasAbility),
+      );
       expect(result.id).toBe(effective.id);
     });
 
@@ -277,7 +313,7 @@ describe("PresentationConfigurationController", () => {
       await expect(
         controller.getForPassport("intruder-org", passport.id, UserRole.USER, MemberRole.OWNER),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.getEffectiveForPassport).not.toHaveBeenCalled();
+      expect(service.getEffective).not.toHaveBeenCalled();
     });
   });
 
@@ -287,7 +323,7 @@ describe("PresentationConfigurationController", () => {
       const template = Template.create({ organizationId });
       const config = makeConfig(organizationId, template.id, PresentationReferenceType.Template);
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.listForTemplate.mockResolvedValue([config]);
+      service.list.mockResolvedValue([config]);
 
       const result = await controller.listForTemplate(
         organizationId,
@@ -299,7 +335,14 @@ describe("PresentationConfigurationController", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(config.id);
-      expect(service.listForTemplate).toHaveBeenCalledWith(template, undefined);
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        template.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.list).toHaveBeenCalledWith(
+        expectedTemplateHolder(template),
+        expect.any(AasAbility),
+      );
     });
 
     it("listForTemplate throws ForbiddenException for cross-organization template", async () => {
@@ -309,7 +352,7 @@ describe("PresentationConfigurationController", () => {
       await expect(
         controller.listForTemplate("intruder-org", template.id, UserRole.USER, MemberRole.OWNER),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.listForTemplate).not.toHaveBeenCalled();
+      expect(service.list).not.toHaveBeenCalled();
     });
 
     it("listForTemplate throws ForbiddenException when memberRole is missing", async () => {
@@ -329,7 +372,7 @@ describe("PresentationConfigurationController", () => {
         label: "Variant A",
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.createForTemplate.mockResolvedValue(created);
+      service.create.mockResolvedValue(created);
 
       const result = await controller.createForTemplate(
         organizationId,
@@ -339,7 +382,9 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.createForTemplate).toHaveBeenCalledWith(template, { label: "Variant A" });
+      expect(service.create).toHaveBeenCalledWith(expectedTemplateHolder(template), {
+        label: "Variant A",
+      });
       expect(result.label).toBe("Variant A");
     });
 
@@ -348,7 +393,7 @@ describe("PresentationConfigurationController", () => {
       const template = Template.create({ organizationId });
       const config = makeConfig(organizationId, template.id, PresentationReferenceType.Template);
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.getByIdForTemplate.mockResolvedValue(config);
+      service.getById.mockResolvedValue(config);
 
       const result = await controller.getByIdForTemplate(
         organizationId,
@@ -358,7 +403,15 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getByIdForTemplate).toHaveBeenCalledWith(template, config.id, undefined);
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        template.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.getById).toHaveBeenCalledWith(
+        expectedTemplateHolder(template),
+        config.id,
+        expect.any(AasAbility),
+      );
       expect(result.id).toBe(config.id);
     });
 
@@ -369,7 +422,7 @@ describe("PresentationConfigurationController", () => {
         elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.applyPatchByConfigIdForTemplate.mockResolvedValue(patched);
+      service.applyPatch.mockResolvedValue(patched);
 
       const result = await controller.patchByIdForTemplate(
         organizationId,
@@ -380,11 +433,15 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.applyPatchByConfigIdForTemplate).toHaveBeenCalledWith(
-        template,
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        template.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.applyPatch).toHaveBeenCalledWith(
+        expectedTemplateHolder(template),
         patched.id,
         { elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber } },
-        undefined,
+        expect.any(AasAbility),
       );
       expect(result.elementDesign).toEqual({
         "submodel.numericField": PresentationComponentName.BigNumber,
@@ -405,7 +462,7 @@ describe("PresentationConfigurationController", () => {
           MemberRole.OWNER,
         ),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.applyPatchByConfigIdForTemplate).not.toHaveBeenCalled();
+      expect(service.applyPatch).not.toHaveBeenCalled();
     });
 
     it("deleteByIdForTemplate calls service and returns void", async () => {
@@ -413,7 +470,7 @@ describe("PresentationConfigurationController", () => {
       const template = Template.create({ organizationId });
       const configId = randomUUID();
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.deleteByConfigIdForTemplate.mockResolvedValue(undefined);
+      service.delete.mockResolvedValue(undefined);
 
       const result = await controller.deleteByIdForTemplate(
         organizationId,
@@ -423,7 +480,7 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.deleteByConfigIdForTemplate).toHaveBeenCalledWith(template, configId);
+      expect(service.delete).toHaveBeenCalledWith(expectedTemplateHolder(template), configId);
       expect(result).toBeUndefined();
     });
 
@@ -434,7 +491,7 @@ describe("PresentationConfigurationController", () => {
         elementDesign: { "sm.p": PresentationComponentName.BigNumber },
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      service.getEffectiveForTemplate.mockResolvedValue(config);
+      service.getEffective.mockResolvedValue(config);
 
       const result = await controller.getForTemplate(
         organizationId,
@@ -443,7 +500,14 @@ describe("PresentationConfigurationController", () => {
         MemberRole.OWNER,
       );
 
-      expect(service.getEffectiveForTemplate).toHaveBeenCalledWith(template, undefined);
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        template.environment,
+        expect.any(SubjectAttributes),
+      );
+      expect(service.getEffective).toHaveBeenCalledWith(
+        expectedTemplateHolder(template),
+        expect.any(AasAbility),
+      );
       expect(result.id).toBe(config.id);
       expect(result.elementDesign).toEqual({ "sm.p": PresentationComponentName.BigNumber });
     });
@@ -455,7 +519,7 @@ describe("PresentationConfigurationController", () => {
       await expect(
         controller.getForTemplate("intruder-org", template.id, UserRole.USER, MemberRole.OWNER),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.getEffectiveForTemplate).not.toHaveBeenCalled();
+      expect(service.getEffective).not.toHaveBeenCalled();
     });
 
     it("getForTemplate throws ForbiddenException when memberRole is missing", async () => {
@@ -481,7 +545,7 @@ describe("PresentationConfigurationController", () => {
           MemberRole.OWNER,
         ),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.getByIdForTemplate).not.toHaveBeenCalled();
+      expect(service.getById).not.toHaveBeenCalled();
     });
 
     it("deleteByIdForTemplate throws ForbiddenException when memberRole is missing", async () => {
@@ -498,15 +562,12 @@ describe("PresentationConfigurationController", () => {
           undefined,
         ),
       ).rejects.toBeInstanceOf(ForbiddenException);
-      expect(service.deleteByConfigIdForTemplate).not.toHaveBeenCalled();
+      expect(service.delete).not.toHaveBeenCalled();
     });
   });
 
   describe("element-level ability flow", () => {
-    function buildShellAndAbility(): {
-      expandedEnv: ExpandedEnvironment;
-      memberAbility: AasAbility;
-    } {
+    function buildMemberAbility(): AasAbility {
       const memberSubject = SubjectAttributes.create({
         userRole: UserRole.USER,
         memberRole: MemberRole.MEMBER,
@@ -519,16 +580,11 @@ describe("PresentationConfigurationController", () => {
       security.addPolicy(memberSubject, IdShortPath.create({ path: "Secret" }), [
         Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       ]);
-      const shell = {
-        security,
-      } as unknown as ExpandedEnvironment["shells"][number];
-      const expandedEnv = ExpandedEnvironment.fromLoaded([shell], [], []);
-      const memberAbility = security.defineAbilityForSubject(memberSubject);
-      return { expandedEnv, memberAbility };
+      return security.defineAbilityForSubject(memberSubject);
     }
 
-    it("patchByIdForPassport builds an ability from the loaded env and forwards it", async () => {
-      const { expandedEnv } = buildShellAndAbility();
+    it("patchByIdForPassport calls loadAbility (not loadExpandedEnvironment) and forwards the ability", async () => {
+      const memberAbility = buildMemberAbility();
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
       const patched = PresentationConfiguration.create({
@@ -537,8 +593,8 @@ describe("PresentationConfigurationController", () => {
         referenceType: PresentationReferenceType.Passport,
       });
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
-      service.applyPatchByConfigIdForPassport.mockResolvedValue(patched);
+      environmentService.loadAbility.mockResolvedValue(memberAbility);
+      service.applyPatch.mockResolvedValue(patched);
 
       await controller.patchByIdForPassport(
         organizationId,
@@ -549,18 +605,22 @@ describe("PresentationConfigurationController", () => {
         MemberRole.MEMBER,
       );
 
-      expect(environmentService.loadExpandedEnvironment).toHaveBeenCalledWith(passport.environment);
-      const lastCall = service.applyPatchByConfigIdForPassport.mock.calls.at(-1)!;
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        passport.environment,
+        expect.any(SubjectAttributes),
+      );
+      const lastCall = service.applyPatch.mock.calls.at(-1)!;
       expect(lastCall[3]).toBeInstanceOf(AasAbility);
+      expect(lastCall[3]).toBe(memberAbility);
     });
 
     it("patchByIdForPassport propagates ForbiddenError from the service", async () => {
-      const { expandedEnv } = buildShellAndAbility();
+      const memberAbility = buildMemberAbility();
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
-      service.applyPatchByConfigIdForPassport.mockRejectedValue(
+      environmentService.loadAbility.mockResolvedValue(memberAbility);
+      service.applyPatch.mockRejectedValue(
         new ForbiddenError("Missing edit permission for presentation paths: Secret"),
       );
 
@@ -576,14 +636,14 @@ describe("PresentationConfigurationController", () => {
       ).rejects.toBeInstanceOf(ForbiddenError);
     });
 
-    it("getForPassport forwards the built ability to the service", async () => {
-      const { expandedEnv } = buildShellAndAbility();
+    it("getForPassport calls loadAbility and forwards the ability to the service", async () => {
+      const memberAbility = buildMemberAbility();
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
       const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
-      service.getEffectiveForPassport.mockResolvedValue(config);
+      environmentService.loadAbility.mockResolvedValue(memberAbility);
+      service.getEffective.mockResolvedValue(config);
 
       await controller.getForPassport(
         organizationId,
@@ -592,12 +652,17 @@ describe("PresentationConfigurationController", () => {
         MemberRole.MEMBER,
       );
 
-      const lastCall = service.getEffectiveForPassport.mock.calls.at(-1)!;
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        passport.environment,
+        expect.any(SubjectAttributes),
+      );
+      const lastCall = service.getEffective.mock.calls.at(-1)!;
       expect(lastCall[1]).toBeInstanceOf(AasAbility);
+      expect(lastCall[1]).toBe(memberAbility);
     });
 
-    it("patchByIdForTemplate builds the ability from the template's env", async () => {
-      const { expandedEnv } = buildShellAndAbility();
+    it("patchByIdForTemplate calls loadAbility from the template's env and forwards the ability", async () => {
+      const memberAbility = buildMemberAbility();
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
       const patched = PresentationConfiguration.create({
@@ -606,8 +671,8 @@ describe("PresentationConfigurationController", () => {
         referenceType: PresentationReferenceType.Template,
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
-      environmentService.loadExpandedEnvironment.mockResolvedValue(expandedEnv);
-      service.applyPatchByConfigIdForTemplate.mockResolvedValue(patched);
+      environmentService.loadAbility.mockResolvedValue(memberAbility);
+      service.applyPatch.mockResolvedValue(patched);
 
       await controller.patchByIdForTemplate(
         organizationId,
@@ -618,9 +683,13 @@ describe("PresentationConfigurationController", () => {
         MemberRole.MEMBER,
       );
 
-      expect(environmentService.loadExpandedEnvironment).toHaveBeenCalledWith(template.environment);
-      const lastCall = service.applyPatchByConfigIdForTemplate.mock.calls.at(-1)!;
+      expect(environmentService.loadAbility).toHaveBeenCalledWith(
+        template.environment,
+        expect.any(SubjectAttributes),
+      );
+      const lastCall = service.applyPatch.mock.calls.at(-1)!;
       expect(lastCall[3]).toBeInstanceOf(AasAbility);
+      expect(lastCall[3]).toBe(memberAbility);
     });
   });
 
@@ -635,7 +704,7 @@ describe("PresentationConfigurationController", () => {
         defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
       });
       passportRepository.findOneOrFail.mockResolvedValue(passport);
-      service.applyPatchByConfigIdForPassport.mockResolvedValue(patched);
+      service.applyPatch.mockResolvedValue(patched);
 
       const result = await controller.patchByIdForPassport(
         organizationId,
@@ -649,6 +718,58 @@ describe("PresentationConfigurationController", () => {
       expect(result.defaultComponents).toEqual({
         [KeyTypes.Property]: PresentationComponentName.BigNumber,
       });
+    });
+  });
+
+  describe("ownership delegation — uses DigitalProductDocumentService", () => {
+    it("controller does not have private loadPassportAndCheckOwnership helper (uses DigitalProductDocumentService)", () => {
+      // After refactoring, the controller delegates ownership checks to
+      // DigitalProductDocumentService instances rather than inline private helpers.
+      // Verify the private helpers are gone and the shared service class is used.
+      expect(
+        (controller as unknown as Record<string, unknown>)["loadPassportAndCheckOwnership"],
+      ).toBeUndefined();
+      expect(
+        (controller as unknown as Record<string, unknown>)["loadTemplateAndCheckOwnership"],
+      ).toBeUndefined();
+    });
+
+    it("controller holds passportDocService and templateDocService instances of DigitalProductDocumentService", () => {
+      const ctrl = controller as unknown as Record<string, unknown>;
+      expect(ctrl["passportDocService"]).toBeInstanceOf(DigitalProductDocumentService);
+      expect(ctrl["templateDocService"]).toBeInstanceOf(DigitalProductDocumentService);
+    });
+
+    it("createForPassport still throws ForbiddenException for cross-org access (ownership via DigitalProductDocumentService)", async () => {
+      const passport = makePassport("owner-org");
+      passportRepository.findOneOrFail.mockResolvedValue(passport);
+
+      await expect(
+        controller.createForPassport(
+          "intruder-org",
+          passport.id,
+          { label: null },
+          UserRole.USER,
+          MemberRole.OWNER,
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(service.create).not.toHaveBeenCalled();
+    });
+
+    it("createForTemplate still throws ForbiddenException for cross-org access (ownership via DigitalProductDocumentService)", async () => {
+      const template = Template.create({ organizationId: "owner-org" });
+      templateRepository.findOneOrFail.mockResolvedValue(template);
+
+      await expect(
+        controller.createForTemplate(
+          "intruder-org",
+          template.id,
+          { label: null },
+          UserRole.USER,
+          MemberRole.OWNER,
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(service.create).not.toHaveBeenCalled();
     });
   });
 });

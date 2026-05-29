@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
 import { MediaService } from "../../../media/infrastructure/media.service";
@@ -60,8 +61,9 @@ export class AasSerializationService {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
       passport.environment,
     );
-    const presentationConfiguration =
-      await this.presentationConfigurationService.getEffectiveForPassport(passport);
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      passportToHolder(passport),
+    );
     const aasExportable = AasExportable.createFromPassport(
       passport,
       expandedEnvironment,
@@ -77,8 +79,9 @@ export class AasSerializationService {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
       template.environment,
     );
-    const presentationConfiguration =
-      await this.presentationConfigurationService.getEffectiveForTemplate(template);
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      templateToHolder(template),
+    );
     const aasExportable = AasExportable.createFromTemplate(
       template,
       expandedEnvironment,
@@ -296,4 +299,20 @@ function buildImportedPresentationConfiguration(params: {
     elementDesign: schema.presentationConfiguration.elementDesign,
     defaultComponents: schema.presentationConfiguration.defaultComponents,
   });
+}
+
+function passportToHolder(passport: Passport): PresentationReferenceHolder {
+  return {
+    id: passport.id,
+    organizationId: passport.organizationId,
+    referenceType: PresentationReferenceType.Passport,
+  };
+}
+
+function templateToHolder(template: Template): PresentationReferenceHolder {
+  return {
+    id: template.id,
+    organizationId: template.organizationId,
+    referenceType: PresentationReferenceType.Template,
+  };
 }

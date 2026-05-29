@@ -469,7 +469,9 @@
         },
         "permalinkBaseUrl": {
           "title": "Passport URL",
-          "description": "URL where published passport pages are served via their permanent links.",
+          "description": "URL where published passport pages are served via their permanent links. Only set this when running a custom passport viewer at a different domain.",
+          "warning": "Changing or clearing this URL will break ALL existing QR codes. This setting is only needed when running a custom passport viewer at a non-default address.",
+          "dangerZone": "Danger Zone",
           "placeholder": "https://dpp.example.com",
           "effectiveFallback": "Currently effective: {url}",
           "invalid": "Must be a valid http(s) URL without a query or fragment."
@@ -676,7 +678,12 @@
     },
     "missingValue": "Value is missing",
     "passportNotFound": "Productpass passport not found",
-    "passportNotFoundLong": "Your digital product passport could not be found. Please validate your data or contact support."
+    "passportNotFoundLong": "Your digital product passport could not be found. It may not have been published yet, or the link may be invalid. Please contact the product owner or support for assistance."
+  },
+  "qrCodeDialog": {
+    "draftWarning": "This passport is a draft and not yet publicly accessible.",
+    "archivedWarning": "This passport is archived and not publicly accessible.",
+    "publishAction": "Publish now"
   },
   "permalink": {
     "notfound": "Could not find permalink. Please contact your administrator.",
@@ -696,7 +703,8 @@
       },
       "baseUrl": {
         "label": "Custom base URL",
-        "description": "Override the organization's default permalink URL for this passport. Include the path prefix if your deployment uses one (e.g. https://example.com/p). Leave blank to inherit."
+        "description": "Override the organization's default permalink URL for this passport. Include the path prefix if your deployment uses one (e.g. https://example.com/p). Leave blank to inherit.",
+        "warning": "Setting a custom URL here overrides the organization and instance defaults. Leave blank to inherit the configured URL."
       },
       "preview": {
         "label": "Preview",

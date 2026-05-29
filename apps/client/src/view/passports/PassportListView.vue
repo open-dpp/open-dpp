@@ -150,6 +150,13 @@ async function onRestoreButtonClicked(item: DigitalProductDocumentDto) {
   await reloadCurrentPage();
 }
 
+async function onPublishFromQrDialog() {
+  if (qrCodeDialogItem.value) {
+    await publish(qrCodeDialogItem.value.id);
+    await reloadCurrentPage();
+  }
+}
+
 async function onSelectedStatusChange(newStatus: DigitalProductDocumentStatusDtoType | undefined) {
   await changeStatus(newStatus);
   await resetCursor();
@@ -230,7 +237,9 @@ onMounted(async () => {
   <PassportCreateDialog ref="createDialog" />
   <PassportQrCodeDialog
     v-if="qrCodeDialogItem"
-    v-model="qrCodeDialogVisible"
+    v-model:visible="qrCodeDialogVisible"
     :passport-id="qrCodeDialogItem.id"
+    :status="qrCodeDialogItem.lastStatusChange.currentStatus"
+    @publish="onPublishFromQrDialog"
   />
 </template>

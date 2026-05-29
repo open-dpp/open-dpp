@@ -83,6 +83,12 @@ const LEAF_EDITOR_COMPONENTS = [
   StubReferenceElementCreateEditor,
 ];
 
+const EDIT_MODE_LEAF_EDITOR_COMPONENTS = [
+  StubPropertyEditor,
+  StubFileEditor,
+  StubReferenceElementEditor,
+];
+
 function makeComputeds(
   editorVNode: ReturnType<typeof useAasDrawer>["editorVNode"],
   saveButtonIsVisible: ReturnType<typeof useAasDrawer>["saveButtonIsVisible"],
@@ -94,7 +100,11 @@ function makeComputeds(
   });
 
   const showPresentationTab = computed(() => {
-    if (!isLeafEditor.value) return false;
+    if (!editorVNode.value) return false;
+    const isEditModeLeaf = EDIT_MODE_LEAF_EDITOR_COMPONENTS.includes(
+      editorVNode.value.component as any,
+    );
+    if (!isEditModeLeaf) return false;
     return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
   });
 
@@ -189,6 +199,29 @@ describe("AASEditor – drawer-tab computed logic", () => {
       title: "Create property",
       mode: EditorMode.CREATE,
       path: {},
+    });
+
+    const activeDrawerTab = ref<"data" | "presentation">("data");
+    const { showPresentationTab } = makeComputeds(
+      drawer.editorVNode,
+      drawer.saveButtonIsVisible,
+      activeDrawerTab,
+    );
+    expect(showPresentationTab.value).toBe(false);
+  });
+
+  it("showPresentationTab is false for PropertyCreateEditor even when idShortPathIncludingSubmodel is set (CREATE mode gates the tab)", () => {
+    const drawer = useAasDrawer({ onHideDrawer, can });
+    drawer.openDrawer({
+      type: KeyTypes.Property,
+      data: { valueType: DataTypeDef.String },
+      title: "Create property",
+      mode: EditorMode.CREATE,
+      path: {
+        submodelId: "s1",
+        idShortPath: "MyProp",
+        idShortPathIncludingSubmodel: "sm.MyProp",
+      },
     });
 
     const activeDrawerTab = ref<"data" | "presentation">("data");

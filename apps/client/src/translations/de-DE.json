@@ -469,7 +469,9 @@
         },
         "permalinkBaseUrl": {
           "title": "Produktpass URL",
-          "description": "URL, unter den permanente Links zu veröffentlichten Produktpässen bereitgestellt werden.",
+          "description": "URL, unter der permanente Links zu veröffentlichten Produktpässen bereitgestellt werden. Nur setzen, wenn ein eigener Produktpass-Viewer unter einer anderen Domain betrieben wird.",
+          "warning": "Das Ändern oder Leeren dieser URL bricht ALLE bestehenden QR-Codes. Diese Einstellung wird nur benötigt, wenn ein eigener Produktpass-Viewer unter einer abweichenden Adresse betrieben wird.",
+          "dangerZone": "Gefahrenzone",
           "placeholder": "https://dpp.example.com",
           "effectiveFallback": "Aktuell wirksam: {url}",
           "invalid": "Muss eine gültige http(s)-URL ohne Query oder Fragment sein."
@@ -676,7 +678,12 @@
     },
     "missingValue": "Kein Wert gesetzt",
     "passportNotFound": "Produktpass nicht gefunden",
-    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
+    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Möglicherweise wurde er noch nicht veröffentlicht oder der Link ist ungültig. Bitte wenden Sie sich an den Produktverantwortlichen oder den Support."
+  },
+  "qrCodeDialog": {
+    "draftWarning": "Dieser Produktpass ist ein Entwurf und noch nicht öffentlich zugänglich.",
+    "archivedWarning": "Dieser Produktpass ist archiviert und nicht öffentlich zugänglich.",
+    "publishAction": "Jetzt veröffentlichen"
   },
   "permalink": {
     "notfound": "Permalink konnte nicht gefunden werden, bitte Administrator kontaktieren.",
@@ -696,7 +703,8 @@
       },
       "baseUrl": {
         "label": "Eigene Basis-URL",
-        "description": "Überschreibt die Permalink-URL der Organisation für diesen Pass. Falls dein Deployment einen Pfad-Präfix verwendet, ihn mit angeben (z. B. https://example.com/p). Leer lassen, um zu erben."
+        "description": "Überschreibt die Permalink-URL der Organisation für diesen Pass. Falls dein Deployment einen Pfad-Präfix verwendet, ihn mit angeben (z. B. https://example.com/p). Leer lassen, um zu erben.",
+        "warning": "Eine eigene URL hier zu setzen überschreibt die Organisations- und Instanz-Standardwerte. Leer lassen, um die konfigurierte URL zu erben."
       },
       "preview": {
         "label": "Vorschau",

@@ -51,12 +51,17 @@ describe("export submodel value", () => {
         {
           provide: PresentationConfigurationService,
           useValue: {
-            getEffectiveForPassport: jest
-              .fn<(passport: Passport) => Promise<PresentationConfiguration>>()
-              .mockImplementation(async (passport: Passport) =>
+            getEffective: jest
+              .fn<
+                (holder: {
+                  id: string;
+                  organizationId: string;
+                }) => Promise<PresentationConfiguration>
+              >()
+              .mockImplementation(async (holder: { id: string; organizationId: string }) =>
                 PresentationConfiguration.create({
-                  organizationId: passport.organizationId,
-                  referenceId: passport.id,
+                  organizationId: holder.organizationId,
+                  referenceId: holder.id,
                   referenceType: PresentationReferenceType.Passport,
                 }),
               ),

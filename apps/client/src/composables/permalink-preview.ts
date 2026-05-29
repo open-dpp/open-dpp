@@ -34,10 +34,10 @@ function isBaseUrlValid(value: string): boolean {
   return PermalinkBaseUrlSchema.safeParse(value).success;
 }
 
-function deriveFallbackBaseUrl(permalink: PermalinkPublicDto): string {
-  if (permalink.fallbackBaseUrl) return permalink.fallbackBaseUrl;
+/** Strips the last path segment from a URL and returns the canonicalised base. */
+function deriveBaseFromUrl(fullUrl: string): string {
   try {
-    const url = new URL(permalink.publicUrl);
+    const url = new URL(fullUrl);
     const segments = url.pathname.split("/").filter(Boolean);
     segments.pop();
     const path = segments.length ? `/${segments.join("/")}` : "";
@@ -45,6 +45,22 @@ function deriveFallbackBaseUrl(permalink: PermalinkPublicDto): string {
   } catch {
     return "";
   }
+}
+
+/** Returns the last path segment of a URL (the slug part). */
+function deriveSlugFromUrl(fullUrl: string): string {
+  try {
+    const url = new URL(fullUrl);
+    const segments = url.pathname.split("/").filter(Boolean);
+    return segments.at(-1) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function deriveFallbackBaseUrl(permalink: PermalinkPublicDto): string {
+  if (permalink.fallbackBaseUrl) return permalink.fallbackBaseUrl;
+  return deriveBaseFromUrl(permalink.publicUrl);
 }
 
 export function usePermalinkPreview(
@@ -59,7 +75,7 @@ export function usePermalinkPreview(
 
   const effectiveBase = computed(() => {
     if (locked.value && permalink.value?.publishedUrl) {
-      return canonicaliseBaseUrl(permalink.value.publishedUrl);
+      return deriveBaseFromUrl(permalink.value.publishedUrl);
     }
     if (trimmedBase.value !== null) {
       return canonicaliseBaseUrl(trimmedBase.value);
@@ -68,7 +84,12 @@ export function usePermalinkPreview(
     return deriveFallbackBaseUrl(permalink.value);
   });
 
-  const effectiveSlug = computed(() => trimmedSlug.value ?? permalink.value?.id ?? "");
+  const effectiveSlug = computed(() => {
+    if (locked.value && permalink.value?.publishedUrl) {
+      return deriveSlugFromUrl(permalink.value.publishedUrl);
+    }
+    return trimmedSlug.value ?? permalink.value?.id ?? "";
+  });
 
   const previewUrl = computed(() => {
     if (locked.value && permalink.value?.publishedUrl) {

@@ -57,7 +57,11 @@ import {
 } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationReferenceType } from "@open-dpp/dto";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Permalink } from "../domain/permalink";
@@ -129,8 +133,10 @@ export class PermalinkController {
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const ability = await this.buildAbility(passport.environment, subject);
-    const presentationConfiguration =
-      await this.presentationConfigurationService.getEffectiveForPassport(passport, ability);
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      passportToHolder(passport),
+      ability,
+    );
     const branding = await this.resolveBranding(passport.organizationId);
     const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
       permalink,
@@ -382,4 +388,12 @@ export class PermalinkController {
       subject,
     );
   }
+}
+
+function passportToHolder(passport: Passport): PresentationReferenceHolder {
+  return {
+    id: passport.id,
+    organizationId: passport.organizationId,
+    referenceType: PresentationReferenceType.Passport,
+  };
 }

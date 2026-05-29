@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   Inject,
@@ -24,10 +23,9 @@ import {
   PresentationConfigurationDtoSchema,
   PresentationConfigurationListResponseSchema,
   PresentationConfigurationPatchSchema,
+  PresentationReferenceType,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { Environment } from "../../aas/domain/environment";
-import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
@@ -37,26 +35,33 @@ import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
+import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 import { PresentationConfiguration } from "../domain/presentation-configuration";
-import { PresentationConfigurationService } from "../application/services/presentation-configuration.service";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "../application/services/presentation-configuration.service";
 
 @Controller()
 export class PresentationConfigurationController {
+  private readonly passportDocService: DigitalProductDocumentService<Passport>;
+  private readonly templateDocService: DigitalProductDocumentService<Template>;
+
   constructor(
     private readonly service: PresentationConfigurationService,
     private readonly templateRepository: TemplateRepository,
     private readonly passportRepository: PassportRepository,
     @Inject(forwardRef(() => EnvironmentService))
     private readonly environmentService: EnvironmentService,
-  ) {}
-
-  private async buildAbility(
-    environment: Environment,
-    subject: SubjectAttributes,
-  ): Promise<AasAbility | undefined> {
-    const expanded = await this.environmentService.loadExpandedEnvironment(environment);
-    if (expanded.shells.length === 0) return undefined;
-    return expanded.shells[0].security.defineAbilityForSubject(subject);
+  ) {
+    this.passportDocService = new DigitalProductDocumentService(
+      this.environmentService,
+      this.passportRepository,
+    );
+    this.templateDocService = new DigitalProductDocumentService(
+      this.environmentService,
+      this.templateRepository,
+    );
   }
 
   @Get("/passports/:id/presentation-configurations")
@@ -67,9 +72,14 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(passport.environment, subject);
-    const list = await this.service.listForPassport(passport, ability);
+    const passport = await this.passportDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(passport.environment, subject);
+    const holder = toPassportHolder(passport);
+    const list = await this.service.list(holder, ability);
     return PresentationConfigurationListResponseSchema.parse(list.map((c) => c.toPlain()));
   }
 
@@ -83,8 +93,12 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const created = await this.service.createForPassport(passport, body);
+    const passport = await this.passportDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const created = await this.service.create(toPassportHolder(passport), body);
     return this.toDto(created);
   }
 
@@ -97,9 +111,13 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(passport.environment, subject);
-    const c = await this.service.getByIdForPassport(passport, configId, ability);
+    const passport = await this.passportDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(passport.environment, subject);
+    const c = await this.service.getById(toPassportHolder(passport), configId, ability);
     return this.toDto(c);
   }
 
@@ -114,9 +132,13 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(passport.environment, subject);
-    const c = await this.service.applyPatchByConfigIdForPassport(passport, configId, body, ability);
+    const passport = await this.passportDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(passport.environment, subject);
+    const c = await this.service.applyPatch(toPassportHolder(passport), configId, body, ability);
     return this.toDto(c);
   }
 
@@ -130,8 +152,12 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    await this.service.deleteByConfigIdForPassport(passport, configId);
+    const passport = await this.passportDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    await this.service.delete(toPassportHolder(passport), configId);
   }
 
   @Get("/templates/:id/presentation-configurations")
@@ -142,9 +168,14 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(template.environment, subject);
-    const list = await this.service.listForTemplate(template, ability);
+    const template = await this.templateDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(template.environment, subject);
+    const holder = toTemplateHolder(template);
+    const list = await this.service.list(holder, ability);
     return PresentationConfigurationListResponseSchema.parse(list.map((c) => c.toPlain()));
   }
 
@@ -158,8 +189,12 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const created = await this.service.createForTemplate(template, body);
+    const template = await this.templateDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const created = await this.service.create(toTemplateHolder(template), body);
     return this.toDto(created);
   }
 
@@ -172,9 +207,13 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(template.environment, subject);
-    const c = await this.service.getByIdForTemplate(template, configId, ability);
+    const template = await this.templateDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(template.environment, subject);
+    const c = await this.service.getById(toTemplateHolder(template), configId, ability);
     return this.toDto(c);
   }
 
@@ -189,9 +228,13 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(template.environment, subject);
-    const c = await this.service.applyPatchByConfigIdForTemplate(template, configId, body, ability);
+    const template = await this.templateDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(template.environment, subject);
+    const c = await this.service.applyPatch(toTemplateHolder(template), configId, body, ability);
     return this.toDto(c);
   }
 
@@ -205,8 +248,12 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    await this.service.deleteByConfigIdForTemplate(template, configId);
+    const template = await this.templateDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    await this.service.delete(toTemplateHolder(template), configId);
   }
 
   @Get("/passports/:id/presentation-configuration")
@@ -217,9 +264,13 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(passport.environment, subject);
-    const c = await this.service.getEffectiveForPassport(passport, ability);
+    const passport = await this.passportDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(passport.environment, subject);
+    const c = await this.service.getEffective(toPassportHolder(passport), ability);
     return this.toDto(c);
   }
 
@@ -231,37 +282,33 @@ export class PresentationConfigurationController {
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PresentationConfigurationDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    const ability = await this.buildAbility(template.environment, subject);
-    const c = await this.service.getEffectiveForTemplate(template, ability);
+    const template = await this.templateDocService.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      subject,
+      organizationId,
+    );
+    const ability = await this.environmentService.loadAbility(template.environment, subject);
+    const c = await this.service.getEffective(toTemplateHolder(template), ability);
     return this.toDto(c);
   }
 
   private toDto(config: PresentationConfiguration): PresentationConfigurationDto {
     return PresentationConfigurationDtoSchema.parse(config.toPlain());
   }
+}
 
-  private async loadTemplateAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Template> {
-    const template = await this.templateRepository.findOneOrFail(id);
-    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return template;
-  }
+function toPassportHolder(passport: Passport): PresentationReferenceHolder {
+  return {
+    id: passport.id,
+    organizationId: passport.organizationId,
+    referenceType: PresentationReferenceType.Passport,
+  };
+}
 
-  private async loadPassportAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Passport> {
-    const passport = await this.passportRepository.findOneOrFail(id);
-    if (passport.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return passport;
-  }
+function toTemplateHolder(template: Template): PresentationReferenceHolder {
+  return {
+    id: template.id,
+    organizationId: template.organizationId,
+    referenceType: PresentationReferenceType.Template,
+  };
 }

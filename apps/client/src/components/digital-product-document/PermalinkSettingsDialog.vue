@@ -2,6 +2,7 @@
 import type { PermalinkPublicDto } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
 import apiClient from "../../lib/api-client";
 import { usePermalinkPreview } from "../../composables/permalink-preview";
 import { useErrorHandlingStore } from "../../stores/error.handling";
@@ -118,6 +119,13 @@ function cancel() {
             t("permalink.settings.baseUrl.label")
           }}</label>
           <small class="text-gray-700">{{ t("permalink.settings.baseUrl.description") }}</small>
+          <div
+            data-testid="base-url-override-warning"
+            class="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-sm text-amber-800"
+          >
+            <ExclamationTriangleIcon class="mt-0.5 size-4 shrink-0 text-amber-500" />
+            <span>{{ t("permalink.settings.baseUrl.warning") }}</span>
+          </div>
           <InputText
             id="permalink-base-url"
             v-model="baseUrl"

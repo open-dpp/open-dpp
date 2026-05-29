@@ -1,20 +1,32 @@
 import { Injectable } from "@nestjs/common";
 import {
-  KeyTypesType,
   Permissions,
   PresentationComponentNameType,
   PresentationConfigurationPatchDto,
   PresentationReferenceType,
   PresentationReferenceTypeType,
 } from "@open-dpp/dto";
-import { ForbiddenError, NotFoundError } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { AasAbility } from "../../../aas/domain/security/aas-ability";
 import type { DbSessionOptions } from "../../../database/query-options";
 import { Passport } from "../../../passports/domain/passport";
-import { Template } from "../../../templates/domain/template";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
-import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
+import {
+  PresentationConfigurationReference,
+  PresentationConfigurationRepository,
+} from "../../infrastructure/presentation-configuration.repository";
+
+/**
+ * Minimal shape required by the service to identify a passport/template reference.
+ * Both `Passport` and `Template` expose `id` and `organizationId` as public readonly fields,
+ * so instances of either class satisfy this interface directly.
+ */
+export interface PresentationReferenceHolder {
+  readonly id: string;
+  readonly organizationId: string;
+  readonly referenceType: PresentationReferenceTypeType;
+}
 
 @Injectable()
 export class PresentationConfigurationService {
@@ -22,28 +34,67 @@ export class PresentationConfigurationService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
   ) {}
 
-  async listForPassport(
-    passport: Passport,
+  async list(
+    holder: PresentationReferenceHolder,
     ability?: AasAbility,
   ): Promise<PresentationConfiguration[]> {
     const configs = await this.listOrSeed({
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-      organizationId: passport.organizationId,
+      referenceType: holder.referenceType,
+      referenceId: holder.id,
+      organizationId: holder.organizationId,
     });
     return configs.map((config) => filterReadable(config, ability));
   }
 
-  async listForTemplate(
-    template: Template,
+  async getById(
+    holder: PresentationReferenceHolder,
+    configId: string,
     ability?: AasAbility,
-  ): Promise<PresentationConfiguration[]> {
-    const configs = await this.listOrSeed({
-      referenceType: PresentationReferenceType.Template,
-      referenceId: template.id,
-      organizationId: template.organizationId,
+  ): Promise<PresentationConfiguration> {
+    const config = await this.requireOwned(configId, {
+      referenceType: holder.referenceType,
+      referenceId: holder.id,
     });
-    return configs.map((config) => filterReadable(config, ability));
+    return filterReadable(config, ability);
+  }
+
+  async create(
+    holder: PresentationReferenceHolder,
+    body: { label: string | null },
+  ): Promise<PresentationConfiguration> {
+    const config = PresentationConfiguration.create({
+      organizationId: holder.organizationId,
+      referenceId: holder.id,
+      referenceType: holder.referenceType,
+      label: body.label,
+    });
+    return await this.presentationConfigurationRepository.save(config);
+  }
+
+  async applyPatch(
+    holder: PresentationReferenceHolder,
+    configId: string,
+    patch: PresentationConfigurationPatchDto,
+    ability?: AasAbility,
+  ): Promise<PresentationConfiguration> {
+    const config = await this.requireOwned(configId, {
+      referenceType: holder.referenceType,
+      referenceId: holder.id,
+    });
+    return this.persistPatch(config, patch, ability);
+  }
+
+  async delete(holder: PresentationReferenceHolder, configId: string): Promise<void> {
+    await this.getById(holder, configId);
+    await this.presentationConfigurationRepository.deleteById(configId);
+  }
+
+  async getEffective(
+    holder: PresentationReferenceHolder,
+    ability?: AasAbility,
+  ): Promise<PresentationConfiguration> {
+    const [first] = await this.list(holder, ability);
+    return first;
   }
 
   private async listOrSeed(input: {
@@ -66,30 +117,6 @@ export class PresentationConfigurationService {
     return [saved];
   }
 
-  async getByIdForPassport(
-    passport: Passport,
-    configId: string,
-    ability?: AasAbility,
-  ): Promise<PresentationConfiguration> {
-    const config = await this.requireOwned(configId, {
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
-    return filterReadable(config, ability);
-  }
-
-  async getByIdForTemplate(
-    template: Template,
-    configId: string,
-    ability?: AasAbility,
-  ): Promise<PresentationConfiguration> {
-    const config = await this.requireOwned(configId, {
-      referenceType: PresentationReferenceType.Template,
-      referenceId: template.id,
-    });
-    return filterReadable(config, ability);
-  }
-
   private async requireOwned(
     configId: string,
     ref: { referenceType: PresentationReferenceTypeType; referenceId: string },
@@ -99,86 +126,6 @@ export class PresentationConfigurationService {
       throw new NotFoundError(`PresentationConfiguration ${configId} not found for reference`);
     }
     return config;
-  }
-
-  async createForPassport(
-    passport: Passport,
-    body: { label: string | null },
-  ): Promise<PresentationConfiguration> {
-    const config = PresentationConfiguration.create({
-      organizationId: passport.organizationId,
-      referenceId: passport.id,
-      referenceType: PresentationReferenceType.Passport,
-      label: body.label,
-    });
-    return await this.presentationConfigurationRepository.save(config);
-  }
-
-  async createForTemplate(
-    template: Template,
-    body: { label: string | null },
-  ): Promise<PresentationConfiguration> {
-    const config = PresentationConfiguration.create({
-      organizationId: template.organizationId,
-      referenceId: template.id,
-      referenceType: PresentationReferenceType.Template,
-      label: body.label,
-    });
-    return await this.presentationConfigurationRepository.save(config);
-  }
-
-  async applyPatchByConfigIdForPassport(
-    passport: Passport,
-    configId: string,
-    patch: PresentationConfigurationPatchDto,
-    ability?: AasAbility,
-  ): Promise<PresentationConfiguration> {
-    const config = await this.requireOwned(configId, {
-      referenceType: PresentationReferenceType.Passport,
-      referenceId: passport.id,
-    });
-    ensureWritable(patch.elementDesign, ability);
-    return this.persistPatch(config, patch);
-  }
-
-  async applyPatchByConfigIdForTemplate(
-    template: Template,
-    configId: string,
-    patch: PresentationConfigurationPatchDto,
-    ability?: AasAbility,
-  ): Promise<PresentationConfiguration> {
-    const config = await this.requireOwned(configId, {
-      referenceType: PresentationReferenceType.Template,
-      referenceId: template.id,
-    });
-    ensureWritable(patch.elementDesign, ability);
-    return this.persistPatch(config, patch);
-  }
-
-  async deleteByConfigIdForPassport(passport: Passport, configId: string): Promise<void> {
-    await this.getByIdForPassport(passport, configId);
-    await this.presentationConfigurationRepository.deleteById(configId);
-  }
-
-  async deleteByConfigIdForTemplate(template: Template, configId: string): Promise<void> {
-    await this.getByIdForTemplate(template, configId);
-    await this.presentationConfigurationRepository.deleteById(configId);
-  }
-
-  async getEffectiveForPassport(
-    passport: Passport,
-    ability?: AasAbility,
-  ): Promise<PresentationConfiguration> {
-    const [first] = await this.listForPassport(passport, ability);
-    return first;
-  }
-
-  async getEffectiveForTemplate(
-    template: Template,
-    ability?: AasAbility,
-  ): Promise<PresentationConfiguration> {
-    const [first] = await this.listForTemplate(template, ability);
-    return first;
   }
 
   async snapshotTemplateConfigsToPassport(
@@ -243,28 +190,42 @@ export class PresentationConfigurationService {
     );
   }
 
+  /**
+   * Removes all `elementDesign` entries from every config belonging to the given reference
+   * whose key is exactly `idShortPath` or starts with `idShortPath.` (child paths).
+   * Only configs that actually changed are saved. Runs inside the provided session when given.
+   */
+  async removeElementDesignEntriesForPath(
+    referenceType: PresentationReferenceTypeType,
+    referenceId: string,
+    idShortPath: string,
+    options?: DbSessionOptions,
+  ): Promise<void> {
+    const ref: PresentationConfigurationReference = { referenceType, referenceId };
+    const configs = await this.presentationConfigurationRepository.findManyByReference(
+      ref,
+      options,
+    );
+    const childPrefix = `${idShortPath}.`;
+    for (const config of configs) {
+      let updated: PresentationConfiguration = config;
+      for (const key of config.elementDesign.keys()) {
+        if (key === idShortPath || key.startsWith(childPrefix)) {
+          updated = updated.withoutElementDesign(key);
+        }
+      }
+      if (updated !== config) {
+        await this.presentationConfigurationRepository.save(updated, options);
+      }
+    }
+  }
+
   private async persistPatch(
     config: PresentationConfiguration,
     patch: PresentationConfigurationPatchDto,
+    ability?: AasAbility,
   ): Promise<PresentationConfiguration> {
-    let next = config;
-    if (patch.elementDesign) {
-      for (const [path, value] of Object.entries(patch.elementDesign)) {
-        next =
-          value === null ? next.withoutElementDesign(path) : next.withElementDesign(path, value);
-      }
-    }
-    if (patch.defaultComponents) {
-      for (const [type, value] of Object.entries(patch.defaultComponents) as [
-        KeyTypesType,
-        PresentationComponentNameType | null,
-      ][]) {
-        next =
-          value === null
-            ? next.withoutDefaultComponent(type)
-            : next.withDefaultComponent(type, value);
-      }
-    }
+    const next = config.withPatch(patch, ability);
     if (next === config) return config;
     return await this.presentationConfigurationRepository.save(next);
   }
@@ -289,22 +250,4 @@ function filterReadable(
     ...config.toPlain(),
     elementDesign: allowed,
   });
-}
-
-function ensureWritable(
-  elementDesign: PresentationConfigurationPatchDto["elementDesign"],
-  ability: AasAbility | undefined,
-): void {
-  if (!elementDesign || !ability) return;
-  const denied: string[] = [];
-  for (const path of Object.keys(elementDesign)) {
-    if (!ability.can(Permissions.Edit, IdShortPath.create({ path }))) {
-      denied.push(path);
-    }
-  }
-  if (denied.length > 0) {
-    throw new ForbiddenError(
-      `Missing edit permission for presentation paths: ${denied.join(", ")}`,
-    );
-  }
 }

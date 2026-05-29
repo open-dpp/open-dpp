@@ -138,6 +138,8 @@ const permalinkActions = computed(() => [
     v-if="type === DigitalProductDocumentType.Passport && model"
     v-model:visible="qrCodeDialogVisible"
     :passportId="model.id"
+    :status="status"
+    @publish="onPublishButtonClicked(model)"
   />
   <PermalinkSettingsDialog
     v-if="type === DigitalProductDocumentType.Passport && model"

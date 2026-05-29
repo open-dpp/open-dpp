@@ -225,6 +225,7 @@ export class EnvironmentService {
     submodelId: string,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
     subject: SubjectAttributes,
+    extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const session = await this.connection.startSession();
     try {
@@ -243,6 +244,9 @@ export class EnvironmentService {
         await this.aasRepository.save(aas, options);
         environment.deleteSubmodel(submodel);
         await saveEnvironment(options);
+        if (extraCleanup) {
+          await extraCleanup(submodel.idShort, options);
+        }
       });
     } finally {
       await session.endSession();
@@ -254,6 +258,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -265,8 +270,15 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.submodelRepository.save(submodel, { session });
-        await this.aasRepository.save(aas, { session });
+        const options = { session };
+        await this.submodelRepository.save(submodel, options);
+        await this.aasRepository.save(aas, options);
+        if (extraCleanup) {
+          // Presentation-config override keys are submodel-prefixed
+          // (`<submodelIdShort>.<elementPath>`), while idShortPath is relative to the
+          // submodel — re-prefix so the cleanup matches the stored keys.
+          await extraCleanup(`${submodel.idShort}.${idShortPath.toString()}`, options);
+        }
       });
     } finally {
       await session.endSession();

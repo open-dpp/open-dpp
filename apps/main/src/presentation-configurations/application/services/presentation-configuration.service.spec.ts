@@ -28,7 +28,10 @@ import {
   PresentationConfigurationDoc,
   PresentationConfigurationSchema,
 } from "../../infrastructure/presentation-configuration.schema";
-import { PresentationConfigurationService } from "./presentation-configuration.service";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "./presentation-configuration.service";
 
 describe("PresentationConfigurationService", () => {
   let service: PresentationConfigurationService;
@@ -80,102 +83,118 @@ describe("PresentationConfigurationService", () => {
     });
   }
 
-  describe("listForPassport", () => {
+  function passportHolder(passport: Passport): PresentationReferenceHolder {
+    return {
+      id: passport.id,
+      organizationId: passport.organizationId,
+      referenceType: PresentationReferenceType.Passport,
+    };
+  }
+
+  function templateHolder(template: Template): PresentationReferenceHolder {
+    return {
+      id: template.id,
+      organizationId: template.organizationId,
+      referenceType: PresentationReferenceType.Template,
+    };
+  }
+
+  describe("list (passport)", () => {
     it("lazy-creates a default config when none exist", async () => {
       const passport = makePassport();
-      const list = await service.listForPassport(passport);
+      const list = await service.list(passportHolder(passport));
       expect(list).toHaveLength(1);
       expect(list[0].label).toBeNull();
 
-      const again = await service.listForPassport(passport);
+      const again = await service.list(passportHolder(passport));
       expect(again).toHaveLength(1);
       expect(again[0].id).toBe(list[0].id);
     });
 
     it("returns existing configs sorted by createdAt", async () => {
       const passport = makePassport();
-      await service.listForPassport(passport);
-      await service.createForPassport(passport, { label: "Variant A" });
-      const list = await service.listForPassport(passport);
+      await service.list(passportHolder(passport));
+      await service.create(passportHolder(passport), { label: "Variant A" });
+      const list = await service.list(passportHolder(passport));
       expect(list).toHaveLength(2);
       expect(list[0].label).toBeNull();
       expect(list[1].label).toBe("Variant A");
     });
   });
 
-  describe("createForPassport", () => {
+  describe("create (passport)", () => {
     it("creates a new config with the given label", async () => {
       const passport = makePassport();
-      const created = await service.createForPassport(passport, { label: "v1" });
+      const created = await service.create(passportHolder(passport), { label: "v1" });
       expect(created.label).toBe("v1");
       expect(created.referenceId).toBe(passport.id);
       expect(created.referenceType).toBe("passport");
     });
   });
 
-  describe("deleteByConfigIdForPassport", () => {
+  describe("delete (passport)", () => {
     it("removes a config by id", async () => {
       const passport = makePassport();
-      const created = await service.createForPassport(passport, { label: "v1" });
-      await service.deleteByConfigIdForPassport(passport, created.id);
-      const list = await service.listForPassport(passport);
+      const created = await service.create(passportHolder(passport), { label: "v1" });
+      await service.delete(passportHolder(passport), created.id);
+      const list = await service.list(passportHolder(passport));
       expect(list.find((c) => c.id === created.id)).toBeUndefined();
     });
 
     it("rejects deletion of a config belonging to another reference", async () => {
       const passportA = makePassport();
       const passportB = makePassport();
-      const configForB = await service.createForPassport(passportB, { label: "B-config" });
+      const configForB = await service.create(passportHolder(passportB), { label: "B-config" });
 
-      await expect(service.deleteByConfigIdForPassport(passportA, configForB.id)).rejects.toThrow(
+      await expect(service.delete(passportHolder(passportA), configForB.id)).rejects.toThrow(
         NotFoundError,
       );
 
-      const stillThere = await service.getByIdForPassport(passportB, configForB.id);
+      const stillThere = await service.getById(passportHolder(passportB), configForB.id);
       expect(stillThere.id).toBe(configForB.id);
     });
   });
 
-  describe("getEffectiveForPassport (no merge)", () => {
+  describe("getEffective (passport, no merge)", () => {
     it("returns the passport's first config without merging template", async () => {
       const template = makeTemplate();
-      await service.createForTemplate(template, { label: "TemplateOnly" });
-      await service.applyPatchByConfigIdForTemplate(
-        template,
-        (await service.listForTemplate(template))[0].id,
+      await service.create(templateHolder(template), { label: "TemplateOnly" });
+      await service.applyPatch(
+        templateHolder(template),
+        (await service.list(templateHolder(template)))[0].id,
         { elementDesign: { "submodel.foo": PresentationComponentName.BigNumber } },
       );
 
       const passport = makePassport({ templateId: template.id });
-      const list = await service.listForPassport(passport);
+      const list = await service.list(passportHolder(passport));
       expect(list[0].elementDesign.size).toBe(0);
 
-      const effective = await service.getEffectiveForPassport(passport);
+      const effective = await service.getEffective(passportHolder(passport));
       expect(effective.id).toBe(list[0].id);
       expect(effective.elementDesign.size).toBe(0);
     });
   });
 
-  describe("getEffectiveForTemplate", () => {
+  describe("getEffective (template)", () => {
     it("returns the template's first config (lazy-creating a default when empty)", async () => {
       const template = makeTemplate();
-      const effective = await service.getEffectiveForTemplate(template);
+      const effective = await service.getEffective(templateHolder(template));
       expect(effective.label).toBeNull();
       expect(effective.referenceId).toBe(template.id);
       expect(effective.referenceType).toBe("template");
 
-      const list = await service.listForTemplate(template);
+      const list = await service.list(templateHolder(template));
       expect(list).toHaveLength(1);
       expect(list[0].id).toBe(effective.id);
     });
   });
 
-  describe("applyPatchByConfigIdForPassport", () => {
+  describe("applyPatch (passport)", () => {
     it("persists a patch that adds an elementDesign entry", async () => {
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
-      const result = await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+      const result = await service.applyPatch(passportHolder(passport), defaultConfig.id, {
         elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
       });
 
@@ -186,9 +205,9 @@ describe("PresentationConfigurationService", () => {
 
     it("is a no-op when the patch makes no observable change", async () => {
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
-      const result = await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+      const result = await service.applyPatch(passportHolder(passport), defaultConfig.id, {
         elementDesign: {},
       });
 
@@ -197,13 +216,13 @@ describe("PresentationConfigurationService", () => {
 
     it("merges defaultComponents and elementDesign across multiple patches", async () => {
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
-      await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
         defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
       });
-      const [refreshed] = await service.listForPassport(passport);
-      const second = await service.applyPatchByConfigIdForPassport(passport, refreshed.id, {
+      const [refreshed] = await service.list(passportHolder(passport));
+      const second = await service.applyPatch(passportHolder(passport), refreshed.id, {
         elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
       });
 
@@ -217,13 +236,13 @@ describe("PresentationConfigurationService", () => {
 
     it("removes a key when the patch value is null", async () => {
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
-      await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
         elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
       });
-      const [refreshed] = await service.listForPassport(passport);
-      const cleared = await service.applyPatchByConfigIdForPassport(passport, refreshed.id, {
+      const [refreshed] = await service.list(passportHolder(passport));
+      const cleared = await service.applyPatch(passportHolder(passport), refreshed.id, {
         elementDesign: { "submodel-1.prop": null },
       });
 
@@ -231,12 +250,12 @@ describe("PresentationConfigurationService", () => {
     });
   });
 
-  describe("applyPatchByConfigIdForTemplate", () => {
+  describe("applyPatch (template)", () => {
     it("persists a patch for a template config", async () => {
       const template = makeTemplate();
-      const [defaultConfig] = await service.listForTemplate(template);
+      const [defaultConfig] = await service.list(templateHolder(template));
 
-      const result = await service.applyPatchByConfigIdForTemplate(template, defaultConfig.id, {
+      const result = await service.applyPatch(templateHolder(template), defaultConfig.id, {
         defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
       });
 
@@ -246,11 +265,31 @@ describe("PresentationConfigurationService", () => {
     });
   });
 
+  describe("requireOwned — cross-type isolation", () => {
+    it("rejects getById when referenceType differs (passport vs template share same id)", async () => {
+      const passport = makePassport();
+      const template = makeTemplate();
+      // Create a config for the passport; then attempt to access it via the template holder.
+      // Even though referenceIds may differ here, the check covers both keys.
+      const created = await service.create(passportHolder(passport), { label: "p-only" });
+
+      // Accessing the passport config via a template holder (even with the same referenceId
+      // in theory) must fail because the referenceType key differs.
+      const fakeTemplateHolder: PresentationReferenceHolder = {
+        id: passport.id, // same UUID, different type
+        organizationId: template.organizationId,
+        referenceType: PresentationReferenceType.Template,
+      };
+
+      await expect(service.getById(fakeTemplateHolder, created.id)).rejects.toThrow(NotFoundError);
+    });
+  });
+
   describe("snapshotTemplateConfigsToPassport", () => {
     it("copies template configs to the passport with the same elementDesign and label", async () => {
       const template = makeTemplate();
-      const [defaultConfig] = await service.listForTemplate(template);
-      await service.applyPatchByConfigIdForTemplate(template, defaultConfig.id, {
+      const [defaultConfig] = await service.list(templateHolder(template));
+      await service.applyPatch(templateHolder(template), defaultConfig.id, {
         elementDesign: { "sm.p": PresentationComponentName.BigNumber },
       });
 
@@ -301,25 +340,25 @@ describe("PresentationConfigurationService", () => {
       passport: Passport,
       entries: Record<string, PresentationComponentName>,
     ) {
-      const [defaultConfig] = await service.listForPassport(passport);
-      await service.applyPatchByConfigIdForPassport(passport, defaultConfig.id, {
+      const [defaultConfig] = await service.list(passportHolder(passport));
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
         elementDesign: entries,
       });
-      return (await service.listForPassport(passport))[0];
+      return (await service.list(passportHolder(passport)))[0];
     }
 
     async function seedTemplateConfigWithEntries(
       template: Template,
       entries: Record<string, PresentationComponentName>,
     ) {
-      const [defaultConfig] = await service.listForTemplate(template);
-      await service.applyPatchByConfigIdForTemplate(template, defaultConfig.id, {
+      const [defaultConfig] = await service.list(templateHolder(template));
+      await service.applyPatch(templateHolder(template), defaultConfig.id, {
         elementDesign: entries,
       });
-      return (await service.listForTemplate(template))[0];
+      return (await service.list(templateHolder(template)))[0];
     }
 
-    it("getEffectiveForPassport strips elementDesign entries the subject can't read", async () => {
+    it("getEffective (passport) strips elementDesign entries the subject can't read", async () => {
       const { memberAbility } = buildAbilities();
       const passport = makePassport();
       await seedConfigWithEntries(passport, {
@@ -327,14 +366,14 @@ describe("PresentationConfigurationService", () => {
         Secret: PresentationComponentName.BigNumber,
       });
 
-      const effective = await service.getEffectiveForPassport(passport, memberAbility);
+      const effective = await service.getEffective(passportHolder(passport), memberAbility);
       expect(Object.fromEntries(effective.elementDesign)).toEqual({
         Pub: PresentationComponentName.BigNumber,
         Secret: PresentationComponentName.BigNumber,
       });
     });
 
-    it("getEffectiveForPassport hides every elementDesign entry for an anonymous subject without rules", async () => {
+    it("getEffective (passport) hides every elementDesign entry for an anonymous subject without rules", async () => {
       const { anonymousAbility } = buildAbilities();
       const passport = makePassport();
       await seedConfigWithEntries(passport, {
@@ -342,11 +381,11 @@ describe("PresentationConfigurationService", () => {
         Secret: PresentationComponentName.BigNumber,
       });
 
-      const effective = await service.getEffectiveForPassport(passport, anonymousAbility);
+      const effective = await service.getEffective(passportHolder(passport), anonymousAbility);
       expect(effective.elementDesign.size).toBe(0);
     });
 
-    it("getEffectiveForTemplate filters by readable paths", async () => {
+    it("getEffective (template) filters by readable paths", async () => {
       const { memberAbility, anonymousAbility } = buildAbilities();
       const template = makeTemplate();
       await seedTemplateConfigWithEntries(template, {
@@ -354,47 +393,47 @@ describe("PresentationConfigurationService", () => {
         Secret: PresentationComponentName.BigNumber,
       });
 
-      const memberView = await service.getEffectiveForTemplate(template, memberAbility);
+      const memberView = await service.getEffective(templateHolder(template), memberAbility);
       expect(memberView.elementDesign.size).toBe(2);
 
-      const anonymousView = await service.getEffectiveForTemplate(template, anonymousAbility);
+      const anonymousView = await service.getEffective(templateHolder(template), anonymousAbility);
       expect(anonymousView.elementDesign.size).toBe(0);
     });
 
-    it("getByIdForPassport applies the same read filter", async () => {
+    it("getById (passport) applies the same read filter", async () => {
       const { anonymousAbility } = buildAbilities();
       const passport = makePassport();
       const seeded = await seedConfigWithEntries(passport, {
         Pub: PresentationComponentName.BigNumber,
       });
 
-      const filtered = await service.getByIdForPassport(passport, seeded.id, anonymousAbility);
+      const filtered = await service.getById(passportHolder(passport), seeded.id, anonymousAbility);
       expect(filtered.elementDesign.size).toBe(0);
     });
 
-    it("listForPassport filters every config in the array", async () => {
+    it("list (passport) filters every config in the array", async () => {
       const { anonymousAbility } = buildAbilities();
       const passport = makePassport();
       await seedConfigWithEntries(passport, { Pub: PresentationComponentName.BigNumber });
-      const variant = await service.createForPassport(passport, { label: "Variant A" });
-      await service.applyPatchByConfigIdForPassport(passport, variant.id, {
+      const variant = await service.create(passportHolder(passport), { label: "Variant A" });
+      await service.applyPatch(passportHolder(passport), variant.id, {
         elementDesign: { Pub: PresentationComponentName.BigNumber },
       });
 
-      const list = await service.listForPassport(passport, anonymousAbility);
+      const list = await service.list(passportHolder(passport), anonymousAbility);
       expect(list).toHaveLength(2);
       for (const config of list) {
         expect(config.elementDesign.size).toBe(0);
       }
     });
 
-    it("applyPatchByConfigIdForPassport allows entries the subject can edit", async () => {
+    it("applyPatch (passport) allows entries the subject can edit", async () => {
       const { memberAbility } = buildAbilities();
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
-      const result = await service.applyPatchByConfigIdForPassport(
-        passport,
+      const result = await service.applyPatch(
+        passportHolder(passport),
         defaultConfig.id,
         { elementDesign: { Pub: PresentationComponentName.BigNumber } },
         memberAbility,
@@ -405,32 +444,32 @@ describe("PresentationConfigurationService", () => {
       });
     });
 
-    it("applyPatchByConfigIdForPassport rejects edits to read-only paths", async () => {
+    it("applyPatch (passport) rejects edits to read-only paths", async () => {
       const { memberAbility } = buildAbilities();
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
       await expect(
-        service.applyPatchByConfigIdForPassport(
-          passport,
+        service.applyPatch(
+          passportHolder(passport),
           defaultConfig.id,
           { elementDesign: { Secret: PresentationComponentName.BigNumber } },
           memberAbility,
         ),
       ).rejects.toThrow(ForbiddenError);
 
-      const [persisted] = await service.listForPassport(passport);
+      const [persisted] = await service.list(passportHolder(passport));
       expect(persisted.elementDesign.size).toBe(0);
     });
 
-    it("applyPatchByConfigIdForPassport rejects atomically when any path is denied", async () => {
+    it("applyPatch (passport) rejects atomically when any path is denied", async () => {
       const { memberAbility } = buildAbilities();
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
       await expect(
-        service.applyPatchByConfigIdForPassport(
-          passport,
+        service.applyPatch(
+          passportHolder(passport),
           defaultConfig.id,
           {
             elementDesign: {
@@ -442,17 +481,17 @@ describe("PresentationConfigurationService", () => {
         ),
       ).rejects.toThrow(ForbiddenError);
 
-      const [persisted] = await service.listForPassport(passport);
+      const [persisted] = await service.list(passportHolder(passport));
       expect(persisted.elementDesign.size).toBe(0);
     });
 
-    it("applyPatchByConfigIdForPassport allows defaultComponents-only patches without per-path checks", async () => {
+    it("applyPatch (passport) allows defaultComponents-only patches without per-path checks", async () => {
       const { memberAbility } = buildAbilities();
       const passport = makePassport();
-      const [defaultConfig] = await service.listForPassport(passport);
+      const [defaultConfig] = await service.list(passportHolder(passport));
 
-      const result = await service.applyPatchByConfigIdForPassport(
-        passport,
+      const result = await service.applyPatch(
+        passportHolder(passport),
         defaultConfig.id,
         {
           defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
@@ -465,22 +504,22 @@ describe("PresentationConfigurationService", () => {
       });
     });
 
-    it("applyPatchByConfigIdForTemplate enforces the same write rules", async () => {
+    it("applyPatch (template) enforces the same write rules", async () => {
       const { memberAbility } = buildAbilities();
       const template = makeTemplate();
-      const [defaultConfig] = await service.listForTemplate(template);
+      const [defaultConfig] = await service.list(templateHolder(template));
 
       await expect(
-        service.applyPatchByConfigIdForTemplate(
-          template,
+        service.applyPatch(
+          templateHolder(template),
           defaultConfig.id,
           { elementDesign: { Secret: PresentationComponentName.BigNumber } },
           memberAbility,
         ),
       ).rejects.toThrow(ForbiddenError);
 
-      const allowed = await service.applyPatchByConfigIdForTemplate(
-        template,
+      const allowed = await service.applyPatch(
+        templateHolder(template),
         defaultConfig.id,
         { elementDesign: { Pub: PresentationComponentName.BigNumber } },
         memberAbility,
@@ -488,6 +527,124 @@ describe("PresentationConfigurationService", () => {
       expect(Object.fromEntries(allowed.elementDesign)).toEqual({
         Pub: PresentationComponentName.BigNumber,
       });
+    });
+  });
+
+  describe("removeElementDesignEntriesForPath", () => {
+    it("removes an exact-match path from all configs for a passport", async () => {
+      const passport = makePassport();
+      const [defaultConfig] = await service.list(passportHolder(passport));
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
+        elementDesign: {
+          "Submodel1.Prop": PresentationComponentName.BigNumber,
+          "Submodel1.Other": PresentationComponentName.BigNumber,
+          "Submodel2.Prop": PresentationComponentName.BigNumber,
+        },
+      });
+
+      await service.removeElementDesignEntriesForPath(
+        PresentationReferenceType.Passport,
+        passport.id,
+        "Submodel1.Prop",
+      );
+
+      const [after] = await service.list(passportHolder(passport));
+      expect(Object.fromEntries(after.elementDesign)).toEqual({
+        "Submodel1.Other": PresentationComponentName.BigNumber,
+        "Submodel2.Prop": PresentationComponentName.BigNumber,
+      });
+    });
+
+    it("removes all child paths when a parent path is deleted", async () => {
+      const passport = makePassport();
+      const [defaultConfig] = await service.list(passportHolder(passport));
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
+        elementDesign: {
+          "Submodel1.Collection.Child1": PresentationComponentName.BigNumber,
+          "Submodel1.Collection.Child2": PresentationComponentName.BigNumber,
+          "Submodel1.Other": PresentationComponentName.BigNumber,
+          "Submodel2.Prop": PresentationComponentName.BigNumber,
+        },
+      });
+
+      await service.removeElementDesignEntriesForPath(
+        PresentationReferenceType.Passport,
+        passport.id,
+        "Submodel1.Collection",
+      );
+
+      const [after] = await service.list(passportHolder(passport));
+      expect(Object.fromEntries(after.elementDesign)).toEqual({
+        "Submodel1.Other": PresentationComponentName.BigNumber,
+        "Submodel2.Prop": PresentationComponentName.BigNumber,
+      });
+    });
+
+    it("removes paths across multiple configs for the same reference", async () => {
+      const passport = makePassport();
+      const [defaultConfig] = await service.list(passportHolder(passport));
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
+        elementDesign: { "Submodel1.Prop": PresentationComponentName.BigNumber },
+      });
+      const variant = await service.create(passportHolder(passport), { label: "Variant B" });
+      await service.applyPatch(passportHolder(passport), variant.id, {
+        elementDesign: {
+          "Submodel1.Prop": PresentationComponentName.BigNumber,
+          "Submodel1.Other": PresentationComponentName.BigNumber,
+        },
+      });
+
+      await service.removeElementDesignEntriesForPath(
+        PresentationReferenceType.Passport,
+        passport.id,
+        "Submodel1.Prop",
+      );
+
+      const configs = await service.list(passportHolder(passport));
+      for (const config of configs) {
+        expect(config.elementDesign.has("Submodel1.Prop")).toBe(false);
+      }
+      const variantAfter = configs.find((c) => c.id === variant.id)!;
+      expect(variantAfter.elementDesign.has("Submodel1.Other")).toBe(true);
+    });
+
+    it("removes paths for a template reference type", async () => {
+      const template = makeTemplate();
+      const [defaultConfig] = await service.list(templateHolder(template));
+      await service.applyPatch(templateHolder(template), defaultConfig.id, {
+        elementDesign: {
+          "Sm.Prop": PresentationComponentName.BigNumber,
+          "Sm.Prop.Child": PresentationComponentName.BigNumber,
+        },
+      });
+
+      await service.removeElementDesignEntriesForPath(
+        PresentationReferenceType.Template,
+        template.id,
+        "Sm.Prop",
+      );
+
+      const [after] = await service.list(templateHolder(template));
+      expect(after.elementDesign.size).toBe(0);
+    });
+
+    it("is a no-op when no config has the matching path", async () => {
+      const passport = makePassport();
+      const [defaultConfig] = await service.list(passportHolder(passport));
+      await service.applyPatch(passportHolder(passport), defaultConfig.id, {
+        elementDesign: { "Submodel1.Prop": PresentationComponentName.BigNumber },
+      });
+
+      await expect(
+        service.removeElementDesignEntriesForPath(
+          PresentationReferenceType.Passport,
+          passport.id,
+          "Submodel2.NonExistent",
+        ),
+      ).resolves.not.toThrow();
+
+      const [after] = await service.list(passportHolder(passport));
+      expect(after.elementDesign.has("Submodel1.Prop")).toBe(true);
     });
   });
 });

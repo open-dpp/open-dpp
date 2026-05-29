@@ -40,6 +40,7 @@ import {
   PassportRequestCreateDtoSchema,
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
+  PresentationReferenceType,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
@@ -423,6 +424,14 @@ export class PassportController
       id,
       submodelId,
       subject,
+      async (submodelIdShort, options) => {
+        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
+          PresentationReferenceType.Passport,
+          id,
+          submodelIdShort,
+          options,
+        );
+      },
     );
   }
 
@@ -652,6 +661,14 @@ export class PassportController
       submodelId,
       idShortPath,
       subject,
+      async (idShortPathString, options) => {
+        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
+          PresentationReferenceType.Passport,
+          id,
+          idShortPathString,
+          options,
+        );
+      },
     );
   }
 

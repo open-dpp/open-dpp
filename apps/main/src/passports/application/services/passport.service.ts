@@ -18,6 +18,7 @@ import {
   PassportDtoSchema,
   PresentationReferenceType,
 } from "@open-dpp/dto";
+import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 
@@ -46,8 +47,9 @@ export class PassportService {
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
-    const presentationConfiguration =
-      await this.presentationConfigurationService.getEffectiveForPassport(passport);
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      passportToHolder(passport),
+    );
 
     if (!passport.environment) {
       this.logger.warn(
@@ -128,4 +130,12 @@ export class PassportService {
       await session.endSession();
     }
   }
+}
+
+function passportToHolder(passport: Passport): PresentationReferenceHolder {
+  return {
+    id: passport.id,
+    organizationId: passport.organizationId,
+    referenceType: PresentationReferenceType.Passport,
+  };
 }

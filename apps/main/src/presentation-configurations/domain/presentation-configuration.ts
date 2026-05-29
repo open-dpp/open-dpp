@@ -1,20 +1,48 @@
 import { randomUUID } from "node:crypto";
 import {
   KeyTypesType,
+  Permissions,
   PresentationComponentNameType,
   PresentationConfigurationDtoSchema,
   PresentationConfigurationInvariantsSchema,
+  PresentationConfigurationPatchDto,
   PresentationReferenceType,
   PresentationReferenceTypeType,
 } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
+import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { IPersistable } from "../../aas/domain/persistable";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 
 export type PresentationComponentName = PresentationComponentNameType;
 
+/**
+ * Immutable domain entity for a presentation configuration.
+ *
+ * **Copy-on-write pattern (not a GoF builder)**
+ * All fields are `readonly` and the constructor is private.  State changes are
+ * expressed through the `withX()` / `withoutX()` / `withPatch()` family of
+ * methods, each of which delegates to the private `copyWith()` helper.
+ * `copyWith()` constructs a brand-new `PresentationConfiguration` instance,
+ * forwarding unchanged fields from `this` and stamping `updatedAt` with the
+ * current instant.  Callers that chain multiple updates therefore accumulate
+ * immutable snapshots:
+ *
+ * ```ts
+ * let next = config;
+ * next = next.withElementDesign(path, component);
+ * next = next.withDefaultComponent(type, component);
+ * await repository.update(next); // persist the final snapshot only
+ * ```
+ *
+ * This satisfies the immutability requirement in CLAUDE.md and is the reason
+ * reviewer comment #3323059001 ("convert to a mutable builder") was declined —
+ * a mutable builder would break the `readonly` contracts, bypass invariant
+ * validation in `create()`, and render `updatedAt` incorrect.
+ */
 export class PresentationConfiguration implements IPersistable, HasCreatedAt {
   private constructor(
     public readonly id: string,
@@ -158,6 +186,47 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
   withLabel(label: string | null): PresentationConfiguration {
     if (this.label === label) return this;
     return this.copyWith({ label });
+  }
+
+  withPatch(
+    patch: PresentationConfigurationPatchDto,
+    ability?: AasAbility,
+  ): PresentationConfiguration {
+    if (ability && patch.elementDesign) {
+      const denied: string[] = [];
+      for (const path of Object.keys(patch.elementDesign)) {
+        if (!ability.can(Permissions.Edit, IdShortPath.create({ path }))) {
+          denied.push(path);
+        }
+      }
+      if (denied.length > 0) {
+        throw new ForbiddenError(
+          `Missing edit permission for presentation paths: ${denied.join(", ")}`,
+        );
+      }
+    }
+
+    let next: PresentationConfiguration | undefined;
+    if (patch.elementDesign) {
+      for (const [path, value] of Object.entries(patch.elementDesign)) {
+        const base = next ?? this;
+        next =
+          value === null ? base.withoutElementDesign(path) : base.withElementDesign(path, value);
+      }
+    }
+    if (patch.defaultComponents) {
+      for (const [type, value] of Object.entries(patch.defaultComponents) as [
+        KeyTypesType,
+        PresentationComponentNameType | null,
+      ][]) {
+        const base = next ?? this;
+        next =
+          value === null
+            ? base.withoutDefaultComponent(type)
+            : base.withDefaultComponent(type, value);
+      }
+    }
+    return next ?? this;
   }
 
   private copyWith(changes: {

@@ -2,6 +2,7 @@
 import { useToast } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { type BooleanSettingsResponseDto, type StringSettingsResponseDto } from "@open-dpp/dto";
@@ -123,15 +124,32 @@ onMounted(async () => {
         :isLocked="!!setting.setting.locked"
         :translationKey="setting.key"
       />
-      <InstanceSettingUrlInput
-        :model-value="permalinkBaseUrl.value"
-        :loading="loading"
-        :isSaving="isSaving"
-        :isLocked="!!permalinkBaseUrl.locked"
-        translationKey="permalinkBaseUrl"
-        :effective-fallback="effectiveFallback"
-        @commit="commitPermalinkBaseUrl"
-      />
+      <div
+        data-testid="permalink-danger-zone"
+        class="flex flex-col gap-3 rounded-lg border border-red-300 bg-red-50 p-4"
+      >
+        <div class="flex items-start gap-2 text-sm text-red-800">
+          <span class="shrink-0 font-semibold tracking-wide text-red-700 uppercase">
+            {{ t("organizations.admin.instanceSettings.permalinkBaseUrl.dangerZone") }}
+          </span>
+        </div>
+        <div
+          data-testid="permalink-danger-warning"
+          class="flex items-start gap-2 rounded-md border border-red-200 bg-white p-3 text-sm text-red-700"
+        >
+          <ExclamationTriangleIcon class="mt-0.5 size-4 shrink-0 text-red-500" />
+          <span>{{ t("organizations.admin.instanceSettings.permalinkBaseUrl.warning") }}</span>
+        </div>
+        <InstanceSettingUrlInput
+          :model-value="permalinkBaseUrl.value"
+          :loading="loading"
+          :isSaving="isSaving"
+          :isLocked="!!permalinkBaseUrl.locked"
+          translationKey="permalinkBaseUrl"
+          :effective-fallback="effectiveFallback"
+          @commit="commitPermalinkBaseUrl"
+        />
+      </div>
     </div>
   </section>
 </template>

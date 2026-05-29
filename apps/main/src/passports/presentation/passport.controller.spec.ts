@@ -7,9 +7,12 @@ import {
 } from "../../../test/export-payload.fixtures";
 import { AasModule } from "../../aas/aas.module";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
+import { Key } from "../../aas/domain/common/key";
 import { LanguageText } from "../../aas/domain/common/language-text";
+import { Reference } from "../../aas/domain/common/reference";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { Property } from "../../aas/domain/submodel-base/property";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import {
@@ -23,7 +26,13 @@ import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorat
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import {
+  DataTypeDef,
+  KeyTypes,
+  PresentationComponentName,
+  PresentationReferenceType,
+  ReferenceTypes,
+} from "@open-dpp/dto";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
 import { PermalinkModule } from "../../permalink/permalink.module";
@@ -916,6 +925,161 @@ describe("passportController", () => {
 
     const passportDefault = passportConfigsResponse.body.find((c: any) => c.label === null);
     expect(passportDefault.elementDesign["DesignOfProduct.numericField"]).toBe("BigNumber");
+  });
+
+  describe("atomic stale-config cleanup on delete (HTTP wiring)", () => {
+    // Builds a passport whose environment references the shared AAS plus a freshly
+    // created `DesignOfProduct` submodel that carries a single top-level `numericField`
+    // Property. `DesignOfProduct` is one of the idShorts the OWNER subject is granted
+    // Read/Edit/Delete on by the test context, so HTTP delete + override patch are allowed.
+    async function createPassportWithDesignSubmodel(
+      orgId: string,
+      opts: { addAasReference?: boolean } = {},
+    ): Promise<{ passport: Passport; submodel: Submodel; property: Property }> {
+      const { aas } = ctx.getAasObjects();
+      const { aasRepository, submodelRepository } = ctx.getRepositories();
+
+      const submodel = Submodel.create({ idShort: "DesignOfProduct" });
+      const property = Property.create({ idShort: "numericField", valueType: DataTypeDef.Double });
+      const ability = aas.security.defineAbilityForSubject(
+        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
+      );
+      submodel.addSubmodelElement(property, { ability });
+      await submodelRepository.save(submodel);
+
+      if (opts.addAasReference) {
+        const reloadedAas = await aasRepository.findOneOrFail(aas.id);
+        reloadedAas.addSubmodelReference(
+          Reference.create({
+            type: ReferenceTypes.ModelReference,
+            keys: [Key.create({ type: KeyTypes.Submodel, value: submodel.id })],
+          }),
+        );
+        await aasRepository.save(reloadedAas);
+      }
+
+      const passport = await ctx.getRepositories().dppIdentifiableRepository.save(
+        Passport.create({
+          id: randomUUID(),
+          organizationId: orgId,
+          environment: Environment.create({
+            assetAdministrationShells: [aas.id],
+            submodels: [submodel.id],
+            conceptDescriptions: [],
+          }),
+        }),
+      );
+      return { passport, submodel, property };
+    }
+
+    async function seedOverrides(
+      authHeaders: Record<string, string>,
+      passportId: string,
+      entries: Record<string, string>,
+    ): Promise<void> {
+      const { app } = ctx.globals();
+      const listResponse = await request(app.getHttpServer())
+        .get(`/passports/${passportId}/presentation-configurations`)
+        .set(authHeaders)
+        .send();
+      expect(listResponse.status).toEqual(200);
+      const configId = listResponse.body[0].id;
+
+      const patchResponse = await request(app.getHttpServer())
+        .patch(`/passports/${passportId}/presentation-configurations/${configId}`)
+        .set(authHeaders)
+        .send({ elementDesign: entries });
+      expect(patchResponse.status).toEqual(200);
+    }
+
+    async function loadOverrides(passportId: string): Promise<Record<string, string>> {
+      const presentationConfigurationRepository = ctx
+        .getModuleRef()
+        .get(PresentationConfigurationRepository);
+      const configs = await presentationConfigurationRepository.findManyByReference({
+        referenceType: PresentationReferenceType.Passport,
+        referenceId: passportId,
+      });
+      const merged: Record<string, string> = {};
+      for (const config of configs) {
+        for (const [key, value] of config.elementDesign) {
+          merged[key] = value;
+        }
+      }
+      return merged;
+    }
+
+    // Presentation-config override keys are submodel-PREFIXED: the frontend writes
+    // `idShortPathIncludingSubmodel` as the key (e.g. `DesignOfProduct.numericField` — see
+    // apps/client AASEditor.vue + ElementPresentationPanel.vue). On element delete the route
+    // carries the submodel-relative path (`numericField`), so the cleanup re-prefixes it with
+    // the submodel idShort (environment.service.ts deleteSubmodelElement) for
+    // `removeElementDesignEntriesForPath` to match and remove the stored override.
+    it("DELETE submodel element removes the submodel-prefixed override", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+      const authHeaders = {
+        Cookie: userCookie,
+        "X-OPEN-DPP-ORGANIZATION-ID": org.id,
+      };
+      const { passport, submodel, property } = await createPassportWithDesignSubmodel(org.id);
+
+      const overrideKey = `${submodel.idShort}.${property.idShort}`;
+      const siblingKey = `${submodel.idShort}.untouched`;
+      await seedOverrides(authHeaders, passport.id, {
+        [overrideKey]: PresentationComponentName.BigNumber,
+        // A sibling override that must survive the delete regardless.
+        [siblingKey]: PresentationComponentName.BigNumber,
+      });
+      // Note: keys contain dots, so use key membership (not nested `toHaveProperty`).
+      expect(Object.keys(await loadOverrides(passport.id))).toContain(overrideKey);
+
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(
+          `${basePath}/${passport.id}/submodels/${btoa(submodel.id)}/submodel-elements/${property.idShort}`,
+        )
+        .set(authHeaders)
+        .send();
+      expect(deleteResponse.status).toEqual(204);
+
+      const overridesAfter = Object.keys(await loadOverrides(passport.id));
+      // The override for the deleted element is removed (cleanup forwards the
+      // submodel-prefixed path, so it matches the stored key).
+      expect(overridesAfter).not.toContain(overrideKey);
+      // The unrelated sibling override stays in place.
+      expect(overridesAfter).toContain(siblingKey);
+    });
+
+    it("DELETE submodel removes every presentation-config override under that submodel", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+      const authHeaders = {
+        Cookie: userCookie,
+        "X-OPEN-DPP-ORGANIZATION-ID": org.id,
+      };
+      const { passport, submodel } = await createPassportWithDesignSubmodel(org.id, {
+        addAasReference: true,
+      });
+
+      await seedOverrides(authHeaders, passport.id, {
+        [`${submodel.idShort}.numericField`]: PresentationComponentName.BigNumber,
+        [`${submodel.idShort}.Design_V01.Author.AuthorName`]: PresentationComponentName.BigNumber,
+      });
+      const before = await loadOverrides(passport.id);
+      expect(Object.keys(before)).toHaveLength(2);
+
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`${basePath}/${passport.id}/submodels/${btoa(submodel.id)}`)
+        .set(authHeaders)
+        .send();
+      expect(deleteResponse.status).toEqual(204);
+
+      const overridesAfter = await loadOverrides(passport.id);
+      const remainingUnderSubmodel = Object.keys(overridesAfter).filter(
+        (key) => key === submodel.idShort || key.startsWith(`${submodel.idShort}.`),
+      );
+      expect(remainingUnderSubmodel).toEqual([]);
+    });
   });
 
   describe("api key authentication", () => {

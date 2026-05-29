@@ -167,6 +167,8 @@ const leafEditorComponents = [
   ReferenceElementCreateEditor,
 ];
 
+const editModeLeafEditorComponents = [PropertyEditor, FileEditor, ReferenceElementEditor];
+
 const isLeafEditor = computed(() => {
   if (!editorVNode.value) return false;
   const comp = editorVNode.value.component;
@@ -174,7 +176,9 @@ const isLeafEditor = computed(() => {
 });
 
 const showPresentationTab = computed(() => {
-  if (!isLeafEditor.value) return false;
+  if (!editorVNode.value) return false;
+  const isEditModeLeaf = editModeLeafEditorComponents.includes(editorVNode.value.component as any);
+  if (!isEditModeLeaf) return false;
   return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
 });
 

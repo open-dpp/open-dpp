@@ -197,6 +197,10 @@ describe("usePermalinkPreview", () => {
     expect(preview.locked.value).toBe(true);
     expect(preview.previewUrl.value).toBe("https://passports.example.com/p/acme-widget");
     expect(preview.previewValid.value).toBe(true);
+    // effectiveBase must be the slug-less base only (no double-slug in preview template)
+    expect(preview.effectiveBase.value).toBe("https://passports.example.com/p");
+    // effectiveSlug must be the slug portion only
+    expect(preview.effectiveSlug.value).toBe("acme-widget");
   });
 
   it("is not locked when publishedUrl is absent", () => {
