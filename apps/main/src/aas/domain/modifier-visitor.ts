@@ -42,7 +42,7 @@ import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
-import { EventQueue, ITrackable } from "../../activity-history/domain/activities/trackable";
+import { ChangeEventQueue, ITrackable } from "../../activity-history/domain/change-event-queue";
 import {
   DescriptionChanged,
   DisplayNameChanged,
@@ -60,7 +60,7 @@ export interface ModifierVisitorContextType {
   data: unknown;
 }
 export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, void>, ITrackable {
-  readonly eventQueue = EventQueue.create();
+  readonly eventQueue = ChangeEventQueue.create();
   constructor(private readonly options: ModifierVisitorOptions) {}
 
   private modifyNameAndDescription<
@@ -76,7 +76,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
       const oldValue = generalInfoDto.displayName;
       generalInfoDto.displayName = displayName.map(LanguageText.fromPlain);
       hasUniqueLanguagesOrFail(generalInfoDto.displayName);
-      this.eventQueue.publishChanges(
+      this.eventQueue.publish(
         DisplayNameChanged.create({
           path: generalInfoDto.getIdShortPath(),
           oldValue: oldValue,
@@ -88,7 +88,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
       const oldValue = generalInfoDto.description;
       generalInfoDto.description = description.map(LanguageText.fromPlain);
       hasUniqueLanguagesOrFail(generalInfoDto.description);
-      this.eventQueue.publishChanges(
+      this.eventQueue.publish(
         DescriptionChanged.create({
           path: generalInfoDto.getIdShortPath(),
           oldValue,
@@ -184,7 +184,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
       element.contentType = parsed.contentType;
     }
 
-    this.eventQueue.publishChanges(
+    this.eventQueue.publish(
       FileValueChanged.create({
         path: element.getIdShortPath(),
         oldValue,
@@ -215,7 +215,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     if (parsed.value !== undefined) {
       const oldValue = element.value;
       element.value = parsed.value;
-      this.eventQueue.publishChanges(
+      this.eventQueue.publish(
         PropertyValueChanged.create({
           valueType: element.valueType,
           path: element.getIdShortPath(),
@@ -271,7 +271,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
         element.value = Reference.fromPlain(parsed.value);
       }
     }
-    this.eventQueue.publishChanges(
+    this.eventQueue.publish(
       ReferenceElementValueChanged.create({
         path: element.getIdShortPath(),
         oldValue,

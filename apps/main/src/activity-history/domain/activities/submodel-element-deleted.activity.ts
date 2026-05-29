@@ -5,7 +5,7 @@ import {
   IActivity,
   IActivityPayload,
 } from "./activity";
-import { ActivityHeaderCreateProps, createActivityHeader } from "./shared.activity";
+import { SharedActivityCreateProps, createActivityHeader } from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
@@ -24,7 +24,7 @@ export class SubmodelElementDeletedActivity implements IActivity {
     public readonly payload: SubmodelElementDeletedPayload,
   ) {}
   static create(
-    data: ActivityHeaderCreateProps & {
+    data: SharedActivityCreateProps & {
       submodel: Submodel;
       aas: AssetAdministrationShell;
     },
@@ -38,7 +38,7 @@ export class SubmodelElementDeletedActivity implements IActivity {
       SubmodelElementDeletedPayload.create({
         aasId: data.aas.id,
         submodelId: data.submodel.id,
-        changes: [...data.submodel.eventQueue.pullChanges(), ...data.aas.eventQueue.pullChanges()],
+        changes: [...data.submodel.eventQueue.pull(), ...data.aas.eventQueue.pull()],
       }),
     );
   }

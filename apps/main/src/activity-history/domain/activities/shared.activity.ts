@@ -1,7 +1,7 @@
 import { ActivityHeader } from "./activity";
 import { z } from "zod";
 
-export interface ActivityHeaderCreateProps {
+export interface SharedActivityCreateProps {
   digitalProductDocumentId: string;
   userId?: string;
   createdAt?: Date;
@@ -10,7 +10,7 @@ export interface ActivityHeaderCreateProps {
 
 export function createActivityHeader(
   type: string,
-  data: ActivityHeaderCreateProps,
+  data: SharedActivityCreateProps,
   version: string,
 ) {
   return ActivityHeader.create({

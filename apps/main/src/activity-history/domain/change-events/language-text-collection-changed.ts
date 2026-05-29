@@ -2,7 +2,7 @@ import { Language, LanguageEnum } from "@open-dpp/dto";
 import { IChangeEvent } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
-import { ChangeEventTypes } from "./change-event-types";
+import { ChangeEventTypes, ChangeEventTypesType } from "./change-event-types";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { LanguageText } from "../../../aas/domain/common/language-text";
 
@@ -22,11 +22,13 @@ type LanguageTextChanged = z.infer<typeof LanguageTextChangedSchema>;
 
 abstract class LanguageTextCollectionChanged {
   protected constructor(
+    public readonly type: ChangeEventTypesType,
     public readonly path: IdShortPath,
     public readonly values: LanguageTextChanged[],
   ) {}
   toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
     return {
+      type: this.type,
       path: this.path.toString(),
       values: this.values,
     };
@@ -65,27 +67,39 @@ function createLanguageTextChanges({ oldValue, newValue }: LanguageTextChangedCr
 }
 
 export class DisplayNameChanged extends LanguageTextCollectionChanged implements IChangeEvent {
-  public readonly type = ChangeEventTypes.DisplayNameChanged;
-
   static create(data: LanguageTextChangedCreateProps) {
-    return new DisplayNameChanged(data.path, createLanguageTextChanges(data));
+    return new DisplayNameChanged(
+      ChangeEventTypes.DisplayNameChanged,
+      data.path,
+      createLanguageTextChanges(data),
+    );
   }
 
   static fromPlain(data: unknown): IChangeEvent {
     const parsed = LanguageTextCollectionChangedSchema.parse(data);
-    return new DisplayNameChanged(IdShortPath.create({ path: parsed.path }), parsed.values);
+    return new DisplayNameChanged(
+      ChangeEventTypes.DisplayNameChanged,
+      IdShortPath.create({ path: parsed.path }),
+      parsed.values,
+    );
   }
 }
 
 export class DescriptionChanged extends LanguageTextCollectionChanged implements IChangeEvent {
-  public readonly type = ChangeEventTypes.DescriptionChanged;
-
   static create(data: LanguageTextChangedCreateProps) {
-    return new DescriptionChanged(data.path, createLanguageTextChanges(data));
+    return new DescriptionChanged(
+      ChangeEventTypes.DescriptionChanged,
+      data.path,
+      createLanguageTextChanges(data),
+    );
   }
 
   static fromPlain(data: unknown): IChangeEvent {
     const parsed = LanguageTextCollectionChangedSchema.parse(data);
-    return new DescriptionChanged(IdShortPath.create({ path: parsed.path }), parsed.values);
+    return new DescriptionChanged(
+      ChangeEventTypes.DescriptionChanged,
+      IdShortPath.create({ path: parsed.path }),
+      parsed.values,
+    );
   }
 }

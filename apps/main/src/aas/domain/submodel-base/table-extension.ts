@@ -5,11 +5,11 @@ import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { EventQueue, ITrackable } from "../../../activity-history/domain/activities/trackable";
+import { ChangeEventQueue, ITrackable } from "../../../activity-history/domain/change-event-queue";
 
 export class TableExtension implements ITrackable {
   private headerRow: ISubmodelElement | undefined;
-  readonly eventQueue = EventQueue.create();
+  readonly eventQueue = ChangeEventQueue.create();
 
   constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {

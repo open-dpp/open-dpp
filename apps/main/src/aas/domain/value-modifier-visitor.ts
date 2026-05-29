@@ -31,7 +31,7 @@ import { SubmodelElementCollection } from "./submodel-base/submodel-element-coll
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
-import { EventQueue, ITrackable } from "../../activity-history/domain/activities/trackable";
+import { ChangeEventQueue, ITrackable } from "../../activity-history/domain/change-event-queue";
 import { FileValueChanged } from "../../activity-history/domain/change-events/file-value-changed";
 import { ReferenceElementValueChanged } from "../../activity-history/domain/change-events/reference-element-value-changed";
 
@@ -45,7 +45,7 @@ export interface ValueModifierVisitorContextType {
 export class ValueModifierVisitor
   implements IVisitor<ValueModifierVisitorContextType, void>, ITrackable
 {
-  readonly eventQueue = EventQueue.create();
+  readonly eventQueue = ChangeEventQueue.create();
   constructor(private readonly options: ValueModifierVisitorOptions) {}
 
   private modificationGuard(element: ISubmodelBase) {
@@ -111,7 +111,7 @@ export class ValueModifierVisitor
     element.value = parsed.value !== undefined ? parsed.value : element.value;
     element.contentType =
       parsed.contentType !== undefined ? parsed.contentType : element.contentType;
-    this.eventQueue.publishChanges(
+    this.eventQueue.publish(
       FileValueChanged.create({
         path: element.getIdShortPath(),
         oldValue,
@@ -156,7 +156,7 @@ export class ValueModifierVisitor
     if (value !== undefined) {
       const oldValue = element.value;
       element.value = value;
-      this.eventQueue.publishChanges(
+      this.eventQueue.publish(
         PropertyValueChanged.create({
           valueType: element.valueType,
           path: element.getIdShortPath(),
@@ -220,7 +220,7 @@ export class ValueModifierVisitor
         element.value?.accept(this, { ...context, data: newValue });
       })
       .otherwise(() => {});
-    this.eventQueue.publishChanges(
+    this.eventQueue.publish(
       ReferenceElementValueChanged.create({
         path: element.getIdShortPath(),
         oldValue,

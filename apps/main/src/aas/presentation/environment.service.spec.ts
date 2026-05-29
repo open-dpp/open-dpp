@@ -61,9 +61,12 @@ import { AssetAdministrationShellOperationTypes } from "../../activity-history/d
 import { EnvironmentOperationTypes } from "../../activity-history/domain/activities/environment-types";
 import { SubmodelRepositoryOperationTypes } from "../../activity-history/domain/activities/submodel-repository-operation-types";
 import { ActivityTypes } from "../../activity-history/domain/activities/activity-types";
-import { SubmodelElementAddedActivity } from "../../activity-history/domain/activities/submodel-element-added.activity";
 import { SubmodelActivityPayload } from "../../activity-history/domain/activities/submodel-activities.shared";
 import { SubmodelElementAdded } from "../../activity-history/domain/change-events/submodel-element-added";
+import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
+import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
+import { SubmodelElementDeletedPayload } from "../../activity-history/domain/activities/submodel-element-deleted.activity";
+import { SubmodelElementDeleted } from "../../activity-history/domain/change-events/submodel-element-deleted";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -1096,6 +1099,7 @@ describe("environmentService", () => {
   it("should modify submodel", async () => {
     const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
       await createDefaultEnvironment();
+    const oldDisplayName = submodel1.displayName;
     const modification = {
       idShort: submodel1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
@@ -1120,24 +1124,15 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.SubmodelModified,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelModified,
-            path: IdShortPath.create({ path: submodel1.idShort }),
-          },
           changes: [
-            {
-              op: "add",
-              path: "/displayName/0",
-              dpp: {},
-              value: {
-                language: "en",
-                text: "Test",
-              },
-            },
+            DisplayNameChanged.create({
+              path: IdShortPath.fromSegments([submodel1.idShort]),
+              oldValue: oldDisplayName,
+              newValue: modification.displayName,
+            }),
           ],
         }),
       },
@@ -1157,8 +1152,16 @@ describe("environmentService", () => {
   });
 
   it("should modify submodel value", async () => {
-    const { correlationId, digitalProductDocumentId, environment, admin, member, submodel1 } =
-      await createDefaultEnvironment();
+    const {
+      correlationId,
+      digitalProductDocumentId,
+      environment,
+      admin,
+      member,
+      submodel1,
+      property1,
+    } = await createDefaultEnvironment();
+    const oldValue = property1.value;
     const modification = {
       subSection1: {
         property1: "Test",
@@ -1185,25 +1188,16 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.SubmodelValueModified,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelValueModified,
-            path: IdShortPath.create({ path: submodel1.idShort }),
-          },
           changes: [
-            {
-              op: "replace",
-              path: "/submodelElements/0/value/0/value",
-              dpp: {
-                p: "subSection1.property1",
-                m: "Property",
-                v: "String",
-              },
-              value: "Test",
-            },
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "subSection1", "property1"]),
+              oldValue,
+              newValue: "Test",
+              valueType: DataTypeDef.String,
+            }),
           ],
         }),
       },
@@ -1234,6 +1228,7 @@ describe("environmentService", () => {
       submodelElementCollection1,
       property1,
     } = await createDefaultEnvironment();
+    const oldDisplayName = property1.displayName;
     const modification = {
       idShort: property1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
@@ -1261,30 +1256,15 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.SubmodelElementModified,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelElementModified,
-            path: IdShortPath.create({
-              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
-            }),
-          },
           changes: [
-            {
-              op: "add",
-              path: "/submodelElements/0/value/0/displayName/0",
-              dpp: {
-                p: "subSection1.property1",
-                m: "Property",
-                v: "String",
-              },
-              value: {
-                language: "en",
-                text: "Test",
-              },
-            },
+            DisplayNameChanged.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "subSection1", "property1"]),
+              oldValue: oldDisplayName,
+              newValue: modification.displayName,
+            }),
           ],
         }),
       },
@@ -1647,6 +1627,8 @@ describe("environmentService", () => {
       property1,
       property2,
     } = await createDefaultEnvironment();
+    const oldValue1 = property1.value;
+    const oldValue2 = property2.value;
     const modification = { [property1.idShort]: "new value 1", [property2.idShort]: "new value 2" };
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}`,
@@ -1672,37 +1654,30 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.SubmodelElementValueModified,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelElementValueModified,
-            path: IdShortPath.create({
-              path: `${submodel1.idShort}.${idShortPathToProperty1}`,
-            }),
-          },
           changes: [
-            {
-              op: "replace",
-              path: "/submodelElements/0/value/1/value",
-              dpp: {
-                p: "subSection1.property2",
-                m: "Property",
-                v: "String",
-              },
-              value: "new value 2",
-            },
-            {
-              op: "replace",
-              path: "/submodelElements/0/value/0/value",
-              dpp: {
-                p: "subSection1.property1",
-                m: "Property",
-                v: "String",
-              },
-              value: "new value 1",
-            },
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([
+                submodel1.idShort,
+                submodelElementCollection1.idShort,
+                property1.idShort,
+              ]),
+              oldValue: oldValue1,
+              newValue: "new value 1",
+              valueType: DataTypeDef.String,
+            }),
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([
+                submodel1.idShort,
+                submodelElementCollection1.idShort,
+                property2.idShort,
+              ]),
+              oldValue: oldValue2,
+              newValue: "new value 2",
+              valueType: DataTypeDef.String,
+            }),
           ],
         }),
       },
@@ -1926,37 +1901,19 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.SubmodelElementDeleted,
+        payload: SubmodelElementDeletedPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelElementDeleted,
-            path: submodelElementCollection1.getIdShortPath(),
-            value: {
-              aId: property1.idShort,
-            },
-          },
+          aasId: environment.assetAdministrationShells[0],
           changes: [
-            {
-              op: "remove",
-              path: "/submodelElements/0/value/1",
-              dpp: {
-                p: "subSection1.property2",
-                m: "Property",
-                v: "String",
-              },
-            },
-            {
-              op: "replace",
-              path: "/submodelElements/0/value/0/idShort",
-              value: "property2",
-              dpp: {
-                p: `subSection1.property1`,
-                m: "Property",
-                v: "String",
-              },
-            },
+            SubmodelElementDeleted.create({
+              path: IdShortPath.fromSegments([
+                submodel1.idShort,
+                submodelElementCollection1.idShort,
+                property1.idShort,
+              ]),
+              submodelElement: property1,
+            }),
           ],
         }),
       },

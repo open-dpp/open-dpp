@@ -1,25 +1,25 @@
-import { IChangeEvent } from "../change-events/change-event";
+import { IChangeEvent } from "./change-events/change-event";
 
 export interface ITrackable {
-  eventQueue: EventQueue;
+  eventQueue: ChangeEventQueue;
 }
 
-export class EventQueue {
+export class ChangeEventQueue {
   private _changes: Array<IChangeEvent> = [];
   private constructor(private onPublishCallback?: () => void) {}
 
-  static create(data?: { onPublishCallback?: () => void }): EventQueue {
-    return new EventQueue(data?.onPublishCallback);
+  static create(data?: { onPublishCallback?: () => void }): ChangeEventQueue {
+    return new ChangeEventQueue(data?.onPublishCallback);
   }
 
-  publishChanges(...changes: IChangeEvent[]) {
+  publish(...changes: IChangeEvent[]) {
     this._changes.push(...changes);
     if (this.onPublishCallback) {
       this.onPublishCallback();
     }
   }
 
-  pullChanges(): Array<IChangeEvent> {
+  pull(): Array<IChangeEvent> {
     const events = [...this._changes];
 
     this._changes = [];

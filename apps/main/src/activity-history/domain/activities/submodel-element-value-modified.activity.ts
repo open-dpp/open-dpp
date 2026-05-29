@@ -1,16 +1,16 @@
 import { ActivityHeader, ActivitySchema, activityToDatabase, IActivity } from "./activity";
-import { SharedActivityCreateProps, createActivityHeader } from "./shared.activity";
+import { createActivityHeader, SharedActivityCreateProps } from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
 import { SubmodelActivityPayload } from "./submodel-activities.shared";
 
-const SubmodelElementAddedActivityVersion = {
+const SubmodelElementValueModifiedActivityVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
-export class SubmodelElementAddedActivity implements IActivity {
-  public static readonly type = ActivityTypes.SubmodelElementAdded;
+export class SubmodelElementValueModifiedActivity implements IActivity {
+  public static readonly type = ActivityTypes.SubmodelElementValueModified;
   private constructor(
     public header: ActivityHeader,
     public readonly payload: SubmodelActivityPayload,
@@ -20,11 +20,11 @@ export class SubmodelElementAddedActivity implements IActivity {
       submodel: Submodel;
     },
   ) {
-    return new SubmodelElementAddedActivity(
+    return new SubmodelElementValueModifiedActivity(
       createActivityHeader(
-        SubmodelElementAddedActivity.type,
+        SubmodelElementValueModifiedActivity.type,
         data,
-        SubmodelElementAddedActivityVersion.v1_0_0,
+        SubmodelElementValueModifiedActivityVersion.v1_0_0,
       ),
       SubmodelActivityPayload.create({
         submodelId: data.submodel.id,
@@ -36,7 +36,7 @@ export class SubmodelElementAddedActivity implements IActivity {
   static fromPlain(data: unknown) {
     const parsed = ActivitySchema.parse(data);
 
-    return new SubmodelElementAddedActivity(
+    return new SubmodelElementValueModifiedActivity(
       ActivityHeader.fromPlain(parsed.header),
       SubmodelActivityPayload.fromPlain(parsed.payload),
     );

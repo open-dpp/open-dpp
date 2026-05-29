@@ -12,12 +12,14 @@ import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
+import { ChangeEventQueue, ITrackable } from "../../../activity-history/domain/change-event-queue";
 
 export const SecuritySchema = z.object({
   localAccessControl: AccessControlSchema,
 });
 
-export class Security {
+export class Security implements ITrackable {
+  public readonly eventQueue = ChangeEventQueue.create();
   private constructor(public readonly localAccessControl: AccessControl) {}
 
   static create(data: { localAccessControl?: AccessControl }): Security {

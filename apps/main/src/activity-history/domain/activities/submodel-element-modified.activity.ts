@@ -1,5 +1,5 @@
 import { ActivityHeader, ActivitySchema, activityToDatabase, IActivity } from "./activity";
-import { ActivityHeaderCreateProps, createActivityHeader } from "./shared.activity";
+import { SharedActivityCreateProps, createActivityHeader } from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
@@ -16,7 +16,7 @@ export class SubmodelElementModifiedActivity implements IActivity {
     public readonly payload: SubmodelActivityPayload,
   ) {}
   static create(
-    data: ActivityHeaderCreateProps & {
+    data: SharedActivityCreateProps & {
       submodel: Submodel;
     },
   ) {
@@ -28,7 +28,7 @@ export class SubmodelElementModifiedActivity implements IActivity {
       ),
       SubmodelActivityPayload.create({
         submodelId: data.submodel.id,
-        changes: data.submodel.eventQueue.pullChanges(),
+        changes: data.submodel.eventQueue.pull(),
       }),
     );
   }

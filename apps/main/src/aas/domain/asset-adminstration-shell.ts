@@ -19,7 +19,7 @@ import { DeleteOptions } from "./submodel-base/submodel-base";
 import { IdShortPath } from "./common/id-short-path";
 import { SubjectAttributes } from "./security/subject-attributes";
 import { SubmodelReferenceAdded } from "../../activity-history/domain/change-events/submodel-reference-added";
-import { EventQueue, ITrackable } from "../../activity-history/domain/activities/trackable";
+import { ChangeEventQueue } from "../../activity-history/domain/change-event-queue";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -37,7 +37,7 @@ export interface AssetAdministrationShellCreateProps {
 }
 
 export class AssetAdministrationShell
-  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable, ITrackable
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
 {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
@@ -59,7 +59,7 @@ export class AssetAdministrationShell
   ) {
     this.displayName = displayName;
     this.description = description;
-    this.eventQueue = EventQueue.create({
+    this.eventQueue = ChangeEventQueue.create({
       onPublishCallback: () => this.administration.increaseVersion(),
     });
   }
@@ -119,7 +119,7 @@ export class AssetAdministrationShell
     const reference = submodelToReference(submodel);
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
-    this.eventQueue.publishChanges(SubmodelReferenceAdded.create({ submodelRef: reference }));
+    this.eventQueue.publish(SubmodelReferenceAdded.create({ submodelRef: reference }));
 
     return reference;
   }

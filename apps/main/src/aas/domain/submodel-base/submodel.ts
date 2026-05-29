@@ -34,7 +34,7 @@ import {
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 import { SubmodelElementAdded } from "../../../activity-history/domain/change-events/submodel-element-added";
-import { EventQueue, ITrackable } from "../../../activity-history/domain/activities/trackable";
+import { ChangeEventQueue, ITrackable } from "../../../activity-history/domain/change-event-queue";
 
 export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   private _displayName: Array<LanguageText>;
@@ -58,7 +58,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     this.displayName = displayName;
     this.description = description;
     setParentIdShortPaths(this, this.idShort);
-    this.eventQueue = EventQueue.create({
+    this.eventQueue = ChangeEventQueue.create({
       onPublishCallback: () => this.administration.increaseVersion(),
     });
   }
@@ -135,20 +135,20 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   modify(data: unknown, options: ModifierVisitorOptions) {
     const modifierVisitor = new ModifierVisitor(options);
     this.accept(modifierVisitor, { data });
-    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
+    this.eventQueue.publish(...modifierVisitor.eventQueue.pull());
   }
 
   modifyValue(data: unknown, options: ValueModifierVisitorOptions) {
     const modifierVisitor = new ValueModifierVisitor(options);
     this.accept(modifierVisitor, { data });
-    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
+    this.eventQueue.publish(...modifierVisitor.eventQueue.pull());
   }
 
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     const modifierVisitor = new ModifierVisitor(options);
     submodelElement.accept(modifierVisitor, { data });
-    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
+    this.eventQueue.publish(...modifierVisitor.eventQueue.pull());
     return submodelElement;
   }
 
@@ -160,7 +160,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     const modifierVisitor = new ValueModifierVisitor(options);
     submodelElement.accept(modifierVisitor, { data });
-    this.eventQueue.publishChanges(...modifierVisitor.eventQueue.pullChanges());
+    this.eventQueue.publish(...modifierVisitor.eventQueue.pull());
     return submodelElement;
   }
 
@@ -178,21 +178,21 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   addRow(idShortPath: IdShortPath, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.addRow(options);
-    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
+    this.eventQueue.publish(...tableExtension.eventQueue.pull());
     return tableExtension.getTableElement();
   }
 
   deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.deleteRow(idShortOfRow, options);
-    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
+    this.eventQueue.publish(...tableExtension.eventQueue.pull());
     return tableExtension.getTableElement();
   }
 
   addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.addColumn(column, options);
-    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
+    this.eventQueue.publish(...tableExtension.eventQueue.pull());
     return tableExtension.getTableElement();
   }
 
@@ -204,7 +204,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.modifyColumn(idShortOfColumn, data, options);
-    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
+    this.eventQueue.publish(...tableExtension.eventQueue.pull());
     return tableExtension.getTableElement();
   }
 
@@ -212,7 +212,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
 
     tableExtension.deleteColumn(idShortOfColumn, options);
-    this.eventQueue.publishChanges(...tableExtension.eventQueue.pullChanges());
+    this.eventQueue.publish(...tableExtension.eventQueue.pull());
     return tableExtension.getTableElement();
   }
 
@@ -270,7 +270,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     } else {
       addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
     }
-    this.eventQueue.publishChanges(
+    this.eventQueue.publish(
       SubmodelElementAdded.create({
         path: addedSubmodelElement.getIdShortPath(),
         submodelElement: addedSubmodelElement,

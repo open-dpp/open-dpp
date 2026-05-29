@@ -61,6 +61,9 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { RowAddedActivity } from "../../activity-history/domain/activities/row-added.activity";
 import { SubmodelElementAddedActivity } from "../../activity-history/domain/activities/submodel-element-added.activity";
 import { SubmodelElementDeletedActivity } from "../../activity-history/domain/activities/submodel-element-deleted.activity";
+import { SubmodelModifiedActivity } from "../../activity-history/domain/activities/submodel-modified.activity";
+import { SubmodelValueModifiedActivity } from "../../activity-history/domain/activities/submodel-value-modified.activity";
+import { SubmodelElementValueModifiedActivity } from "../../activity-history/domain/activities/submodel-element-value-modified.activity";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -228,10 +231,18 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     submodel.modify(modification, { ability });
 
+    const activity = SubmodelModifiedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany([activity], { session });
       });
       return SubmodelJsonSchema.parse(submodel.toPlain());
     } finally {
@@ -457,10 +468,18 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject);
     submodel.modifyValue(modification, { ability });
 
+    const activity = SubmodelValueModifiedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany([activity], { session });
       });
       return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
     } finally {
@@ -514,10 +533,18 @@ export class EnvironmentService {
     const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, {
       ability,
     });
+    const activity = SubmodelElementValueModifiedActivity.create({
+      digitalProductDocumentId,
+      userId,
+      correlationId,
+      submodel,
+    });
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
+        await this.activityRepository.createMany([activity], { session });
       });
       return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
     } finally {

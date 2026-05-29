@@ -10,6 +10,7 @@ import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { Security } from "./security";
 import { SubjectAttributes } from "./subject-attributes";
+import { PolicyDeleted } from "../../../activity-history/domain/change-events/policy-deleted";
 
 describe("security", () => {
   const policyManagementError = "Administrator has no permission to add/ modify/ delete policy.";
@@ -500,6 +501,16 @@ describe("security", () => {
         ],
       },
     ]);
+
+    const changes = security.eventQueue.pull();
+    expect(changes).toEqual([
+      PolicyDeleted.create({
+        userRole: admin.userRole,
+        memberRole: admin.memberRole,
+        object: createAasObject(IdShortPath.create({ path: "section1.subSection1.prop1" })),
+      }),
+    ]);
+
     expect(security.findPoliciesBySubject(member)).toEqual([
       {
         targetSubjectAttributes: member,
