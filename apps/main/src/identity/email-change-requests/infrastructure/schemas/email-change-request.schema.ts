@@ -39,3 +39,11 @@ export class EmailChangeRequest {
 }
 
 export const EmailChangeRequestSchema = SchemaFactory.createForClass(EmailChangeRequest);
+
+EmailChangeRequestSchema.index(
+  { newEmail: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { newEmail: { $exists: true } },
+  },
+);

@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { Types } from "mongoose";
+import { Error as MongooseError, Types } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
@@ -166,10 +166,6 @@ describe("MembersRepository", () => {
   });
 
   describe("NoSQL injection defense", () => {
-    // Helper: a query must NOT leak any rows when called with an operator-shaped value.
-    // Mongoose may either cast-error (organizationId is ObjectId-typed) or
-    // return an empty result (userId is Mixed-typed). Both are safe — only a
-    // non-empty result would indicate a vulnerability.
     async function expectNoLeak<T>(query: () => Promise<T[] | T | null>): Promise<void> {
       try {
         const result = await query();
@@ -178,8 +174,11 @@ describe("MembersRepository", () => {
         } else {
           expect(result).toBeNull();
         }
-      } catch {
-        // CastError from Mongoose schema enforcement is also acceptable defense.
+      } catch (error) {
+        if (error instanceof MongooseError.CastError) {
+          return;
+        }
+        throw error;
       }
     }
 
@@ -195,7 +194,6 @@ describe("MembersRepository", () => {
 
       const malicious = { $ne: null } as unknown as string;
       await expectNoLeak(() => repository.findByUserId(malicious));
-      // Seeded row remains reachable by its real userId.
       expect(await repository.findByUserId(userId)).toHaveLength(1);
     });
 

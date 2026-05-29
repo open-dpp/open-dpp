@@ -68,11 +68,7 @@ describe("RevokeEmailChangeController", () => {
   });
 
   it("redirects to ?status=invalid when the token is expired", async () => {
-    const expiredToken = signRevokeToken(
-      { userId: "user-1", requestId: "req-1" },
-      SECRET,
-      -1_000, // expired 1 second ago
-    );
+    const expiredToken = signRevokeToken({ userId: "user-1", requestId: "req-1" }, SECRET, -1_000);
 
     const result = await controller.revoke(expiredToken);
 

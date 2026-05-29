@@ -16,7 +16,6 @@ import { z } from "zod";
 import {
   computeProfileDiff,
   mapUserToFormValues,
-  mergeUpdatedUserIntoOriginal,
   shouldSubmitEmailChange,
   type ProfileFormValues,
 } from "../../composables/profile-form.ts";
@@ -33,15 +32,16 @@ const newEmailSchema = z.email();
 
 type ProfileFields = z.infer<typeof profileSchema>;
 
-const { handleSubmit, defineField, setValues, errors, isSubmitting, meta, resetForm } =
-  useForm<ProfileFields>({
+const { handleSubmit, defineField, errors, isSubmitting, meta, resetForm } = useForm<ProfileFields>(
+  {
     validationSchema: toTypedSchema(profileSchema),
     initialValues: {
       firstName: "",
       lastName: "",
       preferredLanguage: Language.en,
     },
-  });
+  },
+);
 
 const [firstName] = defineField("firstName");
 const [lastName] = defineField("lastName");
@@ -100,20 +100,36 @@ async function hydrate() {
   loaded.value = true;
 }
 
+function toProfileFields(values: ProfileFormValues): ProfileFields {
+  return {
+    firstName: values.firstName,
+    lastName: values.lastName,
+    preferredLanguage: values.preferredLanguage,
+  };
+}
+
+function toPendingEmailChange(next: MeDto): { newEmail: string; requestedAt: Date } | null {
+  if (!next.pendingEmailChange) return null;
+  return {
+    newEmail: next.pendingEmailChange.newEmail,
+    requestedAt:
+      next.pendingEmailChange.requestedAt instanceof Date
+        ? next.pendingEmailChange.requestedAt
+        : new Date(next.pendingEmailChange.requestedAt),
+  };
+}
+
+function applyEmailState(next: MeDto) {
+  user.value = next.user;
+  pendingEmailChange.value = toPendingEmailChange(next);
+}
+
 function applyMe(next: MeDto) {
   user.value = next.user;
-  pendingEmailChange.value = next.pendingEmailChange
-    ? {
-        newEmail: next.pendingEmailChange.newEmail,
-        requestedAt:
-          next.pendingEmailChange.requestedAt instanceof Date
-            ? next.pendingEmailChange.requestedAt
-            : new Date(next.pendingEmailChange.requestedAt),
-      }
-    : null;
+  pendingEmailChange.value = toPendingEmailChange(next);
   const formValues = mapUserToFormValues(next.user);
   original.value = formValues;
-  setValues(formValues);
+  resetForm({ values: toProfileFields(formValues) });
   if (next.user.preferredLanguage) {
     locale.value = convertLanguageToLocale(next.user.preferredLanguage);
   }
@@ -147,13 +163,7 @@ const submitProfile = handleSubmit(async (formValues) => {
   try {
     const updated = await apiClient.dpp.users.updateProfile(diff);
     applyMe(updated.data);
-    if (updated.data.user.preferredLanguage) {
-      locale.value = convertLanguageToLocale(updated.data.user.preferredLanguage);
-    }
-    if (original.value) {
-      original.value = mergeUpdatedUserIntoOriginal(updated.data.user, original.value);
-    }
-    resetForm({ values: mapUserToFormValues(updated.data.user) });
+    resetForm({ values: toProfileFields(mapUserToFormValues(updated.data.user)) });
     notificationStore.addSuccessNotification(t("user.profileSaved"));
   } catch (error) {
     notificationStore.addErrorNotification(extractServerMessage(error, "user.profileSaveFailed"));
@@ -171,7 +181,7 @@ function extractServerMessage(error: unknown, fallbackKey: string): string {
 
 function discard() {
   if (!original.value) return;
-  resetForm({ values: original.value });
+  resetForm({ values: toProfileFields(original.value) });
 }
 
 function openEmailPanel() {
@@ -218,7 +228,7 @@ async function sendVerification() {
       newEmail: candidate,
       currentPassword: currentPassword.value,
     });
-    applyMe(updated.data);
+    applyEmailState(updated.data);
     notificationStore.addInfoNotification(t("user.emailChangeRequested"));
     closeEmailPanel();
   } catch (error) {
@@ -254,7 +264,7 @@ async function cancelPending() {
   cancelSubmitting.value = true;
   try {
     const updated = await apiClient.dpp.users.cancelEmailChange();
-    applyMe(updated.data);
+    applyEmailState(updated.data);
     notificationStore.addInfoNotification(t("user.emailChangeCancelled"));
   } catch (error) {
     notificationStore.addErrorNotification(

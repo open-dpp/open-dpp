@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { Model, Types } from "mongoose";
+import { Error as MongooseError, Model, Types } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { AUTH } from "../../../auth/auth.provider";
 import { Invitation } from "../../domain/invitation";
@@ -182,10 +182,6 @@ describe("InvitationsRepository", () => {
   });
 
   describe("NoSQL injection defense", () => {
-    // A malicious operator-shaped value must NOT leak rows. Depending on whether
-    // the query goes through Mongoose (schema cast) or the raw collection, the
-    // safe outcome is either a thrown CastError or an empty / null result. Only
-    // a non-empty match would indicate a vulnerability.
     async function expectNoLeak<T>(query: () => Promise<T[] | T | null>): Promise<void> {
       try {
         const result = await query();
@@ -194,8 +190,10 @@ describe("InvitationsRepository", () => {
         } else {
           expect(result).toBeNull();
         }
-      } catch {
-        // Mongoose CastError is also an acceptable defense.
+      } catch (error) {
+        if (!(error instanceof MongooseError.CastError)) {
+          throw error;
+        }
       }
     }
 
@@ -214,7 +212,6 @@ describe("InvitationsRepository", () => {
 
       const malicious = { $ne: null } as unknown as string;
       await expectNoLeak(() => repository.findByEmail(malicious));
-      // Seeded invitation must still be reachable by its real email.
       expect(await repository.findByEmail(email)).toHaveLength(1);
     });
 

@@ -17,8 +17,6 @@ export interface UserCreateProps {
 }
 
 export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
-  // firstName/lastName may be null for accounts created before names became required
-  // at signup. New writes always populate them; nullable here exists purely for legacy reads.
   firstName: string | null;
   lastName: string | null;
   id: string;

@@ -36,8 +36,6 @@ describe("EmailChangeRequestsRepository", () => {
     repository = module.get(EmailChangeRequestsRepository);
     connection = module.get(getConnectionToken());
 
-    // Ensure unique index is built before tests run, so duplicate-key
-    // rejections actually fire at the DB level.
     await connection.model(EmailChangeRequestSchemaClass.name).syncIndexes();
   });
 
@@ -73,6 +71,17 @@ describe("EmailChangeRequestsRepository", () => {
     await expect(
       repository.save(
         EmailChangeRequest.create({ userId: "user-1", newEmail: "second@example.com" }),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("rejects a second user holding a pending change to the same newEmail (partial unique index on newEmail)", async () => {
+    await repository.save(
+      EmailChangeRequest.create({ userId: "user-1", newEmail: "shared@example.com" }),
+    );
+    await expect(
+      repository.save(
+        EmailChangeRequest.create({ userId: "user-2", newEmail: "shared@example.com" }),
       ),
     ).rejects.toThrow();
   });
@@ -122,7 +131,6 @@ describe("EmailChangeRequestsRepository", () => {
 
       const malicious = { $ne: null } as unknown as string;
       await expect(repository.findByUserId(malicious)).rejects.toThrow();
-      // Seeded row must remain unmatched/untouched.
       expect(await repository.findByUserId("user-1")).not.toBeNull();
     });
 

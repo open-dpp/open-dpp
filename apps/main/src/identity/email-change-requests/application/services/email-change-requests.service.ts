@@ -1,5 +1,4 @@
 import type { Auth } from "better-auth";
-import { APIError } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
@@ -23,11 +22,6 @@ export class EmailChangeRequestsService {
   }
 
   async hardCancel(userId: string): Promise<void> {
-    // Deleting the shadow row is sufficient: better-auth's change-email JWT is
-    // stateless, so we cannot invalidate it directly. The user.update.before
-    // hook in auth.provider.ts gates the actual email mutation on the presence
-    // of this row, so a deleted row reliably blocks completion of a revoked
-    // change.
     await this.repository.deleteByUserId(userId);
   }
 
@@ -42,21 +36,7 @@ export class EmailChangeRequestsService {
       throw new ValueError("New email must differ from the current email");
     }
 
-    try {
-      await this.auth.api.signInEmail({
-        body: { email: currentEmail, password: currentPassword },
-      });
-    } catch (error) {
-      if (
-        error instanceof APIError &&
-        (error as APIError & { body?: { code?: string } }).body?.code ===
-          "INVALID_EMAIL_OR_PASSWORD"
-      ) {
-        throw new ValueError("Current password is incorrect");
-      }
-      this.logger.error(`request: better-auth.signInEmail failed for ${userId}`, error);
-      throw error;
-    }
+    await this.verifyCurrentPassword(currentEmail, currentPassword, userId);
 
     const next = EmailChangeRequest.create({ userId, newEmail });
     await this.repository.upsertByUserId(next);
@@ -79,5 +59,35 @@ export class EmailChangeRequestsService {
     }
 
     return next;
+  }
+
+  private async verifyCurrentPassword(
+    currentEmail: string,
+    currentPassword: string,
+    userId: string,
+  ): Promise<void> {
+    let isValid = false;
+    try {
+      const context = await this.auth.$context;
+      const found = await context.internalAdapter.findUserByEmail(currentEmail, {
+        includeAccounts: true,
+      });
+      const credentialAccount = found?.accounts?.find(
+        (account) => account.providerId === "credential" && account.password,
+      );
+      if (credentialAccount?.password) {
+        isValid = await context.password.verify({
+          hash: credentialAccount.password,
+          password: currentPassword,
+        });
+      }
+    } catch (error) {
+      this.logger.error(`request: password verification failed for ${userId}`, error);
+      throw error;
+    }
+
+    if (!isValid) {
+      throw new ValueError("Current password is incorrect");
+    }
   }
 }

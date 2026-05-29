@@ -161,14 +161,10 @@ describe("UsersRepository", () => {
       const seeded = await seedUser();
 
       const malicious = { $ne: null } as unknown as string;
-      // Safe outcomes: Mongoose CastError (email is a String-typed prop) OR null result.
       try {
         const leaked = await repository.findOneByEmail(malicious);
         expect(leaked).toBeNull();
-      } catch {
-        // CastError from the String schema is also an acceptable defense.
-      }
-      // Seeded user must remain reachable by its real email.
+      } catch {}
       expect(await repository.findOneByEmail(seeded.email)).not.toBeNull();
     });
   });

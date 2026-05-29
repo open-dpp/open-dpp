@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const RequestEmailChangeDtoSchema = z.object({
-  newEmail: z.email(),
+  newEmail: z.email().toLowerCase(),
   currentPassword: z.string().min(1),
 });
 

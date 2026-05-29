@@ -11,6 +11,14 @@ describe("RequestEmailChangeDtoSchema", () => {
     expect(parsed.currentPassword).toBe("hunter2");
   });
 
+  it("normalizes the new email to lowercase", () => {
+    const parsed = RequestEmailChangeDtoSchema.parse({
+      newEmail: "John.Doe@Company.com",
+      currentPassword: "hunter2",
+    });
+    expect(parsed.newEmail).toBe("john.doe@company.com");
+  });
+
   it("rejects missing currentPassword", () => {
     expect(() => RequestEmailChangeDtoSchema.parse({ newEmail: "new@example.com" })).toThrow();
   });

@@ -3,8 +3,10 @@ import type {
   InvitationResponseDto,
   InvitationStatusDtoType,
   MeDto,
+  RequestEmailChangeDto,
   SetUserRoleDto,
   UpdateProfileDto,
+  UserDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
 
@@ -16,14 +18,14 @@ export class UsersNamespace {
   }
 
   public async create(data: CreateUserDto) {
-    return this.axiosInstance.post<void>("/users", data);
+    return this.axiosInstance.post<UserDto>("/users", data);
   }
 
   public async updateProfile(data: UpdateProfileDto) {
     return this.axiosInstance.patch<MeDto>("/users/me", data);
   }
 
-  public async requestEmailChange(data: { newEmail: string; currentPassword: string }) {
+  public async requestEmailChange(data: RequestEmailChangeDto) {
     return this.axiosInstance.post<MeDto>("/users/me/email-change", data);
   }
 
@@ -32,7 +34,7 @@ export class UsersNamespace {
   }
 
   public async setRole(id: string, data: SetUserRoleDto) {
-    return this.axiosInstance.patch<void>(`/users/${id}/role`, data);
+    return this.axiosInstance.patch<UserDto>(`/users/${id}/role`, data);
   }
 
   public async getInvitations(params?: { status: InvitationStatusDtoType }) {

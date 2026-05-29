@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import type { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { type Connection, Types } from "mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -19,6 +20,9 @@ import { EmailService } from "../../../email/email.service";
 import { AuthModule } from "../../auth/auth.module";
 import { AUTH } from "../../auth/auth.provider";
 import { AuthGuard } from "../../auth/infrastructure/guards/auth.guard";
+import { EmailChangeRequestsService } from "../../email-change-requests/application/services/email-change-requests.service";
+import { verifyRevokeToken } from "../../email-change-requests/domain/revoke-token";
+import { EMAIL_CHANGE_REQUEST_COLLECTION } from "../../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { InvitationStatus } from "../../organizations/domain/invitation-status.enum";
 import { OrganizationsModule } from "../../organizations/organizations.module";
 import { UsersService } from "../application/services/users.service";
@@ -33,6 +37,7 @@ describe("UsersController", () => {
   let moduleRef: TestingModule;
   let usersRepository: UsersRepository;
   let emailSendMock: jest.Mock;
+  let connection: Connection;
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
@@ -64,6 +69,7 @@ describe("UsersController", () => {
 
     betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
     usersRepository = moduleRef.get<UsersRepository>(UsersRepository);
+    connection = moduleRef.get<Connection>(getConnectionToken());
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(
@@ -308,13 +314,66 @@ describe("UsersController", () => {
         .send({ newEmail, currentPassword: TEST_PASSWORD });
 
       expect(response.status).toBe(202);
-      expect(emailSendMock).toHaveBeenCalled();
       expect(response.body.pendingEmailChange?.newEmail).toBe(newEmail);
       expect(response.body.pendingEmailChange?.requestedAt).toBeDefined();
       expect(response.body.user).not.toHaveProperty("role");
 
+      const notificationCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_NOTIFICATION",
+      );
+      expect(notificationCall).toBeDefined();
+      const notification = notificationCall![0] as {
+        to: string;
+        templateProperties: { currentEmail: string; newEmail: string; revokeUrl: string };
+      };
+      expect(notification.to).toBe(user.email);
+      expect(notification.templateProperties.currentEmail).toBe(user.email);
+      expect(notification.templateProperties.newEmail).toBe(newEmail);
+
+      const revokeUrl = new URL(notification.templateProperties.revokeUrl);
+      expect(revokeUrl.pathname).toBe("/api/users/email-change/revoke");
+      const revokeToken = revokeUrl.searchParams.get("token");
+      expect(typeof revokeToken).toBe("string");
+      const secret = moduleRef.get<EnvService>(EnvService).get("OPEN_DPP_AUTH_SECRET");
+      const decoded = verifyRevokeToken(revokeToken!, secret);
+      expect(decoded.userId).toBe(user.id);
+      const pendingRow = await moduleRef
+        .get<EmailChangeRequestsService>(EmailChangeRequestsService)
+        .findByUserId(user.id);
+      expect(pendingRow).not.toBeNull();
+      expect(decoded.requestId).toBe(pendingRow!.id);
+
       const persisted = await usersRepository.findOneById(user.id);
       expect(persisted!.email).toBe(user.email);
+    });
+
+    it("does not create an orphaned session when verifying the current password", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+
+      const countUserSessions = async () =>
+        connection.collection("session").countDocuments({
+          $or: [
+            { userId: { $eq: user.id } },
+            ...(Types.ObjectId.isValid(user.id)
+              ? [{ userId: { $eq: new Types.ObjectId(user.id) } }]
+              : []),
+          ],
+        });
+
+      const sessionsBefore = await countUserSessions();
+      expect(sessionsBefore).toBeGreaterThanOrEqual(1);
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: `${randomUUID()}@test.test`, currentPassword: TEST_PASSWORD });
+
+      expect(response.status).toBe(202);
+
+      const sessionsAfter = await countUserSessions();
+      expect(sessionsAfter).toBe(sessionsBefore);
     });
 
     it("rejects requestEmailChange with wrong password", async () => {
@@ -373,6 +432,47 @@ describe("UsersController", () => {
       expect(response.status).toBe(202);
       const after = await usersRepository.findOneById(user.id);
       expect(after!.emailVerified).toBe(before!.emailVerified);
+    });
+
+    it("atomically replaces a pending change when a second request arrives without cancelling", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const emailA = `${randomUUID()}@test.test`;
+      const emailB = `${randomUUID()}@test.test`;
+
+      const firstResponse = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: emailA, currentPassword: TEST_PASSWORD });
+      expect(firstResponse.status).toBe(202);
+      expect(firstResponse.body.pendingEmailChange?.newEmail).toBe(emailA);
+
+      emailSendMock.mockClear();
+      const secondResponse = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: emailB, currentPassword: TEST_PASSWORD });
+
+      expect(secondResponse.status).toBe(202);
+      expect(secondResponse.body.pendingEmailChange?.newEmail).toBe(emailB);
+      expect(emailSendMock).toHaveBeenCalled();
+
+      const meResponse = await request(app.getHttpServer())
+        .get("/users/me")
+        .set("Cookie", userCookie);
+      expect(meResponse.body.pendingEmailChange?.newEmail).toBe(emailB);
+
+      const rowCount = await connection
+        .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
+        .countDocuments({ userId: { $eq: user.id } });
+      expect(rowCount).toBe(1);
+      const row = await connection
+        .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
+        .findOne({ userId: { $eq: user.id } });
+      expect(row?.newEmail).toBe(emailB);
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.email).toBe(user.email);
     });
 
     it("rolls back the pending change and returns 500 when the notification email fails", async () => {
@@ -462,10 +562,6 @@ describe("UsersController", () => {
     });
 
     it("blocks completion of a verification link after the change has been revoked", async () => {
-      // After the user clicks the revoke link sent to their old inbox, the verification
-      // JWT in the new inbox must no longer be able to mutate user.email. Better Auth's
-      // change-email JWT is stateless, so the gate lives in the user.update before-hook
-      // that requires a matching EmailChangeRequest row to exist.
       const auth = moduleRef.get<Auth>(AUTH);
       const { user } = await betterAuthHelper.createUser();
       const userCookie = await betterAuthHelper.signAsUser(user.id);
@@ -498,18 +594,83 @@ describe("UsersController", () => {
           query: { token, callbackURL: "/" },
           asResponse: true,
         });
-      } catch {
-        // Hook veto can surface as an error from parseUserOutput on null — expected.
-      }
+      } catch {}
 
       const persisted = await usersRepository.findOneById(user.id);
       expect(persisted!.email).toBe(user.email);
     });
 
-    it("does not let one user's pending shadow row authorize another user's email update", async () => {
-      // Asymmetry between before- and after-hooks would let user B complete a JWT-driven
-      // email change to X using user A's pending shadow row. The before-hook must bind the
-      // lookup to the session user, matching the after-hook's (userId, newEmail) filter.
+    it("sends an EMAIL_CHANGE_COMPLETED notification to the new address when the change completes", async () => {
+      const auth = moduleRef.get<Auth>(AUTH);
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const previousEmail = user.email;
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      const verifyEmailCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      expect(verifyEmailCall).toBeDefined();
+      const verifyLink = (verifyEmailCall![0] as { templateProperties: { link: string } })
+        .templateProperties.link;
+      const token = new URL(verifyLink).searchParams.get("token");
+      emailSendMock.mockClear();
+
+      try {
+        await (auth.api as any).verifyEmail({
+          query: { token, callbackURL: "/" },
+          headers: { cookie: userCookie },
+          asResponse: true,
+        });
+      } catch {}
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.email).toBe(newEmail);
+
+      const completedCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_COMPLETED",
+      );
+      expect(completedCall).toBeDefined();
+      const completedMail = completedCall![0] as {
+        to: string;
+        templateProperties: { previousEmail: string; currentEmail: string; firstName: string };
+      };
+      expect(completedMail.to).toBe(newEmail);
+      expect(completedMail.templateProperties.currentEmail).toBe(newEmail);
+      expect(completedMail.templateProperties.previousEmail).toBe(previousEmail);
+
+      const meResponse = await request(app.getHttpServer())
+        .get("/users/me")
+        .set("Cookie", userCookie);
+      expect(meResponse.body.pendingEmailChange).toBeNull();
+    });
+
+    it("does not send an EMAIL_CHANGE_COMPLETED notification on an unrelated profile update", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({ firstName: "Renamed", preferredLanguage: "de" });
+
+      expect(response.status).toBe(200);
+      const completedCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_COMPLETED",
+      );
+      expect(completedCall).toBeUndefined();
+    });
+
+    it("does not let one user's pending shadow row authorize another user's email update (no cookie on verify)", async () => {
       const auth = moduleRef.get<Auth>(AUTH);
       const sharedNewEmail = `${randomUUID()}@test.test`;
 
@@ -531,10 +692,58 @@ describe("UsersController", () => {
           body: { newEmail: sharedNewEmail, callbackURL: "/" },
           headers: { cookie: userBCookie },
         });
-      } catch {
-        // If better-auth refuses the request outright, the test premise no longer holds
-        // and the assertion below is the real check.
+      } catch {}
+
+      const userBVerifyCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      const userBToken = userBVerifyCall
+        ? new URL(
+            (userBVerifyCall[0] as { templateProperties: { link: string } }).templateProperties
+              .link,
+          ).searchParams.get("token")
+        : null;
+
+      if (typeof userBToken === "string") {
+        try {
+          await (auth.api as any).verifyEmail({
+            query: { token: userBToken, callbackURL: "/" },
+            asResponse: true,
+          });
+        } catch {}
       }
+
+      const persistedB = await usersRepository.findOneById(userB.id);
+      expect(persistedB!.email).toBe(userB.email);
+      const persistedA = await usersRepository.findOneById(userA.id);
+      expect(persistedA!.email).toBe(userA.email);
+    });
+
+    it("does not let one user's pending shadow row authorize another user's email update (with cookie on verify)", async () => {
+      const auth = moduleRef.get<Auth>(AUTH);
+      const sharedNewEmail = `${randomUUID()}@test.test`;
+
+      const { user: userA } = await betterAuthHelper.createUser();
+      const userACookie = await betterAuthHelper.signAsUser(userA.id);
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userACookie)
+        .send({ newEmail: sharedNewEmail, currentPassword: TEST_PASSWORD });
+
+      const { user: userB } = await betterAuthHelper.createUser();
+      const userBCookie = await betterAuthHelper.signAsUser(userB.id);
+      emailSendMock.mockClear();
+
+      try {
+        await (auth.api as any).changeEmail({
+          body: { newEmail: sharedNewEmail, callbackURL: "/" },
+          headers: { cookie: userBCookie },
+        });
+      } catch {}
 
       const userBVerifyCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
         const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
@@ -555,9 +764,7 @@ describe("UsersController", () => {
             headers: { cookie: userBCookie },
             asResponse: true,
           });
-        } catch {
-          // Hook veto can surface as an error from parseUserOutput on null — expected.
-        }
+        } catch {}
       }
 
       const persistedB = await usersRepository.findOneById(userB.id);

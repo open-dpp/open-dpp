@@ -3,7 +3,6 @@
 :root {
   --primary-500: #6bad87;
   --primary-600: #00965e;
-  /* DESIGN.md neutrals + status (see DESIGN.md §2 Colors). */
   --ink: #101828;
   --ink-muted: #475467;
   --ink-subtle: #98a2b3;

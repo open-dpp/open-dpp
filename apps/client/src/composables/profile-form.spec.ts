@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import {
   computeProfileDiff,
   mapUserToFormValues,
-  mergeUpdatedUserIntoOriginal,
   shouldSubmitEmailChange,
   type ProfileFormValues,
 } from "./profile-form.ts";
@@ -115,43 +114,6 @@ describe("computeProfileDiff", () => {
   it("accepts undefined firstName/lastName/preferredLanguage from vee-validate's loose form values", () => {
     const diff = computeProfileDiff({ email: baseFormValues.email }, baseFormValues);
     expect(diff).toEqual({});
-  });
-});
-
-describe("mergeUpdatedUserIntoOriginal", () => {
-  it("overwrites name and language fields with the updated user's values", () => {
-    const updated: UserDto = {
-      ...baseUser,
-      firstName: "Janet",
-      lastName: "Smith",
-      preferredLanguage: Language.de,
-    };
-
-    const result = mergeUpdatedUserIntoOriginal(updated, baseFormValues);
-
-    expect(result).toEqual({
-      ...baseFormValues,
-      firstName: "Janet",
-      lastName: "Smith",
-      preferredLanguage: Language.de,
-    });
-  });
-
-  it("preserves original values when the update returns null fields", () => {
-    const updated: UserDto = { ...baseUser, firstName: null, lastName: null };
-
-    const result = mergeUpdatedUserIntoOriginal(updated, baseFormValues);
-
-    expect(result.firstName).toBe(baseFormValues.firstName);
-    expect(result.lastName).toBe(baseFormValues.lastName);
-  });
-
-  it("preserves the email field even though it cannot change via this flow", () => {
-    const updated: UserDto = { ...baseUser, email: "new@example.com" };
-
-    const result = mergeUpdatedUserIntoOriginal(updated, baseFormValues);
-
-    expect(result.email).toBe(baseFormValues.email);
   });
 });
 

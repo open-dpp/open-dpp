@@ -6,6 +6,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
 import { Connection, Types } from "mongoose";
+import { EmailChangeCompletedMail } from "../../email/domain/email-change-completed-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
@@ -13,6 +14,25 @@ import { EmailService } from "../../email/email.service";
 import { EMAIL_CHANGE_REQUEST_COLLECTION } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 
 export const AUTH = "auth";
+
+function extractPreviousEmailFromContext(context: unknown): string | undefined {
+  const token = (context as { query?: { token?: unknown } } | null | undefined)?.query?.token;
+  if (typeof token !== "string") {
+    return undefined;
+  }
+  const segments = token.split(".");
+  if (segments.length < 2) {
+    return undefined;
+  }
+  try {
+    const payload = JSON.parse(Buffer.from(segments[1], "base64url").toString("utf8")) as {
+      email?: unknown;
+    };
+    return typeof payload.email === "string" ? payload.email : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export const AuthProvider: Provider = {
   provide: AUTH,
@@ -112,35 +132,6 @@ export const AuthProvider: Provider = {
         },
         changeEmail: {
           enabled: true,
-          sendChangeEmailVerification: async ({
-            user,
-            newEmail,
-            url,
-          }: {
-            user: { firstName?: string };
-            newEmail: string;
-            url: string;
-            token: string;
-          }) => {
-            try {
-              const firstName = user.firstName ?? "User";
-              if (!user.firstName) {
-                logger.warn(
-                  `sendChangeEmailVerification invoked without firstName on user payload (newEmail=${newEmail})`,
-                );
-              }
-              await emailService.send(
-                VerifyEmailMail.create({
-                  to: newEmail,
-                  subject: "Confirm your new email address",
-                  templateProperties: { link: url, firstName },
-                }),
-              );
-            } catch (error) {
-              logger.error("Failed to send email change verification", error);
-              throw error;
-            }
-          },
         },
       },
       emailAndPassword: {
@@ -214,44 +205,73 @@ export const AuthProvider: Provider = {
         user: {
           update: {
             before: async (data, context) => {
-              // Better-auth's change-email flow is JWT-based: the verification link in the
-              // user's new inbox is a stateless, signed token that is not stored in the
-              // database, so it cannot be invalidated by deleting any row. To make `revoke`
-              // effective, we gate the actual email mutation on the EmailChangeRequest
-              // shadow table. `hardCancel` deletes that row, so a revoked link will fail
-              // here even if the JWT is still cryptographically valid.
               const newEmail = (data as { email?: unknown } | null | undefined)?.email;
               if (typeof newEmail !== "string") {
                 return;
               }
-              // Also bind the lookup to the session user so another user's pending shadow
-              // row for the same newEmail cannot authorize this update. Mirrors the
-              // after-hook's (userId, newEmail) filter.
-              const sessionUserId = context?.context?.session?.user?.id;
-              const query: {
-                newEmail: { $eq: string };
-                userId?: { $eq: string };
-              } =
-                typeof sessionUserId === "string"
-                  ? {
-                      newEmail: { $eq: newEmail },
-                      userId: { $eq: sessionUserId },
-                    }
-                  : { newEmail: { $eq: newEmail } };
-              const pending = await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).findOne(query);
+              const pending = await db
+                .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
+                .findOne({ newEmail: { $eq: newEmail } });
               if (!pending) {
                 logger.warn(
                   `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest (revoked or unknown)`,
                 );
                 return false;
               }
+
+              const previousEmail = extractPreviousEmailFromContext(context);
+              if (!previousEmail) {
+                logger.warn(
+                  `Blocked user.email update to ${newEmail}: could not resolve the originating user from the verification token`,
+                );
+                return false;
+              }
+              const targetUser = await db
+                .collection("user")
+                .findOne({ email: { $eq: previousEmail.toLowerCase() } });
+              if (!targetUser || pending.userId !== targetUser._id.toString()) {
+                logger.warn(
+                  `Blocked user.email update to ${newEmail}: pending change belongs to a different user than the verification token's subject`,
+                );
+                return false;
+              }
             },
-            after: async (user) => {
-              // When better-auth completes a verified email change, user.email is now the new
-              // address. Best-effort: delete the matching EmailChangeRequest row. The
-              // newEmail filter ensures we only act on completion (other user updates leave
-              // user.email unchanged, so no row matches).
+            after: async (user, context) => {
               try {
+                const pending = await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).findOne({
+                  userId: { $eq: user.id },
+                  newEmail: { $eq: user.email },
+                });
+                if (!pending) {
+                  return;
+                }
+
+                const previousEmail = extractPreviousEmailFromContext(context);
+                if (previousEmail) {
+                  try {
+                    await emailService.send(
+                      EmailChangeCompletedMail.create({
+                        to: user.email,
+                        subject: "Your email address was changed",
+                        templateProperties: {
+                          firstName: (user as { firstName?: string }).firstName ?? "User",
+                          previousEmail,
+                          currentEmail: user.email,
+                        },
+                      }),
+                    );
+                  } catch (error) {
+                    logger.error(
+                      `Failed to send email-change-completed notification to ${user.email}`,
+                      error,
+                    );
+                  }
+                } else {
+                  logger.warn(
+                    `Skipped email-change-completed notification for ${user.email}: previous email could not be resolved from context`,
+                  );
+                }
+
                 await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).deleteOne({
                   userId: { $eq: user.id },
                   newEmail: { $eq: user.email },

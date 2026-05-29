@@ -3,7 +3,10 @@ import { Injectable } from "@nestjs/common";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { EmailChangeRequest } from "../../domain/email-change-request";
-import { EmailChangeRequestMapper } from "../mappers/email-change-request.mapper";
+import {
+  EmailChangeRequestMapper,
+  EmailChangeRequestPersistence,
+} from "../mappers/email-change-request.mapper";
 import {
   EmailChangeRequestDocument,
   EmailChangeRequest as EmailChangeRequestSchemaClass,
@@ -57,12 +60,7 @@ export class EmailChangeRequestsRepository {
     if (!doc) {
       return null;
     }
-    return EmailChangeRequestMapper.toDomain({
-      _id: doc._id,
-      userId: doc.userId,
-      newEmail: doc.newEmail,
-      requestedAt: doc.requestedAt,
-    });
+    return EmailChangeRequestMapper.toDomain(doc as EmailChangeRequestPersistence);
   }
 
   async deleteByUserId(userId: string): Promise<void> {
