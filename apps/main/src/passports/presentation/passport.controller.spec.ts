@@ -46,11 +46,13 @@ import { PresentationConfigurationsModule } from "../../presentation-configurati
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { ExternalIdentifierType } from "../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
@@ -638,6 +640,52 @@ describe("passportController", () => {
     expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
     expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
+  describe("canonical UPI lookup with a GS1 UPI present", () => {
+    async function createDraftPassport(orgId: string) {
+      const { aas, submodels } = ctx.getAasObjects();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: Environment.create({
+          assetAdministrationShells: [aas.id],
+          submodels: submodels.map((s) => s.id),
+          conceptDescriptions: [],
+        }),
+      });
+      const { dppIdentifiableRepository, uniqueProductIdentifierRepository } =
+        ctx.getRepositories();
+      await uniqueProductIdentifierRepository.save(passport.createUniqueProductIdentifier());
+      await dppIdentifiableRepository.save(passport);
+      return passport;
+    }
+
+    it("canonical /unique-product-identifier still resolves OPEN_DPP_UUID when a GS1 UPI exists", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createDraftPassport(org!.id);
+      const canonical = await ctx
+        .getRepositories()
+        .uniqueProductIdentifierRepository.findByReferenceIdAndType(
+          passport.id,
+          ExternalIdentifierType.OPEN_DPP_UUID,
+        );
+      await ctx
+        .getRepositories()
+        .uniqueProductIdentifierRepository.save(
+          UniqueProductIdentifier.createGs1({ referenceId: passport.id, gtin: "00333333333331" }),
+        );
+
+      const response = await request(app.getHttpServer())
+        .get(`${basePath}/${passport.id}/unique-product-identifier`)
+        .set("Cookie", userCookie)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      expect(response.body.uuid).toEqual(canonical!.uuid);
+    });
   });
 
   it("/DELETE passport", async () => {

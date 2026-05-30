@@ -21,6 +21,8 @@ export const InstanceSettingsDtoSchema = z.object({
   organizationCreationEnabled: BooleanSettingsResponseDtoSchema,
   permalinkBaseUrl: StringSettingsResponseDtoSchema,
   effectiveFallback: z.string(),
+  gs1ResolverBaseUrl: StringSettingsResponseDtoSchema,
+  gs1EffectiveFallback: z.string(),
 });
 
 export type InstanceSettingsDto = z.infer<typeof InstanceSettingsDtoSchema>;
@@ -29,6 +31,7 @@ export const InstanceSettingsUpdateDtoSchema = z.object({
   signupEnabled: z.boolean().optional(),
   organizationCreationEnabled: z.boolean().optional(),
   permalinkBaseUrl: PermalinkBaseUrlSchema.nullable().optional(),
+  gs1ResolverBaseUrl: PermalinkBaseUrlSchema.nullable().optional(),
 });
 
 export type InstanceSettingsUpdateDto = z.infer<typeof InstanceSettingsUpdateDtoSchema>;

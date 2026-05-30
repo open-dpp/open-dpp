@@ -51,3 +51,23 @@ describe("validateEnv — OPEN_DPP_URL", () => {
     );
   });
 });
+
+describe("validateEnv — OPEN_DPP_GS1_RESOLVER_BASE_URL", () => {
+  it("is optional", () => {
+    expect(() => validateEnv({ ...baseEnv })).not.toThrow();
+  });
+
+  it("accepts a valid https URL (bare root)", () => {
+    const result = validateEnv({
+      ...baseEnv,
+      OPEN_DPP_GS1_RESOLVER_BASE_URL: "https://id.acme.com",
+    });
+    expect(result.OPEN_DPP_GS1_RESOLVER_BASE_URL).toBe("https://id.acme.com");
+  });
+
+  it("rejects a non-URL value", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_GS1_RESOLVER_BASE_URL: "not-a-url" })).toThrow(
+      /OPEN_DPP_GS1_RESOLVER_BASE_URL/,
+    );
+  });
+});

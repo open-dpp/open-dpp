@@ -6,6 +6,7 @@ import {
 import { SignupEnabledSetting } from "./signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "./organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "./permalink-base-url-setting";
+import { Gs1ResolverBaseUrlSetting } from "./gs1-resolver-base-url-setting";
 import {
   StringInstanceSetting,
   StringInstanceSettingCreateProps,
@@ -24,6 +25,7 @@ export interface InstanceSettingsCreateProps {
   signupEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
   organizationCreationEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
   permalinkBaseUrl?: StringInstanceSettingCreatePropsWithoutName;
+  gs1ResolverBaseUrl?: StringInstanceSettingCreatePropsWithoutName;
 }
 
 export interface InstanceSettingsDbProps {
@@ -31,6 +33,7 @@ export interface InstanceSettingsDbProps {
   signupEnabled: boolean;
   organizationCreationEnabled: boolean;
   permalinkBaseUrl: string | null;
+  gs1ResolverBaseUrl: string | null;
 }
 
 export interface InstanceSettingsResponseProps {
@@ -38,12 +41,14 @@ export interface InstanceSettingsResponseProps {
   signupEnabled: BooleanInstanceSettingResponse;
   organizationCreationEnabled: BooleanInstanceSettingResponse;
   permalinkBaseUrl: StringInstanceSettingResponse;
+  gs1ResolverBaseUrl: StringInstanceSettingResponse;
 }
 
 export interface EnvOverrideProps {
   signupEnabled?: boolean;
   organizationCreationEnabled?: boolean;
   permalinkBaseUrl?: string;
+  gs1ResolverBaseUrl?: string;
 }
 
 export class InstanceSettings {
@@ -52,6 +57,7 @@ export class InstanceSettings {
     public readonly signupEnabled: SignupEnabledSetting,
     public readonly organizationCreationEnabled: OrganizationCreationEnabledSetting,
     public readonly permalinkBaseUrl: StringInstanceSetting,
+    public readonly gs1ResolverBaseUrl: StringInstanceSetting,
   ) {}
 
   public static create(props: InstanceSettingsCreateProps = {}): InstanceSettings {
@@ -66,6 +72,9 @@ export class InstanceSettings {
       props.permalinkBaseUrl
         ? PermalinkBaseUrlSetting.create(props.permalinkBaseUrl)
         : PermalinkBaseUrlSetting.create({}),
+      props.gs1ResolverBaseUrl
+        ? Gs1ResolverBaseUrlSetting.create(props.gs1ResolverBaseUrl)
+        : Gs1ResolverBaseUrlSetting.create({}),
     );
   }
 
@@ -75,6 +84,7 @@ export class InstanceSettings {
       SignupEnabledSetting.create({ value: props.signupEnabled }),
       OrganizationCreationEnabledSetting.create({ value: props.organizationCreationEnabled }),
       PermalinkBaseUrlSetting.create({ value: props.permalinkBaseUrl }),
+      Gs1ResolverBaseUrlSetting.create({ value: props.gs1ResolverBaseUrl ?? null }),
     );
   }
 
@@ -84,6 +94,7 @@ export class InstanceSettings {
       this.signupEnabled.withEnvOverrides(overrides.signupEnabled),
       this.organizationCreationEnabled.withEnvOverrides(overrides.organizationCreationEnabled),
       this.permalinkBaseUrl.withEnvOverrides(overrides.permalinkBaseUrl),
+      this.gs1ResolverBaseUrl.withEnvOverrides(overrides.gs1ResolverBaseUrl),
     );
   }
 
@@ -93,6 +104,7 @@ export class InstanceSettings {
       this.signupEnabled.update(props.signupEnabled),
       this.organizationCreationEnabled.update(props.organizationCreationEnabled),
       this.permalinkBaseUrl.update(props.permalinkBaseUrl),
+      this.gs1ResolverBaseUrl.update(props.gs1ResolverBaseUrl),
     );
   }
 
@@ -102,6 +114,7 @@ export class InstanceSettings {
       signupEnabled: this.signupEnabled.value,
       organizationCreationEnabled: this.organizationCreationEnabled.value,
       permalinkBaseUrl: this.permalinkBaseUrl.value,
+      gs1ResolverBaseUrl: this.gs1ResolverBaseUrl.value,
     };
   }
 
@@ -111,6 +124,7 @@ export class InstanceSettings {
       signupEnabled: this.signupEnabled.toResponse(),
       organizationCreationEnabled: this.organizationCreationEnabled.toResponse(),
       permalinkBaseUrl: this.permalinkBaseUrl.toResponse(),
+      gs1ResolverBaseUrl: this.gs1ResolverBaseUrl.toResponse(),
     };
   }
 }

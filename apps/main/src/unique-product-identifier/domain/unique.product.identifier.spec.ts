@@ -1,0 +1,269 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "@jest/globals";
+import { ValueError } from "@open-dpp/exception";
+import { UniqueProductIdentifier } from "./unique.product.identifier";
+import { ExternalIdentifierType } from "../presentation/dto/unique-product-identifier-dto.schema";
+
+const VALID_GTIN13 = "4006381333931";
+const VALID_GTIN13_AS_14 = "04006381333931";
+
+describe("UniqueProductIdentifier (GS1)", () => {
+  it("creates an OPEN_DPP_UUID UPI with no GS1 identity by default", () => {
+    const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+    expect(upi.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(upi.gs1).toBeUndefined();
+  });
+
+  it("creates a GS1 UPI from a raw GTIN, normalizing it to GTIN-14", () => {
+    const referenceId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
+    expect(upi.type).toBe(ExternalIdentifierType.GS1);
+    expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+    expect(upi.referenceId).toBe(referenceId);
+  });
+
+  it("rejects creating a GS1 UPI with an invalid GTIN check digit", () => {
+    expect(() =>
+      UniqueProductIdentifier.createGs1({ referenceId: randomUUID(), gtin: "4006381333930" }),
+    ).toThrow(ValueError);
+  });
+
+  it("rejects creating a GS1 UPI with a wrong-length GTIN", () => {
+    expect(() =>
+      UniqueProductIdentifier.createGs1({ referenceId: randomUUID(), gtin: "123456789" }),
+    ).toThrow(ValueError);
+  });
+
+  it("withGs1Gtin returns a NEW instance with a replaced GS1 identity (immutability)", () => {
+    const referenceId = randomUUID();
+    const otherValidGtin = "00012345678905";
+    const base = UniqueProductIdentifier.createGs1({ referenceId, gtin: otherValidGtin });
+    const updated = base.withGs1Gtin(VALID_GTIN13);
+    expect(updated).not.toBe(base);
+    expect(updated.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+    expect(updated.uuid).toBe(base.uuid);
+    expect(updated.referenceId).toBe(referenceId);
+    // original is untouched
+    expect(base.gs1).toEqual({ gtin: otherValidGtin });
+  });
+
+  it("rejects loadFromDb of a GS1 row that has no gtin", () => {
+    expect(() =>
+      UniqueProductIdentifier.loadFromDb({
+        uuid: randomUUID(),
+        referenceId: randomUUID(),
+        type: ExternalIdentifierType.GS1,
+        gtin: null,
+      }),
+    ).toThrow(ValueError);
+  });
+
+  it("rejects a non-GS1 UPI that carries a gtin (invariant)", () => {
+    expect(() =>
+      UniqueProductIdentifier.loadFromDb({
+        uuid: randomUUID(),
+        referenceId: randomUUID(),
+        type: ExternalIdentifierType.OPEN_DPP_UUID,
+        gtin: VALID_GTIN13_AS_14,
+      }),
+    ).toThrow(ValueError);
+  });
+
+  it("loadFromDb reconstructs a GS1 identity and validates the stored GTIN-14", () => {
+    const upi = UniqueProductIdentifier.loadFromDb({
+      uuid: randomUUID(),
+      referenceId: randomUUID(),
+      type: ExternalIdentifierType.GS1,
+      gtin: VALID_GTIN13_AS_14,
+    });
+    expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+  });
+
+  it("toPlain serializes the GS1 identity (gtin) alongside the discriminator", () => {
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: VALID_GTIN13,
+    });
+    expect(upi.toPlain()).toEqual({
+      uuid: upi.uuid,
+      referenceId: upi.referenceId,
+      type: ExternalIdentifierType.GS1,
+      gtin: VALID_GTIN13_AS_14,
+      batch: null,
+      serial: null,
+    });
+  });
+
+  it("toPlain emits a null gtin for a non-GS1 UPI", () => {
+    const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+    expect(upi.toPlain()).toEqual({
+      uuid: upi.uuid,
+      referenceId: upi.referenceId,
+      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      gtin: null,
+      batch: null,
+      serial: null,
+    });
+  });
+
+  it("builds an uncompressed GS1 Digital Link from a resolver base", () => {
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: VALID_GTIN13,
+    });
+    expect(upi.buildDigitalLink("https://id.example.com")).toBe(
+      `https://id.example.com/01/${VALID_GTIN13_AS_14}`,
+    );
+  });
+
+  it("throws when building a Digital Link for a UPI without a GS1 identity", () => {
+    const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+    expect(() => upi.buildDigitalLink("https://id.example.com")).toThrow(ValueError);
+  });
+
+  describe("batch & serial (Phase 2)", () => {
+    it("creates a GS1 UPI with an optional batch and serial, trimming them", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId,
+        gtin: VALID_GTIN13,
+        batch: "  LOT-42 ",
+        serial: " SN-001 ",
+      });
+      expect(upi.gs1).toEqual({
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+    });
+
+    it("treats a blank batch / serial as absent", () => {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        batch: "   ",
+        serial: "",
+      });
+      expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+      expect(upi.gs1?.batch).toBeUndefined();
+      expect(upi.gs1?.serial).toBeUndefined();
+    });
+
+    it("rejects a batch with a character outside CSET-82", () => {
+      expect(() =>
+        UniqueProductIdentifier.createGs1({
+          referenceId: randomUUID(),
+          gtin: VALID_GTIN13,
+          batch: "bad value",
+        }),
+      ).toThrow(ValueError);
+    });
+
+    it("rejects an over-length serial", () => {
+      expect(() =>
+        UniqueProductIdentifier.createGs1({
+          referenceId: randomUUID(),
+          gtin: VALID_GTIN13,
+          serial: "x".repeat(21),
+        }),
+      ).toThrow(ValueError);
+    });
+
+    it("withGs1 returns a NEW instance carrying the full key (immutability)", () => {
+      const referenceId = randomUUID();
+      const base = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
+      const updated = base.withGs1({ gtin: VALID_GTIN13, batch: "LOT-42", serial: "SN-001" });
+      expect(updated).not.toBe(base);
+      expect(updated.uuid).toBe(base.uuid);
+      expect(updated.gs1).toEqual({
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      // original untouched (still a bare GTIN)
+      expect(base.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+    });
+
+    it("withGs1 can clear a previously-set batch / serial", () => {
+      const referenceId = randomUUID();
+      const base = UniqueProductIdentifier.createGs1({
+        referenceId,
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      const cleared = base.withGs1({ gtin: VALID_GTIN13 });
+      expect(cleared.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+    });
+
+    it("loadFromDb reconstructs a stored batch and serial", () => {
+      const upi = UniqueProductIdentifier.loadFromDb({
+        uuid: randomUUID(),
+        referenceId: randomUUID(),
+        type: ExternalIdentifierType.GS1,
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      expect(upi.gs1).toEqual({
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+    });
+
+    it("loadFromDb treats null batch / serial as absent", () => {
+      const upi = UniqueProductIdentifier.loadFromDb({
+        uuid: randomUUID(),
+        referenceId: randomUUID(),
+        type: ExternalIdentifierType.GS1,
+        gtin: VALID_GTIN13_AS_14,
+        batch: null,
+        serial: null,
+      });
+      expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+    });
+
+    it("toPlain serializes batch and serial (null when absent)", () => {
+      const withKeys = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      expect(withKeys.toPlain()).toEqual({
+        uuid: withKeys.uuid,
+        referenceId: withKeys.referenceId,
+        type: ExternalIdentifierType.GS1,
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+
+      const bare = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+      });
+      expect(bare.toPlain()).toEqual({
+        uuid: bare.uuid,
+        referenceId: bare.referenceId,
+        type: ExternalIdentifierType.GS1,
+        gtin: VALID_GTIN13_AS_14,
+        batch: null,
+        serial: null,
+      });
+    });
+
+    it("builds a Digital Link listing AIs in canonical order 01 -> 10 -> 21", () => {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      expect(upi.buildDigitalLink("https://id.example.com")).toBe(
+        `https://id.example.com/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      );
+    });
+  });
+});

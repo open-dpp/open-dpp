@@ -5,6 +5,7 @@ import { InstanceSettingsRepository } from "../../infrastructure/adapters/instan
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
+import { Gs1ResolverBaseUrlSetting } from "../../domain/gs1-resolver-base-url-setting";
 
 @Injectable()
 export class InstanceSettingsService {
@@ -42,11 +43,13 @@ export class InstanceSettingsService {
       OrganizationCreationEnabledSetting.ENV_NAME,
     );
     const envPermalinkBaseUrl = this.envService.get(PermalinkBaseUrlSetting.ENV_NAME);
+    const envGs1ResolverBaseUrl = this.envService.get(Gs1ResolverBaseUrlSetting.ENV_NAME);
 
     return settings.withEnvOverrides({
       signupEnabled: enforcedSignup,
       organizationCreationEnabled: envOrganizationCreationEnabled,
       permalinkBaseUrl: envPermalinkBaseUrl,
+      gs1ResolverBaseUrl: envGs1ResolverBaseUrl,
     });
   }
 }

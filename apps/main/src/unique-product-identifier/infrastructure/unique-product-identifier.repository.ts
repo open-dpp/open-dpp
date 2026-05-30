@@ -5,6 +5,10 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import {
+  ExternalIdentifierType,
+  type ExternalIdentifierTypeValue,
+} from "../presentation/dto/unique-product-identifier-dto.schema";
+import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchemaVersion,
 } from "./unique-product-identifier.schema";
@@ -25,16 +29,23 @@ export class UniqueProductIdentifierRepository {
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
       type: uniqueProductIdentifierDoc.type ?? null,
+      gtin: uniqueProductIdentifierDoc.gtin ?? null,
+      batch: uniqueProductIdentifierDoc.batch ?? null,
+      serial: uniqueProductIdentifierDoc.serial ?? null,
     });
   }
 
   async save(uniqueProductIdentifier: UniqueProductIdentifier, options?: DbSessionOptions) {
+    const plain = uniqueProductIdentifier.toPlain();
     const doc = await this.uniqueProductIdentifierDoc.findOneAndUpdate(
       { _id: uniqueProductIdentifier.uuid },
       {
-        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_1_0,
-        referenceId: uniqueProductIdentifier.referenceId,
-        type: uniqueProductIdentifier.type,
+        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_2_0,
+        referenceId: plain.referenceId,
+        type: plain.type,
+        gtin: plain.gtin,
+        batch: plain.batch,
+        serial: plain.serial,
       },
       {
         new: true,
@@ -79,6 +90,69 @@ export class UniqueProductIdentifierRepository {
     return this.convertToDomain(uniqueProductIdentifierDoc);
   }
 
+  /**
+   * Resolve a single UPI for a passport, filtered by external identifier type.
+   *
+   * This is the canonical-key lookup: pass `OPEN_DPP_UUID` to fetch the
+   * load-bearing canonical identifier (media, downloads, AI chat) without it
+   * being shadowed by an opt-in GS1 row. When several rows of the same type
+   * exist, the newest is returned.
+   *
+   * Legacy tolerance: rows persisted before the `type` field existed (schema
+   * v1.0.0) carry no `type` in the database — Mongoose's read-time default does
+   * NOT rewrite stored documents. Such a row is, by definition, the canonical
+   * `OPEN_DPP_UUID`. So when querying for `OPEN_DPP_UUID` we also match rows
+   * whose `type` is null or absent (in MongoDB `{ type: null }` matches both),
+   * mirroring `convertToDomain`'s `?? OPEN_DPP_UUID` defaulting. This tolerance
+   * is scoped to the canonical type and never leaks into other types (e.g. GS1).
+   */
+  async findByReferenceIdAndType(
+    referenceId: string,
+    type: ExternalIdentifierTypeValue,
+  ): Promise<UniqueProductIdentifier | undefined> {
+    const typeFilter =
+      type === ExternalIdentifierType.OPEN_DPP_UUID
+        ? { $or: [{ type: { $eq: type } }, { type: null }] }
+        : { type: { $eq: type } };
+    const doc = await this.uniqueProductIdentifierDoc
+      .findOne({
+        referenceId: { $eq: referenceId },
+        ...typeFilter,
+      })
+      .sort({ createdAt: -1 });
+    if (!doc) {
+      return undefined;
+    }
+    return this.convertToDomain(doc);
+  }
+
+  /**
+   * Resolve the GS1 UPI carrying an EXACT assembled key (gtin + optional batch +
+   * optional serial). Used by the public resolver to turn a scanned
+   * `/01/{gtin}[/10/{batch}][/21/{serial}]` into its passport.
+   *
+   * The match is on the full key: an absent batch/serial maps to a `null` filter,
+   * so a bare-GTIN scan resolves only the bare-GTIN row and never a serialized
+   * sibling that shares the GTIN (and vice versa). This mirrors the
+   * (gtin, batch, serial) compound unique index.
+   */
+  async findByGs1Key(key: {
+    gtin: string;
+    batch?: string | null;
+    serial?: string | null;
+  }): Promise<UniqueProductIdentifier | undefined> {
+    const doc = await this.uniqueProductIdentifierDoc.findOne({
+      gtin: { $eq: key.gtin },
+      batch: { $eq: key.batch ?? null },
+      serial: { $eq: key.serial ?? null },
+      type: { $eq: ExternalIdentifierType.GS1 },
+    });
+    if (!doc) {
+      return undefined;
+    }
+    return this.convertToDomain(doc);
+  }
+
   async findAllByReferencedId(referenceId: string) {
     const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find({
       referenceId: {
@@ -91,6 +165,24 @@ export class UniqueProductIdentifierRepository {
   async deleteByReferenceId(referenceId: string, options?: DbSessionOptions) {
     await this.uniqueProductIdentifierDoc.deleteMany(
       { referenceId },
+      { session: options?.session },
+    );
+  }
+
+  /**
+   * Delete the UPI rows of a single external identifier type for a passport.
+   *
+   * Type-filtered so removing an opt-in identity (e.g. a GS1 row) never touches
+   * the load-bearing canonical `OPEN_DPP_UUID` row that media, downloads and AI
+   * chat depend on. Removing a non-existent identity is a no-op.
+   */
+  async deleteByReferenceIdAndType(
+    referenceId: string,
+    type: ExternalIdentifierTypeValue,
+    options?: DbSessionOptions,
+  ) {
+    await this.uniqueProductIdentifierDoc.deleteMany(
+      { referenceId: { $eq: referenceId }, type: { $eq: type } },
       { session: options?.session },
     );
   }

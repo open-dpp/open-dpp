@@ -8,6 +8,7 @@ export const InstanceSettingsDocVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
   v1_2_0: "1.2.0",
+  v1_3_0: "1.3.0",
 } as const;
 type InstanceSettingsDocVersionType =
   (typeof InstanceSettingsDocVersion)[keyof typeof InstanceSettingsDocVersion];
@@ -26,9 +27,12 @@ export class InstanceSettingsSchema {
   @Prop({ required: false, default: null, type: String })
   permalinkBaseUrl: string | null;
 
+  @Prop({ required: false, default: null, type: String })
+  gs1ResolverBaseUrl: string | null;
+
   @Prop({
     required: true,
-    default: InstanceSettingsDocVersion.v1_2_0,
+    default: InstanceSettingsDocVersion.v1_3_0,
     enum: Object.values(InstanceSettingsDocVersion),
     type: String,
   })

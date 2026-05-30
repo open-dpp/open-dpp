@@ -8,6 +8,7 @@ import {
 export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
+  v1_2_0: "1.2.0",
 } as const;
 
 export type UniqueProductIdentifierSchemaVersion_TYPE =
@@ -32,8 +33,29 @@ export class UniqueProductIdentifierDoc extends Document {
   })
   type?: ExternalIdentifierTypeValue;
 
+  /**
+   * GS1 identity: GTIN normalized to GTIN-14. Only populated on `type = GS1` rows;
+   * null otherwise. Uniqueness is enforced by a partial compound index (see below).
+   */
+  @Prop({ type: String, required: false, default: null })
+  gtin?: string | null;
+
+  /**
+   * GS1 batch / lot (AI `10`), CSET-82, ≤ 20 chars. Part of the assembled unique
+   * key on `type = GS1` rows; null when absent.
+   */
+  @Prop({ type: String, required: false, default: null })
+  batch?: string | null;
+
+  /**
+   * GS1 serial (AI `21`), CSET-82, ≤ 20 chars. Part of the assembled unique key on
+   * `type = GS1` rows; null when absent.
+   */
+  @Prop({ type: String, required: false, default: null })
+  serial?: string | null;
+
   @Prop({
-    default: UniqueProductIdentifierSchemaVersion.v1_1_0,
+    default: UniqueProductIdentifierSchemaVersion.v1_2_0,
     enum: Object.values(UniqueProductIdentifierSchemaVersion),
     type: String,
   }) // Track schema version
@@ -51,3 +73,16 @@ export const UniqueProductIdentifierSchema = SchemaFactory.createForClass(
 
 UniqueProductIdentifierSchema.index({ referenceId: 1 });
 UniqueProductIdentifierSchema.index({ type: 1 });
+// Global uniqueness of the FULL assembled GS1 key (gtin, batch, serial). The
+// partial filter scopes the constraint to GS1 rows (only those carry a string
+// gtin), so OPEN_DPP_UUID rows (gtin = null) are never affected. Because batch
+// and serial are stored as null when absent, a bare GTIN keys as
+// (gtin, null, null) — still one passport per bare GTIN — while serialized units
+// (same gtin, distinct serials) key distinctly and so become distinct passports.
+UniqueProductIdentifierSchema.index(
+  { gtin: 1, batch: 1, serial: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { gtin: { $type: "string" } },
+  },
+);

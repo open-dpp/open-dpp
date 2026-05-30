@@ -29,6 +29,8 @@ const instanceSettings = ref<BooleanInstanceSetting[]>([
 
 const permalinkBaseUrl = ref<StringSettingsResponseDto>({ value: null });
 const effectiveFallback = ref<string>("");
+const gs1ResolverBaseUrl = ref<StringSettingsResponseDto>({ value: null });
+const gs1EffectiveFallback = ref<string>("");
 
 const isSaving = ref(false);
 const loading = ref(true);
@@ -42,6 +44,8 @@ async function fetchSettings() {
     }
     permalinkBaseUrl.value = res.data.permalinkBaseUrl;
     effectiveFallback.value = res.data.effectiveFallback;
+    gs1ResolverBaseUrl.value = res.data.gs1ResolverBaseUrl;
+    gs1EffectiveFallback.value = res.data.gs1EffectiveFallback;
   } catch (error) {
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
@@ -103,6 +107,30 @@ async function commitPermalinkBaseUrl(value: string | null) {
   }
 }
 
+async function commitGs1ResolverBaseUrl(value: string | null) {
+  if (gs1ResolverBaseUrl.value.locked || isSaving.value) return;
+  const previous = gs1ResolverBaseUrl.value;
+  isSaving.value = true;
+  try {
+    const res = await apiClient.dpp.instanceSettings.update({ gs1ResolverBaseUrl: value });
+    gs1ResolverBaseUrl.value = res.data.gs1ResolverBaseUrl;
+    gs1EffectiveFallback.value = res.data.gs1EffectiveFallback;
+    toast.add({
+      severity: "success",
+      summary: t("organizations.admin.instanceSettings.saved"),
+      life: 3000,
+    });
+  } catch (error) {
+    gs1ResolverBaseUrl.value = previous;
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.admin.instanceSettings.error"),
+      error,
+    );
+  } finally {
+    isSaving.value = false;
+  }
+}
+
 onMounted(async () => {
   await fetchSettings();
 });
@@ -148,6 +176,32 @@ onMounted(async () => {
           translationKey="permalinkBaseUrl"
           :effective-fallback="effectiveFallback"
           @commit="commitPermalinkBaseUrl"
+        />
+      </div>
+      <div
+        data-testid="gs1-resolver-section"
+        class="flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4"
+      >
+        <div class="flex items-start gap-2 text-sm text-amber-800">
+          <span class="shrink-0 font-semibold tracking-wide text-amber-700 uppercase">
+            {{ t("organizations.admin.instanceSettings.gs1ResolverBaseUrl.dangerZone") }}
+          </span>
+        </div>
+        <div
+          data-testid="gs1-resolver-warning"
+          class="flex items-start gap-2 rounded-md border border-amber-200 bg-white p-3 text-sm text-amber-700"
+        >
+          <ExclamationTriangleIcon class="mt-0.5 size-4 shrink-0 text-amber-500" />
+          <span>{{ t("organizations.admin.instanceSettings.gs1ResolverBaseUrl.warning") }}</span>
+        </div>
+        <InstanceSettingUrlInput
+          :model-value="gs1ResolverBaseUrl.value"
+          :loading="loading"
+          :isSaving="isSaving"
+          :isLocked="!!gs1ResolverBaseUrl.locked"
+          translationKey="gs1ResolverBaseUrl"
+          :effective-fallback="gs1EffectiveFallback"
+          @commit="commitGs1ResolverBaseUrl"
         />
       </div>
     </div>

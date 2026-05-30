@@ -8,6 +8,7 @@ import { InstanceSettingsService } from "./instance-settings.service";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
+import { Gs1ResolverBaseUrlSetting } from "../../domain/gs1-resolver-base-url-setting";
 
 describe("InstanceSettingsService", () => {
   let service: InstanceSettingsService;
@@ -122,6 +123,29 @@ describe("InstanceSettingsService", () => {
 
       expect(result.permalinkBaseUrl.value).toBeNull();
       expect(result.permalinkBaseUrl.locked).toBeUndefined();
+    });
+
+    it("should apply OPEN_DPP_GS1_RESOLVER_BASE_URL env override and lock the setting", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      mockEnvService.get.mockImplementation((key: string) => {
+        if (key === Gs1ResolverBaseUrlSetting.ENV_NAME) return "https://id.env.example.com";
+        return undefined;
+      });
+
+      const result = await service.getSettings();
+
+      expect(result.gs1ResolverBaseUrl.value).toBe("https://id.env.example.com");
+      expect(result.gs1ResolverBaseUrl.locked).toBe(true);
+    });
+
+    it("should leave gs1ResolverBaseUrl unlocked when env is not set", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      mockEnvService.get.mockReturnValue(undefined);
+
+      const result = await service.getSettings();
+
+      expect(result.gs1ResolverBaseUrl.value).toBeNull();
+      expect(result.gs1ResolverBaseUrl.locked).toBeUndefined();
     });
   });
 

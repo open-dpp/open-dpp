@@ -12,6 +12,7 @@ import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/we
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { ExternalIdentifierType } from "../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema";
 import { ChatService } from "../chat.service";
 
 @UseGuards(WebsocketAuthGuard)
@@ -46,7 +47,10 @@ export class ChatGateway {
           memberRole: client.data.member?.role,
         },
       );
-      const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(passport.id);
+      const upi = await this.uniqueProductIdentifierRepository.findByReferenceIdAndType(
+        passport.id,
+        ExternalIdentifierType.OPEN_DPP_UUID,
+      );
       if (!upi) {
         this.logger.error(
           `No UniqueProductIdentifier found for passport ${passport.id} (permalink=${message.permalink})`,

@@ -58,6 +58,7 @@ async function save() {
         logo: branding.value.logo,
         primaryColor: branding.value.primaryColor,
         permalinkBaseUrl: trimToNull(branding.value.permalinkBaseUrl),
+        gs1ResolverBaseUrl: trimToNull(branding.value.gs1ResolverBaseUrl),
       });
 
       branding.value = brandingResult.data;
@@ -162,6 +163,24 @@ onMounted(async () => {
             id="permalinkBaseUrl"
             v-model="branding.permalinkBaseUrl"
             placeholder="https://passports.example.com"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label
+            for="gs1ResolverBaseUrl"
+            class="block text-sm leading-6 font-medium text-gray-900"
+            >{{ t("organizations.form.gs1ResolverBaseUrl.label") }}</label
+          >
+          <small class="text-gray-700">{{
+            t("organizations.form.gs1ResolverBaseUrl.description")
+          }}</small>
+          <InputText
+            id="gs1ResolverBaseUrl"
+            v-model="branding.gs1ResolverBaseUrl"
+            placeholder="https://id.example.com"
             inputmode="url"
             autocomplete="off"
             spellcheck="false"

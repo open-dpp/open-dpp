@@ -15,6 +15,8 @@ const { getInstanceSettings } = vi.hoisted(() => ({
       organizationCreationEnabled: { value: true },
       permalinkBaseUrl: { value: null },
       effectiveFallback: "https://example.com",
+      gs1ResolverBaseUrl: { value: null },
+      gs1EffectiveFallback: "https://example.com",
     },
   }),
 }));
@@ -112,6 +114,15 @@ const i18n = createI18n({
               invalid: "Must be a valid http(s) URL.",
               dangerZone: "Danger Zone",
             },
+            gs1ResolverBaseUrl: {
+              title: "GS1 resolver domain",
+              description: "Domain used to build GS1 Digital Links for passports.",
+              warning: "Changing this domain invalidates already-printed GS1 QR codes.",
+              placeholder: "https://id.example.com",
+              effectiveFallback: "Currently effective: {url}",
+              invalid: "Must be a valid http(s) URL.",
+              dangerZone: "Danger Zone",
+            },
           },
         },
       },
@@ -180,5 +191,47 @@ describe("SettingsAdminView — Danger Zone", () => {
     const dangerZone = wrapper.find("[data-testid='permalink-danger-zone']");
     const urlInput = dangerZone.find("[data-testid='url-input']");
     expect(urlInput.exists()).toBe(true);
+  });
+});
+
+describe("SettingsAdminView — GS1 resolver domain", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renders a dedicated GS1 resolver domain section", async () => {
+    const wrapper = mountView();
+    await nextTick();
+    const section = wrapper.find("[data-testid='gs1-resolver-section']");
+    expect(section.exists()).toBe(true);
+  });
+
+  it("renders a url input inside the GS1 resolver section", async () => {
+    const wrapper = mountView();
+    await nextTick();
+    const section = wrapper.find("[data-testid='gs1-resolver-section']");
+    const urlInput = section.find("[data-testid='url-input']");
+    expect(urlInput.exists()).toBe(true);
+  });
+
+  it("loads the gs1ResolverBaseUrl from the instance settings response", async () => {
+    getInstanceSettings.mockResolvedValueOnce({
+      data: {
+        signupEnabled: { value: true },
+        organizationCreationEnabled: { value: true },
+        permalinkBaseUrl: { value: null },
+        effectiveFallback: "https://example.com",
+        gs1ResolverBaseUrl: { value: "https://id.acme.com" },
+        gs1EffectiveFallback: "https://example.com",
+      },
+    });
+    const wrapper = mountView();
+    await nextTick();
+    expect(getInstanceSettings).toHaveBeenCalled();
+    expect(wrapper.find("[data-testid='gs1-resolver-section']").exists()).toBe(true);
   });
 });

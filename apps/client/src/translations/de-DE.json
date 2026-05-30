@@ -394,6 +394,10 @@
         "label": "Basis-URL für Produktpässe",
         "description": "Überschreibt die Standard-URL dieser Instanz für Produktpässe."
       },
+      "gs1ResolverBaseUrl": {
+        "label": "GS1-Resolver-Domain",
+        "description": "Überschreibt die Standard-Resolver-Domain der Instanz zum Erstellen von GS1 Digital Links für die Produktpässe dieser Organisation."
+      },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
@@ -473,6 +477,15 @@
           "warning": "Das Ändern oder Leeren dieser URL bricht ALLE bestehenden QR-Codes. Diese Einstellung wird nur benötigt, wenn ein eigener Produktpass-Viewer unter einer abweichenden Adresse betrieben wird.",
           "dangerZone": "Gefahrenzone",
           "placeholder": "https://dpp.example.com",
+          "effectiveFallback": "Aktuell wirksam: {url}",
+          "invalid": "Muss eine gültige http(s)-URL ohne Query oder Fragment sein."
+        },
+        "gs1ResolverBaseUrl": {
+          "title": "GS1-Resolver-Domain",
+          "description": "Basis-URL zum Erstellen von GS1 Digital Links für alle Organisationen. Wenn nicht gesetzt, wird die Instanz-Root verwendet. Organisationen können dies mit einer eigenen Resolver-Domain überschreiben.",
+          "warning": "Diese Domain wird in GS1-QR-Codes gedruckt. Eine Änderung macht bereits gedruckte GS1-Datenträger ungültig.",
+          "dangerZone": "Gefahrenzone",
+          "placeholder": "https://id.example.com",
           "effectiveFallback": "Aktuell wirksam: {url}",
           "invalid": "Muss eine gültige http(s)-URL ohne Query oder Fragment sein."
         },
@@ -716,6 +729,51 @@
           "instance": "Basis-URL vom Instanz-Standard geerbt."
         }
       }
+    }
+  },
+  "gs1": {
+    "settings": {
+      "open": "GS1-Identität",
+      "title": "GS1-Identität",
+      "description": "Weisen Sie eine herstellerseitig vergebene GTIN zu, um einen GS1-kompatiblen (Digital Link) QR-Code zu erzeugen, der auf diesen Pass verweist.",
+      "loadError": "GS1-Identität konnte nicht geladen werden.",
+      "saveError": "GS1-Identität konnte nicht gespeichert werden.",
+      "saveSuccess": "GS1-Identität gespeichert.",
+      "removeError": "GS1-Identität konnte nicht entfernt werden.",
+      "removeSuccess": "GS1-Identität entfernt.",
+      "gtinInvalid": "Geben Sie eine gültige GTIN ein (8, 12, 13 oder 14 Ziffern mit korrekter Prüfziffer).",
+      "gtinConflict": "Diese GS1-Identität (GTIN, Charge und Seriennummer) ist bereits einem anderen Pass zugewiesen.",
+      "componentInvalid": "Verwenden Sie bis zu 20 GS1-Zeichen (Buchstaben, Ziffern und !\"%&'()*+,-./:;<=>?_).",
+      "draftOnly": "Eine GS1-Identität kann nur geändert werden, solange der Pass ein Entwurf ist.",
+      "frozenNotice": "Dieser Pass ist veröffentlicht, daher ist seine GS1-Identität eingefroren. Der GS1 Digital Link wird auf gescannte Datenträger gedruckt und muss stabil bleiben. Setzen Sie den Pass auf Entwurf zurück, um die Identität zu ändern oder zu entfernen.",
+      "gtin": {
+        "label": "GTIN",
+        "placeholder": "z. B. 4006381333931"
+      },
+      "batch": {
+        "label": "Charge / Los (optional)",
+        "placeholder": "z. B. LOT-42"
+      },
+      "serial": {
+        "label": "Seriennummer (optional)",
+        "placeholder": "z. B. SN-001"
+      },
+      "digitalLink": {
+        "label": "GS1 Digital Link"
+      },
+      "empty": "Noch keine GS1-Identität zugewiesen."
+    },
+    "qrCode": {
+      "open": "GS1 QR-Code",
+      "title": "GS1 QR-Code",
+      "loadError": "GS1-Identität für den QR-Code konnte nicht geladen werden.",
+      "digitalLink": {
+        "label": "GS1 Digital Link"
+      },
+      "elementString": {
+        "label": "GS1 Elementkette"
+      },
+      "empty": "Noch keine GS1-Identität zugewiesen. Weisen Sie in den GS1-Identitätseinstellungen eine zu, um einen GS1 QR-Code zu erzeugen."
     }
   }
 }

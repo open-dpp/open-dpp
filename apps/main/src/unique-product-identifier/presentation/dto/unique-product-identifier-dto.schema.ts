@@ -21,6 +21,8 @@ export const UniqueProductIdentifierDtoSchema = z.object({
   uuid: z.string(),
   referenceId: z.uuid(),
   type: ExternalIdentifierTypeSchema.default(ExternalIdentifierType.OPEN_DPP_UUID),
+  /** GS1 identity GTIN (normalized to GTIN-14); null for non-GS1 identifiers. */
+  gtin: z.string().nullish(),
 });
 
 export const UniqueProductIdentifierListDtoSchema = z.array(UniqueProductIdentifierDtoSchema);

@@ -394,6 +394,10 @@
         "label": "Base URL for passports",
         "description": "Overrides the default base URL for passports of this instance."
       },
+      "gs1ResolverBaseUrl": {
+        "label": "GS1 resolver domain",
+        "description": "Overrides the instance default resolver domain used to build GS1 Digital Links for this organization's passports."
+      },
       "updateError": "Failed to update organization.",
       "updateSuccess": "Organization settings saved successfully."
     },
@@ -473,6 +477,15 @@
           "warning": "Changing or clearing this URL will break ALL existing QR codes. This setting is only needed when running a custom passport viewer at a non-default address.",
           "dangerZone": "Danger Zone",
           "placeholder": "https://dpp.example.com",
+          "effectiveFallback": "Currently effective: {url}",
+          "invalid": "Must be a valid http(s) URL without a query or fragment."
+        },
+        "gs1ResolverBaseUrl": {
+          "title": "GS1 resolver domain",
+          "description": "Base URL used to build GS1 Digital Links for all organizations. When unset, the instance root is used. Organizations can override this with their own resolver domain.",
+          "warning": "This domain is printed into GS1 QR codes. Changing it invalidates already-printed GS1 carriers.",
+          "dangerZone": "Danger Zone",
+          "placeholder": "https://id.example.com",
           "effectiveFallback": "Currently effective: {url}",
           "invalid": "Must be a valid http(s) URL without a query or fragment."
         },
@@ -716,6 +729,51 @@
           "instance": "Base URL inherited from the instance default."
         }
       }
+    }
+  },
+  "gs1": {
+    "settings": {
+      "open": "GS1 identity",
+      "title": "GS1 identity",
+      "description": "Assign a manufacturer-issued GTIN to render a GS1-compatible (Digital Link) QR code that resolves to this passport.",
+      "loadError": "Could not load the GS1 identity.",
+      "saveError": "Could not save the GS1 identity.",
+      "saveSuccess": "GS1 identity saved.",
+      "removeError": "Could not remove the GS1 identity.",
+      "removeSuccess": "GS1 identity removed.",
+      "gtinInvalid": "Enter a valid GTIN (8, 12, 13, or 14 digits with a correct check digit).",
+      "gtinConflict": "This GS1 identity (GTIN, batch and serial) is already assigned to another passport.",
+      "componentInvalid": "Use up to 20 GS1 characters (letters, digits and !\"%&'()*+,-./:;<=>?_).",
+      "draftOnly": "A GS1 identity can only be changed while the passport is a draft.",
+      "frozenNotice": "This passport is published, so its GS1 identity is frozen. The GS1 Digital Link is printed onto scanned carriers and must stay stable. Move the passport back to a draft to change or remove the identity.",
+      "gtin": {
+        "label": "GTIN",
+        "placeholder": "e.g. 4006381333931"
+      },
+      "batch": {
+        "label": "Batch / lot (optional)",
+        "placeholder": "e.g. LOT-42"
+      },
+      "serial": {
+        "label": "Serial (optional)",
+        "placeholder": "e.g. SN-001"
+      },
+      "digitalLink": {
+        "label": "GS1 Digital Link"
+      },
+      "empty": "No GS1 identity assigned yet."
+    },
+    "qrCode": {
+      "open": "GS1 QR code",
+      "title": "GS1 QR code",
+      "loadError": "Could not load the GS1 identity for the QR code.",
+      "digitalLink": {
+        "label": "GS1 Digital Link"
+      },
+      "elementString": {
+        "label": "GS1 element string"
+      },
+      "empty": "No GS1 identity assigned yet. Assign one in the GS1 identity settings to generate a GS1 QR code."
     }
   }
 }

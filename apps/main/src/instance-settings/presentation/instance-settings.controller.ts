@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Patch } from "@nestjs/common";
+import { canonicaliseBaseUrl } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
@@ -30,6 +31,7 @@ export class InstanceSettingsController {
     return InstanceSettingsDtoSchema.parse({
       ...settings.toResponse(),
       effectiveFallback: this.computeEffectiveFallback(),
+      gs1EffectiveFallback: this.computeGs1EffectiveFallback(),
     });
   }
 
@@ -42,11 +44,21 @@ export class InstanceSettingsController {
     return InstanceSettingsDtoSchema.parse({
       ...settings.toResponse(),
       effectiveFallback: this.computeEffectiveFallback(),
+      gs1EffectiveFallback: this.computeGs1EffectiveFallback(),
     });
   }
 
   private computeEffectiveFallback(): string {
     return computePermalinkBaseUrlFallback(this.envService.get("OPEN_DPP_URL"));
+  }
+
+  /**
+   * The effective GS1 resolver base when the instance setting is unset: the
+   * canonicalised instance root (`OPEN_DPP_URL`), bare — NOT the permalink `/p`
+   * base. Shown to the admin as the currently-effective default.
+   */
+  private computeGs1EffectiveFallback(): string {
+    return canonicaliseBaseUrl(this.envService.get("OPEN_DPP_URL"));
   }
 
   @Get("public")

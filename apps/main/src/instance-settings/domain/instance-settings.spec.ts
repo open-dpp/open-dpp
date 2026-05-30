@@ -37,6 +37,12 @@ describe("InstanceSettings", () => {
       expect(settings.permalinkBaseUrl.value).toBeNull();
       expect(settings.permalinkBaseUrl.locked).toBeUndefined();
     });
+
+    it("should expose gs1ResolverBaseUrl defaulting to null", () => {
+      const settings = InstanceSettings.create();
+      expect(settings.gs1ResolverBaseUrl.value).toBeNull();
+      expect(settings.gs1ResolverBaseUrl.locked).toBeUndefined();
+    });
   });
 
   describe("loadFromDb", () => {
@@ -46,11 +52,24 @@ describe("InstanceSettings", () => {
         signupEnabled: false,
         organizationCreationEnabled: false,
         permalinkBaseUrl: null,
+        gs1ResolverBaseUrl: null,
       });
       expect(settings.id).toBe("abc");
       expect(settings.signupEnabled.value).toBeFalsy();
       expect(settings.organizationCreationEnabled.value).toBeFalsy();
       expect(settings.permalinkBaseUrl.value).toBeNull();
+      expect(settings.gs1ResolverBaseUrl.value).toBeNull();
+    });
+
+    it("should restore a persisted gs1ResolverBaseUrl", () => {
+      const settings = InstanceSettings.loadFromDb({
+        id: "abc",
+        signupEnabled: true,
+        organizationCreationEnabled: true,
+        permalinkBaseUrl: null,
+        gs1ResolverBaseUrl: "https://id.acme.com",
+      });
+      expect(settings.gs1ResolverBaseUrl.value).toBe("https://id.acme.com");
     });
   });
 
@@ -133,6 +152,26 @@ describe("InstanceSettings", () => {
         "Cannot override permalinkBaseUrl when OPEN_DPP_PERMALINK_BASE_URL is set",
       );
     });
+
+    it("should apply env override on gs1ResolverBaseUrl and lock the setting", () => {
+      const original = InstanceSettings.create();
+      const overridden = original.withEnvOverrides({
+        gs1ResolverBaseUrl: "https://id.env.example.com",
+      });
+
+      expect(overridden.gs1ResolverBaseUrl.value).toBe("https://id.env.example.com");
+      expect(overridden.gs1ResolverBaseUrl.locked).toBe(true);
+    });
+
+    it("should reject update when gs1ResolverBaseUrl is locked", () => {
+      const settings = InstanceSettings.create().withEnvOverrides({
+        gs1ResolverBaseUrl: "https://id.env.example.com",
+      });
+
+      expect(() => settings.update({ gs1ResolverBaseUrl: "https://id.other.example.com" })).toThrow(
+        "Cannot override gs1ResolverBaseUrl when OPEN_DPP_GS1_RESOLVER_BASE_URL is set",
+      );
+    });
   });
 
   describe("update", () => {
@@ -179,6 +218,23 @@ describe("InstanceSettings", () => {
 
       expect(updated.permalinkBaseUrl.value).toBeNull();
     });
+
+    it("should update gs1ResolverBaseUrl from null to a string", () => {
+      const original = InstanceSettings.create();
+      const updated = original.update({ gs1ResolverBaseUrl: "https://id.acme.com" });
+
+      expect(updated.gs1ResolverBaseUrl.value).toBe("https://id.acme.com");
+      expect(original.gs1ResolverBaseUrl.value).toBeNull();
+    });
+
+    it("should clear gs1ResolverBaseUrl when null is passed explicitly", () => {
+      const original = InstanceSettings.create({
+        gs1ResolverBaseUrl: { value: "https://id.acme.com" },
+      });
+      const updated = original.update({ gs1ResolverBaseUrl: null });
+
+      expect(updated.gs1ResolverBaseUrl.value).toBeNull();
+    });
   });
 
   describe("toPlain", () => {
@@ -194,6 +250,7 @@ describe("InstanceSettings", () => {
         signupEnabled: settings.signupEnabled.value,
         organizationCreationEnabled: settings.organizationCreationEnabled.value,
         permalinkBaseUrl: settings.permalinkBaseUrl.value,
+        gs1ResolverBaseUrl: settings.gs1ResolverBaseUrl.value,
       });
     });
   });
@@ -211,6 +268,7 @@ describe("InstanceSettings", () => {
         signupEnabled: settings.signupEnabled.toResponse(),
         organizationCreationEnabled: settings.organizationCreationEnabled.toResponse(),
         permalinkBaseUrl: settings.permalinkBaseUrl.toResponse(),
+        gs1ResolverBaseUrl: settings.gs1ResolverBaseUrl.toResponse(),
       });
     });
   });

@@ -111,6 +111,7 @@ import { PresentationConfigurationService } from "../../presentation-configurati
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { ExternalIdentifierType } from "../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema";
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
@@ -196,7 +197,10 @@ export class PassportController
       subject,
       organizationId,
     );
-    const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(id);
+    const upi = await this.uniqueProductIdentifierRepository.findByReferenceIdAndType(
+      id,
+      ExternalIdentifierType.OPEN_DPP_UUID,
+    );
     if (!upi) {
       throw new NotFoundException(`No UniqueProductIdentifier found for passport ${id}`);
     }

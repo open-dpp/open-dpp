@@ -55,6 +55,8 @@ export * from "./aas/submodel-base/submodel-element-modification-schema";
 export * from "./aas/submodel-base/submodel-element-schema";
 export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
+export * from "./gs1/gs1-digital-link";
+export * from "./gs1/gs1-identity.dto";
 export * from "./organizations/member.dto";
 export * from "./passports/passport.dto";
 export * from "./permalinks/permalink.dto";

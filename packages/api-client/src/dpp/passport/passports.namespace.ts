@@ -1,6 +1,8 @@
 import type {
   DigitalProductDocumentStatusModificationDto,
   GetAllParamsDto,
+  Gs1IdentityRequest,
+  Gs1IdentityResponse,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -45,6 +47,25 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
   public async getUniqueProductIdentifierOfPassport(passportId: string) {
     return await this.axiosInstance.get<{ uuid: string }>(
       `${this.passportEndpoint}/${passportId}/unique-product-identifier`,
+    );
+  }
+
+  public async getGs1Identity(passportId: string) {
+    return await this.axiosInstance.get<Gs1IdentityResponse>(
+      `${this.passportEndpoint}/${passportId}/gs1-identity`,
+    );
+  }
+
+  public async setGs1Identity(passportId: string, data: Gs1IdentityRequest) {
+    return await this.axiosInstance.put<Gs1IdentityResponse>(
+      `${this.passportEndpoint}/${passportId}/gs1-identity`,
+      data,
+    );
+  }
+
+  public async deleteGs1Identity(passportId: string) {
+    return await this.axiosInstance.delete<void>(
+      `${this.passportEndpoint}/${passportId}/gs1-identity`,
     );
   }
 

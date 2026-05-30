@@ -6,6 +6,7 @@ export class Branding {
     public readonly logo: string | null = null,
     public readonly primaryColor: string | null = null,
     public readonly permalinkBaseUrl: string | null = null,
+    public readonly gs1ResolverBaseUrl: string | null = null,
   ) {}
 
   static create(data: {
@@ -13,12 +14,14 @@ export class Branding {
     logo?: string;
     primaryColor?: string;
     permalinkBaseUrl?: string | null;
+    gs1ResolverBaseUrl?: string | null;
   }) {
     return new Branding(
       data.organizationId,
       data.logo,
       data.primaryColor,
       data.permalinkBaseUrl ?? null,
+      data.gs1ResolverBaseUrl ?? null,
     );
   }
 
@@ -37,6 +40,7 @@ export class Branding {
       parsed.logo ?? null,
       parsed.primaryColor ?? null,
       parsed.permalinkBaseUrl ?? null,
+      parsed.gs1ResolverBaseUrl ?? null,
     );
   }
 
@@ -45,12 +49,14 @@ export class Branding {
     logo?: string;
     primaryColor?: string;
     permalinkBaseUrl?: string | null;
+    gs1ResolverBaseUrl?: string | null;
   }) {
     return new Branding(
       data.organizationId,
       data.logo,
       data.primaryColor,
       data.permalinkBaseUrl ?? null,
+      data.gs1ResolverBaseUrl ?? null,
     );
   }
 
@@ -60,6 +66,7 @@ export class Branding {
       logo: this.logo,
       primaryColor: this.primaryColor,
       permalinkBaseUrl: this.permalinkBaseUrl,
+      gs1ResolverBaseUrl: this.gs1ResolverBaseUrl,
     };
   }
 }

@@ -43,6 +43,8 @@ export { OrganizationsNamespace } from "./dpp/organizations/organizations.namesp
 
 export { TemplatesNamespace } from "./dpp/templates/templates.namespace";
 
+export type { Gs1IdentityRequest, Gs1IdentityResponse } from "./dpp/passport/gs1-identity.dtos";
+
 export type {
   PermalinkDto,
   PermalinkListDto,

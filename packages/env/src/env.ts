@@ -25,6 +25,7 @@ export const envSchema = z
       { message: "OPEN_DPP_URL must be an origin (no path, query, or fragment)" },
     ),
     OPEN_DPP_PERMALINK_BASE_URL: z.url().optional(),
+    OPEN_DPP_GS1_RESOLVER_BASE_URL: z.url().optional(),
     OPEN_DPP_LOG_FORMAT: z.enum(["json", "plain"]).optional().default("plain"),
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
     // MongoDB
