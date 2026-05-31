@@ -469,8 +469,8 @@
         },
         "permalinkBaseUrl": {
           "title": "Produktpass URL",
-          "description": "URL, unter der permanente Links zu veröffentlichten Produktpässen bereitgestellt werden. Nur setzen, wenn ein eigener Produktpass-Viewer unter einer anderen Domain betrieben wird.",
-          "warning": "Das Ändern oder Leeren dieser URL bricht ALLE bestehenden QR-Codes. Diese Einstellung wird nur benötigt, wenn ein eigener Produktpass-Viewer unter einer abweichenden Adresse betrieben wird.",
+          "description": "URL, unter der permanente Links zu veröffentlichten Produktpässen bereitgestellt werden.",
+          "warning": "Das Verändern dieser URL hat Auswirkungen auf alle noch nicht veröffentlichten Produktpässe.",
           "dangerZone": "Gefahrenzone",
           "placeholder": "https://dpp.example.com",
           "effectiveFallback": "Aktuell wirksam: {url}",
@@ -702,8 +702,8 @@
         "placeholder": "Ende der URL dieses Produktpasses"
       },
       "baseUrl": {
-        "label": "Eigene Basis-URL",
-        "description": "Überschreibt die Permalink-URL der Organisation für diesen Pass. Falls dein Deployment einen Pfad-Präfix verwendet, ihn mit angeben (z. B. https://example.com/p). Leer lassen, um zu erben.",
+        "label": "Produktpass Basis-URL",
+        "description": "Überschreibt die Basis-URL für diesen Link des Produktpasses.",
         "warning": "Eine eigene URL hier zu setzen überschreibt die Organisations- und Instanz-Standardwerte. Leer lassen, um die konfigurierte URL zu erben."
       },
       "preview": {
