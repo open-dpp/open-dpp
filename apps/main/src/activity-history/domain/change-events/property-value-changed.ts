@@ -1,16 +1,17 @@
-import { DataTypeDefEnum, DataTypeDefType, KeyTypesEnum, KeyTypesType } from "@open-dpp/dto";
-import { IChangeEvent } from "./change-event";
+import { DataTypeDefEnum, DataTypeDefType } from "@open-dpp/dto";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
+
 const ValueChangedSchema = z.object({
   valueType: DataTypeDefEnum,
   path: z.string(),
   oldValue: z.string().nullable(),
   newValue: z.string().nullable(),
 });
-export class PropertyValueChanged implements IChangeEvent {
+export class PropertyValueChanged implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.PropertyValueChanged;
   private constructor(
     public readonly valueType: DataTypeDefType,

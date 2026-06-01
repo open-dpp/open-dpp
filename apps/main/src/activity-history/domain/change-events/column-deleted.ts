@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -16,7 +16,7 @@ const ColumnDeletedSchema = z.object({
   value: SubmodelElementSchema,
 });
 
-export class ColumnDeleted implements IChangeEvent {
+export class ColumnDeleted implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.ColumnDeleted;
 
   private constructor(

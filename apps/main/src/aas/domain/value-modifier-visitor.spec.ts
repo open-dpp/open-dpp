@@ -65,6 +65,7 @@ describe("value modifier visitor", () => {
       valueType: DataTypeDef.String,
       value: "old",
     });
+    submodel.withTracking();
     submodel.addSubmodelElement(property, { ability });
     const modifications = "value new";
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "prop1" }), {
@@ -72,7 +73,7 @@ describe("value modifier visitor", () => {
     });
     expect(property.value).toEqual("value new");
     expect(property.value).toEqual("value new");
-    const changes = submodel.tracker.pull();
+    const changes = submodel.tracker.stop();
     expect(changes).toEqual([
       SubmodelElementAdded.create({
         path: IdShortPath.fromSegments([submodel.idShort, "prop1"]),
@@ -120,7 +121,7 @@ describe("value modifier visitor", () => {
       contentType: "image/png",
       value: "idToFile",
     });
-    submodel.addSubmodelElement(file, { ability });
+    submodel.withTracking().addSubmodelElement(file, { ability });
     let modifications: any = { value: "value new", contentType: "image/jpeg" };
 
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "file" }), {
@@ -134,7 +135,7 @@ describe("value modifier visitor", () => {
     });
     expect(file.value).toBeNull();
     expect(file.contentType).toEqual("image/jpeg");
-    const changes = submodel.tracker.pull();
+    const changes = submodel.tracker.stop();
 
     expect(changes).toEqual([
       SubmodelElementAdded.create({
@@ -195,13 +196,13 @@ describe("value modifier visitor", () => {
       value: initialReference,
     });
     const path = IdShortPath.create({ path: "ref" });
-    submodel.addSubmodelElement(referenceElement, { ability });
+    submodel.withTracking().addSubmodelElement(referenceElement, { ability });
     let modifications: any = {
       keys: [{ type: KeyTypes.GlobalReference, value: "https://example.com/ref/other" }],
     };
     submodel.modifyValueOfSubmodelElement(modifications, path, { ability });
 
-    const changes = submodel.tracker.pull();
+    const changes = submodel.tracker.stop();
     expect(changes).toEqual([
       SubmodelElementAdded.create({
         path: IdShortPath.fromSegments([submodel.idShort, "ref"]),
@@ -269,7 +270,7 @@ describe("value modifier visitor", () => {
       value: "first",
       valueType: DataTypeDef.String,
     });
-    submodel.addSubmodelElement(property, { ability });
+    submodel.withTracking().addSubmodelElement(property, { ability });
 
     const collection = SubmodelElementCollection.create({
       idShort: "collection",
@@ -294,7 +295,7 @@ describe("value modifier visitor", () => {
     expect(property.value).toEqual("second");
     expect(property2.value).toEqual("second2");
 
-    const changes = submodel.tracker.pull();
+    const changes = submodel.tracker.stop();
     expect(changes).toEqual([
       SubmodelElementAdded.create({
         path: IdShortPath.fromSegments([submodel.idShort, "prop1"]),

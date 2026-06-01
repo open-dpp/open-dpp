@@ -1,5 +1,4 @@
 import { ActivityHeader } from "./activity";
-import { z } from "zod";
 
 export interface SharedActivityCreateProps {
   digitalProductDocumentId: string;
@@ -22,14 +21,3 @@ export function createActivityHeader(
     correlationId: data.correlationId,
   });
 }
-
-export const OperationTypes = {
-  Add: "add",
-  Remove: "remove",
-  Replace: "replace",
-  Move: "move",
-  Copy: "copy",
-  Test: "test",
-} as const;
-export const OperationTypeEnum = z.enum(OperationTypes);
-export type OperationTypesType = z.infer<typeof OperationTypeEnum>;

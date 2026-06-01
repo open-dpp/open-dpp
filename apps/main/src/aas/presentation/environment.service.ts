@@ -461,10 +461,9 @@ export class EnvironmentService {
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
-    const submodelElement = submodel.addSubmodelElement(
-      parseSubmodelElement(submodelElementPlain),
-      { idShortPath, ability },
-    );
+    const submodelElement = submodel
+      .withTracking()
+      .addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath, ability });
     const activity = SubmodelElementAddedActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,

@@ -65,7 +65,7 @@ export class AssetAdministrationShell
     this.displayName = displayName;
     this.description = description;
     this.tracker = ChangeTracker.create({
-      onPullCallback: () => this.administration.increaseVersion(),
+      onStopCallback: () => this.administration.increaseVersion(),
     });
   }
 

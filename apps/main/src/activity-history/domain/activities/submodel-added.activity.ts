@@ -1,12 +1,9 @@
 import { ActivityHeader, ActivitySchema, activityToDatabase, IActivity } from "./activity";
-import { SharedActivityCreateProps, createActivityHeader } from "./shared.activity";
+import { createActivityHeader, SharedActivityCreateProps } from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
-import {
-  SubmodelActivityPayload,
-  SubmodelWithAasActivityPayload,
-} from "./submodel-activities.shared";
+import { SubmodelWithAasActivityPayload } from "./submodel-activities.shared";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
 import { Environment } from "../../../aas/domain/environment";
 import { SubmodelAdded } from "../change-events/submodel-added";
@@ -34,9 +31,9 @@ export class SubmodelAddedActivity implements IActivity {
         submodelId: data.submodel.id,
         aasId: data.aas.id,
         changes: [
-          ...data.submodel.tracker.pull(),
-          ...data.aas.tracker.pull(),
-          ...data.environment.tracker.pull(),
+          ...data.submodel.tracker.stop(),
+          ...data.aas.tracker.stop(),
+          ...data.environment.tracker.stop(),
           SubmodelAdded.create({ submodel: data.submodel }),
         ],
       }),

@@ -28,7 +28,7 @@ export class AssetAdministrationShellModifiedActivity implements IActivity {
       ),
       AssetAdministrationShellActivityPayload.create({
         aasId: data.aas.id,
-        changes: data.aas.tracker.pull(),
+        changes: data.aas.tracker.stop(),
       }),
     );
   }

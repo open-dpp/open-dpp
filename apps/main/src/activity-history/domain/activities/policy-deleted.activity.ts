@@ -24,7 +24,7 @@ export class PolicyDeletedActivity implements IActivity {
       createActivityHeader(PolicyDeletedActivity.type, data, PolicyDeletedActivityVersion.v1_0_0),
       AssetAdministrationShellActivityPayload.create({
         aasId: data.aas.id,
-        changes: data.aas.tracker.pull(),
+        changes: data.aas.tracker.stop(),
       }),
     );
   }

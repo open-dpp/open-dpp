@@ -24,7 +24,7 @@ export class ColumnAddedActivity implements IActivity {
       createActivityHeader(ColumnAddedActivity.type, data, ColumnAddedActivityVersion.v1_0_0),
       SubmodelActivityPayload.create({
         submodelId: data.submodel.id,
-        changes: data.submodel.tracker.pull(),
+        changes: data.submodel.tracker.stop(),
       }),
     );
   }

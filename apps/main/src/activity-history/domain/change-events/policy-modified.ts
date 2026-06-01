@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -13,17 +13,17 @@ import { Permission, PermissionSchema } from "../../../aas/domain/security/permi
 
 const PolicyModifiedSchema = z.object({
   type: z.literal(ChangeEventTypes.PolicyModified),
-  object: z.string(),
+  path: z.string(),
   userRole: UserRoleEnum,
   memberRole: MemberRoleEnum.nullable(),
   oldValue: PermissionSchema.array(),
   newValue: PermissionSchema.array(),
 });
 
-export class PolicyModified implements IChangeEvent {
+export class PolicyModified implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.PolicyModified;
   private constructor(
-    public readonly object: IdShortPath,
+    public readonly path: IdShortPath,
     public readonly userRole: UserRoleType,
     public readonly memberRole: MemberRoleType | null,
     public readonly oldValue: Permission[],
@@ -49,7 +49,7 @@ export class PolicyModified implements IChangeEvent {
   static fromPlain(data: unknown): IChangeEvent {
     const parsed = PolicyModifiedSchema.parse(data);
     return new PolicyModified(
-      IdShortPath.create({ path: parsed.object }),
+      IdShortPath.create({ path: parsed.path }),
       parsed.userRole,
       parsed.memberRole,
       parsed.oldValue.map(Permission.fromPlain),
@@ -60,7 +60,7 @@ export class PolicyModified implements IChangeEvent {
   toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
     return {
       type: this.type,
-      object: this.object.toString(),
+      path: this.path.toString(),
       userRole: this.userRole,
       memberRole: this.memberRole,
       oldValue: this.oldValue.map((permission) => permission.toPlain()),

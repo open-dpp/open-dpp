@@ -10,31 +10,40 @@ export function withTrackingHelper<T extends ITrackable>(
   trackable: T,
 ): T {
   trackable.tracker = changeTracker ?? trackable.tracker;
+  trackable.tracker.startTracking();
   return trackable;
 }
 
 export class ChangeTracker {
   private _changes: Array<IChangeEvent> = [];
-  readonly #onPullCallback?: () => void; // Ignore function in jest equal check by prefix it with #
-  private constructor(onPullCallback?: () => void) {
-    this.#onPullCallback = onPullCallback;
+  private trackingEnabled = false;
+  readonly #onStopCallback?: () => void; // Ignore function in jest equal check by prefix it with #
+  private constructor(onStopCallback?: () => void) {
+    this.#onStopCallback = onStopCallback;
   }
 
-  static create(data?: { onPullCallback?: () => void }): ChangeTracker {
-    return new ChangeTracker(data?.onPullCallback);
+  static create(data?: { onStopCallback?: () => void }): ChangeTracker {
+    return new ChangeTracker(data?.onStopCallback);
+  }
+
+  startTracking() {
+    this.trackingEnabled = true;
   }
 
   track(...changes: IChangeEvent[]) {
-    this._changes.push(...changes);
+    if (this.trackingEnabled) {
+      this._changes.push(...changes);
+    }
   }
 
-  pull(): Array<IChangeEvent> {
+  stop(): Array<IChangeEvent> {
     const changes = [...this._changes];
 
     this._changes = [];
-    if (this.#onPullCallback) {
-      this.#onPullCallback();
+    if (this.#onStopCallback) {
+      this.#onStopCallback();
     }
+    this.trackingEnabled = false;
     return changes;
   }
 }

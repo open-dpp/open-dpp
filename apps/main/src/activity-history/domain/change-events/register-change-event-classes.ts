@@ -19,6 +19,7 @@ import { SubmodelAdded } from "./submodel-added";
 import { DeletedSubmodelFromEnv } from "./deleted-submodel-from-env";
 import { SubmodelReferenceDeleted } from "./submodel-reference-deleted";
 import { SubmodelDeleted } from "./submodel-deleted";
+import { DigitalProductDocumentStatusChanged } from "./digital-product-document-status-changed";
 
 export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);
@@ -41,4 +42,8 @@ export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.PolicyAdded, PolicyAdded);
   registerChangeEvent(ChangeEventTypes.PolicyModified, PolicyModified);
   registerChangeEvent(ChangeEventTypes.DefaultThumbnailsModified, DefaultThumbnailsModified);
+  registerChangeEvent(
+    ChangeEventTypes.DigitalProductDocumentStatusChanged,
+    DigitalProductDocumentStatusChanged,
+  );
 }

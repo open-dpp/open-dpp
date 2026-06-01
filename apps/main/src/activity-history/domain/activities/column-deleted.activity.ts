@@ -27,7 +27,7 @@ export class ColumnDeletedActivity implements IActivity {
       SubmodelWithAasActivityPayload.create({
         submodelId: data.submodel.id,
         aasId: data.aas.id,
-        changes: [...data.submodel.tracker.pull(), ...data.aas.tracker.pull()],
+        changes: [...data.submodel.tracker.stop(), ...data.aas.tracker.stop()],
       }),
     );
   }

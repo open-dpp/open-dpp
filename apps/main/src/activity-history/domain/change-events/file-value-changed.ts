@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -14,7 +14,7 @@ const ValueChangedSchema = z.object({
   newValue: FileValueSchema,
 });
 type FileValue = z.infer<typeof FileValueSchema>;
-export class FileValueChanged implements IChangeEvent {
+export class FileValueChanged implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.FileValueChanged;
   private constructor(
     public readonly path: IdShortPath,

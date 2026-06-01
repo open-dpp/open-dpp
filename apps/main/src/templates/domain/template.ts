@@ -15,7 +15,12 @@ import { DigitalProductDocumentSchema } from "../../digital-product-document/dom
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { IActivity } from "../../activity-history/domain/activities/activity";
-import { DigitalProductDocumentOperationTypes } from "../../activity-history/domain/activities/digital-product-document-operation-types";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
 
 export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
   environment: ExpandedEnvironmentPlain;
@@ -28,9 +33,10 @@ export class Template
     IPersistable,
     IDigitalProductDocument,
     HasCreatedAt,
-    IDigitalProductDocumentStatusChangeable
+    IDigitalProductDocumentStatusChangeable,
+    ITrackable
 {
-  private _activities: Array<IActivity> = [];
+  readonly tracker = ChangeTracker.create();
 
   private constructor(
     public readonly id: string,
@@ -72,20 +78,10 @@ export class Template
     );
   }
 
-  private publishActivity(activity: IActivity) {
-    this._activities.push(activity);
-  }
-
-  get activities(): Array<IActivity> {
-    return this._activities;
-  }
-
-  pullActivities(correlationId: string): Array<IActivity> {
-    const events = [...this._activities];
-    events.forEach((event) => event.header.assignCorrelationId(correlationId));
-
-    this._activities = [];
-    return events;
+  withTracking(changeTracker?: ChangeTracker): this {
+    const result = withTrackingHelper(changeTracker, this);
+    this.environment.withTracking(this.tracker);
+    return result;
   }
 
   toPlain() {
@@ -135,5 +131,10 @@ export class Template
   }
   private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
     this.lastStatusChange = lastStatusChange;
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: lastStatusChange,
+      }),
+    );
   }
 }

@@ -22,6 +22,7 @@ export const ChangeEventTypes = {
   DeletedSubmodelFromEnv: "DeletedSubmodelFromEnv",
   SubmodelReferenceDeleted: "SubmodelReferenceDeleted",
   SubmodelDeleted: "SubmodelDeleted",
+  DigitalProductDocumentStatusChanged: "DigitalProductDocumentStatusChanged",
 } as const;
 export const ChangeEventTypeEnum = z.enum(ChangeEventTypes);
 export type ChangeEventTypesType = z.infer<typeof ChangeEventTypeEnum>;

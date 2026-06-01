@@ -64,7 +64,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     this.description = description;
     setParentIdShortPaths(this, this.idShort);
     this.tracker = ChangeTracker.create({
-      onPullCallback: () => this.administration.increaseVersion(),
+      onStopCallback: () => this.administration.increaseVersion(),
     });
   }
 

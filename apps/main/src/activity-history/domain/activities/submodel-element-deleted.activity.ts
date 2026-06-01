@@ -31,7 +31,7 @@ export class SubmodelElementDeletedActivity implements IActivity {
       SubmodelWithAasActivityPayload.create({
         aasId: data.aas.id,
         submodelId: data.submodel.id,
-        changes: [...data.submodel.tracker.pull(), ...data.aas.tracker.pull()],
+        changes: [...data.submodel.tracker.stop(), ...data.aas.tracker.stop()],
       }),
     );
   }

@@ -28,7 +28,7 @@ export class SubmodelElementAddedActivity implements IActivity {
       ),
       SubmodelActivityPayload.create({
         submodelId: data.submodel.id,
-        changes: data.submodel.tracker.pull(),
+        changes: data.submodel.tracker.stop(),
       }),
     );
   }

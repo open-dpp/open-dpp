@@ -15,6 +15,7 @@ import { ColumnDeletedActivity } from "./column-deleted.activity";
 import { RowDeletedActivity } from "./row-deleted.activity";
 import { SubmodelAddedActivity } from "./submodel-added.activity";
 import { SubmodelDeletedActivity } from "./submodel-deleted.activity";
+import { DigitalProductDocumentStatusChangedActivity } from "./digital-product-document-status-changed.activity";
 
 export function registerActivityClasses(): void {
   registerActivity(ActivityTypes.SubmodelAdded, SubmodelAddedActivity);
@@ -38,4 +39,8 @@ export function registerActivityClasses(): void {
   registerActivity(ActivityTypes.RowDeleted, RowDeletedActivity);
   registerActivity(ActivityTypes.ColumnModified, ColumnModifiedActivity);
   registerActivity(ActivityTypes.ColumnDeleted, ColumnDeletedActivity);
+  registerActivity(
+    ActivityTypes.DigitalProductDocumentStatusChanged,
+    DigitalProductDocumentStatusChangedActivity,
+  );
 }

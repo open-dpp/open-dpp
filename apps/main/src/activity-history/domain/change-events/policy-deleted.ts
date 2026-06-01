@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -12,15 +12,15 @@ import { ReferenceElement } from "../../../aas/domain/submodel-base/reference-el
 
 const PolicyDeletedSchema = z.object({
   type: z.literal(ChangeEventTypes.PolicyDeleted),
-  object: z.string(),
+  path: z.string(),
   userRole: UserRoleEnum,
   memberRole: MemberRoleEnum.nullable(),
 });
 
-export class PolicyDeleted implements IChangeEvent {
+export class PolicyDeleted implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.PolicyDeleted;
   private constructor(
-    public readonly object: IdShortPath,
+    public readonly path: IdShortPath,
     public readonly userRole: UserRoleType,
     public readonly memberRole: MemberRoleType | null,
   ) {}
@@ -40,7 +40,7 @@ export class PolicyDeleted implements IChangeEvent {
   static fromPlain(data: unknown): IChangeEvent {
     const parsed = PolicyDeletedSchema.parse(data);
     return new PolicyDeleted(
-      IdShortPath.create({ path: parsed.object }),
+      IdShortPath.create({ path: parsed.path }),
       parsed.userRole,
       parsed.memberRole,
     );
@@ -49,7 +49,7 @@ export class PolicyDeleted implements IChangeEvent {
   toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
     return {
       type: this.type,
-      object: this.object.toString(),
+      path: this.path.toString(),
       userRole: this.userRole,
       memberRole: this.memberRole,
     };

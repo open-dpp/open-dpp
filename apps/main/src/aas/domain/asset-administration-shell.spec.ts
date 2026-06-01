@@ -239,7 +239,7 @@ describe("assetAdministrationShell", () => {
     expect(aas.assetInformation.defaultThumbnails).toEqual(
       defaultThumbnails.map(Resource.fromPlain),
     );
-    expect(aas.tracker.pull()).toContainEqual(
+    expect(aas.tracker.stop()).toContainEqual(
       DefaultThumbnailsModified.create({
         oldValue: [],
         newValue: [Resource.create({ path: "path.to.image", contentType: "image/jepg" })],

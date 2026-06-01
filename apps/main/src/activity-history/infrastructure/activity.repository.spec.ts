@@ -14,12 +14,16 @@ import { ActivityRegistriesInitializer } from "../presentation/activity-registry
 import { PagingResult } from "../../pagination/paging-result";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { Period } from "../../time/period";
-import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { SubmodelActivity } from "../domain/activities/submodel.activity";
-import { SubmodelOperationTypes } from "../domain/activities/submodel-operation-types";
-import { AssetAdministrationShellActivity } from "../domain/activities/asset-administration-shell.activity";
-import { AssetAdministrationShellOperationTypes } from "../domain/activities/asset-administration-shell-operation-types";
-import { ActivityOldTypes } from "../domain/activities/activity-types";
+import { SubmodelElementModifiedActivity } from "../domain/activities/submodel-element-modified.activity";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { ChangeTracker } from "../domain/change-tracker";
+import { PropertyValueChanged } from "../domain/change-events/property-value-changed";
+import { DataTypeDef } from "@open-dpp/dto";
+import { AssetAdministrationShellModifiedActivity } from "../domain/activities/asset-administration-shell-modified.activity";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
+import { DisplayNameChanged } from "../domain/change-events/language-text-collection-changed";
+import { LanguageText } from "../../aas/domain/common/language-text";
+import { ActivityTypes } from "../domain/activities/activity-types";
 
 describe("activityRepository", () => {
   let activityRepository: ActivityRepository;
@@ -53,27 +57,38 @@ describe("activityRepository", () => {
 
   it("should save a activities", async () => {
     const passportId = randomUUID();
-    const submodelId = randomUUID();
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
-    const event1 = SubmodelActivity.create({
-      digitalProductDocumentId: passportId,
-      submodelId,
-      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
-      oldData: { idShort: "prop1", value: "oldValue" },
-      newData: { idShort: "prop1", value: "newValue" },
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
-      createdAt: date1,
+    const changeTracker = ChangeTracker.create();
+    const submodel = Submodel.create({
+      idShort: "submodel1",
     });
-    const event2 = SubmodelActivity.create({
+    changeTracker.track(
+      PropertyValueChanged.create({
+        path: IdShortPath.create({ path: "prop1" }),
+        valueType: DataTypeDef.String,
+        oldValue: "oldValue",
+        newValue: "newValue",
+      }),
+    );
+    const event1 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodelId,
-      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
-      oldData: { idShort: "prop2", value: "oldValue" },
-      newData: { idShort: "prop2", value: "newValue" },
-      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
+      submodel: submodel.withTracking(changeTracker),
+      createdAt: date1,
+      correlationId: randomUUID(),
+    });
+    changeTracker.track(
+      PropertyValueChanged.create({
+        path: IdShortPath.create({ path: "prop2" }),
+        valueType: DataTypeDef.String,
+        oldValue: "oldValue",
+        newValue: "newValue",
+      }),
+    );
+    const event2 = SubmodelElementModifiedActivity.create({
+      digitalProductDocumentId: passportId,
+      submodel: submodel.withTracking(changeTracker),
+      correlationId: randomUUID(),
       createdAt: date2,
     });
     const activities = [event1, event2];
@@ -81,7 +96,7 @@ describe("activityRepository", () => {
     await activityRepository.createMany(activities);
     const foundEvent = await activityRepository.findOneOrFail(event1.header.id);
     expect(foundEvent).toEqual(event1);
-    expect(foundEvent).toBeInstanceOf(SubmodelActivity);
+    expect(foundEvent).toBeInstanceOf(SubmodelElementModifiedActivity);
 
     const foundEvents = await activityRepository.findByAggregateId(event1.header.aggregateId);
     expect(foundEvents.items).toEqual([event2, event1]);
@@ -89,31 +104,43 @@ describe("activityRepository", () => {
 
   it("should delete a activities by aggregation id", async () => {
     const passportId = randomUUID();
-    const submodelId = randomUUID();
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
-    const event1 = SubmodelActivity.create({
+    const correlationId = randomUUID();
+
+    const changeTracker = ChangeTracker.create();
+    const submodel = Submodel.create({
+      idShort: "submodel1",
+    });
+    changeTracker.track(
+      PropertyValueChanged.create({
+        path: IdShortPath.create({ path: "prop1" }),
+        valueType: DataTypeDef.String,
+        oldValue: "oldValue",
+        newValue: "newValue",
+      }),
+    );
+    const event1 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodelId,
-      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop1` }),
-      oldData: { idShort: "prop1", value: "oldValue" },
-      newData: { idShort: "prop1", value: "newValue" },
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
+      submodel: submodel.withTracking(changeTracker),
+      correlationId,
       createdAt: date1,
     });
-    const event2 = SubmodelActivity.create({
+    changeTracker.track(
+      PropertyValueChanged.create({
+        path: IdShortPath.create({ path: "prop2" }),
+        valueType: DataTypeDef.String,
+        oldValue: "oldValue",
+        newValue: "newValue",
+      }),
+    );
+    const event2 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodelId,
-      fullIdShortPath: IdShortPath.create({ path: `${submodelId}.prop2` }),
-      oldData: { idShort: "prop2", value: "oldValue" },
-      newData: { idShort: "prop2", value: "newValue" },
-      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
+      submodel: submodel.withTracking(changeTracker),
+      correlationId,
       createdAt: date2,
     });
     const activities = [event1, event2];
-    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
     await activityRepository.createMany(activities);
     await activityRepository.deleteByAggregateId(passportId);
     const foundEvent1 = await activityRepository.findOne(event1.header.id);
@@ -131,46 +158,55 @@ describe("activityRepository", () => {
     const date5 = new Date("2022-03-03T00:00:00.000Z");
     const date6 = new Date("2022-04-03T00:00:00.000Z");
 
-    const submodelId = randomUUID();
     const submodelIdShort = "submodelIdShort";
     const passportId = randomUUID();
-    const createActivity = (idShort: string, createdAt: Date) =>
-      SubmodelActivity.create({
-        digitalProductDocumentId: passportId,
-        submodelId,
-        fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
-        oldData: { submodelElements: [{ idShort, value: "oldValue" }] },
-        newData: { submodelElements: [{ idShort, value: "newValue" }] },
-        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        operation: SubmodelOperationTypes.SubmodelElementModified,
-        createdAt,
-      });
-
-    const event1 = createActivity("prop1", date1);
-
-    const event2 = createActivity("prop2", date2);
-    const event3 = createActivity("prop3", date3);
-
-    const event4 = createActivity("prop5", date5);
-
-    const eventOfOtherAggregate = SubmodelActivity.create({
-      digitalProductDocumentId: randomUUID(),
-      submodelId: randomUUID(),
-      fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.prop4` }),
-      oldData: { idShort: "prop4", value: "oldValue" },
-      newData: { idShort: "prop4", value: "newValue" },
-      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: SubmodelOperationTypes.SubmodelElementModified,
-      createdAt: date4,
+    const submodel = Submodel.create({
+      idShort: submodelIdShort,
     });
+    const createActivity = (id: string, idShort: string, createdAt: Date) => {
+      const changeTracker = ChangeTracker.create();
+      changeTracker.track(
+        PropertyValueChanged.create({
+          path: IdShortPath.create({ path: idShort }),
+          valueType: DataTypeDef.String,
+          oldValue: "oldValue",
+          newValue: "newValue",
+        }),
+      );
+      return SubmodelElementModifiedActivity.create({
+        digitalProductDocumentId: id,
+        submodel: submodel.withTracking(changeTracker),
+        createdAt,
+        correlationId: randomUUID(),
+      });
+    };
+    const event1 = createActivity(passportId, "prop1", date1);
 
-    const aasActivity = AssetAdministrationShellActivity.create({
+    const event2 = createActivity(passportId, "prop2", date2);
+    const event3 = createActivity(passportId, "prop3", date3);
+
+    const event4 = createActivity(passportId, "prop5", date5);
+
+    const eventOfOtherAggregate = createActivity(randomUUID(), "prop6", date4);
+
+    const aas = AssetAdministrationShell.create({});
+    const changeTracker = ChangeTracker.create();
+    changeTracker.track(
+      DisplayNameChanged.create({
+        path: IdShortPath.create({ path: aas.id }),
+        oldValue: [],
+        newValue: [
+          LanguageText.create({
+            language: "en",
+            text: "newName",
+          }),
+        ],
+      }),
+    );
+    const aasActivity = AssetAdministrationShellModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      assetAdministrationShellId: randomUUID(),
-      oldData: { value: "oldValue" },
-      newData: { value: "newValue" },
-      administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-      operation: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
+      correlationId: randomUUID(),
+      aas: aas.withTracking(changeTracker),
       createdAt: date6,
     });
 
@@ -182,7 +218,7 @@ describe("activityRepository", () => {
 
     it("using filter", async () => {
       let foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityOldTypes.SubmodelActivity },
+        filter: { activityType: ActivityTypes.SubmodelElementModified },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -195,7 +231,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityOldTypes.SubmodelActivity, dppPath: "prop1" },
+        filter: { activityType: ActivityTypes.SubmodelElementModified, dppPath: "prop1" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -208,7 +244,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityOldTypes.SubmodelActivity, dppPath: "sw:prop" },
+        filter: { activityType: ActivityTypes.SubmodelElementModified, dppPath: "sw:prop" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -222,7 +258,7 @@ describe("activityRepository", () => {
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: {
-          activityType: ActivityOldTypes.SubmodelActivity,
+          activityType: ActivityTypes.SubmodelElementModified,
           commandPath: `${submodelIdShort}.prop2`,
         },
       });
@@ -238,7 +274,7 @@ describe("activityRepository", () => {
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: {
-          activityType: ActivityOldTypes.SubmodelActivity,
+          activityType: ActivityTypes.SubmodelElementModified,
           commandPath: `${submodelIdShort}.prop2`,
           dppPath: "sw:prop",
         },
@@ -255,7 +291,7 @@ describe("activityRepository", () => {
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: {
-          activityType: ActivityOldTypes.SubmodelActivity,
+          activityType: ActivityTypes.SubmodelElementModified,
           commandPath: `${submodelIdShort}`,
         },
       });
@@ -377,7 +413,6 @@ describe("activityRepository", () => {
       );
     });
   });
-
   afterAll(async () => {
     await module.close();
   });

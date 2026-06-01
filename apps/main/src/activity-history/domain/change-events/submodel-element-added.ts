@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import {
   ISubmodelElement,
   parseSubmodelElement,
@@ -15,7 +15,7 @@ const SubmodelElementAddedSchema = z.object({
   value: SubmodelElementSchema,
 });
 
-export class SubmodelElementAdded implements IChangeEvent {
+export class SubmodelElementAdded implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.SubmodelElementAdded;
   private constructor(
     public readonly path: IdShortPath,

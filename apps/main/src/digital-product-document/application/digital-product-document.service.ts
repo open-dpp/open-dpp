@@ -32,6 +32,7 @@ import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-produ
 import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { DigitalProductDocumentStatusChangedActivity } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -71,11 +72,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     body: DigitalProductDocumentStatusModificationDto,
     userContext: UserContext,
   ) {
-    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
-      id,
-      userContext.subject,
-      organizationId,
-    );
+    const item = (
+      await this.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        userContext.subject,
+        organizationId,
+      )
+    ).withTracking();
     if (body.method === "Publish") {
       item.publish();
     } else if (body.method === "Archive") {
@@ -86,13 +89,18 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       throw new BadRequestException("Invalid method");
     }
 
-    const activities = item.pullActivities(correlationId);
+    const activity = DigitalProductDocumentStatusChangedActivity.create({
+      correlationId,
+      userId: userContext.userId,
+      digitalProductDocumentId: id,
+      item,
+    });
 
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.digitalProductDocRepository.save(item, { session });
-        await this.activityRepository.createMany(activities, { session });
+        await this.activityRepository.createMany([activity], { session });
       });
     } finally {
       await session.endSession();

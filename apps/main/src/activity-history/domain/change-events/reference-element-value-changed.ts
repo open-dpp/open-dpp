@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -13,7 +13,7 @@ const ValueChangedSchema = z.object({
   newValue: ValueSchema,
 });
 type Value = Reference | null;
-export class ReferenceElementValueChanged implements IChangeEvent {
+export class ReferenceElementValueChanged implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.ReferenceElementValueChanged;
   private constructor(
     public readonly path: IdShortPath,

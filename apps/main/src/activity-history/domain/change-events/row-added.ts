@@ -1,4 +1,4 @@
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -14,7 +14,7 @@ const RowAddedSchema = z.object({
   value: SubmodelElementCollectionJsonSchema,
 });
 
-export class RowAdded implements IChangeEvent {
+export class RowAdded implements IChangeEventWithPath {
   public readonly type = ChangeEventTypes.RowAdded;
 
   private constructor(

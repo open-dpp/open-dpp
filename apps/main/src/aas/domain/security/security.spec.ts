@@ -283,7 +283,7 @@ describe("security", () => {
       }),
     ];
     security.withTracking().applyModifiedRules(modifications);
-    expect(security.tracker.pull()).toEqual([
+    expect(security.tracker.stop()).toEqual([
       PolicyAdded.create({
         userRole: UserRole.USER,
         object: createAasObject(IdShortPath.create({ path: "section1" })),
@@ -548,7 +548,7 @@ describe("security", () => {
       },
     ]);
 
-    const changes = security.tracker.pull();
+    const changes = security.tracker.stop();
     expect(changes).toEqual([
       PolicyDeleted.create({
         userRole: admin.userRole,

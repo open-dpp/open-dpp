@@ -49,16 +49,14 @@ import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
-import { SubmodelActivity } from "../../activity-history/domain/activities/submodel.activity";
-import { SubmodelOperationTypes } from "../../activity-history/domain/activities/submodel-operation-types";
-import { ActivityOldTypes } from "../../activity-history/domain/activities/activity-types";
-import { DigitalProductDocumentPayload } from "../../activity-history/domain/activities/digital-product-document.activity";
-import { DigitalProductDocumentOperationTypes } from "../../activity-history/domain/activities/digital-product-document-operation-types";
 import { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { Security } from "../../aas/domain/security/security";
 import { Permission } from "../../aas/domain/security/permission";
+import { ActivityTypes } from "../../activity-history/domain/activities/activity-types";
+import { DigitalProductDocumentActivityPayload } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
+import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -371,24 +369,12 @@ describe("DigitalProductDocumentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.DigitalProductDocumentActivity,
-        payload: DigitalProductDocumentPayload.create({
-          command: {
-            op: DigitalProductDocumentOperationTypes.StatusModified,
-          },
+        type: ActivityTypes.DigitalProductDocumentStatusChanged,
+        payload: DigitalProductDocumentActivityPayload.create({
           changes: [
-            {
-              op: "replace",
-              path: "/lastStatusChange/currentStatus",
-              value: "Archived",
-              dpp: {},
-            },
-            {
-              op: "replace",
-              path: "/lastStatusChange/previousStatus",
-              value: "Draft",
-              dpp: {},
-            },
+            DigitalProductDocumentStatusChanged.create({
+              digitalProductDocumentStatusChange: foundPassport.getLastStatusChange(),
+            }),
           ],
         }),
       },

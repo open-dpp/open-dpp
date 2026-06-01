@@ -1,5 +1,5 @@
 import { Language, LanguageEnum } from "@open-dpp/dto";
-import { IChangeEvent } from "./change-event";
+import { IChangeEvent, IChangeEventWithPath } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes, ChangeEventTypesType } from "./change-event-types";
@@ -20,7 +20,7 @@ const LanguageTextCollectionChangedSchema = z.object({
 
 type LanguageTextChanged = z.infer<typeof LanguageTextChangedSchema>;
 
-abstract class LanguageTextCollectionChanged {
+abstract class LanguageTextCollectionChanged implements IChangeEventWithPath {
   protected constructor(
     public readonly type: ChangeEventTypesType,
     public readonly path: IdShortPath,
