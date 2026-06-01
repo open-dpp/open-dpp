@@ -55,7 +55,7 @@ export const PRESENTATION_VIEW_CHAT: RouteRecordRaw = {
 };
 
 export const PRESENTATION_PARENT: RouteRecordRaw = {
-  path: "/presentation",
+  path: "/p",
   children: [PRESENTATION_404, PRESENTATION_VIEW, PRESENTATION_VIEW_CHAT],
 };
 

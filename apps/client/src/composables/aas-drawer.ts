@@ -275,11 +275,20 @@ export function useAasDrawer({ onHideDrawer, can, isArchived }: AasDrawerProps):
       );
     }
 
+    const parsed = foundEditor.parse(activeData.value);
+    const data =
+      activeMode.value === EditorMode.EDIT &&
+      parsed &&
+      typeof parsed === "object" &&
+      !("modelType" in (parsed as object))
+        ? { ...(parsed as object), modelType: activeEditor.value }
+        : parsed;
+
     return {
       component: foundEditor.component,
       props: {
         path: activePath.value,
-        data: foundEditor.parse(activeData.value),
+        data,
         callback: activeCallback.value,
       },
     };

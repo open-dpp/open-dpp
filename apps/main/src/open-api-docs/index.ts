@@ -5,6 +5,8 @@ import { aasPaths } from "./aas.paths";
 import { brandingPaths } from "./branding.path";
 import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
+import { presentationConfigurationPaths } from "./presentation-configuration.paths";
+import { permalinkPaths } from "./permalink.paths";
 
 const document = createDocument({
   openapi: "3.1.0",
@@ -31,6 +33,8 @@ const document = createDocument({
     ...brandingPaths,
     ...userPaths,
     ...organizationsPaths,
+    ...presentationConfigurationPaths,
+    ...permalinkPaths,
   },
   components: {
     parameters: {

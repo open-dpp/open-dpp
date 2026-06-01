@@ -27,10 +27,26 @@ export const DigitalProductDocumentStatusModificationDtoEnum = z.enum(
   DigitalProductDocumentStatusModificationMethodDto,
 );
 
-export const DigitalProductDocumentStatusChangeDtoSchema = z.object({
-  previousStatus: DigitalProductDocumentStatusDtoEnum.nullish(),
-  currentStatus: DigitalProductDocumentStatusDtoEnum,
-});
+export const DigitalProductDocumentStatusChangeDtoSchema = z
+  .object({
+    previousStatus: DigitalProductDocumentStatusDtoEnum.nullish(),
+    currentStatus: DigitalProductDocumentStatusDtoEnum,
+  })
+  .refine(
+    (change) => {
+      const { previousStatus, currentStatus } = change;
+      if (previousStatus == null) return true;
+      const { Draft, Published, Archived } = DigitalProductDocumentStatusDto;
+      if (previousStatus === Draft)
+        return currentStatus === Published || currentStatus === Archived;
+      if (previousStatus === Published) return currentStatus === Archived;
+      return currentStatus === Draft || currentStatus === Published;
+    },
+    {
+      error: "Illegal status transition",
+      path: ["currentStatus"],
+    },
+  );
 
 export const DigitalProductDocumentStatusModificationDtoSchema = z.object({
   method: DigitalProductDocumentStatusModificationDtoEnum,

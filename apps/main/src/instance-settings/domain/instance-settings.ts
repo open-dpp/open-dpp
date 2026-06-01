@@ -5,31 +5,45 @@ import {
 } from "./boolean-instance-setting";
 import { SignupEnabledSetting } from "./signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "./organization-creation-enabled-setting";
+import { PermalinkBaseUrlSetting } from "./permalink-base-url-setting";
+import {
+  StringInstanceSetting,
+  StringInstanceSettingCreateProps,
+  StringInstanceSettingResponse,
+} from "./string-instance-setting";
 
-type InstanceSettingCreatePropsWithoutName = Omit<
+type BooleanInstanceSettingCreatePropsWithoutName = Omit<
   BooleanInstanceSettingCreateProps,
   "name" | "envName"
 >;
+type StringInstanceSettingCreatePropsWithoutName = Omit<
+  StringInstanceSettingCreateProps,
+  "name" | "envName"
+>;
 export interface InstanceSettingsCreateProps {
-  signupEnabled?: InstanceSettingCreatePropsWithoutName;
-  organizationCreationEnabled?: InstanceSettingCreatePropsWithoutName;
+  signupEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
+  organizationCreationEnabled?: BooleanInstanceSettingCreatePropsWithoutName;
+  permalinkBaseUrl?: StringInstanceSettingCreatePropsWithoutName;
 }
 
 export interface InstanceSettingsDbProps {
   id: string;
   signupEnabled: boolean;
   organizationCreationEnabled: boolean;
+  permalinkBaseUrl: string | null;
 }
 
 export interface InstanceSettingsResponseProps {
   id: string;
   signupEnabled: BooleanInstanceSettingResponse;
   organizationCreationEnabled: BooleanInstanceSettingResponse;
+  permalinkBaseUrl: StringInstanceSettingResponse;
 }
 
 export interface EnvOverrideProps {
   signupEnabled?: boolean;
   organizationCreationEnabled?: boolean;
+  permalinkBaseUrl?: string;
 }
 
 export class InstanceSettings {
@@ -37,6 +51,7 @@ export class InstanceSettings {
     public readonly id: string,
     public readonly signupEnabled: SignupEnabledSetting,
     public readonly organizationCreationEnabled: OrganizationCreationEnabledSetting,
+    public readonly permalinkBaseUrl: StringInstanceSetting,
   ) {}
 
   public static create(props: InstanceSettingsCreateProps = {}): InstanceSettings {
@@ -48,6 +63,9 @@ export class InstanceSettings {
       props.organizationCreationEnabled
         ? OrganizationCreationEnabledSetting.create(props.organizationCreationEnabled)
         : OrganizationCreationEnabledSetting.create({}),
+      props.permalinkBaseUrl
+        ? PermalinkBaseUrlSetting.create(props.permalinkBaseUrl)
+        : PermalinkBaseUrlSetting.create({}),
     );
   }
 
@@ -56,6 +74,7 @@ export class InstanceSettings {
       props.id,
       SignupEnabledSetting.create({ value: props.signupEnabled }),
       OrganizationCreationEnabledSetting.create({ value: props.organizationCreationEnabled }),
+      PermalinkBaseUrlSetting.create({ value: props.permalinkBaseUrl }),
     );
   }
 
@@ -64,6 +83,7 @@ export class InstanceSettings {
       this.id,
       this.signupEnabled.withEnvOverrides(overrides.signupEnabled),
       this.organizationCreationEnabled.withEnvOverrides(overrides.organizationCreationEnabled),
+      this.permalinkBaseUrl.withEnvOverrides(overrides.permalinkBaseUrl),
     );
   }
 
@@ -72,6 +92,7 @@ export class InstanceSettings {
       this.id,
       this.signupEnabled.update(props.signupEnabled),
       this.organizationCreationEnabled.update(props.organizationCreationEnabled),
+      this.permalinkBaseUrl.update(props.permalinkBaseUrl),
     );
   }
 
@@ -80,6 +101,7 @@ export class InstanceSettings {
       id: this.id,
       signupEnabled: this.signupEnabled.value,
       organizationCreationEnabled: this.organizationCreationEnabled.value,
+      permalinkBaseUrl: this.permalinkBaseUrl.value,
     };
   }
 
@@ -88,6 +110,7 @@ export class InstanceSettings {
       id: this.id,
       signupEnabled: this.signupEnabled.toResponse(),
       organizationCreationEnabled: this.organizationCreationEnabled.toResponse(),
+      permalinkBaseUrl: this.permalinkBaseUrl.toResponse(),
     };
   }
 }

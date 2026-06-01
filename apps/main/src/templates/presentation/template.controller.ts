@@ -24,6 +24,7 @@ import type {
 import {
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
+  PresentationReferenceType,
   TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
@@ -99,6 +100,7 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -120,6 +122,7 @@ export class TemplateController
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @ApiGetShells()
@@ -238,6 +241,14 @@ export class TemplateController
       id,
       submodelId,
       subject,
+      async (submodelIdShort, options) => {
+        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
+          PresentationReferenceType.Template,
+          id,
+          submodelIdShort,
+          options,
+        );
+      },
     );
   }
 
@@ -384,6 +395,14 @@ export class TemplateController
       submodelId,
       idShortPath,
       subject,
+      async (idShortPathString, options) => {
+        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
+          PresentationReferenceType.Template,
+          id,
+          idShortPathString,
+          options,
+        );
+      },
     );
   }
 
@@ -706,10 +725,11 @@ export class TemplateController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Param("id") id: string,
   ): Promise<TemplateDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
       await this.templateService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
         id,
-        SubjectAttributes.create({ userRole, memberRole }),
+        subject,
         organizationId,
       );
     return TemplateDtoSchema.parse(template.toPlain());

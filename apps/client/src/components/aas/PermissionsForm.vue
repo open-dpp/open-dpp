@@ -96,11 +96,11 @@ async function savePermissionsAndClose() {
   await savePermissions();
 }
 
-async function onToggleInheritance(shouldInherit: boolean) {
-  if (shouldInherit) {
-    await resetToInheritedPermissions(selectedRole.value);
-  } else {
+async function onToggleInheritance(shouldOverride: boolean) {
+  if (shouldOverride) {
     takeOverInheritedPermissions(selectedRole.value);
+  } else {
+    await resetToInheritedPermissions(selectedRole.value);
   }
 }
 
@@ -140,7 +140,7 @@ defineExpose<{
       <div v-if="!props.hideInheritanceToggle" class="flex items-center gap-2">
         <ToggleSwitch
           input-id="toggle-inheritance"
-          :model-value="permissionsInherited"
+          :model-value="!permissionsInherited"
           :disabled="disabled || !canEditPermissions"
           @update:model-value="onToggleInheritance"
         />

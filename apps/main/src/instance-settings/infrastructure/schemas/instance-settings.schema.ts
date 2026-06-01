@@ -7,6 +7,7 @@ export type InstanceSettingsDocument = HydratedDocument<InstanceSettingsSchema>;
 export const InstanceSettingsDocVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
+  v1_2_0: "1.2.0",
 } as const;
 type InstanceSettingsDocVersionType =
   (typeof InstanceSettingsDocVersion)[keyof typeof InstanceSettingsDocVersion];
@@ -22,9 +23,12 @@ export class InstanceSettingsSchema {
   @Prop({ required: true, default: true })
   organizationCreationEnabled: boolean;
 
+  @Prop({ required: false, default: null, type: String })
+  permalinkBaseUrl: string | null;
+
   @Prop({
     required: true,
-    default: InstanceSettingsDocVersion.v1_1_0,
+    default: InstanceSettingsDocVersion.v1_2_0,
     enum: Object.values(InstanceSettingsDocVersion),
     type: String,
   })

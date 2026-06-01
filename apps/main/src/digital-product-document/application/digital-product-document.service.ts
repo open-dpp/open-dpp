@@ -1,4 +1,5 @@
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
+import { ForbiddenException } from "@nestjs/common";
+import { ValueError } from "@open-dpp/exception";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
@@ -257,6 +258,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     submodelId: string,
     subject: SubjectAttributes,
+    extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -269,6 +271,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       this.saveEnvironmentCallback(item),
       subject,
+      extraCleanup,
     );
   }
 
@@ -278,6 +281,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -290,6 +294,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       idShortPath,
       subject,
+      extraCleanup,
     );
   }
 
@@ -398,7 +403,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
 
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {
     if (item.isArchived()) {
-      throw new BadRequestException("Archived passport/ template cannot be modified");
+      throw new ValueError("Cannot modify an archived digital product document");
     }
   }
 

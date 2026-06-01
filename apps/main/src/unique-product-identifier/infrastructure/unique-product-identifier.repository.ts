@@ -24,25 +24,29 @@ export class UniqueProductIdentifierRepository {
     return UniqueProductIdentifier.loadFromDb({
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
+      type: uniqueProductIdentifierDoc.type ?? null,
     });
   }
 
   async save(uniqueProductIdentifier: UniqueProductIdentifier, options?: DbSessionOptions) {
-    return this.convertToDomain(
-      await this.uniqueProductIdentifierDoc.findOneAndUpdate(
-        { _id: uniqueProductIdentifier.uuid },
-        {
-          _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
-          referenceId: uniqueProductIdentifier.referenceId,
-        },
-        {
-          new: true, // Return the updated document
-          upsert: true, // Create a new document if none found
-          runValidators: true,
-          session: options?.session ?? null,
-        },
-      ),
+    const doc = await this.uniqueProductIdentifierDoc.findOneAndUpdate(
+      { _id: uniqueProductIdentifier.uuid },
+      {
+        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_1_0,
+        referenceId: uniqueProductIdentifier.referenceId,
+        type: uniqueProductIdentifier.type,
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        session: options?.session ?? null,
+      },
     );
+    if (!doc) {
+      throw new Error("findOneAndUpdate with upsert did not return a document");
+    }
+    return this.convertToDomain(doc);
   }
 
   async findOne(uuid: string) {
@@ -85,6 +89,9 @@ export class UniqueProductIdentifierRepository {
   }
 
   async deleteByReferenceId(referenceId: string, options?: DbSessionOptions) {
-    await this.uniqueProductIdentifierDoc.findOneAndDelete({ referenceId }, options);
+    await this.uniqueProductIdentifierDoc.deleteMany(
+      { referenceId },
+      { session: options?.session },
+    );
   }
 }

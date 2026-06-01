@@ -31,13 +31,21 @@ describe("aasDrawer composable", () => {
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(SubmodelEditor);
-    expect(editorVNode.value?.props).toEqual({ data, path, callback });
+    expect(editorVNode.value?.props).toEqual({
+      data: { ...data, modelType: KeyTypes.Submodel },
+      path,
+      callback,
+    });
 
     openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.EDIT, path: {}, callback });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(SubmodelEditor);
-    expect(editorVNode.value?.props).toEqual({ data, path: {}, callback });
+    expect(editorVNode.value?.props).toEqual({
+      data: { ...data, modelType: KeyTypes.Submodel },
+      path: {},
+      callback,
+    });
   });
 
   it("should open drawer with PropertyEditor, PropertyCreateEditor", async () => {
@@ -56,7 +64,11 @@ describe("aasDrawer composable", () => {
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(PropertyEditor);
-    expect(editorVNode.value?.props).toEqual({ data, path, callback });
+    expect(editorVNode.value?.props).toEqual({
+      data: { ...data, modelType: KeyTypes.Property },
+      path,
+      callback,
+    });
 
     const createData = { valueType: DataTypeDef.String };
     openDrawer({
@@ -75,5 +87,20 @@ describe("aasDrawer composable", () => {
     hideDrawer();
     expect(drawerVisible.value).toBeFalsy();
     expect(onHideDrawer).toHaveBeenCalled();
+  });
+
+  it("preserves modelType on editorVNode.props.data for a Property EDIT", () => {
+    const data = PropertyJsonSchema.parse(propertyInputPlainFactory.build());
+    const mockCan = vi.fn();
+    const { openDrawer, editorVNode } = useAasDrawer({ onHideDrawer, can: mockCan });
+    openDrawer({
+      type: KeyTypes.Property,
+      data,
+      title: "x",
+      mode: EditorMode.EDIT,
+      path: { submodelId: "s1", idShortPath: data.idShort },
+      callback: async () => {},
+    });
+    expect(editorVNode.value?.props.data.modelType).toBe(KeyTypes.Property);
   });
 });

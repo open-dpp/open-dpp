@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
-import { DataTypeDef } from "@open-dpp/dto";
+import { DataTypeDef, isIntegerDataType, isNumericDataType } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
@@ -22,38 +22,13 @@ const emit = defineEmits<{
 
 const { locale } = useI18n();
 
-const INTEGER_TYPES = new Set<DataTypeDefType>([
-  DataTypeDef.Int,
-  DataTypeDef.Long,
-  DataTypeDef.Integer,
-  DataTypeDef.Short,
-  DataTypeDef.Byte,
-  DataTypeDef.NonPositiveInteger,
-  DataTypeDef.PositiveInteger,
-  DataTypeDef.NegativeInteger,
-  DataTypeDef.NonNegativeInteger,
-  DataTypeDef.UnsignedShort,
-  DataTypeDef.UnsignedInt,
-  DataTypeDef.UnsignedLong,
-  DataTypeDef.UnsignedByte,
-]);
-
-const NUMERIC_TYPES = new Set<DataTypeDefType>([
-  ...INTEGER_TYPES,
-  DataTypeDef.Double,
-  DataTypeDef.Float,
-  DataTypeDef.Decimal,
-]);
-
-const isNumeric = computed(() => (props.valueType ? NUMERIC_TYPES.has(props.valueType) : false));
+const isNumeric = computed(() => isNumericDataType(props.valueType));
 
 const isDate = computed(() => props.valueType === DataTypeDef.Date);
 
 const isDateTime = computed(() => props.valueType === DataTypeDef.DateTime);
 
-const maxFractionDigits = computed(() =>
-  props.valueType && INTEGER_TYPES.has(props.valueType) ? 0 : 5,
-);
+const maxFractionDigits = computed(() => (isIntegerDataType(props.valueType) ? 0 : 5));
 
 const numericValue = computed({
   get: () => {

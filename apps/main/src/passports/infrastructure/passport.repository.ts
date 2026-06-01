@@ -35,6 +35,7 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     return {
       ...plain,
       lastStatusChange: {
+        ...plain.lastStatusChange,
         currentStatus: DigitalProductDocumentStatus.Draft,
       },
       _schemaVersion: PassportDocVersion.v1_1_0,
@@ -43,7 +44,10 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
 
   async fromPlainWithMigration(plain: any): Promise<Passport> {
     let migratedVersion = plain;
-    if (migratedVersion._schemaVersion === PassportDocVersion.v1_0_0) {
+    if (
+      !migratedVersion._schemaVersion ||
+      migratedVersion._schemaVersion === PassportDocVersion.v1_0_0
+    ) {
       migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
     }
     return this.fromPlain(migratedVersion);
