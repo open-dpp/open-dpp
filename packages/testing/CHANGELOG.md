@@ -1,5 +1,17 @@
 # @open-dpp/testing
 
+## 1.0.0
+
+### Major Changes
+
+- [#520](https://github.com/open-dpp/open-dpp/pull/520) [`cf7dbd0`](https://github.com/open-dpp/open-dpp/commit/cf7dbd0d01313e50d4eec39a65944d98f417ba88) Thanks [@florianBieck](https://github.com/florianBieck)! - Added granular passport UI customization capabilities and refactored presentation layer into permalink structure.
+
+### Patch Changes
+
+- Updated dependencies [[`cf7dbd0`](https://github.com/open-dpp/open-dpp/commit/cf7dbd0d01313e50d4eec39a65944d98f417ba88)]:
+  - @open-dpp/dto@1.0.0
+  - @open-dpp/env@1.0.0
+
 ## 0.6.0
 
 ### Minor Changes
