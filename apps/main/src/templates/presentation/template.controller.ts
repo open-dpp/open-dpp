@@ -21,7 +21,6 @@ import type {
   ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-
 import {
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
@@ -66,6 +65,7 @@ import {
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
+  ApiPatchSubmodelValue,
   ApiPostColumn,
   ApiPostRow,
   ApiPostSubmodel,
@@ -82,11 +82,10 @@ import {
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
-  ValueModificationRequestBody,
   SubmodelIdParam,
   SubmodelModificationRequestBody,
   SubmodelRequestBody,
-  ApiPatchSubmodelValue,
+  ValueModificationRequestBody,
 } from "../../aas/presentation/aas.decorators";
 import {
   IAasCreateEndpoints,
@@ -104,7 +103,6 @@ import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
-  ActivityCommandPathQueryParam,
   ActivityDppKeyQueryParam,
   ActivityTypeQueryParam,
   ApiDownloadActivities,
@@ -697,7 +695,6 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
     @ActivityDppKeyQueryParam() dppPathFilter: string | undefined,
-    @ActivityCommandPathQueryParam() commandPathFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
@@ -712,7 +709,6 @@ export class TemplateController
       cursor,
       activityType,
       dppPathFilter,
-      commandPathFilter,
     );
   }
 

@@ -26,6 +26,12 @@ export class ChangeTracker {
     return new ChangeTracker(data?.onStopCallback);
   }
 
+  static fromChanges(changes: Array<IChangeEvent>): ChangeTracker {
+    const tracker = new ChangeTracker();
+    tracker._changes = changes;
+    return tracker;
+  }
+
   startTracking() {
     this.trackingEnabled = true;
   }

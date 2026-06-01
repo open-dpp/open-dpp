@@ -112,7 +112,6 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
-  ActivityCommandPathQueryParam,
   ActivityDppKeyQueryParam,
   ActivityTypeQueryParam,
   ApiDownloadActivities,
@@ -840,7 +839,6 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
     @ActivityDppKeyQueryParam() dppPathFilter: string | undefined,
-    @ActivityCommandPathQueryParam() commandPathFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
@@ -855,7 +853,6 @@ export class PassportController
       cursor,
       activityType,
       dppPathFilter,
-      commandPathFilter,
     );
   }
 

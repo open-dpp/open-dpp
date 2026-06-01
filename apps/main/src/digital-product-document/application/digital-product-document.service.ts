@@ -511,7 +511,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     cursor: string | undefined,
     filterByActivityType: ActivityTypesType | undefined,
     dppPathFilter: string | undefined,
-    commandPathFilter: string | undefined,
     ascending: boolean = false,
   ) {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
@@ -532,8 +531,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
           ascending,
           filter: {
             activityType: filterByActivityType,
-            dppPath: dppPathFilter,
-            commandPath: commandPathFilter,
+            path: dppPathFilter,
           },
         })
       ).toPlain({ ability, ...(dppPathFilter ? { filter: { dppPath: dppPathFilter } } : {}) }),
@@ -567,7 +565,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
         endDate,
         limit,
         currentCursor,
-        undefined,
         undefined,
         undefined,
         true,

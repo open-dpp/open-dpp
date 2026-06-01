@@ -87,13 +87,3 @@ export const ActivityDppKeyQueryParamSchema = z
   });
 export const ActivityDppKeyQueryParam = () =>
   Query("dppPath", new ZodValidationPipe(ActivityDppKeyQueryParamSchema));
-
-export const ActivityCommandPathQueryParamSchema = z
-  .string()
-  .optional()
-  .meta({
-    description: "Filter the payload of the activities for the given command path.",
-    param: { in: "query", name: "commandPath" },
-  });
-export const ActivityCommandPathQueryParam = () =>
-  Query("commandPath", new ZodValidationPipe(ActivityCommandPathQueryParamSchema));

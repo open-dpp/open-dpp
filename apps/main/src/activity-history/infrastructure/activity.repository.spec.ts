@@ -59,35 +59,36 @@ describe("activityRepository", () => {
     const passportId = randomUUID();
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
-    const changeTracker = ChangeTracker.create();
     const submodel = Submodel.create({
       idShort: "submodel1",
     });
-    changeTracker.track(
-      PropertyValueChanged.create({
-        path: IdShortPath.create({ path: "prop1" }),
-        valueType: DataTypeDef.String,
-        oldValue: "oldValue",
-        newValue: "newValue",
-      }),
-    );
     const event1 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodel: submodel.withTracking(changeTracker),
+      submodel: submodel.withTracking(
+        ChangeTracker.fromChanges([
+          PropertyValueChanged.create({
+            path: IdShortPath.create({ path: "prop1" }),
+            valueType: DataTypeDef.String,
+            oldValue: "oldValue",
+            newValue: "newValue",
+          }),
+        ]),
+      ),
       createdAt: date1,
       correlationId: randomUUID(),
     });
-    changeTracker.track(
-      PropertyValueChanged.create({
-        path: IdShortPath.create({ path: "prop2" }),
-        valueType: DataTypeDef.String,
-        oldValue: "oldValue",
-        newValue: "newValue",
-      }),
-    );
     const event2 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodel: submodel.withTracking(changeTracker),
+      submodel: submodel.withTracking(
+        ChangeTracker.fromChanges([
+          PropertyValueChanged.create({
+            path: IdShortPath.create({ path: "prop2" }),
+            valueType: DataTypeDef.String,
+            oldValue: "oldValue",
+            newValue: "newValue",
+          }),
+        ]),
+      ),
       correlationId: randomUUID(),
       createdAt: date2,
     });
@@ -108,35 +109,36 @@ describe("activityRepository", () => {
     const date2 = new Date("2022-02-01T00:00:00.000Z");
     const correlationId = randomUUID();
 
-    const changeTracker = ChangeTracker.create();
     const submodel = Submodel.create({
       idShort: "submodel1",
     });
-    changeTracker.track(
-      PropertyValueChanged.create({
-        path: IdShortPath.create({ path: "prop1" }),
-        valueType: DataTypeDef.String,
-        oldValue: "oldValue",
-        newValue: "newValue",
-      }),
-    );
     const event1 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodel: submodel.withTracking(changeTracker),
+      submodel: submodel.withTracking(
+        ChangeTracker.fromChanges([
+          PropertyValueChanged.create({
+            path: IdShortPath.create({ path: "prop1" }),
+            valueType: DataTypeDef.String,
+            oldValue: "oldValue",
+            newValue: "newValue",
+          }),
+        ]),
+      ),
       correlationId,
       createdAt: date1,
     });
-    changeTracker.track(
-      PropertyValueChanged.create({
-        path: IdShortPath.create({ path: "prop2" }),
-        valueType: DataTypeDef.String,
-        oldValue: "oldValue",
-        newValue: "newValue",
-      }),
-    );
     const event2 = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId: passportId,
-      submodel: submodel.withTracking(changeTracker),
+      submodel: submodel.withTracking(
+        ChangeTracker.fromChanges([
+          PropertyValueChanged.create({
+            path: IdShortPath.create({ path: "prop2" }),
+            valueType: DataTypeDef.String,
+            oldValue: "oldValue",
+            newValue: "newValue",
+          }),
+        ]),
+      ),
       correlationId,
       createdAt: date2,
     });
@@ -164,18 +166,18 @@ describe("activityRepository", () => {
       idShort: submodelIdShort,
     });
     const createActivity = (id: string, idShort: string, createdAt: Date) => {
-      const changeTracker = ChangeTracker.create();
-      changeTracker.track(
-        PropertyValueChanged.create({
-          path: IdShortPath.create({ path: idShort }),
-          valueType: DataTypeDef.String,
-          oldValue: "oldValue",
-          newValue: "newValue",
-        }),
-      );
       return SubmodelElementModifiedActivity.create({
         digitalProductDocumentId: id,
-        submodel: submodel.withTracking(changeTracker),
+        submodel: submodel.withTracking(
+          ChangeTracker.fromChanges([
+            PropertyValueChanged.create({
+              path: IdShortPath.create({ path: idShort }),
+              valueType: DataTypeDef.String,
+              oldValue: "oldValue",
+              newValue: "newValue",
+            }),
+          ]),
+        ),
         createdAt,
         correlationId: randomUUID(),
       });
@@ -231,7 +233,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelElementModified, dppPath: "prop1" },
+        filter: { activityType: ActivityTypes.SubmodelElementModified, path: "prop1" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -244,7 +246,7 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: { activityType: ActivityTypes.SubmodelElementModified, dppPath: "sw:prop" },
+        filter: { activityType: ActivityTypes.SubmodelElementModified, path: "sw:prop" },
       });
       expect(foundEvents).toEqual(
         PagingResult.create({
@@ -253,54 +255,6 @@ describe("activityRepository", () => {
             limit: 100,
           }),
           items: [event4, event3, event2, event1],
-        }),
-      );
-
-      foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: {
-          activityType: ActivityTypes.SubmodelElementModified,
-          commandPath: `${submodelIdShort}.prop2`,
-        },
-      });
-      expect(foundEvents).toEqual(
-        PagingResult.create({
-          pagination: Pagination.create({
-            cursor: encodeCursor(event2.header.createdAt.toISOString(), event2.header.id),
-            limit: 100,
-          }),
-          items: [event2],
-        }),
-      );
-
-      foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: {
-          activityType: ActivityTypes.SubmodelElementModified,
-          commandPath: `${submodelIdShort}.prop2`,
-          dppPath: "sw:prop",
-        },
-      });
-      expect(foundEvents).toEqual(
-        PagingResult.create({
-          pagination: Pagination.create({
-            cursor: encodeCursor(event2.header.createdAt.toISOString(), event2.header.id),
-            limit: 100,
-          }),
-          items: [event2],
-        }),
-      );
-
-      foundEvents = await activityRepository.findByAggregateId(passportId, {
-        filter: {
-          activityType: ActivityTypes.SubmodelElementModified,
-          commandPath: `${submodelIdShort}`,
-        },
-      });
-      expect(foundEvents).toEqual(
-        PagingResult.create({
-          pagination: Pagination.create({
-            limit: 100,
-          }),
-          items: [],
         }),
       );
     });
