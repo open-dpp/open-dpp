@@ -90,7 +90,7 @@ describe("modifier visitor", () => {
     submodel.modify({ idShort: "s1", ...sharedModifications }, { ability });
     expect(submodel.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
     expect(submodel.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
-    const changes = submodel.eventQueue.pull();
+    const changes = submodel.tracker.pull();
     expect(changes).toEqual([
       DisplayNameChanged.create({
         path: IdShortPath.create({ path: submodel.idShort }),
@@ -196,7 +196,7 @@ describe("modifier visitor", () => {
       expect(item.toPlain()).toMatchObject({
         ...modifications,
       });
-      const changes = submodel.eventQueue.pull();
+      const changes = submodel.tracker.pull();
       expect(changes).toContainEqual(
         DisplayNameChanged.create({
           path: IdShortPath.create({ path: `${submodel.idShort}.${item.idShort}` }),
@@ -339,7 +339,7 @@ describe("modifier visitor", () => {
     expect(referenceElement.value?.keys[0].type).toEqual(KeyTypes.AssetAdministrationShell);
     expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
 
-    const changes = submodel.eventQueue.pull();
+    const changes = submodel.tracker.pull();
     expect(changes).toContainEqual(
       ReferenceElementValueChanged.create({
         path: IdShortPath.create({ path: "s1.ref" }),

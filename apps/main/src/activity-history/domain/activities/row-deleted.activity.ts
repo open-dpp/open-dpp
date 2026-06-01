@@ -1,16 +1,20 @@
 import { ActivityHeader, ActivitySchema, activityToDatabase, IActivity } from "./activity";
-import { createActivityHeader, SharedActivityCreateProps } from "./shared.activity";
+import { SharedActivityCreateProps, createActivityHeader } from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
-import { SubmodelActivityPayload } from "./submodel-activities.shared";
+import {
+  SubmodelActivityPayload,
+  SubmodelWithAasActivityPayload,
+} from "./submodel-activities.shared";
+import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
 
-const SubmodelElementValueModifiedActivityVersion = {
+const RowDeletedActivityVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
-export class SubmodelElementValueModifiedActivity implements IActivity {
-  public static readonly type = ActivityTypes.SubmodelElementValueModified;
+export class RowDeletedActivity implements IActivity {
+  public static readonly type = ActivityTypes.RowDeleted;
   private constructor(
     public header: ActivityHeader,
     public readonly payload: SubmodelActivityPayload,
@@ -18,17 +22,15 @@ export class SubmodelElementValueModifiedActivity implements IActivity {
   static create(
     data: SharedActivityCreateProps & {
       submodel: Submodel;
+      aas: AssetAdministrationShell;
     },
   ) {
-    return new SubmodelElementValueModifiedActivity(
-      createActivityHeader(
-        SubmodelElementValueModifiedActivity.type,
-        data,
-        SubmodelElementValueModifiedActivityVersion.v1_0_0,
-      ),
-      SubmodelActivityPayload.create({
+    return new RowDeletedActivity(
+      createActivityHeader(RowDeletedActivity.type, data, RowDeletedActivityVersion.v1_0_0),
+      SubmodelWithAasActivityPayload.create({
         submodelId: data.submodel.id,
-        changes: data.submodel.tracker.pull(),
+        aasId: data.aas.id,
+        changes: [...data.submodel.tracker.pull(), ...data.aas.tracker.pull()],
       }),
     );
   }
@@ -36,9 +38,9 @@ export class SubmodelElementValueModifiedActivity implements IActivity {
   static fromPlain(data: unknown) {
     const parsed = ActivitySchema.parse(data);
 
-    return new SubmodelElementValueModifiedActivity(
+    return new RowDeletedActivity(
       ActivityHeader.fromPlain(parsed.header),
-      SubmodelActivityPayload.fromPlain(parsed.payload),
+      SubmodelWithAasActivityPayload.fromPlain(parsed.payload),
     );
   }
 

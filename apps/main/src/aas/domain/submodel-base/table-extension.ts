@@ -5,11 +5,19 @@ import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { ChangeEventQueue, ITrackable } from "../../../activity-history/domain/change-event-queue";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
+import { RowAdded } from "../../../activity-history/domain/change-events/row-added";
+import { ColumnAdded } from "../../../activity-history/domain/change-events/column-added";
+import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
+import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
 
 export class TableExtension implements ITrackable {
   private headerRow: ISubmodelElement | undefined;
-  readonly eventQueue = ChangeEventQueue.create();
+  readonly tracker = ChangeTracker.create();
 
   constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
@@ -18,6 +26,10 @@ export class TableExtension implements ITrackable {
       );
     }
     this.setHeaderRow();
+  }
+
+  withTracking(changeTracker?: ChangeTracker): this {
+    return withTrackingHelper(changeTracker, this);
   }
 
   private setHeaderRow() {
@@ -47,6 +59,15 @@ export class TableExtension implements ITrackable {
     this.rows.forEach((row) => {
       row.addSubmodelElement(cloneSubmodelElement(column), options);
     });
+    const position = options.position ?? this.columns.length - 1;
+    const value = this.columns[position];
+    this.tracker.track(
+      ColumnAdded.create({
+        path: value.getIdShortPath(),
+        position,
+        value,
+      }),
+    );
   }
 
   modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
@@ -58,15 +79,28 @@ export class TableExtension implements ITrackable {
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find((el) => el.idShort === idShort);
       if (column) {
-        column.accept(new ModifierVisitor(options), { data: { ...data, idShort } });
+        column.accept(new ModifierVisitor(options).withTracking(this.tracker), {
+          data: { ...data, idShort },
+        });
       }
     }
   }
 
   deleteColumn(idShort: string, options: DeleteOptions) {
-    this.rows.forEach((row) => {
+    const columnIndex = this.getColumnPosition(idShort);
+    const columnToDelete = this.columns[columnIndex];
+    for (const row of this.rows) {
       row.deleteSubmodelElement(idShort, options);
-    });
+    }
+    if (columnToDelete) {
+      this.tracker.track(
+        ColumnDeleted.create({
+          position: columnIndex,
+          path: columnToDelete.getIdShortPath(),
+          value: columnToDelete,
+        }),
+      );
+    }
   }
 
   private generateRowIdShort() {
@@ -100,11 +134,13 @@ export class TableExtension implements ITrackable {
         this.setHeaderRow();
       }
     }
-    // this.eventQueue.publishChanges({
-    //   path: this.data.getIdShortPath().toString(),
-    //   type: ChangeEventTypes.RowAdded,
-    //   position: options.position ?? this.rows.length - 1,
-    // });
+    this.tracker.track(
+      RowAdded.create({
+        path: newRow.getIdShortPath(),
+        position: options.position ?? this.rows.length - 1,
+        value: newRow,
+      }),
+    );
     return newRow;
   }
 
@@ -117,9 +153,17 @@ export class TableExtension implements ITrackable {
   }
 
   deleteRow(idShort: string, options: DeleteOptions) {
-    this.data.deleteSubmodelElement(idShort, options);
+    const rowIndex = this.getRowPosition(idShort);
+    const row = this.data.deleteSubmodelElement(idShort, options);
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();
     }
+    this.tracker.track(
+      RowDeleted.create({
+        path: row.getIdShortPath(),
+        position: rowIndex,
+        value: row,
+      }),
+    );
   }
 }

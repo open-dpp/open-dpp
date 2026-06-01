@@ -19,4 +19,10 @@ export class Resource implements IVisitable {
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitResource(this, context);
   }
+  toPlain(): Record<string, any> {
+    return {
+      path: this.path,
+      contentType: this.contentType,
+    };
+  }
 }

@@ -42,7 +42,11 @@ import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
-import { ChangeEventQueue, ITrackable } from "../../activity-history/domain/change-event-queue";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
 import {
   DescriptionChanged,
   DisplayNameChanged,
@@ -51,6 +55,7 @@ import { IdShortPath } from "./common/id-short-path";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { FileValueChanged } from "../../activity-history/domain/change-events/file-value-changed";
 import { ReferenceElementValueChanged } from "../../activity-history/domain/change-events/reference-element-value-changed";
+import { DefaultThumbnailsModified } from "../../activity-history/domain/change-events/default-thumbnails-modified";
 
 export interface ModifierVisitorOptions {
   subject?: SubjectAttributes;
@@ -60,8 +65,12 @@ export interface ModifierVisitorContextType {
   data: unknown;
 }
 export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, void>, ITrackable {
-  readonly eventQueue = ChangeEventQueue.create();
+  tracker = ChangeTracker.create();
   constructor(private readonly options: ModifierVisitorOptions) {}
+
+  withTracking(changeTracker?: ChangeTracker) {
+    return withTrackingHelper(changeTracker, this);
+  }
 
   private modifyNameAndDescription<
     T extends {
@@ -76,7 +85,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
       const oldValue = generalInfoDto.displayName;
       generalInfoDto.displayName = displayName.map(LanguageText.fromPlain);
       hasUniqueLanguagesOrFail(generalInfoDto.displayName);
-      this.eventQueue.publish(
+      this.tracker.track(
         DisplayNameChanged.create({
           path: generalInfoDto.getIdShortPath(),
           oldValue: oldValue,
@@ -88,7 +97,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
       const oldValue = generalInfoDto.description;
       generalInfoDto.description = description.map(LanguageText.fromPlain);
       hasUniqueLanguagesOrFail(generalInfoDto.description);
-      this.eventQueue.publish(
+      this.tracker.track(
         DescriptionChanged.create({
           path: generalInfoDto.getIdShortPath(),
           oldValue,
@@ -143,7 +152,14 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     // this.modificationGuard(element, context); // Not yet supported
     const parsed = AssetInformationModificationSchema.parse(context?.data);
     if (parsed.defaultThumbnails) {
+      const oldValue = element.defaultThumbnails;
       element.defaultThumbnails = parsed.defaultThumbnails.map(Resource.fromPlain);
+      this.tracker.track(
+        DefaultThumbnailsModified.create({
+          oldValue,
+          newValue: element.defaultThumbnails,
+        }),
+      );
     }
   }
 
@@ -184,7 +200,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
       element.contentType = parsed.contentType;
     }
 
-    this.eventQueue.publish(
+    this.tracker.track(
       FileValueChanged.create({
         path: element.getIdShortPath(),
         oldValue,
@@ -215,7 +231,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     if (parsed.value !== undefined) {
       const oldValue = element.value;
       element.value = parsed.value;
-      this.eventQueue.publish(
+      this.tracker.track(
         PropertyValueChanged.create({
           valueType: element.valueType,
           path: element.getIdShortPath(),
@@ -271,7 +287,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
         element.value = Reference.fromPlain(parsed.value);
       }
     }
-    this.eventQueue.publish(
+    this.tracker.track(
       ReferenceElementValueChanged.create({
         path: element.getIdShortPath(),
         oldValue,

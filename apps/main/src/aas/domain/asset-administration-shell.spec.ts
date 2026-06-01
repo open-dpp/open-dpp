@@ -28,6 +28,7 @@ import { Security } from "./security/security";
 
 import { SubjectAttributes } from "./security/subject-attributes";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
+import { DefaultThumbnailsModified } from "../../activity-history/domain/change-events/default-thumbnails-modified";
 
 describe("assetAdministrationShell", () => {
   it("should create a new asset administration shell", () => {
@@ -85,14 +86,13 @@ describe("assetAdministrationShell", () => {
       IdShortPath.create({ path: submodelId2 }),
       allPermissionsAllow.map(Permission.fromPlain),
     );
-    const ability = security.defineAbilityForSubject(admin);
 
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
       submodels: [submodelRef1, submodelRef2],
       security,
     });
-    aas.deleteSubmodel(submodelToDelete, { ability, digitalProductDocumentId: randomUUID() });
+    aas.deleteSubmodel(submodelToDelete);
     expect(aas.submodels).toEqual([submodelRef2]);
     expect(aas.security.localAccessControl.accessPermissionRules).toEqual([
       AccessPermissionRule.create({
@@ -226,16 +226,24 @@ describe("assetAdministrationShell", () => {
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
     const ability = security.defineAbilityForSubject(subject);
-    aas.modify(
-      { displayName, description, assetInformation: { defaultThumbnails } },
-      { subject, ability, digitalProductDocumentId: randomUUID() },
-    );
+    aas
+      .withTracking()
+      .modify(
+        { displayName, description, assetInformation: { defaultThumbnails } },
+        { subject, ability },
+      );
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.assetInformation.globalAssetId).toEqual("globalAssetId");
     expect(aas.assetInformation.defaultThumbnails).toEqual(
       defaultThumbnails.map(Resource.fromPlain),
+    );
+    expect(aas.tracker.pull()).toContainEqual(
+      DefaultThumbnailsModified.create({
+        oldValue: [],
+        newValue: [Resource.create({ path: "path.to.image", contentType: "image/jepg" })],
+      }),
     );
   });
 

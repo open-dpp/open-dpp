@@ -72,10 +72,10 @@ describe("value modifier visitor", () => {
     });
     expect(property.value).toEqual("value new");
     expect(property.value).toEqual("value new");
-    const changes = submodel.eventQueue.pullChanges();
+    const changes = submodel.tracker.pull();
     expect(changes).toEqual([
       SubmodelElementAdded.create({
-        path: IdShortPath.create({ path: submodel.idShort }),
+        path: IdShortPath.fromSegments([submodel.idShort, "prop1"]),
         submodelElement: property,
       }),
       PropertyValueChanged.create({
@@ -134,11 +134,11 @@ describe("value modifier visitor", () => {
     });
     expect(file.value).toBeNull();
     expect(file.contentType).toEqual("image/jpeg");
-    const changes = submodel.eventQueue.pullChanges();
+    const changes = submodel.tracker.pull();
 
     expect(changes).toEqual([
       SubmodelElementAdded.create({
-        path: IdShortPath.create({ path: submodel.idShort }),
+        path: IdShortPath.fromSegments([submodel.idShort, "file"]),
         submodelElement: file,
       }),
       FileValueChanged.create({
@@ -201,10 +201,10 @@ describe("value modifier visitor", () => {
     };
     submodel.modifyValueOfSubmodelElement(modifications, path, { ability });
 
-    const changes = submodel.eventQueue.pullChanges();
+    const changes = submodel.tracker.pull();
     expect(changes).toEqual([
       SubmodelElementAdded.create({
-        path: IdShortPath.create({ path: submodel.idShort }),
+        path: IdShortPath.fromSegments([submodel.idShort, "ref"]),
         submodelElement: referenceElement,
       }),
       ReferenceElementValueChanged.create({
@@ -294,18 +294,18 @@ describe("value modifier visitor", () => {
     expect(property.value).toEqual("second");
     expect(property2.value).toEqual("second2");
 
-    const changes = submodel.eventQueue.pullChanges();
+    const changes = submodel.tracker.pull();
     expect(changes).toEqual([
       SubmodelElementAdded.create({
-        path: IdShortPath.create({ path: submodel.idShort }),
+        path: IdShortPath.fromSegments([submodel.idShort, "prop1"]),
         submodelElement: property,
       }),
       SubmodelElementAdded.create({
-        path: IdShortPath.create({ path: submodel.idShort }),
+        path: IdShortPath.fromSegments([submodel.idShort, "collection"]),
         submodelElement: collection,
       }),
       SubmodelElementAdded.create({
-        path: collection.getIdShortPath(),
+        path: IdShortPath.fromSegments([submodel.idShort, "collection", "prop2"]),
         submodelElement: property2,
       }),
       PropertyValueChanged.create({

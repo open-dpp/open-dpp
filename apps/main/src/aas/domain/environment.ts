@@ -3,10 +3,16 @@ import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { IConvertableToPlain } from "./convertable-to-plain";
 import { Submodel } from "./submodel-base/submodel";
-import { IActivity } from "../../activity-history/domain/activities/activity";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { AddedSubmodelToEnv } from "../../activity-history/domain/change-events/added-submodel-to-env";
+import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
 
-export class Environment implements IConvertableToPlain {
-  private _activities: Array<IActivity> = [];
+export class Environment implements IConvertableToPlain, ITrackable {
+  readonly tracker = ChangeTracker.create();
 
   private constructor(
     public readonly assetAdministrationShells: Array<string>,
@@ -35,20 +41,8 @@ export class Environment implements IConvertableToPlain {
     );
   }
 
-  private publishActivity(activity: IActivity) {
-    this._activities.push(activity);
-  }
-
-  get activities(): Array<IActivity> {
-    return this._activities;
-  }
-
-  pullActivities(correlationId: string): Array<IActivity> {
-    const events = [...this._activities];
-    events.forEach((event) => event.header.assignCorrelationId(correlationId));
-
-    this._activities = [];
-    return events;
+  withTracking(changeTracker?: ChangeTracker) {
+    return withTrackingHelper(changeTracker, this);
   }
 
   addAssetAdministrationShell(
@@ -68,6 +62,12 @@ export class Environment implements IConvertableToPlain {
       throw new ValueError(`Submodel with id ${submodel.id} already exists`);
     }
     this.submodels.push(submodel.id);
+    this.tracker.track(
+      AddedSubmodelToEnv.create({
+        submodel,
+        position: this.submodels.length - 1,
+      }),
+    );
 
     return submodel;
   }
@@ -78,6 +78,12 @@ export class Environment implements IConvertableToPlain {
       throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
     }
     this.submodels.splice(index, 1);
+    this.tracker.track(
+      DeletedSubmodelFromEnv.create({
+        submodel,
+        position: index,
+      }),
+    );
   }
 
   toPlain(): Record<string, any> {

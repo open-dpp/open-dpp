@@ -3,19 +3,21 @@ import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
-import { SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
-import { SubmodelElementCollection } from "../../../aas/domain/submodel-base/submodel-element-collection";
-import { ISubmodelElement } from "../../../aas/domain/submodel-base/submodel-base";
+import { SubmodelElementSchema } from "@open-dpp/dto";
+import {
+  ISubmodelElement,
+  parseSubmodelElement,
+} from "../../../aas/domain/submodel-base/submodel-base";
 
-const RowAddedSchema = z.object({
-  type: z.literal(ChangeEventTypes.RowAdded),
+const ColumnDeletedSchema = z.object({
+  type: z.literal(ChangeEventTypes.ColumnDeleted),
   path: z.string(),
   position: z.number(),
-  value: SubmodelElementCollectionJsonSchema,
+  value: SubmodelElementSchema,
 });
 
-export class RowAdded implements IChangeEvent {
-  public readonly type = ChangeEventTypes.RowAdded;
+export class ColumnDeleted implements IChangeEvent {
+  public readonly type = ChangeEventTypes.ColumnDeleted;
 
   private constructor(
     public readonly path: IdShortPath,
@@ -24,15 +26,15 @@ export class RowAdded implements IChangeEvent {
   ) {}
 
   static create(data: { path: IdShortPath; position: number; value: ISubmodelElement }) {
-    return new RowAdded(data.path, data.position, data.value);
+    return new ColumnDeleted(data.path, data.position, data.value);
   }
 
   static fromPlain(data: unknown): IChangeEvent {
-    const parsed = RowAddedSchema.parse(data);
-    return new RowAdded(
+    const parsed = ColumnDeletedSchema.parse(data);
+    return new ColumnDeleted(
       IdShortPath.create({ path: parsed.path }),
       parsed.position,
-      SubmodelElementCollection.fromPlain(parsed.value),
+      parseSubmodelElement(parsed.value),
     );
   }
 

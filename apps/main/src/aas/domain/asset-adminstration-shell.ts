@@ -19,7 +19,12 @@ import { DeleteOptions } from "./submodel-base/submodel-base";
 import { IdShortPath } from "./common/id-short-path";
 import { SubjectAttributes } from "./security/subject-attributes";
 import { SubmodelReferenceAdded } from "../../activity-history/domain/change-events/submodel-reference-added";
-import { ChangeEventQueue } from "../../activity-history/domain/change-event-queue";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { SubmodelReferenceDeleted } from "../../activity-history/domain/change-events/submodel-reference-deleted";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -37,11 +42,11 @@ export interface AssetAdministrationShellCreateProps {
 }
 
 export class AssetAdministrationShell
-  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable, ITrackable
 {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  readonly eventQueue;
+  readonly tracker;
 
   private constructor(
     public readonly id: string,
@@ -59,8 +64,8 @@ export class AssetAdministrationShell
   ) {
     this.displayName = displayName;
     this.description = description;
-    this.eventQueue = ChangeEventQueue.create({
-      onPublishCallback: () => this.administration.increaseVersion(),
+    this.tracker = ChangeTracker.create({
+      onPullCallback: () => this.administration.increaseVersion(),
     });
   }
 
@@ -106,8 +111,14 @@ export class AssetAdministrationShell
     );
   }
 
+  withTracking(changeTracker?: ChangeTracker): this {
+    const result = withTrackingHelper(changeTracker, this);
+    this.security.withTracking(this.tracker);
+    return result;
+  }
+
   modify(data: unknown, options: ModifierVisitorOptions) {
-    const modifier = new ModifierVisitor(options);
+    const modifier = new ModifierVisitor(options).withTracking(this.tracker);
     this.accept(modifier, { data });
   }
 
@@ -119,7 +130,7 @@ export class AssetAdministrationShell
     const reference = submodelToReference(submodel);
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
-    this.eventQueue.publish(SubmodelReferenceAdded.create({ submodelRef: reference }));
+    this.tracker.track(SubmodelReferenceAdded.create({ submodelRef: reference }));
 
     return reference;
   }
@@ -127,15 +138,11 @@ export class AssetAdministrationShell
   deletePolicyBySubjectAndObject(
     object: IdShortPath,
     subject: SubjectAttributes,
-    options: Pick<DeleteOptions, "ability" | "digitalProductDocumentId">,
+    options: Pick<DeleteOptions, "ability">,
   ): void {
     this.security
       .withAdministrator(options.ability.getSubject())
       .deletePolicyBySubjectAndObject(subject, object);
-  }
-
-  deletePoliciesByObjectPath(objectPath: IdShortPath): void {
-    this.security.deletePoliciesByObjectPath(objectPath);
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
@@ -212,7 +219,9 @@ export class AssetAdministrationShell
       sm.keys.some((k) => k.value === submodel.id),
     );
     if (foundSubmodelIndex > -1) {
-      this.submodels.splice(foundSubmodelIndex, 1);
+      const [deletedRef] = this.submodels.splice(foundSubmodelIndex, 1);
+      this.tracker.track(SubmodelReferenceDeleted.create({ submodelRef: deletedRef }));
+
       this.security.deletePoliciesByObjectPath(submodel.getIdShortPath());
     }
   }

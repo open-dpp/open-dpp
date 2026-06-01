@@ -18,7 +18,11 @@ import {
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError } from "@open-dpp/exception";
-import { securityPlainFactory, SecurityPlainTransientParams } from "@open-dpp/testing";
+import {
+  allPermissionsAllow,
+  securityPlainFactory,
+  SecurityPlainTransientParams,
+} from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../database/config";
 
@@ -45,7 +49,7 @@ import { PermissionPerObject } from "../domain/security/permission-per-object";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
-import { Submodel } from "../domain/submodel-base/submodel";
+import { Submodel, submodelToReference } from "../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -55,18 +59,31 @@ import { EnvironmentService } from "./environment.service";
 import { randomUUID } from "node:crypto";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { DbSessionOptions } from "../../database/query-options";
-import { AssetAdministrationShellOperationTypes } from "../../activity-history/domain/activities/asset-administration-shell-operation-types";
-import { EnvironmentOperationTypes } from "../../activity-history/domain/activities/environment-types";
-import { SubmodelRepositoryOperationTypes } from "../../activity-history/domain/activities/submodel-repository-operation-types";
 import { ActivityTypes } from "../../activity-history/domain/activities/activity-types";
-import { SubmodelActivityPayload } from "../../activity-history/domain/activities/submodel-activities.shared";
+import {
+  SubmodelActivityPayload,
+  SubmodelWithAasActivityPayload,
+} from "../../activity-history/domain/activities/submodel-activities.shared";
 import { SubmodelElementAdded } from "../../activity-history/domain/change-events/submodel-element-added";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
-import { SubmodelElementDeletedPayload } from "../../activity-history/domain/activities/submodel-element-deleted.activity";
 import { SubmodelElementDeleted } from "../../activity-history/domain/change-events/submodel-element-deleted";
+import { PolicyDeleted } from "../../activity-history/domain/change-events/policy-deleted";
+import { AssetAdministrationShellActivityPayload } from "../../activity-history/domain/activities/aas-activities.shared";
+import { PolicyAdded } from "../../activity-history/domain/change-events/policy-added";
+import { PolicyModified } from "../../activity-history/domain/change-events/policy-modified";
+import { ChangeTracker } from "../../activity-history/domain/change-tracker";
+import { RowAdded } from "../../activity-history/domain/change-events/row-added";
+import { ColumnAdded } from "../../activity-history/domain/change-events/column-added";
+import { ColumnDeleted } from "../../activity-history/domain/change-events/column-deleted";
+import { RowDeleted } from "../../activity-history/domain/change-events/row-deleted";
+import { SubmodelReferenceAdded } from "../../activity-history/domain/change-events/submodel-reference-added";
+import { AddedSubmodelToEnv } from "../../activity-history/domain/change-events/added-submodel-to-env";
+import { SubmodelAdded } from "../../activity-history/domain/change-events/submodel-added";
+import { SubmodelReferenceDeleted } from "../../activity-history/domain/change-events/submodel-reference-deleted";
+import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
+import { SubmodelDeleted } from "../../activity-history/domain/change-events/submodel-deleted";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -262,53 +279,40 @@ describe("environmentService", () => {
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
 
-    // expect(
-    //   foundActivities.items.map((e) => ({
-    //     correlationId: e.header.correlationId,
-    //     type: e.header.type,
-    //     payload: e.payload,
-    //   })),
-    // ).toEqual([
-    //   {
-    //     correlationId,
-    //     type: ActivityOldTypes.AssetAdministrationShellActivity,
-    //     payload: AssetAdministrationShellPayload.create({
-    //       assetAdministrationShellId: assetAdministrationShell.id,
-    //       administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-    //       command: {
-    //         op: AssetAdministrationShellOperationTypes.AssetAdministrationShellModified,
-    //       },
-    //       changes: [
-    //         {
-    //           op: "add",
-    //           path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/1",
-    //           dpp: {
-    //             o: "section1",
-    //             u: "user",
-    //             m: "member",
-    //           },
-    //           value: {
-    //             kindOfPermission: "Allow",
-    //             permission: "Create",
-    //           },
-    //         },
-    //         {
-    //           op: "add",
-    //           path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/0/permissions/2",
-    //           dpp: {
-    //             o: "section1",
-    //             u: "user",
-    //             m: "member",
-    //           },
-    //           value: {
-    //             kindOfPermission: "Allow",
-    //             permission: "Edit",
-    //           },
-    //         },
-    //       ],
-    //     }),
-    //   },
-    // ]);
+    const sectionObject = createAasObject(IdShortPath.create({ path: "section1" }));
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.AssetAdministrationShellModified,
+        payload: AssetAdministrationShellActivityPayload.create({
+          aasId: assetAdministrationShell.id,
+          changes: [
+            PolicyModified.create({
+              object: sectionObject,
+              userRole: UserRole.USER,
+              memberRole: MemberRole.MEMBER,
+              oldValue: [
+                Permission.create({
+                  permission: Permissions.Read,
+                  kindOfPermission: PermissionKind.Allow,
+                }),
+              ],
+              newValue: [
+                Permission.create({ kindOfPermission: "Allow", permission: Permissions.Read }),
+                Permission.create({ kindOfPermission: "Allow", permission: Permissions.Create }),
+                Permission.create({ kindOfPermission: "Allow", permission: Permissions.Edit }),
+              ],
+            }),
+          ],
+        }),
+      },
+    ]);
 
     const foundAas = await aasRepository.findOneOrFail(assetAdministrationShell.id);
     expect(
@@ -317,6 +321,7 @@ describe("environmentService", () => {
       ),
     ).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({
           userRole: UserRole.USER,
           memberRole: MemberRole.MEMBER,
@@ -448,7 +453,7 @@ describe("environmentService", () => {
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
-    assetAdministrationShell.addSubmodel(submodel1, { digitalProductDocumentId, ability });
+    assetAdministrationShell.addSubmodel(submodel1);
     await aasRepository.save(assetAdministrationShell);
 
     const environment = Environment.create({
@@ -494,282 +499,66 @@ describe("environmentService", () => {
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
-    // expect(
-    //   foundActivities.items.map((e) => ({
-    //     correlationId: e.header.correlationId,
-    //     type: e.header.type,
-    //     payload: e.payload,
-    //   })),
-    // ).toEqual([
-    //   {
-    //     correlationId,
-    //     type: ActivityOldTypes.SubmodelRepositoryActivity,
-    //     payload: SubmodelRepositoryPayload.create({
-    //       command: {
-    //         op: SubmodelRepositoryOperationTypes.SubmodelCreated,
-    //       },
-    //       submodel: Submodel.fromPlain(submodelPlain),
-    //     }),
-    //   },
-    //   {
-    //     type: ActivityOldTypes.AssetAdministrationShellActivity,
-    //     correlationId,
-    //     payload: AssetAdministrationShellPayload.create({
-    //       assetAdministrationShellId: environment.assetAdministrationShells[0],
-    //       administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-    //       command: {
-    //         op: AssetAdministrationShellOperationTypes.SubmodelCreated,
-    //       },
-    //       changes: [
-    //         {
-    //           op: "add",
-    //           path: "/security/localAccessControl/accessPermissionRules/1/permissionsPerObject/1",
-    //           dpp: {
-    //             o: "submodel2",
-    //             u: "user",
-    //             m: "member",
-    //           },
-    //           value: {
-    //             object: {
-    //               category: null,
-    //               description: [],
-    //               displayName: [],
-    //               embeddedDataSpecifications: [],
-    //               extensions: [],
-    //               idShort: "submodel2",
-    //               modelType: "ReferenceElement",
-    //               qualifiers: [],
-    //               semanticId: null,
-    //               supplementalSemanticIds: [],
-    //               value: null,
-    //             },
-    //             permissions: [
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Create",
-    //               },
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Read",
-    //               },
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Edit",
-    //               },
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Delete",
-    //               },
-    //             ],
-    //           },
-    //         },
-    //         {
-    //           op: "add",
-    //           path: "/security/localAccessControl/accessPermissionRules/0/permissionsPerObject/1",
-    //           dpp: {
-    //             o: "submodel2",
-    //             u: "admin",
-    //           },
-    //           value: {
-    //             object: {
-    //               category: null,
-    //               description: [],
-    //               displayName: [],
-    //               embeddedDataSpecifications: [],
-    //               extensions: [],
-    //               idShort: "submodel2",
-    //               modelType: "ReferenceElement",
-    //               qualifiers: [],
-    //               semanticId: null,
-    //               supplementalSemanticIds: [],
-    //               value: null,
-    //             },
-    //             permissions: [
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Create",
-    //               },
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Read",
-    //               },
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Edit",
-    //               },
-    //               {
-    //                 kindOfPermission: "Allow",
-    //                 permission: "Delete",
-    //               },
-    //             ],
-    //           },
-    //         },
-    //         {
-    //           op: "add",
-    //           dpp: {
-    //             u: "user",
-    //             m: "owner",
-    //           },
-    //           path: "/security/localAccessControl/accessPermissionRules/2",
-    //           value: {
-    //             permissionsPerObject: [
-    //               {
-    //                 object: {
-    //                   category: null,
-    //                   description: [],
-    //                   displayName: [],
-    //                   embeddedDataSpecifications: [],
-    //                   extensions: [],
-    //                   idShort: "submodel2",
-    //                   modelType: "ReferenceElement",
-    //                   qualifiers: [],
-    //                   semanticId: null,
-    //                   supplementalSemanticIds: [],
-    //                   value: null,
-    //                 },
-    //                 permissions: [
-    //                   {
-    //                     kindOfPermission: "Allow",
-    //                     permission: "Create",
-    //                   },
-    //                   {
-    //                     kindOfPermission: "Allow",
-    //                     permission: "Read",
-    //                   },
-    //                   {
-    //                     kindOfPermission: "Allow",
-    //                     permission: "Edit",
-    //                   },
-    //                   {
-    //                     kindOfPermission: "Allow",
-    //                     permission: "Delete",
-    //                   },
-    //                 ],
-    //               },
-    //             ],
-    //             targetSubjectAttributes: {
-    //               subjectAttribute: [
-    //                 {
-    //                   category: null,
-    //                   description: [],
-    //                   displayName: [],
-    //                   embeddedDataSpecifications: [],
-    //                   extensions: [],
-    //                   idShort: "userRole",
-    //                   modelType: "Property",
-    //                   qualifiers: [],
-    //                   semanticId: null,
-    //                   supplementalSemanticIds: [],
-    //                   value: "user",
-    //                   valueId: null,
-    //                   valueType: "String",
-    //                 },
-    //                 {
-    //                   category: null,
-    //                   description: [],
-    //                   displayName: [],
-    //                   embeddedDataSpecifications: [],
-    //                   extensions: [],
-    //                   idShort: "memberRole",
-    //                   modelType: "Property",
-    //                   qualifiers: [],
-    //                   semanticId: null,
-    //                   supplementalSemanticIds: [],
-    //                   value: "owner",
-    //                   valueId: null,
-    //                   valueType: "String",
-    //                 },
-    //               ],
-    //             },
-    //           },
-    //         },
-    //         {
-    //           op: "add",
-    //           dpp: {
-    //             u: "anonymous",
-    //           },
-    //           path: "/security/localAccessControl/accessPermissionRules/3",
-    //           value: {
-    //             permissionsPerObject: [
-    //               {
-    //                 object: {
-    //                   category: null,
-    //                   description: [],
-    //                   displayName: [],
-    //                   embeddedDataSpecifications: [],
-    //                   extensions: [],
-    //                   idShort: "submodel2",
-    //                   modelType: "ReferenceElement",
-    //                   qualifiers: [],
-    //                   semanticId: null,
-    //                   supplementalSemanticIds: [],
-    //                   value: null,
-    //                 },
-    //                 permissions: [
-    //                   {
-    //                     kindOfPermission: "Allow",
-    //                     permission: "Read",
-    //                   },
-    //                 ],
-    //               },
-    //             ],
-    //             targetSubjectAttributes: {
-    //               subjectAttribute: [
-    //                 {
-    //                   category: null,
-    //                   description: [],
-    //                   displayName: [],
-    //                   embeddedDataSpecifications: [],
-    //                   extensions: [],
-    //                   idShort: "userRole",
-    //                   modelType: "Property",
-    //                   qualifiers: [],
-    //                   semanticId: null,
-    //                   supplementalSemanticIds: [],
-    //                   value: "anonymous",
-    //                   valueId: null,
-    //                   valueType: "String",
-    //                 },
-    //               ],
-    //             },
-    //           },
-    //         },
-    //         {
-    //           dpp: {},
-    //           op: "add",
-    //           path: "/submodels/1",
-    //           value: {
-    //             keys: [
-    //               {
-    //                 type: "Submodel",
-    //                 value: submodelPlain.id,
-    //               },
-    //             ],
-    //             referredSemanticId: null,
-    //             type: "ModelReference",
-    //           },
-    //         },
-    //       ],
-    //     }),
-    //   },
-    //   {
-    //     type: ActivityOldTypes.EnvironmentActivity,
-    //     correlationId,
-    //     payload: EnvironmentPayload.create({
-    //       command: {
-    //         op: EnvironmentOperationTypes.SubmodelCreated,
-    //       },
-    //       changes: [
-    //         {
-    //           op: "add",
-    //           path: "/submodels/1",
-    //           value: submodelPlain.id,
-    //           dpp: {},
-    //         },
-    //       ],
-    //     }),
-    //   },
-    // ]);
+    const submodelAdded = Submodel.fromPlain({
+      ...submodelPlain,
+      administration: { version: "2", revision: "0" },
+    });
+    const submodelObject = createAasObject(IdShortPath.create({ path: "submodel2" }));
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.SubmodelAdded,
+        payload: SubmodelWithAasActivityPayload.create({
+          submodelId: submodelPlain.id,
+          aasId: environment.assetAdministrationShells[0],
+          changes: [
+            PolicyAdded.create({
+              object: submodelObject,
+              userRole: UserRole.ADMIN,
+              value: allPermissionsAllow.map(Permission.fromPlain),
+            }),
+            PolicyAdded.create({
+              object: submodelObject,
+              userRole: UserRole.USER,
+              memberRole: MemberRole.OWNER,
+              value: allPermissionsAllow.map(Permission.fromPlain),
+            }),
+            PolicyAdded.create({
+              object: submodelObject,
+              userRole: UserRole.USER,
+              memberRole: MemberRole.MEMBER,
+              value: allPermissionsAllow.map(Permission.fromPlain),
+            }),
+            PolicyAdded.create({
+              object: submodelObject,
+              userRole: UserRole.ANONYMOUS,
+              value: [
+                Permission.create({
+                  permission: Permissions.Read,
+                  kindOfPermission: PermissionKind.Allow,
+                }),
+              ],
+            }),
+            SubmodelReferenceAdded.create({
+              submodelRef: submodelToReference(submodelAdded),
+            }),
+            AddedSubmodelToEnv.create({
+              position: 1,
+              submodel: submodelAdded,
+            }),
+            SubmodelAdded.create({
+              submodel: submodelAdded,
+            }),
+          ],
+        }),
+      },
+    ]);
   });
 
   it("should add submodel element", async () => {
@@ -834,7 +623,7 @@ describe("environmentService", () => {
       valueType: DataTypeDef.String,
       value: "test",
     });
-    const position = 3;
+    const position = 1;
 
     await environmentService.addColumn(
       correlationId,
@@ -857,40 +646,15 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.ColumnAdded,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelColumnAdded,
-            path: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
-            value: { pos: position },
-          },
           changes: [
-            {
-              op: "add",
-              path: "/submodelElements/0/value/0/value/1",
-              dpp: {
-                p: `list.${row1.idShort}.column1`,
-                m: "Property",
-                v: "String",
-              },
-              value: {
-                category: null,
-                description: [],
-                displayName: [],
-                embeddedDataSpecifications: [],
-                extensions: [],
-                idShort: "column1",
-                modelType: "Property",
-                qualifiers: [],
-                semanticId: null,
-                supplementalSemanticIds: [],
-                value: "test",
-                valueId: null,
-                valueType: "String",
-              },
-            },
+            ColumnAdded.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "column1"]),
+              value: column,
+              position,
+            }),
           ],
         }),
       },
@@ -929,30 +693,20 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.RowAdded,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelRowAdded,
-            path: IdShortPath.create({ path: submodel1.idShort }).concat(listIdShortPath),
-            value: { pos: position },
-          },
           changes: [
-            {
-              op: "add",
-              path: "/submodelElements/0/value/1",
-              dpp: {
-                p: `list.${row2IdShort}`,
-                m: "SubmodelElementCollection",
-              },
-              value: {
+            RowAdded.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row2IdShort]),
+              position,
+              value: SubmodelElementCollection.fromPlain({
                 category: null,
                 description: [],
                 displayName: [],
                 embeddedDataSpecifications: [],
                 extensions: [],
-                idShort: expect.any(String),
+                idShort: row2IdShort,
                 modelType: "SubmodelElementCollection",
                 qualifiers: [],
                 semanticId: null,
@@ -974,8 +728,8 @@ describe("environmentService", () => {
                     valueType: "Double",
                   },
                 ],
-              },
-            },
+              }),
+            }),
           ],
         }),
       },
@@ -1328,7 +1082,7 @@ describe("environmentService", () => {
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
-    assetAdministrationShell.addSubmodel(submodel1, { ability });
+    assetAdministrationShell.addSubmodel(submodel1);
     await aasRepository.save(assetAdministrationShell);
     const row1 = submodelElementList.getSubmodelElements()[0];
     const environment = Environment.create({
@@ -1361,8 +1115,8 @@ describe("environmentService", () => {
       row1,
       col1,
       listIdShortPath,
-      submodelElementList,
     } = await createEnvironmentWithList();
+    const oldDisplayName = col1.displayName;
     const modification = {
       idShort: col1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
@@ -1388,31 +1142,15 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.ColumnModified,
+        payload: SubmodelActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelColumnModified,
-            path: submodelElementList.getIdShortPath(),
-            value: {
-              aId: col1.idShort,
-            },
-          },
           changes: [
-            {
-              op: "add",
-              path: "/submodelElements/0/value/0/value/0/displayName/0",
-              dpp: {
-                p: `list.${row1.idShort}.col1`,
-                m: "Property",
-                v: "Double",
-              },
-              value: {
-                language: "en",
-                text: "Test",
-              },
-            },
+            DisplayNameChanged.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "col1"]),
+              oldValue: oldDisplayName,
+              newValue: modification.displayName,
+            }),
           ],
         }),
       },
@@ -1448,7 +1186,6 @@ describe("environmentService", () => {
       row1,
       col1,
       listIdShortPath,
-      submodelElementList,
     } = await createEnvironmentWithList();
     await expect(
       environmentService.deleteColumn(
@@ -1488,41 +1225,17 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.ColumnDeleted,
+        payload: SubmodelWithAasActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelColumnDeleted,
-            path: submodelElementList.getIdShortPath(),
-            value: {
-              aId: col1.idShort,
-              pos: 0,
-            },
-          },
+          aasId: environment.assetAdministrationShells[0],
           changes: [
-            {
-              op: "remove",
-              path: "/submodelElements/0/value/0/value/0",
-              dpp: {
-                p: `list.${row1.idShort}.col1`,
-                m: "Property",
-                v: "Double",
-              },
-            },
+            ColumnDeleted.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "col1"]),
+              value: col1,
+              position: 0,
+            }),
           ],
-        }),
-      },
-      {
-        correlationId,
-        type: ActivityOldTypes.AssetAdministrationShellActivity,
-        payload: AssetAdministrationShellPayload.create({
-          assetAdministrationShellId: environment.assetAdministrationShells[0],
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
-          },
-          changes: [],
         }),
       },
     ]);
@@ -1538,7 +1251,6 @@ describe("environmentService", () => {
       submodel1,
       row1,
       listIdShortPath,
-      submodelElementList,
     } = await createEnvironmentWithList();
 
     await expect(
@@ -1576,40 +1288,17 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.SubmodelActivity,
-        payload: SubmodelPayload.create({
+        type: ActivityTypes.RowDeleted,
+        payload: SubmodelWithAasActivityPayload.create({
           submodelId: submodel1.id,
-          administration: AdministrativeInformation.create({ version: "4", revision: "0" }),
-          command: {
-            op: SubmodelOperationTypes.SubmodelRowDeleted,
-            path: submodelElementList.getIdShortPath(),
-            value: {
-              aId: row1.idShort,
-              pos: 0,
-            },
-          },
+          aasId: environment.assetAdministrationShells[0],
           changes: [
-            {
-              op: "remove",
-              path: "/submodelElements/0/value/0",
-              dpp: {
-                p: `list.${row1.idShort}`,
-                m: "SubmodelElementCollection",
-              },
-            },
+            RowDeleted.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort]),
+              position: 0,
+              value: SubmodelElementCollection.fromPlain(row1.toPlain()),
+            }),
           ],
-        }),
-      },
-      {
-        correlationId,
-        type: ActivityOldTypes.AssetAdministrationShellActivity,
-        payload: AssetAdministrationShellPayload.create({
-          assetAdministrationShellId: environment.assetAdministrationShells[0],
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
-          },
-          changes: [],
         }),
       },
     ]);
@@ -1727,22 +1416,15 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.AssetAdministrationShellActivity,
-        payload: AssetAdministrationShellPayload.create({
-          assetAdministrationShellId: environment.assetAdministrationShells[0],
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
-          },
+        type: ActivityTypes.PolicyDeleted,
+        payload: AssetAdministrationShellActivityPayload.create({
+          aasId: environment.assetAdministrationShells[0],
           changes: [
-            {
-              op: "remove",
-              path: "/security/localAccessControl/accessPermissionRules/1",
-              dpp: {
-                u: "user",
-                m: "member",
-              },
-            },
+            PolicyDeleted.create({
+              object: createAasObject(IdShortPath.fromSegments([submodel1.idShort])),
+              userRole: UserRole.USER,
+              memberRole: MemberRole.MEMBER,
+            }),
           ],
         }),
       },
@@ -1779,6 +1461,8 @@ describe("environmentService", () => {
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
 
+    const submodelObject = createAasObject(IdShortPath.fromSegments([submodel1.idShort]));
+
     expect(
       foundActivities.items.map((e) => ({
         correlationId: e.header.correlationId,
@@ -1788,63 +1472,46 @@ describe("environmentService", () => {
     ).toEqual([
       {
         correlationId,
-        type: ActivityOldTypes.EnvironmentActivity,
-        payload: EnvironmentPayload.create({
-          command: {
-            op: EnvironmentOperationTypes.SubmodelDeleted,
-          },
+        type: ActivityTypes.SubmodelDeleted,
+        payload: SubmodelWithAasActivityPayload.create({
+          submodelId: submodel1.id,
+          aasId: environment.assetAdministrationShells[0],
           changes: [
-            {
-              op: "remove",
-              path: "/submodels/0",
-              dpp: {},
-            },
+            SubmodelReferenceDeleted.create({
+              submodelRef: submodelToReference(submodel1),
+            }),
+            PolicyDeleted.create({
+              object: submodelObject,
+              userRole: UserRole.ADMIN,
+            }),
+            PolicyDeleted.create({
+              object: submodelObject,
+              userRole: UserRole.USER,
+              memberRole: MemberRole.MEMBER,
+            }),
+            DeletedSubmodelFromEnv.create({
+              position: 0,
+              submodel: submodel1,
+            }),
+            SubmodelDeleted.create({
+              submodel: Submodel.fromPlain({
+                ...submodel1.toPlain(),
+                administration: { version: "2", revision: "0" },
+              }),
+            }),
           ],
         }),
       },
-      {
-        correlationId,
-        type: ActivityOldTypes.AssetAdministrationShellActivity,
-        payload: AssetAdministrationShellPayload.create({
-          assetAdministrationShellId: environment.assetAdministrationShells[0],
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: AssetAdministrationShellOperationTypes.SubmodelDeleted,
-          },
-          changes: [
-            {
-              op: "remove",
-              dpp: {
-                u: "user",
-                m: "member",
-              },
-              path: "/security/localAccessControl/accessPermissionRules/1",
-            },
-            {
-              op: "remove",
-              dpp: {
-                u: "admin",
-              },
-              path: "/security/localAccessControl/accessPermissionRules/0",
-            },
-            {
-              op: "remove",
-              dpp: {},
-              path: "/submodels/0",
-            },
-          ],
-        }),
-      },
-      {
-        correlationId,
-        type: ActivityOldTypes.SubmodelRepositoryActivity,
-        payload: SubmodelRepositoryPayload.create({
-          command: {
-            op: SubmodelRepositoryOperationTypes.SubmodelDeleted,
-          },
-          submodel: submodel1,
-        }),
-      },
+      // {
+      //   correlationId,
+      //   type: ActivityOldTypes.SubmodelRepositoryActivity,
+      //   payload: SubmodelRepositoryPayload.create({
+      //     command: {
+      //       op: SubmodelRepositoryOperationTypes.SubmodelDeleted,
+      //     },
+      //     submodel: submodel1,
+      //   }),
+      // },
     ]);
     //
   });
@@ -1902,7 +1569,7 @@ describe("environmentService", () => {
       {
         correlationId,
         type: ActivityTypes.SubmodelElementDeleted,
-        payload: SubmodelElementDeletedPayload.create({
+        payload: SubmodelWithAasActivityPayload.create({
           submodelId: submodel1.id,
           aasId: environment.assetAdministrationShells[0],
           changes: [
@@ -1912,21 +1579,9 @@ describe("environmentService", () => {
                 submodelElementCollection1.idShort,
                 property1.idShort,
               ]),
-              submodelElement: property1,
+              submodelElement: Property.fromPlain(property1.toPlain()),
             }),
           ],
-        }),
-      },
-      {
-        correlationId,
-        type: ActivityOldTypes.AssetAdministrationShellActivity,
-        payload: AssetAdministrationShellPayload.create({
-          assetAdministrationShellId: environment.assetAdministrationShells[0],
-          administration: AdministrativeInformation.create({ version: "3", revision: "0" }),
-          command: {
-            op: AssetAdministrationShellOperationTypes.PolicyDeleted,
-          },
-          changes: [],
         }),
       },
     ]);

@@ -7,15 +7,15 @@ import { SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
 import { SubmodelElementCollection } from "../../../aas/domain/submodel-base/submodel-element-collection";
 import { ISubmodelElement } from "../../../aas/domain/submodel-base/submodel-base";
 
-const RowAddedSchema = z.object({
-  type: z.literal(ChangeEventTypes.RowAdded),
+const RowDeletedSchema = z.object({
+  type: z.literal(ChangeEventTypes.RowDeleted),
   path: z.string(),
   position: z.number(),
   value: SubmodelElementCollectionJsonSchema,
 });
 
-export class RowAdded implements IChangeEvent {
-  public readonly type = ChangeEventTypes.RowAdded;
+export class RowDeleted implements IChangeEvent {
+  public readonly type = ChangeEventTypes.RowDeleted;
 
   private constructor(
     public readonly path: IdShortPath,
@@ -24,12 +24,12 @@ export class RowAdded implements IChangeEvent {
   ) {}
 
   static create(data: { path: IdShortPath; position: number; value: ISubmodelElement }) {
-    return new RowAdded(data.path, data.position, data.value);
+    return new RowDeleted(data.path, data.position, data.value);
   }
 
   static fromPlain(data: unknown): IChangeEvent {
-    const parsed = RowAddedSchema.parse(data);
-    return new RowAdded(
+    const parsed = RowDeletedSchema.parse(data);
+    return new RowDeleted(
       IdShortPath.create({ path: parsed.path }),
       parsed.position,
       SubmodelElementCollection.fromPlain(parsed.value),

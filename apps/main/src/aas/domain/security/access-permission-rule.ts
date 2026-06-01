@@ -6,13 +6,21 @@ import { ReferenceElement } from "../submodel-base/reference-element";
 import { Permission } from "./permission";
 import { PermissionPerObject, PermissionPerObjectSchema } from "./permission-per-object";
 import { SubjectAttributes, SubjectAttributesSchema } from "./subject-attributes";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
+import { PolicyDeleted } from "../../../activity-history/domain/change-events/policy-deleted";
+import { PolicyModified } from "../../../activity-history/domain/change-events/policy-modified";
 
 export const AccessPermissionRuleSchema = z.object({
   targetSubjectAttributes: SubjectAttributesSchema,
   permissionsPerObject: z.array(PermissionPerObjectSchema),
 });
 
-export class AccessPermissionRule {
+export class AccessPermissionRule implements ITrackable {
+  public tracker = ChangeTracker.create();
   private constructor(
     public readonly targetSubjectAttributes: SubjectAttributes,
     private _permissionsPerObject: PermissionPerObject[],
@@ -23,6 +31,10 @@ export class AccessPermissionRule {
     permissionsPerObject?: PermissionPerObject[];
   }): AccessPermissionRule {
     return new AccessPermissionRule(data.targetSubjectAttributes, data.permissionsPerObject ?? []);
+  }
+
+  withTracking(changeTracker?: ChangeTracker) {
+    return withTrackingHelper(changeTracker, this);
   }
 
   get permissionsPerObject(): PermissionPerObject[] {
@@ -40,6 +52,18 @@ export class AccessPermissionRule {
         keepPermissions.push(permissionsPerObject);
       } else if (options.exactPathMatch && !idShortPath.isEqual(object)) {
         keepPermissions.push(permissionsPerObject);
+      }
+    }
+
+    for (const permissionsPerObject of this.permissionsPerObject) {
+      if (!keepPermissions.find((p) => p.object.idShort === permissionsPerObject.object.idShort)) {
+        this.tracker.track(
+          PolicyDeleted.create({
+            userRole: this.targetSubjectAttributes.userRole,
+            memberRole: this.targetSubjectAttributes.memberRole,
+            object: permissionsPerObject.object,
+          }),
+        );
       }
     }
 
@@ -70,7 +94,17 @@ export class AccessPermissionRule {
         `Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${object.idShort} does not exist`,
       );
     }
+    const oldPermissions = permissionsPerObject.permissions;
     permissionsPerObject.permissions = permissions;
+    this.tracker.track(
+      PolicyModified.create({
+        userRole: this.targetSubjectAttributes.userRole,
+        memberRole: this.targetSubjectAttributes.memberRole,
+        object: object,
+        oldValue: oldPermissions,
+        newValue: permissions,
+      }),
+    );
   }
 
   static fromPlain(json: unknown): AccessPermissionRule {

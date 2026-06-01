@@ -26,3 +26,33 @@ export class SubmodelActivityPayload implements IActivityPayload {
     };
   }
 }
+
+const PayloadWithAasSchema = PayloadSchema.extend({
+  aasId: z.string(),
+});
+
+export class SubmodelWithAasActivityPayload implements IActivityPayload {
+  private constructor(
+    public readonly submodelId: string,
+    public readonly aasId: string,
+    public readonly changes: IChangeEvent[],
+  ) {}
+  static create(data: { submodelId: string; aasId: string; changes: IChangeEvent[] }) {
+    return new SubmodelWithAasActivityPayload(data.submodelId, data.aasId, data.changes);
+  }
+  static fromPlain(data: unknown) {
+    const parsed = PayloadWithAasSchema.parse(data);
+    return new SubmodelWithAasActivityPayload(
+      parsed.submodelId,
+      parsed.aasId,
+      parsed.changes.map(parseChangeEvent),
+    );
+  }
+  toPlain() {
+    return {
+      submodelId: this.submodelId,
+      aasId: this.aasId,
+      changes: this.changes.map((change) => change.toPlain()),
+    };
+  }
+}

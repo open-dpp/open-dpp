@@ -97,7 +97,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  static fromPlain(data: unknown): ISubmodelElement {
+  static fromPlain(data: unknown): SubmodelElementCollection {
     const parsed = SubmodelElementCollectionJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new SubmodelElementCollection(

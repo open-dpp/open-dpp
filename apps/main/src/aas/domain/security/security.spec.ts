@@ -11,6 +11,9 @@ import { PermissionPerObject } from "./permission-per-object";
 import { Security } from "./security";
 import { SubjectAttributes } from "./subject-attributes";
 import { PolicyDeleted } from "../../../activity-history/domain/change-events/policy-deleted";
+import { ChangeTracker } from "../../../activity-history/domain/change-tracker";
+import { PolicyAdded } from "../../../activity-history/domain/change-events/policy-added";
+import { PolicyModified } from "../../../activity-history/domain/change-events/policy-modified";
 
 describe("security", () => {
   const policyManagementError = "Administrator has no permission to add/ modify/ delete policy.";
@@ -212,6 +215,7 @@ describe("security", () => {
       security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.ADMIN })),
     ).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
         _permissionsPerObject: [
           PermissionPerObject.create({
@@ -252,7 +256,7 @@ describe("security", () => {
   });
 
   it("should apply rules", () => {
-    const security = Security.create({});
+    const security = Security.create({}).withTracking();
     security.addPolicy(
       SubjectAttributes.create({ userRole: UserRole.USER }),
       IdShortPath.create({ path: "section1" }),
@@ -278,11 +282,45 @@ describe("security", () => {
         ],
       }),
     ];
-    security.applyModifiedRules(modifications);
+    security.withTracking().applyModifiedRules(modifications);
+    expect(security.tracker.pull()).toEqual([
+      PolicyAdded.create({
+        userRole: UserRole.USER,
+        object: createAasObject(IdShortPath.create({ path: "section1" })),
+        value: [
+          Permission.create({
+            permission: Permissions.Read,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+        ],
+      }),
+      PolicyModified.create({
+        userRole: UserRole.USER,
+        object: createAasObject(IdShortPath.create({ path: "section1" })),
+        oldValue: [
+          Permission.create({
+            permission: Permissions.Read,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+        ],
+        newValue: [
+          Permission.create({
+            permission: Permissions.Read,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+          Permission.create({
+            permission: Permissions.Edit,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+        ],
+      }),
+    ]);
+
     expect(
       security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER })),
     ).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
         _permissionsPerObject: [
           PermissionPerObject.create({
@@ -334,6 +372,7 @@ describe("security", () => {
       security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER })),
     ).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
         _permissionsPerObject: [
           PermissionPerObject.create({
@@ -354,6 +393,7 @@ describe("security", () => {
       ),
     ).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({
           userRole: UserRole.USER,
           memberRole: MemberRole.MEMBER,
@@ -389,6 +429,7 @@ describe("security", () => {
       security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.ADMIN })),
     ).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
         _permissionsPerObject: [
           PermissionPerObject.create({
@@ -437,6 +478,7 @@ describe("security", () => {
     expect(security.findPoliciesBySubject(admin)).toEqual([]);
     expect(security.findPoliciesBySubject(member)).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: SubjectAttributes.create({
           userRole: UserRole.USER,
           memberRole: MemberRole.MEMBER,
@@ -484,9 +526,13 @@ describe("security", () => {
       security.withAdministrator(member).deletePolicyBySubjectAndObject(admin, objectToDelete),
     ).toThrow(new ForbiddenError(policyManagementError));
 
-    security.withAdministrator(admin).deletePolicyBySubjectAndObject(admin, objectToDelete);
+    security
+      .withTracking()
+      .withAdministrator(admin)
+      .deletePolicyBySubjectAndObject(admin, objectToDelete);
     expect(security.findPoliciesBySubject(admin)).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: admin,
         _permissionsPerObject: [
           PermissionPerObject.create({
@@ -502,17 +548,18 @@ describe("security", () => {
       },
     ]);
 
-    const changes = security.eventQueue.pull();
+    const changes = security.tracker.pull();
     expect(changes).toEqual([
       PolicyDeleted.create({
         userRole: admin.userRole,
         memberRole: admin.memberRole,
-        object: createAasObject(IdShortPath.create({ path: "section1.subSection1.prop1" })),
+        object: createAasObject(objectToDelete),
       }),
     ]);
 
     expect(security.findPoliciesBySubject(member)).toEqual([
       {
+        tracker: expect.any(ChangeTracker),
         targetSubjectAttributes: member,
         _permissionsPerObject: [
           PermissionPerObject.create({

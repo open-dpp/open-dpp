@@ -28,7 +28,7 @@ export class SubmodelValueModifiedActivity implements IActivity {
       ),
       SubmodelActivityPayload.create({
         submodelId: data.submodel.id,
-        changes: data.submodel.eventQueue.pull(),
+        changes: data.submodel.tracker.pull(),
       }),
     );
   }
