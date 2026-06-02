@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PeriodDtoSchema } from "../shared/time.dto";
 import { ChangeEventDtoTypeEnum } from "./change-event-types.dto";
 import { ActivityDtoTypesEnum } from "./activity-types.dto";
+import { LanguageEnum } from "../aas/enums/language-enum";
 
 export const ActivityHeaderDtoSchema = z.object({
   id: z.string(),
@@ -54,3 +55,12 @@ export const GetAllActivitiesParamsDtoSchema = z.object({
 });
 
 export type GetAllActivitiesParamsDto = z.infer<typeof GetAllActivitiesParamsDtoSchema>;
+
+export const LanguageTextChangedDtoSchema = z.object({
+  lng: LanguageEnum,
+  op: z.literal(["replace", "add", "remove"]),
+  oldValue: z.string().nullable(),
+  newValue: z.string().nullable(),
+});
+
+export type LanguageTextChangedDto = z.infer<typeof LanguageTextChangedDtoSchema>;

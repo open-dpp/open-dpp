@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
-import { ExpandedEnvironmentPlain } from "../../aas/domain/expanded-environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import {
   archiveDpp,
@@ -20,11 +19,6 @@ import {
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
-import { IActivity } from "../../activity-history/domain/activities/shared.activity";
-
-export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
-  environment: ExpandedEnvironmentPlain;
-};
 
 const TemplateSchema = DigitalProductDocumentSchema;
 

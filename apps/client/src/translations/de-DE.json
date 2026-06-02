@@ -70,6 +70,7 @@
   },
   "aasEditor": {
     "security": {
+      "unknownRole": "Unbekannte Rolle",
       "missingPermission": "Fehlende Rechte",
       "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
       "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
@@ -493,7 +494,16 @@
     "userId": "Benutzer ID",
     "correlationId": "Korrelations ID",
     "types": {
-      "PropertyValueChanged": "Wert geändert"
+      "SubmodelElementModified": "Element geändert",
+      "AssetAdministrationShellModified": "Element geändert"
+    },
+    "changeTypes": {
+      "PropertyValueChanged": "Wert geändert",
+      "ReferenceElementChanged": "Link geändert",
+      "FileValueChanged": "Datei geändert",
+      "DisplayNameChanged": "Name geändert",
+      "PolicyAdded": "Berechtigung hinzugefügt",
+      "PolicyModified": "Berechtigung geändert"
     }
   },
   "passports": {

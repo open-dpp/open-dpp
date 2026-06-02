@@ -210,7 +210,7 @@ export class ValueModifierVisitor
     this.modificationGuard(element);
     const parsedValue = ReferenceModificationSchema.nullish().parse(context?.data);
     const input = { value: element.value, newValue: parsedValue };
-    const oldValue = element.value;
+    const oldValue = element.value ? Reference.fromPlain(element.value.toPlain()) : null;
     match(input)
       .with(
         {

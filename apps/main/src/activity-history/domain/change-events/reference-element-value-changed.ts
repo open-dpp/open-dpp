@@ -29,8 +29,8 @@ export class ReferenceElementValueChanged implements IChangeEventWithPath {
     const parsed = ValueChangedSchema.parse(data);
     return new ReferenceElementValueChanged(
       IdShortPath.create({ path: parsed.path }),
-      parsed.oldValue,
-      parsed.newValue,
+      parsed.oldValue ? Reference.fromPlain(parsed.oldValue) : null,
+      parsed.newValue ? Reference.fromPlain(parsed.newValue) : null,
     );
   }
   toPlain(_options?: ConvertToPlainOptions): Record<string, any> {

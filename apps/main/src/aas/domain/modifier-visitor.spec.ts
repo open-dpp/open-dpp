@@ -311,6 +311,9 @@ describe("modifier visitor", () => {
         }),
       ],
     });
+
+    const oldValue = Reference.fromPlain(initialValue.toPlain());
+
     const referenceElement = ReferenceElement.create({
       idShort: "ref",
       displayName: existingDisplayNames(),
@@ -340,10 +343,10 @@ describe("modifier visitor", () => {
     expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
 
     const changes = submodel.tracker.stop();
-    expect(changes).toContainEqual(
+    expect(changes[2]).toEqual(
       ReferenceElementValueChanged.create({
         path: IdShortPath.create({ path: "s1.ref" }),
-        oldValue: initialValue,
+        oldValue,
         newValue: Reference.create({
           type: ReferenceTypes.ModelReference,
           keys: [

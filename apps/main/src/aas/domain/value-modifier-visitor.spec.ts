@@ -190,6 +190,9 @@ describe("value modifier visitor", () => {
         }),
       ],
     });
+
+    const oldValue = Reference.fromPlain(initialReference.toPlain());
+
     const referenceElement = ReferenceElement.create({
       idShort: "ref",
       displayName: existingDisplayNames,
@@ -219,7 +222,7 @@ describe("value modifier visitor", () => {
             }),
           ],
         }),
-        oldValue: initialReference,
+        oldValue,
       }),
     ]);
 

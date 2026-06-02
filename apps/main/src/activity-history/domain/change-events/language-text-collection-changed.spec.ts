@@ -41,6 +41,35 @@ describe("LanguageTextCollectionChanged", () => {
     ]);
   });
 
+  it("should ignore replace with same text", () => {
+    const oldValue = [
+      LanguageText.create({
+        language: "en",
+        text: "before",
+      }),
+      LanguageText.create({
+        language: "de",
+        text: "vorher",
+      }),
+    ];
+    const newValue = [
+      LanguageText.create({
+        language: "en",
+        text: "before",
+      }),
+      LanguageText.create({
+        language: "de",
+        text: "vorher",
+      }),
+    ];
+    const displayNameChanged = DisplayNameChanged.create({
+      path: IdShortPath.create({ path: "path" }),
+      oldValue,
+      newValue,
+    });
+    expect(displayNameChanged.values).toEqual([]);
+  });
+
   it("should generate add and remove operations", () => {
     const oldValue = [
       LanguageText.create({

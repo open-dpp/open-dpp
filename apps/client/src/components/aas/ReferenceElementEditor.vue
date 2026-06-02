@@ -105,10 +105,10 @@ defineExpose<{
     </template>
     <template #activityHistory>
       <EditorActivityHistory
-        v-if="props.path.idShortPath"
+        v-if="props.path.idShortPathIncludingSubmodel"
         :id="props.id"
         :type="props.type"
-        :path="props.path.idShortPath"
+        :path="props.path.idShortPathIncludingSubmodel"
       />
     </template>
   </EditorTabs>

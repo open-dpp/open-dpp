@@ -56,6 +56,9 @@ function createLanguageTextChanges({ oldValue, newValue }: LanguageTextChangedCr
       } else {
         return undefined;
       }
+      if (op === "replace" && oldText?.text === newText?.text) {
+        return undefined;
+      }
       return LanguageTextChangedSchema.parse({
         lng: language,
         op,

@@ -276,7 +276,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     if (parsed.description || parsed.displayName) {
       this.modifyNameAndDescription(element, parsed);
     }
-    const oldValue = element.value;
+    const oldValue = element.value ? Reference.fromPlain(element.value.toPlain()) : null;
 
     if (parsed.value === null) {
       element.value = parsed.value;
