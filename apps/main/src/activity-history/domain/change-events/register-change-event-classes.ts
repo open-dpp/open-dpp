@@ -20,6 +20,7 @@ import { DeletedSubmodelFromEnv } from "./deleted-submodel-from-env";
 import { SubmodelReferenceDeleted } from "./submodel-reference-deleted";
 import { SubmodelDeleted } from "./submodel-deleted";
 import { DigitalProductDocumentStatusChanged } from "./digital-product-document-status-changed";
+import { ReferenceElementValueChanged } from "./reference-element-value-changed";
 
 export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);
@@ -46,4 +47,5 @@ export function registerChangeEventClasses(): void {
     ChangeEventTypes.DigitalProductDocumentStatusChanged,
     DigitalProductDocumentStatusChanged,
   );
+  registerChangeEvent(ChangeEventTypes.ReferenceElementValueChanged, ReferenceElementValueChanged);
 }

@@ -1,6 +1,7 @@
 import { ChangeEventSchema, IChangeEvent, parseChangeEvent } from "../change-events/change-event";
-import { IActivityPayload } from "./activity";
 import { z } from "zod";
+import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
+import { filterChangesByAbility, IActivityPayload } from "./shared.activity";
 
 const PayloadSchema = z.object({
   submodelId: z.string(),
@@ -19,10 +20,12 @@ export class SubmodelActivityPayload implements IActivityPayload {
     const parsed = PayloadSchema.parse(data);
     return new SubmodelActivityPayload(parsed.submodelId, parsed.changes.map(parseChangeEvent));
   }
-  toPlain() {
+  toPlain(options?: ConvertToPlainOptions) {
     return {
       submodelId: this.submodelId,
-      changes: this.changes.map((change) => change.toPlain()),
+      changes: filterChangesByAbility(this.changes, options).map((change) =>
+        change.toPlain(options),
+      ),
     };
   }
 }
@@ -48,11 +51,11 @@ export class SubmodelWithAasActivityPayload implements IActivityPayload {
       parsed.changes.map(parseChangeEvent),
     );
   }
-  toPlain() {
+  toPlain(options?: ConvertToPlainOptions) {
     return {
       submodelId: this.submodelId,
       aasId: this.aasId,
-      changes: this.changes.map((change) => change.toPlain()),
+      changes: filterChangesByAbility(this.changes, options).map((change) => change.toPlain()),
     };
   }
 }

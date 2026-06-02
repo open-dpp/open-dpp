@@ -1,11 +1,13 @@
+import { ActivityHeader } from "./activity-header";
 import {
-  ActivityHeader,
   ActivitySchema,
   activityToDatabase,
+  createActivityHeader,
+  filterChangesByAbility,
   IActivity,
   IActivityPayload,
-} from "./activity";
-import { createActivityHeader, SharedActivityCreateProps } from "./shared.activity";
+  SharedActivityCreateProps,
+} from "./shared.activity";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
 import { ChangeEventSchema, IChangeEvent, parseChangeEvent } from "../change-events/change-event";
@@ -53,10 +55,10 @@ export class DigitalProductDocumentStatusChangedActivity implements IActivity {
     return activityToDatabase(this);
   }
 
-  toPlain(_options?: ConvertToPlainOptions) {
+  toPlain(options?: ConvertToPlainOptions) {
     return {
       header: this.header.toPlain(),
-      payload: this.payload.toPlain(),
+      payload: this.payload.toPlain(options),
     };
   }
 }
@@ -74,9 +76,11 @@ export class DigitalProductDocumentActivityPayload implements IActivityPayload {
     const parsed = PayloadSchema.parse(data);
     return new DigitalProductDocumentActivityPayload(parsed.changes.map(parseChangeEvent));
   }
-  toPlain() {
+  toPlain(options?: ConvertToPlainOptions): Record<string, unknown> {
     return {
-      changes: this.changes.map((change) => change.toPlain()),
+      changes: filterChangesByAbility(this.changes, options).map((change) =>
+        change.toPlain(options),
+      ),
     };
   }
 }

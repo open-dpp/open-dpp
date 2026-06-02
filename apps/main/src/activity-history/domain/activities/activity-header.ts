@@ -1,10 +1,6 @@
 import { z } from "zod";
-import { IConvertableToPlain } from "../../../aas/domain/convertable-to-plain";
-import { ActivityTypesEnum } from "./activity-types";
-import { getActivityClass } from "./activity-registry";
 import { randomUUID } from "node:crypto";
 import { LatestAasExportVersion } from "../../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
-import { IChangeEvent } from "../change-events/change-event";
 
 export const ActivityHeaderSchema = z.object({
   id: z.string(),
@@ -15,11 +11,6 @@ export const ActivityHeaderSchema = z.object({
   userId: z.string().nullable(),
   version: z.string(),
   exportVersion: z.string(),
-});
-
-export const ActivitySchema = z.object({
-  header: ActivityHeaderSchema,
-  payload: z.any(),
 });
 
 export class ActivityHeader {
@@ -71,10 +62,6 @@ export class ActivityHeader {
     );
   }
 
-  assignCorrelationId(correlationId: string) {
-    this._correlationId = correlationId;
-  }
-
   toPlain(): Record<string, unknown> {
     return {
       id: this.id,
@@ -87,35 +74,4 @@ export class ActivityHeader {
       exportVersion: this.exportVersion,
     };
   }
-}
-
-export function activityToDatabase(event: IActivity) {
-  return {
-    ...event.header.toPlain(),
-    _id: event.header.id,
-    payload: event.payload.toPlain(),
-  };
-}
-
-export function activityToPlain(event: IActivity) {
-  return {
-    header: event.header.toPlain(),
-    payload: event.payload.toPlain(),
-  };
-}
-
-export interface IActivityPayload extends IConvertableToPlain {
-  changes: Array<IChangeEvent>;
-}
-
-export interface IActivity extends IConvertableToPlain {
-  header: ActivityHeader;
-  payload: IActivityPayload;
-  toDatabase: () => Record<string, any>;
-}
-
-export function parseActivity(activity: any): IActivity {
-  const schema = z.object({ header: z.object({ type: ActivityTypesEnum }) });
-  const ActivityClass = getActivityClass(schema.parse(activity).header.type);
-  return ActivityClass.fromPlain(activity);
 }

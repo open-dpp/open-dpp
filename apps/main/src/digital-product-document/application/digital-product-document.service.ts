@@ -510,7 +510,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     limit: number = 10,
     cursor: string | undefined,
     filterByActivityType: ActivityTypesType | undefined,
-    dppPathFilter: string | undefined,
+    pathFilter: string | undefined,
     ascending: boolean = false,
   ) {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
@@ -531,10 +531,10 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
           ascending,
           filter: {
             activityType: filterByActivityType,
-            path: dppPathFilter,
+            path: pathFilter,
           },
         })
-      ).toPlain({ ability, ...(dppPathFilter ? { filter: { dppPath: dppPathFilter } } : {}) }),
+      ).toPlain({ ability }),
     );
   }
 

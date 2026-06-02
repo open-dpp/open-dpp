@@ -93,7 +93,6 @@ describe("activityRepository", () => {
       createdAt: date2,
     });
     const activities = [event1, event2];
-    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
     await activityRepository.createMany(activities);
     const foundEvent = await activityRepository.findOneOrFail(event1.header.id);
     expect(foundEvent).toEqual(event1);
@@ -214,7 +213,6 @@ describe("activityRepository", () => {
 
     beforeAll(async () => {
       const activities = [event1, event2, event3, eventOfOtherAggregate, event4, aasActivity];
-      activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
       await activityRepository.createMany(activities);
     });
 

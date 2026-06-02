@@ -67,8 +67,5 @@ export * from "./users/set-user-role.dto";
 export * from "./users/user.dto";
 
 export * from "./activity-history/activity-history.dto";
-export * from "./activity-history/asset-administration-shell-operation-types.dto";
-export * from "./activity-history/digital-product-document-operation-types.dto";
-export * from "./activity-history/environment-types.dto";
-export * from "./activity-history/submodel-operation-types.dto";
-export * from "./activity-history/submodel-repository-operation-types.dto";
+export * from "./activity-history/change-event-types.dto";
+export * from "./activity-history/activity-types.dto";

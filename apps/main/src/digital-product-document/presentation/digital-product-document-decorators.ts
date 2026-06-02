@@ -78,12 +78,12 @@ export const ActivityTypeQueryParamSchema = ActivityDtoTypesEnum.optional().meta
 export const ActivityTypeQueryParam = () =>
   Query("type", new ZodValidationPipe(ActivityTypeQueryParamSchema));
 
-export const ActivityDppKeyQueryParamSchema = z
+export const ActivityPathQueryParamSchema = z
   .string()
   .optional()
   .meta({
-    description: "Filter the payload of the activities for the given dpp path.",
-    param: { in: "query", name: "dppPath" },
+    description: "Filter the changes of the activities by the given idShort path.",
+    param: { in: "query", name: "path" },
   });
-export const ActivityDppKeyQueryParam = () =>
-  Query("dppPath", new ZodValidationPipe(ActivityDppKeyQueryParamSchema));
+export const ActivityPathQueryParam = () =>
+  Query("path", new ZodValidationPipe(ActivityPathQueryParamSchema));

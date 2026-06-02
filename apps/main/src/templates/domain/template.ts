@@ -14,13 +14,13 @@ import {
 import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
-import { IActivity } from "../../activity-history/domain/activities/activity";
 import {
   ChangeTracker,
   ITrackable,
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
+import { IActivity } from "../../activity-history/domain/activities/shared.activity";
 
 export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
   environment: ExpandedEnvironmentPlain;

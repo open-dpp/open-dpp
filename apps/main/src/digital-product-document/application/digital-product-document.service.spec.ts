@@ -38,6 +38,7 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import {
+  DataTypeDef,
   DigitalProductDocumentStatusModificationMethodDto,
   KeyTypes,
   PermissionKind,
@@ -48,7 +49,6 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
@@ -57,6 +57,10 @@ import { Permission } from "../../aas/domain/security/permission";
 import { ActivityTypes } from "../../activity-history/domain/activities/activity-types";
 import { DigitalProductDocumentActivityPayload } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
+import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
+import { ChangeTracker } from "../../activity-history/domain/change-tracker";
+import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -387,7 +391,6 @@ describe("DigitalProductDocumentService", () => {
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-03T00:00:00.000Z");
     const organizationId = randomUUID();
-    const submodelId = randomUUID();
     const submodelIdShort = "submodelIdShort";
 
     const security = Security.create({});
@@ -409,26 +412,32 @@ describe("DigitalProductDocumentService", () => {
       }),
     });
     await passportRepository.save(passport);
-    const createActivity = (idShort: string, createdAt: Date) =>
-      SubmodelActivity.create({
-        digitalProductDocumentId: passport.id,
-        submodelId,
-        fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
-        oldData: { idShort, value: "oldValue" },
-        newData: { idShort, value: "newValue" },
-        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        operation: SubmodelOperationTypes.SubmodelElementModified,
+    const submodel = Submodel.create({ idShort: submodelIdShort });
+    const createActivity = (id: string, idShort: string, createdAt: Date) => {
+      return SubmodelElementModifiedActivity.create({
+        digitalProductDocumentId: id,
+        submodel: submodel.withTracking(
+          ChangeTracker.fromChanges([
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([submodelIdShort, idShort]),
+              valueType: DataTypeDef.String,
+              oldValue: "oldValue",
+              newValue: "newValue",
+            }),
+          ]),
+        ),
         createdAt,
+        correlationId: randomUUID(),
       });
+    };
 
-    const event1 = createActivity("prop1", date1);
+    const event1 = createActivity(passport.id, "prop1", date1);
 
-    const event2 = createActivity("prop2", date2);
-    const event3 = createActivity("prop3", date3);
+    const event2 = createActivity(passport.id, "prop2", date2);
+    const event3 = createActivity(passport.id, "prop3", date3);
 
-    const event4 = createActivity("prop4", date4);
+    const event4 = createActivity(passport.id, "prop4", date4);
     const activities = [event1, event2, event3, event4];
-    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
     await activityRepository.createMany(activities);
     const res = {
       set: jest.fn(),
@@ -480,7 +489,6 @@ describe("DigitalProductDocumentService", () => {
     const date3 = new Date("2022-03-01T00:00:00.000Z");
     const date4 = new Date("2022-03-03T00:00:00.000Z");
     const organizationId = randomUUID();
-    const submodelId = randomUUID();
     const submodelIdShort = "submodelIdShort";
 
     const security = Security.create({});
@@ -506,26 +514,33 @@ describe("DigitalProductDocumentService", () => {
       }),
     });
     await passportRepository.save(passport);
-    const createActivity = (idShort: string, createdAt: Date) =>
-      SubmodelActivity.create({
-        digitalProductDocumentId: passport.id,
-        submodelId,
-        fullIdShortPath: IdShortPath.create({ path: `${submodelIdShort}.${idShort}` }),
-        oldData: { idShort, value: "oldValue" },
-        newData: { idShort, value: "newValue" },
-        administration: AdministrativeInformation.create({ version: "2", revision: "0" }),
-        operation: SubmodelOperationTypes.SubmodelElementModified,
+
+    const submodel = Submodel.create({ idShort: submodelIdShort });
+    const createActivity = (id: string, idShort: string, createdAt: Date) => {
+      return SubmodelElementModifiedActivity.create({
+        digitalProductDocumentId: id,
+        submodel: submodel.withTracking(
+          ChangeTracker.fromChanges([
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([submodelIdShort, idShort]),
+              valueType: DataTypeDef.String,
+              oldValue: "oldValue",
+              newValue: "newValue",
+            }),
+          ]),
+        ),
         createdAt,
+        correlationId: randomUUID(),
       });
+    };
 
-    const event1 = createActivity("prop1", date1);
+    const event1 = createActivity(passport.id, "prop1", date1);
 
-    const event2 = createActivity("prop2", date2);
-    const event3 = createActivity("prop3", date3);
+    const event2 = createActivity(passport.id, "prop2", date2);
+    const event3 = createActivity(passport.id, "prop3", date3);
 
-    const event4 = createActivity("prop4", date4);
+    const event4 = createActivity(passport.id, "prop4", date4);
     const activities = [event1, event2, event3, event4];
-    activities.forEach((activity) => activity.header.assignCorrelationId(randomUUID()));
     await activityRepository.createMany(activities);
 
     const result = await service.getActivities(
@@ -539,16 +554,24 @@ describe("DigitalProductDocumentService", () => {
       undefined,
       undefined,
     );
-    const missingPermissionsPayload = (prop: string) => ({
-      error: {
-        status: 403,
-        message: `Missing read permission to access activity payload for resource with idShort path submodelIdShort.${prop}`,
-      },
+    result.result.forEach((e) => {
+      expect(e.payload.changes).toEqual([]);
     });
-    expect(result.result).toEqual([
-      { ...event4.toPlain(), payload: missingPermissionsPayload("prop4") },
-      { ...event3.toPlain(), payload: missingPermissionsPayload("prop3") },
-    ]);
+
+    const resultForAdmin = await service.getActivities(
+      organizationId,
+      passport.id,
+      admin,
+      date1.toISOString(),
+      date4.toISOString(),
+      2,
+      undefined,
+      undefined,
+      undefined,
+    );
+    resultForAdmin.result.forEach((e) => {
+      expect(e.payload.changes).not.toEqual([]);
+    });
   });
 
   afterAll(async () => {

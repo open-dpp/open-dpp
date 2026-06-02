@@ -1,4 +1,4 @@
-import { IChangeEvent, IChangeEventWithPath } from "./change-event";
+import { IChangeEvent, IPolicyChangeEvent } from "./change-event";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
@@ -19,7 +19,7 @@ const PolicyAddedSchema = z.object({
   value: PermissionSchema.array(),
 });
 
-export class PolicyAdded implements IChangeEventWithPath {
+export class PolicyAdded implements IPolicyChangeEvent {
   public readonly type = ChangeEventTypes.PolicyAdded;
   private constructor(
     public readonly path: IdShortPath,

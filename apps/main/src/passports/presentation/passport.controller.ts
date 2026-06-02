@@ -112,7 +112,7 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
-  ActivityDppKeyQueryParam,
+  ActivityPathQueryParam,
   ActivityTypeQueryParam,
   ApiDownloadActivities,
   ApiGetActivities,
@@ -838,7 +838,7 @@ export class PassportController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
-    @ActivityDppKeyQueryParam() dppPathFilter: string | undefined,
+    @ActivityPathQueryParam() dppPathFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {

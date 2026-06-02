@@ -1,5 +1,6 @@
 import { ActivityTypesType } from "./activity-types";
-import { IActivity } from "./activity";
+
+import { IActivity } from "./shared.activity";
 
 // Define the static side of the classes
 export interface ActivityStatic {

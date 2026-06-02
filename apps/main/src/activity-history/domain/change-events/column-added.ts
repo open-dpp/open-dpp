@@ -38,12 +38,12 @@ export class ColumnAdded implements IChangeEventWithPath {
     );
   }
 
-  toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     return {
       type: this.type,
       path: this.path.toString(),
       position: this.position,
-      value: this.value.toPlain(),
+      value: this.value.toPlain(options),
     };
   }
 }

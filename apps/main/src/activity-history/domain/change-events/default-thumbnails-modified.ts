@@ -30,11 +30,11 @@ export class DefaultThumbnailsModified implements IChangeEvent {
     );
   }
 
-  toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     return {
       type: this.type,
-      oldValue: this.oldValue.map((r) => r.toPlain()),
-      newValue: this.newValue.map((r) => r.toPlain()),
+      oldValue: this.oldValue.map((r) => r.toPlain(options)),
+      newValue: this.newValue.map((r) => r.toPlain(options)),
     };
   }
 }

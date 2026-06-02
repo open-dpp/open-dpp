@@ -1,4 +1,4 @@
-import { type ActivityDto, ActivityDtoTypes, SubmodelOperationDtoTypes } from "@open-dpp/dto";
+import { type ActivityDto, ActivityDtoTypes } from "@open-dpp/dto";
 import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";
 
@@ -8,25 +8,13 @@ export const activitiesPlainFactory = Factory.define<ActivityDto>(() => ({
     aggregateId: randomUUID(),
     correlationId: randomUUID(),
     createdAt: new Date().toISOString(),
-    type: ActivityDtoTypes.SubmodelActivity,
+    type: ActivityDtoTypes.SubmodelElementModified,
     userId: randomUUID(),
     version: "1.0.0",
     exportVersion: "1.0.0",
   },
   payload: {
     submodelId: randomUUID(),
-    administration: { version: "1", revision: "0" },
-    command: {
-      op: SubmodelOperationDtoTypes.SubmodelColumnDeleted,
-      path: "section1.list",
-      value: { aId: "col1" },
-    },
-    changes: [
-      {
-        op: "remove",
-        path: "/submodelElements/0/value/0/value/0",
-        dpp: `list.row1.col1`,
-      },
-    ],
+    changes: [],
   },
 }));

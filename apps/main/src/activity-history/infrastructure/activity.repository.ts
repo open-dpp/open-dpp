@@ -5,12 +5,13 @@ import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail } from "../../lib/repositories";
 import { ActivityDoc, ActivityDocVersion } from "./activity.schema";
-import { ActivityHeaderSchema, IActivity, parseActivity } from "../domain/activities/activity";
+import { ActivityHeaderSchema } from "../domain/activities/activity-header";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Period } from "../../time/period";
 import { RegexFilter } from "../domain/regex-filter";
 import { ActivityTypesType } from "../domain/activities/activity-types";
+import { IActivity, parseActivity } from "../domain/activities/shared.activity";
 
 @Injectable()
 export class ActivityRepository {

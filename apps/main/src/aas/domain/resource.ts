@@ -1,5 +1,6 @@
 import { ResourceJsonSchema } from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "./visitor";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
 
 export class Resource implements IVisitable {
   private constructor(
@@ -19,7 +20,7 @@ export class Resource implements IVisitable {
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitResource(this, context);
   }
-  toPlain(): Record<string, any> {
+  toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
     return {
       path: this.path,
       contentType: this.contentType,

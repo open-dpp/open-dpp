@@ -37,8 +37,8 @@ export class ReferenceElementValueChanged implements IChangeEventWithPath {
     return {
       type: this.type,
       path: this.path.toString(),
-      oldValue: this.oldValue ? this.toPlain() : null,
-      newValue: this.newValue ? this.toPlain() : null,
+      oldValue: this.oldValue ? this.oldValue.toPlain() : null,
+      newValue: this.newValue ? this.newValue.toPlain() : null,
     };
   }
 }

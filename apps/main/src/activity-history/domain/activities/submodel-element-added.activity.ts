@@ -1,5 +1,11 @@
-import { ActivityHeader, ActivitySchema, activityToDatabase, IActivity } from "./activity";
-import { SharedActivityCreateProps, createActivityHeader } from "./shared.activity";
+import { ActivityHeader } from "./activity-header";
+import {
+  SharedActivityCreateProps,
+  createActivityHeader,
+  IActivity,
+  activityToDatabase,
+  ActivitySchema,
+} from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
@@ -46,10 +52,10 @@ export class SubmodelElementAddedActivity implements IActivity {
     return activityToDatabase(this);
   }
 
-  toPlain(_options?: ConvertToPlainOptions) {
+  toPlain(options?: ConvertToPlainOptions) {
     return {
       header: this.header.toPlain(),
-      payload: this.payload.toPlain(),
+      payload: this.payload.toPlain(options),
     };
   }
 }

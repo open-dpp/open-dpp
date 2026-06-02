@@ -103,7 +103,7 @@ import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
-  ActivityDppKeyQueryParam,
+  ActivityPathQueryParam,
   ActivityTypeQueryParam,
   ApiDownloadActivities,
   ApiGetActivities,
@@ -694,7 +694,7 @@ export class TemplateController
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
-    @ActivityDppKeyQueryParam() dppPathFilter: string | undefined,
+    @ActivityPathQueryParam() dppPathFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ActivityPaginationDto> {
