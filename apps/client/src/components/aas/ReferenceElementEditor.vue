@@ -19,7 +19,6 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
 import EditorTabs from "./EditorTabs.vue";
-import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props =
   defineProps<SharedEditorProps<ReferenceElementEditorProps, ReferenceElementModificationDto>>();
@@ -37,7 +36,6 @@ const { handleSubmit, errors, submitCount } = useForm<FormValues>({
       props.data.value && props.data.value.keys.length > 0 ? props.data.value.keys[0].value : null,
   },
 });
-const { createTimelineItemForReferenceElement } = useActivityTimeline();
 
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
@@ -110,8 +108,7 @@ defineExpose<{
         v-if="props.path.idShortPath"
         :id="props.id"
         :type="props.type"
-        :dppPath="props.path.idShortPath"
-        :createTimelineItem="createTimelineItemForReferenceElement"
+        :path="props.path.idShortPath"
       />
     </template>
   </EditorTabs>

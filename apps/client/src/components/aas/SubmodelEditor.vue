@@ -13,7 +13,6 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 import EditorTabs from "./EditorTabs.vue";
-import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props = defineProps<SharedEditorProps<SubmodelEditorProps, SubmodelModificationDto>>();
 
@@ -42,8 +41,6 @@ async function submit() {
     await props.callback({ ...data });
   })();
 }
-
-const { createTimelineItemForSubmodel } = useActivityTimeline();
 
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
@@ -84,9 +81,8 @@ defineExpose<{
       <EditorActivityHistory
         v-if="props.data.idShort"
         :id="props.id"
-        :commandPath="props.data.idShort"
+        :path="props.data.idShort"
         :type="props.type"
-        :createTimelineItem="(activity, change) => createTimelineItemForSubmodel(activity, change)"
       />
     </template>
   </EditorTabs>

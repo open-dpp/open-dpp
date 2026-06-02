@@ -13,7 +13,6 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
 import EditorTabs from "./EditorTabs.vue";
-import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
@@ -24,7 +23,6 @@ const formSchema = z.object({
 });
 export type FormValues = z.infer<typeof formSchema>;
 
-const { createTimelineItemForFile } = useActivityTimeline();
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
 });
@@ -84,9 +82,8 @@ defineExpose<{
       <EditorActivityHistory
         v-if="props.path.idShortPath"
         :id="props.id"
-        :dppPath="props.path.idShortPath"
+        :path="props.path.idShortPath"
         :type="props.type"
-        :createTimelineItem="createTimelineItemForFile"
       />
     </template>
   </EditorTabs>

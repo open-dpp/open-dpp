@@ -13,7 +13,6 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 import EditorTabs from "./EditorTabs.vue";
-import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props =
   defineProps<
@@ -23,7 +22,6 @@ const props =
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
 });
-const { createTimelineItemForSubmodel } = useActivityTimeline();
 
 export type FormValues = z.infer<typeof propertyFormSchema>;
 
@@ -87,9 +85,8 @@ defineExpose<{
       <EditorActivityHistory
         v-if="props.data.idShort"
         :id="props.id"
-        :commandPath="`eq:${props.path.idShortPathIncludingSubmodel}`"
+        :path="`eq:${props.path.idShortPathIncludingSubmodel}`"
         :type="props.type"
-        :createTimelineItem="(activity, change) => createTimelineItemForSubmodel(activity, change)"
       />
     </template>
   </EditorTabs>

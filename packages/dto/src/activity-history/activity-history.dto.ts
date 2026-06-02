@@ -41,7 +41,7 @@ export const ActivityPaginationDtoSchema = z
 export type ActivityPaginationDto = z.infer<typeof ActivityPaginationDtoSchema>;
 
 export const ActivityFilterDtoSchema = z.object({
-  type: ActivityDtoTypesEnum,
+  type: ActivityDtoTypesEnum.optional(),
   path: z.string().optional(),
 });
 

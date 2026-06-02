@@ -14,7 +14,6 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 import EditorTabs from "./EditorTabs.vue";
-import { useActivityTimeline } from "../../composables/activity-timeline.ts";
 
 const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
@@ -32,8 +31,6 @@ const { handleSubmit, submitCount, errors } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: { ...props.data },
 });
-
-const { createTimelineItemForProperty } = useActivityTimeline();
 
 const showErrors = computed(() => submitCount.value > 0);
 
@@ -85,13 +82,10 @@ defineExpose<{
       </template>
       <template #activityHistory>
         <EditorActivityHistory
-          v-if="props.path.idShortPath"
+          v-if="props.path.idShortPathIncludingSubmodel"
           :id="props.id"
-          :dppPath="props.path.idShortPath"
+          :path="props.path.idShortPathIncludingSubmodel"
           :type="props.type"
-          :createTimelineItem="
-            (activity, change) => createTimelineItemForProperty(activity, change)
-          "
         />
       </template>
     </EditorTabs>

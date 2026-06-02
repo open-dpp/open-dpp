@@ -492,10 +492,8 @@
     "position": "Position",
     "userId": "Benutzer ID",
     "correlationId": "Korrelations ID",
-    "operations": {
-      "replace": "geändert",
-      "remove": "gelöscht",
-      "add": "hinzugefügt"
+    "types": {
+      "PropertyValueChanged": "Wert geändert"
     }
   },
   "passports": {

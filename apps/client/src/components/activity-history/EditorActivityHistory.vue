@@ -1,61 +1,28 @@
 <script setup lang="ts">
-import {
-  DigitalProductDocumentType,
-  type DigitalProductDocumentTypeType,
-} from "../../lib/digital-product-document.ts";
-import { computed, onMounted } from "vue";
-import {
-  type ActivityDto,
-  ActivityDtoTypes,
-  ActivityPayloadDtoSchema,
-  type ExtendedJsonPatchDtoOperation,
-  type PagingParamsDto,
-} from "@open-dpp/dto";
+import { type DigitalProductDocumentTypeType } from "../../lib/digital-product-document.ts";
+import { onMounted } from "vue";
+import { type PagingParamsDto } from "@open-dpp/dto";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useActivityHistory } from "../../composables/activity-history.ts";
 import { usePagination } from "../../composables/pagination.ts";
 import { useRoute } from "vue-router";
-import MediaFieldView from "../media/MediaFieldView.vue";
-import type { TimelineItem } from "../../composables/activity-timeline.ts";
+import { useI18n } from "vue-i18n";
 
 dayjs.extend(utc);
 const props = defineProps<{
   id: string;
-  dppPath?: string;
-  commandPath?: string;
+  path?: string;
   type: DigitalProductDocumentTypeType;
-  createTimelineItem: (
-    activity: ActivityDto,
-    change: ExtendedJsonPatchDtoOperation,
-  ) => TimelineItem | undefined;
 }>();
 
 const { activities, fetchActivities } = useActivityHistory(props.type);
 
 const route = useRoute();
 
-const timelineItems = computed<TimelineItem[]>(() => {
-  const result = [];
-  for (const activity of activities.value) {
-    const payloadParsing = ActivityPayloadDtoSchema.safeParse(activity.payload);
-    if (payloadParsing.success) {
-      for (const change of payloadParsing.data.changes) {
-        const timelineItem = props.createTimelineItem(activity, change);
-        if (timelineItem) {
-          result.push(timelineItem);
-        }
-      }
-    }
-  }
-  return result;
-});
-
 async function fetchCallback(pagingParams: PagingParamsDto) {
   const response = await fetchActivities(props.id, pagingParams, {
-    type: ActivityDtoTypes.SubmodelActivity,
-    dppPath: props.dppPath,
-    commandPath: props.commandPath,
+    path: props.path,
   });
 
   activities.value = response.result;
@@ -68,6 +35,7 @@ const { nextPage } = usePagination({
   fetchCallback,
   changeQueryParams: () => {},
 });
+const { t } = useI18n();
 
 onMounted(async () => {
   await nextPage();
@@ -75,28 +43,28 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Timeline :value="timelineItems" align="alternate">
-    <template #marker="slotProps">
-      <span class="z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm">
-        <i :class="slotProps.item.icon"></i>
-      </span>
-    </template>
+  <Timeline :value="activities" align="alternate">
+    <!--    <template #marker="slotProps">-->
+    <!--      <span class="z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm">-->
+    <!--        <i :class="slotProps.item.icon"></i>-->
+    <!--      </span>-->
+    <!--    </template>-->
     <template #content="slotProps">
       <Card class="mt-4">
-        <template #title>{{ slotProps.item.title }}</template>
+        <template #title>{{ t(`activityHistory.types.${slotProps.item.type}`) }}</template>
         <template #subtitle>
           {{ slotProps.item.timestamp }}
         </template>
-        <template #content>
-          <div
-            v-for="(item, index) in slotProps.item.content"
-            :key="index"
-            class="flex flex-col gap-2"
-          >
-            <MediaFieldView v-if="item.renderContentAsFile" :media-id="item.value" />
-            <p v-else>{{ item.value }}</p>
-          </div>
-        </template>
+        <!--        <template #content>-->
+        <!--          <div-->
+        <!--            v-for="(item, index) in slotProps.item.content"-->
+        <!--            :key="index"-->
+        <!--            class="flex flex-col gap-2"-->
+        <!--          >-->
+        <!--            <MediaFieldView v-if="item.renderContentAsFile" :media-id="item.value" />-->
+        <!--            <p v-else>{{ item.value }}</p>-->
+        <!--          </div>-->
+        <!--        </template>-->
       </Card>
     </template>
   </Timeline>
