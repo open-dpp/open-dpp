@@ -215,8 +215,8 @@ describe("assetAdministrationShell", () => {
         globalAssetId: "globalAssetId",
       }),
     });
-    const displayName = [{ language: "en", text: "MyAAS" }];
-    const description = [{ language: "en", text: "My description" }];
+    const displayName = [{ language: "en-US", text: "MyAAS" }];
+    const description = [{ language: "en-US", text: "My description" }];
     const defaultThumbnails = [{ path: "path.to.image", contentType: "image/jepg" }];
     const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const security = Security.create({});

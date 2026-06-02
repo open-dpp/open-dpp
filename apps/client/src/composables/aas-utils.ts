@@ -1,6 +1,7 @@
 import type {
   AssetAdministrationShellResponseDto,
   ExtendedEnvironmentResponseDto,
+  LanguageTextDto,
   LanguageType,
 } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
@@ -11,6 +12,7 @@ interface AasUtilsProps {
 }
 
 export interface IAasUtils {
+  parseDisplayName: (displayNames: LanguageTextDto[]) => string,
   parseDisplayNameFromAas: (
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ) => string;
@@ -20,13 +22,15 @@ export interface IAasUtils {
 }
 
 export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAasUtils {
+  function parseDisplayName(displayNames: LanguageTextDto[]) {
+    const displayName = displayNames.find((d) => d.language === selectedLanguage);
+    return displayName?.text ?? translate("common.untitled");
+  }
+
   function parseDisplayNameFromAas(
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ): string {
-    const displayName = assetAdministrationShell.displayName.find(
-      (d) => d.language === selectedLanguage,
-    );
-    return displayName?.text ?? translate("common.untitled");
+    return parseDisplayName(assetAdministrationShell.displayName);
   }
 
   function parseDisplayNameFromEnvironment(
@@ -46,5 +50,5 @@ export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAa
       });
   }
 
-  return { parseDisplayNameFromAas, parseDisplayNameFromEnvironment };
+  return { parseDisplayName, parseDisplayNameFromAas, parseDisplayNameFromEnvironment };
 }

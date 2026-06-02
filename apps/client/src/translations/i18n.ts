@@ -1,6 +1,4 @@
-import type { LanguageType } from "@open-dpp/dto";
 import type { I18n } from "vue-i18n";
-import { Language } from "@open-dpp/dto";
 import { createI18n } from "vue-i18n";
 import { z } from "zod";
 
@@ -30,12 +28,3 @@ export const i18n = createI18n<[MessageSchema], "en-US" | "de-DE">({
 z.config({
   localeError: makeZodI18nMap(i18n as I18n),
 });
-
-export function convertLocaleToLanguage(locale: string): LanguageType {
-  switch (locale) {
-    case "de-DE":
-      return Language.de;
-    default:
-      return Language.en;
-  }
-}

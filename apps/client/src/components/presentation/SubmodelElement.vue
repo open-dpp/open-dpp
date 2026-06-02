@@ -10,7 +10,7 @@ const { element, parentPath } = defineProps<{
   parentPath?: string;
 }>();
 
-const { description: elementName } = useDisplayName(element.displayName);
+const elementName = useDisplayName(element.displayName);
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),

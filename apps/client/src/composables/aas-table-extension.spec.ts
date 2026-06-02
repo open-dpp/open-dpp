@@ -66,24 +66,24 @@ describe("aasTableExtension composable", () => {
       idShort: "Column1",
       valueType: DataTypeDef.String,
       modelType: AasSubmodelElements.Property,
-      displayName: [{ language: "en", text: "Material" }],
+      displayName: [{ language: "en-US", text: "Material" }],
     },
     {
       idShort: "Column2",
       valueType: DataTypeDef.Double,
       modelType: AasSubmodelElements.Property,
-      displayName: [{ language: "en", text: "Amount in percentage" }],
+      displayName: [{ language: "en-US", text: "Amount in percentage" }],
     },
     {
       idShort: "Column3",
       modelType: AasSubmodelElements.File,
       contentType: "application/octet-stream",
-      displayName: [{ language: "en", text: "File" }],
+      displayName: [{ language: "en-US", text: "File" }],
     },
     {
       idShort: "Column4",
       modelType: AasSubmodelElements.ReferenceElement,
-      displayName: [{ language: "en", text: "Link" }],
+      displayName: [{ language: "en-US", text: "Link" }],
     },
   ];
   const colsWithValue = [
@@ -250,13 +250,13 @@ describe("aasTableExtension composable", () => {
     idShort: "ColumnDate",
     valueType: DataTypeDef.Date,
     modelType: AasSubmodelElements.Property,
-    displayName: [{ language: "en", text: "Produced on" }],
+    displayName: [{ language: "en-US", text: "Produced on" }],
   };
   const dateTimeCol = {
     idShort: "ColumnDateTime",
     valueType: DataTypeDef.DateTime,
     modelType: AasSubmodelElements.Property,
-    displayName: [{ language: "en", text: "Produced at" }],
+    displayName: [{ language: "en-US", text: "Produced at" }],
   };
 
   it.each([
@@ -545,7 +545,7 @@ describe("aasTableExtension composable", () => {
 
     const columnData = {
       ...cols[1],
-      displayName: [{ language: "en", text: "Modified Amount in percentage" }],
+      displayName: [{ language: "en-US", text: "Modified Amount in percentage" }],
     };
 
     const submodelElementListModified = {

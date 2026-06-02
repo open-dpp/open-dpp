@@ -1,10 +1,9 @@
-import type { SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
-import type { DisplayName } from "./display-name";
+import type { LanguageTextDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
 
 export interface SubmodelTreeElement {
   idShort: string;
-  name: DisplayName[];
+  name: LanguageTextDto[];
   children: SubmodelTreeElement[];
   submodelElements: SubmodelElementResponseDto[];
 }

@@ -92,7 +92,7 @@ describe("passports", () => {
       status: HTTPCode.CREATED,
     });
     mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
-    const displayName = [{ language: Language.en, text: "test" }];
+    const displayName = [{ language: Language["en-US"], text: "test" }];
     await createPassport({ displayName });
     expect(mocks.createPassport).toHaveBeenCalledWith({
       environment: { assetAdministrationShells: [{ displayName }] },

@@ -3,7 +3,6 @@ import type { TreeNode } from "primevue/treenode";
 import {
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
-  type DigitalProductDocumentStatusDtoType,
   KeyTypes,
   Permissions,
 } from "@open-dpp/dto";
@@ -21,7 +20,7 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePresentationConfigurationStore } from "../../stores/presentation-configuration.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 import TablePagination from "../pagination/TablePagination.vue";
 import ElementPresentationPanel from "./presentation/ElementPresentationPanel.vue";

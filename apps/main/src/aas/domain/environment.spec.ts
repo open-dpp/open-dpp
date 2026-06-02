@@ -11,8 +11,8 @@ import { Submodel } from "./submodel-base/submodel";
 describe("environment", () => {
   it("should add aas", () => {
     const environment = Environment.create({});
-    const displayName = [LanguageText.create({ language: "en", text: "Test AAS" })];
-    const description = [LanguageText.create({ language: "en", text: "Test AAS description" })];
+    const displayName = [LanguageText.create({ language: "en-US", text: "Test AAS" })];
+    const description = [LanguageText.create({ language: "en-US", text: "Test AAS description" })];
 
     const aas = environment.addAssetAdministrationShell(
       AssetAdministrationShell.create({

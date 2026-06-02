@@ -1,18 +1,17 @@
 <script lang="ts" setup>
-import type { SubmodelElementResponseDto } from "@open-dpp/dto";
-import type { DisplayName } from "../../composables/display-name";
+import type { LanguageTextDto, SubmodelElementResponseDto } from "@open-dpp/dto";
 import { useDisplayName } from "../../composables/display-name";
 import SubmodelElement from "./SubmodelElement.vue";
 
 const { title, idShort, parentPathOverride } = defineProps<{
-  title: DisplayName[];
+  title: LanguageTextDto[];
   idShort: string;
   parentId?: string;
   parentPathOverride?: string;
   submodelElements: SubmodelElementResponseDto[];
 }>();
 
-const { description: name } = useDisplayName(title);
+const name = useDisplayName(title);
 </script>
 
 <template>

@@ -71,7 +71,7 @@ function getLinkTarget(index: number) {
       </svg>
       <router-link class="text-gray-400 hover:text-gray-500" :to="getLinkTarget(index - 1)">
         <span>
-          {{ useDisplayName(breadcrumb.name).description }}
+          {{ useDisplayName(breadcrumb.name) }}
         </span>
       </router-link>
     </div>

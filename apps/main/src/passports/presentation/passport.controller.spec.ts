@@ -262,7 +262,7 @@ describe("passportController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const now = new Date("2022-01-01T00:00:00.000Z");
     jest.spyOn(DateTime, "now").mockReturnValue(now);
-    const displayName = [{ language: "en", text: "Test passport" }];
+    const displayName = [{ language: "en-US", text: "Test passport" }];
     const body = {
       environment: {
         assetAdministrationShells: [{ displayName }],
@@ -815,8 +815,8 @@ describe("passportController", () => {
     // Verify multi-language property values are preserved
     const mlProp = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "mlProp");
     expect(mlProp.value).toEqual([
-      { language: "en", text: "English" },
-      { language: "de", text: "Deutsch" },
+      { language: "en-US", text: "English" },
+      { language: "de-DE", text: "Deutsch" },
     ]);
 
     // Verify blob value is preserved
@@ -860,7 +860,7 @@ describe("passportController", () => {
     expect(exportedConceptDescriptions).toHaveLength(1);
     expect(exportedConceptDescriptions[0].idShort).toEqual("conceptDesc1");
     expect(exportedConceptDescriptions[0].displayName).toEqual([
-      { language: "en", text: "Test Concept" },
+      { language: "en-US", text: "Test Concept" },
     ]);
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
   });
@@ -1107,7 +1107,7 @@ describe("passportController", () => {
       const now = new Date("2022-01-01T00:00:00.000Z");
       jest.spyOn(DateTime, "now").mockReturnValue(now);
 
-      const displayName = [{ language: "en", text: "API key passport" }];
+      const displayName = [{ language: "en-US", text: "API key passport" }];
       const body = {
         environment: {
           assetAdministrationShells: [{ displayName }],

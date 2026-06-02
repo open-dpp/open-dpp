@@ -14,7 +14,7 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import FileField from "./form/FileField.vue";
 import FormContainer from "./form/FormContainer.vue";
 import LinkCellField from "./LinkCellField.vue";

@@ -41,10 +41,10 @@ importers:
         version: 2.2.0(vue@3.5.32(typescript@5.9.3))
       '@open-dpp/api-client':
         specifier: workspace:*
-        version: link:../../packages/api-client
+        version: file:packages/api-client
       '@open-dpp/dto':
         specifier: workspace:*
-        version: link:../../packages/dto
+        version: file:packages/dto
       '@primeuix/themes':
         specifier: ^2.0.3
         version: 2.0.3
@@ -78,9 +78,6 @@ importers:
       dompurify:
         specifier: ^3.4.0
         version: 3.4.0
-      language-tags:
-        specifier: ^2.1.0
-        version: 2.1.0
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -132,7 +129,7 @@ importers:
     devDependencies:
       '@open-dpp/testing':
         specifier: workspace:*
-        version: link:../../packages/testing
+        version: file:packages/testing(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-validator@0.14.4)(mongoose@9.4.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@primevue/auto-import-resolver':
         specifier: ^4.5.5
         version: 4.5.5
@@ -2202,6 +2199,18 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
+
+  '@open-dpp/api-client@file:packages/api-client':
+    resolution: {directory: packages/api-client, type: directory}
+
+  '@open-dpp/dto@file:packages/dto':
+    resolution: {directory: packages/dto, type: directory}
+
+  '@open-dpp/env@file:packages/env':
+    resolution: {directory: packages/env, type: directory}
+
+  '@open-dpp/testing@file:packages/testing':
+    resolution: {directory: packages/testing, type: directory}
 
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
@@ -5921,13 +5930,6 @@ packages:
         optional: true
       ws:
         optional: true
-
-  language-subtag-registry@0.3.23:
-    resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
-
-  language-tags@2.1.0:
-    resolution: {integrity: sha512-D4CgpyCt+61f6z2jHjJS1OmZPviAWM57iJ9OKdFFWSNgS7Udj9QVWqyGs/cveVNF57XpZmhSvMdVIV5mjLA7Vg==}
-    engines: {node: '>=22'}
 
   lazy-cache@2.0.2:
     resolution: {integrity: sha512-7vp2Acd2+Kz4XkzxGxaB1FWOi8KjWIWsgdfD5MCb86DWvlLqhRPM+d6Pro3iNEL5VT9mstz5hKAlcd+QR6H3aA==}
@@ -10026,6 +10028,55 @@ snapshots:
 
   '@one-ini/wasm@0.1.1': {}
 
+  '@open-dpp/api-client@file:packages/api-client':
+    dependencies:
+      '@open-dpp/dto': file:packages/dto
+      axios: 1.15.0
+    transitivePeerDependencies:
+      - debug
+
+  '@open-dpp/dto@file:packages/dto':
+    dependencies:
+      uuid: 13.0.0
+      zod: 4.3.6
+
+  '@open-dpp/env@file:packages/env(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config': 4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core': 11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      zod: 4.3.6
+    transitivePeerDependencies:
+      - '@nestjs/microservices'
+      - '@nestjs/platform-express'
+      - '@nestjs/websockets'
+      - class-transformer
+      - class-validator
+      - reflect-metadata
+      - rxjs
+      - supports-color
+
+  '@open-dpp/testing@file:packages/testing(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-validator@0.14.4)(mongoose@9.4.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config': 4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core': 11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/mongoose': 11.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(mongoose@9.4.1)(rxjs@7.8.2)
+      '@open-dpp/dto': file:packages/dto
+      '@open-dpp/env': file:packages/env(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      class-transformer: 0.5.1
+      fishery: 2.4.0
+      zod: 4.3.6
+    transitivePeerDependencies:
+      - '@nestjs/microservices'
+      - '@nestjs/platform-express'
+      - '@nestjs/websockets'
+      - class-validator
+      - mongoose
+      - reflect-metadata
+      - rxjs
+      - supports-color
+
   '@open-draft/deferred-promise@2.2.0': {}
 
   '@open-draft/logger@0.3.0':
@@ -11530,7 +11581,7 @@ snapshots:
 
   axios@1.15.0:
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.0
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -12770,6 +12821,8 @@ snapshots:
     dependencies:
       tabbable: 6.4.0
 
+  follow-redirects@1.16.0: {}
+
   follow-redirects@1.16.0(debug@4.4.3):
     optionalDependencies:
       debug: 4.4.3
@@ -13950,12 +14003,6 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       ws: 8.20.0
-
-  language-subtag-registry@0.3.23: {}
-
-  language-tags@2.1.0:
-    dependencies:
-      language-subtag-registry: 0.3.23
 
   lazy-cache@2.0.2:
     dependencies:

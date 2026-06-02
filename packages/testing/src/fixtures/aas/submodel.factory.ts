@@ -175,11 +175,11 @@ export const submodelDesignOfProductPlainFactory = Factory.define<
                 modelType: "MultiLanguageProperty",
                 value: [
                   {
-                    language: "de",
+                    language: "de-DE",
                     text: "Schnelle Übersicht",
                   },
                   {
-                    language: "en",
+                    language: "en-US",
                     text: "Quick Overview",
                   },
                 ],
@@ -372,17 +372,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
   id: `${transientParams.iriDomain}/submodels/ObSfHebEIR`,
   description: [
     {
-      language: "en",
+      language: "en-US",
       text: "The Submodel provides the means to access the Carbon Footprint",
     },
   ],
   displayName: [
     {
-      language: "de",
+      language: "de-DE",
       text: "CO2 Footprint",
     },
     {
-      language: "en",
+      language: "en-US",
       text: "Carbon Footprint",
     },
   ],
@@ -401,17 +401,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
       },
       description: [
         {
-          language: "en",
+          language: "en-US",
           text: "Balance of greenhouse gas emissions along the entire life cycle of a product in a defined application and in relation to a defined unit of use",
         },
       ],
       displayName: [
         {
-          language: "de",
+          language: "de-DE",
           text: "Produkt C02-Fußabdruck",
         },
         {
-          language: "en",
+          language: "en-US",
           text: "Product carbon footprint",
         },
       ],
@@ -433,21 +433,21 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Standard, method for determining the greenhouse gas emissions of a product",
             },
             {
-              language: "de",
+              language: "de-DE",
               text: "Norm, Standard, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Folgenabschätzungsmethode / Berechnungsmethode",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "impact assessment method / calculation method",
             },
           ],
@@ -469,17 +469,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Sum of all greenhouse gas emissions of a product according to the quantification requirements of the standard",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "CO2 eq Klimawandel",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "CO2 eq Climate Change",
             },
           ],
@@ -501,17 +501,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Quantity unit of the product to which the PCF information on the CO2 footprint refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Referenzeinheit für die Berechnung",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "Reference value for calculation",
             },
           ],
@@ -533,17 +533,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Quantity of the product to which the PCF information on the CO2 footprint refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Mengenangabe für die Berechnung",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "quantity of measure for calculation",
             },
           ],
@@ -574,17 +574,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Life cycle stages of the product according to the quantification requirements of the standard to which the PCF carbon footprint statement refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Lebenszyklusphase",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "life cycle phase",
             },
           ],
@@ -606,17 +606,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Time at which something was first published or made available",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Veröffentlichungsdatum",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "Publication date",
             },
           ],
@@ -635,17 +635,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           },
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Indicates the place of hand-over of the goods",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "PCF Warenübergabeadresse",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "PCF goods address hand-over",
             },
           ],
@@ -667,7 +667,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Street indication of the place of transfer of goods",
                 },
               ],
@@ -689,7 +689,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Number for identification or differentiation of individual houses of a street",
                 },
               ],
@@ -711,7 +711,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Zip code of the goods transfer address",
                 },
               ],
@@ -733,7 +733,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Indication of the city or town of the transfer of goods",
                 },
               ],
@@ -755,7 +755,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Country where the product is transmitted",
                 },
               ],
@@ -821,17 +821,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
       },
       description: [
         {
-          language: "en",
+          language: "en-US",
           text: "Balance of greenhouse gas emissions along the entire life cycle of a product in a defined application and in relation to a defined unit of use",
         },
       ],
       displayName: [
         {
-          language: "de",
+          language: "de-DE",
           text: "Produkt C02-Fußabdruck",
         },
         {
-          language: "en",
+          language: "en-US",
           text: "Product carbon footprint",
         },
       ],
@@ -853,21 +853,21 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Standard, method for determining the greenhouse gas emissions of a product",
             },
             {
-              language: "de",
+              language: "de-DE",
               text: "Norm, Standard, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Folgenabschätzungsmethode / Berechnungsmethode",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "impact assessment method / calculation method",
             },
           ],
@@ -889,17 +889,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Sum of all greenhouse gas emissions of a product according to the quantification requirements of the standard",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "CO2 eq Klimawandel",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "CO2 eq Climate Change",
             },
           ],
@@ -921,17 +921,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Quantity unit of the product to which the PCF information on the CO2 footprint refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Referenzeinheit für die Berechnung",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "Reference value for calculation",
             },
           ],
@@ -953,17 +953,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Quantity of the product to which the PCF information on the CO2 footprint refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Mengenangabe für die Berechnung",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "quantity of measure for calculation",
             },
           ],
@@ -994,17 +994,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Life cycle stages of the product according to the quantification requirements of the standard to which the PCF carbon footprint statement refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Lebenszyklusphase",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "life cycle phase",
             },
           ],
@@ -1026,17 +1026,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Time at which something was first published or made available",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Veröffentlichungsdatum",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "Publication date",
             },
           ],
@@ -1055,17 +1055,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           },
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Indicates the place of hand-over of the goods",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "PCF Warenübergabeadresse",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "PCF goods address hand-over",
             },
           ],
@@ -1087,7 +1087,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Street indication of the place of transfer of goods",
                 },
               ],
@@ -1109,7 +1109,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Number for identification or differentiation of individual houses of a street",
                 },
               ],
@@ -1131,7 +1131,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Zip code of the goods transfer address",
                 },
               ],
@@ -1153,7 +1153,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Indication of the city or town of the transfer of goods",
                 },
               ],
@@ -1175,7 +1175,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Country where the product is transmitted",
                 },
               ],
@@ -1228,17 +1228,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
       },
       description: [
         {
-          language: "en",
+          language: "en-US",
           text: "Balance of greenhouse gas emissions along the entire life cycle of a product in a defined application and in relation to a defined unit of use",
         },
       ],
       displayName: [
         {
-          language: "de",
+          language: "de-DE",
           text: "Produkt C02-Fußabdruck",
         },
         {
-          language: "en",
+          language: "en-US",
           text: "Product carbon footprint",
         },
       ],
@@ -1260,21 +1260,21 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Standard, method for determining the greenhouse gas emissions of a product",
             },
             {
-              language: "de",
+              language: "de-DE",
               text: "Norm, Standard, Verfahren zur Ermittlung der Treibhausgas-Emissionen eines Produkts",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Folgenabschätzungsmethode / Berechnungsmethode",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "impact assessment method / calculation method",
             },
           ],
@@ -1296,17 +1296,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Sum of all greenhouse gas emissions of a product according to the quantification requirements of the standard",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "CO2 eq Klimawandel",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "CO2 eq Climate Change",
             },
           ],
@@ -1328,17 +1328,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Quantity unit of the product to which the PCF information on the CO2 footprint refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Referenzeinheit für die Berechnung",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "Reference value for calculation",
             },
           ],
@@ -1360,17 +1360,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Quantity of the product to which the PCF information on the CO2 footprint refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Mengenangabe für die Berechnung",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "quantity of measure for calculation",
             },
           ],
@@ -1401,17 +1401,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Life cycle stages of the product according to the quantification requirements of the standard to which the PCF carbon footprint statement refers",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Lebenszyklusphase",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "life cycle phase",
             },
           ],
@@ -1433,17 +1433,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           category: "PARAMETER",
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Time at which something was first published or made available",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "Veröffentlichungsdatum",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "Publication date",
             },
           ],
@@ -1462,17 +1462,17 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           },
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: "Indicates the place of hand-over of the goods",
             },
           ],
           displayName: [
             {
-              language: "de",
+              language: "de-DE",
               text: "PCF Warenübergabeadresse",
             },
             {
-              language: "en",
+              language: "en-US",
               text: "PCF goods address hand-over",
             },
           ],
@@ -1494,7 +1494,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Street indication of the place of transfer of goods",
                 },
               ],
@@ -1516,7 +1516,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Number for identification or differentiation of individual houses of a street",
                 },
               ],
@@ -1538,7 +1538,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Zip code of the goods transfer address",
                 },
               ],
@@ -1560,7 +1560,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Indication of the city or town of the transfer of goods",
                 },
               ],
@@ -1582,7 +1582,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
               category: "PARAMETER",
               description: [
                 {
-                  language: "en",
+                  language: "en-US",
                   text: "Country where the product is transmitted",
                 },
               ],
@@ -1761,7 +1761,7 @@ export const submodelBillOfMaterialPlainFactory = Factory.define<
           ],
           description: [
             {
-              language: "en",
+              language: "en-US",
               text: 'Modeling of logical connections between components and sub-components. Either this or "IsPartOf" must be used, not both.',
             },
           ],

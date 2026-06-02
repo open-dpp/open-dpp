@@ -12,7 +12,7 @@ import { useI18n } from "vue-i18n";
 import { useAasUtils } from "../../composables/aas-utils";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
-import { convertLocaleToLanguage } from "../../translations/i18n";
+import { convertLocaleToLanguage } from "../../translations/util";
 
 const { startSize = 10, disabled = false } = defineProps<{
   startSize?: number;

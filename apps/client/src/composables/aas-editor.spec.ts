@@ -154,8 +154,8 @@ describe("aasEditor composable", () => {
   const assetAdministrationShell1: AssetAdministrationShellResponseDto = {
     id: "aas-id-1",
     displayName: [
-      { language: "de", text: "Mein AAS" },
-      { language: "en", text: "My AAS" },
+      { language: "de-DE", text: "Mein AAS" },
+      { language: "en-US", text: "My AAS" },
     ],
     description: [],
     embeddedDataSpecifications: [],
@@ -287,8 +287,8 @@ describe("aasEditor composable", () => {
     });
     expect(editorVNode.value!.component).toEqual(AssetAdministrationShellEditor);
     const newDisplayName = [
-      { language: "de", text: "Neuer Name" },
-      { language: "en", text: "New Name" },
+      { language: "de-DE", text: "Neuer Name" },
+      { language: "en-US", text: "New Name" },
     ];
     const data = { displayName: newDisplayName };
 

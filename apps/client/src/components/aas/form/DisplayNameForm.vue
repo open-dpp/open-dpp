@@ -4,7 +4,7 @@ import { Language, LanguageEnum } from "@open-dpp/dto";
 import { useFieldArray } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { convertLocaleToLanguage } from "../../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../../translations/util";
 import DisplayNameRow from "./DisplayNameRow.vue";
 
 const props = defineProps<{

@@ -27,11 +27,11 @@ import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 
 describe("modifier visitor", () => {
   const existingDisplayNames = () => [
-    LanguageText.create({ language: "en", text: "Submodel Carbon Footprint" }),
+    LanguageText.create({ language: "en-US", text: "Submodel Carbon Footprint" }),
   ];
   const existingDescriptions = () => [
     LanguageText.create({
-      language: "en",
+      language: "en-US",
       text: "The Submodel Carbon Footprint OLD",
     }),
   ];
@@ -42,17 +42,17 @@ describe("modifier visitor", () => {
 
   const newDisplayNames = [
     {
-      language: "de",
+      language: "de-DE",
       text: "CO2 Footprint New Text",
     },
   ];
   const newDescriptions = [
     {
-      language: "en",
+      language: "en-US",
       text: "The Submodel Carbon Footprint NEW",
     },
     {
-      language: "de",
+      language: "de-DE",
       text: "Das Submodel liefert CO2",
     },
   ];

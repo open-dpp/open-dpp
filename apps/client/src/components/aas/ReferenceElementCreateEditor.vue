@@ -14,7 +14,7 @@ import {
   submodelBaseFormDefaultValues,
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
 

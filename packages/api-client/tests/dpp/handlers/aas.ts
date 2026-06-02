@@ -28,7 +28,7 @@ export const aasResponse = AssetAdministrationShellJsonSchema.parse(
   aasPlainFactory.build(undefined, { transient: { iriDomain } }),
 );
 export const aasModification = {
-  displayName: [{ language: "en", text: "modify" }],
+  displayName: [{ language: "en-US", text: "modify" }],
 };
 export const submodelCarbonFootprintResponse = SubmodelJsonSchema.parse(
   submodelCarbonFootprintPlainFactory.build(undefined, {

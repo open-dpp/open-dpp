@@ -59,11 +59,11 @@ describe("submodelRepository", () => {
               category: "CONSTANT",
               description: [
                 LanguageText.create({
-                  language: "en",
+                  language: "en-US",
                   text: "URL of the application",
                 }),
                 LanguageText.create({
-                  language: "de",
+                  language: "de-DE",
                   text: "URL der Anwendung",
                 }),
               ],

@@ -286,7 +286,7 @@ export function createAasTestContext<T>(
       ],
     };
 
-    const newDisplayName = [{ language: "en", text: "MyAAS" }];
+    const newDisplayName = [{ language: "en-US", text: "MyAAS" }];
 
     const body = {
       displayName: newDisplayName,
@@ -635,8 +635,8 @@ export function createAasTestContext<T>(
 
     const modificationBody = {
       idShort: submodel.idShort,
-      displayName: [{ language: "en", text: "Bill of Materials" }],
-      description: [{ language: "en", text: "A list of all products in the factory" }],
+      displayName: [{ language: "en-US", text: "Bill of Materials" }],
+      description: [{ language: "en-US", text: "A list of all products in the factory" }],
     };
 
     const response = await request(app.getHttpServer())
@@ -695,8 +695,8 @@ export function createAasTestContext<T>(
 
     const modificationBody = {
       idShort: property.idShort,
-      displayName: [{ language: "en", text: "Bill of Materials" }],
-      description: [{ language: "en", text: "A list of all products in the factory" }],
+      displayName: [{ language: "en-US", text: "Bill of Materials" }],
+      description: [{ language: "en-US", text: "A list of all products in the factory" }],
     };
 
     const response = await request(app.getHttpServer())
@@ -820,7 +820,7 @@ export function createAasTestContext<T>(
 
     const newDisplayNames = [
       {
-        language: "de",
+        language: "de-DE",
         text: "CO2 Footprint New Text",
       },
     ];

@@ -32,11 +32,11 @@ describe("zod-schemas", () => {
                 category: "CONSTANT",
                 description: [
                   {
-                    language: "en",
+                    language: "en-US",
                     text: "URL of the application",
                   },
                   {
-                    language: "de",
+                    language: "de-DE",
                     text: "URL der Anwendung",
                   },
                 ],
@@ -54,11 +54,11 @@ describe("zod-schemas", () => {
             },
             description: [
               {
-                language: "en",
+                language: "en-US",
                 text: "SmartFactoryKL ShellScape",
               },
               {
-                language: "de",
+                language: "de-DE",
                 text: "SmartFactoryKL ShellScape",
               },
             ],
@@ -75,11 +75,11 @@ describe("zod-schemas", () => {
                 category: "CONSTANT",
                 description: [
                   {
-                    language: "en",
+                    language: "en-US",
                     text: "URL of the application",
                   },
                   {
-                    language: "de",
+                    language: "de-DE",
                     text: "URL der Anwendung",
                   },
                 ],
@@ -92,11 +92,11 @@ describe("zod-schemas", () => {
                 category: "CONSTANT",
                 description: [
                   {
-                    language: "en",
+                    language: "en-US",
                     text: "URL of the digital production system hmi client",
                   },
                   {
-                    language: "de",
+                    language: "de-DE",
                     text: "URL des HMI Clients des digitalen Produktionssystem",
                   },
                 ],
@@ -114,11 +114,11 @@ describe("zod-schemas", () => {
             },
             description: [
               {
-                language: "en",
+                language: "en-US",
                 text: "DigitalProductionSystem (German Edge Cloud)",
               },
               {
-                language: "de",
+                language: "de-DE",
                 text: "DigitalProductionSystem (German Edge Cloud)",
               },
             ],

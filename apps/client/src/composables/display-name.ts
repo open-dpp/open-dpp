@@ -1,37 +1,19 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { useAasUtils } from "./aas-utils";
+import type { LanguageTextDto } from "@open-dpp/dto";
+import { convertLocaleToLanguage } from "../translations/util";
 
-export interface DisplayName {
-  language: "en" | "de";
-  text: string;
-}
-
-export function resolveDisplayName(
-  options: DisplayName[],
-  locale: string,
-  fallback: string,
-): string {
-  const shortLocale = locale.split("-")[0];
-
-  let option = options.find((opt) => opt.language === shortLocale);
-
-  if (!option) {
-    option = options.find((opt) => opt.language === "en");
-  }
-
-  if (!option) {
-    option = options[0];
-  }
-
-  return option ? option.text : fallback;
-}
-
-export function useDisplayName(options: DisplayName[]) {
+export function useDisplayName(options: LanguageTextDto[]) {
   const { locale, t } = useI18n();
 
-  const description = computed(() =>
-    resolveDisplayName(options, locale.value, t("common.unknownName")),
-  );
+  const parseDisplayName = computed(() => {
+    const { parseDisplayName } = useAasUtils({
+      translate: t,
+      selectedLanguage: convertLocaleToLanguage(locale.value),
+    });
+    return parseDisplayName;
+  });
 
-  return { description };
+  return computed(() => parseDisplayName.value(options));
 }

@@ -31,7 +31,7 @@ describe("value modifier visitor", () => {
   });
 
   const existingDisplayNames = [
-    LanguageText.create({ language: "en", text: "Submodel Carbon Footprint" }),
+    LanguageText.create({ language: "en-US", text: "Submodel Carbon Footprint" }),
   ];
   const prefixPermissionError = "Missing permissions to modify element";
 
@@ -280,7 +280,7 @@ describe("value modifier visitor", () => {
     const multiLanguageProperty = MultiLanguageProperty.create({
       idShort: "prop2",
       displayName: existingDisplayNames,
-      value: [LanguageText.create({ language: "en", text: "english" })],
+      value: [LanguageText.create({ language: "en-US", text: "english" })],
     });
 
     collection.addSubmodelElement(property, { ability });
@@ -297,7 +297,7 @@ describe("value modifier visitor", () => {
     expect(property.value).toEqual("prop New");
     expect(property.displayName).toEqual(existingDisplayNames.map(LanguageText.fromPlain));
     expect(multiLanguageProperty.value).toEqual([
-      LanguageText.create({ language: "de", text: "CO2 Footprint New Text" }),
+      LanguageText.create({ language: "de-DE", text: "CO2 Footprint New Text" }),
     ]);
     expect(multiLanguageProperty.displayName).toEqual(
       existingDisplayNames.map(LanguageText.fromPlain),

@@ -8,17 +8,17 @@ describe("aas", () => {
     const translate = (key: string) => key;
 
     const assetAdministrationShell = {
-      displayName: [{ language: Language.en, text: "my name" }],
+      displayName: [{ language: Language["en-US"], text: "my name" }],
     };
-    let aasUtils = useAasUtils({ translate, selectedLanguage: Language.en });
+    let aasUtils = useAasUtils({ translate, selectedLanguage: Language["en-US"] });
     expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual("my name");
-    aasUtils = useAasUtils({ translate, selectedLanguage: Language.de });
+    aasUtils = useAasUtils({ translate, selectedLanguage: Language["de-DE"] });
     expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual("common.untitled");
 
     const environment = {
       assetAdministrationShells: [{ ...assetAdministrationShell, id: "id1" }],
     };
-    aasUtils = useAasUtils({ translate, selectedLanguage: Language.en });
+    aasUtils = useAasUtils({ translate, selectedLanguage: Language["en-US"] });
     expect(aasUtils.parseDisplayNameFromEnvironment(environment)).toEqual("my name");
   });
 });

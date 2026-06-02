@@ -83,7 +83,7 @@ describe("apiClient", () => {
     it("should create template", async () => {
       const response = await sdk.dpp.templates.create({
         environment: {
-          assetAdministrationShells: [{ displayName: [{ language: "en", text: "test" }] }],
+          assetAdministrationShells: [{ displayName: [{ language: "en-US", text: "test" }] }],
         },
       });
       expect(response.data).toEqual(template1);
@@ -123,7 +123,7 @@ describe("apiClient", () => {
 
       response = await sdk.dpp.passports.create({
         environment: {
-          assetAdministrationShells: [{ displayName: [{ language: "en", text: "test" }] }],
+          assetAdministrationShells: [{ displayName: [{ language: "en-US", text: "test" }] }],
         },
       });
 

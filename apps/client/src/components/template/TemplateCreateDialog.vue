@@ -9,7 +9,7 @@ import {
   displayNameFormDefaultValues,
   LanguageTextFormSchema,
 } from "../../lib/submodel-base-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import DisplayNameForm from "../aas/form/DisplayNameForm.vue";
 
 const props = defineProps<{ createTemplate: CreateTemplateCallback }>();

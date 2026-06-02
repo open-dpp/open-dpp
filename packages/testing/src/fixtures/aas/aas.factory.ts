@@ -311,7 +311,7 @@ export const aasPlainFactory = Factory.define<
   id: `${transientParams.iriDomain}/shells/-SR7BbncJG`,
   displayName: [
     {
-      language: "de",
+      language: "de-DE",
       text: "de.smartfactory.product.truck",
     },
   ],

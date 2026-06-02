@@ -30,7 +30,7 @@ describe("multiLanguageProperty", () => {
       memberRole: MemberRole.MEMBER,
     });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const valueEn = LanguageText.create({ language: "en", text: "value" });
+    const valueEn = LanguageText.create({ language: "en-US", text: "value" });
     const multiLanguageProperty = MultiLanguageProperty.create({
       idShort: "prop1",
       value: [valueEn],
@@ -41,7 +41,7 @@ describe("multiLanguageProperty", () => {
     let ability = security.defineAbilityForSubject(member);
     expect(multiLanguageProperty.toPlain({ ability })).toMatchObject({
       idShort: "prop1",
-      value: [{ language: "en", text: "value" }],
+      value: [{ language: "en-US", text: "value" }],
     });
     ability = security.defineAbilityForSubject(anonymous);
     expect(multiLanguageProperty.toPlain({ ability })).toEqual({});

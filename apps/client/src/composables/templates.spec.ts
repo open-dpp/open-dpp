@@ -73,7 +73,7 @@ describe("templates", () => {
     mocks.createTemplate.mockResolvedValueOnce({ data: t1, status: HTTPCode.CREATED });
     const templates = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templates });
-    const displayName: LanguageTextDto[] = [{ language: "en", text: "test" }];
+    const displayName: LanguageTextDto[] = [{ language: "en-US", text: "test" }];
     await templatesStore.createTemplate({ displayName });
     expect(mocks.createTemplate).toHaveBeenCalledWith({
       environment: {

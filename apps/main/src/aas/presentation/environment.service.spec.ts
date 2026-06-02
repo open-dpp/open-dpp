@@ -92,8 +92,8 @@ describe("environmentService", () => {
   });
 
   it("should create environment", async () => {
-    const displayName: LanguageTextDto[] = [{ language: "en", text: "Test AAS" }];
-    const description: LanguageTextDto[] = [{ language: "en", text: "Test AAS description" }];
+    const displayName: LanguageTextDto[] = [{ language: "en-US", text: "Test AAS" }];
+    const description: LanguageTextDto[] = [{ language: "en-US", text: "Test AAS description" }];
     const environment = await environmentService.createEnvironment(
       {
         assetAdministrationShells: [{ displayName, description }],
@@ -487,7 +487,7 @@ describe("environmentService", () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const modification = {
       idShort: submodel1.idShort,
-      displayName: [LanguageText.create({ text: "Test", language: "en" })],
+      displayName: [LanguageText.create({ text: "Test", language: "en-US" })],
     };
     await environmentService.modifySubmodel(environment, submodel1.id, modification, admin);
     //
@@ -517,7 +517,7 @@ describe("environmentService", () => {
       await createDefaultEnvironment();
     const modification = {
       idShort: property1.idShort,
-      displayName: [LanguageText.create({ text: "Test", language: "en" })],
+      displayName: [LanguageText.create({ text: "Test", language: "en-US" })],
     };
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
@@ -607,7 +607,7 @@ describe("environmentService", () => {
       await createEnvironmentWithList();
     const modification = {
       idShort: col1.idShort,
-      displayName: [LanguageText.create({ text: "Test", language: "en" })],
+      displayName: [LanguageText.create({ text: "Test", language: "en-US" })],
     };
     await environmentService.modifyColumn(
       environment,

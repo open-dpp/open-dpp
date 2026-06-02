@@ -11,7 +11,7 @@ import { useRoute } from "vue-router";
 import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassports } from "../../composables/passports";
 import { useTemplates } from "../../composables/templates";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import { usePagination } from "../../composables/pagination.ts";
 
 const route = useRoute();
