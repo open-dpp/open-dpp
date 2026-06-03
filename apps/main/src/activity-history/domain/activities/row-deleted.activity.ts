@@ -1,18 +1,15 @@
 import { ActivityHeader } from "./activity-header";
 import {
-  SharedActivityCreateProps,
+  ActivitySchema,
+  activityToDatabase,
   createActivityHeader,
   IActivity,
-  activityToDatabase,
-  ActivitySchema,
+  SharedActivityCreateProps,
 } from "./shared.activity";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
 import { ActivityTypes } from "./activity-types";
-import {
-  SubmodelActivityPayload,
-  SubmodelWithAasActivityPayload,
-} from "./submodel-activities.shared";
+import { SubmodelWithAasActivityPayload } from "./submodel-activities.shared";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
 
 const RowDeletedActivityVersion = {
@@ -23,7 +20,7 @@ export class RowDeletedActivity implements IActivity {
   public static readonly type = ActivityTypes.RowDeleted;
   private constructor(
     public header: ActivityHeader,
-    public readonly payload: SubmodelActivityPayload,
+    public readonly payload: SubmodelWithAasActivityPayload,
   ) {}
   static create(
     data: SharedActivityCreateProps & {

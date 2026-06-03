@@ -231,6 +231,24 @@ describe("activityRepository", () => {
       );
 
       foundEvents = await activityRepository.findByAggregateId(passportId, {
+        filter: {
+          activityType: [
+            ActivityTypes.SubmodelElementModified,
+            ActivityTypes.AssetAdministrationShellModified,
+          ],
+        },
+      });
+      expect(foundEvents).toEqual(
+        PagingResult.create({
+          pagination: Pagination.create({
+            cursor: encodeCursor(event1.header.createdAt.toISOString(), event1.header.id),
+            limit: 100,
+          }),
+          items: [aasActivity, event4, event3, event2, event1],
+        }),
+      );
+
+      foundEvents = await activityRepository.findByAggregateId(passportId, {
         filter: { activityType: ActivityTypes.SubmodelElementModified, path: "prop1" },
       });
       expect(foundEvents).toEqual(

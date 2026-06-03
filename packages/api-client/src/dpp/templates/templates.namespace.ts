@@ -9,7 +9,10 @@ import type {
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
-import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import {
+  parseGetAllActivitiesParams,
+  parseGetAllParams,
+} from "../digital-product-document/parse-get-all-params";
 import type {
   DownloadActivityParams,
   IDigitalProductDocumentNamespace,
@@ -71,7 +74,10 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
     return this.axiosInstance.get<ActivityPaginationDto>(
       `${this.templatesEndpoint}/${id}/activities`,
       {
-        params: { ...params.pagination, ...params.period, ...params.filter },
+        params: parseGetAllActivitiesParams(params),
+        paramsSerializer: {
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
+        },
       },
     );
   }

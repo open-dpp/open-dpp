@@ -26,6 +26,7 @@ const props = defineProps<{
   id: string;
   path?: string;
   type: DigitalProductDocumentTypeType;
+  filterByActivityType?: ActivityDtoTypesType[];
 }>();
 
 const { activities, fetchActivities } = useActivityHistory(props.type);
@@ -35,6 +36,7 @@ const route = useRoute();
 async function fetchCallback(pagingParams: PagingParamsDto) {
   const response = await fetchActivities(props.id, pagingParams, {
     path: props.path,
+    type: props.filterByActivityType,
   });
 
   activities.value = response.result;
@@ -68,15 +70,15 @@ onMounted(async () => {
         <Button @click="reloadCurrentPage" :aria-label="t('common.refresh')" icon="pi pi-refresh" />
       </template>
     </Toolbar>
-    <Timeline :value="activities" align="alternate">
+    <Timeline :value="activities" align="left">
+      <template #opposite="slotProps">
+        {{ dayjs(slotProps.item.header.createdAt).format("L LTS") }}
+      </template>
       <template #content="slotProps">
         <Card class="mt-4">
           <template #title
             >{{ t(`activityHistory.timelineTitle`) }}: {{ slotProps.item.header.type }}</template
           >
-          <template #subtitle>
-            {{ dayjs(slotProps.item.header.createdAt).format("L LTS") }}
-          </template>
           <template #content>
             <TimelineContentItem
               v-for="(change, index) in filterChanges(

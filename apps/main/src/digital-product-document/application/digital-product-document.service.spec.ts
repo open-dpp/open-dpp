@@ -569,7 +569,7 @@ describe("DigitalProductDocumentService", () => {
       undefined,
       undefined,
     );
-    resultForAdmin.result.forEach((e) => {
+    resultForAdmin.result.every((e) => {
       expect(e.payload.changes).not.toEqual([]);
     });
   });

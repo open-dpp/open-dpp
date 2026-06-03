@@ -693,7 +693,7 @@ export class TemplateController
     @EndDateQueryParam() endDate: string | undefined,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
-    @ActivityTypeQueryParam() activityType: ActivityTypesType | undefined,
+    @ActivityTypeQueryParam() activityType: ActivityTypesType[] | undefined,
     @ActivityPathQueryParam() dppPathFilter: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,

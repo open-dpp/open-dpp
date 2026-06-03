@@ -42,7 +42,7 @@ export const ActivityPaginationDtoSchema = z
 export type ActivityPaginationDto = z.infer<typeof ActivityPaginationDtoSchema>;
 
 export const ActivityFilterDtoSchema = z.object({
-  type: ActivityDtoTypesEnum.optional(),
+  type: z.union([ActivityDtoTypesEnum, ActivityDtoTypesEnum.array()]).optional(),
   path: z.string().optional(),
 });
 
@@ -58,7 +58,7 @@ export type GetAllActivitiesParamsDto = z.infer<typeof GetAllActivitiesParamsDto
 
 export const LanguageTextChangedDtoSchema = z.object({
   lng: LanguageEnum,
-  op: z.literal(["replace", "add", "remove"]),
+  op: z.enum(["replace", "add", "remove"]),
   oldValue: z.string().nullable(),
   newValue: z.string().nullable(),
 });

@@ -47,7 +47,7 @@ export class ActivityRepository {
       pagination?: Pagination;
       period?: Period;
       ascending?: boolean;
-      filter?: { activityType?: ActivityTypesType; path?: string };
+      filter?: { activityType?: ActivityTypesType | ActivityTypesType[]; path?: string };
     },
   ): Promise<PagingResult<IActivity>> {
     const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
@@ -65,7 +65,9 @@ export class ActivityRepository {
 
     const headerFilter = options?.filter?.activityType
       ? {
-          type: options.filter.activityType,
+          type: Array.isArray(options.filter.activityType)
+            ? { $in: options.filter.activityType }
+            : options.filter.activityType,
         }
       : {};
 

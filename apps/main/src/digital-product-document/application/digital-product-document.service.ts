@@ -509,7 +509,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     endDate: string | undefined,
     limit: number = 10,
     cursor: string | undefined,
-    filterByActivityType: ActivityTypesType | undefined,
+    filterByActivityType: ActivityTypesType | ActivityTypesType[] | undefined,
     pathFilter: string | undefined,
     ascending: boolean = false,
   ) {

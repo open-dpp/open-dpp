@@ -7,7 +7,16 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <Fieldset :legend="t(`activityHistory.changeTypes.${props.changeType}`)" :toggleable="true">
+  <Fieldset
+    class="w-full"
+    :pt="{
+      content: {
+        class: 'wrap-anywhere',
+      },
+    }"
+    :legend="t(`activityHistory.changeTypes.${props.changeType}`)"
+    :toggleable="true"
+  >
     <slot />
   </Fieldset>
 </template>

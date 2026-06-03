@@ -8,7 +8,7 @@ import { LanguageText } from "../../../aas/domain/common/language-text";
 
 const LanguageTextChangedSchema = z.object({
   lng: LanguageEnum,
-  op: z.literal(["replace", "add", "remove"]),
+  op: z.enum(["replace", "add", "remove"]),
   oldValue: z.string().nullable(),
   newValue: z.string().nullable(),
 });

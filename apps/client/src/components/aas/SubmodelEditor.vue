@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SubmodelModificationDto } from "@open-dpp/dto";
+import { ActivityDtoTypes, type SubmodelModificationDto } from "@open-dpp/dto";
 import { Permissions } from "@open-dpp/dto";
 import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";

@@ -70,10 +70,14 @@ export const StartDateQueryParam = () =>
 export const EndDateQueryParam = () =>
   Query("endDate", new ZodValidationPipe(EndDateQueryParamSchema));
 
-export const ActivityTypeQueryParamSchema = ActivityDtoTypesEnum.optional().meta({
-  description: "Filter activities by type.",
-  param: { in: "query", name: "type" },
-});
+export const ActivityTypeQueryParamSchema = z
+  .union([ActivityDtoTypesEnum, ActivityDtoTypesEnum.array()])
+  .transform((val) => (Array.isArray(val) ? val : [val]))
+  .optional()
+  .meta({
+    description: "Filter activities by type.",
+    param: { in: "query", name: "type" },
+  });
 
 export const ActivityTypeQueryParam = () =>
   Query("type", new ZodValidationPipe(ActivityTypeQueryParamSchema));
