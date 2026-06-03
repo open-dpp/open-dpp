@@ -515,7 +515,7 @@ describe("templateController", () => {
 
     expect(responseForPublishedTemplate.status).toEqual(403);
     expect(responseForPublishedTemplate.body.message).toEqual(
-      'Only passports/ templates with the status "Draft" can be deleted',
+      'Only templates with the status "Draft" can be deleted',
     );
   });
 

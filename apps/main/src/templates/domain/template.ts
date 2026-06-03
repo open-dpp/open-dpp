@@ -38,7 +38,7 @@ export class Template
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    private readonly lastStatusChange: DigitalProductDocumentStatusChange,
+    private lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -116,16 +116,16 @@ export class Template
     );
   }
 
-  publish(): this {
-    return this.withLastStatusChange(publishDpp(this.lastStatusChange)) as this;
+  publish() {
+    this.setLastStatusChange(publishDpp(this.lastStatusChange));
   }
 
-  archive(): this {
-    return this.withLastStatusChange(archiveDpp(this.lastStatusChange)) as this;
+  archive() {
+    this.setLastStatusChange(archiveDpp(this.lastStatusChange));
   }
 
-  restore(): this {
-    return this.withLastStatusChange(restoreDpp(this.lastStatusChange)) as this;
+  restore() {
+    this.setLastStatusChange(restoreDpp(this.lastStatusChange));
   }
 
   isPublished(): boolean {
@@ -138,5 +138,14 @@ export class Template
 
   isDraft(): boolean {
     return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
+  }
+
+  private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
+    this.lastStatusChange = lastStatusChange;
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: lastStatusChange,
+      }),
+    );
   }
 }

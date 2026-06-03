@@ -9,7 +9,6 @@ import {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
-  DigitalProductDocumentStatusModificationDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   type SubmodelElementRequestDto,
@@ -33,7 +32,6 @@ import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-produ
 import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
-import { DigitalProductDocumentStatusChangedActivity } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -64,49 +62,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       this.saveEnvironmentCallback(item),
       userContext,
     );
-  }
-
-  async modifyStatus(
-    correlationId: string,
-    organizationId: string,
-    id: string,
-    body: DigitalProductDocumentStatusModificationDto,
-    userContext: UserContext,
-  ) {
-    const item = (
-      await this.loadDigitalProductDocumentAndCheckOwnership(
-        id,
-        userContext.subject,
-        organizationId,
-      )
-    ).withTracking();
-    if (body.method === "Publish") {
-      item.publish();
-    } else if (body.method === "Archive") {
-      item.archive();
-    } else if (body.method === "Restore") {
-      item.restore();
-    } else {
-      throw new BadRequestException("Invalid method");
-    }
-
-    const activity = DigitalProductDocumentStatusChangedActivity.create({
-      correlationId,
-      userId: userContext.userId,
-      digitalProductDocumentId: id,
-      item,
-    });
-
-    const session = await this.connection.startSession();
-    try {
-      await session.withTransaction(async () => {
-        await this.digitalProductDocRepository.save(item, { session });
-        await this.activityRepository.createMany([activity], { session });
-      });
-    } finally {
-      await session.endSession();
-    }
-    return item;
   }
 
   async addColumnToSubmodelElementList(
@@ -611,38 +566,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       20,
       archive,
     );
-  }
-
-  async deleteDigitalProductDocument(
-    organizationId: string,
-    id: string,
-    subject: SubjectAttributes,
-    onDeleteCallback?: (options: DbSessionOptions) => Promise<void>,
-  ) {
-    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
-    if (!item.isDraft()) {
-      throw new ForbiddenException(
-        'Only passports/ templates with the status "Draft" can be deleted',
-      );
-    }
-
-    const session = await this.connection.startSession();
-    try {
-      await session.withTransaction(async () => {
-        await this.environmentService.deleteEnvironment(item.getEnvironment(), session);
-        await this.digitalProductDocRepository.deleteById(item.id, { session });
-        await this.activityRepository.deleteByAggregateId(item.id, { session });
-        if (onDeleteCallback) {
-          await onDeleteCallback({ session });
-        }
-      });
-    } finally {
-      await session.endSession();
-    }
   }
 
   private archiveGuard(item: IDigitalProductDocumentStatusChangeable): void {

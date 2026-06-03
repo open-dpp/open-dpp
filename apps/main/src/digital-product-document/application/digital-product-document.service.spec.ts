@@ -37,26 +37,17 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import {
-  DataTypeDef,
-  DigitalProductDocumentStatusModificationMethodDto,
-  KeyTypes,
-  PermissionKind,
-  Permissions,
-} from "@open-dpp/dto";
+import { DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import { Connection } from "mongoose";
+import type { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { Security } from "../../aas/domain/security/security";
 import { Permission } from "../../aas/domain/security/permission";
-import { ActivityTypes } from "../../activity-history/domain/activities/activity-types";
-import { DigitalProductDocumentActivityPayload } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
-import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
 import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
@@ -334,57 +325,6 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
   });
 
-  it("should change status of passport", async () => {
-    const correlationId = randomUUID();
-    const userId = randomUUID();
-    const passport = Passport.create({
-      organizationId: "organizationId",
-      environment: Environment.create({}),
-      lastStatusChange: DigitalProductDocumentStatusChange.create({
-        currentStatus: DigitalProductDocumentStatus.Draft,
-      }),
-    });
-    const subject = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-    const userContext = { subject, userId };
-    await passportRepository.save(passport);
-    await service.modifyStatus(
-      correlationId,
-      passport.organizationId,
-      passport.id,
-      { method: DigitalProductDocumentStatusModificationMethodDto.Archive },
-      userContext,
-    );
-    const foundPassport = await passportRepository.findOneOrFail(passport.id);
-    expect(foundPassport.getLastStatusChange().currentStatus).toBe(
-      DigitalProductDocumentStatus.Archived,
-    );
-
-    const foundActivities = await activityRepository.findByAggregateId(foundPassport.id);
-
-    expect(
-      foundActivities.items.map((e) => ({
-        correlationId: e.header.correlationId,
-        type: e.header.type,
-        payload: e.payload,
-      })),
-    ).toEqual([
-      {
-        correlationId,
-        type: ActivityTypes.DigitalProductDocumentStatusChanged,
-        payload: DigitalProductDocumentActivityPayload.create({
-          changes: [
-            DigitalProductDocumentStatusChanged.create({
-              digitalProductDocumentStatusChange: foundPassport.getLastStatusChange(),
-            }),
-          ],
-        }),
-      },
-    ]);
-  });
-
   it("should download activities", async () => {
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-02-01T00:00:00.000Z");
@@ -581,40 +521,4 @@ describe("DigitalProductDocumentService", () => {
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
-
-  it.each([
-    ["Draft", DigitalProductDocumentStatusChange.create({})],
-    [
-      "Published",
-      DigitalProductDocumentStatusChange.create({
-        previousStatus: DigitalProductDocumentStatus.Draft,
-        currentStatus: DigitalProductDocumentStatus.Published,
-      }),
-    ],
-  ])(
-    "archiveGuard permits %s passports (does not short-circuit on non-archived)",
-    async (_label, lastStatusChange) => {
-      const passport = Passport.create({
-        organizationId: "organizationId",
-        environment: Environment.create({}),
-        lastStatusChange,
-      });
-      const subject = SubjectAttributes.create({
-        userRole: UserRole.USER,
-        memberRole: MemberRole.MEMBER,
-      });
-      await passportRepository.save(passport);
-
-      const archiveError = new ValueError("Cannot modify an archived digital product document");
-      await expect(
-        service.modifySubmodel(
-          passport.organizationId,
-          passport.id,
-          randomUUID(),
-          { idShort: "demo" },
-          subject,
-        ),
-      ).rejects.not.toThrow(archiveError);
-    },
-  );
 });

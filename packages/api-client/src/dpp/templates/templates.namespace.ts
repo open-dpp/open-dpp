@@ -9,7 +9,10 @@ import type {
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
-import { parseGetAllActivitiesParams, parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import {
+  parseGetAllActivitiesParams,
+  parseGetAllParams,
+} from "../digital-product-document/parse-get-all-params";
 import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 import type {
   DownloadActivityParams,

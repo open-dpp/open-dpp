@@ -1,5 +1,5 @@
 import type { Connection } from "mongoose";
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
@@ -8,21 +8,24 @@ import { SubjectAttributes } from "../../../aas/domain/security/subject-attribut
 import { EnvironmentService, UserContext } from "../../../aas/presentation/environment.service";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
-import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import {
   DigitalProductDocumentStatusModificationDto,
+  DigitalProductDocumentStatusModificationMethodDto,
   PassportDtoSchema,
   PresentationReferenceType,
 } from "@open-dpp/dto";
-import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
-import { DbSessionOptions } from "../../../database/query-options";
+import { DigitalProductDocumentStatusChangedActivity } from "../../../activity-history/domain/activities/digital-product-document-status-changed.activity";
 
 @Injectable()
 export class PassportService {
@@ -94,14 +97,24 @@ export class PassportService {
     const passport =
       await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
         id,
-        subject,
+        userContext.subject,
         organizationId,
       );
-    const updatedPassport = handleDppStatusChangeRequest(passport, body);
+    handleDppStatusChangeRequest(passport, body);
+    const activity = DigitalProductDocumentStatusChangedActivity.create({
+      correlationId,
+      userId: userContext.userId,
+      digitalProductDocumentId: id,
+      item: passport,
+    });
+
     const saved = await this.environmentService.withTransaction(async (options) => {
-      const persisted = await this.passportRepository.save(updatedPassport, options);
-      if (body.method === "Publish") {
+      const persisted = await this.passportRepository.save(passport, options);
+      if (body.method === DigitalProductDocumentStatusModificationMethodDto.Publish) {
         await this.permalinkApplicationService.freezeAllForPassport(persisted, options);
+      }
+      if (!activity.isNoop()) {
+        await this.activityRepository.createMany([activity], options);
       }
       return persisted;
     });
@@ -125,7 +138,7 @@ export class PassportService {
         await this.environmentService.deleteEnvironment(passport.getEnvironment(), session);
         await this.passportRepository.deleteById(passport.id, { session });
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
-
+        await this.activityRepository.deleteByAggregateId(passport.id, { session });
         await this.permalinkRepository.deleteAllByPassportId(passport.id, { session });
         await this.presentationConfigurationRepository.deleteByReference(
           { referenceType: PresentationReferenceType.Passport, referenceId: passport.id },

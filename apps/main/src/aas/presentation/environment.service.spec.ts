@@ -1,6 +1,5 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
-import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
@@ -1593,8 +1592,15 @@ describe("environmentService", () => {
   describe("extraCleanup / atomic stale-config cleanup", () => {
     describe("deleteSubmodelElement", () => {
       it("invokes extraCleanup exactly once with the submodel-prefixed element path and the active transaction session", async () => {
-        const { environment, admin, submodel1, submodelElementCollection1, property1 } =
-          await createDefaultEnvironment();
+        const {
+          digitalProductDocumentId,
+          correlationId,
+          environment,
+          admin,
+          submodel1,
+          submodelElementCollection1,
+          property1,
+        } = await createDefaultEnvironment();
         const idShortPath = IdShortPath.create({
           path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
         });
@@ -1607,6 +1613,8 @@ describe("environmentService", () => {
           });
 
         await environmentService.deleteSubmodelElement(
+          correlationId,
+          digitalProductDocumentId,
           environment,
           submodel1.id,
           idShortPath,
@@ -1625,8 +1633,15 @@ describe("environmentService", () => {
       });
 
       it("rolls back the element deletion when extraCleanup throws", async () => {
-        const { environment, admin, submodel1, submodelElementCollection1, property1 } =
-          await createDefaultEnvironment();
+        const {
+          digitalProductDocumentId,
+          correlationId,
+          environment,
+          admin,
+          submodel1,
+          submodelElementCollection1,
+          property1,
+        } = await createDefaultEnvironment();
         const idShortPath = IdShortPath.create({
           path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
         });
@@ -1637,6 +1652,8 @@ describe("environmentService", () => {
 
         await expect(
           environmentService.deleteSubmodelElement(
+            correlationId,
+            digitalProductDocumentId,
             environment,
             submodel1.id,
             idShortPath,
@@ -1652,8 +1669,15 @@ describe("environmentService", () => {
       });
 
       it("rolls back the cleanup's own writes performed through the shared session", async () => {
-        const { environment, admin, submodel1, submodelElementCollection1, property1 } =
-          await createDefaultEnvironment();
+        const {
+          environment,
+          digitalProductDocumentId,
+          correlationId,
+          admin,
+          submodel1,
+          submodelElementCollection1,
+          property1,
+        } = await createDefaultEnvironment();
         const idShortPath = IdShortPath.create({
           path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
         });
@@ -1672,6 +1696,8 @@ describe("environmentService", () => {
 
         await expect(
           environmentService.deleteSubmodelElement(
+            correlationId,
+            digitalProductDocumentId,
             environment,
             submodel1.id,
             idShortPath,
@@ -1687,7 +1713,8 @@ describe("environmentService", () => {
 
     describe("deleteSubmodelFromEnvironment", () => {
       it("invokes extraCleanup exactly once with the submodel idShort and the active transaction session", async () => {
-        const { environment, admin, submodel1 } = await createDefaultEnvironment();
+        const { environment, admin, submodel1, correlationId, digitalProductDocumentId } =
+          await createDefaultEnvironment();
         const saveEnvironmentMock = jest.fn<() => Promise<void>>();
 
         let capturedSession: ClientSession | undefined;
@@ -1698,6 +1725,8 @@ describe("environmentService", () => {
           });
 
         await environmentService.deleteSubmodelFromEnvironment(
+          correlationId,
+          digitalProductDocumentId,
           environment,
           submodel1.id,
           saveEnvironmentMock,
@@ -1714,7 +1743,8 @@ describe("environmentService", () => {
       });
 
       it("rolls back the submodel deletion when extraCleanup throws", async () => {
-        const { environment, admin, submodel1 } = await createDefaultEnvironment();
+        const { environment, admin, submodel1, digitalProductDocumentId, correlationId } =
+          await createDefaultEnvironment();
         const saveEnvironmentMock = jest.fn<() => Promise<void>>();
 
         const extraCleanup = jest
@@ -1723,6 +1753,8 @@ describe("environmentService", () => {
 
         await expect(
           environmentService.deleteSubmodelFromEnvironment(
+            correlationId,
+            digitalProductDocumentId,
             environment,
             submodel1.id,
             saveEnvironmentMock,

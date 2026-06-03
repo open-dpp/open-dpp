@@ -6,7 +6,6 @@ import {
   DigitalProductDocumentStatusModificationDto,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { z } from "zod";
 
 export const DigitalProductDocumentStatus = DigitalProductDocumentStatusDto;
 export const DigitalProductDocumentStatusEnum = DigitalProductDocumentStatusDtoEnum;
@@ -14,9 +13,9 @@ export type DigitalProductDocumentStatusType = DigitalProductDocumentStatusDtoTy
 export const DigitalProductDocumentStatusChangeSchema = DigitalProductDocumentStatusChangeDtoSchema;
 
 export interface IDigitalProductDocumentStatusChangeable {
-  publish: () => this;
-  archive: () => this;
-  restore: () => this;
+  publish: () => void;
+  archive: () => void;
+  restore: () => void;
   isDraft: () => boolean;
   isPublished: () => boolean;
   isArchived: () => boolean;
@@ -61,14 +60,17 @@ export function restoreDpp(lastStatusChange: DigitalProductDocumentStatusChange)
 export function handleDppStatusChangeRequest<T extends IDigitalProductDocumentStatusChangeable>(
   changeable: T,
   body: DigitalProductDocumentStatusModificationDto,
-): T {
+): void {
   switch (body.method) {
     case "Publish":
-      return changeable.publish();
+      changeable.publish();
+      break;
     case "Archive":
-      return changeable.archive();
+      changeable.archive();
+      break;
     case "Restore":
-      return changeable.restore();
+      changeable.restore();
+      break;
     default: {
       const exhaustiveCheck: never = body.method;
       throw new ValueError(`Invalid status modification method: ${String(exhaustiveCheck)}`);
