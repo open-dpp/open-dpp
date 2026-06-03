@@ -5,6 +5,8 @@ import { aasPaths } from "./aas.paths";
 import { brandingPaths } from "./branding.path";
 import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
+import { presentationConfigurationPaths } from "./presentation-configuration.paths";
+import { permalinkPaths } from "./permalink.paths";
 
 const document = createDocument({
   openapi: "3.1.0",
@@ -14,8 +16,16 @@ const document = createDocument({
   },
   servers: [
     {
+      url: "https://cloud.open-dpp.de/api",
+      description: "Production server",
+    },
+    {
+      url: "https://demo.open-dpp.de/api",
+      description: "Test server",
+    },
+    {
       url: "http://localhost:3000/api",
-      description: "Local test server",
+      description: "Local development server",
     },
   ],
   paths: {
@@ -23,6 +33,8 @@ const document = createDocument({
     ...brandingPaths,
     ...userPaths,
     ...organizationsPaths,
+    ...presentationConfigurationPaths,
+    ...permalinkPaths,
   },
   components: {
     parameters: {
@@ -33,6 +45,7 @@ const document = createDocument({
         schema: {
           type: "string",
         },
+        example: "690cf22459cdae7ce188c1f8",
         description: "Organization identifier",
       },
     },
@@ -52,5 +65,5 @@ export function buildOpenApiDocumentation(): OpenAPIObject {
 }
 
 export function addSwaggerToApp(app: INestApplication, openApiDoc: OpenAPIObject) {
-  SwaggerModule.setup("api", app, openApiDoc);
+  SwaggerModule.setup("api", app, openApiDoc, { jsonDocumentUrl: "api.json" });
 }

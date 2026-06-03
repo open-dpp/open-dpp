@@ -13,7 +13,18 @@ export const envSchema = z
     NODE_ENV: z.coerce.string().optional(),
     // Common
     OPEN_DPP_PORT: z.coerce.number().max(65535).min(0).optional().default(3000),
-    OPEN_DPP_URL: z.url(),
+    OPEN_DPP_URL: z.url().refine(
+      (s) => {
+        try {
+          const u = new URL(s);
+          return (u.pathname === "/" || u.pathname === "") && !u.search && !u.hash;
+        } catch {
+          return false;
+        }
+      },
+      { message: "OPEN_DPP_URL must be an origin (no path, query, or fragment)" },
+    ),
+    OPEN_DPP_PERMALINK_BASE_URL: z.url().optional(),
     OPEN_DPP_LOG_FORMAT: z.enum(["json", "plain"]).optional().default("plain"),
     OPEN_DPP_INSTANCE_BRANDING: z.coerce.string().optional(),
     // MongoDB

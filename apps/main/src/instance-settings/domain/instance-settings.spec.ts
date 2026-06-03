@@ -31,6 +31,12 @@ describe("InstanceSettings", () => {
       expect(settings.signupEnabled.value).toBeTruthy();
       expect(settings.organizationCreationEnabled.value).toBeTruthy();
     });
+
+    it("should expose permalinkBaseUrl defaulting to null", () => {
+      const settings = InstanceSettings.create();
+      expect(settings.permalinkBaseUrl.value).toBeNull();
+      expect(settings.permalinkBaseUrl.locked).toBeUndefined();
+    });
   });
 
   describe("loadFromDb", () => {
@@ -39,10 +45,12 @@ describe("InstanceSettings", () => {
         id: "abc",
         signupEnabled: false,
         organizationCreationEnabled: false,
+        permalinkBaseUrl: null,
       });
       expect(settings.id).toBe("abc");
       expect(settings.signupEnabled.value).toBeFalsy();
       expect(settings.organizationCreationEnabled.value).toBeFalsy();
+      expect(settings.permalinkBaseUrl.value).toBeNull();
     });
   });
 
@@ -105,6 +113,26 @@ describe("InstanceSettings", () => {
 
       expect(overridden.id).toBe(original.id);
     });
+
+    it("should apply env override on permalinkBaseUrl and lock the setting", () => {
+      const original = InstanceSettings.create();
+      const overridden = original.withEnvOverrides({
+        permalinkBaseUrl: "https://env.example.com/p",
+      });
+
+      expect(overridden.permalinkBaseUrl.value).toBe("https://env.example.com/p");
+      expect(overridden.permalinkBaseUrl.locked).toBe(true);
+    });
+
+    it("should reject update when permalinkBaseUrl is locked", () => {
+      const settings = InstanceSettings.create().withEnvOverrides({
+        permalinkBaseUrl: "https://env.example.com/p",
+      });
+
+      expect(() => settings.update({ permalinkBaseUrl: "https://other.example.com/p" })).toThrow(
+        "Cannot override permalinkBaseUrl when OPEN_DPP_PERMALINK_BASE_URL is set",
+      );
+    });
   });
 
   describe("update", () => {
@@ -134,6 +162,23 @@ describe("InstanceSettings", () => {
       expect(updated.signupEnabled.value).toBeFalsy();
       expect(updated.organizationCreationEnabled.value).toBeFalsy();
     });
+
+    it("should update permalinkBaseUrl from null to a string", () => {
+      const original = InstanceSettings.create();
+      const updated = original.update({ permalinkBaseUrl: "https://acme.com/p" });
+
+      expect(updated.permalinkBaseUrl.value).toBe("https://acme.com/p");
+      expect(original.permalinkBaseUrl.value).toBeNull();
+    });
+
+    it("should clear permalinkBaseUrl when null is passed explicitly", () => {
+      const original = InstanceSettings.create({
+        permalinkBaseUrl: { value: "https://acme.com/p" },
+      });
+      const updated = original.update({ permalinkBaseUrl: null });
+
+      expect(updated.permalinkBaseUrl.value).toBeNull();
+    });
   });
 
   describe("toPlain", () => {
@@ -148,6 +193,7 @@ describe("InstanceSettings", () => {
         id: settings.id,
         signupEnabled: settings.signupEnabled.value,
         organizationCreationEnabled: settings.organizationCreationEnabled.value,
+        permalinkBaseUrl: settings.permalinkBaseUrl.value,
       });
     });
   });
@@ -164,6 +210,7 @@ describe("InstanceSettings", () => {
         id: settings.id,
         signupEnabled: settings.signupEnabled.toResponse(),
         organizationCreationEnabled: settings.organizationCreationEnabled.toResponse(),
+        permalinkBaseUrl: settings.permalinkBaseUrl.toResponse(),
       });
     });
   });

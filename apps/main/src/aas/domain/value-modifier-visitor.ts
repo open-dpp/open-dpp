@@ -200,8 +200,18 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
     throw new NotSupportedError("SpecificAssetId is not supported.");
   }
 
-  visitSubmodel(_element: Submodel, _context: unknown): void {
-    throw new NotSupportedError("Submodel is not supported.");
+  visitSubmodel(element: Submodel, context?: ValueModifierVisitorContextType): void {
+    const parsed = z.record(z.string(), z.any()).parse(context?.data);
+
+    for (const [key, value] of Object.entries(parsed)) {
+      const foundElement = element.submodelElements.find((e) => e.idShort === key);
+      if (!foundElement) {
+        throw new ValueError(
+          `Could not find element with idShort ${key} within submodel ${element.idShort}.`,
+        );
+      }
+      foundElement.accept(this, { data: value });
+    }
   }
 
   visitSubmodelElementCollection(

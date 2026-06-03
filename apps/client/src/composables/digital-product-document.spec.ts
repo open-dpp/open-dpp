@@ -5,6 +5,7 @@ import {
 } from "@open-dpp/dto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
+import { AxiosError, type AxiosResponse } from "axios";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
@@ -21,6 +22,7 @@ const mocks = vi.hoisted(() => {
     createPassport: vi.fn(),
     deleteById: vi.fn(),
     fetchPassports: vi.fn(),
+    getById: vi.fn(),
     routerPush: vi.fn(),
     confirm: vi.fn(),
     modifyStatus: vi.fn(),
@@ -34,6 +36,7 @@ vi.mock("../lib/api-client", () => ({
       passports: {
         create: mocks.createPassport,
         getAll: mocks.fetchPassports,
+        getById: mocks.getById,
         deleteById: mocks.deleteById,
         modifyStatus: mocks.modifyStatus,
       },
@@ -140,6 +143,46 @@ describe("passports", () => {
     await restore(p2.id);
     expect(mocks.modifyStatus).toHaveBeenCalledWith(p2.id, {
       method: DigitalProductDocumentStatusModificationMethodDto.Restore,
+    });
+  });
+
+  describe("fetchById", () => {
+    it("returns data on 200 response", async () => {
+      const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
+      const passport = passportsPlainFactory.build();
+      mocks.getById.mockResolvedValueOnce({ status: HTTPCode.OK, data: passport });
+
+      const result = await fetchById(passport.id);
+
+      expect(mocks.getById).toHaveBeenCalledWith(passport.id);
+      expect(result).toEqual(passport);
+    });
+
+    it("returns null on 404 AxiosError without toasting", async () => {
+      const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
+      const error = new AxiosError("Not found");
+      error.response = { status: 404 } as AxiosResponse;
+      mocks.getById.mockRejectedValueOnce(error);
+
+      const result = await fetchById("missing-id");
+
+      expect(result).toBeNull();
+    });
+
+    it("rethrows on non-404 AxiosError", async () => {
+      const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
+      const error = new AxiosError("Boom");
+      error.response = { status: 500 } as AxiosResponse;
+      mocks.getById.mockRejectedValueOnce(error);
+
+      await expect(fetchById("any-id")).rejects.toBe(error);
+    });
+
+    it("throws on unexpected non-ok status", async () => {
+      const { fetchById } = mountHarness(DigitalProductDocumentType.Passport);
+      mocks.getById.mockResolvedValueOnce({ status: HTTPCode.NO_CONTENT, data: null });
+
+      await expect(fetchById("any-id")).rejects.toThrow("Unexpected status 204");
     });
   });
 

@@ -7,8 +7,8 @@ export class DigitalProductDocumentStatusChangeDoc {
   @Prop({ enum: Object.values(DigitalProductDocumentStatus), type: String, required: false })
   previousStatus: DigitalProductDocumentStatusType | null;
 
-  @Prop({ enum: Object.values(DigitalProductDocumentStatus), type: String, required: false })
-  currentStatus: DigitalProductDocumentStatusType | null;
+  @Prop({ enum: Object.values(DigitalProductDocumentStatus), type: String, required: true })
+  currentStatus: DigitalProductDocumentStatusType;
 }
 
 export const DigitalProductDocumentStatusChangeDbSchema = SchemaFactory.createForClass(

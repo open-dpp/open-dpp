@@ -95,11 +95,16 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
 });
 
 function constructTemplateOptions({ result }: TemplatePaginationDto) {
-  return result.map((template) => ({
-    ...template,
-    label: getOptionLabel(template),
-    status: getOptionStatus(template),
-  }));
+  return result
+    .filter(
+      (template) =>
+        template.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived,
+    )
+    .map((template) => ({
+      ...template,
+      label: getOptionLabel(template),
+      status: getOptionStatus(template),
+    }));
 }
 
 function getOptionStatus(option: TemplateDto): string {

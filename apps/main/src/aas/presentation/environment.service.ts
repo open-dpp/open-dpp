@@ -30,7 +30,7 @@ import {
   ValueResponseDto,
   ValueSchema,
 } from "@open-dpp/dto";
-import { ForbiddenError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";
 
@@ -225,6 +225,7 @@ export class EnvironmentService {
     submodelId: string,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
     subject: SubjectAttributes,
+    extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const session = await this.connection.startSession();
     try {
@@ -243,6 +244,9 @@ export class EnvironmentService {
         await this.aasRepository.save(aas, options);
         environment.deleteSubmodel(submodel);
         await saveEnvironment(options);
+        if (extraCleanup) {
+          await extraCleanup(submodel.idShort, options);
+        }
       });
     } finally {
       await session.endSession();
@@ -254,6 +258,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -265,8 +270,15 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.submodelRepository.save(submodel, { session });
-        await this.aasRepository.save(aas, { session });
+        const options = { session };
+        await this.submodelRepository.save(submodel, options);
+        await this.aasRepository.save(aas, options);
+        if (extraCleanup) {
+          // Presentation-config override keys are submodel-prefixed
+          // (`<submodelIdShort>.<elementPath>`), while idShortPath is relative to the
+          // submodel — re-prefix so the cleanup matches the stored keys.
+          await extraCleanup(`${submodel.idShort}.${idShortPath.toString()}`, options);
+        }
       });
     } finally {
       await session.endSession();
@@ -357,6 +369,19 @@ export class EnvironmentService {
     );
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async modifyValueOfSubmodel(
+    environment: Environment,
+    submodelId: string,
+    modification: ValueRequestDto,
+    subject: SubjectAttributes,
+  ) {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, subject);
+    submodel.modifyValue(modification, { ability });
+    await this.submodelRepository.save(submodel);
+    return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
   }
 
   async modifySubmodelElement(
@@ -571,6 +596,19 @@ export class EnvironmentService {
     }
   }
 
+  async withTransaction<T>(work: (options: DbSessionOptions) => Promise<T>): Promise<T> {
+    const session = await this.connection.startSession();
+    try {
+      let result!: T;
+      await session.withTransaction(async () => {
+        result = await work({ session });
+      });
+      return result;
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async populateEnvironmentForPagingResult(
     pagingResult: PagingResult<Passport | Template>,
     populateOptions: PopulateOptions,
@@ -604,8 +642,10 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.aasRepository.save(aasCopy);
-        await Promise.all(submodelsCopy.map((model) => this.submodelRepository.save(model)));
+        await this.aasRepository.save(aasCopy, { session });
+        await Promise.all(
+          submodelsCopy.map((model) => this.submodelRepository.save(model, { session })),
+        );
       });
     } finally {
       await session.endSession();
@@ -633,7 +673,7 @@ export class EnvironmentService {
     environment: Environment,
   ): Promise<AssetAdministrationShell> {
     if (environment.assetAdministrationShells.length === 0) {
-      throw new Error("No asset administration shell for environment. Can't add submodel");
+      throw new ValueError("No asset administration shell for environment. Can't add submodel");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }

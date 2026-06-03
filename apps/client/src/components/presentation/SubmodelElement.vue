@@ -2,16 +2,27 @@
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useDisplayName } from "../../composables/display-name";
+import { usePresentationDispatch } from "./presentation-dispatch";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
-const { element } = defineProps<{
+const { element, parentPath } = defineProps<{
   element: SubmodelElementResponseDto;
+  parentPath?: string;
 }>();
 
 const { description: elementName } = useDisplayName(element.displayName);
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),
+);
+
+const fullPath = computed(() =>
+  parentPath ? `${parentPath}.${element.idShort}` : element.idShort,
+);
+
+const { selfCaptioning } = usePresentationDispatch(
+  () => element,
+  () => fullPath.value,
 );
 </script>
 
@@ -21,12 +32,14 @@ const isComplexType = computed(() =>
     :data-cy="element.idShort"
     class="border-b border-gray-50"
     :class="[
-      isComplexType ? 'col-span-full py-5' : 'flex items-baseline justify-between gap-4 py-4',
+      isComplexType || selfCaptioning
+        ? 'col-span-full py-5'
+        : 'flex items-baseline justify-between gap-4 py-4',
     ]"
   >
-    <dt class="shrink-0 text-sm font-medium text-gray-500">
+    <dt v-if="!selfCaptioning" class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
     </dt>
-    <SubmodelElementValue :element="element" />
+    <SubmodelElementValue :element="element" :path="fullPath" />
   </div>
 </template>

@@ -82,6 +82,10 @@ export function ApiGetSubmodelValue(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiGetSubmodelValuePath, prefix)));
 }
 
+export function ApiPatchSubmodelValue() {
+  return applyDecorators(Patch(ApiGetSubmodelValuePath));
+}
+
 export const ApiSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
 export function ApiGetSubmodelElements(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiSubmodelElementsPath, prefix)));
@@ -166,6 +170,28 @@ export const IdParamSchema = IdBaseSchema.meta({
 
 export const IdParam = () => Param("id", new ZodValidationPipe(IdParamSchema));
 
+const SlugShape = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+export const IdOrSlugParamSchema = z
+  .string()
+  .transform((v, ctx) => {
+    const uuid = z.uuid().safeParse(v);
+    if (uuid.success) return uuid.data;
+    if (v.length >= 2 && v.length <= 64 && SlugShape.test(v)) return v;
+    ctx.addIssue({
+      code: "custom",
+      message: "Must be a UUID or a kebab-case slug (2-64 chars, lowercase alphanumerics)",
+    });
+    return z.NEVER;
+  })
+  .meta({
+    description: "A Permalink id (UUID) or slug",
+    example: "958b741c-c2ef-4366-a134-fafd30210ed4",
+    param: { in: "path", name: "id" },
+  });
+
+export const IdOrSlugParam = () => Param("id", new ZodValidationPipe(IdOrSlugParamSchema));
+
 export const SubmodelIdParamSchema = IdBaseSchema.meta({
   description: "The submodel id",
   example: "032a7e62-29e2-4530-8f4b-765e32514a56",
@@ -230,7 +256,6 @@ export const CursorQueryParamSchema = z
   .meta({
     description:
       "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
-    example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
     param: { in: "query", name: "cursor" },
   });
 
@@ -247,6 +272,15 @@ export const PositionQueryParamSchema = z.coerce
 export const PositionQueryParam = () =>
   Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
+export const PassportIdQueryParamSchema = z.uuid().meta({
+  description: "The passport id (UUID)",
+  example: "958b741c-c2ef-4366-a134-fafd30210ed4",
+  param: { in: "query", name: "passportId" },
+});
+
+export const PassportIdQueryParam = () =>
+  Query("passportId", new ZodValidationPipe(PassportIdQueryParamSchema));
+
 export const CursorQueryParam = () =>
   Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
 
@@ -260,7 +294,6 @@ export const SubmodelModificationRequestBody = () =>
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
-export const SubmodelElementValueModificationRequestBody = () =>
-  Body(new ZodValidationPipe(ValueSchema));
+export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));
