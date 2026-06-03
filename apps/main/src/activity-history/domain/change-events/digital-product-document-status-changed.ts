@@ -22,6 +22,10 @@ export class DigitalProductDocumentStatusChanged implements IChangeEvent {
     public readonly newValue: DigitalProductDocumentStatusType,
   ) {}
 
+  isNoop(): boolean {
+    return this.oldValue === this.newValue;
+  }
+
   static create(data: { digitalProductDocumentStatusChange: DigitalProductDocumentStatusChange }) {
     return new DigitalProductDocumentStatusChanged(
       data.digitalProductDocumentStatusChange.previousStatus,

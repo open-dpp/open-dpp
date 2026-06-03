@@ -21,6 +21,16 @@ export class ReferenceElementValueChanged implements IChangeEventWithPath {
     public readonly newValue: Value,
   ) {}
 
+  isNoop(): boolean {
+    if (this.oldValue === null && this.newValue === null) {
+      return true;
+    }
+    if (this.oldValue === null || this.newValue === null) {
+      return false;
+    }
+    return this.oldValue.equals(this.newValue);
+  }
+
   static create(data: { path: IdShortPath; oldValue: Value; newValue: Value }) {
     return new ReferenceElementValueChanged(data.path, data.oldValue, data.newValue);
   }

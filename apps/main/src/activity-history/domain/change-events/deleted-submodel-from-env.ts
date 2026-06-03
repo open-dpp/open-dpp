@@ -18,6 +18,10 @@ export class DeletedSubmodelFromEnv implements IChangeEvent {
     public readonly position: number,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { position: number; submodel: Submodel }) {
     return new DeletedSubmodelFromEnv(data.submodel.id, data.position);
   }

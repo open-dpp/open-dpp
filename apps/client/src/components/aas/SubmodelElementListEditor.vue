@@ -324,10 +324,10 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
     </template>
     <template #activityHistory>
       <EditorActivityHistory
-        v-if="props.path.idShortPath"
+        v-if="props.path.idShortPathIncludingSubmodel"
         :id="props.id"
         :type="props.type"
-        :path="`sw:${props.path.idShortPath}`"
+        :path="`sw:${props.path.idShortPathIncludingSubmodel}`"
       />
     </template>
   </EditorTabs>

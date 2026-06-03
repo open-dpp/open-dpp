@@ -30,6 +30,15 @@ export class PolicyModified implements IPolicyChangeEvent {
     public readonly newValue: Permission[],
   ) {}
 
+  isNoop(): boolean {
+    if (this.oldValue.length !== this.newValue.length) {
+      return false;
+    }
+    return this.oldValue.every((oldPermission, index) =>
+      oldPermission.equals(this.newValue[index]),
+    );
+  }
+
   static create(data: {
     userRole: UserRoleType;
     memberRole?: MemberRoleType;

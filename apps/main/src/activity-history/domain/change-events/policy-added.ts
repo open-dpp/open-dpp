@@ -28,6 +28,10 @@ export class PolicyAdded implements IPolicyChangeEvent {
     public readonly value: Permission[],
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: {
     userRole: UserRoleType;
     memberRole?: MemberRoleType;

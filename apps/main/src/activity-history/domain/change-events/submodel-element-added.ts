@@ -22,6 +22,10 @@ export class SubmodelElementAdded implements IChangeEventWithPath {
     public readonly value: ISubmodelElement,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { path: IdShortPath; submodelElement: ISubmodelElement }) {
     return new SubmodelElementAdded(data.path, data.submodelElement);
   }

@@ -18,6 +18,16 @@ export class DefaultThumbnailsModified implements IChangeEvent {
     public readonly newValue: Resource[],
   ) {}
 
+  isNoop(): boolean {
+    if (this.oldValue.length !== this.newValue.length) {
+      return false;
+    }
+    return this.oldValue.every((oldRes, index) => {
+      const newRes = this.newValue[index];
+      return oldRes.equals(newRes);
+    });
+  }
+
   static create(data: { oldValue: Resource[]; newValue: Resource[] }) {
     return new DefaultThumbnailsModified(data.oldValue, data.newValue);
   }

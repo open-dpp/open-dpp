@@ -22,6 +22,13 @@ export class FileValueChanged implements IChangeEventWithPath {
     public readonly newValue: FileValue,
   ) {}
 
+  isNoop(): boolean {
+    return (
+      this.oldValue.value === this.newValue.value &&
+      this.oldValue.contentType === this.newValue.contentType
+    );
+  }
+
   static create(data: { path: IdShortPath; oldValue: FileValue; newValue: FileValue }) {
     return new FileValueChanged(data.path, data.oldValue, data.newValue);
   }

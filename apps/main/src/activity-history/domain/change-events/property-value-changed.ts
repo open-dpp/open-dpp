@@ -20,6 +20,10 @@ export class PropertyValueChanged implements IChangeEventWithPath {
     public readonly newValue: string | null,
   ) {}
 
+  isNoop(): boolean {
+    return this.oldValue === this.newValue;
+  }
+
   static create(data: {
     path: IdShortPath;
     valueType: DataTypeDefType;

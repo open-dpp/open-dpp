@@ -20,6 +20,10 @@ export class SubmodelDeleted implements IChangeEventWithPath {
     public readonly value: Submodel,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { submodel: Submodel }) {
     return new SubmodelDeleted(data.submodel.getIdShortPath(), data.submodel);
   }

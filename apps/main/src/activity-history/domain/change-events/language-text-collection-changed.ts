@@ -26,6 +26,9 @@ abstract class LanguageTextCollectionChanged implements IChangeEventWithPath {
     public readonly path: IdShortPath,
     public readonly values: LanguageTextChanged[],
   ) {}
+  isNoop(): boolean {
+    return this.values.length === 0;
+  }
   toPlain(_options?: ConvertToPlainOptions): Record<string, any> {
     return {
       type: this.type,

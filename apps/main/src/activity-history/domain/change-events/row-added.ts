@@ -23,6 +23,10 @@ export class RowAdded implements IChangeEventWithPath {
     public readonly value: ISubmodelElement,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { path: IdShortPath; position: number; value: ISubmodelElement }) {
     return new RowAdded(data.path, data.position, data.value);
   }

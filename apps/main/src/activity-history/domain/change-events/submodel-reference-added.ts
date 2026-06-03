@@ -14,6 +14,10 @@ export class SubmodelReferenceAdded implements IChangeEvent {
   public readonly type = ChangeEventTypes.SubmodelReferenceAdded;
   private constructor(public readonly value: Reference) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { submodelRef: Reference }) {
     return new SubmodelReferenceAdded(data.submodelRef);
   }

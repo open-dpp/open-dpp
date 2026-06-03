@@ -20,6 +20,10 @@ export class SubmodelAdded implements IChangeEventWithPath {
     public readonly value: Submodel,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { submodel: Submodel }) {
     return new SubmodelAdded(data.submodel.getIdShortPath(), data.submodel);
   }

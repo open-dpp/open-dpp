@@ -25,6 +25,10 @@ export class ColumnDeleted implements IChangeEventWithPath {
     public readonly value: ISubmodelElement,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { path: IdShortPath; position: number; value: ISubmodelElement }) {
     return new ColumnDeleted(data.path, data.position, data.value);
   }

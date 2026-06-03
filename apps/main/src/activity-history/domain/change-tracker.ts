@@ -38,7 +38,11 @@ export class ChangeTracker {
 
   track(...changes: IChangeEvent[]) {
     if (this.trackingEnabled) {
-      this._changes.push(...changes);
+      for (const change of changes) {
+        if (!change.isNoop()) {
+          this._changes.push(...changes);
+        }
+      }
     }
   }
 

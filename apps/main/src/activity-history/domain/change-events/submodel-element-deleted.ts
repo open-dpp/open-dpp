@@ -22,6 +22,10 @@ export class SubmodelElementDeleted implements IChangeEventWithPath {
     public readonly value: ISubmodelElement,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { path: IdShortPath; submodelElement: ISubmodelElement }) {
     return new SubmodelElementDeleted(data.path, data.submodelElement);
   }

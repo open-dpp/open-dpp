@@ -8,6 +8,7 @@ import { MemberRoleType } from "../../../identity/organizations/domain/member-ro
 
 export interface IChangeEvent extends IConvertableToPlain {
   type: ChangeEventTypesType;
+  isNoop(): boolean;
 }
 
 export interface IChangeEventWithPath extends IChangeEvent {

@@ -119,6 +119,7 @@ export class ValueModifierVisitor
     element.value = parsed.value !== undefined ? parsed.value : element.value;
     element.contentType =
       parsed.contentType !== undefined ? parsed.contentType : element.contentType;
+
     this.tracker.track(
       FileValueChanged.create({
         path: element.getIdShortPath(),

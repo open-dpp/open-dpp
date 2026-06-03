@@ -22,6 +22,10 @@ export class Key implements IVisitable {
     };
   }
 
+  equals(other: Key): boolean {
+    return this.type === other.type && this.value === other.value;
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitKey(this, context);
   }

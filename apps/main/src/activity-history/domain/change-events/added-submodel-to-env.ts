@@ -21,6 +21,10 @@ export class AddedSubmodelToEnv implements IChangeEventWithPath {
     public readonly path: IdShortPath,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { position: number; submodel: Submodel }) {
     return new AddedSubmodelToEnv(data.submodel.id, data.position, data.submodel.getIdShortPath());
   }

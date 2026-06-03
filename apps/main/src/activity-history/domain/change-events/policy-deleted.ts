@@ -25,6 +25,10 @@ export class PolicyDeleted implements IPolicyChangeEvent {
     public readonly memberRole: MemberRoleType | null,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: {
     userRole: UserRoleType;
     memberRole?: MemberRoleType;

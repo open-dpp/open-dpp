@@ -25,6 +25,10 @@ export class ColumnAdded implements IChangeEventWithPath {
     public readonly value: ISubmodelElement,
   ) {}
 
+  isNoop(): boolean {
+    return false;
+  }
+
   static create(data: { path: IdShortPath; position: number; value: ISubmodelElement }) {
     return new ColumnAdded(data.path, data.position, data.value);
   }

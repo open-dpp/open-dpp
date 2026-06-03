@@ -17,6 +17,10 @@ export class Resource implements IVisitable {
     return new Resource(parsed.path, parsed.contentType ?? null);
   }
 
+  equals(other: Resource): boolean {
+    return this.path === other.path && this.contentType === other.contentType;
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitResource(this, context);
   }
