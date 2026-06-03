@@ -1,5 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
+import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
@@ -23,7 +24,7 @@ import {
   securityPlainFactory,
   SecurityPlainTransientParams,
 } from "@open-dpp/testing";
-import { Connection } from "mongoose";
+import { ClientSession, Connection } from "mongoose";
 import { generateMongoConfig } from "../../database/config";
 
 import { AuthModule } from "../../identity/auth/auth.module";
@@ -42,6 +43,7 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { IdShortPath } from "../domain/common/id-short-path";
 import { LanguageText } from "../domain/common/language-text";
+import { ConceptDescription } from "../domain/concept-description";
 import { Environment } from "../domain/environment";
 import { createAasObject } from "../domain/security/aas-object";
 import { Permission } from "../domain/security/permission";
@@ -1588,8 +1590,163 @@ describe("environmentService", () => {
     //
   });
 
-  it("should delete all resource of environment", async () => {
-    const { environment } = await createDefaultEnvironment();
+  describe("extraCleanup / atomic stale-config cleanup", () => {
+    describe("deleteSubmodelElement", () => {
+      it("invokes extraCleanup exactly once with the submodel-prefixed element path and the active transaction session", async () => {
+        const { environment, admin, submodel1, submodelElementCollection1, property1 } =
+          await createDefaultEnvironment();
+        const idShortPath = IdShortPath.create({
+          path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+        });
+
+        let capturedSession: ClientSession | undefined;
+        const extraCleanup = jest
+          .fn<(idShortPathString: string, options: { session?: ClientSession }) => Promise<void>>()
+          .mockImplementation(async (_idShortPathString, options) => {
+            capturedSession = options.session;
+          });
+
+        await environmentService.deleteSubmodelElement(
+          environment,
+          submodel1.id,
+          idShortPath,
+          admin,
+          extraCleanup,
+        );
+
+        expect(extraCleanup).toHaveBeenCalledTimes(1);
+        const [pathArg, optionsArg] = extraCleanup.mock.calls[0];
+        expect(pathArg).toBe(`${submodel1.idShort}.${idShortPath.toString()}`);
+        expect(optionsArg.session).toBeTruthy();
+        // The session handed to the cleanup must be a live Mongo ClientSession that
+        // participated in the surrounding transaction.
+        expect(capturedSession).toBeDefined();
+        expect(typeof capturedSession!.endSession).toBe("function");
+      });
+
+      it("rolls back the element deletion when extraCleanup throws", async () => {
+        const { environment, admin, submodel1, submodelElementCollection1, property1 } =
+          await createDefaultEnvironment();
+        const idShortPath = IdShortPath.create({
+          path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+        });
+
+        const extraCleanup = jest
+          .fn<(idShortPathString: string, options: { session?: ClientSession }) => Promise<void>>()
+          .mockRejectedValue(new Error("cleanup boom"));
+
+        await expect(
+          environmentService.deleteSubmodelElement(
+            environment,
+            submodel1.id,
+            idShortPath,
+            admin,
+            extraCleanup,
+          ),
+        ).rejects.toThrow("cleanup boom");
+
+        // The element delete and the cleanup share one transaction; aborting the
+        // cleanup must abort the delete, so the element is still present in the DB.
+        const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
+        expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeDefined();
+      });
+
+      it("rolls back the cleanup's own writes performed through the shared session", async () => {
+        const { environment, admin, submodel1, submodelElementCollection1, property1 } =
+          await createDefaultEnvironment();
+        const idShortPath = IdShortPath.create({
+          path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
+        });
+        const conceptDescriptionId = randomUUID();
+
+        const extraCleanup = jest
+          .fn<(idShortPathString: string, options: { session?: ClientSession }) => Promise<void>>()
+          .mockImplementation(async (_idShortPathString, options) => {
+            // Perform a real write on the shared session, then fail the transaction.
+            await conceptDescriptionRepository.save(
+              ConceptDescription.create({ id: conceptDescriptionId }),
+              options,
+            );
+            throw new Error("cleanup boom after write");
+          });
+
+        await expect(
+          environmentService.deleteSubmodelElement(
+            environment,
+            submodel1.id,
+            idShortPath,
+            admin,
+            extraCleanup,
+          ),
+        ).rejects.toThrow("cleanup boom after write");
+
+        // The write issued by the cleanup on the shared session must roll back too.
+        expect(await conceptDescriptionRepository.findOne(conceptDescriptionId)).toBeUndefined();
+      });
+    });
+
+    describe("deleteSubmodelFromEnvironment", () => {
+      it("invokes extraCleanup exactly once with the submodel idShort and the active transaction session", async () => {
+        const { environment, admin, submodel1 } = await createDefaultEnvironment();
+        const saveEnvironmentMock = jest.fn<() => Promise<void>>();
+
+        let capturedSession: ClientSession | undefined;
+        const extraCleanup = jest
+          .fn<(submodelIdShort: string, options: { session?: ClientSession }) => Promise<void>>()
+          .mockImplementation(async (_submodelIdShort, options) => {
+            capturedSession = options.session;
+          });
+
+        await environmentService.deleteSubmodelFromEnvironment(
+          environment,
+          submodel1.id,
+          saveEnvironmentMock,
+          admin,
+          extraCleanup,
+        );
+
+        expect(extraCleanup).toHaveBeenCalledTimes(1);
+        const [idShortArg, optionsArg] = extraCleanup.mock.calls[0];
+        expect(idShortArg).toBe(submodel1.idShort);
+        expect(optionsArg.session).toBeTruthy();
+        expect(capturedSession).toBeDefined();
+        expect(typeof capturedSession!.endSession).toBe("function");
+      });
+
+      it("rolls back the submodel deletion when extraCleanup throws", async () => {
+        const { environment, admin, submodel1 } = await createDefaultEnvironment();
+        const saveEnvironmentMock = jest.fn<() => Promise<void>>();
+
+        const extraCleanup = jest
+          .fn<(submodelIdShort: string, options: { session?: ClientSession }) => Promise<void>>()
+          .mockRejectedValue(new Error("submodel cleanup boom"));
+
+        await expect(
+          environmentService.deleteSubmodelFromEnvironment(
+            environment,
+            submodel1.id,
+            saveEnvironmentMock,
+            admin,
+            extraCleanup,
+          ),
+        ).rejects.toThrow("submodel cleanup boom");
+
+        // The submodel delete and the cleanup share one transaction; the abort must
+        // leave the submodel persisted.
+        expect(await submodelRepository.findOne(submodel1.id)).toBeDefined();
+      });
+    });
+  });
+
+  it("should delete all resources of environment", async () => {
+    const { environment: defaultEnvironment } = await createDefaultEnvironment();
+    const conceptDescription = ConceptDescription.create({ id: randomUUID() });
+    await conceptDescriptionRepository.save(conceptDescription);
+    const environment = Environment.create({
+      assetAdministrationShells: defaultEnvironment.assetAdministrationShells,
+      submodels: defaultEnvironment.submodels,
+      conceptDescriptions: [conceptDescription.id],
+    });
     const session = await connection.startSession();
     await session.withTransaction(async () => {
       await environmentService.deleteEnvironment(environment, session);
@@ -1601,6 +1758,7 @@ describe("environmentService", () => {
     for (const submodelId of environment.submodels) {
       expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
     }
+    expect(environment.conceptDescriptions.length).toBeGreaterThan(0);
     for (const conceptDescriptionId of environment.conceptDescriptions) {
       expect(await conceptDescriptionRepository.findOne(conceptDescriptionId)).toBeUndefined();
     }

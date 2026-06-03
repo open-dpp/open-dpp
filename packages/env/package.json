@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/env",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "private": true,
   "description": "",
   "keywords": [],
@@ -21,7 +21,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
     "test": "jest --passWithNoTests"
   },

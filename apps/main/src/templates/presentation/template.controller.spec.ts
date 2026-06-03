@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
 
-import { AssetKind, DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
+import {
+  AssetKind,
+  DigitalProductDocumentStatusModificationMethodDto,
+  PresentationReferenceType,
+} from "@open-dpp/dto";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -25,6 +29,8 @@ import { MemberRole } from "../../identity/organizations/domain/member-role.enum
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
@@ -40,7 +46,7 @@ describe("templateController", () => {
   const ctx = createAasTestContext(
     basePath,
     {
-      imports: [TemplatesModule],
+      imports: [TemplatesModule, PresentationConfigurationsModule],
       providers: [TemplateRepository, AasSerializationService],
       controllers: [TemplateController],
     },
@@ -85,6 +91,50 @@ describe("templateController", () => {
 
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createTemplate);
+  });
+
+  it(`/GET shells does not write a PresentationConfiguration row for an uncustomized template`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const template = await createTemplate(org.id);
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
+
+    const firstResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${template.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send();
+    expect(firstResponse.status).toEqual(200);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
+
+    const secondResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${template.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send();
+    expect(secondResponse.status).toEqual(200);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: PresentationReferenceType.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
   });
 
   it(`/PATCH shell`, async () => {

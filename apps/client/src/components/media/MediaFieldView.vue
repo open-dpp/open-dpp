@@ -18,12 +18,12 @@ onMounted(async () => {
 <template>
   <div v-if="mediaInfo" class="flex max-w-full flex-col gap-4">
     <div class="flex w-full flex-row gap-4">
-      <MediaPreview :media="mediaInfo" class="h-48 grow" />
+      <MediaPreview :media="mediaInfo" class="h-40 min-w-[160px]" />
       <a
         v-if="fileUrl"
         :download="mediaInfo.title"
         :href="fileUrl"
-        class="bg-primary-500/50 hover:bg-primary-500 my-auto h-8 w-8 shrink rounded-sm p-2 hover:cursor-pointer"
+        class="bg-primary-500/50 hover:bg-primary-500 my-auto h-8 w-8 shrink-0 rounded-sm p-2 hover:cursor-pointer"
       >
         <ArrowDownTrayIcon class="h-4 w-4" />
       </a>

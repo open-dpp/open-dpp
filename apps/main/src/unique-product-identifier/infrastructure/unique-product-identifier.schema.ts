@@ -1,8 +1,13 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
+import {
+  ExternalIdentifierType,
+  type ExternalIdentifierTypeValue,
+} from "../presentation/dto/unique-product-identifier-dto.schema";
 
 export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
+  v1_1_0: "1.1.0",
 } as const;
 
 export type UniqueProductIdentifierSchemaVersion_TYPE =
@@ -21,7 +26,14 @@ export class UniqueProductIdentifierDoc extends Document {
   referenceId: string;
 
   @Prop({
-    default: UniqueProductIdentifierSchemaVersion.v1_0_0,
+    default: ExternalIdentifierType.OPEN_DPP_UUID,
+    enum: Object.values(ExternalIdentifierType),
+    type: String,
+  })
+  type?: ExternalIdentifierTypeValue;
+
+  @Prop({
+    default: UniqueProductIdentifierSchemaVersion.v1_1_0,
     enum: Object.values(UniqueProductIdentifierSchemaVersion),
     type: String,
   }) // Track schema version
@@ -38,3 +50,4 @@ export const UniqueProductIdentifierSchema = SchemaFactory.createForClass(
 );
 
 UniqueProductIdentifierSchema.index({ referenceId: 1 });
+UniqueProductIdentifierSchema.index({ type: 1 });

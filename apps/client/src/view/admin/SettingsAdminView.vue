@@ -2,20 +2,21 @@
 import { useToast } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
-import { type BooleanSettingsResponseDto } from "@open-dpp/dto";
+import { type BooleanSettingsResponseDto, type StringSettingsResponseDto } from "@open-dpp/dto";
 import { authClient } from "../../auth-client.ts";
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const toast = useToast();
-type InstanceSetting = {
+type BooleanInstanceSetting = {
   key: "signupEnabled" | "organizationCreationEnabled";
   setting: BooleanSettingsResponseDto;
 };
 
-const instanceSettings = ref<InstanceSetting[]>([
+const instanceSettings = ref<BooleanInstanceSetting[]>([
   {
     key: "signupEnabled",
     setting: { value: true },
@@ -25,6 +26,9 @@ const instanceSettings = ref<InstanceSetting[]>([
     setting: { value: true },
   },
 ]);
+
+const permalinkBaseUrl = ref<StringSettingsResponseDto>({ value: null });
+const effectiveFallback = ref<string>("");
 
 const isSaving = ref(false);
 const loading = ref(true);
@@ -36,6 +40,8 @@ async function fetchSettings() {
     for (const setting of instanceSettings.value) {
       setting.setting = res.data[setting.key];
     }
+    permalinkBaseUrl.value = res.data.permalinkBaseUrl;
+    effectiveFallback.value = res.data.effectiveFallback;
   } catch (error) {
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
@@ -73,6 +79,30 @@ async function toggleInstanceSetting(settingKey: string) {
   }
 }
 
+async function commitPermalinkBaseUrl(value: string | null) {
+  if (permalinkBaseUrl.value.locked || isSaving.value) return;
+  const previous = permalinkBaseUrl.value;
+  isSaving.value = true;
+  try {
+    const res = await apiClient.dpp.instanceSettings.update({ permalinkBaseUrl: value });
+    permalinkBaseUrl.value = res.data.permalinkBaseUrl;
+    effectiveFallback.value = res.data.effectiveFallback;
+    toast.add({
+      severity: "success",
+      summary: t("organizations.admin.instanceSettings.saved"),
+      life: 3000,
+    });
+  } catch (error) {
+    permalinkBaseUrl.value = previous;
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.admin.instanceSettings.error"),
+      error,
+    );
+  } finally {
+    isSaving.value = false;
+  }
+}
+
 onMounted(async () => {
   await fetchSettings();
 });
@@ -94,6 +124,32 @@ onMounted(async () => {
         :isLocked="!!setting.setting.locked"
         :translationKey="setting.key"
       />
+      <div
+        data-testid="permalink-danger-zone"
+        class="flex flex-col gap-3 rounded-lg border border-red-300 bg-red-50 p-4"
+      >
+        <div class="flex items-start gap-2 text-sm text-red-800">
+          <span class="shrink-0 font-semibold tracking-wide text-red-700 uppercase">
+            {{ t("organizations.admin.instanceSettings.permalinkBaseUrl.dangerZone") }}
+          </span>
+        </div>
+        <div
+          data-testid="permalink-danger-warning"
+          class="flex items-start gap-2 rounded-md border border-red-200 bg-white p-3 text-sm text-red-700"
+        >
+          <ExclamationTriangleIcon class="mt-0.5 size-4 shrink-0 text-red-500" />
+          <span>{{ t("organizations.admin.instanceSettings.permalinkBaseUrl.warning") }}</span>
+        </div>
+        <InstanceSettingUrlInput
+          :model-value="permalinkBaseUrl.value"
+          :loading="loading"
+          :isSaving="isSaving"
+          :isLocked="!!permalinkBaseUrl.locked"
+          translationKey="permalinkBaseUrl"
+          :effective-fallback="effectiveFallback"
+          @commit="commitPermalinkBaseUrl"
+        />
+      </div>
     </div>
   </section>
 </template>

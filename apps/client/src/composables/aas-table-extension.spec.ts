@@ -428,9 +428,10 @@ describe("aasTableExtension composable", () => {
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
-    expect(editorVNode.value!.props.data).toEqual(
-      SubmodelElementListJsonSchema.parse(submodelElementListModified),
-    );
+    expect(editorVNode.value!.props.data).toEqual({
+      ...SubmodelElementListJsonSchema.parse(submodelElementListModified),
+      modelType: KeyTypes.SubmodelElementList,
+    });
     expect(editorVNode.value!.props.callback).toEqual(callbackOfSubmodelElementListEditor);
   });
 
@@ -578,9 +579,10 @@ describe("aasTableExtension composable", () => {
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     await waitFor(() => expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor));
-    expect(editorVNode.value!.props.data).toEqual(
-      SubmodelElementListJsonSchema.parse(submodelElementListModified),
-    );
+    expect(editorVNode.value!.props.data).toEqual({
+      ...SubmodelElementListJsonSchema.parse(submodelElementListModified),
+      modelType: KeyTypes.SubmodelElementList,
+    });
   });
 
   it("should delete column", async () => {

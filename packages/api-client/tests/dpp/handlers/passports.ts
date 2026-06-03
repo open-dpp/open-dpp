@@ -45,7 +45,7 @@ export function passportsHandlers() {
     http.put(`${passportsEndpointUrl}/${passport1.id}/status`, async () => {
       return HttpResponse.json(
         {
-          passport1,
+          ...passport1,
           lastStatusChange: {
             ...passport1.lastStatusChange,
             currentStatus: DigitalProductDocumentStatusDto.Published,

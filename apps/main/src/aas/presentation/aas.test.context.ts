@@ -23,6 +23,12 @@ import {
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
+  ForbiddenExceptionFilter,
+  NotFoundExceptionFilter,
+  NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
+} from "@open-dpp/exception";
+import {
   aasPlainFactory,
   propertyInputPlainFactory,
   securityPlainFactory,
@@ -160,6 +166,12 @@ export function createAasTestContext<T>(
     betterAuthHelper.init(userService, moduleRef.get<Auth>(AUTH));
 
     app = moduleRef.createNestApplication();
+    app.useGlobalFilters(
+      new NotFoundInDatabaseExceptionFilter(),
+      new NotFoundExceptionFilter(),
+      new ValueErrorFilter(),
+      new ForbiddenExceptionFilter(),
+    );
     await app.init();
     dppIdentifiableRepository = moduleRef.get<T>(EntityRepositoryClass);
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
@@ -1156,7 +1168,7 @@ export function createAasTestContext<T>(
       dppIdentifiableRepository,
       aasRepository,
       submodelRepository,
-      uniqueProductIdentifierService: uniqueProductIdentifierRepository,
+      uniqueProductIdentifierRepository,
       activityRepository,
     }),
     getAasObjects: () => ({ aas, submodels }),

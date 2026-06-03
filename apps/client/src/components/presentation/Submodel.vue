@@ -4,10 +4,11 @@ import type { DisplayName } from "../../composables/display-name";
 import { useDisplayName } from "../../composables/display-name";
 import SubmodelElement from "./SubmodelElement.vue";
 
-const { title } = defineProps<{
+const { title, idShort, parentPathOverride } = defineProps<{
   title: DisplayName[];
   idShort: string;
   parentId?: string;
+  parentPathOverride?: string;
   submodelElements: SubmodelElementResponseDto[];
 }>();
 
@@ -28,6 +29,7 @@ const { description: name } = useDisplayName(title);
         :key="element.idShort"
         :element="element"
         :parent-id="parentId"
+        :parent-path="parentPathOverride ?? idShort"
       />
     </dl>
   </div>

@@ -4,9 +4,14 @@ import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
-import { DigitalProductDocumentStatusModificationDto, TemplateDtoSchema } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusModificationDto,
+  PresentationReferenceType,
+  TemplateDtoSchema,
+} from "@open-dpp/dto";
 import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
@@ -20,6 +25,7 @@ export class TemplateService {
     private readonly environmentService: EnvironmentService,
     private readonly activityRepository: ActivityRepository,
     @InjectConnection() private connection: Connection,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
@@ -36,21 +42,39 @@ export class TemplateService {
     body: DigitalProductDocumentStatusModificationDto,
     userContext: UserContext,
   ) {
-    const template = await this.digitalProductDocumentService.modifyStatus(
-      correlationId,
-      organizationId,
-      id,
-      body,
-      userContext,
-    );
-    return TemplateDtoSchema.parse(template.toPlain());
+    const template =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
+    const updatedTemplate = handleDppStatusChangeRequest(template, body);
+    return TemplateDtoSchema.parse((await this.templateRepository.save(updatedTemplate)).toPlain());
   }
 
   async deleteTemplate(id: string, organizationId: string, subject: SubjectAttributes) {
-    await this.digitalProductDocumentService.deleteDigitalProductDocument(
-      organizationId,
-      id,
-      subject,
-    );
+    const template =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        subject,
+        organizationId,
+      );
+    if (!template.isDraft()) {
+      throw new ForbiddenException('Only templates with the status "Draft" can be deleted');
+    }
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.environmentService.deleteEnvironment(template.environment, session);
+        await this.templateRepository.deleteById(template.id, { session });
+        await this.presentationConfigurationRepository.deleteByReference(
+          { referenceType: PresentationReferenceType.Template, referenceId: template.id },
+          { session },
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
   }
 }

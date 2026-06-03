@@ -10,10 +10,8 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
-import {
-  parseGetAllActivitiesParams,
-  parseGetAllParams,
-} from "../digital-product-document/parse-get-all-params";
+import { parseGetAllActivitiesParams, parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
 import type {
   DownloadActivityParams,
   IDigitalProductDocumentNamespace,
@@ -21,10 +19,15 @@ import type {
 
 export class PassportNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
+  public presentationConfiguration!: PresentationConfigurationNamespace;
   private readonly passportEndpoint = "/passports";
 
   constructor(private readonly axiosInstance: AxiosInstance) {
     this.aas = new AasNamespace(this.axiosInstance, "passports");
+    this.presentationConfiguration = new PresentationConfigurationNamespace(
+      this.axiosInstance,
+      "passports",
+    );
   }
 
   public async getAll(params: GetAllParamsDto) {

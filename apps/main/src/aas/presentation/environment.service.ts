@@ -30,7 +30,7 @@ import {
   ValueResponseDto,
   ValueSchema,
 } from "@open-dpp/dto";
-import { ForbiddenError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";
 
@@ -321,6 +321,7 @@ export class EnvironmentService {
     submodelId: string,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
     userContext: UserContext,
+    extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const aas = await this.getFirstAssetAdministrationShell(environment);
     const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
@@ -351,6 +352,9 @@ export class EnvironmentService {
         if (!activity.isNoop()) {
           await this.activityRepository.createMany([activity], options);
         }
+        if (extraCleanup) {
+          await extraCleanup(submodel.idShort, options);
+        }
       });
     } finally {
       await session.endSession();
@@ -364,6 +368,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     userContext: UserContext,
+    extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -382,10 +387,17 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.submodelRepository.save(submodel, { session });
-        await this.aasRepository.save(aas, { session });
+        const options = { session };
+        await this.submodelRepository.save(submodel, options);
+        await this.aasRepository.save(aas, options);
+        if (extraCleanup) {
+          // Presentation-config override keys are submodel-prefixed
+          // (`<submodelIdShort>.<elementPath>`), while idShortPath is relative to the
+          // submodel — re-prefix so the cleanup matches the stored keys.
+          await extraCleanup(`${submodel.idShort}.${idShortPath.toString()}`, options);
+        }
         if (!activity.isNoop()) {
-          await this.activityRepository.createMany([activity], { session });
+          await this.activityRepository.createMany([activity], options);
         }
       });
     } finally {
@@ -870,6 +882,19 @@ export class EnvironmentService {
     }
   }
 
+  async withTransaction<T>(work: (options: DbSessionOptions) => Promise<T>): Promise<T> {
+    const session = await this.connection.startSession();
+    try {
+      let result!: T;
+      await session.withTransaction(async () => {
+        result = await work({ session });
+      });
+      return result;
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async populateEnvironmentForPagingResult(
     pagingResult: PagingResult<Passport | Template>,
     populateOptions: PopulateOptions,
@@ -903,8 +928,10 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.aasRepository.save(aasCopy);
-        await Promise.all(submodelsCopy.map((model) => this.submodelRepository.save(model)));
+        await this.aasRepository.save(aasCopy, { session });
+        await Promise.all(
+          submodelsCopy.map((model) => this.submodelRepository.save(model, { session })),
+        );
       });
     } finally {
       await session.endSession();
@@ -932,7 +959,7 @@ export class EnvironmentService {
     environment: Environment,
   ): Promise<AssetAdministrationShell> {
     if (environment.assetAdministrationShells.length === 0) {
-      throw new Error("No asset administration shell for environment.");
+      throw new ValueError("No asset administration shell for environment.");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }

@@ -5,6 +5,8 @@ import { digitalProductDocumentPaths } from "./digital-product-document.paths";
 import { brandingPaths } from "./branding.path";
 import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
+import { presentationConfigurationPaths } from "./presentation-configuration.paths";
+import { permalinkPaths } from "./permalink.paths";
 
 const document = createDocument({
   openapi: "3.1.0",
@@ -14,11 +16,11 @@ const document = createDocument({
   },
   servers: [
     {
-      url: "https://app.cloud.open-dpp.de/api",
+      url: "https://cloud.open-dpp.de/api",
       description: "Production server",
     },
     {
-      url: "https://app.demo1.open-dpp.de/api",
+      url: "https://demo.open-dpp.de/api",
       description: "Test server",
     },
     {
@@ -31,6 +33,8 @@ const document = createDocument({
     ...brandingPaths,
     ...userPaths,
     ...organizationsPaths,
+    ...presentationConfigurationPaths,
+    ...permalinkPaths,
   },
   components: {
     parameters: {

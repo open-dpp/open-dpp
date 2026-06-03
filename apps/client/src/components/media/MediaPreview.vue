@@ -55,7 +55,7 @@ watch(
 
 <template>
   <div
-    class="relative flex w-full items-center justify-center overflow-hidden rounded border border-gray-200 bg-gray-50"
+    class="relative flex h-full min-h-[160px] w-full items-center justify-center overflow-hidden rounded border border-gray-200 bg-gray-50"
   >
     <div v-if="loading" class="mx-auto my-auto">
       <RingLoader />

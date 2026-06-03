@@ -8,27 +8,31 @@ import { Template } from "./template";
 
 describe("template", () => {
   it("should be published", () => {
-    const passport = Template.create({
+    const template = Template.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
     });
-    expect(passport.isPublished()).toBeFalsy();
-    passport.publish();
-    expect(passport.isPublished()).toBeTruthy();
+    expect(template.isPublished()).toBeFalsy();
+    const published = template.publish();
+    expect(published).not.toBe(template);
+    expect(template.isPublished()).toBeFalsy();
+    expect(published.isPublished()).toBeTruthy();
   });
 
   it("should be archived", () => {
-    const passport = Template.create({
+    const template = Template.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
     });
-    expect(passport.isArchived()).toBeFalsy();
-    passport.archive();
-    expect(passport.isArchived()).toBeTruthy();
+    expect(template.isArchived()).toBeFalsy();
+    const archived = template.archive();
+    expect(archived).not.toBe(template);
+    expect(template.isArchived()).toBeFalsy();
+    expect(archived.isArchived()).toBeTruthy();
   });
 
   it("should be restored", () => {
-    const passport = Template.create({
+    const template = Template.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
       lastStatusChange: DigitalProductDocumentStatusChange.create({
@@ -36,9 +40,11 @@ describe("template", () => {
         currentStatus: DigitalProductDocumentStatus.Archived,
       }),
     });
-    expect(passport.isArchived()).toBeTruthy();
-    passport.restore();
-    expect(passport.isArchived()).toBeFalsy();
-    expect(passport.isDraft()).toBeTruthy();
+    expect(template.isArchived()).toBeTruthy();
+    const restored = template.restore();
+    expect(restored).not.toBe(template);
+    expect(template.isArchived()).toBeTruthy();
+    expect(restored.isArchived()).toBeFalsy();
+    expect(restored.isDraft()).toBeTruthy();
   });
 });

@@ -4,6 +4,7 @@ import {
   AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
   DeletePolicyDtoSchema,
+  DigitalProductDocumentStatusModificationDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
@@ -574,10 +575,11 @@ function createTemplatePaths() {
       delete: {
         tags: [tag],
         summary: `Delete template by specified id. Only templates with the status "draft" can be deleted.`,
-        parameters: [IdParamSchema],
+        parameters: [IdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.NO_CONTENT]: {},
         },
+        security,
       },
     },
     [`/${tag}/{id}/status`]: {
@@ -585,6 +587,13 @@ function createTemplatePaths() {
         tags: [tag],
         summary: `Change status of template by specified id.`,
         parameters: [IdParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: {
+              schema: DigitalProductDocumentStatusModificationDtoSchema,
+            },
+          },
+        },
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -695,10 +704,11 @@ function createPassportPaths() {
       delete: {
         tags: [tag],
         summary: `Delete passport by specified id. Only passports with the status "draft" can be deleted.`,
-        parameters: [IdParamSchema],
+        parameters: [IdParamSchema, orgaIdHeader],
         responses: {
           [HTTPCode.NO_CONTENT]: {},
         },
+        security,
       },
     },
     [`/${tag}/{id}/status`]: {
@@ -706,6 +716,13 @@ function createPassportPaths() {
         tags: [tag],
         summary: `Change status of passport by specified id.`,
         parameters: [IdParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: {
+              schema: DigitalProductDocumentStatusModificationDtoSchema,
+            },
+          },
+        },
         responses: {
           [HTTPCode.OK]: {
             content: {

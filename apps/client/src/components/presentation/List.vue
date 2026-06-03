@@ -4,23 +4,15 @@ import type {
   SubmodelElementRequestDto,
 } from "@open-dpp/dto";
 import { computed } from "vue";
-import { useDisplayName } from "../../composables/display-name";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
+import { buildColumns } from "./list-columns";
 
-const { content } = defineProps<{
+const { content, path } = defineProps<{
   content: SubmodelElementCollectionResponseDto[];
+  path?: string;
 }>();
 
-const columns = computed(() => {
-  if (content.length >= 1 && content[0] && content[0].value) {
-    return content[0].value.map((collectionElement) => ({
-      header: useDisplayName(collectionElement.displayName).description.value,
-      field: collectionElement.idShort,
-    }));
-  } else {
-    return [];
-  }
-});
+const columns = computed(() => buildColumns(content));
 
 const rows = computed(() => {
   const result: Record<string, SubmodelElementRequestDto>[] = [];
@@ -44,13 +36,23 @@ const rows = computed(() => {
 
   return result;
 });
+
+function cellPath(field: string): string | undefined {
+  return path ? `${path}.${field}` : undefined;
+}
 </script>
 
 <template>
-  <DataTable :value="rows">
-    <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header">
+  <DataTable :value="rows" scrollable>
+    <Column
+      v-for="col of columns"
+      :key="col.field"
+      :field="col.field"
+      :header="col.header"
+      :style="col.style"
+    >
       <template #body="slotProps">
-        <SubmodelElementValue :element="slotProps.data[col.field]" />
+        <SubmodelElementValue :element="slotProps.data[col.field]" :path="cellPath(col.field)" />
       </template>
     </Column>
   </DataTable>

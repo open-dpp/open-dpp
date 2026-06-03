@@ -281,7 +281,10 @@ describe("aasEditor composable", () => {
     openAssetAdministrationShellEditor();
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual({});
-    expect(editorVNode.value!.props.data).toEqual(assetAdministrationShell1);
+    expect(editorVNode.value!.props.data).toEqual({
+      ...assetAdministrationShell1,
+      modelType: KeyTypes.AssetAdministrationShell,
+    });
     expect(editorVNode.value!.component).toEqual(AssetAdministrationShellEditor);
     const newDisplayName = [
       { language: "de", text: "Neuer Name" },
