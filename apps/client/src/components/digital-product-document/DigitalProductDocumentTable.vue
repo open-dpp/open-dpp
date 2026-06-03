@@ -38,12 +38,8 @@ const emits = defineEmits<{
 
 dayjs.extend(utc);
 
-const { t, locale } = useI18n();
-const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
-const { parseDisplayNameFromEnvironment } = useAasUtils({
-  translate: t,
-  selectedLanguage: selectedLanguage.value,
-});
+const { t } = useI18n();
+const { parseDisplayNameFromEnvironment } = useAasUtils();
 
 async function goToItem(item: DigitalProductDocumentDto) {
   await router.push(`${route.path}/${item.id}`);

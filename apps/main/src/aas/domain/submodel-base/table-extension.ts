@@ -59,7 +59,7 @@ export class TableExtension implements ITrackable {
     this.rows.forEach((row) => {
       row.addSubmodelElement(cloneSubmodelElement(column), options);
     });
-    const position = options.position ?? this.columns.length - 1;
+    const position = this.getColumnPosition(column.idShort);
     const value = this.columns[position];
     this.tracker.track(
       ColumnAdded.create({

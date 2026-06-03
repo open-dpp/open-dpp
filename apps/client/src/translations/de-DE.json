@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "refresh": "Aktualisieren",
     "reset": "Zurücksetzen",
     "noEntries": "Keine Einträge gefunden",
     "moveUp": "Nach oben verschieben",
@@ -491,20 +492,42 @@
     "label": "Aktivitätsverlauf",
     "createdAt": "Datum",
     "position": "Position",
+    "name": "Name",
+    "oldValue": "Alter Wert",
+    "newValue": "Neuer Wert",
     "userId": "Benutzer ID",
-    "correlationId": "Korrelations ID",
-    "types": {
-      "SubmodelElementModified": "Element geändert",
-      "AssetAdministrationShellModified": "Element geändert",
-      "SubmodelElementValueModified": "Elemente geändert"
+    "path": "Pfad",
+    "languageOps": {
+      "replace": "geändert",
+      "add": "hinzugefügt",
+      "remove": "entfernt"
     },
+    "correlationId": "Korrelations ID",
+    "timelineTitle": "Aktivität",
     "changeTypes": {
       "PropertyValueChanged": "Wert geändert",
       "ReferenceElementChanged": "Link geändert",
-      "FileValueChanged": "Datei geändert",
       "DisplayNameChanged": "Name geändert",
       "PolicyAdded": "Berechtigung hinzugefügt",
-      "PolicyModified": "Berechtigung geändert"
+      "PolicyModified": "Berechtigung geändert",
+      "DescriptionChanged": "Beschreibung geändert",
+      "RowAdded": "Zeile hinzugefügt",
+      "RowDeleted": "Zeile gelöscht",
+      "ColumnAdded": "Spalte hinzugefügt",
+      "ColumnDeleted": "Spalte gelöscht",
+      "SubmodelAdded": "Abschnitt hinzugefügt",
+      "AddedSubmodelToEnv": "Abschnitt zur Umgebung hinzugefügt",
+      "SubmodelElementAdded": "Element hinzugefügt",
+      "SubmodelElementDeleted": "Element gelöscht",
+      "SubmodelReferenceAdded": "Referenz hinzugefügt",
+      "PolicyDeleted": "Berechtigung gelöscht",
+      "DefaultThumbnailsModified": "Vorschaubilder geändert",
+      "DeletedSubmodelFromEnv": "Abschnitt aus Umgebung gelöscht",
+      "SubmodelReferenceDeleted": "Referenz gelöscht",
+      "SubmodelDeleted": "Abschnitt gelöscht",
+      "DigitalProductDocumentStatusChanged": "Status geändert",
+      "FileValueChanged": "Datei geändert",
+      "ReferenceElementValueChanged": "Referenz geändert"
     }
   },
   "passports": {

@@ -20,7 +20,9 @@ export class SubmodelElementDeleted implements IChangeEventWithPath {
   private constructor(
     public readonly path: IdShortPath,
     public readonly value: ISubmodelElement,
-  ) {}
+  ) {
+    value.setParentIdShortPath(this.path.getParentPath());
+  }
 
   isNoop(): boolean {
     return false;

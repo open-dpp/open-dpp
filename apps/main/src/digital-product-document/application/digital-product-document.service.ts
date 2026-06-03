@@ -523,19 +523,16 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       startDate || endDate ? Period.fromIso({ start: startDate, end: endDate }) : undefined;
 
     const pagination = Pagination.create({ limit, cursor });
-    return ActivityPaginationDtoSchema.parse(
-      (
-        await this.activityRepository.findByAggregateId(item.id, {
-          pagination,
-          period,
-          ascending,
-          filter: {
-            activityType: filterByActivityType,
-            path: pathFilter,
-          },
-        })
-      ).toPlain({ ability }),
-    );
+    const activities = await this.activityRepository.findByAggregateId(item.id, {
+      pagination,
+      period,
+      ascending,
+      filter: {
+        activityType: filterByActivityType,
+        path: pathFilter,
+      },
+    });
+    return ActivityPaginationDtoSchema.parse(activities.toPlain({ ability }));
   }
 
   async downloadActivitiesWithArchiver(

@@ -81,7 +81,7 @@ defineExpose<{
       <EditorActivityHistory
         v-if="props.data.idShort"
         :id="props.id"
-        :path="props.data.idShort"
+        :path="`sw:${props.data.idShort}`"
         :type="props.type"
       />
     </template>

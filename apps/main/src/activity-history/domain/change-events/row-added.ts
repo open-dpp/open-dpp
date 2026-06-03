@@ -21,7 +21,9 @@ export class RowAdded implements IChangeEventWithPath {
     public readonly path: IdShortPath,
     public readonly position: number,
     public readonly value: ISubmodelElement,
-  ) {}
+  ) {
+    value.setParentIdShortPath(this.path.getParentPath());
+  }
 
   isNoop(): boolean {
     return false;

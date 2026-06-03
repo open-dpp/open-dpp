@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import { formatPropertyValue } from "../../lib/property-value.ts";
-import { ChangeEventDtoTypes, type DataTypeDefType, type ReferenceValue } from "@open-dpp/dto";
+import { type ReferenceValue } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import { computed } from "vue";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import DiffViewer from "./DiffViewer.vue";
 import Reference from "../presentation/Reference.vue";
+import IdShortPath from "./IdShortPath.vue";
 
 const { locale } = useI18n();
 
 const props = defineProps<{
+  path: string;
   oldValue: ReferenceValue;
   newValue: ReferenceValue;
 }>();
-
-const language = computed(() => convertLocaleToLanguage(locale.value));
 </script>
 
 <template>
+  <IdShortPath :path="props.path" />
   <DiffViewer>
     <template #oldValue>
       <Reference :model="props.oldValue" />

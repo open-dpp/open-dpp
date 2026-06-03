@@ -3,6 +3,7 @@
     "required": "Required"
   },
   "common": {
+    "refresh": "Refresh",
     "reset": "Reset",
     "noEntries": "No entries found",
     "moveUp": "Move up",
@@ -456,21 +457,47 @@
     "marketplace": "Marketplace"
   },
   "activityHistory": {
+    "path": "Path",
     "errorLoading": "Failed to load activity history",
     "errorDownloading": "Failed to download activity history",
     "label": "Activity history",
     "createdAt": "Date",
     "position": "Position",
+    "name": "Name",
+    "oldValue": "Old value",
+    "newValue": "New value",
     "userId": "User ID",
-    "correlationId": "Correlation ID",
-    "types": {
-      "SubmodelElementModified": "Element geändert",
-      "AssetAdministrationShellModified": "Element geändert"
+    "languageOps": {
+      "replace": "modified",
+      "add": "added",
+      "remove": "deleted"
     },
+    "correlationId": "Correlation ID",
+    "timelineTitle": "Activity",
     "changeTypes": {
-      "PropertyValueChanged": "Wert geändert",
-      "DisplayNameChanged": "Name geändert",
-      "PolicyAdded": "Berechtigung hinzugefügt"
+      "PropertyValueChanged": "Value changed",
+      "ReferenceElementChanged": "Link changed",
+      "DisplayNameChanged": "Name changed",
+      "PolicyAdded": "Permission added",
+      "DescriptionChanged": "Description changed",
+      "RowAdded": "Row added",
+      "RowDeleted": "Row deleted",
+      "ColumnAdded": "Column added",
+      "ColumnDeleted": "Column deleted",
+      "SubmodelAdded": "Section added",
+      "AddedSubmodelToEnv": "Section added to environment",
+      "SubmodelElementAdded": "Element added",
+      "SubmodelElementDeleted": "Element deleted",
+      "SubmodelReferenceAdded": "Reference added",
+      "PolicyDeleted": "Permission deleted",
+      "DefaultThumbnailsModified": "Thumbnails modified",
+      "DeletedSubmodelFromEnv": "Section deleted from environment",
+      "SubmodelReferenceDeleted": "Reference deleted",
+      "SubmodelDeleted": "Section deleted",
+      "DigitalProductDocumentStatusChanged": "Status changed",
+      "PolicyModified": "Permission modified",
+      "FileValueChanged": "File changed",
+      "ReferenceElementValueChanged": "Reference changed"
     }
   },
   "passports": {
