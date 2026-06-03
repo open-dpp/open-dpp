@@ -87,12 +87,14 @@ export function activityToPlain(event: IActivity) {
 
 export interface IActivityPayload extends IConvertableToPlain {
   changes: Array<IChangeEvent>;
+  isNoop: () => boolean;
 }
 
 export interface IActivity extends IConvertableToPlain {
   header: ActivityHeader;
   payload: IActivityPayload;
   toDatabase: () => Record<string, any>;
+  isNoop: () => boolean;
 }
 
 export function parseActivity(activity: any): IActivity {

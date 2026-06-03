@@ -44,6 +44,10 @@ export class ColumnAddedActivity implements IActivity {
     );
   }
 
+  isNoop(): boolean {
+    return this.payload.isNoop();
+  }
+
   toDatabase(): Record<string, unknown> {
     return activityToDatabase(this);
   }

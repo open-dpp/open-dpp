@@ -51,6 +51,10 @@ export class ColumnDeletedActivity implements IActivity {
     return activityToDatabase(this);
   }
 
+  isNoop(): boolean {
+    return this.payload.isNoop();
+  }
+
   toPlain(options?: ConvertToPlainOptions) {
     return {
       header: this.header.toPlain(),

@@ -55,6 +55,10 @@ export class DigitalProductDocumentStatusChangedActivity implements IActivity {
     return activityToDatabase(this);
   }
 
+  isNoop(): boolean {
+    return this.payload.isNoop();
+  }
+
   toPlain(options?: ConvertToPlainOptions) {
     return {
       header: this.header.toPlain(),
@@ -82,5 +86,9 @@ export class DigitalProductDocumentActivityPayload implements IActivityPayload {
         change.toPlain(options),
       ),
     };
+  }
+
+  isNoop(): boolean {
+    return this.changes.every((change) => change.isNoop());
   }
 }

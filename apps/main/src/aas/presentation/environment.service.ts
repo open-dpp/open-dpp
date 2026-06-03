@@ -171,7 +171,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.aasRepository.save(aas, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
     } finally {
       await session.endSession();
@@ -218,7 +220,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.aasRepository.save(aas);
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ ability }));
     } finally {
@@ -262,7 +266,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelJsonSchema.parse(submodel.toPlain());
     } finally {
@@ -298,7 +304,9 @@ export class EnvironmentService {
         await saveEnvironment(options);
         await this.submodelRepository.save(submodel, options);
         await this.aasRepository.save(aas, options);
-        await this.activityRepository.createMany([activity], options);
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], options);
+        }
       });
       return SubmodelJsonSchema.parse(submodel.toPlain());
     } finally {
@@ -340,7 +348,9 @@ export class EnvironmentService {
           submodel,
           environment,
         });
-        await this.activityRepository.createMany([activity], options);
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], options);
+        }
       });
     } finally {
       await session.endSession();
@@ -374,7 +384,9 @@ export class EnvironmentService {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
     } finally {
       await session.endSession();
@@ -474,7 +486,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementSchema.parse(submodelElement.toPlain());
     } finally {
@@ -505,7 +519,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
     } finally {
@@ -537,7 +553,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
     } finally {
@@ -570,7 +588,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
     } finally {
@@ -606,7 +626,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
     } finally {
@@ -641,7 +663,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
     } finally {
@@ -681,7 +705,9 @@ export class EnvironmentService {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     } finally {
@@ -714,7 +740,9 @@ export class EnvironmentService {
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
     } finally {
@@ -754,7 +782,9 @@ export class EnvironmentService {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
-        await this.activityRepository.createMany([activity], { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     } finally {

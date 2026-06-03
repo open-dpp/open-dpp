@@ -495,7 +495,8 @@
     "correlationId": "Korrelations ID",
     "types": {
       "SubmodelElementModified": "Element geändert",
-      "AssetAdministrationShellModified": "Element geändert"
+      "AssetAdministrationShellModified": "Element geändert",
+      "SubmodelElementValueModified": "Elemente geändert"
     },
     "changeTypes": {
       "PropertyValueChanged": "Wert geändert",

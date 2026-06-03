@@ -20,6 +20,11 @@ export class SubmodelActivityPayload implements IActivityPayload {
     const parsed = PayloadSchema.parse(data);
     return new SubmodelActivityPayload(parsed.submodelId, parsed.changes.map(parseChangeEvent));
   }
+
+  isNoop(): boolean {
+    return this.changes.every((change) => change.isNoop());
+  }
+
   toPlain(options?: ConvertToPlainOptions) {
     return {
       submodelId: this.submodelId,
@@ -51,6 +56,10 @@ export class SubmodelWithAasActivityPayload implements IActivityPayload {
       parsed.changes.map(parseChangeEvent),
     );
   }
+  isNoop(): boolean {
+    return this.changes.every((change) => change.isNoop());
+  }
+
   toPlain(options?: ConvertToPlainOptions) {
     return {
       submodelId: this.submodelId,

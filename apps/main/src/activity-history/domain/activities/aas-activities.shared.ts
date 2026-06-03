@@ -31,4 +31,8 @@ export class AssetAdministrationShellActivityPayload implements IActivityPayload
       ),
     };
   }
+
+  isNoop(): boolean {
+    return this.changes.every((change) => change.isNoop());
+  }
 }
