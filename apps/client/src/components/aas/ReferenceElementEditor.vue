@@ -18,7 +18,6 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
-import EditorTabs from "./EditorTabs.vue";
 
 const props =
   defineProps<SharedEditorProps<ReferenceElementEditorProps, ReferenceElementModificationDto>>();
@@ -82,34 +81,22 @@ defineExpose<{
 </script>
 
 <template>
-  <EditorTabs>
-    <template #data>
-      <FormContainer>
-        <ReferenceElementForm
-          :disabled="disableEdit"
-          :data="props.data"
-          :show-errors="showErrors"
-          :errors="errors"
-          :editor-mode="EditorMode.EDIT"
-        />
-        <PermissionsForm
-          ref="permissionsFormRef"
-          :disabled="disableEdit"
-          :ignored-permission-options="[Permissions.Create]"
-          :path="props.path"
-          :modify-shell="props.modifyShell"
-          :get-access-permission-rules="props.getAccessPermissionRules"
-          :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-        />
-      </FormContainer>
-    </template>
-    <template #activityHistory>
-      <EditorActivityHistory
-        v-if="props.path.idShortPathIncludingSubmodel"
-        :id="props.id"
-        :type="props.type"
-        :path="props.path.idShortPathIncludingSubmodel"
-      />
-    </template>
-  </EditorTabs>
+  <FormContainer>
+    <ReferenceElementForm
+      :disabled="disableEdit"
+      :data="props.data"
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.EDIT"
+    />
+    <PermissionsForm
+      ref="permissionsFormRef"
+      :disabled="disableEdit"
+      :ignored-permission-options="[Permissions.Create]"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :get-access-permission-rules="props.getAccessPermissionRules"
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+    />
+  </FormContainer>
 </template>

@@ -156,13 +156,6 @@ onMounted(async () => {
                 "
                 :id-short="change.value.idShort"
               />
-              <SubmodelReferenceChanged
-                v-else-if="
-                  change.type === ChangeEventDtoTypes.SubmodelReferenceAdded ||
-                  change.type === ChangeEventDtoTypes.SubmodelReferenceDeleted
-                "
-                :id-short="change.idShort"
-              />
             </TimelineContentItem>
           </template>
         </Card>

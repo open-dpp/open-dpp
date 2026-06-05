@@ -11,7 +11,6 @@ import {
 } from "@open-dpp/dto";
 import type { AasEditorPath, EditorType, OpenDrawerCallback } from "../composables/aas-drawer.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
-import type { DigitalProductDocumentTypeType } from "./digital-product-document.ts";
 
 export interface SharedEditorProps<Data, RequestDto> {
   path: AasEditorPath;
@@ -19,7 +18,6 @@ export interface SharedEditorProps<Data, RequestDto> {
   callback: (data: RequestDto) => Promise<void>;
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
   aasNamespace: AasNamespace;
-  type: DigitalProductDocumentTypeType;
   errorHandlingStore: IErrorHandlingStore;
   id: string;
   translate: (label: string, ...args: unknown[]) => string;

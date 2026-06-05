@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ActivityDtoTypes, type SubmodelModificationDto } from "@open-dpp/dto";
-import { Permissions } from "@open-dpp/dto";
+import { Permissions, type SubmodelModificationDto } from "@open-dpp/dto";
 import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
@@ -12,7 +11,6 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
-import EditorTabs from "./EditorTabs.vue";
 
 const props = defineProps<SharedEditorProps<SubmodelEditorProps, SubmodelModificationDto>>();
 
@@ -58,32 +56,20 @@ defineExpose<{
 </script>
 
 <template>
-  <EditorTabs>
-    <template #data>
-      <FormContainer>
-        <SubmodelBaseForm
-          :disabled="disableEdit"
-          :show-errors="showErrors"
-          :editor-mode="EditorMode.EDIT"
-        />
-        <PermissionsForm
-          ref="permissionsFormRef"
-          :disabled="disableEdit"
-          :path="props.path"
-          :modify-shell="props.modifyShell"
-          :get-access-permission-rules="props.getAccessPermissionRules"
-          hide-inheritance-toggle
-          :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-        />
-      </FormContainer>
-    </template>
-    <template #activityHistory>
-      <EditorActivityHistory
-        v-if="props.data.idShort"
-        :id="props.id"
-        :path="`sw:${props.data.idShort}`"
-        :type="props.type"
-      />
-    </template>
-  </EditorTabs>
+  <FormContainer>
+    <SubmodelBaseForm
+      :disabled="disableEdit"
+      :show-errors="showErrors"
+      :editor-mode="EditorMode.EDIT"
+    />
+    <PermissionsForm
+      ref="permissionsFormRef"
+      :disabled="disableEdit"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :get-access-permission-rules="props.getAccessPermissionRules"
+      hide-inheritance-toggle
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+    />
+  </FormContainer>
 </template>

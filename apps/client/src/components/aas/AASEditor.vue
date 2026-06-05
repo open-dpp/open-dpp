@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import {
+  DataTypeDef,
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
   type DigitalProductDocumentStatusDtoType,
+  isNumericDataType,
   KeyTypes,
   Permissions,
 } from "@open-dpp/dto";
@@ -147,7 +149,7 @@ function canEditPath(path: string): boolean {
   return canForPath(Permissions.Edit, path);
 }
 
-const activeDrawerTab = ref<"data" | "presentation">("data");
+const activeDrawerTab = ref<"data" | "presentation" | "activityHistory">("data");
 
 watch(
   () => drawerVisible.value,
@@ -158,27 +160,13 @@ watch(
   },
 );
 
-const leafEditorComponents = [
-  PropertyEditor,
-  PropertyCreateEditor,
-  FileEditor,
-  FileCreateEditor,
-  ReferenceElementEditor,
-  ReferenceElementCreateEditor,
-];
-
-const editModeLeafEditorComponents = [PropertyEditor, FileEditor, ReferenceElementEditor];
-
-const isLeafEditor = computed(() => {
-  if (!editorVNode.value) return false;
-  const comp = editorVNode.value.component;
-  return leafEditorComponents.includes(comp as any);
-});
-
 const showPresentationTab = computed(() => {
   if (!editorVNode.value) return false;
-  const isEditModeLeaf = editModeLeafEditorComponents.includes(editorVNode.value.component as any);
-  if (!isEditModeLeaf) return false;
+  const editorSupportsPresentationConfiguration =
+    editorVNode.value.component === PropertyEditor &&
+    editorVNode.value.props.data.valueType &&
+    isNumericDataType(editorVNode.value.props.data.valueType);
+  if (!editorSupportsPresentationConfiguration) return false;
   return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
 });
 
@@ -415,13 +403,15 @@ const isFullPosition = computed(() => position.value === fullPosition);
           </div>
         </div>
       </template>
-
-      <template v-if="showPresentationTab">
-        <Tabs v-model:value="activeDrawerTab">
+      <template #default>
+        <Tabs :value="activeDrawerTab">
           <TabList>
             <Tab data-cy="drawer-tab-data" value="data">{{ t("aasEditor.drawerTabs.data") }}</Tab>
-            <Tab data-cy="drawer-tab-presentation" value="presentation">
+            <Tab v-if="showPresentationTab" data-cy="drawer-tab-presentation" value="presentation">
               {{ t("aasEditor.drawerTabs.presentation") }}
+            </Tab>
+            <Tab value="activityHistory" data-cy="drawer-tab-activityHistory">
+              {{ t("activityHistory.label") }}
             </Tab>
           </TabList>
           <TabPanels>
@@ -442,7 +432,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 :is-archived="isArchived"
               />
             </TabPanel>
-            <TabPanel value="presentation">
+            <TabPanel v-if="showPresentationTab" value="presentation">
               <ElementPresentationPanel
                 :element="editorVNode!.props.data"
                 :path="editorVNode!.props.path.idShortPathIncludingSubmodel!"
@@ -451,26 +441,17 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 "
               />
             </TabPanel>
+            <TabPanel value="activityHistory">
+              <EditorActivityHistory
+                v-if="editorVNode && editorVNode.props.path.idShortPathIncludingSubmodel"
+                :id="model.id"
+                :path="editorVNode.props.path.idShortPathIncludingSubmodel"
+                :type="props.type"
+              />
+            </TabPanel>
           </TabPanels>
         </Tabs>
       </template>
-
-      <component
-        v-else-if="editorVNode"
-        :is="editorVNode.component"
-        v-bind="editorVNode.props"
-        :id="model.id"
-        ref="componentRef"
-        :type="props.type"
-        :aas-namespace="aasNamespace"
-        :open-drawer="aasEditor.openDrawer"
-        :error-handling-store="errorHandlingStore"
-        :translate="t"
-        :get-access-permission-rules="getAccessPermissionRules"
-        :modify-shell="modifyShell"
-        :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
-        :is-archived="isArchived"
-      />
     </Drawer>
   </div>
 </template>

@@ -12,7 +12,6 @@ import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
-import EditorTabs from "./EditorTabs.vue";
 
 const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
@@ -59,32 +58,16 @@ defineExpose<{
 </script>
 
 <template>
-  <EditorTabs>
-    <template #data>
-      <div class="flex flex-col gap-4 p-2">
-        <FileForm
-          :show-errors="showErrors"
-          :editor-mode="EditorMode.EDIT"
-          :disabled="disableEdit"
-        />
-        <PermissionsForm
-          ref="permissionsFormRef"
-          :disabled="disableEdit"
-          :ignored-permission-options="[Permissions.Create]"
-          :path="props.path"
-          :modify-shell="props.modifyShell"
-          :get-access-permission-rules="props.getAccessPermissionRules"
-          :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-        />
-      </div>
-    </template>
-    <template #activityHistory>
-      <EditorActivityHistory
-        v-if="props.path.idShortPathIncludingSubmodel"
-        :id="props.id"
-        :path="props.path.idShortPathIncludingSubmodel"
-        :type="props.type"
-      />
-    </template>
-  </EditorTabs>
+  <div class="flex flex-col gap-4 p-2">
+    <FileForm :show-errors="showErrors" :editor-mode="EditorMode.EDIT" :disabled="disableEdit" />
+    <PermissionsForm
+      ref="permissionsFormRef"
+      :disabled="disableEdit"
+      :ignored-permission-options="[Permissions.Create]"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :get-access-permission-rules="props.getAccessPermissionRules"
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+    />
+  </div>
 </template>

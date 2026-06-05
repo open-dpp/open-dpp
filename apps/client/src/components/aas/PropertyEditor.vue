@@ -13,7 +13,6 @@ import { useAasAbility } from "../../composables/aas-ability.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
-import EditorTabs from "./EditorTabs.vue";
 
 const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
@@ -58,36 +57,22 @@ defineExpose<{
 </script>
 
 <template>
-  <div class="card">
-    <EditorTabs>
-      <template #data>
-        <FormContainer>
-          <PropertyForm
-            :data="props.data"
-            :show-errors="showErrors"
-            :errors="errors"
-            :editor-mode="EditorMode.EDIT"
-            :disabled="disableEdit"
-          />
-          <PermissionsForm
-            ref="permissionsFormRef"
-            :disabled="disableEdit"
-            :ignored-permission-options="[Permissions.Create]"
-            :path="props.path"
-            :modify-shell="props.modifyShell"
-            :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
-            :get-access-permission-rules="props.getAccessPermissionRules"
-          />
-        </FormContainer>
-      </template>
-      <template #activityHistory>
-        <EditorActivityHistory
-          v-if="props.path.idShortPathIncludingSubmodel"
-          :id="props.id"
-          :path="props.path.idShortPathIncludingSubmodel"
-          :type="props.type"
-        />
-      </template>
-    </EditorTabs>
-  </div>
+  <FormContainer>
+    <PropertyForm
+      :data="props.data"
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.EDIT"
+      :disabled="disableEdit"
+    />
+    <PermissionsForm
+      ref="permissionsFormRef"
+      :disabled="disableEdit"
+      :ignored-permission-options="[Permissions.Create]"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+      :get-access-permission-rules="props.getAccessPermissionRules"
+    />
+  </FormContainer>
 </template>
