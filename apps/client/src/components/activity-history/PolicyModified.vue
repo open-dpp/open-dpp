@@ -6,6 +6,7 @@ import PermissionList from "./PermissionList.vue";
 import RoleHeader from "./RoleHeader.vue";
 
 const props = defineProps<{
+  path: string;
   userRole: UserRoleDtoType;
   memberRole: MemberRoleDtoType | null;
   oldValue: PermissionDto[];
@@ -14,6 +15,7 @@ const props = defineProps<{
 </script>
 
 <template>
+  <IdShortPath :path="props.path" />
   <RoleHeader :user-role="props.userRole" :member-role="props.memberRole" />
   <DiffViewer>
     <template #oldValue>

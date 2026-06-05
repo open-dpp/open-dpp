@@ -21,10 +21,10 @@ const language = computed(() => convertLocaleToLanguage(locale.value));
 <template>
   <IdShortPath :path="props.path" />
   <DiffViewer>
-    <template #oldValue>
+    <template v-if="props.oldValue" #oldValue>
       {{ formatPropertyValue(props.oldValue, props.valueType, language) }}
     </template>
-    <template #newValue>
+    <template v-if="props.newValue" #newValue>
       {{ formatPropertyValue(props.newValue, props.valueType, language) }}
     </template>
   </DiffViewer>

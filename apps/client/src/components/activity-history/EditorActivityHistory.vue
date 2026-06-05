@@ -90,15 +90,18 @@ onMounted(async () => {
     </Toolbar>
     <Timeline :value="activities" align="left">
       <template #opposite="slotProps">
-        {{ dayjs(slotProps.item.header.createdAt).format("L LTS") }}
+        <div class="flex flex-col gap-1">
+          <div>{{ dayjs(slotProps.item.header.createdAt).format("L LTS") }}</div>
+          <div class="p-card-subtitle">ID: {{ slotProps.item.header.id }}</div>
+        </div>
       </template>
       <template #content="slotProps">
         <Card class="mt-4">
           <template #title
             >{{ t(`activityHistory.timelineTitle`) }}: {{ slotProps.item.header.type }}</template
           >
-          <template #subtitle
-            >{{ t(`activityHistory.userId`) }}: {{ slotProps.item.header.userId }}</template
+          <template #subtitle>
+            {{ t(`activityHistory.userId`) }}: {{ slotProps.item.header.userId }}</template
           >
           <template #content>
             <TimelineContentItem
@@ -142,6 +145,7 @@ onMounted(async () => {
                 :memberRole="change.memberRole"
                 :userRole="change.userRole"
                 :value="change.value"
+                :path="change.path"
               />
               <PolicyModified
                 v-else-if="change.type === ChangeEventDtoTypes.PolicyModified"
@@ -149,11 +153,13 @@ onMounted(async () => {
                 :userRole="change.userRole"
                 :oldValue="change.oldValue"
                 :newValue="change.newValue"
+                :path="change.path"
               />
               <PolicyDeleted
                 v-else-if="change.type === ChangeEventDtoTypes.PolicyDeleted"
                 :memberRole="change.memberRole"
                 :userRole="change.userRole"
+                :path="change.path"
               />
               <RowAddedOrDeleted
                 v-else-if="

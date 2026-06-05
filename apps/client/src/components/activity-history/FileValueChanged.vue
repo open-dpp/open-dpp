@@ -13,11 +13,11 @@ const props = defineProps<{
 <template>
   <IdShortPath :path="props.path" />
   <DiffViewer>
-    <template #oldValue>
-      <MediaFieldView v-if="props.oldValue.value" :media-id="props.oldValue.value" />
+    <template v-if="props.oldValue.value" #oldValue>
+      <MediaFieldView :media-id="props.oldValue.value" />
     </template>
-    <template #newValue>
-      <MediaFieldView v-if="props.newValue.value" :media-id="props.newValue.value" />
+    <template v-if="props.newValue.value" #newValue>
+      <MediaFieldView :media-id="props.newValue.value" />
     </template>
   </DiffViewer>
 </template>

@@ -528,6 +528,7 @@
     "position": "Position",
     "name": "Name",
     "type": "Typ",
+    "affectedRole": "Betroffene Rolle",
     "oldValue": "Alter Wert",
     "newValue": "Neuer Wert",
     "userId": "Benutzer ID",
