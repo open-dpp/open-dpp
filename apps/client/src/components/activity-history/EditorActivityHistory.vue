@@ -55,6 +55,24 @@ function filterChanges(changes: any[], activityType: ActivityDtoTypesType) {
   if (activityType === ActivityDtoTypes.ColumnModified) {
     return changes.slice(0, 1);
   }
+  if (activityType === ActivityDtoTypes.SubmodelAdded) {
+    return changes.filter(
+      (change) =>
+        ![
+          ChangeEventDtoTypes.SubmodelReferenceAdded,
+          ChangeEventDtoTypes.AddedSubmodelToEnv,
+        ].includes(change.type),
+    );
+  }
+  if (activityType === ActivityDtoTypes.SubmodelDeleted) {
+    return changes.filter(
+      (change) =>
+        ![
+          ChangeEventDtoTypes.SubmodelReferenceDeleted,
+          ChangeEventDtoTypes.DeletedSubmodelFromEnv,
+        ].includes(change.type),
+    );
+  }
   return changes;
 }
 

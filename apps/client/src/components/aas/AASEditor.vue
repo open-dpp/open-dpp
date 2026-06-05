@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import {
-  DataTypeDef,
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
-  type DigitalProductDocumentStatusDtoType,
   isNumericDataType,
   KeyTypes,
   Permissions,
@@ -29,15 +27,15 @@ import TablePagination from "../pagination/TablePagination.vue";
 import ElementPresentationPanel from "./presentation/ElementPresentationPanel.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 import PropertyEditor from "./PropertyEditor.vue";
-import PropertyCreateEditor from "./PropertyCreateEditor.vue";
 import FileEditor from "./FileEditor.vue";
-import FileCreateEditor from "./FileCreateEditor.vue";
 import ReferenceElementEditor from "./ReferenceElementEditor.vue";
-import ReferenceElementCreateEditor from "./ReferenceElementCreateEditor.vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
+import SubmodelElementListEditor from "./SubmodelElementListEditor.vue";
+import SubmodelElementCollectionEditor from "./SubmodelElementCollectionEditor.vue";
+import SubmodelEditor from "./SubmodelEditor.vue";
 
 const model = defineModel<DigitalProductDocumentDto>({ required: true });
 
@@ -226,6 +224,34 @@ function onSubmit() {
   }
 }
 
+const activityHistoryPath = computed(() => {
+  if (
+    !editorVNode.value ||
+    !editorVNode.value.props.path.idShortPathIncludingSubmodel ||
+    !editorVNode.value.component
+  ) {
+    return undefined;
+  }
+  const path = editorVNode.value.props.path.idShortPathIncludingSubmodel;
+
+  const hasChildElements = [
+    SubmodelElementCollectionEditor,
+    SubmodelElementListEditor,
+    SubmodelEditor,
+  ].includes(editorVNode.value.component as any);
+
+  if (hasChildElements) {
+    return `sw:${path}`;
+  }
+  const isLeafEditor = [PropertyEditor, FileEditor, ReferenceElementEditor].includes(
+    editorVNode.value.component as any,
+  );
+  if (isLeafEditor) {
+    return path;
+  }
+  return undefined;
+});
+
 const isFullPosition = computed(() => position.value === fullPosition);
 </script>
 
@@ -410,7 +436,11 @@ const isFullPosition = computed(() => position.value === fullPosition);
             <Tab v-if="showPresentationTab" data-cy="drawer-tab-presentation" value="presentation">
               {{ t("aasEditor.drawerTabs.presentation") }}
             </Tab>
-            <Tab value="activityHistory" data-cy="drawer-tab-activityHistory">
+            <Tab
+              v-if="activityHistoryPath"
+              value="activityHistory"
+              data-cy="drawer-tab-activityHistory"
+            >
               {{ t("activityHistory.label") }}
             </Tab>
           </TabList>
@@ -441,11 +471,11 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 "
               />
             </TabPanel>
-            <TabPanel value="activityHistory">
+            <TabPanel v-if="activityHistoryPath" value="activityHistory">
               <EditorActivityHistory
                 v-if="editorVNode && editorVNode.props.path.idShortPathIncludingSubmodel"
                 :id="model.id"
-                :path="editorVNode.props.path.idShortPathIncludingSubmodel"
+                :path="activityHistoryPath"
                 :type="props.type"
               />
             </TabPanel>
