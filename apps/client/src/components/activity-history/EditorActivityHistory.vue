@@ -97,6 +97,9 @@ onMounted(async () => {
           <template #title
             >{{ t(`activityHistory.timelineTitle`) }}: {{ slotProps.item.header.type }}</template
           >
+          <template #subtitle
+            >{{ t(`activityHistory.userId`) }}: {{ slotProps.item.header.userId }}</template
+          >
           <template #content>
             <TimelineContentItem
               v-for="(change, index) in filterChanges(
@@ -158,6 +161,7 @@ onMounted(async () => {
                   change.type === ChangeEventDtoTypes.RowDeleted
                 "
                 :position="change.position"
+                :value="change.value"
               />
               <ColumnAddedOrDeleted
                 v-else-if="
@@ -173,6 +177,7 @@ onMounted(async () => {
                   change.type === ChangeEventDtoTypes.SubmodelElementDeleted
                 "
                 :id-short="change.value.idShort"
+                :value="change.value"
               />
             </TimelineContentItem>
           </template>

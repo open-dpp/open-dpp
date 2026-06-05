@@ -498,6 +498,7 @@
     "createdAt": "Date",
     "position": "Position",
     "name": "Name",
+    "type": "Type",
     "oldValue": "Old value",
     "newValue": "New value",
     "userId": "User ID",

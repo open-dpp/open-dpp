@@ -527,6 +527,7 @@
     "createdAt": "Datum",
     "position": "Position",
     "name": "Name",
+    "type": "Typ",
     "oldValue": "Alter Wert",
     "newValue": "Neuer Wert",
     "userId": "Benutzer ID",
