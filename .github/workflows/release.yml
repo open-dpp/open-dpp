@@ -36,6 +36,43 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Preflight: refuse to start a publish that npm will ultimately reject.
+      #
+      # `changeset publish` decides what to publish from `npm view <pkg> versions`
+      # (via `npm info`), which does NOT list versions that were published and then
+      # unpublished. npm permanently reserves those "burned" version numbers, so a
+      # publish attempt dies with `E400 Cannot publish over previously published
+      # version` — but only after the build, and with a cryptic message. This step
+      # surfaces it in seconds: for every non-private workspace package it computes
+      #   burned = (every version in `npm view time`) − (live `npm view versions`)
+      # and fails fast if the package's local target version sits in that burned set.
+      # See docs/adr/0001-jump-published-packages-past-burned-npm-versions.md.
+      - name: Guard against burned npm versions
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r pkg_json; do
+            [ "$(jq -r '.private // false' "$pkg_json")" = "true" ] && continue
+            name=$(jq -r '.name' "$pkg_json")
+            version=$(jq -r '.version' "$pkg_json")
+            ever=$(npm view "$name" time --json 2>/dev/null \
+              | jq -r 'try (keys[]) catch empty | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+"))' \
+              | sort -u || true)
+            live=$(npm view "$name" versions --json 2>/dev/null \
+              | jq -r 'if type=="array" then .[] elif type=="string" then . else empty end' \
+              | sort -u || true)
+            burned=$(comm -23 <(printf '%s\n' "$ever") <(printf '%s\n' "$live") | sed '/^$/d')
+            if printf '%s\n' "$burned" | grep -qxF "$version"; then
+              echo "::error::$name@$version is a burned npm version (published then unpublished; npm permanently reserves the number). Bump the fixed group past the burned range — see docs/adr/0001." >&2
+              fail=1
+            fi
+          done < <(find apps packages docs -maxdepth 2 -name package.json -not -path '*/node_modules/*')
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Refusing to publish: one or more target versions are burned on npm." >&2
+            exit 1
+          fi
+          echo "No burned target versions detected; safe to publish."
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0

@@ -1,5 +1,11 @@
 # @open-dpp/api-client
 
+## 2.3.0
+
+### Major Changes
+
+- Realign the `@open-dpp/*` fixed version group above npm's burned version range. `@open-dpp/api-client@1.0.0` — and the whole `1.x`–`2.2.x` line — was published in 2025, then unpublished; npm permanently reserves those numbers, so `1.0.0` could never publish again and the package stayed stuck at `0.6.0`. The changes staged under `1.0.0` below ship here as `2.3.0`. See [ADR 0001](../../docs/adr/0001-jump-published-packages-past-burned-npm-versions.md).
+
 ## 1.0.0
 
 ### Major Changes
