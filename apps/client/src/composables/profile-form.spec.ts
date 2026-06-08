@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import {
   computeProfileDiff,
   mapUserToFormValues,
-  shouldSubmitEmailChange,
   type ProfileFormValues,
 } from "./profile-form.ts";
 
@@ -114,19 +113,5 @@ describe("computeProfileDiff", () => {
   it("accepts undefined firstName/lastName/preferredLanguage from vee-validate's loose form values", () => {
     const diff = computeProfileDiff({ email: baseFormValues.email }, baseFormValues);
     expect(diff).toEqual({});
-  });
-});
-
-describe("shouldSubmitEmailChange", () => {
-  it("rejects an empty candidate", () => {
-    expect(shouldSubmitEmailChange("", "user@example.com")).toBe(false);
-  });
-
-  it("rejects a candidate equal to the current email", () => {
-    expect(shouldSubmitEmailChange("user@example.com", "user@example.com")).toBe(false);
-  });
-
-  it("accepts a candidate different from the current email", () => {
-    expect(shouldSubmitEmailChange("new@example.com", "user@example.com")).toBe(true);
   });
 });

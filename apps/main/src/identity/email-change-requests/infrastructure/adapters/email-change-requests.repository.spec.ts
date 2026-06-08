@@ -47,14 +47,19 @@ describe("EmailChangeRequestsRepository", () => {
     await connection.collection(EMAIL_CHANGE_REQUEST_COLLECTION).deleteMany({});
   });
 
-  it("saves and finds by userId", async () => {
-    const request = EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" });
-    await repository.save(request);
+  it("upserts and finds by userId, round-tripping all fields", async () => {
+    const request = EmailChangeRequest.create({
+      userId: "user-1",
+      newEmail: "new@example.com",
+      previousEmail: "old@example.com",
+    });
+    await repository.upsertByUserId(request);
 
     const found = await repository.findByUserId("user-1");
     expect(found).not.toBeNull();
     expect(found?.userId).toBe("user-1");
     expect(found?.newEmail).toBe("new@example.com");
+    expect(found?.previousEmail).toBe("old@example.com");
     expect(found?.id).toBe(request.id);
     expect(found?.requestedAt.getTime()).toBe(request.requestedAt.getTime());
   });
@@ -64,45 +69,53 @@ describe("EmailChangeRequestsRepository", () => {
     expect(found).toBeNull();
   });
 
-  it("rejects a second request for the same userId (unique index)", async () => {
-    await repository.save(
-      EmailChangeRequest.create({ userId: "user-1", newEmail: "first@example.com" }),
+  it("allows two different users to hold a pending change to the same newEmail (no cross-user reservation)", async () => {
+    await repository.upsertByUserId(
+      EmailChangeRequest.create({
+        userId: "user-1",
+        newEmail: "shared@example.com",
+        previousEmail: "old-1@example.com",
+      }),
     );
-    await expect(
-      repository.save(
-        EmailChangeRequest.create({ userId: "user-1", newEmail: "second@example.com" }),
-      ),
-    ).rejects.toThrow();
-  });
+    await repository.upsertByUserId(
+      EmailChangeRequest.create({
+        userId: "user-2",
+        newEmail: "shared@example.com",
+        previousEmail: "old-2@example.com",
+      }),
+    );
 
-  it("rejects a second user holding a pending change to the same newEmail (partial unique index on newEmail)", async () => {
-    await repository.save(
-      EmailChangeRequest.create({ userId: "user-1", newEmail: "shared@example.com" }),
-    );
-    await expect(
-      repository.save(
-        EmailChangeRequest.create({ userId: "user-2", newEmail: "shared@example.com" }),
-      ),
-    ).rejects.toThrow();
+    expect((await repository.findByUserId("user-1"))?.newEmail).toBe("shared@example.com");
+    expect((await repository.findByUserId("user-2"))?.newEmail).toBe("shared@example.com");
   });
 
   it("upserts by userId: inserts when no row exists", async () => {
-    const request = EmailChangeRequest.create({ userId: "user-1", newEmail: "first@example.com" });
+    const request = EmailChangeRequest.create({
+      userId: "user-1",
+      newEmail: "first@example.com",
+      previousEmail: "old@example.com",
+    });
     await repository.upsertByUserId(request);
 
     const found = await repository.findByUserId("user-1");
     expect(found?.id).toBe(request.id);
     expect(found?.newEmail).toBe("first@example.com");
+    expect(found?.previousEmail).toBe("old@example.com");
   });
 
   it("upserts by userId: replaces an existing row atomically", async () => {
-    await repository.save(
-      EmailChangeRequest.create({ userId: "user-1", newEmail: "first@example.com" }),
+    await repository.upsertByUserId(
+      EmailChangeRequest.create({
+        userId: "user-1",
+        newEmail: "first@example.com",
+        previousEmail: "old@example.com",
+      }),
     );
 
     const replacement = EmailChangeRequest.create({
       userId: "user-1",
       newEmail: "second@example.com",
+      previousEmail: "old@example.com",
     });
     await repository.upsertByUserId(replacement);
 
@@ -112,8 +125,12 @@ describe("EmailChangeRequestsRepository", () => {
   });
 
   it("deletes by userId", async () => {
-    await repository.save(
-      EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" }),
+    await repository.upsertByUserId(
+      EmailChangeRequest.create({
+        userId: "user-1",
+        newEmail: "new@example.com",
+        previousEmail: "old@example.com",
+      }),
     );
     await repository.deleteByUserId("user-1");
     expect(await repository.findByUserId("user-1")).toBeNull();
@@ -125,8 +142,12 @@ describe("EmailChangeRequestsRepository", () => {
 
   describe("NoSQL injection defense", () => {
     it("findByUserId rejects an operator-shaped userId (Mongoose cast error from $eq + schema)", async () => {
-      await repository.save(
-        EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" }),
+      await repository.upsertByUserId(
+        EmailChangeRequest.create({
+          userId: "user-1",
+          newEmail: "new@example.com",
+          previousEmail: "old@example.com",
+        }),
       );
 
       const malicious = { $ne: null } as unknown as string;
@@ -135,8 +156,12 @@ describe("EmailChangeRequestsRepository", () => {
     });
 
     it("deleteByUserId rejects an operator-shaped userId without deleting any rows", async () => {
-      await repository.save(
-        EmailChangeRequest.create({ userId: "user-1", newEmail: "new@example.com" }),
+      await repository.upsertByUserId(
+        EmailChangeRequest.create({
+          userId: "user-1",
+          newEmail: "new@example.com",
+          previousEmail: "old@example.com",
+        }),
       );
 
       const malicious = { $ne: null } as unknown as string;

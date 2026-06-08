@@ -7,12 +7,14 @@ describe("EmailChangeRequest", () => {
     const request = EmailChangeRequest.create({
       userId: "user-1",
       newEmail: "new@example.com",
+      previousEmail: "old@example.com",
     });
     const after = new Date();
 
     expect(request.id).toEqual(expect.any(String));
     expect(request.userId).toBe("user-1");
     expect(request.newEmail).toBe("new@example.com");
+    expect(request.previousEmail).toBe("old@example.com");
     expect(request.requestedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
     expect(request.requestedAt.getTime()).toBeLessThanOrEqual(after.getTime());
   });
@@ -23,20 +25,44 @@ describe("EmailChangeRequest", () => {
       id: "req-1",
       userId: "user-1",
       newEmail: "new@example.com",
+      previousEmail: "old@example.com",
       requestedAt,
     });
 
     expect(request.id).toBe("req-1");
     expect(request.userId).toBe("user-1");
     expect(request.newEmail).toBe("new@example.com");
+    expect(request.previousEmail).toBe("old@example.com");
     expect(request.requestedAt).toBe(requestedAt);
   });
 
   it("rejects empty userId", () => {
-    expect(() => EmailChangeRequest.create({ userId: "", newEmail: "new@example.com" })).toThrow();
+    expect(() =>
+      EmailChangeRequest.create({
+        userId: "",
+        newEmail: "new@example.com",
+        previousEmail: "old@example.com",
+      }),
+    ).toThrow();
   });
 
   it("rejects empty newEmail", () => {
-    expect(() => EmailChangeRequest.create({ userId: "user-1", newEmail: "" })).toThrow();
+    expect(() =>
+      EmailChangeRequest.create({
+        userId: "user-1",
+        newEmail: "",
+        previousEmail: "old@example.com",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects empty previousEmail", () => {
+    expect(() =>
+      EmailChangeRequest.create({
+        userId: "user-1",
+        newEmail: "new@example.com",
+        previousEmail: "",
+      }),
+    ).toThrow();
   });
 });

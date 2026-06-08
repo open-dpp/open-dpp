@@ -8,6 +8,7 @@ describe("EmailChangeRequestMapper", () => {
       id: "req-1",
       userId: "user-1",
       newEmail: "new@example.com",
+      previousEmail: "old@example.com",
       requestedAt: new Date("2026-05-02T10:00:00Z"),
     });
 
@@ -16,6 +17,7 @@ describe("EmailChangeRequestMapper", () => {
       _id: "req-1",
       userId: "user-1",
       newEmail: "new@example.com",
+      previousEmail: "old@example.com",
       requestedAt: new Date("2026-05-02T10:00:00Z"),
     });
 
@@ -23,6 +25,7 @@ describe("EmailChangeRequestMapper", () => {
     expect(restored.id).toBe(original.id);
     expect(restored.userId).toBe(original.userId);
     expect(restored.newEmail).toBe(original.newEmail);
+    expect(restored.previousEmail).toBe(original.previousEmail);
     expect(restored.requestedAt.getTime()).toBe(original.requestedAt.getTime());
   });
 
@@ -31,12 +34,16 @@ describe("EmailChangeRequestMapper", () => {
       id: "req-1",
       userId: "user-1",
       newEmail: "new@example.com",
+      previousEmail: "old@example.com",
       requestedAt: new Date("2026-05-02T10:00:00Z"),
     });
 
-    expect(EmailChangeRequestMapper.toDto(entity)).toEqual({
+    const dto = EmailChangeRequestMapper.toDto(entity);
+    expect(dto).toEqual({
       newEmail: "new@example.com",
       requestedAt: new Date("2026-05-02T10:00:00Z"),
     });
+    // previousEmail is internal persistence only and must never leak into the DTO.
+    expect(dto).not.toHaveProperty("previousEmail");
   });
 });

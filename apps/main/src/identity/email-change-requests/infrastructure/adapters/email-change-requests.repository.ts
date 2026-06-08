@@ -21,15 +21,6 @@ export class EmailChangeRequestsRepository {
     @InjectConnection() private readonly connection: Connection,
   ) {}
 
-  async save(request: EmailChangeRequest): Promise<EmailChangeRequest> {
-    const persistence = EmailChangeRequestMapper.toPersistence(request);
-    await this.model.create({
-      ...persistence,
-      _schemaVersion: EmailChangeRequestSchemaVersion.v1_0_0,
-    });
-    return request;
-  }
-
   async upsertByUserId(request: EmailChangeRequest): Promise<EmailChangeRequest> {
     const persistence = EmailChangeRequestMapper.toPersistence(request);
     const session = await this.connection.startSession();

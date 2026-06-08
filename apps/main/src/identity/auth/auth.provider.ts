@@ -7,15 +7,36 @@ import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
 import { Connection, Types } from "mongoose";
 import { EmailChangeCompletedMail } from "../../email/domain/email-change-completed-mail";
+import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
 import { EmailService } from "../../email/email.service";
-import { EMAIL_CHANGE_REQUEST_COLLECTION } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
+import {
+  deletePendingEmailChangeForUser,
+  findPendingEmailChangeForUser,
+} from "../email-change-requests/infrastructure/email-change-gate";
+import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 
 export const AUTH = "auth";
 
-function extractPreviousEmailFromContext(context: unknown): string | undefined {
+interface VerificationTokenPayload {
+  /** The address the token was issued for. For a change-email token this is the PREVIOUS email. */
+  email?: string;
+  /** Present only on a change-email verification token: the NEW address being moved to. */
+  updateTo?: string;
+}
+
+/**
+ * Decodes the better-auth verification JWT carried on the request context.
+ *
+ * This depends on better-auth issuing an HS256 JWT whose payload carries `email` (the previous
+ * address for a change-email token) and, for change-email verifications, `updateTo` (the new
+ * address). We only read the unverified payload here; better-auth itself verifies the token's
+ * signature before it ever drives a `user.update`, so this decode is used purely to identify the
+ * flow, never to authorize it.
+ */
+function decodeVerificationToken(context: unknown): VerificationTokenPayload | undefined {
   const token = (context as { query?: { token?: unknown } } | null | undefined)?.query?.token;
   if (typeof token !== "string") {
     return undefined;
@@ -27,8 +48,12 @@ function extractPreviousEmailFromContext(context: unknown): string | undefined {
   try {
     const payload = JSON.parse(Buffer.from(segments[1], "base64url").toString("utf8")) as {
       email?: unknown;
+      updateTo?: unknown;
     };
-    return typeof payload.email === "string" ? payload.email : undefined;
+    return {
+      email: typeof payload.email === "string" ? payload.email : undefined,
+      updateTo: typeof payload.updateTo === "string" ? payload.updateTo : undefined,
+    };
   } catch {
     return undefined;
   }
@@ -152,8 +177,38 @@ export const AuthProvider: Provider = {
       },
       emailVerification: {
         sendOnSignUp: true,
-        sendVerificationEmail: async ({ user, url }: { user: any; url: string; token: string }) => {
+        // Token lifetime and the Email Change Request shadow-row TTL are coupled to one value
+        // (see ADR-0001 / EMAIL_CHANGE_REQUEST_TTL_SECONDS) so the verification window and the
+        // authorizing row cannot drift apart.
+        expiresIn: EMAIL_CHANGE_REQUEST_TTL_SECONDS,
+        sendVerificationEmail: async ({
+          user,
+          url,
+          token,
+        }: {
+          user: any;
+          url: string;
+          token: string;
+        }) => {
           const firstName = (user as any).firstName ?? "User";
+          // Distinguish a change-email verification from the signup verification by decoding the
+          // token: `updateTo` is present only when verifying a move to a new address. In that case
+          // better-auth passes `user.email` already set to the NEW address.
+          const decoded = decodeVerificationToken({ query: { token } });
+          if (decoded?.updateTo) {
+            await emailService.send(
+              EmailChangeVerificationMail.create({
+                to: user.email,
+                subject: "Confirm your new email address",
+                templateProperties: {
+                  firstName,
+                  newEmail: user.email,
+                  link: url,
+                },
+              }),
+            );
+            return;
+          }
           await emailService.send(
             VerifyEmailMail.create({
               to: user.email,
@@ -207,19 +262,13 @@ export const AuthProvider: Provider = {
             before: async (data, context) => {
               const newEmail = (data as { email?: unknown } | null | undefined)?.email;
               if (typeof newEmail !== "string") {
+                // Not an email update (e.g. profile/name change): nothing to gate, allow it.
                 return;
               }
-              const pending = await db
-                .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
-                .findOne({ newEmail: { $eq: newEmail } });
-              if (!pending) {
-                logger.warn(
-                  `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest (revoked or unknown)`,
-                );
-                return false;
-              }
-
-              const previousEmail = extractPreviousEmailFromContext(context);
+              // Resolve the originating identity from the signed verification token FIRST, so the
+              // gate no longer depends on `newEmail` being globally unique (per ADR-0001 there is
+              // no cross-user address reservation). `email` in the token is the PREVIOUS address.
+              const previousEmail = decodeVerificationToken(context)?.email;
               if (!previousEmail) {
                 logger.warn(
                   `Blocked user.email update to ${newEmail}: could not resolve the originating user from the verification token`,
@@ -229,53 +278,51 @@ export const AuthProvider: Provider = {
               const targetUser = await db
                 .collection("user")
                 .findOne({ email: { $eq: previousEmail.toLowerCase() } });
-              if (!targetUser || pending.userId !== targetUser._id.toString()) {
+              if (!targetUser) {
                 logger.warn(
-                  `Blocked user.email update to ${newEmail}: pending change belongs to a different user than the verification token's subject`,
+                  `Blocked user.email update to ${newEmail}: no user matches the verification token's subject`,
+                );
+                return false;
+              }
+              // Allow only when an Email Change Request exists for THAT user and authorizes THIS
+              // exact new address. This binds the (revocable) authorization to the token's subject.
+              const pending = await findPendingEmailChangeForUser(db, targetUser._id.toString());
+              if (!pending || pending.newEmail !== newEmail) {
+                logger.warn(
+                  `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest for the token's subject (revoked, unknown, or belongs to a different user)`,
                 );
                 return false;
               }
             },
-            after: async (user, context) => {
+            after: async (user) => {
               try {
-                const pending = await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).findOne({
-                  userId: { $eq: user.id },
-                  newEmail: { $eq: user.email },
-                });
-                if (!pending) {
+                const pending = await findPendingEmailChangeForUser(db, user.id);
+                if (!pending || pending.newEmail !== user.email) {
                   return;
                 }
 
-                const previousEmail = extractPreviousEmailFromContext(context);
-                if (previousEmail) {
-                  try {
-                    await emailService.send(
-                      EmailChangeCompletedMail.create({
-                        to: user.email,
-                        subject: "Your email address was changed",
-                        templateProperties: {
-                          firstName: (user as { firstName?: string }).firstName ?? "User",
-                          previousEmail,
-                          currentEmail: user.email,
-                        },
-                      }),
-                    );
-                  } catch (error) {
-                    logger.error(
-                      `Failed to send email-change-completed notification to ${user.email}`,
-                      error,
-                    );
-                  }
-                } else {
-                  logger.warn(
-                    `Skipped email-change-completed notification for ${user.email}: previous email could not be resolved from context`,
+                // Use the previousEmail persisted on the request rather than re-parsing the token
+                // (per ADR-0001 the after-hook is decoupled from the token format).
+                try {
+                  await emailService.send(
+                    EmailChangeCompletedMail.create({
+                      to: user.email,
+                      subject: "Your email address was changed",
+                      templateProperties: {
+                        firstName: (user as { firstName?: string }).firstName ?? "User",
+                        previousEmail: pending.previousEmail,
+                        currentEmail: user.email,
+                      },
+                    }),
+                  );
+                } catch (error) {
+                  logger.error(
+                    `Failed to send email-change-completed notification to ${user.email}`,
+                    error,
                   );
                 }
 
-                await db.collection(EMAIL_CHANGE_REQUEST_COLLECTION).deleteOne({
-                  userId: { $eq: user.id },
-                  newEmail: { $eq: user.email },
-                });
+                await deletePendingEmailChangeForUser(db, user.id);
               } catch (error) {
                 logger.error("Failed to clear EmailChangeRequest after user.email update", error);
               }

@@ -1,15 +1,12 @@
+import type { MeDto } from "@open-dpp/dto";
 import { Language } from "@open-dpp/dto";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, h } from "vue";
+import { defineComponent, h, type PropType } from "vue";
 import apiClient from "../../lib/api-client.ts";
 import ProfileForm from "./ProfileForm.vue";
-
-const confirmMocks = vi.hoisted(() => ({
-  require: vi.fn(),
-}));
 
 vi.mock("../../lib/api-client.ts", () => ({
   default: {
@@ -42,21 +39,21 @@ vi.mock("../../const.ts", () => ({
   AI_INTEGRATION_ID: "ai-integration",
 }));
 
+const localeRef = vi.hoisted(() => ({ current: null as { value: string } | null }));
+
 vi.mock("vue-i18n", async () => {
   const { ref: realRef } = await import("vue");
   return {
-    useI18n: () => ({
-      t: (key: string) => key,
-      locale: realRef("en-US"),
-    }),
+    useI18n: () => {
+      const locale = realRef("en-US");
+      localeRef.current = locale;
+      return {
+        t: (key: string) => key,
+        locale,
+      };
+    },
   };
 });
-
-vi.mock("primevue/useconfirm", () => ({
-  useConfirm: () => ({
-    require: confirmMocks.require,
-  }),
-}));
 
 const InputTextStub = defineComponent({
   name: "InputText",
@@ -118,17 +115,56 @@ const SelectButtonStub = defineComponent({
   },
 });
 
-const ConfirmDialogStub = defineComponent({
-  name: "ConfirmDialog",
-  setup() {
-    return () => h("div", { class: "confirm-dialog-stub" });
+// Stub that records the props handed to EmailChangeCard and exposes a button to
+// emit the "updated" event the parent must react to.
+const EmailChangeCardStub = defineComponent({
+  name: "EmailChangeCard",
+  props: {
+    email: { type: String, default: "" },
+    pendingEmailChange: {
+      type: Object as PropType<{ newEmail: string; requestedAt: Date } | null>,
+      default: null,
+    },
+    loaded: { type: Boolean, default: false },
+    hydrationFailed: { type: Boolean, default: false },
   },
-});
-
-const TransitionStub = defineComponent({
-  name: "Transition",
-  setup(_props, { slots }) {
-    return () => slots.default?.();
+  emits: ["updated"],
+  setup(props, { emit }) {
+    return () =>
+      h("div", { class: "email-change-card-stub", "data-testid": "email-change-card" }, [
+        h("span", { "data-testid": "card-email" }, props.email),
+        h(
+          "span",
+          { "data-testid": "card-pending" },
+          props.pendingEmailChange ? props.pendingEmailChange.newEmail : "none",
+        ),
+        h(
+          "button",
+          {
+            "data-testid": "card-emit-updated",
+            onClick: () =>
+              emit("updated", {
+                user: {
+                  id: "user-1",
+                  email: "new@example.com",
+                  firstName: "Florian",
+                  lastName: "Bieck",
+                  name: "Florian Bieck",
+                  image: null,
+                  emailVerified: true,
+                  preferredLanguage: Language.de,
+                  createdAt: new Date("2026-01-01T00:00:00Z"),
+                  updatedAt: new Date("2026-01-01T00:00:00Z"),
+                },
+                pendingEmailChange: {
+                  newEmail: "pending@example.com",
+                  requestedAt: new Date("2026-02-01T12:00:00Z"),
+                },
+              } satisfies MeDto),
+          },
+          "emit-updated",
+        ),
+      ]);
   },
 });
 
@@ -154,8 +190,7 @@ function makeMount() {
         Button: ButtonStub,
         Message: MessageStub,
         SelectButton: SelectButtonStub,
-        ConfirmDialog: ConfirmDialogStub,
-        Transition: TransitionStub,
+        EmailChangeCard: EmailChangeCardStub,
       },
     },
   });
@@ -230,79 +265,31 @@ describe("ProfileForm.vue", () => {
     expect(wrapper.text()).not.toContain("user.discardChanges");
   });
 
-  it("renders pending-email banner when pendingEmailChange is present", async () => {
-    (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: {
-        user: baseUser,
-        pendingEmailChange: {
-          newEmail: "new@example.com",
-          requestedAt: new Date("2026-02-01T12:00:00Z"),
-        },
-      },
-    });
-    const wrapper = makeMount();
-    await flushPromises();
-    expect(wrapper.find('[data-testid="cancel-pending"]').exists()).toBe(true);
-    expect(wrapper.text()).toContain("user.emailPending");
-  });
-
-  it("requires currentPassword before submitting an email change", async () => {
+  it("enables Save and shows Discard once a name edit makes the form dirty", async () => {
     (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { user: baseUser, pendingEmailChange: null },
     });
     const wrapper = makeMount();
     await flushPromises();
 
-    await wrapper.find('[data-testid="change-email"]').trigger("click");
+    // Pristine: Save disabled.
+    expect(wrapper.find('button[type="submit"]').attributes("disabled")).toBeDefined();
+
+    await wrapper.find("#profile-first-name").setValue("Changed");
     await flushPromises();
 
-    const newEmailInput = wrapper.find('[data-testid="new-email"]');
-    expect(newEmailInput.exists()).toBe(true);
-    await newEmailInput.setValue("new@example.com");
-
-    await wrapper.find('[data-testid="send-verification"]').trigger("click");
-    await flushPromises();
-
-    expect(
-      (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
-    ).toBe(0);
-    expect(wrapper.text()).toContain("user.emailChangeCurrentPasswordRequired");
+    // Dirty: Save enabled, Discard visible. (Submitting goes through vee-validate's
+    // handleSubmit, which hangs under jsdom; see project caveat — not exercised here.)
+    expect(wrapper.find('button[type="submit"]').attributes("disabled")).toBeUndefined();
+    expect(wrapper.text()).toContain("user.discardChanges");
   });
 
-  it("surfaces a 429 from the rate limiter as a friendly message", async () => {
+  it("renders EmailChangeCard with the current email and pending change as props", async () => {
     (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { user: baseUser, pendingEmailChange: null },
-    });
-    (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mockRejectedValue({
-      response: { status: 429 },
-    });
-    const wrapper = makeMount();
-    await flushPromises();
-
-    await wrapper.find('[data-testid="change-email"]').trigger("click");
-    await flushPromises();
-
-    await wrapper.find('[data-testid="new-email"]').setValue("new@example.com");
-    await wrapper.find('[data-testid="current-password"]').setValue("hunter2");
-
-    await wrapper.find('[data-testid="send-verification"]').trigger("click");
-    await flushPromises();
-
-    expect(
-      (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
-    ).toBe(1);
-    expect(wrapper.text()).toContain("user.emailChangeRateLimited");
-  });
-
-  it("calls requestEmailChange exactly once when Enter is pressed in the password field", async () => {
-    (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { user: baseUser, pendingEmailChange: null },
-    });
-    (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: {
         user: baseUser,
         pendingEmailChange: {
-          newEmail: "new@example.com",
+          newEmail: "pending@example.com",
           requestedAt: new Date("2026-02-01T12:00:00Z"),
         },
       },
@@ -310,128 +297,43 @@ describe("ProfileForm.vue", () => {
     const wrapper = makeMount();
     await flushPromises();
 
-    await wrapper.find('[data-testid="change-email"]').trigger("click");
-    await flushPromises();
-
-    await wrapper.find('[data-testid="new-email"]').setValue("new@example.com");
-    await wrapper.find('[data-testid="current-password"]').setValue("hunter2");
-
-    await wrapper.find('[data-testid="current-password"]').trigger("keydown", { key: "Enter" });
-    await flushPromises();
-
-    expect(
-      (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
-    ).toBe(1);
+    expect(wrapper.find('[data-testid="email-change-card"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="card-email"]').text()).toBe(baseUser.email);
+    expect(wrapper.find('[data-testid="card-pending"]').text()).toBe("pending@example.com");
   });
 
-  it("opens the confirm dialog before cancelling a pending change", async () => {
+  it("applies the MeDto from EmailChangeCard's 'updated' event (email, pending, locale)", async () => {
     (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: {
-        user: baseUser,
-        pendingEmailChange: {
-          newEmail: "new@example.com",
-          requestedAt: new Date("2026-02-01T12:00:00Z"),
-        },
-      },
-    });
-    const wrapper = makeMount();
-    await flushPromises();
-
-    const cancelButton = wrapper.find('[data-testid="cancel-pending"]');
-    expect(cancelButton.exists()).toBe(true);
-    await cancelButton.trigger("click");
-    await flushPromises();
-
-    expect(confirmMocks.require).toHaveBeenCalledTimes(1);
-    const callArgs = confirmMocks.require.mock.calls[0]?.[0];
-    expect(callArgs?.header).toBe("user.emailChangeConfirmTitle");
-    expect(callArgs?.message).toBe("user.emailChangeConfirmMessage");
-  });
-
-  it("preserves unsaved name edits when sending an email verification", async () => {
-    (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { user: baseUser, pendingEmailChange: null },
-    });
-    (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: {
-        user: baseUser,
-        pendingEmailChange: {
-          newEmail: "new@example.com",
-          requestedAt: new Date("2026-02-01T12:00:00Z"),
-        },
-      },
-    });
-    const wrapper = makeMount();
-    await flushPromises();
-
-    const firstNameInput = wrapper.find("#profile-first-name");
-    await firstNameInput.setValue("Changed");
-    await flushPromises();
-
-    await wrapper.find('[data-testid="change-email"]').trigger("click");
-    await flushPromises();
-    await wrapper.find('[data-testid="new-email"]').setValue("new@example.com");
-    await wrapper.find('[data-testid="current-password"]').setValue("hunter2");
-    await wrapper.find('[data-testid="send-verification"]').trigger("click");
-    await flushPromises();
-
-    expect(
-      (apiClient.dpp.users.requestEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
-    ).toBe(1);
-    expect((firstNameInput.element as HTMLInputElement).value).toBe("Changed");
-  });
-
-  it("preserves unsaved name edits when cancelling a pending email change", async () => {
-    (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: {
-        user: baseUser,
-        pendingEmailChange: {
-          newEmail: "new@example.com",
-          requestedAt: new Date("2026-02-01T12:00:00Z"),
-        },
-      },
-    });
-    (apiClient.dpp.users.cancelEmailChange as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { user: baseUser, pendingEmailChange: null },
     });
     const wrapper = makeMount();
     await flushPromises();
 
-    const firstNameInput = wrapper.find("#profile-first-name");
-    await firstNameInput.setValue("Changed");
+    expect(wrapper.find('[data-testid="card-email"]').text()).toBe("u@example.com");
+    expect(wrapper.find('[data-testid="card-pending"]').text()).toBe("none");
+
+    await wrapper.find('[data-testid="card-emit-updated"]').trigger("click");
     await flushPromises();
 
-    await wrapper.find('[data-testid="cancel-pending"]').trigger("click");
-    await flushPromises();
-    const accept = confirmMocks.require.mock.calls[0]?.[0]?.accept as (() => void) | undefined;
-    expect(accept).toBeTypeOf("function");
-    accept!();
-    await flushPromises();
-
-    expect(
-      (apiClient.dpp.users.cancelEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
-    ).toBe(1);
-    expect((firstNameInput.element as HTMLInputElement).value).toBe("Changed");
+    // Parent applied the new user + pending and pushed them back down as props.
+    expect(wrapper.find('[data-testid="card-email"]').text()).toBe("new@example.com");
+    expect(wrapper.find('[data-testid="card-pending"]').text()).toBe("pending@example.com");
+    // Locale mirrored from the updated user's preferredLanguage (de -> de-DE).
+    expect(localeRef.current?.value).toBe("de-DE");
   });
 
-  it("does not call cancelEmailChange directly when cancel-pending is clicked (only via confirm accept)", async () => {
+  it("does not mark the profile form dirty when EmailChangeCard emits 'updated'", async () => {
     (apiClient.dpp.users.getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: {
-        user: baseUser,
-        pendingEmailChange: {
-          newEmail: "new@example.com",
-          requestedAt: new Date("2026-02-01T12:00:00Z"),
-        },
-      },
+      data: { user: baseUser, pendingEmailChange: null },
     });
     const wrapper = makeMount();
     await flushPromises();
 
-    await wrapper.find('[data-testid="cancel-pending"]').trigger("click");
+    await wrapper.find('[data-testid="card-emit-updated"]').trigger("click");
     await flushPromises();
 
-    expect(
-      (apiClient.dpp.users.cancelEmailChange as ReturnType<typeof vi.fn>).mock.calls.length,
-    ).toBe(0);
+    // The name/language form is untouched by an email-change update.
+    expect(wrapper.text()).not.toContain("user.discardChanges");
+    expect(wrapper.find('button[type="submit"]').attributes("disabled")).toBeDefined();
   });
 });

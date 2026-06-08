@@ -5,6 +5,7 @@ export type BaseEmailType =
   | "INVITE_USER_TO_ORGANIZATION"
   | "PASSWORD_RESET"
   | "EMAIL_CHANGE_NOTIFICATION"
+  | "EMAIL_CHANGE_VERIFICATION"
   | "EMAIL_CHANGE_COMPLETED";
 
 export interface BaseEmailCreateProps {

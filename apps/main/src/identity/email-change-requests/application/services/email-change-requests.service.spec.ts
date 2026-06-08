@@ -3,17 +3,25 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
+import { EmailService } from "../../../../email/email.service";
 import { EmailChangeRequest } from "../../domain/email-change-request";
+import { verifyRevokeToken } from "../../domain/revoke-token";
 import { EmailChangeRequestsRepository } from "../../infrastructure/adapters/email-change-requests.repository";
 import { EmailChangeRequestsService } from "./email-change-requests.service";
+
+const AUTH_SECRET = "test-secret-32-chars-min-........";
 
 describe("EmailChangeRequestsService", () => {
   let service: EmailChangeRequestsService;
   let mockRepo: any;
   let mockAuth: any;
   let mockEnv: any;
+  let mockEmail: any;
   let mockInternalAdapter: any;
   let mockPassword: any;
+
+  const currentUser = { id: "user-1", email: "current@x.com", firstName: "Ada" };
+  const headers = { cookie: "session=abc" } as const;
 
   beforeEach(async () => {
     mockRepo = {
@@ -42,9 +50,12 @@ describe("EmailChangeRequestsService", () => {
     mockEnv = {
       get: jest.fn((key: string) => {
         if (key === "OPEN_DPP_URL") return "https://open-dpp.test";
-        if (key === "OPEN_DPP_AUTH_SECRET") return "test-secret-32-chars-min-........";
+        if (key === "OPEN_DPP_AUTH_SECRET") return AUTH_SECRET;
         return undefined;
       }),
+    };
+    mockEmail = {
+      send: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -53,6 +64,7 @@ describe("EmailChangeRequestsService", () => {
         { provide: EmailChangeRequestsRepository, useValue: mockRepo },
         { provide: AUTH, useValue: mockAuth },
         { provide: EnvService, useValue: mockEnv },
+        { provide: EmailService, useValue: mockEmail },
       ],
     }).compile();
 
@@ -61,7 +73,11 @@ describe("EmailChangeRequestsService", () => {
 
   describe("findByUserId", () => {
     it("returns the row when present", async () => {
-      const request = EmailChangeRequest.create({ userId: "user-1", newEmail: "new@x.com" });
+      const request = EmailChangeRequest.create({
+        userId: "user-1",
+        newEmail: "new@x.com",
+        previousEmail: "current@x.com",
+      });
       mockRepo.findByUserId.mockResolvedValue(request);
       const result = await service.findByUserId("user-1");
       expect(result).toBe(request);
@@ -76,7 +92,11 @@ describe("EmailChangeRequestsService", () => {
   describe("hardCancel", () => {
     it("deletes the shadow row", async () => {
       mockRepo.findByUserId.mockResolvedValue(
-        EmailChangeRequest.create({ userId: "user-1", newEmail: "new@x.com" }),
+        EmailChangeRequest.create({
+          userId: "user-1",
+          newEmail: "new@x.com",
+          previousEmail: "current@x.com",
+        }),
       );
 
       await service.hardCancel("user-1");
@@ -94,26 +114,17 @@ describe("EmailChangeRequestsService", () => {
   });
 
   describe("request", () => {
-    const headers = { cookie: "session=abc" } as const;
-
     beforeEach(() => {
       mockInternalAdapter.findUserByEmail.mockResolvedValue({
         user: { id: "user-1", email: "current@x.com" },
         accounts: [{ providerId: "credential", password: "stored-hash" }],
       });
       mockPassword.verify.mockResolvedValue(true);
+      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
     });
 
-    it("creates a new request when none exists, verifying the password without minting a session", async () => {
-      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
-
-      const result = await service.request(
-        "user-1",
-        "new@x.com",
-        "current@x.com",
-        "hunter2",
-        headers,
-      );
+    it("creates a request whose previousEmail is the current email, verifying the password without minting a session", async () => {
+      const result = await service.request(currentUser, "new@x.com", "hunter2", headers);
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
       expect(mockPassword.verify).toHaveBeenCalledWith({
@@ -121,20 +132,71 @@ describe("EmailChangeRequestsService", () => {
         password: "hunter2",
       });
       expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
+      const persisted = mockRepo.upsertByUserId.mock.calls[0][0] as EmailChangeRequest;
+      expect(persisted.newEmail).toBe("new@x.com");
+      expect(persisted.previousEmail).toBe("current@x.com");
       expect(mockAuth.api.changeEmail).toHaveBeenCalledTimes(1);
       expect(result.newEmail).toBe("new@x.com");
+    });
+
+    it("sends an EmailChangeNotificationMail to the current email with a verifiable revoke URL after changeEmail succeeds", async () => {
+      const result = await service.request(currentUser, "new@x.com", "hunter2", headers);
+
+      const notificationCall = (mockEmail.send.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_NOTIFICATION",
+      );
+      expect(notificationCall).toBeDefined();
+      const mail = notificationCall![0] as {
+        to: string;
+        templateProperties: {
+          firstName: string;
+          currentEmail: string;
+          newEmail: string;
+          revokeUrl: string;
+        };
+      };
+      expect(mail.to).toBe("current@x.com");
+      expect(mail.templateProperties.firstName).toBe("Ada");
+      expect(mail.templateProperties.currentEmail).toBe("current@x.com");
+      expect(mail.templateProperties.newEmail).toBe("new@x.com");
+
+      const revokeUrl = new URL(mail.templateProperties.revokeUrl);
+      expect(revokeUrl.origin + revokeUrl.pathname).toBe(
+        "https://open-dpp.test/api/users/email-change/revoke",
+      );
+      const token = revokeUrl.searchParams.get("token");
+      expect(typeof token).toBe("string");
+      const decoded = verifyRevokeToken(token!, AUTH_SECRET);
+      expect(decoded.userId).toBe("user-1");
+      expect(decoded.requestId).toBe(result.id);
+    });
+
+    it("falls back to a default firstName when the user has none", async () => {
+      await service.request(
+        { id: "user-1", email: "current@x.com", firstName: null },
+        "new@x.com",
+        "hunter2",
+        headers,
+      );
+
+      const notificationCall = (mockEmail.send.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_NOTIFICATION",
+      );
+      const mail = notificationCall![0] as { templateProperties: { firstName: string } };
+      expect(mail.templateProperties.firstName).toBe("User");
     });
 
     it("rejects with ValueError when password is wrong and creates no session", async () => {
       mockPassword.verify.mockResolvedValue(false);
 
       await expect(
-        service.request("user-1", "new@x.com", "current@x.com", "wrong", headers),
+        service.request(currentUser, "new@x.com", "wrong", headers),
       ).rejects.toThrow(ValueError);
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
       expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+      expect(mockEmail.send).not.toHaveBeenCalled();
     });
 
     it("rejects with ValueError when no credential account exists", async () => {
@@ -144,7 +206,7 @@ describe("EmailChangeRequestsService", () => {
       });
 
       await expect(
-        service.request("user-1", "new@x.com", "current@x.com", "hunter2", headers),
+        service.request(currentUser, "new@x.com", "hunter2", headers),
       ).rejects.toThrow(ValueError);
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
@@ -159,7 +221,7 @@ describe("EmailChangeRequestsService", () => {
       });
 
       await expect(
-        service.request("user-1", "new@x.com", "current@x.com", "hunter2", headers),
+        service.request(currentUser, "new@x.com", "hunter2", headers),
       ).rejects.toThrow(ValueError);
 
       expect(mockPassword.verify).not.toHaveBeenCalled();
@@ -168,15 +230,7 @@ describe("EmailChangeRequestsService", () => {
     });
 
     it("replaces an existing pending request atomically", async () => {
-      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
-
-      const result = await service.request(
-        "user-1",
-        "new@x.com",
-        "current@x.com",
-        "hunter2",
-        headers,
-      );
+      const result = await service.request(currentUser, "new@x.com", "hunter2", headers);
 
       expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
       expect(mockRepo.upsertByUserId.mock.calls[0][0].newEmail).toBe("new@x.com");
@@ -185,24 +239,36 @@ describe("EmailChangeRequestsService", () => {
     });
 
     it("rolls back the row when better-auth.changeEmail fails", async () => {
-      mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
       mockAuth.api.changeEmail.mockRejectedValue(new Error("auth boom"));
 
       await expect(
-        service.request("user-1", "new@x.com", "current@x.com", "hunter2", headers),
+        service.request(currentUser, "new@x.com", "hunter2", headers),
       ).rejects.toThrow();
 
       expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
+      expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
+      expect(mockEmail.send).not.toHaveBeenCalled();
+    });
+
+    it("hard-cancels and throws when the notification email fails to send", async () => {
+      mockEmail.send.mockRejectedValue(new Error("SMTP unavailable"));
+
+      await expect(
+        service.request(currentUser, "new@x.com", "hunter2", headers),
+      ).rejects.toThrow();
+
+      expect(mockAuth.api.changeEmail).toHaveBeenCalledTimes(1);
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
     });
 
     it("rejects when newEmail equals currentEmail", async () => {
       await expect(
-        service.request("user-1", "same@x.com", "same@x.com", "hunter2", headers),
+        service.request(currentUser, "current@x.com", "hunter2", headers),
       ).rejects.toThrow(ValueError);
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
       expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
+      expect(mockEmail.send).not.toHaveBeenCalled();
     });
   });
 });

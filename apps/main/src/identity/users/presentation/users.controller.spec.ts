@@ -480,8 +480,8 @@ describe("UsersController", () => {
       const userCookie = await betterAuthHelper.signAsUser(user.id);
       const newEmail = `${randomUUID()}@test.test`;
       emailSendMock.mockClear();
-      emailSendMock.mockImplementation(async (mail: { type: string }) => {
-        if (mail.type === "EMAIL_CHANGE_NOTIFICATION") {
+      emailSendMock.mockImplementation(async (mail: unknown) => {
+        if ((mail as { type?: string }).type === "EMAIL_CHANGE_NOTIFICATION") {
           throw new Error("SMTP unavailable");
         }
       });
@@ -501,6 +501,71 @@ describe("UsersController", () => {
       } finally {
         emailSendMock.mockReset();
       }
+    });
+
+    it("lets two different users hold a pending change to the SAME new address without a 500", async () => {
+      const sharedNewEmail = `${randomUUID()}@test.test`;
+
+      const { user: userA } = await betterAuthHelper.createUser();
+      const userACookie = await betterAuthHelper.signAsUser(userA.id);
+      const { user: userB } = await betterAuthHelper.createUser();
+      const userBCookie = await betterAuthHelper.signAsUser(userB.id);
+
+      const responseA = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userACookie)
+        .send({ newEmail: sharedNewEmail, currentPassword: TEST_PASSWORD });
+      expect(responseA.status).toBe(202);
+      expect(responseA.body.pendingEmailChange?.newEmail).toBe(sharedNewEmail);
+
+      // Previously this second request collided on a unique newEmail index and threw E11000 (500).
+      const responseB = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userBCookie)
+        .send({ newEmail: sharedNewEmail, currentPassword: TEST_PASSWORD });
+      expect(responseB.status).toBe(202);
+      expect(responseB.body.pendingEmailChange?.newEmail).toBe(sharedNewEmail);
+
+      const rowCount = await connection
+        .collection(EMAIL_CHANGE_REQUEST_COLLECTION)
+        .countDocuments({ newEmail: { $eq: sharedNewEmail } });
+      expect(rowCount).toBe(2);
+    });
+
+    it("sends the new-address verification as an EMAIL_CHANGE_VERIFICATION mail, not the generic VERIFY_EMAIL", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+      expect(response.status).toBe(202);
+
+      // The verification email to the new address (the link contains /verify-email?token=)
+      // must be the tailored change-email template addressed to the new email.
+      const verificationCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      expect(verificationCall).toBeDefined();
+      const verification = verificationCall![0] as {
+        type: string;
+        to: string;
+        templateProperties: { newEmail?: string; firstName?: string };
+      };
+      expect(verification.type).toBe("EMAIL_CHANGE_VERIFICATION");
+      expect(verification.to).toBe(newEmail);
+      expect(verification.templateProperties.newEmail).toBe(newEmail);
+
+      // The generic signup verification template must NOT be used for a change-email verification.
+      const genericVerifyCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "VERIFY_EMAIL",
+      );
+      expect(genericVerifyCall).toBeUndefined();
     });
   });
 

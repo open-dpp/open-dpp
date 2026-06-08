@@ -5,6 +5,7 @@ export interface EmailChangeRequestPersistence {
   _id: string;
   userId: string;
   newEmail: string;
+  previousEmail: string;
   requestedAt: Date;
 }
 
@@ -14,6 +15,7 @@ export class EmailChangeRequestMapper {
       _id: entity.id,
       userId: entity.userId,
       newEmail: entity.newEmail,
+      previousEmail: entity.previousEmail,
       requestedAt: entity.requestedAt,
     };
   }
@@ -23,6 +25,7 @@ export class EmailChangeRequestMapper {
       id: persistence._id,
       userId: persistence.userId,
       newEmail: persistence.newEmail,
+      previousEmail: persistence.previousEmail,
       requestedAt: persistence.requestedAt,
     });
   }

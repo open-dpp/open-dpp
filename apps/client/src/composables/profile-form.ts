@@ -40,9 +40,3 @@ export function computeProfileDiff(
   }
   return diff;
 }
-
-export function shouldSubmitEmailChange(candidate: string, currentEmail: string): boolean {
-  if (!candidate) return false;
-  if (candidate === currentEmail) return false;
-  return true;
-}

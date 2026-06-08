@@ -2,10 +2,29 @@ import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
+import { EmailChangeNotificationMail } from "../../../../email/domain/email-change-notification-mail";
+import { EmailService } from "../../../../email/email.service";
 import { AUTH } from "../../../auth/auth.provider";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { EmailChangeRequest } from "../../domain/email-change-request";
+import { signRevokeToken } from "../../domain/revoke-token";
 import { EmailChangeRequestsRepository } from "../../infrastructure/adapters/email-change-requests.repository";
+
+// Lifetime of the revoke token embedded in the "your email is being changed" notification.
+// Independent of the verification-token / shadow-row TTL: the revoke link should stay usable
+// for a while after the request lapses so a user can still neutralize an unwanted change.
+const REVOKE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The subset of a User the email-change use case needs. Accepting this rather than the full
+ * User entity keeps the service decoupled from the users module while letting a User be
+ * passed directly.
+ */
+export interface EmailChangeRequester {
+  id: string;
+  email: string;
+  firstName: string | null;
+}
 
 @Injectable()
 export class EmailChangeRequestsService {
@@ -15,6 +34,7 @@ export class EmailChangeRequestsService {
     private readonly repository: EmailChangeRequestsRepository,
     @Inject(AUTH) private readonly auth: Auth,
     private readonly envService: EnvService,
+    private readonly emailService: EmailService,
   ) {}
 
   async findByUserId(userId: string): Promise<EmailChangeRequest | null> {
@@ -25,20 +45,31 @@ export class EmailChangeRequestsService {
     await this.repository.deleteByUserId(userId);
   }
 
+  /**
+   * Owns the full "request an email change" use case: it verifies the requester's password,
+   * records the authorizing Email Change Request (carrying `previousEmail`), kicks off
+   * better-auth's verification flow, and sends the revoke-notification to the *current*
+   * address. Any failure after the row is written rolls the row back so no orphaned pending
+   * change is left behind.
+   */
   async request(
-    userId: string,
+    user: EmailChangeRequester,
     newEmail: string,
-    currentEmail: string,
     currentPassword: string,
     headers: BetterAuthHeaders,
   ): Promise<EmailChangeRequest> {
+    const currentEmail = user.email;
     if (newEmail === currentEmail) {
       throw new ValueError("New email must differ from the current email");
     }
 
-    await this.verifyCurrentPassword(currentEmail, currentPassword, userId);
+    await this.verifyCurrentPassword(currentEmail, currentPassword, user.id);
 
-    const next = EmailChangeRequest.create({ userId, newEmail });
+    const next = EmailChangeRequest.create({
+      userId: user.id,
+      newEmail,
+      previousEmail: currentEmail,
+    });
     await this.repository.upsertByUserId(next);
 
     try {
@@ -54,14 +85,51 @@ export class EmailChangeRequestsService {
       });
     } catch (error) {
       this.logger.error(
-        `request: better-auth.changeEmail failed for ${userId}; rolling back shadow row`,
+        `request: better-auth.changeEmail failed for ${user.id}; rolling back shadow row`,
         error,
       );
-      await this.repository.deleteByUserId(userId);
+      await this.repository.deleteByUserId(user.id);
       throw error;
     }
 
+    await this.sendNotification(user, next, newEmail);
+
     return next;
+  }
+
+  private async sendNotification(
+    user: EmailChangeRequester,
+    request: EmailChangeRequest,
+    newEmail: string,
+  ): Promise<void> {
+    const revokeToken = signRevokeToken(
+      { userId: user.id, requestId: request.id },
+      this.envService.get("OPEN_DPP_AUTH_SECRET"),
+      REVOKE_TOKEN_TTL_MS,
+    );
+    const revokeUrl = `${this.envService.get("OPEN_DPP_URL")}/api/users/email-change/revoke?token=${encodeURIComponent(revokeToken)}`;
+
+    try {
+      await this.emailService.send(
+        EmailChangeNotificationMail.create({
+          to: user.email,
+          subject: "Your email is being changed",
+          templateProperties: {
+            firstName: user.firstName ?? "User",
+            currentEmail: user.email,
+            newEmail,
+            revokeUrl,
+          },
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        `request: failed to send email-change notification to ${user.email} for user ${user.id}; rolling back pending change`,
+        error,
+      );
+      await this.hardCancel(user.id);
+      throw error;
+    }
   }
 
   private async verifyCurrentPassword(

@@ -6,8 +6,6 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
-  Logger,
   Param,
   Patch,
   Post,
@@ -30,17 +28,13 @@ import {
   SetUserRoleDtoSchema,
   UpdateProfileDtoSchema,
 } from "@open-dpp/dto";
-import { EnvService } from "@open-dpp/env";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { EmailChangeNotificationMail } from "../../../email/domain/email-change-notification-mail";
-import { EmailService } from "../../../email/email.service";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session as SessionDomainEntity } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
 import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
 import { UserHasRole } from "../../auth/presentation/decorators/user-has-role.decorator";
 import { EmailChangeRequestsService } from "../../email-change-requests/application/services/email-change-requests.service";
-import { signRevokeToken } from "../../email-change-requests/domain/revoke-token";
 import { EmailChangeRequestMapper } from "../../email-change-requests/infrastructure/mappers/email-change-request.mapper";
 import { InvitationPopulateDecorator } from "../../organizations/application/invitation-populate-decorator";
 import { Invitation } from "../../organizations/domain/invitation";
@@ -51,17 +45,11 @@ import { UserRole, UserRoleEnum } from "../domain/user-role.enum";
 import { UserMapper } from "../infrastructure/mappers/user.mapper";
 import { InvitationStatusQueryParam } from "./users.decorators";
 
-const REVOKE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
-
 @Controller("users")
 export class UsersController {
-  private readonly logger = new Logger(UsersController.name);
-
   constructor(
     private readonly usersService: UsersService,
     private readonly emailChangeRequestsService: EmailChangeRequestsService,
-    private readonly emailService: EmailService,
-    private readonly envService: EnvService,
     private readonly organizationRepository: OrganizationsRepository,
     private readonly invitationsRepository: InvitationsRepository,
   ) {}
@@ -108,43 +96,11 @@ export class UsersController {
   ): Promise<MeDto> {
     const user = await this.usersService.getMe(session.userId);
     const pending = await this.emailChangeRequestsService.request(
-      session.userId,
+      user,
       body.newEmail,
-      user.email,
       body.currentPassword,
       extractBetterAuthHeaders(headers),
     );
-
-    const revokeToken = signRevokeToken(
-      { userId: user.id, requestId: pending.id },
-      this.envService.get("OPEN_DPP_AUTH_SECRET"),
-      REVOKE_TOKEN_TTL_MS,
-    );
-    const revokeUrl = `${this.envService.get("OPEN_DPP_URL")}/api/users/email-change/revoke?token=${encodeURIComponent(revokeToken)}`;
-
-    try {
-      await this.emailService.send(
-        EmailChangeNotificationMail.create({
-          to: user.email,
-          subject: "Your email is being changed",
-          templateProperties: {
-            firstName: user.firstName ?? "User",
-            currentEmail: user.email,
-            newEmail: body.newEmail,
-            revokeUrl,
-          },
-        }),
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to send email-change notification to ${user.email} for user ${user.id}; rolling back pending change`,
-        error,
-      );
-      await this.emailChangeRequestsService.hardCancel(session.userId);
-      throw new InternalServerErrorException(
-        "Failed to send email-change notification. Please try again.",
-      );
-    }
 
     return {
       user: UserMapper.toDto(user),
