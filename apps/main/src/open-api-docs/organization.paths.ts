@@ -20,7 +20,7 @@ export const organizationsPaths = {
       },
     },
   },
-  "/organizations/member/{id}/role": {
+  "/organizations/members/{id}/role": {
     patch: {
       tags: [tag],
       parameters: [IdParamSchema],
