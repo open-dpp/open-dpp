@@ -1,0 +1,51 @@
+import { ChangeEventTypes } from "./change-event-types";
+import { PropertyValueChanged } from "./property-value-changed";
+import { RowAdded } from "./row-added";
+import { registerChangeEvent } from "./change-event-registry";
+import { SubmodelElementAdded } from "./submodel-element-added";
+import { SubmodelElementDeleted } from "./submodel-element-deleted";
+import { SubmodelReferenceAdded } from "./submodel-reference-added";
+import { DescriptionChanged, DisplayNameChanged } from "./language-text-collection-changed";
+import { FileValueChanged } from "./file-value-changed";
+import { PolicyDeleted } from "./policy-deleted";
+import { PolicyAdded } from "./policy-added";
+import { PolicyModified } from "./policy-modified";
+import { DefaultThumbnailsModified } from "./default-thumbnails-modified";
+import { ColumnAdded } from "./column-added";
+import { ColumnDeleted } from "./column-deleted";
+import { RowDeleted } from "./row-deleted";
+import { AddedSubmodelToEnv } from "./added-submodel-to-env";
+import { SubmodelAdded } from "./submodel-added";
+import { DeletedSubmodelFromEnv } from "./deleted-submodel-from-env";
+import { SubmodelReferenceDeleted } from "./submodel-reference-deleted";
+import { SubmodelDeleted } from "./submodel-deleted";
+import { DigitalProductDocumentStatusChanged } from "./digital-product-document-status-changed";
+import { ReferenceElementValueChanged } from "./reference-element-value-changed";
+
+export function registerChangeEventClasses(): void {
+  registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);
+  registerChangeEvent(ChangeEventTypes.SubmodelReferenceAdded, SubmodelReferenceAdded);
+  registerChangeEvent(ChangeEventTypes.SubmodelAdded, SubmodelAdded);
+  registerChangeEvent(ChangeEventTypes.DeletedSubmodelFromEnv, DeletedSubmodelFromEnv);
+  registerChangeEvent(ChangeEventTypes.SubmodelReferenceDeleted, SubmodelReferenceDeleted);
+  registerChangeEvent(ChangeEventTypes.SubmodelDeleted, SubmodelDeleted);
+  registerChangeEvent(ChangeEventTypes.PropertyValueChanged, PropertyValueChanged);
+  registerChangeEvent(ChangeEventTypes.FileValueChanged, FileValueChanged);
+  registerChangeEvent(ChangeEventTypes.DisplayNameChanged, DisplayNameChanged);
+  registerChangeEvent(ChangeEventTypes.DescriptionChanged, DescriptionChanged);
+  registerChangeEvent(ChangeEventTypes.RowAdded, RowAdded);
+  registerChangeEvent(ChangeEventTypes.RowDeleted, RowDeleted);
+  registerChangeEvent(ChangeEventTypes.ColumnAdded, ColumnAdded);
+  registerChangeEvent(ChangeEventTypes.ColumnDeleted, ColumnDeleted);
+  registerChangeEvent(ChangeEventTypes.SubmodelElementAdded, SubmodelElementAdded);
+  registerChangeEvent(ChangeEventTypes.SubmodelElementDeleted, SubmodelElementDeleted);
+  registerChangeEvent(ChangeEventTypes.PolicyDeleted, PolicyDeleted);
+  registerChangeEvent(ChangeEventTypes.PolicyAdded, PolicyAdded);
+  registerChangeEvent(ChangeEventTypes.PolicyModified, PolicyModified);
+  registerChangeEvent(ChangeEventTypes.DefaultThumbnailsModified, DefaultThumbnailsModified);
+  registerChangeEvent(
+    ChangeEventTypes.DigitalProductDocumentStatusChanged,
+    DigitalProductDocumentStatusChanged,
+  );
+  registerChangeEvent(ChangeEventTypes.ReferenceElementValueChanged, ReferenceElementValueChanged);
+}

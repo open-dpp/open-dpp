@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
-import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
-import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
+import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
+import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
@@ -11,8 +13,6 @@ import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileField from "./form/FileField.vue";

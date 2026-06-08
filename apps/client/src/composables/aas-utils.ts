@@ -1,16 +1,15 @@
 import type {
   AssetAdministrationShellResponseDto,
   ExtendedEnvironmentResponseDto,
-  LanguageType,
+  LanguageTextDto,
 } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
-
-interface AasUtilsProps {
-  selectedLanguage: LanguageType;
-  translate: (label: string, ...args: unknown[]) => string;
-}
+import { useI18n } from "vue-i18n";
+import { computed } from "vue";
+import { convertLocaleToLanguage } from "../translations/i18n.ts";
 
 export interface IAasUtils {
+  parseLanguageTexts: (languageTexts: LanguageTextDto[], defaultText?: string) => string;
   parseDisplayNameFromAas: (
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ) => string;
@@ -19,14 +18,21 @@ export interface IAasUtils {
   ) => string;
 }
 
-export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAasUtils {
+export function useAasUtils(): IAasUtils {
+  const { t, locale } = useI18n();
+  const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
+
+  function parseLanguageTexts(
+    languageTexts: LanguageTextDto[],
+    defaultText = t("common.untitled"),
+  ): string {
+    return languageTexts.find((d) => d.language === selectedLanguage.value)?.text ?? defaultText;
+  }
+
   function parseDisplayNameFromAas(
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ): string {
-    const displayName = assetAdministrationShell.displayName.find(
-      (d) => d.language === selectedLanguage,
-    );
-    return displayName?.text ?? translate("common.untitled");
+    return parseLanguageTexts(assetAdministrationShell.displayName);
   }
 
   function parseDisplayNameFromEnvironment(
@@ -42,9 +48,9 @@ export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAa
         },
       )
       .otherwise(() => {
-        return translate("common.untitled");
+        return t("common.untitled");
       });
   }
 
-  return { parseDisplayNameFromAas, parseDisplayNameFromEnvironment };
+  return { parseDisplayNameFromAas, parseDisplayNameFromEnvironment, parseLanguageTexts };
 }

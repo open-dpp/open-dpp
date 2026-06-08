@@ -117,7 +117,7 @@ export class File implements ISubmodelElement {
     throw new ValueError("File cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("File does not support to delete submodel elements");
   }
 

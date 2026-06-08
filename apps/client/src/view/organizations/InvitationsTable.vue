@@ -10,7 +10,6 @@ import { onMounted } from "vue";
 import { InvitationStatusDto } from "@open-dpp/dto";
 
 dayjs.extend(utc);
-dayjs.extend(localizedFormat);
 dayjs.extend(isSameOrBefore);
 
 const { t } = useI18n();

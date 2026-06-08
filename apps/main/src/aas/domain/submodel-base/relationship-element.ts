@@ -127,7 +127,7 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     throw new ValueError("RelationshipElement cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("RelationshipElement does not support to delete submodel elements");
   }
 

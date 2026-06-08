@@ -117,7 +117,7 @@ export class ReferenceElement implements ISubmodelElement {
     throw new ValueError("ReferenceElement cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("ReferenceElement does not support to delete submodel elements");
   }
 

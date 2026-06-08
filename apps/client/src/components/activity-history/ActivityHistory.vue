@@ -1,0 +1,133 @@
+<script setup lang="ts">
+import { type DigitalProductDocumentTypeType } from "../../lib/digital-product-document.ts";
+import { onMounted, ref } from "vue";
+import type { ActivityDto, PagingParamsDto } from "@open-dpp/dto";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+import { useI18n } from "vue-i18n";
+import { useActivityHistory } from "../../composables/activity-history.ts";
+import { usePagination } from "../../composables/pagination.ts";
+import TablePagination from "../pagination/TablePagination.vue";
+import { useRoute, useRouter } from "vue-router";
+
+dayjs.extend(utc);
+const props = defineProps<{ id: string; type: DigitalProductDocumentTypeType }>();
+
+const { period, changePeriod, activities, fetchActivities, downloadActivities } =
+  useActivityHistory(props.type);
+const { t } = useI18n();
+const router = useRouter();
+
+const route = useRoute();
+
+function changeQueryParams(newQuery: Record<string, string | undefined>) {
+  router.replace({
+    query: {
+      ...route.query,
+      ...newQuery,
+    },
+  });
+}
+
+async function fetchCallback(pagingParams: PagingParamsDto) {
+  const response = await fetchActivities(props.id, pagingParams);
+
+  activities.value = response.result;
+  return response;
+}
+
+const {
+  hasPrevious,
+  hasNext,
+  currentPage,
+  previousPage,
+  resetCursor,
+  nextPage,
+  reloadCurrentPage,
+} = usePagination({
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  limit: 20,
+  fetchCallback,
+  changeQueryParams,
+});
+
+const downloadZip = async () => {
+  await downloadActivities(props.id);
+};
+
+const downloadJson = (activityDto: ActivityDto) => {
+  const dataStr = JSON.stringify(activityDto, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${dayjs(activityDto.header.createdAt).format("LLL")}_${activityDto.header.aggregateId}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+async function onPeriodChange(newPeriod: Date | Date[] | (Date | null)[] | null | undefined) {
+  if (Array.isArray(newPeriod)) {
+    await changePeriod(newPeriod);
+    await resetCursor();
+  }
+}
+
+onMounted(async () => {
+  await nextPage();
+});
+</script>
+
+<template>
+  <DataTable
+    :value="activities"
+    tableStyle="min-width: 50rem"
+    paginator
+    :rows="10"
+    :rows-per-page-options="[10]"
+  >
+    <template #header>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-4">
+          <span class="text-xl font-bold">{{ t("activityHistory.label") }}</span>
+          <DatePicker
+            v-model:model-value="period"
+            selectionMode="range"
+            :manualInput="false"
+            @update:model-value="onPeriodChange"
+          />
+        </div>
+        <Button icon="pi pi-download" :label="t('common.download')" raised @click="downloadZip" />
+      </div>
+    </template>
+    <Column field="header.createdAt" :header="t('activityHistory.createdAt')">
+      <template #body="slotProps">
+        <p>
+          {{ dayjs(slotProps.data.header.createdAt).format("L LTS") }}
+        </p>
+      </template>
+    </Column>
+    <Column field="header.id" header="ID" />
+    <Column field="header.correlationId" :header="t('activityHistory.correlationId')" />
+    <Column field="header.userId" :header="t('activityHistory.userId')" />
+    <Column>
+      <template #body="{ data }">
+        <Button :label="t('common.download')" @click="downloadJson(data)" />
+      </template>
+    </Column>
+    <template #paginatorcontainer>
+      <TablePagination
+        :current-page="currentPage"
+        :has-previous="hasPrevious"
+        :has-next="hasNext"
+        @reset-cursor="resetCursor"
+        @previous-page="previousPage"
+        @next-page="nextPage"
+      />
+    </template>
+  </DataTable>
+</template>

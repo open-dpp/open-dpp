@@ -158,7 +158,8 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
         submodels: [],
         conceptDescriptions: [],
       }),
-    }).publish();
+    });
+    passport.publish();
     await ctx.getModuleRef().get(PassportRepository).save(passport);
     return passport;
   }
@@ -275,7 +276,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const permalinkRepo = ctx.getModuleRef().get(PermalinkRepository);
     const lookupSpy = jest
       .spyOn(permalinkRepo, "findByPresentationConfigurationId")
-      .mockResolvedValueOnce(null);
+      .mockResolvedValueOnce(undefined);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
     const [result] = await service.createPermalinksForConfigs([config]);

@@ -1,5 +1,7 @@
 import type {
+  ActivityPaginationDto,
   DigitalProductDocumentStatusModificationDto,
+  GetAllActivitiesParamsDto,
   GetAllParamsDto,
   TemplateCreateDto,
   TemplateDto,
@@ -7,10 +9,15 @@ import type {
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 import { AasNamespace } from "../aas/aasNamespace";
-import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
-import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import {
+  parseGetAllActivitiesParams,
+  parseGetAllParams,
+} from "../digital-product-document/parse-get-all-params";
 import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
-
+import type {
+  DownloadActivityParams,
+  IDigitalProductDocumentNamespace,
+} from "../digital-product-document/digital-product-document.namespace";
 export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
   public presentationConfiguration!: PresentationConfigurationNamespace;
@@ -63,5 +70,27 @@ export class TemplatesNamespace implements IDigitalProductDocumentNamespace {
       `${this.templatesEndpoint}/${id}/status`,
       data,
     );
+  }
+
+  async getActivities(
+    id: string,
+    params: GetAllActivitiesParamsDto,
+  ): Promise<AxiosResponse<ActivityPaginationDto>> {
+    return this.axiosInstance.get<ActivityPaginationDto>(
+      `${this.templatesEndpoint}/${id}/activities`,
+      {
+        params: parseGetAllActivitiesParams(params),
+        paramsSerializer: {
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
+        },
+      },
+    );
+  }
+
+  downloadActivities(id: string, params: DownloadActivityParams): Promise<AxiosResponse<Blob>> {
+    return this.axiosInstance.get(`${this.templatesEndpoint}/${id}/activities/download`, {
+      responseType: "blob",
+      params: { ...params.period },
+    });
   }
 }

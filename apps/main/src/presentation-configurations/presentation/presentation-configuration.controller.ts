@@ -41,6 +41,9 @@ import {
   PresentationConfigurationService,
   PresentationReferenceHolder,
 } from "../application/services/presentation-configuration.service";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import type { Connection } from "mongoose";
+import { InjectConnection } from "@nestjs/mongoose";
 
 @Controller()
 export class PresentationConfigurationController {
@@ -53,14 +56,20 @@ export class PresentationConfigurationController {
     private readonly passportRepository: PassportRepository,
     @Inject(forwardRef(() => EnvironmentService))
     private readonly environmentService: EnvironmentService,
+    private readonly activityRepository: ActivityRepository,
+    @InjectConnection() private connection: Connection,
   ) {
     this.passportDocService = new DigitalProductDocumentService(
       this.environmentService,
       this.passportRepository,
+      this.activityRepository,
+      this.connection,
     );
     this.templateDocService = new DigitalProductDocumentService(
       this.environmentService,
       this.templateRepository,
+      this.activityRepository,
+      this.connection,
     );
   }
 
