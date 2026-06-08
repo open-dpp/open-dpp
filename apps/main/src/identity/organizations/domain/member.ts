@@ -29,24 +29,16 @@ export interface MemberWithUser {
 }
 
 export class Member {
-  public readonly id: string;
-  public readonly organizationId: string;
-  public readonly userId: string;
-  public readonly role: MemberRoleType;
-  public readonly createdAt: Date;
-
   private constructor(
-    id: string,
-    organizationId: string,
-    userId: string,
-    role: MemberRoleType,
-    createdAt: Date,
-  ) {
-    this.id = id;
-    this.organizationId = organizationId;
-    this.userId = userId;
-    this.role = role;
-    this.createdAt = createdAt;
+    public readonly id: string,
+    public readonly organizationId: string,
+    public readonly userId: string,
+    private _role: MemberRoleType,
+    public readonly createdAt: Date,
+  ) {}
+
+  get role(): MemberRoleType {
+    return this._role;
   }
 
   public static create(data: MemberCreateProps) {
@@ -61,7 +53,11 @@ export class Member {
   }
 
   public isOwner(): boolean {
-    return this.role === MemberRole.OWNER;
+    return this._role === MemberRole.OWNER;
+  }
+
+  changeRole(newRole: MemberRoleType) {
+    this._role = newRole;
   }
 
   public toPlain(): {
