@@ -17,11 +17,11 @@ export class OrganizationsNamespace {
   }
 
   public async getMemberOrganizations() {
-    return this.axiosInstance.get<OrganizationDto[]>("${this.basePath}/member");
+    return this.axiosInstance.get<OrganizationDto[]>(`${this.basePath}/member`);
   }
 
   public async post(data: OrganizationCreateDto) {
-    return this.axiosInstance.post<OrganizationDto>("${this.basePath}", data);
+    return this.axiosInstance.post<OrganizationDto>(`${this.basePath}`, data);
   }
 
   public async inviteUser(email: string, organizationId: string) {
@@ -43,6 +43,6 @@ export class OrganizationsNamespace {
   }
 
   public async changeMemberRole(memberId: string, role: MemberRoleDtoType) {
-    return this.axiosInstance.patch<void>(`${this.basePath}/member/${memberId}/role`, { role });
+    return this.axiosInstance.patch<void>(`${this.basePath}/members/${memberId}/role`, { role });
   }
 }

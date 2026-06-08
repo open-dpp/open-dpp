@@ -154,13 +154,13 @@ export class OrganizationsController {
     return this.membersService.getMembers(id);
   }
 
-  @Patch("member/:id/role")
+  @Patch("members/:id/role")
   async updateMemberRole(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(MemberRoleChangeDtoSchema)) body: MemberRoleChangeDto,
     @MemberRoleDecorator() requesterMemberRole: MemberRoleType,
   ) {
-    return this.organizationsService.updateMemberRole(id, body.role, requesterMemberRole);
+    return this.membersService.updateMemberRole(id, body.role, requesterMemberRole);
   }
 
   @Get(":id/name")

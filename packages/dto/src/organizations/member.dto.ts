@@ -1,4 +1,4 @@
-import { MemberRoleDtoEnum, UserDto } from "../users/user.dto";
+import { MemberRoleDtoEnum, type UserDto } from "../users/user.dto";
 import { z } from "zod";
 
 export interface MemberDto {

@@ -9,11 +9,16 @@ import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import RingLoader from "../navigation/RingLoader.vue";
 
-const props = defineProps<{
+interface Props {
   userId: string;
   userEmail: string;
   currentRole: string;
-}>();
+  roleOptions: { label: string; value: string }[];
+  isEscalation?: boolean;
+  onSave: (role: string) => Promise<void>;
+}
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "close"): void;
@@ -21,38 +26,31 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
 const visible = ref(true);
 const loading = ref(false);
 const errors = ref<string[]>([]);
 const success = ref(false);
 const confirming = ref(false);
-const selectedRole = ref<"admin" | "user">(props.currentRole as "admin" | "user");
 
-const roleOptions = computed(() => [
-  { label: t("organizations.admin.changeRoleDialog.roleAdmin"), value: "admin" },
-  { label: t("organizations.admin.changeRoleDialog.roleUser"), value: "user" },
-]);
+const selectedRole = ref<string>(props.currentRole);
 
 const selectedRoleLabel = computed(() => {
-  const option = roleOptions.value.find((o) => o.value === selectedRole.value);
+  const option = props.roleOptions.find((o) => o.value === selectedRole.value);
   return option?.label ?? selectedRole.value;
 });
 
 const currentRoleLabel = computed(() => {
-  const option = roleOptions.value.find((o) => o.value === props.currentRole);
+  const option = props.roleOptions.find((o) => o.value === props.currentRole);
   return option?.label ?? props.currentRole;
 });
-
-const isEscalation = computed(
-  () => selectedRole.value === "admin" && props.currentRole !== "admin",
-);
 
 function requestChangeRole() {
   if (!selectedRole.value || selectedRole.value === props.currentRole) {
     return;
   }
 
-  if (isEscalation.value) {
+  if (props.isEscalation && selectedRole.value === "admin" && props.currentRole !== "admin") {
     confirming.value = true;
     return;
   }
@@ -73,12 +71,12 @@ async function changeRole() {
 
   try {
     loading.value = true;
+
     await Promise.all([
-      apiClient.dpp.users.setRole(props.userId, {
-        role: selectedRole.value,
-      }),
+      props.onSave(selectedRole.value),
       new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS)),
     ]);
+
     success.value = true;
   } catch (error) {
     console.error(error);

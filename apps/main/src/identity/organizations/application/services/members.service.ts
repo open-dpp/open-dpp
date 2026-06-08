@@ -1,11 +1,12 @@
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
-import { Injectable, Logger } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberWithUser } from "../../domain/member";
 import { Organization } from "../../domain/organization";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
+import { MemberRole, MemberRoleType } from "../../domain/member-role.enum";
 
 @Injectable()
 export class MembersService {
@@ -60,7 +61,7 @@ export class MembersService {
     const userMap = new Map(users.map((user) => [user.id, user]));
 
     return members.map((member) => ({
-      ...member,
+      ...member.toPlain(),
       user: userMap.get(member.userId)
         ? {
             id: userMap.get(member.userId)!.id,
@@ -70,5 +71,20 @@ export class MembersService {
           }
         : null,
     }));
+  }
+
+  async updateMemberRole(
+    memberId: string,
+    newRole: MemberRoleType,
+    requesterMemberRole: MemberRoleType,
+  ): Promise<void> {
+    const memberToUpdate = await this.membersRepository.findOneByIdOrFail(memberId);
+
+    if (requesterMemberRole !== MemberRole.OWNER) {
+      throw new ForbiddenException("Only organization owners can change member roles");
+    }
+
+    memberToUpdate.changeRole(newRole);
+    await this.membersRepository.save(memberToUpdate);
   }
 }

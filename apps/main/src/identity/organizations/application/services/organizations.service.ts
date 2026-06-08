@@ -9,7 +9,7 @@ import {
 import { Session } from "../../../auth/domain/session";
 import { UserRole, UserRoleType } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
-import { MemberRole, MemberRoleEnum, MemberRoleType } from "../../domain/member-role.enum";
+import { MemberRoleEnum, MemberRoleType } from "../../domain/member-role.enum";
 import {
   Organization,
   OrganizationCreateProps,
@@ -167,21 +167,6 @@ export class OrganizationsService {
       throw new ForbiddenException();
     }
     return this.organizationsRepository.getAllOrganizations();
-  }
-
-  async updateMemberRole(
-    memberId: string,
-    newRole: MemberRoleType,
-    requesterMemberRole: MemberRoleType,
-  ): Promise<void> {
-    const memberToUpdate = await this.membersRepository.findOneByIdOrFail(memberId);
-
-    if (requesterMemberRole !== MemberRole.OWNER) {
-      throw new ForbiddenException("Only organization owners can change member roles");
-    }
-
-    memberToUpdate.changeRole(newRole);
-    await this.membersRepository.save(memberToUpdate);
   }
 
   // ! only used for organisation data in passports

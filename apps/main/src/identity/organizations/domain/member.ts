@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
 import { MemberRole, MemberRoleEnum, MemberRoleType } from "./member-role.enum";
+import { Types } from "mongoose";
 
 export interface MemberCreateProps {
   organizationId: string;
@@ -43,7 +43,13 @@ export class Member {
 
   public static create(data: MemberCreateProps) {
     const now = new Date();
-    return new Member(randomUUID(), data.organizationId, data.userId, data.role, now);
+    return new Member(
+      new Types.ObjectId().toHexString(),
+      data.organizationId,
+      data.userId,
+      data.role,
+      now,
+    );
   }
 
   public static loadFromDb(data: MemberDbProps) {
