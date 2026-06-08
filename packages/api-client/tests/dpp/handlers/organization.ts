@@ -21,7 +21,7 @@ export const organizationHandlers = [
   http.get(`${baseURL}/organizations/invitations/${orgaInvitation.id}`, async () => {
     return HttpResponse.json(orgaInvitation, { status: 200 });
   }),
-  http.patch(`${baseURL}/organizations/member/:id/role`, async () => {
+  http.patch(`${baseURL}/organizations/members/:id/role`, async () => {
     return new HttpResponse(null, { status: 200 });
   }),
 ];

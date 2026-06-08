@@ -188,7 +188,7 @@ describe("OrganizationsController", () => {
     );
 
     const response = await request(app.getHttpServer())
-      .patch(`/organizations/member/${member.id}/role`)
+      .patch(`/organizations/members/${member.id}/role`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({ role: MemberRole.OWNER });
@@ -216,7 +216,7 @@ describe("OrganizationsController", () => {
     );
 
     const response = await request(app.getHttpServer())
-      .patch(`/organizations/member/${member.id}/role`)
+      .patch(`/organizations/members/${member.id}/role`)
       .set("Cookie", otherUserCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({ role: MemberRole.OWNER });
