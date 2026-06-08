@@ -72,7 +72,8 @@ function isInvited(object: any): object is InvitedMember {
 }
 
 function canChangeRole(member: MemberDto): boolean {
-  const subject = asSubject();
+  const subject = asSubject(false);
+
   return (
     isMember(member) && member.userId !== user.id && subject.memberRole === MemberRoleDto.OWNER
   );
