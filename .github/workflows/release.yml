@@ -36,17 +36,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Preflight: refuse to start a publish that npm will ultimately reject.
-      #
-      # `changeset publish` decides what to publish from `npm view <pkg> versions`
-      # (via `npm info`), which does NOT list versions that were published and then
-      # unpublished. npm permanently reserves those "burned" version numbers, so a
-      # publish attempt dies with `E400 Cannot publish over previously published
-      # version` — but only after the build, and with a cryptic message. This step
-      # surfaces it in seconds: for every non-private workspace package it computes
-      #   burned = (every version in `npm view time`) − (live `npm view versions`)
-      # and fails fast if the package's local target version sits in that burned set.
-      # See docs/adr/0001-jump-published-packages-past-burned-npm-versions.md.
       - name: Guard against burned npm versions
         run: |
           set -euo pipefail
@@ -103,18 +92,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Push a repo-wide `v<version>` git tag so the release is reachable by
-      # tag name in git. Every `@open-dpp/*` package is in the `fixed` group
-      # in `.changeset/config.json`, so the first published package carries
-      # the canonical release version for the whole repo.
-      #
-      # Note: this tag push is made with `GITHUB_TOKEN`, which (by design)
-      # does not trigger other workflow runs. That's why the next step
-      # explicitly dispatches `build.yml` with the tag as its ref — it would
-      # otherwise never run for the versioned Docker image.
-      #
-      # PUBLISHED_PACKAGES is passed through an env var (not inlined via
-      # ${{ }}) to avoid script injection via workflow expression expansion.
       - name: Push repo-wide version tag
         id: version-tag
         if: steps.changesets.outputs.published == 'true'
@@ -142,10 +119,6 @@ jobs:
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      # Trigger `build.yml` at the tag ref so `docker/metadata-action` picks
-      # up the tag via `type=semver,pattern={{version}}` and publishes a
-      # version-tagged Docker image. RELEASE_TAG is read from the previous
-      # step's output via env var to avoid inlining `${{ }}` into `run:`.
       - name: Trigger versioned Docker build
         if: steps.changesets.outputs.published == 'true'
         env:
