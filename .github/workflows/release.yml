@@ -50,17 +50,36 @@ jobs:
       - name: Guard against burned npm versions
         run: |
           set -euo pipefail
+
+          # Fetch `npm view <name> <field> --json` and echo the JSON. A clean
+          # E404 (package not published yet — e.g. a new package's first
+          # release) yields `{}`, so it contributes no burned versions. Any
+          # other failure (network, auth, registry/parse error) aborts the
+          # step rather than being silently treated as "no burned versions",
+          # which would let a burned target slip through to a failed publish.
+          npm_meta() {
+            local out
+            if out=$(npm view "$1" "$2" --json 2>&1); then
+              printf '%s' "$out"
+            elif grep -qi 'E404' <<<"$out"; then
+              printf '{}'
+            else
+              echo "::error::npm view $1 $2 failed: $out" >&2
+              return 1
+            fi
+          }
+
           fail=0
           while IFS= read -r pkg_json; do
             [ "$(jq -r '.private // false' "$pkg_json")" = "true" ] && continue
             name=$(jq -r '.name' "$pkg_json")
             version=$(jq -r '.version' "$pkg_json")
-            ever=$(npm view "$name" time --json 2>/dev/null \
+            ever=$(npm_meta "$name" time \
               | jq -r 'try (keys[]) catch empty | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+"))' \
-              | sort -u || true)
-            live=$(npm view "$name" versions --json 2>/dev/null \
+              | sort -u)
+            live=$(npm_meta "$name" versions \
               | jq -r 'if type=="array" then .[] elif type=="string" then . else empty end' \
-              | sort -u || true)
+              | sort -u)
             burned=$(comm -23 <(printf '%s\n' "$ever") <(printf '%s\n' "$live") | sed '/^$/d')
             if printf '%s\n' "$burned" | grep -qxF "$version"; then
               echo "::error::$name@$version is a burned npm version (published then unpublished; npm permanently reserves the number). Bump the fixed group past the burned range — see docs/adr/0001." >&2
