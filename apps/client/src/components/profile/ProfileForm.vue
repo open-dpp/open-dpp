@@ -152,13 +152,6 @@ function discard() {
     :aria-busy="isSubmitting"
     @submit.prevent="submitProfile"
   >
-    <header class="mb-6">
-      <h1 class="text-ink m-0 mb-1 text-3xl leading-tight font-semibold tracking-tight">
-        {{ t("user.profile") }}
-      </h1>
-      <p class="text-ink-muted m-0 text-sm">{{ t("user.profileSubtitle") }}</p>
-    </header>
-
     <Message v-if="hydrationFailed" severity="error" class="mb-6" :closable="false">
       <div class="flex w-full items-center gap-3">
         <span>{{ t("user.profileLoadFailed") }}</span>
