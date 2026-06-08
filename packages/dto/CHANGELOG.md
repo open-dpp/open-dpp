@@ -1,5 +1,11 @@
 # @open-dpp/dto
 
+## 2.3.0
+
+### Major Changes
+
+- Realign the `@open-dpp/*` fixed version group above npm's burned version range so `@open-dpp/api-client` can publish again (its `1.x`–`2.2.x` line is burned on npm). `@open-dpp/dto@1.0.0` already published; this entry moves the shared group to `2.3.0`. See [ADR 0001](../../docs/adr/0001-jump-published-packages-past-burned-npm-versions.md).
+
 ## 1.0.0
 
 ### Major Changes
