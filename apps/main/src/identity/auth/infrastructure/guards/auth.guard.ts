@@ -7,6 +7,7 @@ import { UsersRepository } from "../../../users/infrastructure/adapters/users.re
 import { SessionsService } from "../../application/services/sessions.service";
 import { Session } from "../../domain/session";
 import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decorator";
+import { randomUUID } from "node:crypto";
 
 /**
  * NestJS guard that handles authentication for protected routes
@@ -31,6 +32,7 @@ export class AuthGuard implements CanActivate {
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    request.correlationId = request.headers["x-correlation-id"] ?? randomUUID();
     const url = request.url as string;
 
     const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];

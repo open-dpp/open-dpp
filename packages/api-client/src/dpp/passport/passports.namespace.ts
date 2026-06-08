@@ -1,5 +1,7 @@
 import type {
+  ActivityPaginationDto,
   DigitalProductDocumentStatusModificationDto,
+  GetAllActivitiesParamsDto,
   GetAllParamsDto,
   PassportDto,
   PassportPaginationDto,
@@ -8,9 +10,15 @@ import type {
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
-import { type IDigitalProductDocumentNamespace } from "../digital-product-document/digital-product-document.namespace";
-import { parseGetAllParams } from "../digital-product-document/parse-get-all-params";
+import {
+  parseGetAllActivitiesParams,
+  parseGetAllParams,
+} from "../digital-product-document/parse-get-all-params";
 import { PresentationConfigurationNamespace } from "../presentation-configurations/presentation-configuration.namespace";
+import type {
+  DownloadActivityParams,
+  IDigitalProductDocumentNamespace,
+} from "../digital-product-document/digital-product-document.namespace";
 
 export class PassportNamespace implements IDigitalProductDocumentNamespace {
   public aas!: AasNamespace;
@@ -57,5 +65,27 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     data: DigitalProductDocumentStatusModificationDto,
   ): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.put<PassportDto>(`${this.passportEndpoint}/${id}/status`, data);
+  }
+
+  async getActivities(
+    id: string,
+    params: GetAllActivitiesParamsDto,
+  ): Promise<AxiosResponse<ActivityPaginationDto>> {
+    return this.axiosInstance.get<ActivityPaginationDto>(
+      `${this.passportEndpoint}/${id}/activities`,
+      {
+        params: parseGetAllActivitiesParams(params),
+        paramsSerializer: {
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
+        },
+      },
+    );
+  }
+
+  downloadActivities(id: string, params: DownloadActivityParams): Promise<AxiosResponse<Blob>> {
+    return this.axiosInstance.get(`${this.passportEndpoint}/${id}/activities/download`, {
+      responseType: "blob",
+      params: { ...params.period },
+    });
   }
 }

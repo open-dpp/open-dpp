@@ -1,9 +1,9 @@
 import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
-import { DataTypeDef, EntityType } from "@open-dpp/dto";
+import { DataTypeDef, EntityType, PermissionKind, Permissions } from "@open-dpp/dto";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -15,6 +15,12 @@ import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelRegistryInitializer } from "../presentation/submodel-registry-initializer";
 import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
 import { SubmodelRepository } from "./submodel.repository";
+import { Security } from "../domain/security/security";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { IdShortPath } from "../domain/common/id-short-path";
+import { Permission } from "../domain/security/permission";
 
 describe("submodelRepository", () => {
   let submodelRepository: SubmodelRepository;
@@ -90,6 +96,36 @@ describe("submodelRepository", () => {
     await submodelRepository.save(submodel);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     expect(foundSubmodel).toEqual(submodel);
+  });
+
+  it("should save audit event of submodel", async () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+
+    const submodel = Submodel.create({ idShort: "section1" });
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member, "userId");
+    const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(prop1, { ability });
+    const digitalProductDocumentId = randomUUID();
+
+    submodel.modifySubmodelElement(
+      { idShort: prop1.idShort, value: "20" },
+      IdShortPath.create({ path: "prop1" }),
+      {
+        ability,
+        digitalProductDocumentId,
+      },
+    );
+
+    await submodelRepository.save(submodel);
   });
 
   it("should delete a submodel", async () => {

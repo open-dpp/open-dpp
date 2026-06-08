@@ -7,4 +7,6 @@ export const KeyJsonSchema = z.object({
   value: z.string(),
 });
 
+export type KeyDto = z.infer<typeof KeyJsonSchema>;
+
 export const KeyModificationSchema = KeyJsonSchema;

@@ -28,6 +28,37 @@ export class Reference implements IVisitable {
     });
   }
 
+  toPlain(): Record<string, any> {
+    return {
+      type: this.type,
+      referredSemanticId: this.referredSemanticId?.toPlain(),
+      keys: this.keys.map((k) => k.toPlain()),
+    };
+  }
+
+  equals(other: Reference): boolean {
+    if (this.type !== other.type) {
+      return false;
+    }
+    if (this.referredSemanticId === null && other.referredSemanticId !== null) {
+      return false;
+    }
+    if (this.referredSemanticId !== null && other.referredSemanticId === null) {
+      return false;
+    }
+    if (
+      this.referredSemanticId !== null &&
+      other.referredSemanticId !== null &&
+      !this.referredSemanticId.equals(other.referredSemanticId)
+    ) {
+      return false;
+    }
+    if (this.keys.length !== other.keys.length) {
+      return false;
+    }
+    return this.keys.every((key, index) => key.equals(other.keys[index]));
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitReference(this, context);
   }

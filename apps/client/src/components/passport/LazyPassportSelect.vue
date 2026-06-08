@@ -4,15 +4,12 @@ import {
   type PagingParamsDto,
   type PassportDto,
   type PassportPaginationDto,
-  type TemplateDto,
-  type TemplatePaginationDto,
 } from "@open-dpp/dto";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAasUtils } from "../../composables/aas-utils";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
-import { convertLocaleToLanguage } from "../../translations/i18n";
 
 const { startSize = 10, disabled = false } = defineProps<{
   startSize?: number;
@@ -21,7 +18,7 @@ const { startSize = 10, disabled = false } = defineProps<{
 
 const model = defineModel<PassportDto>();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 type PassportOption = PassportDto & { label: string };
 const passportList = ref<PassportOption[]>([]);
 const passport = computed({
@@ -56,10 +53,7 @@ async function loadMorePassports() {
   }
 }
 
-const { parseDisplayNameFromEnvironment } = useAasUtils({
-  translate: t,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-});
+const { parseDisplayNameFromEnvironment } = useAasUtils();
 
 function constructPassports({ result }: PassportPaginationDto) {
   return result.map((passport) => ({

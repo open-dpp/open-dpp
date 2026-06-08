@@ -12,6 +12,7 @@ import {
   PresentationConfigurationSchema,
 } from "./infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationController } from "./presentation/presentation-configuration.controller";
+import { ActivityHistoryModule } from "../activity-history/activity-history.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PresentationConfigurationController } from "./presentation/presentation
       },
     ]),
     forwardRef(() => AasModule),
+    ActivityHistoryModule,
   ],
   controllers: [PresentationConfigurationController],
   providers: [

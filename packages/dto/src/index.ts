@@ -8,6 +8,7 @@ export * from "./aas/common/language-text-json-schema";
 
 export * from "./shared/get-all-params.dto";
 export * from "./shared/filter.dto";
+export * from "./shared/time.dto";
 
 export * from "./organizations/invitation.dto";
 
@@ -73,3 +74,7 @@ export * from "./users/request-email-change.dto";
 export * from "./users/set-user-role.dto";
 export * from "./users/update-profile.dto";
 export * from "./users/user.dto";
+
+export * from "./activity-history/activity-history.dto";
+export * from "./activity-history/change-event-types.dto";
+export * from "./activity-history/activity-types.dto";

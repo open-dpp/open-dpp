@@ -137,8 +137,8 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.annotations, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.annotations, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

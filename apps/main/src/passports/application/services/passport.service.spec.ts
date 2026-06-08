@@ -38,6 +38,7 @@ import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
+import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 
 describe("passportService", () => {
   let service: PassportService;
@@ -62,6 +63,7 @@ describe("passportService", () => {
           { name: SubmodelDoc.name, schema: SubmodelSchema },
           { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
         ]),
+        ActivityHistoryModule,
         AasModule,
         UsersModule,
         OrganizationsModule,
@@ -109,9 +111,15 @@ describe("passportService", () => {
     });
     await permalinkRepository.save(permalink);
 
-    await service.modifyPassportStatus(passport.id, organizationId, subject, {
-      method: "Publish",
-    });
+    await service.modifyPassportStatus(
+      randomUUID(),
+      organizationId,
+      passport.id,
+      {
+        method: "Publish",
+      },
+      { subject, userId: randomUUID() },
+    );
 
     const frozen = await permalinkRepository.findOneOrFail(permalink.id);
     expect(frozen.publishedUrl).toBe("http://localhost:3000/p/frozen-on-publish");
@@ -134,9 +142,15 @@ describe("passportService", () => {
     const permalink = Permalink.create({ presentationConfigurationId: config.id });
     await permalinkRepository.save(permalink);
 
-    await service.modifyPassportStatus(passport.id, organizationId, subject, {
-      method: "Archive",
-    });
+    await service.modifyPassportStatus(
+      randomUUID(),
+      organizationId,
+      passport.id,
+      {
+        method: "Archive",
+      },
+      { subject, userId: randomUUID() },
+    );
 
     const stillDynamic = await permalinkRepository.findOneOrFail(permalink.id);
     expect(stillDynamic.publishedUrl).toBeNull();

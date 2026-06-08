@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => {
     routerPush: vi.fn(),
     confirm: vi.fn(),
     modifyStatus: vi.fn(),
+    getActivities: vi.fn(),
   };
 });
 
@@ -39,6 +40,7 @@ vi.mock("../lib/api-client", () => ({
         getById: mocks.getById,
         deleteById: mocks.deleteById,
         modifyStatus: mocks.modifyStatus,
+        getActivities: mocks.getActivities,
       },
     },
   },

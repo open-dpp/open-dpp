@@ -5,6 +5,10 @@ export class IdShortPath {
     return new IdShortPath(data.path.split("."));
   }
 
+  static fromSegments(segments: string[]): IdShortPath {
+    return new IdShortPath(segments);
+  }
+
   addPathSegment(segment: string) {
     return new IdShortPath([...this._segments, segment]);
   }

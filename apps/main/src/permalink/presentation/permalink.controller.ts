@@ -43,7 +43,6 @@ import {
   CursorQueryParam,
   IdOrSlugParam,
   IdShortPathParam,
-  LimitQueryParam,
   PassportIdQueryParam,
   SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
@@ -71,6 +70,7 @@ import {
   isMemberOfPassportOrg,
   resolveFallbackBaseUrl,
 } from "../application/services/permalink.application.service";
+import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
 
 @Controller()
 export class PermalinkController {

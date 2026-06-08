@@ -30,25 +30,27 @@ import {
 import { PresentationConfiguration } from "../domain/presentation-configuration";
 import { PresentationConfigurationController } from "./presentation-configuration.controller";
 import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import { getConnectionToken } from "@nestjs/mongoose";
 
 describe("PresentationConfigurationController", () => {
   let controller: PresentationConfigurationController;
   let service: {
-    list: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration[]>>;
-    create: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    getById: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    applyPatch: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
-    delete: jest.Mock<(...args: never[]) => Promise<void>>;
-    getEffective: jest.Mock<(...args: never[]) => Promise<PresentationConfiguration>>;
+    list: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration[]>>;
+    create: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    getById: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    applyPatch: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
+    delete: jest.Mock<(...args: any[]) => Promise<void>>;
+    getEffective: jest.Mock<(...args: any[]) => Promise<PresentationConfiguration>>;
   };
   let templateRepository: {
-    findOneOrFail: jest.Mock<(...args: never[]) => Promise<Template>>;
+    findOneOrFail: jest.Mock<(...args: any[]) => Promise<Template>>;
   };
   let passportRepository: {
-    findOneOrFail: jest.Mock<(...args: never[]) => Promise<Passport>>;
+    findOneOrFail: jest.Mock<(...args: any[]) => Promise<Passport>>;
   };
   let environmentService: {
-    loadAbility: jest.Mock<(...args: never[]) => Promise<AasAbility>>;
+    loadAbility: jest.Mock<(...args: any[]) => Promise<AasAbility>>;
   };
 
   beforeEach(async () => {
@@ -82,6 +84,15 @@ describe("PresentationConfigurationController", () => {
         { provide: TemplateRepository, useValue: templateRepository },
         { provide: PassportRepository, useValue: passportRepository },
         { provide: EnvironmentService, useValue: environmentService },
+        { provide: ActivityRepository, useValue: {} },
+        {
+          provide: getConnectionToken(),
+          useValue: {
+            startSession: jest.fn(),
+            transaction: jest.fn(),
+            close: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

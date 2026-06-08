@@ -50,6 +50,7 @@ import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
 import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
+import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 
 const adminPlain = {
   subjectAttribute: [
@@ -318,6 +319,7 @@ describe("aasSerializationService", () => {
             schema: PresentationConfigurationSchema,
           },
         ]),
+        ActivityHistoryModule,
         UsersModule,
         OrganizationsModule,
       ],
@@ -599,7 +601,10 @@ describe("aasSerializationService", () => {
       });
       expect(exportedForMember.environment.submodels).toEqual([
         {
-          administration: null,
+          administration: {
+            revision: "0",
+            version: "1",
+          },
           category: null,
           description: [],
           displayName: [],
