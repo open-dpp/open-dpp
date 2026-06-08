@@ -142,8 +142,8 @@ export class Entity implements ISubmodelElement {
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.statements, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.statements, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

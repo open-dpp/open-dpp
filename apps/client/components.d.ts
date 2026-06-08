@@ -13,6 +13,7 @@ export {};
 declare module 'vue' {
   export interface GlobalComponents {
     AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+    ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
     BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
@@ -25,6 +26,7 @@ declare module 'vue' {
     Checkbox: typeof import('primevue/checkbox')['default']
     ColorPicker: typeof import('primevue/colorpicker')['default']
     Column: typeof import('primevue/column')['default']
+    ColumnAddedOrDeleted: typeof import('./src/components/activity-history/ColumnAddedOrDeleted.vue')['default']
     ColumnCreateEditor: typeof import('./src/components/aas/ColumnCreateEditor.vue')['default']
     ColumnEditor: typeof import('./src/components/aas/ColumnEditor.vue')['default']
     ConfirmDialog: typeof import('primevue/confirmdialog')['default']
@@ -32,25 +34,32 @@ declare module 'vue' {
     DataTable: typeof import('primevue/datatable')['default']
     DataView: typeof import('primevue/dataview')['default']
     DatePicker: typeof import('primevue/datepicker')['default']
+    DescriptionTerm: typeof import('./src/components/activity-history/DescriptionTerm.vue')['default']
     Dialog: typeof import('primevue/dialog')['default']
+    DiffViewer: typeof import('./src/components/activity-history/DiffViewer.vue')['default']
     DigitalProductDocumentStatusChangeMenu: typeof import('./src/components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue')['default']
     DigitalProductDocumentStatusSelect: typeof import('./src/components/digital-product-document/DigitalProductDocumentStatusSelect.vue')['default']
     DigitalProductDocumentTable: typeof import('./src/components/digital-product-document/DigitalProductDocumentTable.vue')['default']
     DigitalProductDocumentToolbar: typeof import('./src/components/digital-product-document/DigitalProductDocumentToolbar.vue')['default']
     DisplayNameForm: typeof import('./src/components/aas/form/DisplayNameForm.vue')['default']
     DisplayNameRow: typeof import('./src/components/aas/form/DisplayNameRow.vue')['default']
+    Divider: typeof import('primevue/divider')['default']
     Drawer: typeof import('primevue/drawer')['default']
+    EditorActivityHistory: typeof import('./src/components/activity-history/EditorActivityHistory.vue')['default']
     ElementPresentationPanel: typeof import('./src/components/aas/presentation/ElementPresentationPanel.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
+    Fieldset: typeof import('primevue/fieldset')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
     FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
     FileField: typeof import('./src/components/aas/form/FileField.vue')['default']
     FileForm: typeof import('./src/components/aas/FileForm.vue')['default']
     FileUpload: typeof import('primevue/fileupload')['default']
+    FileValueChanged: typeof import('./src/components/activity-history/FileValueChanged.vue')['default']
     FloatLabel: typeof import('primevue/floatlabel')['default']
     FormContainer: typeof import('./src/components/aas/form/FormContainer.vue')['default']
     GalleriaEdit: typeof import('./src/components/media/GalleriaEdit.vue')['default']
     IdField: typeof import('./src/components/aas/form/IdField.vue')['default']
+    IdShortPath: typeof import('./src/components/activity-history/IdShortPath.vue')['default']
     Image: typeof import('primevue/image')['default']
     InputGroup: typeof import('primevue/inputgroup')['default']
     InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
@@ -62,6 +71,7 @@ declare module 'vue' {
     InviteToOrganizationDialog: typeof import('./src/components/admin/InviteToOrganizationDialog.vue')['default']
     InviteUserDialog: typeof import('./src/components/admin/InviteUserDialog.vue')['default']
     LanguageSelect: typeof import('./src/components/basics/LanguageSelect.vue')['default']
+    LanguageTextsChanged: typeof import('./src/components/activity-history/LanguageTextsChanged.vue')['default']
     Layout: typeof import('./src/components/layout/Layout.vue')['default']
     LazyPassportSelect: typeof import('./src/components/passport/LazyPassportSelect.vue')['default']
     LinkCellField: typeof import('./src/components/aas/LinkCellField.vue')['default']
@@ -92,7 +102,11 @@ declare module 'vue' {
     PassportQrCodeDialog: typeof import('./src/components/presentation/PassportQrCodeDialog.vue')['default']
     Password: typeof import('primevue/password')['default']
     PermalinkSettingsDialog: typeof import('./src/components/digital-product-document/PermalinkSettingsDialog.vue')['default']
+    PermissionList: typeof import('./src/components/activity-history/PermissionList.vue')['default']
     PermissionsForm: typeof import('./src/components/aas/PermissionsForm.vue')['default']
+    PolicyAdded: typeof import('./src/components/activity-history/PolicyAdded.vue')['default']
+    PolicyDeleted: typeof import('./src/components/activity-history/PolicyDeleted.vue')['default']
+    PolicyModified: typeof import('./src/components/activity-history/PolicyModified.vue')['default']
     PresentationComponentRenderer: typeof import('./src/components/presentation/components/PresentationComponentRenderer.vue')['default']
     PresentationPreviewFrame: typeof import('./src/components/aas/presentation/PresentationPreviewFrame.vue')['default']
     ProductImageGalleria: typeof import('./src/components/media/ProductImageGalleria.vue')['default']
@@ -102,6 +116,7 @@ declare module 'vue' {
     PropertyEditor: typeof import('./src/components/aas/PropertyEditor.vue')['default']
     PropertyForm: typeof import('./src/components/aas/PropertyForm.vue')['default']
     PropertyValue: typeof import('./src/components/aas/PropertyValue.vue')['default']
+    PropertyValueChanged: typeof import('./src/components/activity-history/PropertyValueChanged.vue')['default']
     PropertyValueField: typeof import('./src/components/aas/form/PropertyValueField.vue')['default']
     QrCode: typeof import('./src/components/QrCode.vue')['default']
     RadioButton: typeof import('primevue/radiobutton')['default']
@@ -109,9 +124,12 @@ declare module 'vue' {
     ReferenceElementCreateEditor: typeof import('./src/components/aas/ReferenceElementCreateEditor.vue')['default']
     ReferenceElementEditor: typeof import('./src/components/aas/ReferenceElementEditor.vue')['default']
     ReferenceElementForm: typeof import('./src/components/aas/ReferenceElementForm.vue')['default']
+    ReferenceElementValueChanged: typeof import('./src/components/activity-history/ReferenceElementValueChanged.vue')['default']
     RingLoader: typeof import('./src/components/navigation/RingLoader.vue')['default']
+    RoleHeader: typeof import('./src/components/activity-history/RoleHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    RowAddedOrDeleted: typeof import('./src/components/activity-history/RowAddedOrDeleted.vue')['default']
     Select: typeof import('primevue/select')['default']
     SelectOrganization: typeof import('./src/components/organizations/SelectOrganization.vue')['default']
     SidebarContent: typeof import('./src/components/navigation/SidebarContent.vue')['default']
@@ -122,18 +140,21 @@ declare module 'vue' {
     SubmodelCreateEditor: typeof import('./src/components/aas/SubmodelCreateEditor.vue')['default']
     SubmodelEditor: typeof import('./src/components/aas/SubmodelEditor.vue')['default']
     SubmodelElement: typeof import('./src/components/presentation/SubmodelElement.vue')['default']
+    SubmodelElementAddedOrDeleted: typeof import('./src/components/activity-history/SubmodelElementAddedOrDeleted.vue')['default']
     SubmodelElementCollection: typeof import('./src/components/presentation/SubmodelElementCollection.vue')['default']
     SubmodelElementCollectionCreateEditor: typeof import('./src/components/aas/SubmodelElementCollectionCreateEditor.vue')['default']
     SubmodelElementCollectionEditor: typeof import('./src/components/aas/SubmodelElementCollectionEditor.vue')['default']
     SubmodelElementListCreateEditor: typeof import('./src/components/aas/SubmodelElementListCreateEditor.vue')['default']
     SubmodelElementListEditor: typeof import('./src/components/aas/SubmodelElementListEditor.vue')['default']
+    SubmodelElementName: typeof import('./src/components/activity-history/SubmodelElementName.vue')['default']
     SubmodelElementValue: typeof import('./src/components/presentation/SubmodelElementValue.vue')['default']
     TablePagination: typeof import('./src/components/pagination/TablePagination.vue')['default']
-    Tabs: typeof import('./src/components/lists/Tabs.vue')['default']
     Tag: typeof import('primevue/tag')['default']
     TemplateCreateDialog: typeof import('./src/components/template/TemplateCreateDialog.vue')['default']
     Textarea: typeof import('primevue/textarea')['default']
     TextFieldWithValidation: typeof import('./src/components/basics/TextFieldWithValidation.vue')['default']
+    Timeline: typeof import('primevue/timeline')['default']
+    TimelineContentItem: typeof import('./src/components/activity-history/TimelineContentItem.vue')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     Toolbar: typeof import('primevue/toolbar')['default']
     Tree: typeof import('primevue/tree')['default']
@@ -149,6 +170,7 @@ declare module 'vue' {
 // For TSX support
 declare global {
   const AASEditor: (typeof import("./src/components/aas/AASEditor.vue"))["default"];
+  const ActivityHistory: (typeof import("./src/components/activity-history/ActivityHistory.vue"))["default"];
   const AdminUsersList: (typeof import("./src/components/admin/AdminUsersList.vue"))["default"];
   const AssetAdministrationShellEditor: (typeof import("./src/components/aas/AssetAdministrationShellEditor.vue"))["default"];
   const BaseButton: (typeof import("./src/components/basics/BaseButton.vue"))["default"];
@@ -161,6 +183,7 @@ declare global {
   const Checkbox: (typeof import("primevue/checkbox"))["default"];
   const ColorPicker: (typeof import("primevue/colorpicker"))["default"];
   const Column: (typeof import("primevue/column"))["default"];
+  const ColumnAddedOrDeleted: (typeof import("./src/components/activity-history/ColumnAddedOrDeleted.vue"))["default"];
   const ColumnCreateEditor: (typeof import("./src/components/aas/ColumnCreateEditor.vue"))["default"];
   const ColumnEditor: (typeof import("./src/components/aas/ColumnEditor.vue"))["default"];
   const ConfirmDialog: (typeof import("primevue/confirmdialog"))["default"];
@@ -168,25 +191,32 @@ declare global {
   const DataTable: (typeof import("primevue/datatable"))["default"];
   const DataView: (typeof import("primevue/dataview"))["default"];
   const DatePicker: (typeof import("primevue/datepicker"))["default"];
+  const DescriptionTerm: (typeof import("./src/components/activity-history/DescriptionTerm.vue"))["default"];
   const Dialog: (typeof import("primevue/dialog"))["default"];
+  const DiffViewer: (typeof import("./src/components/activity-history/DiffViewer.vue"))["default"];
   const DigitalProductDocumentStatusChangeMenu: (typeof import("./src/components/digital-product-document/DigitalProductDocumentStatusChangeMenu.vue"))["default"];
   const DigitalProductDocumentStatusSelect: (typeof import("./src/components/digital-product-document/DigitalProductDocumentStatusSelect.vue"))["default"];
   const DigitalProductDocumentTable: (typeof import("./src/components/digital-product-document/DigitalProductDocumentTable.vue"))["default"];
   const DigitalProductDocumentToolbar: (typeof import("./src/components/digital-product-document/DigitalProductDocumentToolbar.vue"))["default"];
   const DisplayNameForm: (typeof import("./src/components/aas/form/DisplayNameForm.vue"))["default"];
   const DisplayNameRow: (typeof import("./src/components/aas/form/DisplayNameRow.vue"))["default"];
+  const Divider: (typeof import("primevue/divider"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
+  const EditorActivityHistory: (typeof import("./src/components/activity-history/EditorActivityHistory.vue"))["default"];
   const ElementPresentationPanel: (typeof import("./src/components/aas/presentation/ElementPresentationPanel.vue"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
+  const Fieldset: (typeof import("primevue/fieldset"))["default"];
   const FileCreateEditor: (typeof import("./src/components/aas/FileCreateEditor.vue"))["default"];
   const FileEditor: (typeof import("./src/components/aas/FileEditor.vue"))["default"];
   const FileField: (typeof import("./src/components/aas/form/FileField.vue"))["default"];
   const FileForm: (typeof import("./src/components/aas/FileForm.vue"))["default"];
   const FileUpload: (typeof import("primevue/fileupload"))["default"];
+  const FileValueChanged: (typeof import("./src/components/activity-history/FileValueChanged.vue"))["default"];
   const FloatLabel: (typeof import("primevue/floatlabel"))["default"];
   const FormContainer: (typeof import("./src/components/aas/form/FormContainer.vue"))["default"];
   const GalleriaEdit: (typeof import("./src/components/media/GalleriaEdit.vue"))["default"];
   const IdField: (typeof import("./src/components/aas/form/IdField.vue"))["default"];
+  const IdShortPath: (typeof import("./src/components/activity-history/IdShortPath.vue"))["default"];
   const Image: (typeof import("primevue/image"))["default"];
   const InputGroup: (typeof import("primevue/inputgroup"))["default"];
   const InputGroupAddon: (typeof import("primevue/inputgroupaddon"))["default"];
@@ -198,6 +228,7 @@ declare global {
   const InviteToOrganizationDialog: (typeof import("./src/components/admin/InviteToOrganizationDialog.vue"))["default"];
   const InviteUserDialog: (typeof import("./src/components/admin/InviteUserDialog.vue"))["default"];
   const LanguageSelect: (typeof import("./src/components/basics/LanguageSelect.vue"))["default"];
+  const LanguageTextsChanged: (typeof import("./src/components/activity-history/LanguageTextsChanged.vue"))["default"];
   const Layout: (typeof import("./src/components/layout/Layout.vue"))["default"];
   const LazyPassportSelect: (typeof import("./src/components/passport/LazyPassportSelect.vue"))["default"];
   const LinkCellField: (typeof import("./src/components/aas/LinkCellField.vue"))["default"];
@@ -228,7 +259,11 @@ declare global {
   const PassportQrCodeDialog: (typeof import("./src/components/presentation/PassportQrCodeDialog.vue"))["default"];
   const Password: (typeof import("primevue/password"))["default"];
   const PermalinkSettingsDialog: (typeof import("./src/components/digital-product-document/PermalinkSettingsDialog.vue"))["default"];
+  const PermissionList: (typeof import("./src/components/activity-history/PermissionList.vue"))["default"];
   const PermissionsForm: (typeof import("./src/components/aas/PermissionsForm.vue"))["default"];
+  const PolicyAdded: (typeof import("./src/components/activity-history/PolicyAdded.vue"))["default"];
+  const PolicyDeleted: (typeof import("./src/components/activity-history/PolicyDeleted.vue"))["default"];
+  const PolicyModified: (typeof import("./src/components/activity-history/PolicyModified.vue"))["default"];
   const PresentationComponentRenderer: (typeof import("./src/components/presentation/components/PresentationComponentRenderer.vue"))["default"];
   const PresentationPreviewFrame: (typeof import("./src/components/aas/presentation/PresentationPreviewFrame.vue"))["default"];
   const ProductImageGalleria: (typeof import("./src/components/media/ProductImageGalleria.vue"))["default"];
@@ -238,6 +273,7 @@ declare global {
   const PropertyEditor: (typeof import("./src/components/aas/PropertyEditor.vue"))["default"];
   const PropertyForm: (typeof import("./src/components/aas/PropertyForm.vue"))["default"];
   const PropertyValue: (typeof import("./src/components/aas/PropertyValue.vue"))["default"];
+  const PropertyValueChanged: (typeof import("./src/components/activity-history/PropertyValueChanged.vue"))["default"];
   const PropertyValueField: (typeof import("./src/components/aas/form/PropertyValueField.vue"))["default"];
   const QrCode: (typeof import("./src/components/QrCode.vue"))["default"];
   const RadioButton: (typeof import("primevue/radiobutton"))["default"];
@@ -245,9 +281,12 @@ declare global {
   const ReferenceElementCreateEditor: (typeof import("./src/components/aas/ReferenceElementCreateEditor.vue"))["default"];
   const ReferenceElementEditor: (typeof import("./src/components/aas/ReferenceElementEditor.vue"))["default"];
   const ReferenceElementForm: (typeof import("./src/components/aas/ReferenceElementForm.vue"))["default"];
+  const ReferenceElementValueChanged: (typeof import("./src/components/activity-history/ReferenceElementValueChanged.vue"))["default"];
   const RingLoader: (typeof import("./src/components/navigation/RingLoader.vue"))["default"];
+  const RoleHeader: (typeof import("./src/components/activity-history/RoleHeader.vue"))["default"];
   const RouterLink: (typeof import("vue-router"))["RouterLink"];
   const RouterView: (typeof import("vue-router"))["RouterView"];
+  const RowAddedOrDeleted: (typeof import("./src/components/activity-history/RowAddedOrDeleted.vue"))["default"];
   const Select: (typeof import("primevue/select"))["default"];
   const SelectOrganization: (typeof import("./src/components/organizations/SelectOrganization.vue"))["default"];
   const SidebarContent: (typeof import("./src/components/navigation/SidebarContent.vue"))["default"];
@@ -258,18 +297,21 @@ declare global {
   const SubmodelCreateEditor: (typeof import("./src/components/aas/SubmodelCreateEditor.vue"))["default"];
   const SubmodelEditor: (typeof import("./src/components/aas/SubmodelEditor.vue"))["default"];
   const SubmodelElement: (typeof import("./src/components/presentation/SubmodelElement.vue"))["default"];
+  const SubmodelElementAddedOrDeleted: (typeof import("./src/components/activity-history/SubmodelElementAddedOrDeleted.vue"))["default"];
   const SubmodelElementCollection: (typeof import("./src/components/presentation/SubmodelElementCollection.vue"))["default"];
   const SubmodelElementCollectionCreateEditor: (typeof import("./src/components/aas/SubmodelElementCollectionCreateEditor.vue"))["default"];
   const SubmodelElementCollectionEditor: (typeof import("./src/components/aas/SubmodelElementCollectionEditor.vue"))["default"];
   const SubmodelElementListCreateEditor: (typeof import("./src/components/aas/SubmodelElementListCreateEditor.vue"))["default"];
   const SubmodelElementListEditor: (typeof import("./src/components/aas/SubmodelElementListEditor.vue"))["default"];
+  const SubmodelElementName: (typeof import("./src/components/activity-history/SubmodelElementName.vue"))["default"];
   const SubmodelElementValue: (typeof import("./src/components/presentation/SubmodelElementValue.vue"))["default"];
   const TablePagination: (typeof import("./src/components/pagination/TablePagination.vue"))["default"];
-  const Tabs: (typeof import("./src/components/lists/Tabs.vue"))["default"];
   const Tag: (typeof import("primevue/tag"))["default"];
   const TemplateCreateDialog: (typeof import("./src/components/template/TemplateCreateDialog.vue"))["default"];
   const Textarea: (typeof import("primevue/textarea"))["default"];
   const TextFieldWithValidation: (typeof import("./src/components/basics/TextFieldWithValidation.vue"))["default"];
+  const Timeline: (typeof import("primevue/timeline"))["default"];
+  const TimelineContentItem: (typeof import("./src/components/activity-history/TimelineContentItem.vue"))["default"];
   const ToggleSwitch: (typeof import("primevue/toggleswitch"))["default"];
   const Toolbar: (typeof import("primevue/toolbar"))["default"];
   const Tree: (typeof import("primevue/tree"))["default"];

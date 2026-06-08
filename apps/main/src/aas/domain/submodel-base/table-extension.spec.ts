@@ -15,6 +15,7 @@ import { cloneSubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
+import { randomUUID } from "node:crypto";
 
 describe("tableExtension", () => {
   beforeAll(() => {
@@ -40,16 +41,17 @@ describe("tableExtension", () => {
     const table = new TableExtension(submodelElementList);
     const col1Plain = propertyInputPlainFactory.build({ idShort: "col1", value: "10" });
     const col1 = Property.fromPlain(col1Plain);
+    const digitalProductDocumentId = randomUUID();
     // Add first column
-    table.addColumn(col1, { ability });
+    table.addColumn(col1, { ability, digitalProductDocumentId });
     const firstRowId = table.rows[0].idShort;
     const expHeaderRow = SubmodelElementCollection.create({ idShort: firstRowId });
     expHeaderRow.setParentIdShortPath(submodelElementList.getIdShortPath());
-    expHeaderRow.addSubmodelElement(col1, { ability });
+    expHeaderRow.addSubmodelElement(col1, { ability, digitalProductDocumentId });
     expect(table.rows).toEqual([expHeaderRow]);
 
     // Add one row
-    table.addRow({ ability });
+    table.addRow({ ability, digitalProductDocumentId });
     const col1Row1WithEmptyValue = Property.fromPlain({ ...col1Plain, value: undefined });
     const secondRowId = table.rows[1].idShort;
     const expRow1 = SubmodelElementCollection.create({
@@ -62,20 +64,24 @@ describe("tableExtension", () => {
 
     // Add third column
     const col3 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col3" }));
-    expHeaderRow.addSubmodelElement(col3, { ability });
-    expRow1.addSubmodelElement(cloneSubmodelElement(col3), { ability });
-    table.addColumn(col3, { ability });
+    expHeaderRow.addSubmodelElement(col3, { ability, digitalProductDocumentId });
+    expRow1.addSubmodelElement(cloneSubmodelElement(col3), { ability, digitalProductDocumentId });
+    table.addColumn(col3, { ability, digitalProductDocumentId });
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
 
     // Add second column between first and third
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
-    expHeaderRow.addSubmodelElement(col2, { position: 1, ability });
-    expRow1.addSubmodelElement(cloneSubmodelElement(col2), { position: 1, ability });
-    table.addColumn(col2, { position: 1, ability });
+    expHeaderRow.addSubmodelElement(col2, { position: 1, ability, digitalProductDocumentId });
+    expRow1.addSubmodelElement(cloneSubmodelElement(col2), {
+      position: 1,
+      ability,
+      digitalProductDocumentId,
+    });
+    table.addColumn(col2, { position: 1, ability, digitalProductDocumentId });
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
 
     // Add one row at position 1
-    table.addRow({ position: 1, ability });
+    table.addRow({ position: 1, ability, digitalProductDocumentId });
     const rowAtPos1Id = table.rows[1].idShort;
     const expRowAtPos1 = SubmodelElementCollection.create({
       idShort: rowAtPos1Id,
@@ -93,6 +99,7 @@ describe("tableExtension", () => {
   });
 
   it("should delete column", () => {
+    const digitalProductDocumentId = randomUUID();
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "list",
@@ -107,10 +114,10 @@ describe("tableExtension", () => {
     const table = new TableExtension(submodelElementList);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
-    table.addColumn(col1, { ability });
-    table.addColumn(col2, { ability });
-    table.addRow({ ability });
-    table.addRow({ ability });
+    table.addColumn(col1, { ability, digitalProductDocumentId });
+    table.addColumn(col2, { ability, digitalProductDocumentId });
+    table.addRow({ ability, digitalProductDocumentId });
+    table.addRow({ ability, digitalProductDocumentId });
     expect(
       table.rows.some((r) => r.getSubmodelElements().some((c) => c.idShort === col1.idShort)),
     ).toBeTruthy();
@@ -131,6 +138,8 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    const digitalProductDocumentId = randomUUID();
+
     const table = new TableExtension(submodelElementList);
     const security = Security.create({});
     security.addPolicy(member, IdShortPath.create({ path: submodelElementList.idShort }), [
@@ -142,11 +151,11 @@ describe("tableExtension", () => {
     const col1 = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "col1", value: "10" }),
     );
-    table.addColumn(col1, { ability });
+    table.addColumn(col1, { ability, digitalProductDocumentId });
     col1.setParentIdShortPath(table.rows[0].getIdShortPath());
     expect(table.columns).toEqual([col1]);
     // The header row is updated to the new row at position 0.
-    table.addRow({ position: 0, ability });
+    table.addRow({ position: 0, ability, digitalProductDocumentId });
     const expectedCol = cloneSubmodelElement(col1, { value: null });
     expectedCol.setParentIdShortPath(table.rows[0].getIdShortPath());
     expect(table.columns).toEqual([expectedCol]);
@@ -157,6 +166,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     security.addPolicy(member, IdShortPath.create({ path: submodelElementList.idShort }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
@@ -167,10 +177,10 @@ describe("tableExtension", () => {
     const table = new TableExtension(submodelElementList);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
-    table.addColumn(col1, { ability });
-    table.addColumn(col2, { ability });
-    table.addRow({ ability });
-    table.addRow({ ability });
+    table.addColumn(col1, { ability, digitalProductDocumentId });
+    table.addColumn(col2, { ability, digitalProductDocumentId });
+    table.addRow({ ability, digitalProductDocumentId });
+    table.addRow({ ability, digitalProductDocumentId });
     const newDisplayNames = [
       {
         language: "de",
@@ -191,7 +201,7 @@ describe("tableExtension", () => {
     table.modifyColumn(
       col1.idShort,
       { displayName: newDisplayNames, description: newDescriptions },
-      { ability },
+      { ability, digitalProductDocumentId },
     );
     for (const row of table.rows) {
       const column = row.getSubmodelElements().find((c) => c.idShort === col1.idShort);
@@ -199,11 +209,17 @@ describe("tableExtension", () => {
       expect(column?.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
     }
     expect(() =>
-      table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" }, { ability }),
+      table.modifyColumn(
+        col1.idShort,
+        { displayName: newDisplayNames, value: "2" },
+        { ability, digitalProductDocumentId },
+      ),
     ).toThrow(new ValueError("Column value modification is not supported."));
   });
 
   it("should delete row", () => {
+    const digitalProductDocumentId = randomUUID();
+
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
@@ -218,10 +234,10 @@ describe("tableExtension", () => {
     const table = new TableExtension(submodelElementList);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
-    table.addColumn(col1, { ability });
-    table.addColumn(col2, { ability });
-    const rowToDelete = table.addRow({ ability });
-    table.addRow({ ability });
+    table.addColumn(col1, { ability, digitalProductDocumentId });
+    table.addColumn(col2, { ability, digitalProductDocumentId });
+    const rowToDelete = table.addRow({ ability, digitalProductDocumentId });
+    table.addRow({ ability, digitalProductDocumentId });
     expect(table.rows.some((r) => r.idShort === rowToDelete.idShort)).toBeTruthy();
     const onDelete = jest.fn();
     table.deleteRow(rowToDelete.idShort, { ability, onDelete });

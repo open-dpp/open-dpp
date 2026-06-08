@@ -16,10 +16,7 @@ import {
 import apiClient from "../lib/api-client.ts";
 
 export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) {
-  const digitalProductDocNamespace =
-    type === DigitalProductDocumentType.Passport
-      ? apiClient.dpp.passports
-      : apiClient.dpp.templates;
+  const digitalProductDocNamespace = getDigitalProductDocNamespace(type);
   const errorHandlingStore = useErrorHandlingStore();
   const prefix = type === DigitalProductDocumentType.Passport ? "passports" : "templates";
   const { t } = useI18n();
@@ -110,4 +107,10 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     restore,
     deleteDPD,
   };
+}
+
+export function getDigitalProductDocNamespace(type: DigitalProductDocumentTypeType) {
+  return type === DigitalProductDocumentType.Passport
+    ? apiClient.dpp.passports
+    : apiClient.dpp.templates;
 }

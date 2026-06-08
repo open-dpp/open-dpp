@@ -8,7 +8,6 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const DATE_FORMAT = "YYYY-MM-DD";
-const DATE_TIME_DISPLAY_FORMAT = "YYYY-MM-DD HH:mm:ss";
 
 /**
  * Serialize a Date picked in the user's local timezone for persistence.
@@ -54,7 +53,7 @@ export function getCurrentTimezone(): string {
  * Returns `null` for empty input, and the raw input for values that cannot be
  * parsed as a date (so users still see something instead of "Invalid Date").
  */
-export function formatDateValueForDisplay(
+function formatDateValueForDisplay(
   value: string | null | undefined,
   valueType: DataTypeDefType,
   viewerTimezone: string = getCurrentTimezone(),
@@ -65,7 +64,7 @@ export function formatDateValueForDisplay(
     const parsed = dayjs(value);
     if (!parsed.isValid()) return value;
     const zoned = parsed.tz(viewerTimezone);
-    const base = zoned.format(DATE_TIME_DISPLAY_FORMAT);
+    const base = zoned.format("L LT");
     // Always suffix with the IANA zone name: deterministic across Node/browsers
     // (where `.format('z')` may return "GMT+2", "CEST", etc.), and unambiguous
     // for the reader.
@@ -79,8 +78,11 @@ export function formatDateValueForDisplay(
     // shift with the viewer's timezone. We still append the viewer's zone so
     // the UI is symmetric with DateTime rendering and the reader always knows
     // the ambient zone in which they're looking at the field.
-    return `${parsed.format(DATE_FORMAT)} ${viewerTimezone}`;
+
+    return `${parsed.format("L")} ${viewerTimezone}`;
   }
 
   return value;
 }
+
+export default formatDateValueForDisplay;

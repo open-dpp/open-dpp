@@ -1,5 +1,22 @@
 # @open-dpp/api-client
 
+## 2.4.0
+
+### Minor Changes
+
+- [#580](https://github.com/open-dpp/open-dpp/pull/580) [`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da) Thanks [@mr42](https://github.com/mr42)! - Add activity history to passports and templates.
+
+### Patch Changes
+
+- Updated dependencies [[`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da)]:
+  - @open-dpp/dto@2.4.0
+
+## 2.3.0
+
+### Major Changes
+
+- Realign the `@open-dpp/*` fixed version group above npm's burned version range. `@open-dpp/api-client@1.0.0` — and the whole `1.x`–`2.2.x` line — was published in 2025, then unpublished; npm permanently reserves those numbers, so `1.0.0` could never publish again and the package stayed stuck at `0.6.0`. The changes staged under `1.0.0` below ship here as `2.3.0`. See [ADR 0001](../../docs/adr/0001-jump-published-packages-past-burned-npm-versions.md).
+
 ## 1.0.0
 
 ### Major Changes

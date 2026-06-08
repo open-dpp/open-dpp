@@ -12,6 +12,7 @@ import {
   type DigitalProductDocumentStatusDtoType,
   type FileRequestDto,
   KeyTypes,
+  KeyTypesEnum,
   type LanguageTextDto,
   type LanguageType,
   type PagingParamsDto,
@@ -48,6 +49,7 @@ import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
+import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -361,40 +363,11 @@ export function useAasEditor({
   }
 
   function getVisualType(submodelBase: SubmodelElementSharedResponseDto): string {
-    if (submodelBase.modelType === KeyTypes.Submodel) {
-      return translate(`${translatePrefix}.submodel`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.Property) {
-      const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
-      if (valueType === DataTypeDef.String) {
-        return translate(`${translatePrefix}.textField`);
-      }
-      if (valueType === DataTypeDef.Double) {
-        return translate(`${translatePrefix}.numberField`);
-      }
-      if (valueType === DataTypeDef.Boolean) {
-        return translate(`${translatePrefix}.booleanField`);
-      }
-      if (valueType === DataTypeDef.Date) {
-        return translate(`${translatePrefix}.dateField`);
-      }
-      if (valueType === DataTypeDef.DateTime) {
-        return translate(`${translatePrefix}.dateTimeField`);
-      }
-    }
-    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
-      return translate(`${translatePrefix}.submodelElementList`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.ReferenceElement) {
-      return translate(`${translatePrefix}.link`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.File) {
-      return translate(`${translatePrefix}.file`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
-      return translate(`${translatePrefix}.submodelElementCollection`);
-    }
-    return submodelBase.modelType;
+    const valueType =
+      submodelBase.modelType === AasSubmodelElements.Property
+        ? PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase).valueType
+        : undefined;
+    return getVisualTypeHelper(KeyTypesEnum.parse(submodelBase.modelType), valueType, translate);
   }
 
   function submodelElementCanHaveChildren(

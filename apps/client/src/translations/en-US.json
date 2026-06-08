@@ -3,6 +3,7 @@
     "required": "Required"
   },
   "common": {
+    "refresh": "Refresh",
     "reset": "Reset",
     "noEntries": "No entries found",
     "moveUp": "Move up",
@@ -18,6 +19,7 @@
     "save": "Save",
     "create": "Create",
     "change": "Change",
+    "download": "Download",
     "close": "Close",
     "cancel": "Cancel",
     "select": "Select",
@@ -90,6 +92,7 @@
       }
     },
     "security": {
+      "unknownRole": "Unknown role",
       "missingPermission": "Missing permissions",
       "inheritedPermission": "Inherits permissions of parent node",
       "overriddenPermission": "Overrides permissions of parent node",
@@ -127,6 +130,7 @@
       "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.row",
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
+    "data": "Data",
     "link": "Link",
     "errorLoading": "Loading @:common.failed",
     "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
@@ -486,6 +490,52 @@
   },
   "marketplace": {
     "marketplace": "Marketplace"
+  },
+  "activityHistory": {
+    "path": "Path",
+    "errorLoading": "Failed to load activity history",
+    "errorDownloading": "Failed to download activity history",
+    "label": "Activity history",
+    "createdAt": "Date",
+    "position": "Position",
+    "name": "Name",
+    "type": "Type",
+    "affectedRole": "Affected role",
+    "oldValue": "Old value",
+    "newValue": "New value",
+    "userId": "User ID",
+    "languageOps": {
+      "replace": "modified",
+      "add": "added",
+      "remove": "deleted"
+    },
+    "correlationId": "Correlation ID",
+    "timelineTitle": "Activity",
+    "changeTypes": {
+      "PropertyValueChanged": "Value changed",
+      "ReferenceElementChanged": "Link changed",
+      "DisplayNameChanged": "Name changed",
+      "PolicyAdded": "Permission added",
+      "DescriptionChanged": "Description changed",
+      "RowAdded": "Row added",
+      "RowDeleted": "Row deleted",
+      "ColumnAdded": "Column added",
+      "ColumnDeleted": "Column deleted",
+      "SubmodelAdded": "Section added",
+      "AddedSubmodelToEnv": "Section added to environment",
+      "SubmodelElementAdded": "Element added",
+      "SubmodelElementDeleted": "Element deleted",
+      "SubmodelReferenceAdded": "Reference added",
+      "PolicyDeleted": "Permission deleted",
+      "DefaultThumbnailsModified": "Thumbnails modified",
+      "DeletedSubmodelFromEnv": "Section deleted from environment",
+      "SubmodelReferenceDeleted": "Reference deleted",
+      "SubmodelDeleted": "Section deleted",
+      "DigitalProductDocumentStatusChanged": "Status changed",
+      "PolicyModified": "Permission modified",
+      "FileValueChanged": "File changed",
+      "ReferenceElementValueChanged": "Reference changed"
+    }
   },
   "passports": {
     "select": "Select passport",

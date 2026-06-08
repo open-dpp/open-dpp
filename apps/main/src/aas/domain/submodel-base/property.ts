@@ -164,7 +164,7 @@ export class Property implements ISubmodelElement {
     throw new ValueError("Property cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("Property does not support to delete submodel elements");
   }
 

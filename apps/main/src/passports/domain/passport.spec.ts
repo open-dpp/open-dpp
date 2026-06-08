@@ -13,10 +13,8 @@ describe("passport", () => {
       environment: Environment.create({}),
     });
     expect(passport.isPublished()).toBeFalsy();
-    const published = passport.publish();
-    expect(published).not.toBe(passport);
-    expect(passport.isPublished()).toBeFalsy();
-    expect(published.isPublished()).toBeTruthy();
+    passport.publish();
+    expect(passport.isPublished()).toBeTruthy();
   });
 
   it("should be archived", () => {
@@ -25,10 +23,8 @@ describe("passport", () => {
       environment: Environment.create({}),
     });
     expect(passport.isArchived()).toBeFalsy();
-    const archived = passport.archive();
-    expect(archived).not.toBe(passport);
-    expect(passport.isArchived()).toBeFalsy();
-    expect(archived.isArchived()).toBeTruthy();
+    passport.archive();
+    expect(passport.isArchived()).toBeTruthy();
   });
 
   it("should be restored", () => {
@@ -41,10 +37,7 @@ describe("passport", () => {
       }),
     });
     expect(passport.isArchived()).toBeTruthy();
-    const restored = passport.restore();
-    expect(restored).not.toBe(passport);
-    expect(passport.isArchived()).toBeTruthy();
-    expect(restored.isArchived()).toBeFalsy();
-    expect(restored.isDraft()).toBeTruthy();
+    passport.restore();
+    expect(passport.isDraft()).toBeTruthy();
   });
 });

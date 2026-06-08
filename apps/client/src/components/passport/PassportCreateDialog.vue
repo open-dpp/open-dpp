@@ -35,7 +35,7 @@ const { hasNext, nextPage } = usePagination({
 
 const { createPassport } = usePassports();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 type TemplateOption = TemplateDto & { label: string; status: string };
 const templateList = ref<TemplateOption[]>([]);
 
@@ -89,10 +89,7 @@ onMounted(async () => {
   }
 });
 
-const { parseDisplayNameFromEnvironment } = useAasUtils({
-  translate: t,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-});
+const { parseDisplayNameFromEnvironment } = useAasUtils();
 
 function constructTemplateOptions({ result }: TemplatePaginationDto) {
   return result
