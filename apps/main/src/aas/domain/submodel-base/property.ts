@@ -112,7 +112,7 @@ export class Property implements ISubmodelElement {
         // would render differently for users in different timezones.
         parse(z.iso.datetime({ offset: true }));
       } else if (valueType === DataTypeDef.Boolean) {
-        parse(z.coerce.boolean());
+        parse(z.union([z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")]));
       } else {
         parse(z.string());
       }

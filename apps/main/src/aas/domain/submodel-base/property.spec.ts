@@ -23,6 +23,11 @@ describe("property", () => {
       valueType: DataTypeDef.Float,
       errorMessage: "Invalid input: expected number, received NaN",
     },
+    {
+      value: "blub1",
+      valueType: DataTypeDef.Boolean,
+      errorMessage: "Invalid input",
+    },
   ])("should validate value attribute for $valueType", ({ value, valueType, errorMessage }) => {
     expect(() => Property.create({ idShort: "b1", value, valueType })).toThrow(
       new ValueError(`Invalid value for valueType ${valueType}: ${errorMessage}`),
