@@ -32,7 +32,10 @@ describe("emailChangeRequestSchema", () => {
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());
-    EmailChangeRequestModel = mongoConnection.model(EmailChangeRequest.name, EmailChangeRequestSchema);
+    EmailChangeRequestModel = mongoConnection.model(
+      EmailChangeRequest.name,
+      EmailChangeRequestSchema,
+    );
   });
 
   afterEach(async () => {

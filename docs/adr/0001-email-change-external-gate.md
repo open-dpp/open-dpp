@@ -6,7 +6,7 @@ status: accepted
 
 ## Context
 
-better-auth's change-email verification token is a stateless JWT. Once issued it cannot be invalidated server-side, so better-auth alone cannot guarantee that a *revoked* email change won't complete if the (still-valid) verification link is later clicked. We need a revoke that is a real guarantee, not best-effort, and we need a "pending email change" state to show the user.
+better-auth's change-email verification token is a stateless JWT. Once issued it cannot be invalidated server-side, so better-auth alone cannot guarantee that a _revoked_ email change won't complete if the (still-valid) verification link is later clicked. We need a revoke that is a real guarantee, not best-effort, and we need a "pending email change" state to show the user.
 
 ## Decision
 

@@ -189,9 +189,9 @@ describe("EmailChangeRequestsService", () => {
     it("rejects with ValueError when password is wrong and creates no session", async () => {
       mockPassword.verify.mockResolvedValue(false);
 
-      await expect(
-        service.request(currentUser, "new@x.com", "wrong", headers),
-      ).rejects.toThrow(ValueError);
+      await expect(service.request(currentUser, "new@x.com", "wrong", headers)).rejects.toThrow(
+        ValueError,
+      );
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
       expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
@@ -205,9 +205,9 @@ describe("EmailChangeRequestsService", () => {
         accounts: [],
       });
 
-      await expect(
-        service.request(currentUser, "new@x.com", "hunter2", headers),
-      ).rejects.toThrow(ValueError);
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
+        ValueError,
+      );
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
       expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
@@ -220,9 +220,9 @@ describe("EmailChangeRequestsService", () => {
         accounts: [{ providerId: "credential", password: "stored-hash" }],
       });
 
-      await expect(
-        service.request(currentUser, "new@x.com", "hunter2", headers),
-      ).rejects.toThrow(ValueError);
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
+        ValueError,
+      );
 
       expect(mockPassword.verify).not.toHaveBeenCalled();
       expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
@@ -241,9 +241,7 @@ describe("EmailChangeRequestsService", () => {
     it("rolls back the row when better-auth.changeEmail fails", async () => {
       mockAuth.api.changeEmail.mockRejectedValue(new Error("auth boom"));
 
-      await expect(
-        service.request(currentUser, "new@x.com", "hunter2", headers),
-      ).rejects.toThrow();
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow();
 
       expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
@@ -253,9 +251,7 @@ describe("EmailChangeRequestsService", () => {
     it("hard-cancels and throws when the notification email fails to send", async () => {
       mockEmail.send.mockRejectedValue(new Error("SMTP unavailable"));
 
-      await expect(
-        service.request(currentUser, "new@x.com", "hunter2", headers),
-      ).rejects.toThrow();
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow();
 
       expect(mockAuth.api.changeEmail).toHaveBeenCalledTimes(1);
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");

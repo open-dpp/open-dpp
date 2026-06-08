@@ -1,11 +1,7 @@
 import type { UserDto } from "@open-dpp/dto";
 import { Language } from "@open-dpp/dto";
 import { describe, expect, it } from "vitest";
-import {
-  computeProfileDiff,
-  mapUserToFormValues,
-  type ProfileFormValues,
-} from "./profile-form.ts";
+import { computeProfileDiff, mapUserToFormValues, type ProfileFormValues } from "./profile-form.ts";
 
 const baseUser: UserDto = {
   id: "user-1",

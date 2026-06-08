@@ -41,6 +41,7 @@ declare module 'vue' {
     DisplayNameRow: typeof import('./src/components/aas/form/DisplayNameRow.vue')['default']
     Drawer: typeof import('primevue/drawer')['default']
     ElementPresentationPanel: typeof import('./src/components/aas/presentation/ElementPresentationPanel.vue')['default']
+    EmailChangeCard: typeof import('./src/components/profile/EmailChangeCard.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
     FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
@@ -177,6 +178,7 @@ declare global {
   const DisplayNameRow: (typeof import("./src/components/aas/form/DisplayNameRow.vue"))["default"];
   const Drawer: (typeof import("primevue/drawer"))["default"];
   const ElementPresentationPanel: (typeof import("./src/components/aas/presentation/ElementPresentationPanel.vue"))["default"];
+  const EmailChangeCard: (typeof import("./src/components/profile/EmailChangeCard.vue"))["default"];
   const EmptyState: (typeof import("./src/components/organizations/EmptyState.vue"))["default"];
   const FileCreateEditor: (typeof import("./src/components/aas/FileCreateEditor.vue"))["default"];
   const FileEditor: (typeof import("./src/components/aas/FileEditor.vue"))["default"];

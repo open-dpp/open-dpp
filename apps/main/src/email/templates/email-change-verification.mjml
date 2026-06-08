@@ -34,7 +34,8 @@
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >Please confirm that you want to change your open-dpp account email to
-          <strong>{{ newEmail }}</strong>.<br />
+          <strong>{{ newEmail }}</strong
+          >.<br />
           <p></p
         ></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial"
