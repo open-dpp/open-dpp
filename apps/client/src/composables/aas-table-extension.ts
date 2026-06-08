@@ -532,6 +532,13 @@ export function useAasTableExtension({
         DataTypeDef.Double,
       ),
       buildColumnMenuItem(
+        translate(`${translatePrefix}.booleanField`),
+        icon,
+        options,
+        AasSubmodelElements.Property,
+        DataTypeDef.Boolean,
+      ),
+      buildColumnMenuItem(
         translate(`${translatePrefix}.dateField`),
         icon,
         options,

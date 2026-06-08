@@ -372,6 +372,9 @@ export function useAasEditor({
       if (valueType === DataTypeDef.Double) {
         return translate(`${translatePrefix}.numberField`);
       }
+      if (valueType === DataTypeDef.Boolean) {
+        return translate(`${translatePrefix}.booleanField`);
+      }
       if (valueType === DataTypeDef.Date) {
         return translate(`${translatePrefix}.dateField`);
       }
@@ -501,6 +504,11 @@ export function useAasEditor({
         translate(`${translatePrefix}.numberField`),
         "pi pi-calculator",
         DataTypeDef.Double,
+      ),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.booleanField`),
+        "pi pi-check-square",
+        DataTypeDef.Boolean,
       ),
       buildPropertyEntry(
         translate(`${translatePrefix}.dateField`),

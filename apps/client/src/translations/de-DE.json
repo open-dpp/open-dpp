@@ -144,6 +144,7 @@
     "file": "Datei",
     "dateField": "Datumsfeld",
     "dateTimeField": "Datum-Zeit-Feld",
+    "booleanField": "Wahrheitswert",
     "numberField": "Zahlenfeld",
     "timezone": "Zeitzone",
     "type": "Typ",
