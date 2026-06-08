@@ -1,4 +1,4 @@
-import { InvitationResponseSchema } from "@open-dpp/dto";
+import { InvitationResponseSchema, MemberRoleChangeDtoSchema } from "@open-dpp/dto";
 import { HTTPCode } from "./http.codes";
 import { ContentType } from "./content.types";
 import { IdParamSchema } from "../aas/presentation/aas.decorators";
@@ -16,6 +16,25 @@ export const organizationsPaths = {
           content: {
             [ContentType.JSON]: { schema: InvitationResponseSchema },
           },
+        },
+      },
+    },
+  },
+  "/organizations/member/{id}/role": {
+    patch: {
+      tags: [tag],
+      parameters: [IdParamSchema],
+      summary: "Updates the role of a member",
+      requestBody: {
+        content: {
+          [ContentType.JSON]: {
+            schema: MemberRoleChangeDtoSchema,
+          },
+        },
+      },
+      responses: {
+        [HTTPCode.OK]: {
+          description: "Role updated successfully",
         },
       },
     },

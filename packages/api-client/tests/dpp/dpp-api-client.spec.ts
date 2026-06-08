@@ -55,6 +55,14 @@ describe("apiClient", () => {
       const response = await sdk.dpp.organizations.getInvitation(orgaInvitation.id);
       expect(response.data).toEqual(orgaInvitation);
     });
+
+    it("should change member role", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.organizations.changeMemberRole(randomUUID(), "owner");
+      expect(response.status).toEqual(200);
+    });
   });
 
   describe("users", () => {

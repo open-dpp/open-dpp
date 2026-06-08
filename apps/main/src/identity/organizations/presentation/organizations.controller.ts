@@ -15,16 +15,23 @@ import { AuthSession } from "../../auth/presentation/decorators/auth-session.dec
 import { MembersService } from "../application/services/members.service";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { MemberWithUser } from "../domain/member";
-import { MemberRole } from "../domain/member-role.enum";
+import { MemberRole, type MemberRoleType } from "../domain/member-role.enum";
 import { Organization } from "../domain/organization";
 import { UserRoleDecorator } from "../../auth/presentation/decorators/user-role.decorator";
 import { type UserRoleType } from "../../users/domain/user-role.enum";
-import { InvitationResponseDto, InvitationResponseSchema } from "@open-dpp/dto";
+import {
+  InvitationResponseDto,
+  InvitationResponseSchema,
+  type MemberRoleChangeDto,
+  MemberRoleChangeDtoSchema,
+} from "@open-dpp/dto";
 import { InvitationsRepository } from "../infrastructure/adapters/invitations.repository";
 import { UsersService } from "../../users/application/services/users.service";
 import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
 import { InvitationPopulateDecorator } from "../application/invitation-populate-decorator";
 import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
+import { MemberRoleDecorator } from "../../auth/presentation/decorators/member-role.decorator";
+import { ZodValidationPipe } from "@open-dpp/exception";
 
 @Controller("organizations")
 export class OrganizationsController {
@@ -145,6 +152,15 @@ export class OrganizationsController {
     }
 
     return this.membersService.getMembers(id);
+  }
+
+  @Patch("member/:id/role")
+  async updateMemberRole(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(MemberRoleChangeDtoSchema)) body: MemberRoleChangeDto,
+    @MemberRoleDecorator() requesterMemberRole: MemberRoleType,
+  ) {
+    return this.organizationsService.updateMemberRole(id, body.role, requesterMemberRole);
   }
 
   @Get(":id/name")
