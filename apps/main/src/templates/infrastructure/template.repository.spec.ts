@@ -18,6 +18,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateDocVersion, TemplateSchema } from "./template.schema";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;
@@ -43,9 +44,11 @@ describe("templateRepository", () => {
           },
         ]),
         AasModule,
+        ActivityHistoryModule,
       ],
       providers: [TemplateRepository],
     }).compile();
+    await module.init();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
     TemplateDocument = module.get<Model<TemplateDoc>>(getModelToken(TemplateDoc.name));

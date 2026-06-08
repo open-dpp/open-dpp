@@ -1,13 +1,17 @@
 import type { NextFunction, Request, Response } from "express";
 import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
+import { CorrelationIdService } from "./correlation-id.service";
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
   private readonly logger = new Logger("HTTP");
   private readonly logFormat: "json" | "plain";
 
-  constructor(private readonly envService: EnvService) {
+  constructor(
+    private readonly envService: EnvService,
+    private correlationIdService: CorrelationIdService,
+  ) {
     this.logFormat = this.envService.get("OPEN_DPP_LOG_FORMAT");
   }
 
@@ -20,7 +24,6 @@ export class LoggerMiddleware implements NestMiddleware {
     res.on("finish", () => {
       const { statusCode } = res;
       const duration = Date.now() - startTime;
-
       let message: string | object;
       if (this.logFormat === "json") {
         message = {
@@ -32,7 +35,7 @@ export class LoggerMiddleware implements NestMiddleware {
           duration,
         };
       } else {
-        message = `${method} ${originalUrl} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
+        message = `${this.correlationIdService.getCorrelationId()} ${method} ${originalUrl} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
       }
 
       if (statusCode >= 500) {

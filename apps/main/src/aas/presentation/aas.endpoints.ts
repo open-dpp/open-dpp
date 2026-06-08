@@ -133,21 +133,26 @@ export interface IAasReadEndpoints {
 
 export interface IAasCreateEndpoints {
   createSubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     body: SubmodelRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     body: SubmodelElementRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   createSubmodelElementAtIdShortPath: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -155,8 +160,10 @@ export interface IAasCreateEndpoints {
     body: SubmodelElementRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   addColumnToSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -165,8 +172,10 @@ export interface IAasCreateEndpoints {
     position: number | undefined,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -174,35 +183,43 @@ export interface IAasCreateEndpoints {
     position: number | undefined,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasModifyEndpoints {
   modifyShell: (
+    correlationId: string,
     organizationId: string,
     id: string,
     aasId: string,
     body: AssetAdministrationShellModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<AssetAdministrationShellResponseDto>;
   modifySubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     body: SubmodelModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelResponseDto>;
   modifyValueOfSubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     body: ValueRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -210,8 +227,10 @@ export interface IAasModifyEndpoints {
     body: SubmodelElementModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   modifySubmodelElementValue: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -219,8 +238,10 @@ export interface IAasModifyEndpoints {
     body: ValueRequestDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementResponseDto>;
   modifyColumnOfSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -229,26 +250,32 @@ export interface IAasModifyEndpoints {
     body: SubmodelElementModificationDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasDeleteEndpoints {
   deleteSubmodel: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<void>;
   deleteSubmodelElement: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<void>;
   deleteColumnFromSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -256,8 +283,10 @@ export interface IAasDeleteEndpoints {
     idShortOfColumn: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   deleteRowFromSubmodelElementList: (
+    correlationId: string,
     organizationId: string,
     id: string,
     submodelId: string,
@@ -265,12 +294,15 @@ export interface IAasDeleteEndpoints {
     idShortOfRow: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<SubmodelElementListResponseDto>;
   deletePolicyBySubjectAndObject: (
+    correlationId: string,
     organizationId: string,
     id: string,
     body: DeletePolicyDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    userId: string,
   ) => Promise<void>;
 }

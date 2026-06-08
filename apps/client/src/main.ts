@@ -18,6 +18,10 @@ import { i18n } from "./translations/i18n.ts";
 import "./index.css";
 import "primeicons/primeicons.css";
 import "dayjs/locale/de";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
 
 const pinia = createPinia();
 

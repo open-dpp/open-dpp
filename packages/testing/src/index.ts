@@ -8,3 +8,4 @@ export * from "./fixtures/passports/passports.factory";
 export * from "./fixtures/permalinks/permalinks.factory";
 export * from "./fixtures/templates/templates.factory";
 export * from "./fixtures/organizations/invitations.factory";
+export * from "./fixtures/activity-history/activity.factory";

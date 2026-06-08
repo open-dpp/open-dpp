@@ -33,10 +33,18 @@ import {
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
+import { SubmodelElementAdded } from "../../../activity-history/domain/change-events/submodel-element-added";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
+import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
 
-export class Submodel implements ISubmodelBase, IPersistable {
+export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  public readonly tracker;
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -44,7 +52,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     public readonly idShort: string,
     displayName: Array<LanguageText>,
     description: Array<LanguageText>,
-    public readonly administration: AdministrativeInformation | null,
+    public readonly administration: AdministrativeInformation,
     public readonly kind: ModellingKindType | null,
     public readonly semanticId: Reference | null,
     public readonly supplementalSemanticIds: Array<Reference>,
@@ -55,6 +63,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
     this.displayName = displayName;
     this.description = description;
     setParentIdShortPaths(this, this.idShort);
+    this.tracker = ChangeTracker.create({
+      onStopCallback: () => this.administration.increaseVersion(),
+    });
+  }
+
+  withTracking(changeTracker?: ChangeTracker) {
+    return withTrackingHelper(changeTracker, this);
   }
 
   getIdShortPath(): IdShortPath {
@@ -94,7 +109,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
       data.idShort,
       data.displayName ?? [],
       data.description ?? [],
-      data.administration ?? null,
+      data.administration ?? AdministrativeInformation.create({ version: "1", revision: "0" }),
       data.kind ?? null,
       data.semanticId ?? null,
       data.supplementalSemanticIds ?? [],
@@ -114,7 +129,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
       baseObjects.idShort,
       baseObjects.displayName,
       baseObjects.description,
-      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.administration
+        ? AdministrativeInformation.fromPlain(parsed.administration)
+        : AdministrativeInformation.create({ version: "1", revision: "0" }),
       parsed.kind ?? null,
       baseObjects.semanticId,
       baseObjects.supplementalSemanticIds,
@@ -125,17 +142,19 @@ export class Submodel implements ISubmodelBase, IPersistable {
   }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
-    this.accept(new ModifierVisitor(options), { data });
+    const modifierVisitor = new ModifierVisitor(options).withTracking(this.tracker);
+    this.accept(modifierVisitor, { data });
   }
 
   modifyValue(data: unknown, options: ValueModifierVisitorOptions) {
-    this.accept(new ValueModifierVisitor(options), { data });
+    const modifierVisitor = new ValueModifierVisitor(options).withTracking(this.tracker);
+    this.accept(modifierVisitor, { data });
   }
 
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-
-    submodelElement.accept(new ModifierVisitor(options), { data });
+    const modifierVisitor = new ModifierVisitor(options).withTracking(this.tracker);
+    submodelElement.accept(modifierVisitor, { data });
     return submodelElement;
   }
 
@@ -145,17 +164,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
     options: ValueModifierVisitorOptions,
   ) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    submodelElement.accept(new ValueModifierVisitor(options), { data });
+    const modifierVisitor = new ValueModifierVisitor(options).withTracking(this.tracker);
+    submodelElement.accept(modifierVisitor, { data });
     return submodelElement;
   }
 
   private getListAsTableExtensionOrFail(idShortPath: IdShortPath) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     if (submodelElement instanceof SubmodelElementList) {
-      return new TableExtension(submodelElement);
+      return new TableExtension(submodelElement).withTracking(this.tracker);
     } else {
       throw new ValueError(
-        `Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`,
+        `Cannot create table for submodel element with type ${submodelElement.getSubmodelElementType()}`,
       );
     }
   }
@@ -191,6 +211,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+
     tableExtension.deleteColumn(idShortOfColumn, options);
     return tableExtension.getTableElement();
   }
@@ -241,22 +262,47 @@ export class Submodel implements ISubmodelBase, IPersistable {
     submodelElement: ISubmodelElement,
     options: AddOptions,
   ): ISubmodelElement {
+    let addedSubmodelElement: ISubmodelElement;
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       submodelElement.setParentIdShortPath(parent.getIdShortPath());
-      return parent.addSubmodelElement(submodelElement, options);
+      addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
+    } else {
+      addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
     }
-    return addSubmodelElementOrFail(this, submodelElement, options);
+    this.tracker.track(
+      SubmodelElementAdded.create({
+        path: addedSubmodelElement.getIdShortPath(),
+        submodelElement: addedSubmodelElement,
+      }),
+    );
+    return addedSubmodelElement;
   }
 
-  public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {
+  public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions): ISubmodelElement {
     const parent = this.findSubmodelElementParent(idShortPath);
+    let deletedSubmodelElement: ISubmodelElement;
     if (idShortPath.last) {
       if (!parent) {
-        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last, options);
+        deletedSubmodelElement = deleteSubmodelElementOrFail(
+          this.submodelElements,
+          idShortPath.last,
+          options,
+        );
       } else {
-        parent.deleteSubmodelElement(idShortPath.last, options);
+        deletedSubmodelElement = parent.deleteSubmodelElement(idShortPath.last, options);
       }
+      this.tracker.track(
+        SubmodelElementDeleted.create({
+          path: deletedSubmodelElement.getIdShortPath(),
+          submodelElement: deletedSubmodelElement,
+        }),
+      );
+      return deletedSubmodelElement;
+    } else {
+      throw new ValueError(
+        `Cannot delete submodel element with idShortPath ${idShortPath.toString()}`,
+      );
     }
   }
 

@@ -5,9 +5,20 @@ import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
+import { RowAdded } from "../../../activity-history/domain/change-events/row-added";
+import { ColumnAdded } from "../../../activity-history/domain/change-events/column-added";
+import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
+import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
 
-export class TableExtension {
+export class TableExtension implements ITrackable {
   private headerRow: ISubmodelElement | undefined;
+  readonly tracker = ChangeTracker.create();
+
   constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
       throw new Error(
@@ -15,6 +26,10 @@ export class TableExtension {
       );
     }
     this.setHeaderRow();
+  }
+
+  withTracking(changeTracker?: ChangeTracker): this {
+    return withTrackingHelper(changeTracker, this);
   }
 
   private setHeaderRow() {
@@ -44,6 +59,15 @@ export class TableExtension {
     this.rows.forEach((row) => {
       row.addSubmodelElement(cloneSubmodelElement(column), options);
     });
+    const position = this.getColumnPosition(column.idShort);
+    const value = this.columns[position];
+    this.tracker.track(
+      ColumnAdded.create({
+        path: value.getIdShortPath(),
+        position,
+        value,
+      }),
+    );
   }
 
   modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
@@ -55,15 +79,28 @@ export class TableExtension {
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find((el) => el.idShort === idShort);
       if (column) {
-        column.accept(new ModifierVisitor(options), { data: { ...data, idShort } });
+        column.accept(new ModifierVisitor(options).withTracking(this.tracker), {
+          data: { ...data, idShort },
+        });
       }
     }
   }
 
   deleteColumn(idShort: string, options: DeleteOptions) {
-    this.rows.forEach((row) => {
+    const columnIndex = this.getColumnPosition(idShort);
+    const columnToDelete = this.columns[columnIndex];
+    for (const row of this.rows) {
       row.deleteSubmodelElement(idShort, options);
-    });
+    }
+    if (columnToDelete) {
+      this.tracker.track(
+        ColumnDeleted.create({
+          position: columnIndex,
+          path: columnToDelete.getIdShortPath(),
+          value: columnToDelete,
+        }),
+      );
+    }
   }
 
   private generateRowIdShort() {
@@ -80,27 +117,53 @@ export class TableExtension {
   }
 
   addRow(options: AddOptions) {
+    let newRow: ISubmodelElement;
     if (!this.headerRow) {
-      return this.addHeaderRow(options);
+      newRow = this.addHeaderRow(options);
     } else {
-      const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
+      newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
         const columnCopy = cloneSubmodelElement(column, { value: undefined });
-        newRow.addSubmodelElement(columnCopy, { ability: options.ability });
+        newRow.addSubmodelElement(columnCopy, {
+          ability: options.ability,
+        });
       });
 
       if (options?.position === 0) {
         this.setHeaderRow();
       }
-      return newRow;
     }
+    this.tracker.track(
+      RowAdded.create({
+        path: newRow.getIdShortPath(),
+        position: options.position ?? this.rows.length - 1,
+        value: newRow,
+      }),
+    );
+    return newRow;
+  }
+
+  getRowPosition(idShort: string) {
+    return this.rows.findIndex((row) => row.idShort === idShort);
+  }
+
+  getColumnPosition(idShort: string) {
+    return this.columns.findIndex((column) => column.idShort === idShort);
   }
 
   deleteRow(idShort: string, options: DeleteOptions) {
-    this.data.deleteSubmodelElement(idShort, options);
+    const rowIndex = this.getRowPosition(idShort);
+    const row = this.data.deleteSubmodelElement(idShort, options);
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();
     }
+    this.tracker.track(
+      RowDeleted.create({
+        path: row.getIdShortPath(),
+        position: rowIndex,
+        value: row,
+      }),
+    );
   }
 }

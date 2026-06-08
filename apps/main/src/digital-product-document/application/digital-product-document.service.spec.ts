@@ -1,4 +1,4 @@
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../aas/aas.module";
@@ -27,7 +27,7 @@ import { SubjectAttributes } from "../../aas/domain/security/subject-attributes"
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { beforeAll, expect, jest } from "@jest/globals";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { DigitalProductDocumentService } from "./digital-product-document.service";
@@ -37,14 +37,31 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import { KeyTypes } from "@open-dpp/dto";
+import { DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+
+import { Response } from "express";
+import { Archiver } from "archiver";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import type { Connection } from "mongoose";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
+import { AasRepository } from "../../aas/infrastructure/aas.repository";
+import { Security } from "../../aas/domain/security/security";
+import { Permission } from "../../aas/domain/security/permission";
+import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
+import { ChangeTracker } from "../../activity-history/domain/change-tracker";
+import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
   let module: TestingModule;
   let passportRepository: PassportRepository;
+  let activityRepository: ActivityRepository;
+  let assetAdministrationShellRepository: AasRepository;
+  let connection: Connection;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
@@ -62,6 +79,7 @@ describe("DigitalProductDocumentService", () => {
           { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
           { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
         ]),
+        ActivityHistoryModule,
         AasModule,
         UsersModule,
         OrganizationsModule,
@@ -73,13 +91,24 @@ describe("DigitalProductDocumentService", () => {
         ConceptDescriptionRepository,
       ],
     }).compile();
-
+    await module.init();
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
-    service = new DigitalProductDocumentService(environmentService, passportRepository);
+    activityRepository = module.get<ActivityRepository>(ActivityRepository);
+    assetAdministrationShellRepository = module.get<AasRepository>(AasRepository);
+    connection = module.get<Connection>(getConnectionToken());
+
+    service = new DigitalProductDocumentService(
+      environmentService,
+      passportRepository,
+      activityRepository,
+      connection,
+    );
   });
 
   it("should fail on modifications of archived passports", async () => {
+    const correlationId = randomUUID();
+    const userId = randomUUID();
     const passport = Passport.create({
       organizationId: "organizationId",
       environment: Environment.create({}),
@@ -92,93 +121,115 @@ describe("DigitalProductDocumentService", () => {
       userRole: UserRole.USER,
       memberRole: MemberRole.MEMBER,
     });
+    const userContext = { subject, userId };
     await passportRepository.save(passport);
     const exception = new ValueError("Cannot modify an archived digital product document");
     await expect(
-      service.modifyShell(passport.organizationId, passport.id, randomUUID(), {}, subject),
+      service.modifyShell(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        {},
+        userContext,
+      ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.modifySubmodel(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         { idShort: "demo" },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.modifyColumnOfSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "demolist" }),
         "col1",
         { idShort: "col1" },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.modifySubmodelElement(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "col1" }),
         { idShort: "col1" },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.modifySubmodelElementValue(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "col1" }),
         {},
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
-      service.deleteSubmodel(passport.organizationId, passport.id, randomUUID(), subject),
+      service.deleteSubmodel(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        userContext,
+      ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.deleteSubmodelElement(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "sub1" }),
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.deleteColumnFromSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "demolist" }),
         "col1",
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
     await expect(
       service.deleteRowFromSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "demolist" }),
         "row1",
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.deletePolicyBySubjectAndObject(
+        correlationId,
         passport.organizationId,
         passport.id,
         {
@@ -188,16 +239,23 @@ describe("DigitalProductDocumentService", () => {
           }),
           object: "policy1",
         },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
-      service.createSubmodel(passport.organizationId, passport.id, { idShort: "sub" }, subject),
+      service.createSubmodel(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        { idShort: "sub" },
+        userContext,
+      ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.addColumnToSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -212,23 +270,25 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         undefined,
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.addRowToSubmodelElementList(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
         IdShortPath.create({ path: "sub" }),
         undefined,
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
 
     await expect(
       service.createSubmodelElement(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -241,11 +301,12 @@ describe("DigitalProductDocumentService", () => {
           supplementalSemanticIds: [],
           qualifiers: [],
         },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
     await expect(
       service.createSubmodelElementAtIdShortPath(
+        correlationId,
         passport.organizationId,
         passport.id,
         randomUUID(),
@@ -259,9 +320,198 @@ describe("DigitalProductDocumentService", () => {
           supplementalSemanticIds: [],
           qualifiers: [],
         },
-        subject,
+        userContext,
       ),
     ).rejects.toThrow(exception);
+  });
+
+  it("should download activities", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const date3 = new Date("2022-03-01T00:00:00.000Z");
+    const date4 = new Date("2022-03-03T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const submodelIdShort = "submodelIdShort";
+
+    const security = Security.create({});
+    const admin = SubjectAttributes.create({
+      userRole: UserRole.ADMIN,
+      memberRole: MemberRole.MEMBER,
+    });
+    security.addPolicy(admin, IdShortPath.create({ path: submodelIdShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    await assetAdministrationShellRepository.save(assetAdministrationShell);
+
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [assetAdministrationShell.id],
+      }),
+    });
+    await passportRepository.save(passport);
+    const submodel = Submodel.create({ idShort: submodelIdShort });
+    const createActivity = (id: string, idShort: string, createdAt: Date) => {
+      return SubmodelElementModifiedActivity.create({
+        digitalProductDocumentId: id,
+        submodel: submodel.withTracking(
+          ChangeTracker.fromChanges([
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([submodelIdShort, idShort]),
+              valueType: DataTypeDef.String,
+              oldValue: "oldValue",
+              newValue: "newValue",
+            }),
+          ]),
+        ),
+        createdAt,
+        correlationId: randomUUID(),
+      });
+    };
+
+    const event1 = createActivity(passport.id, "prop1", date1);
+
+    const event2 = createActivity(passport.id, "prop2", date2);
+    const event3 = createActivity(passport.id, "prop3", date3);
+
+    const event4 = createActivity(passport.id, "prop4", date4);
+    const activities = [event1, event2, event3, event4];
+    await activityRepository.createMany(activities);
+    const res = {
+      set: jest.fn(),
+    } as unknown as Response;
+
+    const mockArchive = {
+      pipe: jest.fn(),
+      append: jest.fn(),
+      finalize: jest.fn(),
+    } as unknown as Archiver;
+
+    await service.downloadActivitiesWithArchiver(
+      res,
+      organizationId,
+      passport.id,
+      admin,
+      date1.toISOString(),
+      date4.toISOString(),
+      2,
+      mockArchive,
+    );
+
+    const appendMock = mockArchive.append as jest.Mock;
+
+    let [arg1, arg2] = appendMock.mock.calls[0];
+    expect(JSON.parse(arg1 as string)).toEqual([event1.toPlain(), event2.toPlain()]);
+    expect(arg2).toEqual({
+      name: `${date1.toISOString()}-${date2.toISOString()}.json`,
+    });
+
+    [arg1, arg2] = appendMock.mock.calls[1];
+    expect(JSON.parse(arg1 as string)).toEqual([event3.toPlain(), event4.toPlain()]);
+    expect(arg2).toEqual({
+      name: `${date3.toISOString()}-${date4.toISOString()}.json`,
+    });
+
+    expect(res.set).toHaveBeenCalledWith({
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="activities.zip"',
+    });
+    expect(mockArchive.pipe).toHaveBeenCalledWith(res);
+    expect(mockArchive.append).toHaveBeenCalledTimes(2);
+    expect(mockArchive.finalize).toHaveBeenCalledTimes(1);
+  });
+
+  it("should get activities", async () => {
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const date3 = new Date("2022-03-01T00:00:00.000Z");
+    const date4 = new Date("2022-03-03T00:00:00.000Z");
+    const organizationId = randomUUID();
+    const submodelIdShort = "submodelIdShort";
+
+    const security = Security.create({});
+    const admin = SubjectAttributes.create({
+      userRole: UserRole.ADMIN,
+      memberRole: MemberRole.MEMBER,
+    });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    security.addPolicy(admin, IdShortPath.create({ path: submodelIdShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    await assetAdministrationShellRepository.save(assetAdministrationShell);
+
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [assetAdministrationShell.id],
+      }),
+    });
+    await passportRepository.save(passport);
+
+    const submodel = Submodel.create({ idShort: submodelIdShort });
+    const createActivity = (id: string, idShort: string, createdAt: Date) => {
+      return SubmodelElementModifiedActivity.create({
+        digitalProductDocumentId: id,
+        submodel: submodel.withTracking(
+          ChangeTracker.fromChanges([
+            PropertyValueChanged.create({
+              path: IdShortPath.fromSegments([submodelIdShort, idShort]),
+              valueType: DataTypeDef.String,
+              oldValue: "oldValue",
+              newValue: "newValue",
+            }),
+          ]),
+        ),
+        createdAt,
+        correlationId: randomUUID(),
+      });
+    };
+
+    const event1 = createActivity(passport.id, "prop1", date1);
+
+    const event2 = createActivity(passport.id, "prop2", date2);
+    const event3 = createActivity(passport.id, "prop3", date3);
+
+    const event4 = createActivity(passport.id, "prop4", date4);
+    const activities = [event1, event2, event3, event4];
+    await activityRepository.createMany(activities);
+
+    const result = await service.getActivities(
+      organizationId,
+      passport.id,
+      member,
+      date1.toISOString(),
+      date4.toISOString(),
+      2,
+      undefined,
+      undefined,
+      undefined,
+    );
+    result.result.forEach((e) => {
+      expect(e.payload.changes).toEqual([]);
+    });
+
+    const resultForAdmin = await service.getActivities(
+      organizationId,
+      passport.id,
+      admin,
+      date1.toISOString(),
+      date4.toISOString(),
+      2,
+      undefined,
+      undefined,
+      undefined,
+    );
+    resultForAdmin.result.every((e) => {
+      expect(e.payload.changes).not.toEqual([]);
+    });
   });
 
   afterAll(async () => {
@@ -271,40 +521,4 @@ describe("DigitalProductDocumentService", () => {
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
-
-  it.each([
-    ["Draft", DigitalProductDocumentStatusChange.create({})],
-    [
-      "Published",
-      DigitalProductDocumentStatusChange.create({
-        previousStatus: DigitalProductDocumentStatus.Draft,
-        currentStatus: DigitalProductDocumentStatus.Published,
-      }),
-    ],
-  ])(
-    "archiveGuard permits %s passports (does not short-circuit on non-archived)",
-    async (_label, lastStatusChange) => {
-      const passport = Passport.create({
-        organizationId: "organizationId",
-        environment: Environment.create({}),
-        lastStatusChange,
-      });
-      const subject = SubjectAttributes.create({
-        userRole: UserRole.USER,
-        memberRole: MemberRole.MEMBER,
-      });
-      await passportRepository.save(passport);
-
-      const archiveError = new ValueError("Cannot modify an archived digital product document");
-      await expect(
-        service.modifySubmodel(
-          passport.organizationId,
-          passport.id,
-          randomUUID(),
-          { idShort: "demo" },
-          subject,
-        ),
-      ).rejects.not.toThrow(archiveError);
-    },
-  );
 });

@@ -32,6 +32,12 @@ import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
 import { userInvitation } from "./handlers/users";
+import {
+  activity1,
+  activity2,
+  digitalProductDocumentId,
+  periodParams,
+} from "./handlers/digital-product-documents";
 
 describe("apiClient", () => {
   beforeAll(() => server.listen());
@@ -152,6 +158,42 @@ describe("apiClient", () => {
       );
     });
   });
+
+  describe.each(["templates", "passports"])(
+    "digital product document for %s",
+    (appIdentifiable) => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      it("should get activities", async () => {
+        const response = await sdk.dpp[appIdentifiable].getActivities(digitalProductDocumentId, {
+          pagination: paginationParams,
+        });
+        expect(response.data.result).toEqual(
+          [activity1, activity2].map((a) => ({
+            ...a,
+            header: { ...a.header, createdAt: a.header.createdAt },
+          })),
+        );
+      });
+
+      it("should download activities", async () => {
+        const response = await sdk.dpp[appIdentifiable].downloadActivities(
+          digitalProductDocumentId,
+          {
+            period: periodParams,
+          },
+        );
+        expect(JSON.stringify(response.headers)).toEqual(
+          JSON.stringify({
+            "content-disposition": 'attachment; filename="data.zip"',
+            "content-length": "0",
+            "content-type": "application/zip",
+          }),
+        );
+      });
+    },
+  );
 
   describe.each(["templates", "passports"])("aas for %s", (appIdentifiable) => {
     const sdk = new OpenDppClient({
