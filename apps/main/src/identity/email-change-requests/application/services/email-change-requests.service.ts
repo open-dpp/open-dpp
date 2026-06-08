@@ -47,7 +47,10 @@ export class EmailChangeRequestsService {
           newEmail,
           callbackURL: `${this.envService.get("OPEN_DPP_URL")}/profile`,
         },
-        headers,
+        // BetterAuthHeaders is an interface (no implicit index signature), so it is not
+        // directly assignable to better-auth's `HeadersInit`. The cast is runtime-safe:
+        // extractBetterAuthHeaders only ever populates string values.
+        headers: headers as Record<string, string>,
       });
     } catch (error) {
       this.logger.error(
@@ -72,9 +75,15 @@ export class EmailChangeRequestsService {
       const found = await context.internalAdapter.findUserByEmail(currentEmail, {
         includeAccounts: true,
       });
-      const credentialAccount = found?.accounts?.find(
-        (account) => account.providerId === "credential" && account.password,
-      );
+      // Bind verification to the target user: only trust the credential account when the
+      // email resolves to the user whose email is being changed. Otherwise a mismatched
+      // currentEmail/userId would verify the password against a different user's account.
+      const credentialAccount =
+        found?.user?.id === userId
+          ? found.accounts?.find(
+              (account) => account.providerId === "credential" && account.password,
+            )
+          : undefined;
       if (credentialAccount?.password) {
         isValid = await context.password.verify({
           hash: credentialAccount.password,

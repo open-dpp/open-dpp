@@ -152,6 +152,21 @@ describe("EmailChangeRequestsService", () => {
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
     });
 
+    it("rejects with ValueError when the email resolves to a different user", async () => {
+      mockInternalAdapter.findUserByEmail.mockResolvedValue({
+        user: { id: "other-user", email: "current@x.com" },
+        accounts: [{ providerId: "credential", password: "stored-hash" }],
+      });
+
+      await expect(
+        service.request("user-1", "new@x.com", "current@x.com", "hunter2", headers),
+      ).rejects.toThrow(ValueError);
+
+      expect(mockPassword.verify).not.toHaveBeenCalled();
+      expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
+      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
+    });
+
     it("replaces an existing pending request atomically", async () => {
       mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
 
