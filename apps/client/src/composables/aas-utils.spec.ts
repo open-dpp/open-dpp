@@ -1,24 +1,69 @@
 import { Language } from "@open-dpp/dto";
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAasUtils } from "./aas-utils.ts";
+import { defineComponent } from "vue";
+import { createPinia, setActivePinia } from "pinia";
+import { mount } from "@vue/test-utils";
+
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key,
+    locale: { value: Language.en },
+  }),
+  createI18n: () => ({
+    global: {
+      t: (key: string) => key,
+      locale: { value: Language.en },
+    },
+    install: () => {},
+  }),
+}));
 
 describe("aas", () => {
-  it("should parse displayName from assetAdministrationShell", () => {
-    const translate = (key: string) => key;
+  beforeEach(() => {
+    vi.resetAllMocks();
+    setActivePinia(createPinia());
+  });
 
-    const assetAdministrationShell = {
+  const mountedWrappers: Array<ReturnType<typeof mount>> = [];
+
+  function mountHarness() {
+    const Harness = defineComponent({
+      name: "use-aas-utils-harness",
+      setup() {
+        const api = useAasUtils();
+        return { api };
+      },
+      template: "<div></div>",
+    });
+
+    const wrapper = mount(Harness);
+    mountedWrappers.push(wrapper);
+    return {
+      wrapper,
+      ...(wrapper.vm.api as ReturnType<typeof useAasUtils>),
+    };
+  }
+
+  it("should parse displayName from assetAdministrationShell", () => {
+    const assetAdministrationShell1 = {
       displayName: [{ language: Language.en, text: "my name" }],
     };
-    let aasUtils = useAasUtils({ translate, selectedLanguage: Language.en });
-    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual("my name");
-    aasUtils = useAasUtils({ translate, selectedLanguage: Language.de });
-    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual("common.untitled");
+
+    let aasUtils = mountHarness();
+    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell1)).toEqual("my name");
+
+    aasUtils = mountHarness();
+    const assetAdministrationShell2 = {
+      displayName: [{ language: Language.de, text: "mein name" }],
+    };
+    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell2)).toEqual("common.untitled");
 
     const environment = {
-      assetAdministrationShells: [{ ...assetAdministrationShell, id: "id1" }],
+      assetAdministrationShells: [{ ...assetAdministrationShell1, id: "id1" }],
     };
-    aasUtils = useAasUtils({ translate, selectedLanguage: Language.en });
+    aasUtils = mountHarness();
     expect(aasUtils.parseDisplayNameFromEnvironment(environment)).toEqual("my name");
   });
 });

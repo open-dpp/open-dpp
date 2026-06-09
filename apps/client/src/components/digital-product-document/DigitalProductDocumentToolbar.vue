@@ -15,6 +15,7 @@ import apiClient from "../../lib/api-client.ts";
 import PermalinkSettingsDialog from "./PermalinkSettingsDialog.vue";
 import Gs1SettingsDialog from "./Gs1SettingsDialog.vue";
 import Gs1QrCodeDialog from "./Gs1QrCodeDialog.vue";
+import { useRoute, useRouter } from "vue-router";
 
 const { t } = useI18n();
 
@@ -26,6 +27,8 @@ const props = defineProps<{
 const { goToParent } = useRouterUtils();
 const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
 const errorHandlingStore = useErrorHandlingStore();
+const route = useRoute();
+const router = useRouter();
 
 async function fetchDPD(id: string) {
   try {
@@ -104,6 +107,10 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await fetchDPD(item.id);
 }
 
+async function navigateToActivityHistory() {
+  await router.push(`${route.path}/activities`);
+}
+
 const status = computed(() => model.value?.lastStatusChange.currentStatus);
 
 const permalinkActions = computed(() => [
@@ -175,6 +182,14 @@ const permalinkActions = computed(() => [
             :aria-label="t('status.publish')"
             v-tooltip.bottom="t('status.publish')"
             @click="onPublishButtonClicked(model)"
+          />
+          <Button
+            icon="pi pi-history"
+            text
+            severity="secondary"
+            :aria-label="t('activityHistory.label')"
+            v-tooltip.bottom="t('activityHistory.label')"
+            @click="navigateToActivityHistory"
           />
         </div>
       </template>

@@ -119,7 +119,7 @@ export class Blob implements ISubmodelElement {
     throw new ValueError("Blob cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("Blob does not support to delete submodel elements");
   }
 

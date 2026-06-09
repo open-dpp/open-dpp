@@ -30,6 +30,14 @@ import { ISubmodelBase } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
+import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { FileValueChanged } from "../../activity-history/domain/change-events/file-value-changed";
+import { ReferenceElementValueChanged } from "../../activity-history/domain/change-events/reference-element-value-changed";
 
 export interface ValueModifierVisitorOptions {
   ability: AasAbility;
@@ -38,8 +46,15 @@ export interface ValueModifierVisitorContextType {
   data: unknown;
 }
 
-export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContextType, void> {
+export class ValueModifierVisitor
+  implements IVisitor<ValueModifierVisitorContextType, void>, ITrackable
+{
+  readonly tracker = ChangeTracker.create();
   constructor(private readonly options: ValueModifierVisitorOptions) {}
+
+  withTracking(queue?: ChangeTracker) {
+    return withTrackingHelper(queue, this);
+  }
 
   private modificationGuard(element: ISubmodelBase) {
     const idShortPath = element.getIdShortPath();
@@ -95,9 +110,26 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
         contentType: z.string().optional(),
       })
       .parse(context?.data);
+
+    const oldValue = {
+      value: element.value,
+      contentType: element.contentType,
+    };
+
     element.value = parsed.value !== undefined ? parsed.value : element.value;
     element.contentType =
       parsed.contentType !== undefined ? parsed.contentType : element.contentType;
+
+    this.tracker.track(
+      FileValueChanged.create({
+        path: element.getIdShortPath(),
+        oldValue,
+        newValue: {
+          value: element.value,
+          contentType: element.contentType,
+        },
+      }),
+    );
   }
 
   visitKey(_element: Key, _context: unknown): void {
@@ -129,8 +161,18 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
       .string()
       .nullish()
       .parse(context?.data ?? element.value);
+
     if (value !== undefined) {
+      const oldValue = element.value;
       element.value = value;
+      this.tracker.track(
+        PropertyValueChanged.create({
+          valueType: element.valueType,
+          path: element.getIdShortPath(),
+          oldValue,
+          newValue: value,
+        }),
+      );
     }
   }
 
@@ -169,6 +211,7 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
     this.modificationGuard(element);
     const parsedValue = ReferenceModificationSchema.nullish().parse(context?.data);
     const input = { value: element.value, newValue: parsedValue };
+    const oldValue = element.value ? Reference.fromPlain(element.value.toPlain()) : null;
     match(input)
       .with(
         {
@@ -186,6 +229,13 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
         element.value?.accept(this, { ...context, data: newValue });
       })
       .otherwise(() => {});
+    this.tracker.track(
+      ReferenceElementValueChanged.create({
+        path: element.getIdShortPath(),
+        oldValue,
+        newValue: element.value,
+      }),
+    );
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {

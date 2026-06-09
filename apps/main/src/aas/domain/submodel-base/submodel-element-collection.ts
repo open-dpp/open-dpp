@@ -97,7 +97,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  static fromPlain(data: unknown): ISubmodelElement {
+  static fromPlain(data: unknown): SubmodelElementCollection {
     const parsed = SubmodelElementCollectionJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new SubmodelElementCollection(
@@ -131,7 +131,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return AasSubmodelElements.SubmodelElementCollection;
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.value, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.value, idShort, options);
   }
 }

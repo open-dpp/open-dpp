@@ -9,15 +9,28 @@ import { AccessPermissionRule, AccessPermissionRuleSchema } from "./access-permi
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
+import { PolicyAdded } from "../../../activity-history/domain/change-events/policy-added";
 
 export const AccessControlSchema = z.object({
   accessPermissionRules: AccessPermissionRuleSchema.array(),
 });
 
-export class AccessControl {
+export class AccessControl implements ITrackable {
   private administrator = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+  public tracker = ChangeTracker.create();
 
   private constructor(private _accessPermissionRules: AccessPermissionRule[]) {}
+
+  withTracking(changeTracker?: ChangeTracker) {
+    const result = withTrackingHelper(changeTracker, this);
+    this._accessPermissionRules.forEach((rule) => rule.withTracking(this.tracker));
+    return result;
+  }
 
   get accessPermissionRules(): AccessPermissionRule[] {
     return this._accessPermissionRules;
@@ -130,6 +143,14 @@ export class AccessControl {
         }),
       );
     }
+    this.tracker.track(
+      PolicyAdded.create({
+        userRole: subject.userRole,
+        memberRole: subject.memberRole,
+        object: permissionPerObject.object,
+        value: permissions,
+      }),
+    );
   }
 
   private administratePolicyGuard(subject: SubjectAttributes) {

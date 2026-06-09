@@ -1,5 +1,35 @@
 # @open-dpp/main
 
+## 2.4.0
+
+### Minor Changes
+
+- [#580](https://github.com/open-dpp/open-dpp/pull/580) [`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da) Thanks [@mr42](https://github.com/mr42)! - Add activity history to passports and templates.
+
+### Patch Changes
+
+- Updated dependencies [[`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da)]:
+  - @open-dpp/api-client@2.4.0
+  - @open-dpp/permission@2.4.0
+  - @open-dpp/exception@2.4.0
+  - @open-dpp/dto@2.4.0
+  - @open-dpp/env@2.4.0
+
+## 1.0.0
+
+### Major Changes
+
+- [#520](https://github.com/open-dpp/open-dpp/pull/520) [`cf7dbd0`](https://github.com/open-dpp/open-dpp/commit/cf7dbd0d01313e50d4eec39a65944d98f417ba88) Thanks [@florianBieck](https://github.com/florianBieck)! - Added granular passport UI customization capabilities and refactored presentation layer into permalink structure.
+
+### Patch Changes
+
+- Updated dependencies [[`cf7dbd0`](https://github.com/open-dpp/open-dpp/commit/cf7dbd0d01313e50d4eec39a65944d98f417ba88)]:
+  - @open-dpp/api-client@1.0.0
+  - @open-dpp/permission@1.0.0
+  - @open-dpp/exception@1.0.0
+  - @open-dpp/dto@1.0.0
+  - @open-dpp/env@1.0.0
+
 ## 0.6.0
 
 ### Minor Changes

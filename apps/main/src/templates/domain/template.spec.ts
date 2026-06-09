@@ -13,10 +13,8 @@ describe("template", () => {
       environment: Environment.create({}),
     });
     expect(template.isPublished()).toBeFalsy();
-    const published = template.publish();
-    expect(published).not.toBe(template);
-    expect(template.isPublished()).toBeFalsy();
-    expect(published.isPublished()).toBeTruthy();
+    template.publish();
+    expect(template.isPublished()).toBeTruthy();
   });
 
   it("should be archived", () => {
@@ -25,10 +23,8 @@ describe("template", () => {
       environment: Environment.create({}),
     });
     expect(template.isArchived()).toBeFalsy();
-    const archived = template.archive();
-    expect(archived).not.toBe(template);
-    expect(template.isArchived()).toBeFalsy();
-    expect(archived.isArchived()).toBeTruthy();
+    template.archive();
+    expect(template.isArchived()).toBeTruthy();
   });
 
   it("should be restored", () => {
@@ -41,10 +37,7 @@ describe("template", () => {
       }),
     });
     expect(template.isArchived()).toBeTruthy();
-    const restored = template.restore();
-    expect(restored).not.toBe(template);
-    expect(template.isArchived()).toBeTruthy();
-    expect(restored.isArchived()).toBeFalsy();
-    expect(restored.isDraft()).toBeTruthy();
+    template.restore();
+    expect(template.isDraft()).toBeTruthy();
   });
 });

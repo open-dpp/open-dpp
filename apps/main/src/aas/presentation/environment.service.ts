@@ -56,6 +56,22 @@ import { ConceptDescriptionRepository } from "../infrastructure/concept-descript
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { DigitalProductPassportIdentifiableEnvironmentPopulateDecorator } from "./digital-product-passport-identifiable-environment-populate-decorator";
 import { PopulateOptions } from "./environment-populate-decorator";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
+import { RowAddedActivity } from "../../activity-history/domain/activities/row-added.activity";
+import { SubmodelElementAddedActivity } from "../../activity-history/domain/activities/submodel-element-added.activity";
+import { SubmodelElementDeletedActivity } from "../../activity-history/domain/activities/submodel-element-deleted.activity";
+import { SubmodelModifiedActivity } from "../../activity-history/domain/activities/submodel-modified.activity";
+import { SubmodelValueModifiedActivity } from "../../activity-history/domain/activities/submodel-value-modified.activity";
+import { SubmodelElementValueModifiedActivity } from "../../activity-history/domain/activities/submodel-element-value-modified.activity";
+import { AssetAdministrationShellModifiedActivity } from "../../activity-history/domain/activities/asset-administration-shell-modified.activity";
+import { PolicyDeletedActivity } from "../../activity-history/domain/activities/policy-deleted.activity";
+import { ColumnAddedActivity } from "../../activity-history/domain/activities/column-added.activity";
+import { ColumnModifiedActivity } from "../../activity-history/domain/activities/column-modified.activity";
+import { ColumnDeletedActivity } from "../../activity-history/domain/activities/column-deleted.activity";
+import { RowDeletedActivity } from "../../activity-history/domain/activities/row-deleted.activity";
+import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
+import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -63,30 +79,34 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   }
 }
 
+export type UserContext = {
+  subject: SubjectAttributes;
+  userId: string;
+};
+
 @Injectable()
 export class EnvironmentService {
   private readonly logger = new Logger(EnvironmentService.name);
   private aasRepository: AasRepository;
   private submodelRepository: SubmodelRepository;
   private conceptDescriptionRepository: ConceptDescriptionRepository;
-  private membersService: MembersService;
 
   constructor(
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
     conceptDescriptionRepository: ConceptDescriptionRepository,
     membersService: MembersService,
+    private activityRepository: ActivityRepository,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
     this.submodelRepository = submodelRepository;
     this.conceptDescriptionRepository = conceptDescriptionRepository;
-    this.membersService = membersService;
   }
 
-  async loadAbility(environment: Environment, subjet: SubjectAttributes) {
+  async loadAbility(environment: Environment, subject: SubjectAttributes, userId?: string) {
     const security = await this.loadSecurity(environment);
-    return security.defineAbilityForSubject(subjet);
+    return security.defineAbilityForSubject(subject, userId);
   }
 
   private async loadSecurity(environment: Environment): Promise<Security> {
@@ -127,14 +147,37 @@ export class EnvironmentService {
   }
 
   async deletePolicyBySubjectAndObject(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     object: IdShortPath,
     subject: SubjectAttributes,
-    administrator: SubjectAttributes,
+    userContext: UserContext,
   ) {
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    aas.security.withAdministrator(administrator).deletePolicyBySubjectAndObject(subject, object);
-    await this.aasRepository.save(aas);
+    const ability = aas
+      .withTracking()
+      .security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    aas.deletePolicyBySubjectAndObject(object, subject, { ability });
+
+    const activity = PolicyDeletedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      aas,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.aasRepository.save(aas, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+    } finally {
+      await session.endSession();
+    }
   }
 
   async getAasShells(
@@ -156,16 +199,35 @@ export class EnvironmentService {
   }
 
   async modifyAasShell(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     aasId: string,
     modification: AssetAdministrationShellModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
-    const ability = aas.security.defineAbilityForSubject(subject);
-    aas.modify(modification, { subject, ability });
-    await this.aasRepository.save(aas);
-    return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ ability }));
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    aas.withTracking().modify(modification, { subject: userContext.subject, ability });
+    const activity = AssetAdministrationShellModifiedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      aas,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.aasRepository.save(aas);
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
   }
 
   async getSubmodels(
@@ -182,68 +244,114 @@ export class EnvironmentService {
   }
 
   async modifySubmodel(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     modification: SubmodelModificationDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
   ): Promise<SubmodelResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     submodel.modify(modification, { ability });
-    await this.submodelRepository.save(submodel);
-    return SubmodelJsonSchema.parse(submodel.toPlain());
+
+    const activity = SubmodelModifiedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelJsonSchema.parse(submodel.toPlain());
+    } finally {
+      await session.endSession();
+    }
   }
 
   async addSubmodelToEnvironment(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelPlain: SubmodelRequestDto,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
+    userContext: UserContext,
   ): Promise<SubmodelResponseDto> {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+
+    const submodel = environment.withTracking().addSubmodel(Submodel.fromPlain(submodelPlain));
+    aas.withTracking().addSubmodel(submodel);
+    const activity = SubmodelAddedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      aas,
+      submodel,
+      environment,
+    });
+
     const session = await this.connection.startSession();
-    let result: SubmodelResponseDto;
     try {
       await session.withTransaction(async () => {
         const options = { session };
-        const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
         await saveEnvironment(options);
         await this.submodelRepository.save(submodel, options);
-
-        const aas = await this.getFirstAssetAdministrationShell(environment);
-        aas.addSubmodel(submodel);
         await this.aasRepository.save(aas, options);
-
-        result = SubmodelJsonSchema.parse(submodel.toPlain());
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], options);
+        }
       });
-      return result!;
+      return SubmodelJsonSchema.parse(submodel.toPlain());
     } finally {
       await session.endSession();
     }
   }
 
   async deleteSubmodelFromEnvironment(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
-    subject: SubjectAttributes,
+    userContext: UserContext,
     extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+
+    if (!ability.can(Permissions.Delete, IdShortPath.create({ path: submodel.idShort }))) {
+      throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
+    }
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         const options = { session };
-        const aas = await this.getFirstAssetAdministrationShell(environment);
-        const ability = aas.security.defineAbilityForSubject(subject);
-        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-
-        if (!ability.can(Permissions.Delete, IdShortPath.create({ path: submodel.idShort }))) {
-          throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
-        }
         await this.submodelRepository.deleteById(submodel.id, options);
 
-        aas.deleteSubmodel(submodel);
+        aas.withTracking().deleteSubmodel(submodel);
         await this.aasRepository.save(aas, options);
-        environment.deleteSubmodel(submodel);
+        environment.withTracking().deleteSubmodel(submodel);
+
         await saveEnvironment(options);
+        const activity = SubmodelDeletedActivity.create({
+          digitalProductDocumentId,
+          userId: userContext.userId,
+          correlationId,
+          aas,
+          submodel,
+          environment,
+        });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], options);
+        }
         if (extraCleanup) {
           await extraCleanup(submodel.idShort, options);
         }
@@ -254,18 +362,27 @@ export class EnvironmentService {
   }
 
   async deleteSubmodelElement(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
-    subject: SubjectAttributes,
+    userContext: UserContext,
     extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(subject);
-    submodel.deleteSubmodelElement(idShortPath, {
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    submodel.withTracking().deleteSubmodelElement(idShortPath, {
       ability,
-      onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      onDelete: (s) => aas.withTracking().security.deletePoliciesByObjectPath(s.getIdShortPath()),
+    });
+    const activity = SubmodelElementDeletedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      aas,
+      submodel,
     });
     const session = await this.connection.startSession();
     try {
@@ -278,6 +395,9 @@ export class EnvironmentService {
           // (`<submodelIdShort>.<elementPath>`), while idShortPath is relative to the
           // submodel — re-prefix so the cleanup matches the stored keys.
           await extraCleanup(`${submodel.idShort}.${idShortPath.toString()}`, options);
+        }
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], options);
         }
       });
     } finally {
@@ -355,122 +475,251 @@ export class EnvironmentService {
   }
 
   async addSubmodelElement(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     submodelElementPlain: SubmodelElementRequestDto,
-    subject: SubjectAttributes,
+    userContext: UserContext,
     idShortPath?: IdShortPath,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const submodelElement = submodel.addSubmodelElement(
-      parseSubmodelElement(submodelElementPlain),
-      { idShortPath, ability },
-    );
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain());
-  }
-
-  async modifyValueOfSubmodel(
-    environment: Environment,
-    submodelId: string,
-    modification: ValueRequestDto,
-    subject: SubjectAttributes,
-  ) {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    submodel.modifyValue(modification, { ability });
-    await this.submodelRepository.save(submodel);
-    return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
-  }
-
-  async modifySubmodelElement(
-    environment: Environment,
-    submodelId: string,
-    modification: SubmodelElementModificationDto,
-    idShortPath: IdShortPath,
-    subject: SubjectAttributes,
-  ): Promise<SubmodelElementResponseDto> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, { ability });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
-  }
-
-  async modifyValueOfSubmodelElement(
-    environment: Environment,
-    submodelId: string,
-    modification: ValueRequestDto,
-    idShortPath: IdShortPath,
-    subject: SubjectAttributes,
-  ): Promise<SubmodelElementResponseDto> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, {
-      ability,
-    });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
-  }
-
-  async addColumn(
-    environment: Environment,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    column: ISubmodelElement,
-    subject: SubjectAttributes,
-    position?: number,
-  ): Promise<SubmodelElementListResponseDto> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, {
-      position,
-      ability,
-    });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
-  }
-
-  async modifyColumn(
-    environment: Environment,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    idShortOfColumn: string,
-    modifications: SubmodelElementModificationDto,
-    subject: SubjectAttributes,
-  ): Promise<SubmodelElementListResponseDto> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const modifiedSubmodelElement = submodel.modifyColumn(
-      idShortPath,
-      idShortOfColumn,
-      modifications,
-      { ability },
-    );
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
-  }
-
-  async deleteColumn(
-    environment: Environment,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    idShortOfColumn: string,
-    subject: SubjectAttributes,
-  ): Promise<SubmodelElementListResponseDto> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(subject);
-    const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn, {
-      ability,
-      onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const submodelElement = submodel
+      .withTracking()
+      .addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath, ability });
+    const activity = SubmodelElementAddedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
     });
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementSchema.parse(submodelElement.toPlain());
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async modifyValueOfSubmodel(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    modification: ValueRequestDto,
+    userContext: UserContext,
+  ) {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, userContext.subject);
+    submodel.modifyValue(modification, { ability });
+
+    const activity = SubmodelValueModifiedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async modifySubmodelElement(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    modification: SubmodelElementModificationDto,
+    idShortPath: IdShortPath,
+    { subject, userId }: UserContext,
+  ): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, subject, userId);
+    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, {
+      ability,
+    });
+    const activity = SubmodelElementModifiedActivity.create({
+      digitalProductDocumentId,
+      userId,
+      correlationId,
+      submodel,
+    });
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async modifyValueOfSubmodelElement(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    modification: ValueRequestDto,
+    idShortPath: IdShortPath,
+    { subject, userId }: UserContext,
+  ): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, subject, userId);
+    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, {
+      ability,
+    });
+    const activity = SubmodelElementValueModifiedActivity.create({
+      digitalProductDocumentId,
+      userId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async addColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    column: ISubmodelElement,
+    userContext: UserContext,
+    position?: number,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const modifiedSubmodelElementList = submodel.withTracking().addColumn(idShortPath, column, {
+      position,
+      ability,
+    });
+
+    const activity = ColumnAddedActivity.create({
+      userId: userContext.userId,
+      digitalProductDocumentId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async modifyColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    modifications: SubmodelElementModificationDto,
+    userContext: UserContext,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const modifiedSubmodelElement = submodel
+      .withTracking()
+      .modifyColumn(idShortPath, idShortOfColumn, modifications, { ability });
+
+    const activity = ColumnModifiedActivity.create({
+      userId: userContext.userId,
+      digitalProductDocumentId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async deleteColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    userContext: UserContext,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .deleteColumn(idShortPath, idShortOfColumn, {
+        ability,
+        onDelete: (s) => aas.withTracking().security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      });
+
+    const activity = ColumnDeletedActivity.create({
+      userId: userContext.userId,
+      digitalProductDocumentId,
+      correlationId,
+      submodel,
+      aas,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     } finally {
@@ -479,38 +728,75 @@ export class EnvironmentService {
   }
 
   async addRow(
+    correlationId: string,
+    digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
-    subject: SubjectAttributes,
+    userContext: UserContext,
     position?: number,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const modifiedSubmodelElement = submodel.addRow(idShortPath, { position, ability });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
-  }
-
-  async deleteRow(
-    environment: Environment,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    idShortOfRow: string,
-    subject: SubjectAttributes,
-  ): Promise<SubmodelElementListResponseDto> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const aas = await this.getFirstAssetAdministrationShell(environment);
-    const ability = aas.security.defineAbilityForSubject(subject);
-    const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow, {
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const modifiedSubmodelElement = submodel.withTracking().addRow(idShortPath, {
+      position,
       ability,
-      onDelete: (s) => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()),
+    });
+    const activity = RowAddedActivity.create({
+      userId: userContext.userId,
+      digitalProductDocumentId,
+      correlationId,
+      submodel,
     });
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async deleteRow(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfRow: string,
+    userContext: UserContext,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .deleteRow(idShortPath, idShortOfRow, {
+        ability,
+        onDelete: (s) => aas.withTracking().security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      });
+    const session = await this.connection.startSession();
+
+    const activity = RowDeletedActivity.create({
+      userId: userContext.userId,
+      digitalProductDocumentId,
+      correlationId,
+      submodel,
+      aas,
+    });
+
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
       });
       return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     } finally {
@@ -673,7 +959,7 @@ export class EnvironmentService {
     environment: Environment,
   ): Promise<AssetAdministrationShell> {
     if (environment.assetAdministrationShells.length === 0) {
-      throw new ValueError("No asset administration shell for environment. Can't add submodel");
+      throw new ValueError("No asset administration shell for environment.");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }

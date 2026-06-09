@@ -32,11 +32,18 @@ export function useRoleHierarchy() {
     return roleHierarchy.slice(roleIndex);
   }
 
+  function getRoleName(subject: Subject) {
+    const roleIndex = getRoleIndex(subject);
+    return roleIndex !== -1 && roleHierarchy[roleIndex]
+      ? roleHierarchy[roleIndex].name
+      : t("aasEditor.security.unknownRole");
+  }
+
   function canEditPermissionsOfRole(subject: Subject, target: Subject) {
     const subjectRoles = getRoleIndex(subject);
     const targetRoles = getRoleIndex(target);
     return subjectRoles < targetRoles;
   }
 
-  return { hierarchy: roleHierarchy, getVisibleRoles, canEditPermissionsOfRole };
+  return { hierarchy: roleHierarchy, getVisibleRoles, canEditPermissionsOfRole, getRoleName };
 }

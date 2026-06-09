@@ -10,7 +10,7 @@ import {
 } from "../aas/presentation/aas.decorators";
 import { ContentType } from "./content.types";
 import { HTTPCode } from "./http.codes";
-import { createAasPaths } from "./aas.paths";
+import { createAasPaths } from "./digital-product-document.paths";
 
 const security = [{ apiKeyAuth: [] }];
 
