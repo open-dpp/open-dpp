@@ -217,7 +217,7 @@ describe("aasTableExtension composable", () => {
       openConfirm: mockOpenConfirmDialog,
       errorHandlingStore,
       translate,
-      selectedLanguage: Language.en,
+      selectedLanguage: Language["en-US"],
       openDrawer,
       callbackOfSubmodelElementListEditor,
     });
@@ -601,7 +601,7 @@ describe("aasTableExtension composable", () => {
       aasNamespace: apiClient.dpp.templates.aas,
       errorHandlingStore,
       openConfirm: openAutoConfirm,
-      selectedLanguage: Language.en,
+      selectedLanguage: Language["en-US"],
       translate,
       openDrawer,
       callbackOfSubmodelElementListEditor,

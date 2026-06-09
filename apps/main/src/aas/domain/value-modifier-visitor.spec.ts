@@ -288,7 +288,7 @@ describe("value modifier visitor", () => {
     const modifications = [
       {
         prop1: "prop New",
-        prop2: [{ de: "CO2 Footprint New Text" }],
+        prop2: [{ "de-DE": "CO2 Footprint New Text" }],
       },
     ];
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "list" }), {

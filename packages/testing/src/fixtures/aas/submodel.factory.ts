@@ -321,10 +321,10 @@ export const submodelDesignOfProductValuePlainFactory = Factory.define<any>(() =
       },
       MultilanguageProp: [
         {
-          de: "Schnelle Übersicht",
+          "de-DE": "Schnelle Übersicht",
         },
         {
-          en: "Quick Overview",
+          "en-US": "Quick Overview",
         },
       ],
     },
