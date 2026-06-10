@@ -62,13 +62,34 @@ pnpm install
 cp .env.dev.example .env.dev
 ```
 
-Set required secrets and API keys in `.env.dev`.
+Set required secrets and API keys in `.env.dev`. The `dev` and `test` scripts also load an optional `.env` file for local overrides; create an empty one with `touch .env` to silence a harmless "missing file" warning if you have no overrides.
+
+### Generate the MongoDB keyfile
+
+Local MongoDB runs as a single-node replica set (required for the multi-document transactions the backend uses), which needs a shared keyfile. This file is intentionally not committed, so generate it once before starting the infrastructure:
+
+```bash
+openssl rand -base64 756 > docker/mongo_keyfile
+chmod 600 docker/mongo_keyfile
+```
+
+The `chmod 600` is required — MongoDB refuses to start if the keyfile is group- or world-readable.
+
+### Build shared packages
+
+The apps import the shared `packages/*` from their compiled `dist/` output, and `pnpm run dev` does not build the packages automatically. Build them once before the first run (and again after changing a package):
+
+```bash
+pnpm run build
+```
 
 ### Start local infrastructure
 
 ```bash
-make dev
+pnpm exec make dev
 ```
+
+This starts MongoDB, MinIO, Mailpit, and ClamAV via Docker Compose. Run it with `pnpm exec` so the local `dotenvx` CLI is found on your `PATH`; plain `make dev` only works if `dotenvx` is installed globally.
 
 ### Run the application
 
@@ -79,7 +100,7 @@ pnpm run dev
 Useful URLs after startup:
 
 - App: `http://localhost:3000`
-- Mailpit: `http://localhost:8025`
+- Mailpit: `http://localhost:8025` — open this to confirm your sign-up email and verify your account.
 
 ## Quality checks
 
