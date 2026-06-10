@@ -30,9 +30,25 @@ When archived, you can do the following operations on the {{ typeLowerSingular }
 
 - Restore it to the previous state.
 
+## Registration of the {{ typeLowerSingular }} to the EU-Registry
+
+```mermaid
+flowchart TD
+A([Publish])--> B[Send passport to registry]
+    B --> C{Economic operator is registered}
+    C -->|Yes| RegP[🎉 Register passport]
+    C -->|No| RegE[Register operator]
+    RegE --> B
+    RegP --> VerP{Validate passport}
+    VerP -->|Valid| Upi[Retrieve upi and store it]
+    VerP -->|Invalid| RepVE[Report validation error]
+    Upi --> F([End])
+```
+
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useData } from "vitepress";
+
 
 const { frontmatter } = useData();
 const typeLowerSingular = computed(() =>

@@ -2,7 +2,7 @@ import { defineConfig } from "vitepress";
 import { useSidebar } from "vitepress-openapi";
 import spec from "../api-docs.json" with { type: "json" };
 import pkg from "../package.json" with { type: "json" };
-
+import { mermaidPlugin } from "./plugins/vitepress-mermaid";
 const sidebar = useSidebar({
   spec,
   // Optionally, you can specify a link prefix for all generated sidebar items. Default is `/operations/`.
@@ -72,5 +72,10 @@ export default defineConfig({
     },
 
     socialLinks: [{ icon: "github", link: "https://github.com/open-dpp/open-dpp" }],
+  },
+  markdown: {
+    config: (md) => {
+      md.use(mermaidPlugin);
+    },
   },
 });
