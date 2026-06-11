@@ -1,5 +1,5 @@
 import type MarkdownIt from "markdown-it";
-
+// See https://github.com/vuejs/vitepress/discussions/4999
 export const mermaidPlugin = (md: MarkdownIt) => {
   const fence = md.renderer.rules.fence!;
 
