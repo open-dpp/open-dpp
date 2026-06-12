@@ -10,7 +10,7 @@ import { API_URL } from "./const.ts";
 
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
-  baseURL: `${API_URL}/auth`,
+  baseURL: `${API_URL}/v1/auth`,
   plugins: [
     inferAdditionalFields({
       user: {

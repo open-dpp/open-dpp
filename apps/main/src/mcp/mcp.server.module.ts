@@ -14,6 +14,8 @@ import { PassportTool } from "./passport.tool";
     McpModule.forRoot({
       name: "mcp-server",
       version: "1.0.0",
+      sseEndpoint: "/v1/sse",
+      messagesEndpoint: "/v1/messages",
     }),
     UniqueProductIdentifierModule,
     AuthModule,

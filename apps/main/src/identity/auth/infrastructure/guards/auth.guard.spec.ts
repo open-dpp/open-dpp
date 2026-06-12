@@ -78,38 +78,38 @@ describe("authGuard Allowlist Repro", () => {
     } as ExecutionContext & { _request: any };
   };
 
-  it("should allow /api/sse exactly", async () => {
-    const context = createMockContext("/api/sse");
+  it("should allow /api/v1/sse exactly", async () => {
+    const context = createMockContext("/api/v1/sse");
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it("should NOT allow /api/sse/something", async () => {
-    const context = createMockContext("/api/sse/123");
+  it("should NOT allow /api/v1/sse/something", async () => {
+    const context = createMockContext("/api/v1/sse/123");
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should allow /api/sse?query=123", async () => {
-    const context = createMockContext("/api/sse?foo=bar");
+  it("should allow /api/v1/sse?query=123", async () => {
+    const context = createMockContext("/api/v1/sse?foo=bar");
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it("should allow /api/messages exactly", async () => {
-    const context = createMockContext("/api/messages");
+  it("should allow /api/v1/messages exactly", async () => {
+    const context = createMockContext("/api/v1/messages");
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it("should NOT allow /api/messages/something", async () => {
-    const context = createMockContext("/api/messages/123");
+  it("should NOT allow /api/v1/messages/something", async () => {
+    const context = createMockContext("/api/v1/messages/123");
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should NOT allow /api/sse-extension (partial match prefix)", async () => {
-    const context = createMockContext("/api/sse-extension");
+  it("should NOT allow /api/v1/sse-extension (partial match prefix)", async () => {
+    const context = createMockContext("/api/v1/sse-extension");
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should NOT allow /api/messages-extension (partial match prefix)", async () => {
-    const context = createMockContext("/api/messages-extension");
+  it("should NOT allow /api/v1/messages-extension (partial match prefix)", async () => {
+    const context = createMockContext("/api/v1/messages-extension");
     expect(await guard.canActivate(context)).toBe(false);
   });
 
@@ -129,7 +129,7 @@ describe("authGuard Allowlist Repro", () => {
 
     it("should deny access when API key is invalid", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue(null);
-      const context = createMockContext("/api/items", { "x-api-key": "invalid-key" });
+      const context = createMockContext("/api/v1/items", { "x-api-key": "invalid-key" });
 
       const result = await guard.canActivate(context);
 

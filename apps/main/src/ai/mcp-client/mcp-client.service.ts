@@ -21,7 +21,7 @@ export class McpClientService implements OnModuleDestroy {
   }
 
   async connect() {
-    const url = `http://localhost:${this.configService.get("OPEN_DPP_PORT")}/api/sse`;
+    const url = `http://localhost:${this.configService.get("OPEN_DPP_PORT")}/api/v1/sse`;
     // Create a new client instance
     this.client = new MultiServerMCPClient({
       throwOnLoadError: true,

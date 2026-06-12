@@ -1,6 +1,15 @@
 import type { Auth } from "better-auth";
 import type express from "express";
-import { Controller, ForbiddenException, Get, Inject, Post, Req, Res } from "@nestjs/common";
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Inject,
+  Post,
+  Req,
+  Res,
+  Version,
+} from "@nestjs/common";
 import { toNodeHandler } from "better-auth/node";
 import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
 import { AUTH } from "../auth.provider";
@@ -13,6 +22,7 @@ export class AuthController {
     private readonly instanceSettingsService: InstanceSettingsService,
   ) {}
 
+  @Version("1")
   @Post("*path")
   @OptionalAuth()
   async handleBetterAuthPostRequest(
@@ -34,6 +44,7 @@ export class AuthController {
     await handler(request, response);
   }
 
+  @Version("1")
   @Get("*path")
   @OptionalAuth()
   async handleBetterAuthGetRequest(

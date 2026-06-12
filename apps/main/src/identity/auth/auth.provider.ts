@@ -61,7 +61,7 @@ export const AuthProvider: Provider = {
 
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
-      basePath: "/api/auth",
+      basePath: "/api/v1/auth",
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
       logger: {

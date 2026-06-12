@@ -72,19 +72,13 @@ async function bootstrap() {
       }
     });
 
-    // app.use((req: Request, res: Response, next: NextFunction) => {
-    //   if (
-    //     req.url.startsWith("/api/") &&
-    //     !req.url.startsWith("/api/sse") &&
-    //     !req.url.startsWith("/api/auth") &&
-    //     !req.url.startsWith("/api/messages") &&
-    //     !req.url.match(/^\/api\/v\d+(\/|$)/)
-    //   ) {
-    //     return res.redirect(308, req.url.replace(/^\/api/, "/api/v1"));
-    //   }
-    //
-    //   next();
-    // });
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.url.startsWith("/api/") && !req.url.match(/^\/api\/v\d+(\/|$)/)) {
+        return res.redirect(308, req.url.replace(/^\/api/, "/api/v1"));
+      }
+
+      next();
+    });
 
     httpServer.on("upgrade", (req, socket, head) => {
       if (req.url && !req.url.startsWith("/api")) {
@@ -94,11 +88,11 @@ async function bootstrap() {
   }
 
   app.setGlobalPrefix("api");
-  // app.enableVersioning({
-  //   type: VersioningType.URI,
-  //   // header: "X-API-VERSION",
-  //   defaultVersion: "1",
-  // });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    // header: "X-API-VERSION",
+    defaultVersion: "1",
+  });
   app.enableCors({
     credentials: true,
     origin: "http://localhost:5173",

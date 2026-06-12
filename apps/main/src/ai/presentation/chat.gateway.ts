@@ -15,7 +15,7 @@ import { UniqueProductIdentifierRepository } from "../../unique-product-identifi
 import { ChatService } from "../chat.service";
 
 @UseGuards(WebsocketAuthGuard)
-@WebSocketGateway({ cors: true, path: "/api/ai-socket" })
+@WebSocketGateway({ cors: true, path: "/api/v1/ai-socket" })
 @UseFilters(new SocketIoExceptionFilter())
 export class ChatGateway {
   private readonly logger: Logger = new Logger(ChatGateway.name);

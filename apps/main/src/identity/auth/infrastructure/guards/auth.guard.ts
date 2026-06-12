@@ -91,12 +91,12 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
-      const allowedPaths = ["/api/sse", "/api/messages"];
+      const allowedPaths = ["/api/v1/sse", "/api/v1/messages"];
       const path = url.split("?")[0];
       return allowedPaths.includes(path);
     }
 
-    const isBetterAuthUrl = url.startsWith("/api/auth");
+    const isBetterAuthUrl = url.startsWith("/api/v1/auth");
     if (!isBetterAuthUrl) {
       const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
