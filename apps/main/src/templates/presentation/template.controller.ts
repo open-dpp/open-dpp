@@ -119,8 +119,16 @@ import { UserIdDecorator } from "../../identity/auth/presentation/decorators/use
 import type { Response } from "express";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { ApiVersion } from "../../common/decorators/api-version.decorator";
+import {
+  migrateSubmodelElementLinks,
+  migrateSubmodelLinks,
+  reverseMigrateSubmodelElementLinks,
+  reverseMigrateSubmodelLinks,
+} from "../../aas/infrastructure/migrate-links";
+import { type ApiVersionsType } from "../../api-version";
 
-@Controller("/templates")
+@Controller({ path: "/templates", version: ["1", "2"] })
 export class TemplateController
   implements
     IAasReadEndpointsWithOrganizationId,
@@ -216,15 +224,18 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.createSubmodel(
+    const migratedBody = version === "1" ? reverseMigrateSubmodelLinks(body) : body;
+    const response = await this.templateService.digitalProductDocumentService.createSubmodel(
       correlationId,
       organizationId,
       id,
-      body,
+      migratedBody,
       { subject, userId },
     );
+    return version === "1" ? migrateSubmodelLinks(response) : response;
   }
 
   @ApiDeletePolicy()
@@ -285,16 +296,19 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.modifySubmodel(
+    const migratedBody = version === "1" ? reverseMigrateSubmodelLinks(body) : body;
+    const response = await this.templateService.digitalProductDocumentService.modifySubmodel(
       correlationId,
       organizationId,
       id,
       submodelId,
-      body,
+      migratedBody,
       { subject, userId },
     );
+    return version === "1" ? migrateSubmodelLinks(response) : response;
   }
 
   @ApiPatchSubmodelValue()
@@ -326,6 +340,7 @@ export class TemplateController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -338,6 +353,7 @@ export class TemplateController
       template.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -372,6 +388,7 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -381,12 +398,19 @@ export class TemplateController
         organizationId,
       );
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(
+    const response = await this.environmentService.getSubmodelElements(
       template.getEnvironment(),
       submodelId,
       pagination,
       subject,
     );
+    if (version === "1") {
+      return {
+        ...response,
+        result: response.result.map(migrateSubmodelElementLinks),
+      };
+    }
+    return response;
   }
 
   @ApiPostSubmodelElement()
@@ -399,16 +423,19 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.createSubmodelElement(
+    const migratedBody = version === "1" ? reverseMigrateSubmodelElementLinks(body) : body;
+    const response = await this.templateService.digitalProductDocumentService.createSubmodelElement(
       correlationId,
       organizationId,
       id,
       submodelId,
-      body,
+      migratedBody,
       { subject, userId },
     );
+    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiDeleteSubmodelElementById()
@@ -453,18 +480,22 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.addColumnToSubmodelElementList(
-      correlationId,
-      organizationId,
-      id,
-      submodelId,
-      idShortPath,
-      body,
-      position,
-      { subject, userId },
-    );
+    const migratedBody = version === "1" ? reverseMigrateSubmodelElementLinks(body) : body;
+    const response =
+      await this.templateService.digitalProductDocumentService.addColumnToSubmodelElementList(
+        correlationId,
+        organizationId,
+        id,
+        submodelId,
+        idShortPath,
+        migratedBody,
+        position,
+        { subject, userId },
+      );
+    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiPatchColumn()
@@ -479,18 +510,22 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
-      correlationId,
-      organizationId,
-      id,
-      submodelId,
-      idShortPath,
-      idShortOfColumn,
-      body,
-      { subject, userId },
-    );
+    const migratedBody = version === "1" ? reverseMigrateSubmodelLinks(body) : body;
+    const response =
+      await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
+        correlationId,
+        organizationId,
+        id,
+        submodelId,
+        idShortPath,
+        idShortOfColumn,
+        migratedBody,
+        { subject, userId },
+      );
+    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiDeleteColumn()
@@ -576,17 +611,20 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.modifySubmodelElement(
+    const migratedBody = version === "1" ? reverseMigrateSubmodelElementLinks(body) : body;
+    const response = await this.templateService.digitalProductDocumentService.modifySubmodelElement(
       correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
-      body,
+      migratedBody,
       { subject, userId },
     );
+    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiPatchSubmodelElementValue()
@@ -621,6 +659,7 @@ export class TemplateController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -629,12 +668,13 @@ export class TemplateController
         subject,
         organizationId,
       );
-    return await this.environmentService.getSubmodelElementById(
+    const response = await this.environmentService.getSubmodelElementById(
       template.getEnvironment(),
       submodelId,
       idShortPath,
       subject,
     );
+    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiPostSubmodelElementAtIdShortPath()
@@ -648,17 +688,21 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version?: string,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
-      correlationId,
-      organizationId,
-      id,
-      submodelId,
-      idShortPath,
-      body,
-      { subject, userId },
-    );
+    const migratedBody = version === "1" ? reverseMigrateSubmodelElementLinks(body) : body;
+    const response =
+      await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
+        correlationId,
+        organizationId,
+        id,
+        submodelId,
+        idShortPath,
+        migratedBody,
+        { subject, userId },
+      );
+    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiGetSubmodelElementValue()

@@ -42,7 +42,8 @@ import {
 } from "../../digital-product-document/domain/digital-product-document-status";
 
 describe("templateController", () => {
-  const basePath = "/templates";
+  const basePath = "templates";
+  const basePathV2 = `/v2/${basePath}`;
   const ctx = createAasTestContext(
     basePath,
     {
@@ -109,7 +110,7 @@ describe("templateController", () => {
     ).toBeUndefined();
 
     const firstResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${template.id}/shells?limit=1`)
+      .get(`${basePathV2}/${template.id}/shells?limit=1`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
@@ -123,7 +124,7 @@ describe("templateController", () => {
     ).toBeUndefined();
 
     const secondResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${template.id}/shells?limit=1`)
+      .get(`${basePathV2}/${template.id}/shells?limit=1`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
@@ -166,6 +167,7 @@ describe("templateController", () => {
   });
 
   it(`/GET submodel by id`, async () => {
+    await ctx.asserts.getSubmodelByIdV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelById(createTemplate);
   });
 
@@ -247,7 +249,7 @@ describe("templateController", () => {
 
     let response = await request(app.getHttpServer())
       .get(
-        `${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`,
+        `${basePathV2}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`,
       )
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
@@ -273,7 +275,7 @@ describe("templateController", () => {
     );
 
     response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
+      .get(`${basePathV2}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
@@ -286,7 +288,7 @@ describe("templateController", () => {
     );
 
     response = await request(app.getHttpServer())
-      .get(`${basePath}?status=Archived`)
+      .get(`${basePathV2}?status=Archived`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
@@ -316,7 +318,7 @@ describe("templateController", () => {
       },
     };
     const response = await request(app.getHttpServer())
-      .post(basePath)
+      .post(basePathV2)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(body);
@@ -349,7 +351,7 @@ describe("templateController", () => {
     const template = await createTemplate(org.id);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${template.id}/export`)
+      .get(`${basePathV2}/${template.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -370,13 +372,13 @@ describe("templateController", () => {
     const template = await createTemplate(org.id);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${template.id}/export`)
+      .get(`${basePathV2}/${template.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(exportResponse.body);
@@ -395,7 +397,7 @@ describe("templateController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send({ invalid: "data" });
@@ -410,7 +412,7 @@ describe("templateController", () => {
     const emptyPayload = buildEmptyExportPayload();
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(emptyPayload);
@@ -423,7 +425,7 @@ describe("templateController", () => {
     expect(importResponse.body.environment.conceptDescriptions).toHaveLength(0);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${importResponse.body.id}/export`)
+      .get(`${basePathV2}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -451,7 +453,7 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(template);
 
     const response = await request(app.getHttpServer())
-      .put(`${basePath}/${template.id}/status`)
+      .put(`${basePathV2}/${template.id}/status`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
@@ -487,7 +489,7 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(template);
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${template.id}`)
+      .delete(`${basePathV2}/${template.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
 
@@ -509,7 +511,7 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(publishedTemplate);
 
     const responseForPublishedTemplate = await request(app.getHttpServer())
-      .delete(`${basePath}/${publishedTemplate.id}`)
+      .delete(`${basePathV2}/${publishedTemplate.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
 
@@ -526,7 +528,7 @@ describe("templateController", () => {
     const richPayload = buildRichExportPayload();
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(richPayload);
@@ -539,7 +541,7 @@ describe("templateController", () => {
     expect(importResponse.body.environment.conceptDescriptions).toHaveLength(1);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${importResponse.body.id}/export`)
+      .get(`${basePathV2}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 

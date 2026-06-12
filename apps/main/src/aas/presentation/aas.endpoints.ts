@@ -21,6 +21,7 @@ import { MemberRoleType } from "../../identity/organizations/domain/member-role.
 import { UserRoleType } from "../../identity/users/domain/user-role.enum";
 
 import { IdShortPath } from "../domain/common/id-short-path";
+import { ApiVersionsType } from "../../api-version";
 
 export interface IAasReadEndpointsWithOrganizationId {
   getShells: (
@@ -45,6 +46,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     submodelId: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    version: ApiVersionsType,
   ) => Promise<SubmodelResponseDto>;
   getSubmodelValue: (
     organizationId: string,

@@ -60,3 +60,66 @@ export function migrateSubmodelLinks(submodel: any): any {
     submodelElements: submodel.submodelElements.map(migrateSubmodelElementLinks),
   };
 }
+
+export function reverseMigrateSubmodelElementLinks(element: any): any {
+  if (!element || typeof element !== "object") {
+    return element;
+  }
+
+  // Check if it's a Property (AnyUri) that should be a ReferenceElement
+  if (element.modelType === KeyTypes.Property && element.valueType === DataTypeDef.AnyUri) {
+    const migrated = { ...element };
+    delete migrated.valueType;
+    if (element.value !== null && element.value !== undefined) {
+      return {
+        ...migrated,
+        modelType: KeyTypes.ReferenceElement,
+        value: {
+          type: ReferenceTypes.ExternalReference,
+          keys: [
+            {
+              type: KeyTypes.GlobalReference,
+              value: element.value,
+            },
+          ],
+        },
+      };
+    }
+    return {
+      ...migrated,
+      modelType: KeyTypes.ReferenceElement,
+      value: null,
+    };
+  }
+
+  // Recurse into submodel elements if they exist (SMC or SML)
+  if (element.modelType === KeyTypes.SubmodelElementCollection && Array.isArray(element.value)) {
+    return {
+      ...element,
+      value: element.value.map(reverseMigrateSubmodelElementLinks),
+    };
+  }
+
+  if (element.modelType === KeyTypes.SubmodelElementList && Array.isArray(element.value)) {
+    return {
+      ...element,
+      value: element.value.map(reverseMigrateSubmodelElementLinks),
+    };
+  }
+
+  return element;
+}
+
+export function reverseMigrateSubmodelLinks(submodel: any): any {
+  if (!submodel) {
+    return submodel;
+  }
+
+  const migrated = { ...submodel };
+
+  if (Array.isArray(submodel.submodelElements)) {
+    migrated.submodelElements = submodel.submodelElements.map(reverseMigrateSubmodelElementLinks);
+  }
+
+  return migrated;
+}

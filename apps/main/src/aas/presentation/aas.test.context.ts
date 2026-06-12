@@ -1,4 +1,4 @@
-import type { INestApplication } from "@nestjs/common";
+import { INestApplication, VersioningType } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
@@ -11,6 +11,7 @@ import {
   AasSubmodelElements,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKind,
+  DataTypeDef,
   KeyTypes,
   MemberRoleDto,
   PermissionKind,
@@ -30,6 +31,7 @@ import {
 } from "@open-dpp/exception";
 import {
   aasPlainFactory,
+  allPermissionsAllow,
   propertyInputPlainFactory,
   securityPlainFactory,
   SecurityPlainTransientParams,
@@ -91,6 +93,7 @@ import { CorrelationIdService } from "../../common/middleware/correlation-id.ser
 import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
+import { DefaultApiVersion } from "../../api-version";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -99,6 +102,8 @@ export function createAasTestContext<T>(
   EntityRepositoryClass: new (...args: any[]) => T,
   subject: SubjectAttributes,
 ) {
+  const basePathV1 = `/v1/${basePath}`;
+  const basePathV2 = `/v2/${basePath}`;
   let app: INestApplication;
   let dppIdentifiableRepository: T;
   let submodelRepository: SubmodelRepository;
@@ -172,7 +177,12 @@ export function createAasTestContext<T>(
       new ValueErrorFilter(),
       new ForbiddenExceptionFilter(),
     );
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: DefaultApiVersion,
+    });
     await app.init();
+
     dppIdentifiableRepository = moduleRef.get<T>(EntityRepositoryClass);
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
@@ -237,12 +247,68 @@ export function createAasTestContext<T>(
       : { ...(await betterAuthHelper.getUserWithCookie(user1data.user.id)), org: undefined };
   }
 
+  async function addPolicy(
+    subject: SubjectAttributes,
+    object: IdShortPath,
+    permissions: Permission[],
+  ) {
+    if (!aas.security.hasPolicy(subject, object, permissions)) {
+      aas.security.addPolicy(subject, object, permissions);
+    }
+    await aasRepository.save(aas);
+  }
+
+  async function createSubmodelWithReferenceElement(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const passport = await createEntity(org!.id);
+
+    const submodel = Submodel.create({
+      idShort: "testSubmodel",
+      submodelElements: [
+        Property.create({
+          idShort: "link",
+          valueType: DataTypeDef.AnyUri,
+          value: "https://example.com",
+        }),
+      ],
+    });
+    await addPolicy(
+      subject,
+      IdShortPath.create({ path: submodel.idShort }),
+      allPermissionsAllow.map(Permission.fromPlain),
+    );
+    passport.getEnvironment().addSubmodel(submodel);
+    await submodelRepository.save(submodel);
+    await saveEntity(passport);
+    return { org, userCookie, passport, submodel };
+  }
+
+  async function assertGetSubmodelByIdV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    expect(responseV1.body.submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(responseV1.body.submodelElements[0].value.keys[0].value).toEqual("https://example.com");
+  }
+
   async function assertGetShells(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createEntity(org?.id);
 
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .get(`${basePathV2}/${passport.id}/shells?limit=1`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -301,7 +367,7 @@ export function createAasTestContext<T>(
       security: securityPlainFactory.build(undefined, { transient: transientParams }),
     };
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/shells/${btoa(newAas.id)}`)
+      .patch(`${basePathV2}/${entity.id}/shells/${btoa(newAas.id)}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(body);
@@ -325,7 +391,7 @@ export function createAasTestContext<T>(
       object: "section1",
     };
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${passport.id}/security/policies`)
+      .delete(`${basePathV2}/${passport.id}/security/policies`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(body);
@@ -340,7 +406,7 @@ export function createAasTestContext<T>(
     const passport = await createEntity(org?.id);
 
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/submodels?limit=2`)
+      .get(`${basePathV2}/${passport.id}/submodels?limit=2`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -359,7 +425,7 @@ export function createAasTestContext<T>(
     const passport = await createEntity(org?.id);
 
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/submodels/${btoa(submodels[1].id)}`)
+      .get(`${basePathV2}/${passport.id}/submodels/${btoa(submodels[1].id)}`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -380,7 +446,7 @@ export function createAasTestContext<T>(
     });
 
     const req = request(app.getHttpServer())
-      .post(`${basePath}/${passport.id}/submodels`)
+      .post(`${basePathV2}/${passport.id}/submodels`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -398,7 +464,7 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .get(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -421,7 +487,7 @@ export function createAasTestContext<T>(
     const submodelElementJson = propertyInputPlainFactory.build();
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .post(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(submodelElementJson);
@@ -442,7 +508,7 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
       .get(
-        `${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`,
       )
       .set("Cookie", userCookie);
 
@@ -486,7 +552,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .post(
-        `${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -508,7 +574,7 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/$value`)
+      .get(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/$value`)
       .set("Cookie", userCookie)
       .send();
 
@@ -588,7 +654,7 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
       .get(
-        `${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`,
       )
       .set("Cookie", userCookie)
       .send();
@@ -648,7 +714,7 @@ export function createAasTestContext<T>(
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .patch(`${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
@@ -678,7 +744,7 @@ export function createAasTestContext<T>(
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${submodel.id}/$value`)
+      .patch(`${basePathV2}/${entity.id}/submodels/${submodel.id}/$value`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
@@ -708,7 +774,9 @@ export function createAasTestContext<T>(
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`)
+      .patch(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(modificationBody);
@@ -761,7 +829,7 @@ export function createAasTestContext<T>(
     await activityRepository.createMany(activities);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/activities`)
+      .get(`${basePathV2}/${entity.id}/activities`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -811,7 +879,7 @@ export function createAasTestContext<T>(
     await activityRepository.createMany(activities);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/activities/download`)
+      .get(`${basePathV2}/${entity.id}/activities/download`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -853,7 +921,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .patch(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -894,7 +962,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .post(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -945,7 +1013,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .patch(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -985,7 +1053,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .delete(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -1028,7 +1096,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .post(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -1069,7 +1137,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .delete(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -1111,7 +1179,7 @@ export function createAasTestContext<T>(
     ).toBeTruthy();
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .delete(`${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -1141,7 +1209,7 @@ export function createAasTestContext<T>(
 
     await submodelRepository.save(submodel);
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/${path}`)
+      .delete(`${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/${path}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -1174,6 +1242,7 @@ export function createAasTestContext<T>(
     getAasObjects: () => ({ aas, submodels }),
     getModuleRef: () => moduleRef,
     asserts: {
+      getSubmodelByIdV1: assertGetSubmodelByIdV1,
       getShells: assertGetShells,
       modifyShell: assertModifyShell,
       getSubmodels: assertGetSubmodels,

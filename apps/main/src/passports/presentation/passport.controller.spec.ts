@@ -63,7 +63,8 @@ import {
 import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 
 describe("passportController", () => {
-  const basePath = "/passports";
+  const basePath = "passports";
+  const basePathV2 = `/v2/${basePath}`;
   const ctx = createAasTestContext(
     basePath,
     {
@@ -157,7 +158,7 @@ describe("passportController", () => {
     await passportRepository.save(secondPassport);
 
     let response = await request(app.getHttpServer())
-      .get(`${basePath}?populate=environment.assetAdministrationShells`)
+      .get(`${basePathV2}?populate=environment.assetAdministrationShells`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
@@ -184,7 +185,7 @@ describe("passportController", () => {
     });
 
     response = await request(app.getHttpServer())
-      .get(`${basePath}`)
+      .get(`${basePathV2}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
@@ -201,7 +202,7 @@ describe("passportController", () => {
     });
 
     response = await request(app.getHttpServer())
-      .get(`${basePath}?status=Archived`)
+      .get(`${basePathV2}?status=Archived`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
@@ -244,7 +245,7 @@ describe("passportController", () => {
     await passportRepository.save(passport);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}`)
+      .get(`${basePathV2}/${passport.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
@@ -270,7 +271,7 @@ describe("passportController", () => {
     };
 
     const response = await request(app.getHttpServer())
-      .post(basePath)
+      .post(basePathV2)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(body);
@@ -331,7 +332,7 @@ describe("passportController", () => {
     await templateRepository.save(template);
 
     const response = await request(app.getHttpServer())
-      .post(basePath)
+      .post(basePathV2)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send({
@@ -381,7 +382,7 @@ describe("passportController", () => {
       });
 
     const response = await request(app.getHttpServer())
-      .post(basePath)
+      .post(basePathV2)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({
@@ -429,7 +430,7 @@ describe("passportController", () => {
     });
 
     const firstResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .get(`${basePathV2}/${passport.id}/shells?limit=1`)
       .set("Cookie", userCookie)
       .set("x-open-dpp-organization-id", org.id)
       .send();
@@ -443,7 +444,7 @@ describe("passportController", () => {
     ).toBeUndefined();
 
     const secondResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .get(`${basePathV2}/${passport.id}/shells?limit=1`)
       .set("Cookie", userCookie)
       .set("x-open-dpp-organization-id", org.id)
       .send();
@@ -484,8 +485,8 @@ describe("passportController", () => {
     await ctx.asserts.modifyValueOfSubmodel(createPassport, savePassport);
   });
 
-  //
   it(`/GET submodel by id`, async () => {
+    await ctx.asserts.getSubmodelByIdV1(createPassport, savePassport);
     await ctx.asserts.getSubmodelById(createPassport);
   });
 
@@ -559,7 +560,7 @@ describe("passportController", () => {
     const passport = await createPassport(org.id);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/export`)
+      .get(`${basePathV2}/${passport.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -580,13 +581,13 @@ describe("passportController", () => {
     const passport = await createPassport(org.id);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/export`)
+      .get(`${basePathV2}/${passport.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(exportResponse.body);
@@ -610,7 +611,7 @@ describe("passportController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send({ invalid: "data" });
@@ -637,7 +638,7 @@ describe("passportController", () => {
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/status`)
+      .put(`${basePathV2}/${passport.id}/status`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
@@ -681,7 +682,7 @@ describe("passportController", () => {
     await dppIdentifiableRepository.save(passport);
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${passport.id}`)
+      .delete(`${basePathV2}/${passport.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
 
@@ -704,7 +705,7 @@ describe("passportController", () => {
     await dppIdentifiableRepository.save(publishedPassport);
 
     const responseForPublishedPassport = await request(app.getHttpServer())
-      .delete(`${basePath}/${publishedPassport.id}`)
+      .delete(`${basePathV2}/${publishedPassport.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
 
@@ -721,7 +722,7 @@ describe("passportController", () => {
     const emptyPayload = buildEmptyExportPayload("Instance");
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(emptyPayload);
@@ -739,7 +740,7 @@ describe("passportController", () => {
     expect(upids).toHaveLength(1);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${importResponse.body.id}/export`)
+      .get(`${basePathV2}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -758,7 +759,7 @@ describe("passportController", () => {
     const richPayload = buildRichExportPayload("Instance");
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(richPayload);
@@ -776,7 +777,7 @@ describe("passportController", () => {
     expect(upids).toHaveLength(1);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${importResponse.body.id}/export`)
+      .get(`${basePathV2}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -896,33 +897,33 @@ describe("passportController", () => {
     await templateRepository.save(template);
 
     const listResponse = await request(app.getHttpServer())
-      .get(`/templates/${templateId}/presentation-configurations`)
+      .get(`/v1/templates/${templateId}/presentation-configurations`)
       .set(authHeaders)
       .send();
     expect(listResponse.status).toEqual(200);
     const defaultConfigId = listResponse.body[0].id;
 
     const patchResponse = await request(app.getHttpServer())
-      .patch(`/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
+      .patch(`/v1/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
       .set(authHeaders)
       .send({ elementDesign: { "DesignOfProduct.numericField": "BigNumber" } });
     expect(patchResponse.status).toEqual(200);
 
     const createVariantResponse = await request(app.getHttpServer())
-      .post(`/templates/${templateId}/presentation-configurations`)
+      .post(`/v1/templates/${templateId}/presentation-configurations`)
       .set(authHeaders)
       .send({ label: "Variant A" });
     expect(createVariantResponse.status).toEqual(201);
 
     const createPassportResponse = await request(app.getHttpServer())
-      .post(basePath)
+      .post(basePathV2)
       .set(authHeaders)
       .send({ templateId });
     expect(createPassportResponse.status).toEqual(201);
     const passportId = createPassportResponse.body.id;
 
     const passportConfigsResponse = await request(app.getHttpServer())
-      .get(`/passports/${passportId}/presentation-configurations`)
+      .get(`/v1/passports/${passportId}/presentation-configurations`)
       .set(authHeaders)
       .send();
     expect(passportConfigsResponse.status).toEqual(200);
@@ -987,14 +988,14 @@ describe("passportController", () => {
     ): Promise<void> {
       const { app } = ctx.globals();
       const listResponse = await request(app.getHttpServer())
-        .get(`/passports/${passportId}/presentation-configurations`)
+        .get(`/v1/passports/${passportId}/presentation-configurations`)
         .set(authHeaders)
         .send();
       expect(listResponse.status).toEqual(200);
       const configId = listResponse.body[0].id;
 
       const patchResponse = await request(app.getHttpServer())
-        .patch(`/passports/${passportId}/presentation-configurations/${configId}`)
+        .patch(`/v1/passports/${passportId}/presentation-configurations/${configId}`)
         .set(authHeaders)
         .send({ elementDesign: entries });
       expect(patchResponse.status).toEqual(200);
@@ -1044,7 +1045,7 @@ describe("passportController", () => {
 
       const deleteResponse = await request(app.getHttpServer())
         .delete(
-          `${basePath}/${passport.id}/submodels/${btoa(submodel.id)}/submodel-elements/${property.idShort}`,
+          `${basePathV2}/${passport.id}/submodels/${btoa(submodel.id)}/submodel-elements/${property.idShort}`,
         )
         .set(authHeaders)
         .send();
@@ -1077,7 +1078,7 @@ describe("passportController", () => {
       expect(Object.keys(before)).toHaveLength(2);
 
       const deleteResponse = await request(app.getHttpServer())
-        .delete(`${basePath}/${passport.id}/submodels/${btoa(submodel.id)}`)
+        .delete(`${basePathV2}/${passport.id}/submodels/${btoa(submodel.id)}`)
         .set(authHeaders)
         .send();
       expect(deleteResponse.status).toEqual(204);
@@ -1097,7 +1098,7 @@ describe("passportController", () => {
       const passport = await createPassport(org.id);
 
       const response = await request(app.getHttpServer())
-        .get(basePath)
+        .get(basePathV2)
         .set("x-api-key", apiKey)
         .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
         .send();
@@ -1123,7 +1124,7 @@ describe("passportController", () => {
       };
 
       const response = await request(app.getHttpServer())
-        .post(basePath)
+        .post(basePathV2)
         .set("x-api-key", apiKey)
         .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
         .send(body);
@@ -1137,7 +1138,7 @@ describe("passportController", () => {
       const { app } = ctx.globals();
 
       const response = await request(app.getHttpServer())
-        .get(basePath)
+        .get(basePathV2)
         .set("x-api-key", "invalid-key")
         .set("X-OPEN-DPP-ORGANIZATION-ID", randomUUID())
         .send();
@@ -1151,7 +1152,7 @@ describe("passportController", () => {
       const { org: otherOrg } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(app.getHttpServer())
-        .get(basePath)
+        .get(basePathV2)
         .set("x-api-key", apiKey)
         .set("X-OPEN-DPP-ORGANIZATION-ID", otherOrg.id)
         .send();

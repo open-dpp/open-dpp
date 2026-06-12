@@ -16,6 +16,7 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
+import { DefaultApiVersion } from "./api-version";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
@@ -91,7 +92,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
     // header: "X-API-VERSION",
-    defaultVersion: "1",
+    defaultVersion: DefaultApiVersion,
   });
   app.enableCors({
     credentials: true,

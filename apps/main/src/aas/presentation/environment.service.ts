@@ -72,6 +72,8 @@ import { ColumnDeletedActivity } from "../../activity-history/domain/activities/
 import { RowDeletedActivity } from "../../activity-history/domain/activities/row-deleted.activity";
 import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
+import { ApiVersions, ApiVersionsType } from "../../api-version";
+import { reverseMigrateSubmodelLinks } from "../infrastructure/migrate-links";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -433,6 +435,7 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     subject: SubjectAttributes,
+    version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const ability = await this.loadAbility(environment, subject);
     const result = (await this.findSubmodelByIdOrFail(environment, submodelId)).toPlain({
@@ -441,7 +444,10 @@ export class EnvironmentService {
     if (isEmptyObject(result)) {
       throw new ForbiddenError();
     }
-    return SubmodelJsonSchema.parse(result);
+    const migratedResult =
+      version === ApiVersions.v1 ? reverseMigrateSubmodelLinks(result) : result;
+
+    return SubmodelJsonSchema.parse(migratedResult);
   }
 
   async getSubmodelValue(
