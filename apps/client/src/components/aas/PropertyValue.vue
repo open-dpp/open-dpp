@@ -5,6 +5,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { formatDateValueForModel, parseDateValueFromModel } from "../../lib/date-value.ts";
+import TextFieldWithValidation from "../basics/TextFieldWithValidation.vue";
 
 const props = defineProps<{
   id: string;
@@ -14,6 +15,7 @@ const props = defineProps<{
   disabled?: boolean;
   ariaDescribedby?: string;
   ariaInvalid?: "true" | "false" | undefined;
+  withinList?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -27,6 +29,8 @@ const isNumeric = computed(() => isNumericDataType(props.valueType));
 const isDate = computed(() => props.valueType === DataTypeDef.Date);
 
 const isDateTime = computed(() => props.valueType === DataTypeDef.DateTime);
+
+const isLink = computed(() => props.valueType === DataTypeDef.AnyUri);
 
 const maxFractionDigits = computed(() => (isIntegerDataType(props.valueType) ? 0 : 5));
 
@@ -88,6 +92,23 @@ const textValue = computed({
     icon-display="input"
     fluid
   />
+  <InputText
+    v-else-if="isLink && !props.withinList"
+    :invalid="props.invalid"
+    :id="props.id"
+    v-model="textValue"
+    :disabled="props.disabled"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
+    :treat-empty-string-as-null="true"
+  />
+  <LinkCellField
+    v-else-if="isLink && props.withinList"
+    :id="props.id"
+    :modelValue="props.modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+  </LinkCellField>
   <Textarea
     v-else
     :id="props.id"

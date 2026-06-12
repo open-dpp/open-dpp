@@ -6,21 +6,30 @@ export function migrateSubmodelElementLinks(element: any): any {
   }
 
   // Check if it's a ReferenceElement that should be a Property (Link)
-  if (
-    element.modelType === KeyTypes.ReferenceElement &&
-    element.value &&
-    element.value.type === ReferenceTypes.ExternalReference &&
-    Array.isArray(element.value.keys) &&
-    element.value.keys.length === 1
-  ) {
+  if (element.modelType === KeyTypes.ReferenceElement) {
     const migrated = { ...element };
     delete migrated.value;
-    return {
-      ...migrated,
-      modelType: KeyTypes.Property,
-      valueType: DataTypeDef.AnyUri,
-      value: element.value.keys[0].value,
-    };
+    if (
+      element.value &&
+      element.value.type === ReferenceTypes.ExternalReference &&
+      Array.isArray(element.value.keys) &&
+      element.value.keys.length === 1
+    ) {
+      return {
+        ...migrated,
+        modelType: KeyTypes.Property,
+        valueType: DataTypeDef.AnyUri,
+        value: element.value.keys[0].value,
+      };
+    }
+    if (element.value === null || element.value === undefined) {
+      return {
+        ...migrated,
+        modelType: KeyTypes.Property,
+        valueType: DataTypeDef.AnyUri,
+        value: null,
+      };
+    }
   }
 
   // Recurse into submodel elements if they exist (SMC or SML)

@@ -27,6 +27,23 @@ describe("migrateSubmodelElementLinks", () => {
     expect(migrateSubmodelElementLinks(input)).toEqual(expected);
   });
 
+  it("should migrate a ReferenceElement with null value to a Property with AnyUri", () => {
+    const input = {
+      idShort: "link",
+      modelType: KeyTypes.ReferenceElement,
+      value: null,
+    };
+
+    const expected = {
+      idShort: "link",
+      modelType: KeyTypes.Property,
+      valueType: DataTypeDef.AnyUri,
+      value: null,
+    };
+
+    expect(migrateSubmodelElementLinks(input)).toEqual(expected);
+  });
+
   it("should not migrate a ReferenceElement with ModelReference", () => {
     const input = {
       idShort: "ref",

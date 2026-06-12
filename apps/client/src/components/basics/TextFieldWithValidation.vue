@@ -8,7 +8,7 @@ const props = withDefaults(
     disabled?: boolean;
     showErrors: boolean;
     error: string | undefined;
-    modelValue: string | null;
+    modelValue: string | null | undefined;
     treatEmptyStringAsNull?: boolean;
     errorPlacement?: "flow" | "absolute";
   }>(),
@@ -17,7 +17,7 @@ const props = withDefaults(
   },
 );
 const emit = defineEmits<{
-  "update:modelValue": [value: string | null];
+  "update:modelValue": [value: string | null | undefined];
   blur: [event: FocusEvent];
 }>();
 

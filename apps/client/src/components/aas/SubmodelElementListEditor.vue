@@ -255,6 +255,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
               :id="`${rowIndex}-${field}`"
               :model-value="cellData[field]"
               :value-type="col.plain.valueType"
+              withinList
               @update:model-value="
                 (value) =>
                   onCellEditComplete({
@@ -294,11 +295,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
             :value-type="col.plain.valueType"
-          />
-          <LinkCellField
-            v-else-if="col.plain.modelType === AasSubmodelElements.ReferenceElement"
-            :id="`${rowIndex}-${field}`"
-            v-model="editorData[field]"
+            withinList
           />
         </template>
       </Column>

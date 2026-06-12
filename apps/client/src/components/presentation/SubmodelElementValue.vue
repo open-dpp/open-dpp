@@ -11,7 +11,7 @@ import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import PresentationComponentRenderer from "./components/PresentationComponentRenderer.vue";
 import List from "./List.vue";
-import Reference from "./Reference.vue";
+import Link from "./Link.vue";
 import SubmodelElementCollection from "./SubmodelElementCollection.vue";
 
 const { element, path, config } = defineProps<{
@@ -35,11 +35,20 @@ const { t } = useI18n();
       <template v-else-if="element.valueType === 'DateTime'">
         {{ formatDateValueForDisplay(element.value as string, DataTypeDef.DateTime) }}
       </template>
+      <template v-else-if="element.valueType === DataTypeDef.AnyUri">
+        <a
+          :href="element.value as string"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary-500 mt-1 text-sm/6 hover:underline sm:mt-2"
+          >{{ element.value }}</a
+        >
+      </template>
       <template v-else>
         {{ element.value }}
       </template>
     </dd>
-    <Reference
+    <Link
       v-else-if="element.modelType === 'ReferenceElement'"
       :model="element.value as ReferenceValue"
     />
