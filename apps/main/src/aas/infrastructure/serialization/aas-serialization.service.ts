@@ -266,7 +266,7 @@ export class AasSerializationService {
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
     const schema = AasExportSchemas.parse(data);
 
-    const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
+    const { submodels, idMapping } = mapSubmodels(schema.environment.submodels, schema.version);
 
     return {
       shells: mapAssetAdministrationShells(

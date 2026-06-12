@@ -772,6 +772,48 @@ describe("aasSerializationService", () => {
     });
   });
 
+  it("should import passport of version 3 and converts reference elements to properties", async () => {
+    const data = buildExportData({
+      version: AasExportVersion.v3_0,
+      submodelElements: [
+        {
+          extensions: [],
+          category: null,
+          idShort: "carbonFootprintStudy",
+          displayName: [
+            {
+              language: "de",
+              text: "Studie zum CO₂-Fußabdruck",
+            },
+            {
+              language: "en",
+              text: "Carbon footprint study",
+            },
+          ],
+          description: [],
+          semanticId: null,
+          supplementalSemanticIds: [],
+          qualifiers: [],
+          embeddedDataSpecifications: [],
+          modelType: "ReferenceElement",
+          value: null,
+        },
+      ],
+    });
+    const importResult = await aasSerializationService.importPassport(
+      data,
+      randomUUID(),
+      async (p, options) => {
+        await passportRepository.save(p, options);
+      },
+    );
+    const loaded = await passportRepository.findOneOrFail(importResult.id);
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const exported = await aasSerializationService.exportPassport(loaded, admin);
+    expect(exported.environment.submodels[0].submodelElements[0].modelType).toEqual("Property");
+    expect(exported.version).toEqual(AasExportVersion.v4_0);
+  });
+
   describe("presentation configuration", () => {
     const orgId = "org-1";
 
