@@ -42,10 +42,9 @@ import {
 } from "../../digital-product-document/domain/digital-product-document-status";
 
 describe("templateController", () => {
-  const basePath = "templates";
-  const basePathV2 = `/v2/${basePath}`;
+  const basePathV2 = `/v2/templates`;
   const ctx = createAasTestContext(
-    basePath,
+    basePathV2,
     {
       imports: [TemplatesModule, PresentationConfigurationsModule],
       providers: [TemplateRepository, AasSerializationService],
@@ -172,6 +171,7 @@ describe("templateController", () => {
   });
 
   it("/GET submodel value", async () => {
+    await ctx.asserts.getSubmodelValueV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelValue(createTemplate);
   });
 
@@ -220,6 +220,7 @@ describe("templateController", () => {
   });
 
   it(`/GET submodel element by id`, async () => {
+    await ctx.asserts.getSubmodelElementByIdV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelElementById(createTemplate);
   });
 

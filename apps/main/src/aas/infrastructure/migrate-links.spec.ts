@@ -1,5 +1,9 @@
 import { DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
-import { migrateSubmodelElementLinks, reverseMigrateSubmodelElementLinks } from "./migrate-links";
+import {
+  migrateSubmodelElementLinks,
+  reverseMigrateLinksInValueRepresentation,
+  reverseMigrateSubmodelElementLinks,
+} from "./migrate-links";
 
 describe("migrate-links", () => {
   describe("migrateSubmodelElementLinks", () => {
@@ -115,6 +119,50 @@ describe("migrate-links", () => {
       };
 
       expect(reverseMigrateSubmodelElementLinks(input)).toEqual(expected);
+    });
+
+    it("should reverse migrate a Property to a ReferenceElement value representation", () => {
+      const input = {
+        demo: "a",
+        link: "https://example.com",
+        nested: [
+          {
+            item1: {
+              anotherLink: "https://example2.com",
+            },
+          },
+        ],
+      };
+
+      const expected = {
+        demo: "a",
+        link: {
+          type: ReferenceTypes.ExternalReference,
+          keys: [
+            {
+              type: KeyTypes.GlobalReference,
+              value: "https://example.com",
+            },
+          ],
+        },
+        nested: [
+          {
+            item1: {
+              anotherLink: {
+                type: ReferenceTypes.ExternalReference,
+                keys: [
+                  {
+                    type: KeyTypes.GlobalReference,
+                    value: "https://example2.com",
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      };
+
+      expect(reverseMigrateLinksInValueRepresentation(input)).toEqual(expected);
     });
 
     it("should reverse migrate a Property with AnyUri and null value to a ReferenceElement", () => {

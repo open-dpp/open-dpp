@@ -54,6 +54,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     submodelId: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    version: ApiVersionsType,
   ) => Promise<ValueResponseDto>;
   getSubmodelElements: (
     organizationId: string,
@@ -71,6 +72,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     idShortPath: IdShortPath,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementResponseDto>;
   getSubmodelElementValue: (
     organizationId: string,

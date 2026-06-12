@@ -73,7 +73,11 @@ import { RowDeletedActivity } from "../../activity-history/domain/activities/row
 import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
 import { ApiVersions, ApiVersionsType } from "../../api-version";
-import { reverseMigrateSubmodelLinks } from "../infrastructure/migrate-links";
+import {
+  reverseMigrateLinksInValueRepresentation,
+  reverseMigrateSubmodelElementLinks,
+  reverseMigrateSubmodelLinks,
+} from "../infrastructure/migrate-links";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -454,13 +458,15 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     subject: SubjectAttributes,
+    version: ApiVersionsType,
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
     const ability = await this.loadAbility(environment, subject);
     const result = submodel.getValueRepresentation({ options: { ability } });
-
-    return ValueSchema.parse(result);
+    const migratedResult =
+      version === ApiVersions.v1 ? reverseMigrateLinksInValueRepresentation(result) : result;
+    return ValueSchema.parse(migratedResult);
   }
 
   async getSubmodelElements(
@@ -815,6 +821,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
@@ -823,7 +830,10 @@ export class EnvironmentService {
     if (isEmptyObject(result)) {
       throw new ForbiddenError();
     }
-    return SubmodelElementSchema.parse(result);
+    const migratedSubmodel =
+      version === ApiVersions.v1 ? reverseMigrateSubmodelElementLinks(result) : result;
+
+    return SubmodelElementSchema.parse(migratedSubmodel);
   }
 
   async getSubmodelElementValue(

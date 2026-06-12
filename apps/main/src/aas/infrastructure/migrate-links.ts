@@ -1,4 +1,5 @@
 import { DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { z } from "zod/v4";
 
 export function migrateSubmodelElementLinks(element: any): any {
   if (!element || typeof element !== "object") {
@@ -122,4 +123,34 @@ export function reverseMigrateSubmodelLinks(submodel: any): any {
   }
 
   return migrated;
+}
+
+export function reverseMigrateLinksInValueRepresentation(valueRepr: any): any {
+  if (Array.isArray(valueRepr)) {
+    return valueRepr.map(reverseMigrateLinksInValueRepresentation);
+  }
+
+  if (valueRepr && typeof valueRepr === "object") {
+    return Object.entries(valueRepr).reduce(
+      (acc, [key, value]) => {
+        acc[key] = reverseMigrateLinksInValueRepresentation(value);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
+  }
+
+  const urlParser = z.url().safeParse(valueRepr);
+
+  return urlParser.success
+    ? {
+        type: ReferenceTypes.ExternalReference,
+        keys: [
+          {
+            type: KeyTypes.GlobalReference,
+            value: valueRepr,
+          },
+        ],
+      }
+    : valueRepr;
 }

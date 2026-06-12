@@ -553,6 +553,7 @@ export class PassportController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -565,6 +566,7 @@ export class PassportController
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -848,7 +850,7 @@ export class PassportController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -857,13 +859,13 @@ export class PassportController
         subject,
         organizationId,
       );
-    const response = await this.environmentService.getSubmodelElementById(
+    return await this.environmentService.getSubmodelElementById(
       passport.getEnvironment(),
       submodelId,
       idShortPath,
       subject,
+      version,
     );
-    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiPostSubmodelElementAtIdShortPath()

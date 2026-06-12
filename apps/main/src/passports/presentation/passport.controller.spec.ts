@@ -63,10 +63,9 @@ import {
 import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 
 describe("passportController", () => {
-  const basePath = "passports";
-  const basePathV2 = `/v2/${basePath}`;
+  const basePathV2 = `/v2/passports`;
   const ctx = createAasTestContext(
-    basePath,
+    basePathV2,
     {
       imports: [PassportsModule, AasModule, PresentationConfigurationsModule, PermalinkModule],
       providers: [
@@ -491,6 +490,7 @@ describe("passportController", () => {
   });
 
   it("/GET submodel value", async () => {
+    await ctx.asserts.getSubmodelValueV1(createPassport, savePassport);
     await ctx.asserts.getSubmodelValue(createPassport);
   });
 
@@ -539,6 +539,7 @@ describe("passportController", () => {
   });
 
   it(`/GET submodel element by id`, async () => {
+    await ctx.asserts.getSubmodelElementByIdV1(createPassport, savePassport);
     await ctx.asserts.getSubmodelElementById(createPassport);
   });
 
