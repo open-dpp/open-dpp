@@ -369,7 +369,7 @@ describe("aasSerializationService", () => {
     const exportResult = await aasSerializationService.exportPassport(foundAas, subject);
     expect(exportResult).toBeDefined();
     expect(exportResult.format).toBe("open-dpp:json");
-    expect(exportResult.version).toBe(AasExportVersion.v3_0);
+    expect(exportResult.version).toBe(AasExportVersion.v4_0);
   });
 
   describe("importPassport - media ownership validation", () => {
@@ -842,7 +842,7 @@ describe("aasSerializationService", () => {
       const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const exportResult = await aasSerializationService.exportPassport(passport, subject);
 
-      expect(exportResult.version).toBe(AasExportVersion.v3_0);
+      expect(exportResult.version).toBe(AasExportVersion.v4_0);
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",
