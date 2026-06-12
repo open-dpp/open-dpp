@@ -1,5 +1,12 @@
 # @open-dpp/api-client
 
+## 2.5.0
+
+### Patch Changes
+
+- Updated dependencies [[`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360)]:
+  - @open-dpp/dto@2.5.0
+
 ## 2.4.0
 
 ### Minor Changes
