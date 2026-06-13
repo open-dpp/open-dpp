@@ -67,3 +67,5 @@ api-mongo-config
 api-mongo-db
 auth-db
 .turbo
+
+./apps/client/components.d.ts
