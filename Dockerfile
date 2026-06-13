@@ -1,7 +1,7 @@
 FROM node:25-slim AS build
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+ENV PATH="$PNPM_HOME/bin:$PATH"
 
 RUN npm install --global pnpm@latest-11
 
