@@ -3,7 +3,7 @@ FROM node:25-slim AS build
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-RUN npm install --global pnpm@latest-10
+RUN npm install --global pnpm@latest-11
 
 RUN pnpm install -g rimraf
 
