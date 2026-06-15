@@ -176,13 +176,11 @@ describe("apiClient", () => {
             period: periodParams,
           },
         );
-        expect(JSON.stringify(response.headers)).toEqual(
-          JSON.stringify({
-            "content-disposition": 'attachment; filename="data.zip"',
-            "content-length": "0",
-            "content-type": "application/zip",
-          }),
-        );
+        expect(JSON.parse(JSON.stringify(response.headers))).toEqual({
+          "content-disposition": 'attachment; filename="data.zip"',
+          "content-length": "0",
+          "content-type": "application/zip",
+        });
       });
     },
   );

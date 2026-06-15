@@ -20,7 +20,9 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: ["node_modules/(?!.*(@open-dpp|until-async|uuid|rettime))"],
+  transformIgnorePatterns: [
+    "node_modules/(?!.*(@open-dpp|@open-draft/deferred-promise|until-async|uuid|rettime))",
+  ],
   moduleNameMapper: {
     "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src",
   },
