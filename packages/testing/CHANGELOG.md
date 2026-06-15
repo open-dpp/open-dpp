@@ -1,5 +1,13 @@
 # @open-dpp/testing
 
+## 2.6.0
+
+### Patch Changes
+
+- Updated dependencies [[`f8ec4ed`](https://github.com/open-dpp/open-dpp/commit/f8ec4ed20a0e6e9ada5eec60465293b0585c726d)]:
+  - @open-dpp/dto@2.6.0
+  - @open-dpp/env@2.6.0
+
 ## 2.5.0
 
 ### Patch Changes
