@@ -474,16 +474,20 @@ export class EnvironmentService {
     submodelId: string,
     pagination: Pagination,
     subject: SubjectAttributes,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const ability = await this.loadAbility(environment, subject);
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const pages = pagination.nextPages(submodel.submodelElements.map((e) => e.idShort));
     const submodelElements = submodel.submodelElements.filter((e) => pages.includes(e.idShort));
-    return SubmodelElementPaginationResponseDtoSchema.parse(
-      PagingResult.create({ pagination, items: submodelElements }).toPlain({
-        ability,
-      }),
-    );
+    const pagingResult = PagingResult.create({ pagination, items: submodelElements }).toPlain({
+      ability,
+    });
+    const migratedResult = {
+      ...pagingResult,
+      result: pagingResult.result.map((s) => this.migrateSubmodelElement(s, version)),
+    };
+    return SubmodelElementPaginationResponseDtoSchema.parse(migratedResult);
   }
 
   async addSubmodelElement(
@@ -974,6 +978,12 @@ export class EnvironmentService {
 
   private migrateSubmodel(submodelPlain: any, version: ApiVersionsType) {
     return version === ApiVersions.v1 ? reverseMigrateSubmodelLinks(submodelPlain) : submodelPlain;
+  }
+
+  private migrateSubmodelElement(submodelElementPlain: any, version: ApiVersionsType) {
+    return version === ApiVersions.v1
+      ? reverseMigrateSubmodelElementLinks(submodelElementPlain)
+      : submodelElementPlain;
   }
 
   private migrateValueRepr(input: any, version: ApiVersionsType) {

@@ -496,6 +496,7 @@ describe("passportController", () => {
   });
 
   it(`/GET submodel elements`, async () => {
+    await ctx.asserts.getSubmodelElementsV1(createPassport, savePassport);
     await ctx.asserts.getSubmodelElements(createPassport);
   });
 

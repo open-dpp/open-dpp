@@ -819,7 +819,7 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -829,19 +829,13 @@ export class PassportController
         organizationId,
       );
     const pagination = Pagination.create({ limit, cursor });
-    const response = await this.environmentService.getSubmodelElements(
+    return await this.environmentService.getSubmodelElements(
       passport.getEnvironment(),
       submodelId,
       pagination,
       subject,
+      version,
     );
-    if (version === "1") {
-      return {
-        ...response,
-        result: response.result.map(migrateSubmodelElementLinks),
-      };
-    }
-    return response;
   }
 
   @ApiGetSubmodelElementById()

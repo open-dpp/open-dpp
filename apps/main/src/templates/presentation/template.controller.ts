@@ -392,7 +392,7 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -402,19 +402,13 @@ export class TemplateController
         organizationId,
       );
     const pagination = Pagination.create({ limit, cursor });
-    const response = await this.environmentService.getSubmodelElements(
+    return await this.environmentService.getSubmodelElements(
       template.getEnvironment(),
       submodelId,
       pagination,
       subject,
+      version,
     );
-    if (version === "1") {
-      return {
-        ...response,
-        result: response.result.map(migrateSubmodelElementLinks),
-      };
-    }
-    return response;
   }
 
   @ApiPostSubmodelElement()

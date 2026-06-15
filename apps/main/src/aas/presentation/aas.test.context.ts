@@ -303,6 +303,23 @@ export function createAasTestContext<T>(
     expect(responseV1.body.submodelElements[0].value.keys[0].value).toEqual("https://example.com");
   }
 
+  async function assertGetSubmodelElementsV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    const submodelElements = responseV1.body.result;
+    expect(submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(submodelElements[0].value.keys[0].value).toEqual("https://example.com");
+  }
+
   async function assertGetSubmodelsV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
     const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
       createEntity,
@@ -1316,8 +1333,9 @@ export function createAasTestContext<T>(
       getSubmodels: assertGetSubmodels,
       getSubmodelByIdV1: assertGetSubmodelByIdV1,
       getSubmodelById: assertGetSubmodelById,
-      getSubmodelValue: assertGetSubmodelValue,
       getSubmodelValueV1: assertGetSubmodelValueV1,
+      getSubmodelValue: assertGetSubmodelValue,
+      getSubmodelElementsV1: assertGetSubmodelElementsV1,
       getSubmodelElements: assertGetSubmodelElements,
       getSubmodelElementByIdV1: assertGetSubmodelElementByIdV1,
       getSubmodelElementById: assertGetSubmodelElementById,

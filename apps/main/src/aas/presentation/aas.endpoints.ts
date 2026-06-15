@@ -65,6 +65,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     cursor: string | undefined,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementPaginationResponseDto>;
   getSubmodelElementById: (
     organizationId: string,
