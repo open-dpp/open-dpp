@@ -351,7 +351,7 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org!.id);
 
     expect(responseV1.status).toEqual(200);
-    expect(responseV1.body).toEqual("https://example.com");
+    expect(responseV1.body.keys[0].value).toEqual("https://example.com");
   }
 
   async function assertGetShells(createEntity: CreateEntity) {

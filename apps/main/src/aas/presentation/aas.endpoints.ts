@@ -81,6 +81,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     idShortPath: IdShortPath,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
+    version: ApiVersionsType,
   ) => Promise<ValueResponseDto>;
 }
 

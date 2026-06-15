@@ -904,6 +904,7 @@ export class PassportController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -917,6 +918,7 @@ export class PassportController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 

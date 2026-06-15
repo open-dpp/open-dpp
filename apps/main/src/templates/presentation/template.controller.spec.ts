@@ -225,6 +225,7 @@ describe("templateController", () => {
   });
 
   it(`/GET submodel element value`, async () => {
+    await ctx.asserts.getSubmodelElementValueV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelElementValue(createTemplate);
   });
 

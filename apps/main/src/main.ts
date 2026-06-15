@@ -1,7 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import { ConsoleLogger, Logger, ValidationPipe, VersioningType } from "@nestjs/common";
+import {
+  ConsoleLogger,
+  Logger,
+  ValidationPipe,
+  VERSION_NEUTRAL,
+  VersioningType,
+} from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -16,7 +22,6 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
-import { DefaultApiVersion } from "./api-version";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
@@ -92,7 +97,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
     // header: "X-API-VERSION",
-    defaultVersion: DefaultApiVersion,
+    defaultVersion: VERSION_NEUTRAL,
   });
   app.enableCors({
     credentials: true,

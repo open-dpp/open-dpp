@@ -464,9 +464,7 @@ export class EnvironmentService {
 
     const ability = await this.loadAbility(environment, subject);
     const result = submodel.getValueRepresentation({ options: { ability } });
-    const migratedResult =
-      version === ApiVersions.v1 ? reverseMigrateLinksInValueRepresentation(result) : result;
-    return ValueSchema.parse(migratedResult);
+    return this.migrateValueRepr(result, version);
   }
 
   async getSubmodelElements(
@@ -841,6 +839,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    version: ApiVersionsType,
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject);
@@ -849,7 +848,7 @@ export class EnvironmentService {
     if (result === undefined || isEmptyObject(result)) {
       throw new ForbiddenError();
     }
-    return ValueSchema.parse(result);
+    return this.migrateValueRepr(result, version);
   }
 
   async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {
@@ -969,6 +968,12 @@ export class EnvironmentService {
     for (const conceptDescriptionId of environment.conceptDescriptions) {
       await this.conceptDescriptionRepository.deleteById(conceptDescriptionId, { session });
     }
+  }
+
+  private migrateValueRepr(input: any, version: ApiVersionsType) {
+    const migratedResult =
+      version === ApiVersions.v1 ? reverseMigrateLinksInValueRepresentation(input) : input;
+    return ValueSchema.parse(migratedResult);
   }
 
   private async getFirstAssetAdministrationShell(

@@ -383,6 +383,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -394,6 +395,7 @@ export class PermalinkController {
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 }
