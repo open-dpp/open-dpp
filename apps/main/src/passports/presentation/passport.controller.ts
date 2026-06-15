@@ -415,18 +415,17 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const migratedBody = version === "1" ? reverseMigrateSubmodelLinks(body) : body;
-    const response = await this.passportService.digitalProductDocumentService.createSubmodel(
+    return await this.passportService.digitalProductDocumentService.createSubmodel(
       correlationId,
       organizationId,
       id,
-      migratedBody,
+      body,
       { subject, userId },
+      version,
     );
-    return version === "1" ? migrateSubmodelLinks(response) : response;
   }
 
   @ApiDeletePolicy()

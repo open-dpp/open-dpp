@@ -74,6 +74,7 @@ import { SubmodelAddedActivity } from "../../activity-history/domain/activities/
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
 import { ApiVersions, ApiVersionsType } from "../../api-version";
 import {
+  migrateSubmodelLinks,
   reverseMigrateLinksInValueRepresentation,
   reverseMigrateSubmodelElementLinks,
   reverseMigrateSubmodelLinks,
@@ -248,7 +249,7 @@ export class EnvironmentService {
     const pagingResult = PagingResult.create({ pagination, items: submodels }).toPlain({ ability });
     const migratedResult = {
       ...pagingResult,
-      result: pagingResult.result.map((s) => this.migrateSubmodel(s, version)),
+      result: pagingResult.result.map((s) => this.migrateSubmodelResponse(s, version)),
     };
     return SubmodelPaginationResponseDtoSchema.parse(migratedResult);
   }
@@ -293,10 +294,13 @@ export class EnvironmentService {
     submodelPlain: SubmodelRequestDto,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const aas = await this.getFirstAssetAdministrationShell(environment);
 
-    const submodel = environment.withTracking().addSubmodel(Submodel.fromPlain(submodelPlain));
+    const submodel = environment
+      .withTracking()
+      .addSubmodel(Submodel.fromPlain(this.migrateSubmodelRequest(submodelPlain, version)));
     aas.withTracking().addSubmodel(submodel);
     const activity = SubmodelAddedActivity.create({
       digitalProductDocumentId,
@@ -318,7 +322,7 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], options);
         }
       });
-      return SubmodelJsonSchema.parse(submodel.toPlain());
+      return SubmodelJsonSchema.parse(this.migrateSubmodelResponse(submodel.toPlain(), version));
     } finally {
       await session.endSession();
     }
@@ -453,7 +457,7 @@ export class EnvironmentService {
       throw new ForbiddenError();
     }
 
-    return SubmodelJsonSchema.parse(this.migrateSubmodel(result, version));
+    return SubmodelJsonSchema.parse(this.migrateSubmodelResponse(result, version));
   }
 
   async getSubmodelValue(
@@ -466,7 +470,7 @@ export class EnvironmentService {
 
     const ability = await this.loadAbility(environment, subject);
     const result = submodel.getValueRepresentation({ options: { ability } });
-    return this.migrateValueRepr(result, version);
+    return this.migrateValueResponse(result, version);
   }
 
   async getSubmodelElements(
@@ -485,7 +489,7 @@ export class EnvironmentService {
     });
     const migratedResult = {
       ...pagingResult,
-      result: pagingResult.result.map((s) => this.migrateSubmodelElement(s, version)),
+      result: pagingResult.result.map((s) => this.migrateSubmodelElementResponse(s, version)),
     };
     return SubmodelElementPaginationResponseDtoSchema.parse(migratedResult);
   }
@@ -854,7 +858,7 @@ export class EnvironmentService {
     if (result === undefined || isEmptyObject(result)) {
       throw new ForbiddenError();
     }
-    return this.migrateValueRepr(result, version);
+    return this.migrateValueResponse(result, version);
   }
 
   async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {
@@ -976,17 +980,21 @@ export class EnvironmentService {
     }
   }
 
-  private migrateSubmodel(submodelPlain: any, version: ApiVersionsType) {
+  private migrateSubmodelRequest(submodelPlain: SubmodelRequestDto, version: ApiVersionsType) {
+    return version === ApiVersions.v1 ? migrateSubmodelLinks(submodelPlain) : submodelPlain;
+  }
+
+  private migrateSubmodelResponse(submodelPlain: any, version: ApiVersionsType) {
     return version === ApiVersions.v1 ? reverseMigrateSubmodelLinks(submodelPlain) : submodelPlain;
   }
 
-  private migrateSubmodelElement(submodelElementPlain: any, version: ApiVersionsType) {
+  private migrateSubmodelElementResponse(submodelElementPlain: any, version: ApiVersionsType) {
     return version === ApiVersions.v1
       ? reverseMigrateSubmodelElementLinks(submodelElementPlain)
       : submodelElementPlain;
   }
 
-  private migrateValueRepr(input: any, version: ApiVersionsType) {
+  private migrateValueResponse(input: any, version: ApiVersionsType) {
     const migratedResult =
       version === ApiVersions.v1 ? reverseMigrateLinksInValueRepresentation(input) : input;
     return ValueSchema.parse(migratedResult);

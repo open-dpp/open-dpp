@@ -87,57 +87,6 @@ export interface IAasReadEndpointsWithOrganizationId {
   ) => Promise<ValueResponseDto>;
 }
 
-export interface IAasReadEndpoints {
-  getShells: (
-    id: string,
-    limit: number | undefined,
-    cursor: string | undefined,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<AssetAdministrationShellPaginationResponseDto>;
-  getSubmodels: (
-    id: string,
-    limit: number | undefined,
-    cursor: string | undefined,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<SubmodelPaginationResponseDto>;
-  getSubmodelById: (
-    id: string,
-    submodelId: string,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<SubmodelResponseDto>;
-  getSubmodelValue: (
-    id: string,
-    submodelId: string,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<ValueResponseDto>;
-  getSubmodelElements: (
-    id: string,
-    submodelId: string,
-    limit: number | undefined,
-    cursor: string | undefined,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<SubmodelElementPaginationResponseDto>;
-  getSubmodelElementById: (
-    id: string,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<SubmodelElementResponseDto>;
-  getSubmodelElementValue: (
-    id: string,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-  ) => Promise<ValueResponseDto>;
-}
-
 export interface IAasCreateEndpoints {
   createSubmodel: (
     correlationId: string,
@@ -147,6 +96,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
     correlationId: string,

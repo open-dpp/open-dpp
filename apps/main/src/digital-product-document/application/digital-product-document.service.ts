@@ -32,6 +32,7 @@ import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-produ
 import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { ApiVersionsType } from "../../api-version";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -47,6 +48,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     body: SubmodelRequestDto,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -61,6 +63,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       body,
       this.saveEnvironmentCallback(item),
       userContext,
+      version,
     );
   }
 

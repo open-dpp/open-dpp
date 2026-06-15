@@ -95,6 +95,7 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
 import { DefaultApiVersion } from "../../api-version";
+import { HttpStatusCode } from "axios";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -352,6 +353,42 @@ export function createAasTestContext<T>(
 
     expect(responseV1.status).toEqual(200);
     expect(responseV1.body.link.keys[0].value).toEqual("https://example.com");
+  }
+
+  function createReferenceElementRequestDto() {
+    return {
+      modelType: KeyTypes.ReferenceElement,
+      idShort: "link",
+      value: {
+        type: ReferenceTypes.ExternalReference,
+        keys: [
+          {
+            type: KeyTypes.GlobalReference,
+            value: "https://example.com",
+          },
+        ],
+      },
+    };
+  }
+
+  async function assertPostSubmodelV1(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const passport = await createEntity(org!.id);
+    const refElement = createReferenceElementRequestDto();
+    const body = {
+      idShort: "testSubmodel",
+      submodelElements: [refElement],
+    };
+
+    const responseV1 = await request(app.getHttpServer())
+      .post(`${basePathV1}/${passport.id}/submodels`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(body);
+
+    expect(responseV1.status).toEqual(HttpStatusCode.Created);
+    expect(responseV1.body.submodelElements[0].modelType).toEqual(refElement.modelType);
+    expect(responseV1.body.submodelElements[0].value).toEqual(refElement.value);
   }
 
   async function assertGetSubmodelElementByIdV1(
@@ -1343,6 +1380,7 @@ export function createAasTestContext<T>(
       getSubmodelElementValue: assertGetSubmodelElementValue,
       getActivities: assertGetActivities,
       modifyShell: assertModifyShell,
+      postSubmodelV1: assertPostSubmodelV1,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
       modifyValueOfSubmodel: assertModifyValueOfSubmodel,

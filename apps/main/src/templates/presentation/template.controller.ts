@@ -226,18 +226,17 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const migratedBody = version === "1" ? reverseMigrateSubmodelLinks(body) : body;
-    const response = await this.templateService.digitalProductDocumentService.createSubmodel(
+    return await this.templateService.digitalProductDocumentService.createSubmodel(
       correlationId,
       organizationId,
       id,
-      migratedBody,
+      body,
       { subject, userId },
+      version,
     );
-    return version === "1" ? migrateSubmodelLinks(response) : response;
   }
 
   @ApiDeletePolicy()

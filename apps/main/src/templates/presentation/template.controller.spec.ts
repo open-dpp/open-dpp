@@ -147,6 +147,7 @@ describe("templateController", () => {
   });
 
   it(`/POST submodel`, async () => {
+    await ctx.asserts.postSubmodelV1(createTemplate);
     await ctx.asserts.postSubmodel(createTemplate);
   });
 
