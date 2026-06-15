@@ -6,6 +6,7 @@ import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories"
 import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDbSchema } from "./schemas/submodel-base/submodel-db-schema";
 import { SubmodelDoc, SubmodelDocSchemaVersion } from "./schemas/submodel.schema";
+import { LanguageTextDto } from "@open-dpp/dto";
 
 @Injectable()
 export class SubmodelRepository {
@@ -22,11 +23,45 @@ export class SubmodelRepository {
     return Submodel.fromPlain(SubmodelDbSchema.encode(plain));
   }
 
+  migrate1_0_0To1_1_0(submodel: {
+    displayName: LanguageTextDto[];
+    description: LanguageTextDto[];
+  }) {
+    const mapCorrectLanguageTags = (languageText: LanguageTextDto[]) =>
+      languageText.map((l) => {
+        let lang = l.language;
+        if (lang === "en") {
+          lang = "en-US";
+        } else if (lang === "de") {
+          lang = "de-DE";
+        }
+
+        return {
+          ...l,
+          language: lang,
+        };
+      });
+    return {
+      ...submodel,
+      displayName: mapCorrectLanguageTags(submodel.displayName),
+      description: mapCorrectLanguageTags(submodel.description),
+      _schemaVersion: SubmodelDocSchemaVersion.v1_1_0,
+    };
+  }
+
+  async fromPlainWithMigration(plain: any): Promise<Submodel> {
+    let migratedVersion = plain;
+    if (migratedVersion._schemaVersion === SubmodelDocSchemaVersion.v1_0_0) {
+      migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
+    }
+    return this.fromPlain(migratedVersion);
+  }
+
   async save(submodel: Submodel, options?: DbSessionOptions) {
     return await save(
       submodel,
       this.submodelDoc,
-      SubmodelDocSchemaVersion.v1_0_0,
+      SubmodelDocSchemaVersion.v1_1_0,
       this.fromPlain,
       SubmodelDbSchema,
       options,
@@ -34,7 +69,7 @@ export class SubmodelRepository {
   }
 
   async findOneOrFail(id: string): Promise<Submodel> {
-    return await findOneOrFail(id, this.submodelDoc, this.fromPlain);
+    return await findOneOrFail(id, this.submodelDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
@@ -42,10 +77,10 @@ export class SubmodelRepository {
   }
 
   async findOne(id: string): Promise<Submodel | undefined> {
-    return await findOne(id, this.submodelDoc, this.fromPlain);
+    return await findOne(id, this.submodelDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async findByIds(ids: string[]): Promise<Map<string, Submodel>> {
-    return await findByIds(ids, this.submodelDoc, this.fromPlain);
+    return await findByIds(ids, this.submodelDoc, this.fromPlainWithMigration.bind(this));
   }
 }

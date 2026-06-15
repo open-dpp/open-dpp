@@ -17,6 +17,7 @@ export const AssetAdministrationShellDocSchemaVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
   v1_2_0: "1.2.0",
+  v1_3_0: "1.3.0"
 } as const;
 type AssetAdministrationShellDocSchemaVersionType =
   (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
@@ -26,11 +27,11 @@ export class AssetAdministrationShellDoc extends Document<string> {
   declare _id: string;
 
   @Prop({
-    default: AssetAdministrationShellDocSchemaVersion.v1_2_0,
+    default: AssetAdministrationShellDocSchemaVersion.v1_3_0,
     enum: Object.values(AssetAdministrationShellDocSchemaVersion),
     type: String,
   }) // Track schema version
-  _schemaVersion: AssetAdministrationShellDocSchemaVersionType;
+  declare _schemaVersion: AssetAdministrationShellDocSchemaVersionType;
 
   @Prop({ type: MongooseSchema.Types.Mixed, required: true })
   assetInformation: AssetInformationDb;

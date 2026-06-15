@@ -3,6 +3,19 @@ packages:
   - packages/*
   - docs
 
+allowBuilds:
+  '@nestjs/core': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  core-js: true
+  esbuild: true
+  highlight.js: true
+  mongodb-memory-server: true
+  msw: true
+  sharp: true
+  unrs-resolver: true
+  vue-demi: true
+
 injectWorkspacePackages: true
 
 onlyBuiltDependencies:

@@ -120,23 +120,23 @@ describe("BigNumberValue", () => {
   });
 
   describe("label rendering", () => {
-    it("falls back to idShort when no displayName is provided", () => {
+    it("falls back to untitled when no displayName is provided", () => {
       const wrapper = mount(BigNumberValue, {
         props: {
           element: makeElement("42", { idShort: "myProp" }),
         },
       });
       const labelText = wrapper.get('[data-cy="bignumber"] span.uppercase').text();
-      expect(labelText).toBe("myProp");
+      expect(labelText).toBe("common.untitled");
     });
 
-    it("prefers the localized displayName over idShort", () => {
+    it("prefers the localized displayName over untitled", () => {
       localeRef.value = "en-US";
       const wrapper = mount(BigNumberValue, {
         props: {
           element: makeElement("42", {
             idShort: "myProp",
-            displayName: [{ language: "en", text: "My Property" }],
+            displayName: [{ language: "en-US", text: "My Property" }],
           }),
         },
       });

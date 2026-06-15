@@ -90,11 +90,23 @@ describe("aasRepository", () => {
     expect(foundAas).toEqual(aas);
   });
 
-  it(`should load and migrate aas from version 1.0.0 to 1.2.0`, async () => {
+  it(`should load and migrate aas from version 1.0.0 to 1.3.0`, async () => {
     const id = randomUUID();
     const legacyDoc = new AasDoc({
       _id: id,
       _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_0_0,
+      displayName: [
+        {
+          language: "en",
+          text: "my-aas",
+        },
+      ],
+      description: [
+        {
+          language: "de",
+          text: "Eine schöne AAS",
+        },
+      ],
       assetInformation: {
         assetKind: "Instance",
         specificAssetIds: [],
@@ -108,23 +120,36 @@ describe("aasRepository", () => {
     });
     await legacyDoc.save({ validateBeforeSave: false });
     const foundAas = await aasRepository.findOneOrFail(id);
-    expect(foundAas).toEqual(
-      AssetAdministrationShell.fromPlain({
-        id,
-        assetInformation: {
-          assetKind: AssetKind.Instance,
-          defaultThumbnails: [
-            {
-              path: "https://example.png",
-              contentType: "image/png",
-            },
-          ],
-          specificAssetIds: [],
-          globalAssetId: id,
+
+    const expected = AssetAdministrationShell.fromPlain({
+      id,
+      displayName: [
+        {
+          language: "en-US",
+          text: "my-aas",
         },
-        security: Security.create({}).toPlain(),
-      }),
-    );
+      ],
+      description: [
+        {
+          language: "de-DE",
+          text: "Eine schöne AAS",
+        },
+      ],
+      assetInformation: {
+        assetKind: AssetKind.Instance,
+        defaultThumbnails: [
+          {
+            path: "https://example.png",
+            contentType: "image/png",
+          },
+        ],
+        specificAssetIds: [],
+        globalAssetId: id,
+      },
+      security: Security.create({}).toPlain(),
+    });
+
+    expect(foundAas).toEqual(expected);
   });
 
   it(`should load and migrate aas without security from version $1.1.0 to 1.2.0`, async () => {
@@ -226,6 +251,76 @@ describe("aasRepository", () => {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeFalsy();
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeFalsy();
     }
+  });
+
+  it(`should load and migrate aas with en and de in language tags to en-US and de-DE from version $1.2.0 to $1.3.0`, async () => {
+    const id = randomUUID();
+
+    const legacyDoc = new AasDoc({
+      _id: id,
+      _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_2_0,
+      submodels: [],
+      displayName: [
+        {
+          language: "en",
+          text: "A AssetAdministrationShell",
+        },
+        {
+          language: "de",
+          text: "Eine AssetAdministrationShell",
+        },
+      ],
+      description: [
+        {
+          language: "en",
+          text: "A AssetAdministrationShell that is used as an example.",
+        },
+        {
+          language: "de",
+          text: "Eine AssetAdministrationShell die als Beispiel genutzt wird.",
+        },
+      ],
+      assetInformation: {
+        assetKind: "Instance",
+        specificAssetIds: [],
+        defaultThumbnails: [],
+      },
+      security: Security.create({}).toPlain(),
+    });
+
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundAas = await aasRepository.findOneOrFail(id);
+
+    expect(foundAas).toEqual(AssetAdministrationShell.fromPlain({
+      id: id,
+      submodels: [],
+      displayName: [
+        {
+          language: "en-US",
+          text: "A AssetAdministrationShell",
+        },
+        {
+          language: "de-DE",
+          text: "Eine AssetAdministrationShell",
+        },
+      ],
+      description: [
+        {
+          language: "en-US",
+          text: "A AssetAdministrationShell that is used as an example.",
+        },
+        {
+          language: "de-DE",
+          text: "Eine AssetAdministrationShell die als Beispiel genutzt wird.",
+        },
+      ],
+      assetInformation: {
+        assetKind: "Instance",
+        specificAssetIds: [],
+        defaultThumbnails: [],
+      },
+      security: Security.create({}).toPlain(),
+    }));
   });
 
   it("should delete a aas", async () => {

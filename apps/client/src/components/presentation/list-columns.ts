@@ -1,5 +1,5 @@
-import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
-import { resolveDisplayName } from "../../composables/display-name";
+import type { LanguageType, SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
+import { useAasUtils } from "../../composables/aas-utils";
 
 export interface ColumnDef {
   header: string;
@@ -17,17 +17,19 @@ const FILE_MIN_WIDTH = "200px";
  *
  * Pure function — no Vue reactivity, safe to call from a `computed` or a test.
  */
-export function buildColumns(content: SubmodelElementCollectionResponseDto[]): ColumnDef[] {
+export function buildColumns(
+  content: SubmodelElementCollectionResponseDto[],
+  currentLocale: LanguageType,
+  t: (s: string) => string,
+): ColumnDef[] {
   if (content.length < 1 || !content[0] || !content[0].value) {
     return [];
   }
 
+  const { parseDisplayName } = useAasUtils({ translate: t, selectedLanguage: currentLocale });
+
   return content[0].value.map((collectionElement) => {
-    const header = resolveDisplayName(
-      collectionElement.displayName as { language: "en" | "de"; text: string }[],
-      "en",
-      collectionElement.idShort,
-    );
+    const header = parseDisplayName(collectionElement.displayName);
     const field = collectionElement.idShort;
     const isFile = collectionElement.modelType === "File";
 

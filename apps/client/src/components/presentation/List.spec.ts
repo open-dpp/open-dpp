@@ -11,7 +11,7 @@ function makeFileRow(): SubmodelElementCollectionResponseDto {
     {
       modelType: KeyTypes.File,
       idShort: "photo",
-      displayName: [{ language: "en", text: "Photo" }],
+      displayName: [{ language: "en-US", text: "Photo" }],
       description: [],
       supplementalSemanticIds: [],
       qualifiers: [],
@@ -21,7 +21,7 @@ function makeFileRow(): SubmodelElementCollectionResponseDto {
     {
       modelType: KeyTypes.Property,
       idShort: "name",
-      displayName: [{ language: "en", text: "Name" }],
+      displayName: [{ language: "en-US", text: "Name" }],
       description: [],
       supplementalSemanticIds: [],
       qualifiers: [],
@@ -46,7 +46,7 @@ function makePropertyOnlyRow(): SubmodelElementCollectionResponseDto {
     {
       modelType: KeyTypes.Property,
       idShort: "name",
-      displayName: [{ language: "en", text: "Name" }],
+      displayName: [{ language: "en-US", text: "Name" }],
       description: [],
       supplementalSemanticIds: [],
       qualifiers: [],
@@ -66,9 +66,11 @@ function makePropertyOnlyRow(): SubmodelElementCollectionResponseDto {
   } as unknown as SubmodelElementCollectionResponseDto;
 }
 
+const mockT = (s: string) => s;
+
 describe("buildColumns", () => {
   it("returns an empty array when content is empty", () => {
-    expect(buildColumns([])).toEqual([]);
+    expect(buildColumns([], "en-US", mockT)).toEqual([]);
   });
 
   it("returns an empty array when the first row has no value", () => {
@@ -82,32 +84,33 @@ describe("buildColumns", () => {
       embeddedDataSpecifications: [],
       value: undefined,
     } as unknown as SubmodelElementCollectionResponseDto;
-    expect(buildColumns([row])).toEqual([]);
+    expect(buildColumns([row], "en-US", mockT)).toEqual([])
+;
   });
 
   it("sets minWidth on File-type columns", () => {
-    const cols = buildColumns([makeFileRow()]);
+    const cols = buildColumns([makeFileRow()], "en-US", mockT);
     const fileCol = cols.find((c) => c.field === "photo");
     expect(fileCol).toBeDefined();
     expect(fileCol?.style).toMatchObject({ minWidth: "200px" });
   });
 
   it("does not set minWidth on non-File columns", () => {
-    const cols = buildColumns([makeFileRow()]);
+    const cols = buildColumns([makeFileRow()], "en-US", mockT);
     const nameCol = cols.find((c) => c.field === "name");
     expect(nameCol).toBeDefined();
     expect(nameCol?.style).toBeUndefined();
   });
 
   it("no column has minWidth when there are only Property columns", () => {
-    const cols = buildColumns([makePropertyOnlyRow()]);
+    const cols = buildColumns([makePropertyOnlyRow()], "en-US", mockT);
     for (const col of cols) {
       expect(col.style).toBeUndefined();
     }
   });
 
   it("uses the first available displayName as header", () => {
-    const cols = buildColumns([makeFileRow()]);
+    const cols = buildColumns([makeFileRow()], "en-US", mockT);
     const fileCol = cols.find((c) => c.field === "photo");
     expect(fileCol?.header).toBe("Photo");
   });

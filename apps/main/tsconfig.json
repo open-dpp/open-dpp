@@ -3,6 +3,7 @@
     "incremental": true,
     "target": "ES2023",
     "lib": ["ES2021", "esnext"],
+    "types": ["node", "jest"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "module": "commonjs",

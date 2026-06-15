@@ -13,6 +13,7 @@ import {
 import { ReferenceDb } from "./schemas/db-types";
 import { SecurityDb } from "./schemas/security/security-db-schema";
 import { SubmodelRepository } from "./submodel.repository";
+import { LanguageTextDto } from "@open-dpp/dto";
 
 @Injectable()
 export class AasRepository {
@@ -61,7 +62,31 @@ export class AasRepository {
 
     return {
       ...aas,
+      _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_2_0,
       security: security.toPlain(),
+    };
+  }
+
+  migrate1_2_0To1_3_0(aas: { displayName: LanguageTextDto[], description: LanguageTextDto[] }) {
+    const mapCorrectLanguageTags = (languageText: LanguageTextDto[]) => languageText.map((l) => {
+      let lang = l.language;
+      if (lang === "en") {
+        lang = "en-US";
+      } else if (lang === "de") {
+        lang = "de-DE";
+      }
+
+      return {
+        ...l,
+        language: lang,
+      };
+    });    
+
+    return {
+      ...aas,
+      displayName: mapCorrectLanguageTags(aas.displayName),
+      description: mapCorrectLanguageTags(aas.description),
+      _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_3_0,
     };
   }
 
@@ -72,6 +97,9 @@ export class AasRepository {
     }
     if (migratedVersion._schemaVersion === AssetAdministrationShellDocSchemaVersion.v1_1_0) {
       migratedVersion = await this.migrate1_1_0To1_2_0(migratedVersion);
+    }
+    if (migratedVersion._schemaVersion === AssetAdministrationShellDocSchemaVersion.v1_2_0) {
+      migratedVersion = this.migrate1_2_0To1_3_0(migratedVersion);
     }
     return this.fromPlain(migratedVersion);
   }
