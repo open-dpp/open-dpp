@@ -177,7 +177,6 @@ describe("OrganizationsController", () => {
       email: `member-${randomUUID()}@example.com`,
     });
 
-    // Invite and join member (simplest is to create a member document directly for testing)
     const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
     const member = await membersRepository.save(
       Member.create({
@@ -222,6 +221,33 @@ describe("OrganizationsController", () => {
       .send({ role: MemberRole.OWNER });
 
     expect(response.status).toEqual(403);
+  });
+
+  it("should return 403 when updating role of member of different organization", async () => {
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { user: otherUser } = await betterAuthHelper.createUser({
+      email: `member-${randomUUID()}@example.com`,
+    });
+
+    const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
+    const member = await membersRepository.save(
+      Member.create({
+        organizationId: new Types.ObjectId().toHexString(),
+        userId: otherUser.id,
+        role: MemberRole.MEMBER,
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .patch(`/organizations/members/${member.id}/role`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send({ role: MemberRole.OWNER });
+
+    expect(response.status).toEqual(403);
+
+    const updatedMember = await membersRepository.findOneById(member.id);
+    expect(updatedMember!.role).toEqual(MemberRole.MEMBER);
   });
 
   it("should return 403 when updating organization without rights", async () => {

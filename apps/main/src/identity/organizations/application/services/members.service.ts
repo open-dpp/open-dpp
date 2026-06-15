@@ -6,7 +6,7 @@ import { MemberWithUser } from "../../domain/member";
 import { Organization } from "../../domain/organization";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
-import { MemberRole, MemberRoleType } from "../../domain/member-role.enum";
+import { MemberRoleType } from "../../domain/member-role.enum";
 
 @Injectable()
 export class MembersService {
@@ -74,14 +74,13 @@ export class MembersService {
   }
 
   async updateMemberRole(
+    organizationId: string,
     memberId: string,
     newRole: MemberRoleType,
-    requesterMemberRole: MemberRoleType,
   ): Promise<void> {
     const memberToUpdate = await this.membersRepository.findOneByIdOrFail(memberId);
-
-    if (requesterMemberRole !== MemberRole.OWNER) {
-      throw new ForbiddenException("Only organization owners can change member roles");
+    if (memberToUpdate.organizationId !== organizationId) {
+      throw new ForbiddenException("You are not authorized to update this member");
     }
 
     memberToUpdate.changeRole(newRole);

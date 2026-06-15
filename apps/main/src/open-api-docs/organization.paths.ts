@@ -25,6 +25,7 @@ export const organizationsPaths = {
       tags: [tag],
       parameters: [IdParamSchema],
       summary: "Updates the role of a member",
+      description: "Only the organization owner can update the role of a member.",
       requestBody: {
         content: {
           [ContentType.JSON]: {
