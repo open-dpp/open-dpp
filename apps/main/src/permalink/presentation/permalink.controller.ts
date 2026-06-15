@@ -264,6 +264,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -275,6 +276,7 @@ export class PermalinkController {
       passport.getEnvironment(),
       pagination,
       subject,
+      version,
     );
   }
 

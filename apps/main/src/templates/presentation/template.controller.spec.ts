@@ -142,6 +142,7 @@ describe("templateController", () => {
   });
 
   it(`/GET submodels`, async () => {
+    await ctx.asserts.getSubmodelsV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodels(createTemplate);
   });
 

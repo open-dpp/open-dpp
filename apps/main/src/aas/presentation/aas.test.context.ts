@@ -20,6 +20,7 @@ import {
   SubmodelElementSchema,
   SubmodelJsonSchema,
   SubmodelPaginationResponseDtoSchema,
+  SubmodelResponseDto,
   UserRoleDto,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -300,6 +301,25 @@ export function createAasTestContext<T>(
     expect(responseV1.status).toEqual(200);
     expect(responseV1.body.submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
     expect(responseV1.body.submodelElements[0].value.keys[0].value).toEqual("https://example.com");
+  }
+
+  async function assertGetSubmodelsV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    const submodelWithLink = responseV1.body.result.find(
+      (s: SubmodelResponseDto) => s.id === submodel.id,
+    )!;
+    expect(submodelWithLink.submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(submodelWithLink.submodelElements[0].value.keys[0].value).toEqual("https://example.com");
   }
 
   async function assertGetSubmodelValueV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -1291,14 +1311,20 @@ export function createAasTestContext<T>(
     getAasObjects: () => ({ aas, submodels }),
     getModuleRef: () => moduleRef,
     asserts: {
-      getSubmodelByIdV1: assertGetSubmodelByIdV1,
-      getSubmodelValueV1: assertGetSubmodelValueV1,
-      getSubmodelElementByIdV1: assertGetSubmodelElementByIdV1,
-      getSubmodelElementValueV1: assertGetSubmodelElementValueV1,
       getShells: assertGetShells,
-      modifyShell: assertModifyShell,
+      getSubmodelsV1: assertGetSubmodelsV1,
       getSubmodels: assertGetSubmodels,
+      getSubmodelByIdV1: assertGetSubmodelByIdV1,
       getSubmodelById: assertGetSubmodelById,
+      getSubmodelValue: assertGetSubmodelValue,
+      getSubmodelValueV1: assertGetSubmodelValueV1,
+      getSubmodelElements: assertGetSubmodelElements,
+      getSubmodelElementByIdV1: assertGetSubmodelElementByIdV1,
+      getSubmodelElementById: assertGetSubmodelElementById,
+      getSubmodelElementValueV1: assertGetSubmodelElementValueV1,
+      getSubmodelElementValue: assertGetSubmodelElementValue,
+      getActivities: assertGetActivities,
+      modifyShell: assertModifyShell,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
       modifyValueOfSubmodel: assertModifyValueOfSubmodel,
@@ -1312,13 +1338,8 @@ export function createAasTestContext<T>(
       deleteRow: assertDeleteRow,
       deleteSubmodel: assertDeleteSubmodel,
       deleteSubmodelElement: assertDeleteSubmodelElement,
-      getSubmodelValue: assertGetSubmodelValue,
-      getSubmodelElements: assertGetSubmodelElements,
       postSubmodelElement: assertPostSubmodelElement,
       postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
-      getSubmodelElementById: assertGetSubmodelElementById,
-      getSubmodelElementValue: assertGetSubmodelElementValue,
-      getActivities: assertGetActivities,
       downloadActivities: assertDownloadActivities,
     },
   };

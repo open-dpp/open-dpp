@@ -240,13 +240,17 @@ export class EnvironmentService {
     environment: Environment,
     pagination: Pagination,
     subject: SubjectAttributes,
+    version: ApiVersionsType,
   ): Promise<SubmodelPaginationResponseDto> {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map((p) => this.submodelRepository.findOneOrFail(p)));
     const ability = await this.loadAbility(environment, subject);
-    return SubmodelPaginationResponseDtoSchema.parse(
-      PagingResult.create({ pagination, items: submodels }).toPlain({ ability }),
-    );
+    const pagingResult = PagingResult.create({ pagination, items: submodels }).toPlain({ ability });
+    const migratedResult = {
+      ...pagingResult,
+      result: pagingResult.result.map((s) => this.migrateSubmodel(s, version)),
+    };
+    return SubmodelPaginationResponseDtoSchema.parse(migratedResult);
   }
 
   async modifySubmodel(
@@ -448,10 +452,8 @@ export class EnvironmentService {
     if (isEmptyObject(result)) {
       throw new ForbiddenError();
     }
-    const migratedResult =
-      version === ApiVersions.v1 ? reverseMigrateSubmodelLinks(result) : result;
 
-    return SubmodelJsonSchema.parse(migratedResult);
+    return SubmodelJsonSchema.parse(this.migrateSubmodel(result, version));
   }
 
   async getSubmodelValue(
@@ -968,6 +970,10 @@ export class EnvironmentService {
     for (const conceptDescriptionId of environment.conceptDescriptions) {
       await this.conceptDescriptionRepository.deleteById(conceptDescriptionId, { session });
     }
+  }
+
+  private migrateSubmodel(submodelPlain: any, version: ApiVersionsType) {
+    return version === ApiVersions.v1 ? reverseMigrateSubmodelLinks(submodelPlain) : submodelPlain;
   }
 
   private migrateValueRepr(input: any, version: ApiVersionsType) {
