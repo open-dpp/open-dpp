@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/main",
-  "version": "2.4.0",
+  "version": "2.6.0",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -114,5 +114,5 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.26.2"
+  "packageManager": "pnpm@11.6.0"
 }

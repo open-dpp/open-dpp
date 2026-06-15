@@ -1,5 +1,17 @@
 # @open-dpp/dto
 
+## 2.6.0
+
+### Minor Changes
+
+- [#587](https://github.com/open-dpp/open-dpp/pull/587) [`f8ec4ed`](https://github.com/open-dpp/open-dpp/commit/f8ec4ed20a0e6e9ada5eec60465293b0585c726d) Thanks [@mr42](https://github.com/mr42)! - Organization owners can change the role of a member.
+
+## 2.5.0
+
+### Minor Changes
+
+- [#585](https://github.com/open-dpp/open-dpp/pull/585) [`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360) Thanks [@mr42](https://github.com/mr42)! - Add support for boolean data field.
+
 ## 2.4.0
 
 ### Minor Changes

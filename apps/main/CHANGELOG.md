@@ -1,5 +1,35 @@
 # @open-dpp/main
 
+## 2.6.0
+
+### Minor Changes
+
+- [#587](https://github.com/open-dpp/open-dpp/pull/587) [`f8ec4ed`](https://github.com/open-dpp/open-dpp/commit/f8ec4ed20a0e6e9ada5eec60465293b0585c726d) Thanks [@mr42](https://github.com/mr42)! - Organization owners can change the role of a member.
+
+### Patch Changes
+
+- Updated dependencies [[`f8ec4ed`](https://github.com/open-dpp/open-dpp/commit/f8ec4ed20a0e6e9ada5eec60465293b0585c726d)]:
+  - @open-dpp/api-client@2.6.0
+  - @open-dpp/dto@2.6.0
+  - @open-dpp/env@2.6.0
+  - @open-dpp/exception@2.6.0
+  - @open-dpp/permission@2.6.0
+
+## 2.5.0
+
+### Minor Changes
+
+- [#585](https://github.com/open-dpp/open-dpp/pull/585) [`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360) Thanks [@mr42](https://github.com/mr42)! - Add support for boolean data field.
+
+### Patch Changes
+
+- Updated dependencies [[`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360)]:
+  - @open-dpp/dto@2.5.0
+  - @open-dpp/api-client@2.5.0
+  - @open-dpp/env@2.5.0
+  - @open-dpp/exception@2.5.0
+  - @open-dpp/permission@2.5.0
+
 ## 2.4.0
 
 ### Minor Changes

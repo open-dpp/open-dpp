@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/permission",
-  "version": "2.4.0",
+  "version": "2.6.0",
   "private": true,
   "description": "",
   "keywords": [],
@@ -61,5 +61,5 @@
       ]
     }
   },
-  "packageManager": "pnpm@10.26.2"
+  "packageManager": "pnpm@11.6.0"
 }

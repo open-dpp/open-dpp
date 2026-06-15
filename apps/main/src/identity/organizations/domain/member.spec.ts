@@ -46,4 +46,23 @@ describe("member", () => {
 
     expect(member.role).toEqual(MemberRole.MEMBER);
   });
+
+  it("changes member role using changeRole method", () => {
+    const member = Member.create({
+      organizationId: "org-1",
+      userId: "user-1",
+      role: MemberRole.MEMBER,
+    });
+
+    expect(member.role).toEqual(MemberRole.MEMBER);
+    expect(member.isOwner()).toBe(false);
+
+    member.changeRole(MemberRole.OWNER);
+
+    expect(member.role).toEqual(MemberRole.OWNER);
+    expect(member.isOwner()).toBe(true);
+    expect(member.id).toEqual(member.id);
+    expect(member.organizationId).toEqual(member.organizationId);
+    expect(member.userId).toEqual(member.userId);
+  });
 });
