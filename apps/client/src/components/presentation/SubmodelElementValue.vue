@@ -29,11 +29,19 @@ const { t } = useI18n();
   </div>
   <PresentationComponentRenderer v-else :element="element" :path="path" :config="config">
     <dd v-if="element.modelType === 'Property'" class="mt-1 text-sm/6 text-gray-700 sm:mt-2">
-      <template v-if="element.valueType === 'Date'">
+      <template v-if="element.valueType === DataTypeDef.Date">
         {{ formatDateValueForDisplay(element.value as string, DataTypeDef.Date) }}
       </template>
-      <template v-else-if="element.valueType === 'DateTime'">
+      <template v-else-if="element.valueType === DataTypeDef.DateTime">
         {{ formatDateValueForDisplay(element.value as string, DataTypeDef.DateTime) }}
+      </template>
+      <template v-else-if="element.valueType === DataTypeDef.Boolean">
+        <Checkbox
+          class="pointer-events-none"
+          :model-value="element.value === 'true'"
+          disabled
+          binary
+        />
       </template>
       <template v-else-if="element.valueType === DataTypeDef.AnyUri">
         <a

@@ -250,7 +250,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                 canEdit &&
                 col.plain.modelType === AasSubmodelElements.Property &&
                 (col.plain.valueType === DataTypeDef.Date ||
-                  col.plain.valueType === DataTypeDef.DateTime)
+                  col.plain.valueType === DataTypeDef.DateTime ||
+                  col.plain.valueType === DataTypeDef.Boolean)
               "
               :id="`${rowIndex}-${field}`"
               :model-value="cellData[field]"
@@ -285,7 +286,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             !(
               col.plain.modelType === AasSubmodelElements.Property &&
               (col.plain.valueType === DataTypeDef.Date ||
-                col.plain.valueType === DataTypeDef.DateTime)
+                col.plain.valueType === DataTypeDef.DateTime ||
+                col.plain.valueType === DataTypeDef.Boolean)
             )
           "
           #editor="{ data: editorData, field, index: rowIndex }"

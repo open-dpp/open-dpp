@@ -25,7 +25,7 @@ const emit = defineEmits<{
 const { locale } = useI18n();
 
 const isNumeric = computed(() => isNumericDataType(props.valueType));
-
+const isBoolean = computed(() => props.valueType === DataTypeDef.Boolean);
 const isDate = computed(() => props.valueType === DataTypeDef.Date);
 
 const isDateTime = computed(() => props.valueType === DataTypeDef.DateTime);
@@ -43,6 +43,11 @@ const numericValue = computed({
     }
   },
   set: (v) => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+});
+
+const booleanValue = computed({
+  get: () => props.modelValue === "true",
+  set: (v) => emit("update:modelValue", v ? "true" : "false"),
 });
 
 const dateValue = computed({
@@ -77,6 +82,16 @@ const textValue = computed({
     :aria-describedby="props.ariaDescribedby"
     :aria-invalid="props.ariaInvalid"
     show-buttons
+  />
+  <Checkbox
+    v-else-if="isBoolean"
+    :id="props.id"
+    v-model="booleanValue"
+    :disabled="props.disabled"
+    :invalid="props.invalid"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
+    binary
   />
   <DatePicker
     v-else-if="isDate || isDateTime"

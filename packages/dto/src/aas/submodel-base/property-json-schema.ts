@@ -7,17 +7,19 @@ import {
   SubmodelBaseModificationSchema,
 } from "./submodel-base-json-schema";
 
+const PropertyValueDtoSchema = z.nullish(z.coerce.string());
+
 export const PropertyJsonSchema = z.object({
   ...SubmodelBaseJsonSchema.shape,
   valueType: ValueTypeSchema,
   extensions: ExtensionJsonSchema.array().default([]),
-  value: z.nullish(z.string()),
+  value: PropertyValueDtoSchema,
   valueId: z.nullish(ReferenceJsonSchema),
 });
 
 export const PropertyModificationSchema = z.object({
   ...SubmodelBaseModificationSchema.shape,
-  value: z.nullish(z.string()),
+  value: PropertyValueDtoSchema,
 });
 
 export type PropertyResponseDto = z.infer<typeof PropertyJsonSchema>;

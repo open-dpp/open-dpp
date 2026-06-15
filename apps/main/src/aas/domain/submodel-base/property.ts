@@ -111,6 +111,8 @@ export class Property implements ISubmodelElement {
         // represents an unambiguous instant. A naive "2026-04-10T14:00:00"
         // would render differently for users in different timezones.
         parse(z.iso.datetime({ offset: true }));
+      } else if (valueType === DataTypeDef.Boolean) {
+        parse(z.union([z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")]));
       } else if (valueType === DataTypeDef.AnyUri) {
         parse(z.url());
       } else {
