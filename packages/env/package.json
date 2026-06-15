@@ -26,17 +26,17 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.19",
+    "@nestjs/common": "^11.1.26",
     "@nestjs/config": "^4.0.4",
-    "@nestjs/core": "^11.1.19",
-    "zod": "^4.3.6"
+    "@nestjs/core": "^11.1.26",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.24",
+    "@swc/core": "^1.15.41",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
-    "jest": "^30.3.0",
+    "jest": "^30.4.2",
     "typescript": "^5.9.3"
   },
   "jest": {
