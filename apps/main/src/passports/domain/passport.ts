@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { PassportDtoSchema } from "@open-dpp/dto";
-import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import {
@@ -14,14 +14,23 @@ import {
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
 
 export class Passport
   implements
     IPersistable,
-    IDigitalProductPassportIdentifiable,
+    IDigitalProductDocument,
     HasCreatedAt,
-    IDigitalProductDocumentStatusChangeable
+    IDigitalProductDocumentStatusChangeable,
+    ITrackable
 {
+  readonly tracker = ChangeTracker.create();
+
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,
@@ -29,7 +38,7 @@ export class Passport
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-    private readonly lastStatusChange: DigitalProductDocumentStatusChange,
+    private lastStatusChange: DigitalProductDocumentStatusChange,
   ) {}
 
   static create(data: {
@@ -67,14 +76,20 @@ export class Passport
     );
   }
 
+  withTracking(changeTracker?: ChangeTracker) {
+    const result = withTrackingHelper(changeTracker, this);
+    this.environment.withTracking(result.tracker);
+    return result;
+  }
+
   toPlain() {
     return {
       id: this.id,
       organizationId: this.organizationId,
       environment: this.environment.toPlain(),
       templateId: this.templateId,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
       lastStatusChange: this.lastStatusChange.toPlain(),
     };
   }
@@ -98,6 +113,12 @@ export class Passport
   }
 
   private withLastStatusChange(newChange: DigitalProductDocumentStatusChange): Passport {
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: newChange,
+      }),
+    );
+
     return new Passport(
       this.id,
       this.organizationId,
@@ -109,16 +130,16 @@ export class Passport
     );
   }
 
-  publish(): this {
-    return this.withLastStatusChange(publishDpp(this.lastStatusChange)) as this;
+  publish() {
+    this.setLastStatusChange(publishDpp(this.lastStatusChange));
   }
 
-  archive(): this {
-    return this.withLastStatusChange(archiveDpp(this.lastStatusChange)) as this;
+  archive() {
+    this.setLastStatusChange(archiveDpp(this.lastStatusChange));
   }
 
-  restore(): this {
-    return this.withLastStatusChange(restoreDpp(this.lastStatusChange)) as this;
+  restore() {
+    this.setLastStatusChange(restoreDpp(this.lastStatusChange));
   }
 
   isPublished(): boolean {
@@ -131,5 +152,14 @@ export class Passport
 
   isDraft(): boolean {
     return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
+  }
+
+  private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
+    this.lastStatusChange = lastStatusChange;
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: lastStatusChange,
+      }),
+    );
   }
 }

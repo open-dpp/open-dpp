@@ -19,6 +19,10 @@ import { HTTPCode } from "../stores/http-codes.ts";
 import { generatedErrorHandlingStoreMock } from "../testing-utils/error-handling-store-mock.ts";
 import { useAasDrawer } from "./aas-drawer.ts";
 import { useAasTableExtension } from "./aas-table-extension.ts";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+
+dayjs.extend(localizedFormat);
 
 const mocks = vi.hoisted(() => {
   return {
@@ -287,7 +291,7 @@ describe("aasTableExtension composable", () => {
         label: "Produced on",
         plain: SubmodelElementSchema.parse(dateCol),
       },
-      expected: "2026-04-10 Europe/Berlin",
+      expected: "04/10/2026 Europe/Berlin",
     },
     {
       // DateTime is stored as ISO-8601 UTC, displayed in the viewer's zone
@@ -299,7 +303,7 @@ describe("aasTableExtension composable", () => {
         label: "Produced at",
         plain: SubmodelElementSchema.parse(dateTimeCol),
       },
-      expected: "2026-04-10 16:00:00 Europe/Berlin",
+      expected: "04/10/2026 4:00 PM Europe/Berlin",
     },
   ])("should formatCellValue $value", async ({ value, column, expected }) => {
     const mockOnHideDrawer = vi.fn();

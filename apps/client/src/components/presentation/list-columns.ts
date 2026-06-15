@@ -19,14 +19,12 @@ const FILE_MIN_WIDTH = "200px";
  */
 export function buildColumns(
   content: SubmodelElementCollectionResponseDto[],
-  currentLocale: LanguageType,
-  t: (s: string) => string,
 ): ColumnDef[] {
   if (content.length < 1 || !content[0] || !content[0].value) {
     return [];
   }
 
-  const { parseDisplayName } = useAasUtils({ translate: t, selectedLanguage: currentLocale });
+  const { parseDisplayName } = useAasUtils();
 
   return content[0].value.map((collectionElement) => {
     const header = parseDisplayName(collectionElement.displayName);

@@ -111,6 +111,8 @@ export class Property implements ISubmodelElement {
         // represents an unambiguous instant. A naive "2026-04-10T14:00:00"
         // would render differently for users in different timezones.
         parse(z.iso.datetime({ offset: true }));
+      } else if (valueType === DataTypeDef.Boolean) {
+        parse(z.union([z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")]));
       } else {
         parse(z.string());
       }
@@ -162,7 +164,7 @@ export class Property implements ISubmodelElement {
     throw new ValueError("Property cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("Property does not support to delete submodel elements");
   }
 

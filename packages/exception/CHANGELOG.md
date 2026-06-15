@@ -1,5 +1,13 @@
 # @open-dpp/exception
 
+## 2.5.0
+
+## 2.4.0
+
+### Minor Changes
+
+- [#580](https://github.com/open-dpp/open-dpp/pull/580) [`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da) Thanks [@mr42](https://github.com/mr42)! - Add activity history to passports and templates.
+
 ## 1.0.0
 
 ### Major Changes

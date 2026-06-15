@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
-import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
-import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
+import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
+import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
@@ -11,8 +13,6 @@ import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
 import FileField from "./form/FileField.vue";
@@ -250,7 +250,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                 canEdit &&
                 col.plain.modelType === AasSubmodelElements.Property &&
                 (col.plain.valueType === DataTypeDef.Date ||
-                  col.plain.valueType === DataTypeDef.DateTime)
+                  col.plain.valueType === DataTypeDef.DateTime ||
+                  col.plain.valueType === DataTypeDef.Boolean)
               "
               :id="`${rowIndex}-${field}`"
               :model-value="cellData[field]"
@@ -284,7 +285,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             !(
               col.plain.modelType === AasSubmodelElements.Property &&
               (col.plain.valueType === DataTypeDef.Date ||
-                col.plain.valueType === DataTypeDef.DateTime)
+                col.plain.valueType === DataTypeDef.DateTime ||
+                col.plain.valueType === DataTypeDef.Boolean)
             )
           "
           #editor="{ data: editorData, field, index: rowIndex }"

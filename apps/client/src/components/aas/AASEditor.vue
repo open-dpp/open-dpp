@@ -3,6 +3,7 @@ import type { TreeNode } from "primevue/treenode";
 import {
   type DigitalProductDocumentDto,
   DigitalProductDocumentStatusDto,
+  isNumericDataType,
   KeyTypes,
   Permissions,
 } from "@open-dpp/dto";
@@ -26,15 +27,15 @@ import TablePagination from "../pagination/TablePagination.vue";
 import ElementPresentationPanel from "./presentation/ElementPresentationPanel.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 import PropertyEditor from "./PropertyEditor.vue";
-import PropertyCreateEditor from "./PropertyCreateEditor.vue";
 import FileEditor from "./FileEditor.vue";
-import FileCreateEditor from "./FileCreateEditor.vue";
 import ReferenceElementEditor from "./ReferenceElementEditor.vue";
-import ReferenceElementCreateEditor from "./ReferenceElementCreateEditor.vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
+import SubmodelElementListEditor from "./SubmodelElementListEditor.vue";
+import SubmodelElementCollectionEditor from "./SubmodelElementCollectionEditor.vue";
+import SubmodelEditor from "./SubmodelEditor.vue";
 
 const model = defineModel<DigitalProductDocumentDto>({ required: true });
 
@@ -146,7 +147,7 @@ function canEditPath(path: string): boolean {
   return canForPath(Permissions.Edit, path);
 }
 
-const activeDrawerTab = ref<"data" | "presentation">("data");
+const activeDrawerTab = ref<"data" | "presentation" | "activityHistory">("data");
 
 watch(
   () => drawerVisible.value,
@@ -157,27 +158,13 @@ watch(
   },
 );
 
-const leafEditorComponents = [
-  PropertyEditor,
-  PropertyCreateEditor,
-  FileEditor,
-  FileCreateEditor,
-  ReferenceElementEditor,
-  ReferenceElementCreateEditor,
-];
-
-const editModeLeafEditorComponents = [PropertyEditor, FileEditor, ReferenceElementEditor];
-
-const isLeafEditor = computed(() => {
-  if (!editorVNode.value) return false;
-  const comp = editorVNode.value.component;
-  return leafEditorComponents.includes(comp as any);
-});
-
 const showPresentationTab = computed(() => {
   if (!editorVNode.value) return false;
-  const isEditModeLeaf = editModeLeafEditorComponents.includes(editorVNode.value.component as any);
-  if (!isEditModeLeaf) return false;
+  const editorSupportsPresentationConfiguration =
+    editorVNode.value.component === PropertyEditor &&
+    editorVNode.value.props.data.valueType &&
+    isNumericDataType(editorVNode.value.props.data.valueType);
+  if (!editorSupportsPresentationConfiguration) return false;
   return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
 });
 
@@ -236,6 +223,34 @@ function onSubmit() {
     componentRef.value.submit();
   }
 }
+
+const activityHistoryPath = computed(() => {
+  if (
+    !editorVNode.value ||
+    !editorVNode.value.props.path.idShortPathIncludingSubmodel ||
+    !editorVNode.value.component
+  ) {
+    return undefined;
+  }
+  const path = editorVNode.value.props.path.idShortPathIncludingSubmodel;
+
+  const hasChildElements = [
+    SubmodelElementCollectionEditor,
+    SubmodelElementListEditor,
+    SubmodelEditor,
+  ].includes(editorVNode.value.component as any);
+
+  if (hasChildElements) {
+    return `sw:${path}`;
+  }
+  const isLeafEditor = [PropertyEditor, FileEditor, ReferenceElementEditor].includes(
+    editorVNode.value.component as any,
+  );
+  if (isLeafEditor) {
+    return path;
+  }
+  return undefined;
+});
 
 const isFullPosition = computed(() => position.value === fullPosition);
 </script>
@@ -414,13 +429,19 @@ const isFullPosition = computed(() => position.value === fullPosition);
           </div>
         </div>
       </template>
-
-      <template v-if="showPresentationTab">
-        <Tabs v-model:value="activeDrawerTab">
+      <template #default>
+        <Tabs :value="activeDrawerTab">
           <TabList>
             <Tab data-cy="drawer-tab-data" value="data">{{ t("aasEditor.drawerTabs.data") }}</Tab>
-            <Tab data-cy="drawer-tab-presentation" value="presentation">
+            <Tab v-if="showPresentationTab" data-cy="drawer-tab-presentation" value="presentation">
               {{ t("aasEditor.drawerTabs.presentation") }}
+            </Tab>
+            <Tab
+              v-if="activityHistoryPath"
+              value="activityHistory"
+              data-cy="drawer-tab-activityHistory"
+            >
+              {{ t("activityHistory.label") }}
             </Tab>
           </TabList>
           <TabPanels>
@@ -441,7 +462,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 :is-archived="isArchived"
               />
             </TabPanel>
-            <TabPanel value="presentation">
+            <TabPanel v-if="showPresentationTab" value="presentation">
               <ElementPresentationPanel
                 :element="editorVNode!.props.data"
                 :path="editorVNode!.props.path.idShortPathIncludingSubmodel!"
@@ -450,25 +471,17 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 "
               />
             </TabPanel>
+            <TabPanel v-if="activityHistoryPath" value="activityHistory">
+              <EditorActivityHistory
+                v-if="editorVNode && editorVNode.props.path.idShortPathIncludingSubmodel"
+                :id="model.id"
+                :path="activityHistoryPath"
+                :type="props.type"
+              />
+            </TabPanel>
           </TabPanels>
         </Tabs>
       </template>
-
-      <component
-        v-else-if="editorVNode"
-        :is="editorVNode.component"
-        v-bind="editorVNode.props"
-        :id="model.id"
-        ref="componentRef"
-        :aas-namespace="aasNamespace"
-        :open-drawer="aasEditor.openDrawer"
-        :error-handling-store="errorHandlingStore"
-        :translate="t"
-        :get-access-permission-rules="getAccessPermissionRules"
-        :modify-shell="modifyShell"
-        :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
-        :is-archived="isArchived"
-      />
     </Drawer>
   </div>
 </template>

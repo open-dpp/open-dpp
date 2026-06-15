@@ -2,14 +2,11 @@ import type {
   AssetAdministrationShellResponseDto,
   ExtendedEnvironmentResponseDto,
   LanguageTextDto,
-  LanguageType,
 } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
-
-interface AasUtilsProps {
-  selectedLanguage: LanguageType;
-  translate: (label: string, ...args: unknown[]) => string;
-}
+import { useI18n } from "vue-i18n";
+import { computed } from "vue";
+import { convertLocaleToLanguage } from "../translations/util";
 
 export interface IAasUtils {
   parseDisplayName: (displayNames: LanguageTextDto[]) => string,
@@ -21,10 +18,13 @@ export interface IAasUtils {
   ) => string;
 }
 
-export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAasUtils {
+export function useAasUtils(): IAasUtils {
+  const { t, locale } = useI18n();
+  const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
+
   function parseDisplayName(displayNames: LanguageTextDto[]) {
-    const displayName = displayNames.find((d) => d.language === selectedLanguage);
-    return displayName?.text ?? translate("common.untitled");
+    const displayName = displayNames.find((d) => d.language === selectedLanguage.value);
+    return displayName?.text ?? t("common.untitled");
   }
 
   function parseDisplayNameFromAas(
@@ -46,7 +46,7 @@ export function useAasUtils({ translate, selectedLanguage }: AasUtilsProps): IAa
         },
       )
       .otherwise(() => {
-        return translate("common.untitled");
+        return t("common.untitled");
       });
   }
 

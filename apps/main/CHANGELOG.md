@@ -1,5 +1,35 @@
 # @open-dpp/main
 
+## 2.5.0
+
+### Minor Changes
+
+- [#585](https://github.com/open-dpp/open-dpp/pull/585) [`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360) Thanks [@mr42](https://github.com/mr42)! - Add support for boolean data field.
+
+### Patch Changes
+
+- Updated dependencies [[`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360)]:
+  - @open-dpp/dto@2.5.0
+  - @open-dpp/api-client@2.5.0
+  - @open-dpp/env@2.5.0
+  - @open-dpp/exception@2.5.0
+  - @open-dpp/permission@2.5.0
+
+## 2.4.0
+
+### Minor Changes
+
+- [#580](https://github.com/open-dpp/open-dpp/pull/580) [`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da) Thanks [@mr42](https://github.com/mr42)! - Add activity history to passports and templates.
+
+### Patch Changes
+
+- Updated dependencies [[`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da)]:
+  - @open-dpp/api-client@2.4.0
+  - @open-dpp/permission@2.4.0
+  - @open-dpp/exception@2.4.0
+  - @open-dpp/dto@2.4.0
+  - @open-dpp/env@2.4.0
+
 ## 1.0.0
 
 ### Major Changes

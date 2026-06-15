@@ -5,4 +5,5 @@ export const ContentType = {
   WEBP: "image/webp",
   GIF: "image/gif",
   SVG: "image/svg+xml",
+  ZIP: "application/zip",
 } as const;

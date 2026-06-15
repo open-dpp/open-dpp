@@ -12,13 +12,25 @@ import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
 
 export const SecuritySchema = z.object({
   localAccessControl: AccessControlSchema,
 });
 
-export class Security {
+export class Security implements ITrackable {
+  public tracker = ChangeTracker.create();
   private constructor(public readonly localAccessControl: AccessControl) {}
+
+  withTracking(changeTracker?: ChangeTracker) {
+    const result = withTrackingHelper(changeTracker, this);
+    this.localAccessControl.withTracking(this.tracker);
+    return result;
+  }
 
   static create(data: { localAccessControl?: AccessControl }): Security {
     return new Security(data.localAccessControl ?? AccessControl.create({}));
@@ -127,7 +139,7 @@ export class Security {
     this.addDefaultPolicyForObjectIfNoExists(IdShortPath.create({ path: submodel.idShort }));
   }
 
-  defineAbilityForSubject(subject: SubjectAttributes): AasAbility {
-    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject });
+  defineAbilityForSubject(subject: SubjectAttributes, userId?: string): AasAbility {
+    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject, userId });
   }
 }

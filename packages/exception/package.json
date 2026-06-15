@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/exception",
-  "version": "1.0.0",
+  "version": "2.5.0",
   "private": true,
   "description": "",
   "keywords": [],
@@ -63,5 +63,5 @@
       ]
     }
   },
-  "packageManager": "pnpm@10.26.2"
+  "packageManager": "pnpm@11.6.0"
 }

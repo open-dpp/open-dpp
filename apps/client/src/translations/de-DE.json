@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "refresh": "Aktualisieren",
     "reset": "Zurücksetzen",
     "noEntries": "Keine Einträge gefunden",
     "moveUp": "Nach oben verschieben",
@@ -28,6 +29,7 @@
     "selected": "Ausgewählt",
     "submit": "Bestätigen",
     "abort": "Abbrechen",
+    "download": "Herunterladen",
     "general": "Allgemein",
     "remove": "Entfernen",
     "copy": "Kopieren",
@@ -90,6 +92,7 @@
       }
     },
     "security": {
+      "unknownRole": "Unbekannte Rolle",
       "missingPermission": "Fehlende Rechte",
       "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
       "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
@@ -127,6 +130,7 @@
       "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed",
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
+    "data": "Daten",
     "link": "Link",
     "errorLoading": "Laden @:common.failed",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
@@ -144,6 +148,7 @@
     "file": "Datei",
     "dateField": "Datumsfeld",
     "dateTimeField": "Datum-Zeit-Feld",
+    "booleanField": "Wahrheitswert",
     "numberField": "Zahlenfeld",
     "timezone": "Zeitzone",
     "type": "Typ",
@@ -515,6 +520,52 @@
     },
     "deleteSuccess": "Datei wurde erfolgreich gelöscht",
     "deleteFailure": "Fehler beim Löschen der Datei"
+  },
+  "activityHistory": {
+    "errorLoading": "Fehler beim Laden des Aktivitätsverlaufs",
+    "errorDownloading": "Fehler beim Herunterladen des Aktivitätsverlaufs",
+    "label": "Aktivitätsverlauf",
+    "createdAt": "Datum",
+    "position": "Position",
+    "name": "Name",
+    "type": "Typ",
+    "affectedRole": "Betroffene Rolle",
+    "oldValue": "Alter Wert",
+    "newValue": "Neuer Wert",
+    "userId": "Benutzer ID",
+    "path": "Pfad",
+    "languageOps": {
+      "replace": "geändert",
+      "add": "hinzugefügt",
+      "remove": "entfernt"
+    },
+    "correlationId": "Korrelations ID",
+    "timelineTitle": "Aktivität",
+    "changeTypes": {
+      "PropertyValueChanged": "Wert geändert",
+      "ReferenceElementChanged": "Link geändert",
+      "DisplayNameChanged": "Name geändert",
+      "PolicyAdded": "Berechtigung hinzugefügt",
+      "PolicyModified": "Berechtigung geändert",
+      "DescriptionChanged": "Beschreibung geändert",
+      "RowAdded": "Zeile hinzugefügt",
+      "RowDeleted": "Zeile gelöscht",
+      "ColumnAdded": "Spalte hinzugefügt",
+      "ColumnDeleted": "Spalte gelöscht",
+      "SubmodelAdded": "Abschnitt hinzugefügt",
+      "AddedSubmodelToEnv": "Abschnitt zur Umgebung hinzugefügt",
+      "SubmodelElementAdded": "Element hinzugefügt",
+      "SubmodelElementDeleted": "Element gelöscht",
+      "SubmodelReferenceAdded": "Referenz hinzugefügt",
+      "PolicyDeleted": "Berechtigung gelöscht",
+      "DefaultThumbnailsModified": "Vorschaubilder geändert",
+      "DeletedSubmodelFromEnv": "Abschnitt aus Umgebung gelöscht",
+      "SubmodelReferenceDeleted": "Referenz gelöscht",
+      "SubmodelDeleted": "Abschnitt gelöscht",
+      "DigitalProductDocumentStatusChanged": "Status geändert",
+      "FileValueChanged": "Datei geändert",
+      "ReferenceElementValueChanged": "Referenz geändert"
+    }
   },
   "passports": {
     "select": "Produktpass auswählen",

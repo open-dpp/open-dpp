@@ -5,17 +5,13 @@ import { useAasGallery } from "../../composables/aas-gallery.ts";
 import { useAasUtils } from "../../composables/aas-utils.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePassportStore } from "../../stores/passport";
-import { convertLocaleToLanguage } from "../../translations/util";
 
 const passportStore = usePassportStore();
 
 const { t, locale } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 
-const aasUtils = useAasUtils({
-  translate: t,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-});
+const aasUtils = useAasUtils();
 
 const { files, downloadDefaultThumbnails } = useAasGallery({
   translate: t,

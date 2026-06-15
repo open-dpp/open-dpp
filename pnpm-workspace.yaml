@@ -3,33 +3,20 @@ packages:
   - packages/*
   - docs
 
+injectWorkspacePackages: true
+
 allowBuilds:
-  '@nestjs/core': true
-  '@scarf/scarf': true
-  '@swc/core': true
+  "@nestjs/core": true
+  "@scarf/scarf": true
+  "@swc/core": true
+  "@tailwindcss/oxide": true
+  better-sqlite3: true
   core-js: true
   esbuild: true
+  fsevents: true
   highlight.js: true
   mongodb-memory-server: true
   msw: true
   sharp: true
   unrs-resolver: true
   vue-demi: true
-
-injectWorkspacePackages: true
-
-onlyBuiltDependencies:
-  - "@nestjs/core"
-  - "@scarf/scarf"
-  - "@swc/core"
-  - "@tailwindcss/oxide"
-  - better-sqlite3
-  - core-js
-  - esbuild
-  - fsevents
-  - highlight.js
-  - mongodb-memory-server
-  - msw
-  - sharp
-  - unrs-resolver
-  - vue-demi

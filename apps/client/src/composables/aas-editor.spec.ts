@@ -706,6 +706,7 @@ describe("aasEditor composable", () => {
     it.each([
       { label: "aasEditor.textField", valueType: DataTypeDef.String },
       { label: "aasEditor.numberField", valueType: DataTypeDef.Double },
+      { label: "aasEditor.booleanField", valueType: DataTypeDef.Boolean },
     ])("should create property for $label", async ({ label, valueType }) => {
       mocks.getSubmodels.mockResolvedValue({
         data: paginationResponse,

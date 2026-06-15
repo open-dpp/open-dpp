@@ -6,19 +6,14 @@ import type {
 import { computed } from "vue";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 import { buildColumns } from "./list-columns";
-import { useI18n } from "vue-i18n";
-import { convertLocaleToLanguage } from "../../translations/util.ts";
 
 const { content, path } = defineProps<{
   content: SubmodelElementCollectionResponseDto[];
   path?: string;
 }>();
 
-const { locale, t } = useI18n();
-
 const columns = computed(() => {
-  const language = convertLocaleToLanguage(locale.value);
-  return buildColumns(content, language, t);
+  return buildColumns(content);
 });
 
 const rows = computed(() => {

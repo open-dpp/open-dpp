@@ -28,6 +28,7 @@ import { Security } from "./security/security";
 
 import { SubjectAttributes } from "./security/subject-attributes";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
+import { DefaultThumbnailsModified } from "../../activity-history/domain/change-events/default-thumbnails-modified";
 
 describe("assetAdministrationShell", () => {
   it("should create a new asset administration shell", () => {
@@ -146,8 +147,8 @@ describe("assetAdministrationShell", () => {
       security,
     });
 
-    const copyS1 = submodel1.copy();
-    const copyS2 = submodel2.copy();
+    const copyS1 = submodel1.copy()!;
+    const copyS2 = submodel2.copy()!;
     const copy = aas.copy([copyS1, copyS2]);
     expect(copy.id).not.toEqual(aas.id);
     expect(copy.assetInformation).toEqual({ ...aas.assetInformation, globalAssetId: copy.id });
@@ -225,16 +226,24 @@ describe("assetAdministrationShell", () => {
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
     const ability = security.defineAbilityForSubject(subject);
-    aas.modify(
-      { displayName, description, assetInformation: { defaultThumbnails } },
-      { subject, ability },
-    );
+    aas
+      .withTracking()
+      .modify(
+        { displayName, description, assetInformation: { defaultThumbnails } },
+        { subject, ability },
+      );
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.assetInformation.globalAssetId).toEqual("globalAssetId");
     expect(aas.assetInformation.defaultThumbnails).toEqual(
       defaultThumbnails.map(Resource.fromPlain),
+    );
+    expect(aas.tracker.stop()).toContainEqual(
+      DefaultThumbnailsModified.create({
+        oldValue: [],
+        newValue: [Resource.create({ path: "path.to.image", contentType: "image/jepg" })],
+      }),
     );
   });
 

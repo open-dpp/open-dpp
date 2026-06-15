@@ -1,5 +1,23 @@
 # @open-dpp/dto
 
+## 2.5.0
+
+### Minor Changes
+
+- [#585](https://github.com/open-dpp/open-dpp/pull/585) [`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360) Thanks [@mr42](https://github.com/mr42)! - Add support for boolean data field.
+
+## 2.4.0
+
+### Minor Changes
+
+- [#580](https://github.com/open-dpp/open-dpp/pull/580) [`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da) Thanks [@mr42](https://github.com/mr42)! - Add activity history to passports and templates.
+
+## 2.3.0
+
+### Major Changes
+
+- Realign the `@open-dpp/*` fixed version group above npm's burned version range so `@open-dpp/api-client` can publish again (its `1.x`–`2.2.x` line is burned on npm). `@open-dpp/dto@1.0.0` already published; this entry moves the shared group to `2.3.0`. See [ADR 0001](../../docs/adr/0001-jump-published-packages-past-burned-npm-versions.md).
+
 ## 1.0.0
 
 ### Major Changes

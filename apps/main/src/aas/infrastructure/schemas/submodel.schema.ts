@@ -52,7 +52,7 @@ export class SubmodelDoc extends Document<string> {
   @Prop({ type: [MongooseSchema.Types.Mixed] })
   supplementalSemanticIds: ReferenceDb[];
 
-  @Prop({ qualifiers: [MongooseSchema.Types.Mixed] })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   qualifiers: QualifierDb[];
 
   @Prop({ type: [MongooseSchema.Types.Mixed] })
