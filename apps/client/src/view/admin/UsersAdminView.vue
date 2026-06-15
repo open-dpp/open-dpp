@@ -3,7 +3,7 @@ import type { UserWithRole } from "better-auth/plugins";
 import { computed, onMounted, ref } from "vue";
 import { authClient } from "../../auth-client.ts";
 import AdminUsersList from "../../components/admin/AdminUsersList.vue";
-import ChangeRoleDialog from "../../components/admin/ChangeRoleDialog.vue";
+import ChangeUserRoleDialog from "../../components/admin/ChangeUserRoleDialog.vue";
 import InviteToOrganizationDialog from "../../components/admin/InviteToOrganizationDialog.vue";
 import InviteUserDialog from "../../components/admin/InviteUserDialog.vue";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
@@ -82,7 +82,7 @@ onMounted(async () => {
         @close="onInviteToOrgClose"
         @success="onInviteToOrgClose"
       />
-      <ChangeRoleDialog
+      <ChangeUserRoleDialog
         v-if="changeRoleUser"
         :user-id="changeRoleUser.id"
         :user-email="changeRoleUser.email"

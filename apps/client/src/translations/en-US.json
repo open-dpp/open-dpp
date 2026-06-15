@@ -358,6 +358,7 @@
     "details": "Organization details and users.",
     "create": "Create a new organization.",
     "createError": "Error creating organization.",
+    "changeRoleError": "Error changing role.",
     "organizationCreationDisabled": {
       "title": "Creating organizations is disabled",
       "description": "Your administrator has disabled the ability to create organizations. Please ask your administrator or a colleague to invite you to an organization."
