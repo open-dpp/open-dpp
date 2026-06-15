@@ -35,6 +35,7 @@ async function onSave(role: string) {
 <template>
   <ChangeRoleDialog
     v-bind="props"
+    :escalation-role="MemberRoleDto.OWNER"
     :role-options="roleOptions"
     :on-save="onSave"
     @close="emit('close')"

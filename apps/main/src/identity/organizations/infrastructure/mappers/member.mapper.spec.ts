@@ -10,7 +10,7 @@ describe("memberMapper", () => {
   const orgId = new Types.ObjectId();
   const userId = new Types.ObjectId();
 
-  const id = new Types.ObjectId().toHexString();
+  const id = new Types.ObjectId();
 
   const validDomainMember = Member.loadFromDb({
     id: id.toString(),
@@ -58,7 +58,7 @@ describe("memberMapper", () => {
     const domain = MemberMapper.toDomain(validMemberDocument);
 
     expect(domain).toBeInstanceOf(Member);
-    expect(domain.id).toBe(validMemberDocument._id);
+    expect(domain.id).toBe(validMemberDocument._id.toString());
     expect(domain.organizationId).toBe(validMemberDocument.organizationId.toString());
     expect(domain.userId).toBe(validMemberDocument.userId.toString());
     expect(domain.role).toBe(validMemberDocument.role);

@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import ChangeRoleDialog from "./ChangeRoleDialog.vue";
-import { UserRoleDto } from "@open-dpp/dto";
+import { UserRoleDto, UserRoleDtoEnum } from "@open-dpp/dto";
 
 const props = defineProps<{
   userId: string;
@@ -25,7 +25,7 @@ const roleOptions = computed(() => [
 
 async function onSave(role: string) {
   await apiClient.dpp.users.setRole(props.userId, {
-    role: role as any,
+    role: UserRoleDtoEnum.parse(role),
   });
 }
 </script>
@@ -34,7 +34,7 @@ async function onSave(role: string) {
   <ChangeRoleDialog
     v-bind="props"
     :role-options="roleOptions"
-    :is-escalation="true"
+    :escalation-role="UserRoleDto.ADMIN"
     :on-save="onSave"
     @close="emit('close')"
     @success="emit('success')"

@@ -66,6 +66,7 @@ describe("apiClient", () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
       });
+      sdk.setActiveOrganizationId(activeOrganization.id);
       const response = await sdk.dpp.organizations.changeMemberRole(randomUUID(), "owner");
       expect(response.status).toEqual(200);
     });

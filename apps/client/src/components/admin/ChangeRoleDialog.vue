@@ -14,7 +14,7 @@ interface Props {
   userEmail: string;
   currentRole: string;
   roleOptions: { label: string; value: string }[];
-  isEscalation?: boolean;
+  escalationRole: string;
   onSave: (role: string) => Promise<void>;
 }
 
@@ -50,7 +50,7 @@ function requestChangeRole() {
     return;
   }
 
-  if (props.isEscalation && selectedRole.value === "admin" && props.currentRole !== "admin") {
+  if (selectedRole.value === props.escalationRole && props.currentRole !== props.escalationRole) {
     confirming.value = true;
     return;
   }
