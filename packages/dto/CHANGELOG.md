@@ -1,5 +1,11 @@
 # @open-dpp/dto
 
+## 2.5.0
+
+### Minor Changes
+
+- [#585](https://github.com/open-dpp/open-dpp/pull/585) [`cdf8621`](https://github.com/open-dpp/open-dpp/commit/cdf8621873ca0d98abe101bcb320b8a08a34e360) Thanks [@mr42](https://github.com/mr42)! - Add support for boolean data field.
+
 ## 2.4.0
 
 ### Minor Changes

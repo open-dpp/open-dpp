@@ -479,6 +479,11 @@ export function useAasEditor({
         DataTypeDef.Double,
       ),
       buildPropertyEntry(
+        translate(`${translatePrefix}.booleanField`),
+        "pi pi-check-square",
+        DataTypeDef.Boolean,
+      ),
+      buildPropertyEntry(
         translate(`${translatePrefix}.dateField`),
         "pi pi-calendar",
         DataTypeDef.Date,
