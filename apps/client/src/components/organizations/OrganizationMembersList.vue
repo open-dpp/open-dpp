@@ -6,7 +6,10 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
 import { ModalType, useLayoutStore } from "../../stores/layout";
+import ChangeMemberRoleDialog from "./ChangeMemberRoleDialog.vue";
 import InviteMemberDialog from "./InviteMemberDialog.vue";
+import { useUserStore } from "../../stores/user.ts";
+import { MemberRoleDto } from "@open-dpp/dto";
 
 interface InvitedMember {
   id: string;
@@ -18,6 +21,10 @@ interface InvitedMember {
   expiresAt: Date;
 }
 
+const emit = defineEmits<{
+  (e: "refresh"): void;
+}>();
+
 const { members } = defineProps<{
   organizationId: string;
   members: Array<MemberDto>;
@@ -25,8 +32,10 @@ const { members } = defineProps<{
 
 const { t } = useI18n();
 const layoutStore = useLayoutStore();
+const { asSubject, user } = useUserStore();
 
 const invitations = ref<InvitedMember[]>([]);
+const changeRoleMember = ref<MemberDto | null>(null);
 
 const rows = computed(() =>
   [...members, ...invitations.value].sort((a, b) => a.role.localeCompare(b.role)),
@@ -45,6 +54,15 @@ async function cancelInvite(invitationId: string) {
   await loadInvitations();
 }
 
+function onChangeRoleSuccess() {
+  emit("refresh");
+  changeRoleMember.value = null;
+}
+
+function onChangeRoleClose() {
+  changeRoleMember.value = null;
+}
+
 function isMember(object: any): object is MemberDto {
   return "userId" in object;
 }
@@ -53,12 +71,29 @@ function isInvited(object: any): object is InvitedMember {
   return "status" in object;
 }
 
+function canChangeRole(member: MemberDto): boolean {
+  const subject = asSubject(false);
+
+  return (
+    isMember(member) && member.userId !== user.id && subject.memberRole === MemberRoleDto.OWNER
+  );
+}
+
 onMounted(async () => {
   await loadInvitations();
 });
 </script>
 
 <template>
+  <ChangeMemberRoleDialog
+    v-if="changeRoleMember"
+    :user-id="changeRoleMember.userId"
+    :user-email="changeRoleMember.user?.email || ''"
+    :current-role="changeRoleMember.role"
+    :member-id="changeRoleMember.id"
+    @close="onChangeRoleClose"
+    @success="onChangeRoleSuccess"
+  />
   <InviteMemberDialog
     v-if="layoutStore.modalOpen === ModalType.INVITE_MEMBER_MODAL"
     :organization-id="organizationId"
@@ -119,6 +154,13 @@ onMounted(async () => {
       <template #body="{ data }: { data: MemberDto | InvitedMember }">
         <Button v-if="isInvited(data)" severity="secondary" @click="cancelInvite(data.id)">
           {{ t("organizations.invitation.cancel") }}
+        </Button>
+        <Button
+          v-else-if="canChangeRole(data)"
+          severity="secondary"
+          @click="changeRoleMember = data"
+        >
+          {{ t("organizations.admin.changeRoleDialog.change") }}
         </Button>
       </template>
     </Column>

@@ -148,6 +148,7 @@
     "file": "Datei",
     "dateField": "Datumsfeld",
     "dateTimeField": "Datum-Zeit-Feld",
+    "booleanField": "Wahrheitswert",
     "numberField": "Zahlenfeld",
     "timezone": "Zeitzone",
     "type": "Typ",
@@ -357,6 +358,7 @@
     "details": "Details und User der Organisation.",
     "create": " Erstellen Sie eine neue Organisation.",
     "createError": "Fehler beim Erstellen der Organisation.",
+    "changeRoleError": "Fehler beim Ändern der Rolle.",
     "organizationCreationDisabled": {
       "title": "Erstellung von Organisationen deaktiviert",
       "description": "Die Erstellung von Organisationen ist von Ihrer Administrator*in deaktiviert worden. Bitte lassen Sie sich von Ihrer Adminstrator*in oder Kolleg*in zu einer Organisation einladen."
