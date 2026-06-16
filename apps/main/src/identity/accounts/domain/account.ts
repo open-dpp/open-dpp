@@ -1,6 +1,7 @@
-import { randomUUID } from "node:crypto";
-
-export interface AccountCreateProps {
+// Read-only domain mirror of a better-auth Account (see ADR-0002). There is intentionally no
+// `create()` factory: better-auth is the sole writer of accounts, and minting one here would
+// generate an id better-auth never issued. Instances are only ever rehydrated via `loadFromDb`.
+export interface AccountProps {
   userId: string;
   accountId: string;
   providerId: string;
@@ -13,7 +14,7 @@ export interface AccountCreateProps {
   password?: string;
 }
 
-export type AccountDbProps = AccountCreateProps & {
+export type AccountDbProps = AccountProps & {
   id: string;
   createdAt: Date;
   updatedAt: Date;
@@ -62,26 +63,6 @@ export class Account {
     this.scope = scope;
     this.idToken = idToken;
     this.password = password;
-  }
-
-  public static create(data: AccountCreateProps) {
-    const now = new Date();
-
-    return new Account(
-      randomUUID(),
-      data.userId,
-      data.accountId,
-      data.providerId,
-      now,
-      now,
-      data.accessToken,
-      data.refreshToken,
-      data.accessTokenExpiresAt,
-      data.refreshTokenExpiresAt,
-      data.scope,
-      data.idToken,
-      data.password,
-    );
   }
 
   public static loadFromDb(data: AccountDbProps) {

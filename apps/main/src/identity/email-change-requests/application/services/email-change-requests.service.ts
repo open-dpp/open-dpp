@@ -4,6 +4,7 @@ import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { EmailChangeNotificationMail } from "../../../../email/domain/email-change-notification-mail";
 import { EmailService } from "../../../../email/email.service";
+import { AccountsService } from "../../../accounts/application/services/accounts.service";
 import { AUTH } from "../../../auth/auth.provider";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { EmailChangeRequest } from "../../domain/email-change-request";
@@ -32,6 +33,7 @@ export class EmailChangeRequestsService {
 
   constructor(
     private readonly repository: EmailChangeRequestsRepository,
+    private readonly accountsService: AccountsService,
     @Inject(AUTH) private readonly auth: Auth,
     private readonly envService: EnvService,
     private readonly emailService: EmailService,
@@ -63,7 +65,10 @@ export class EmailChangeRequestsService {
       throw new ValueError("New email must differ from the current email");
     }
 
-    await this.verifyCurrentPassword(currentEmail, currentPassword, user.id);
+    const passwordValid = await this.accountsService.verifyPassword(user.id, currentPassword);
+    if (!passwordValid) {
+      throw new ValueError("Current password is incorrect");
+    }
 
     const next = EmailChangeRequest.create({
       userId: user.id,
@@ -129,42 +134,6 @@ export class EmailChangeRequestsService {
       );
       await this.hardCancel(user.id);
       throw error;
-    }
-  }
-
-  private async verifyCurrentPassword(
-    currentEmail: string,
-    currentPassword: string,
-    userId: string,
-  ): Promise<void> {
-    let isValid = false;
-    try {
-      const context = await this.auth.$context;
-      const found = await context.internalAdapter.findUserByEmail(currentEmail, {
-        includeAccounts: true,
-      });
-      // Bind verification to the target user: only trust the credential account when the
-      // email resolves to the user whose email is being changed. Otherwise a mismatched
-      // currentEmail/userId would verify the password against a different user's account.
-      const credentialAccount =
-        found?.user?.id === userId
-          ? found.accounts?.find(
-              (account) => account.providerId === "credential" && account.password,
-            )
-          : undefined;
-      if (credentialAccount?.password) {
-        isValid = await context.password.verify({
-          hash: credentialAccount.password,
-          password: currentPassword,
-        });
-      }
-    } catch (error) {
-      this.logger.error(`request: password verification failed for ${userId}`, error);
-      throw error;
-    }
-
-    if (!isValid) {
-      throw new ValueError("Current password is incorrect");
     }
   }
 }

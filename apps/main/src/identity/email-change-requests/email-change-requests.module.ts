@@ -2,6 +2,7 @@ import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../../email/email.module";
+import { AccountsModule } from "../accounts/accounts.module";
 import { AuthModule } from "../auth/auth.module";
 import { EmailChangeRequestsService } from "./application/services/email-change-requests.service";
 import { EmailChangeRequestsRepository } from "./infrastructure/adapters/email-change-requests.repository";
@@ -18,6 +19,7 @@ import { RevokeEmailChangeController } from "./presentation/revoke-email-change.
     ]),
     EnvModule,
     forwardRef(() => AuthModule),
+    AccountsModule,
     EmailModule,
   ],
   providers: [EmailChangeRequestsService, EmailChangeRequestsRepository],

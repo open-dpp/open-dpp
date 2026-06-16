@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
+import { AccountsService } from "../../../accounts/application/services/accounts.service";
 import { AUTH } from "../../../auth/auth.provider";
 import { EmailService } from "../../../../email/email.service";
 import { EmailChangeRequest } from "../../domain/email-change-request";
@@ -17,8 +18,7 @@ describe("EmailChangeRequestsService", () => {
   let mockAuth: any;
   let mockEnv: any;
   let mockEmail: any;
-  let mockInternalAdapter: any;
-  let mockPassword: any;
+  let mockAccountsService: any;
 
   const currentUser = { id: "user-1", email: "current@x.com", firstName: "Ada" };
   const headers = { cookie: "session=abc" } as const;
@@ -30,11 +30,8 @@ describe("EmailChangeRequestsService", () => {
       deleteByUserId: jest.fn(),
       upsertByUserId: jest.fn(),
     };
-    mockInternalAdapter = {
-      findUserByEmail: jest.fn(),
-    };
-    mockPassword = {
-      verify: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+    mockAccountsService = {
+      verifyPassword: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
     };
     mockAuth = {
       api: {
@@ -42,10 +39,6 @@ describe("EmailChangeRequestsService", () => {
         signInEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
         signOut: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
-      $context: Promise.resolve({
-        internalAdapter: mockInternalAdapter,
-        password: mockPassword,
-      }),
     };
     mockEnv = {
       get: jest.fn((key: string) => {
@@ -62,6 +55,7 @@ describe("EmailChangeRequestsService", () => {
       providers: [
         EmailChangeRequestsService,
         { provide: EmailChangeRequestsRepository, useValue: mockRepo },
+        { provide: AccountsService, useValue: mockAccountsService },
         { provide: AUTH, useValue: mockAuth },
         { provide: EnvService, useValue: mockEnv },
         { provide: EmailService, useValue: mockEmail },
@@ -115,11 +109,7 @@ describe("EmailChangeRequestsService", () => {
 
   describe("request", () => {
     beforeEach(() => {
-      mockInternalAdapter.findUserByEmail.mockResolvedValue({
-        user: { id: "user-1", email: "current@x.com" },
-        accounts: [{ providerId: "credential", password: "stored-hash" }],
-      });
-      mockPassword.verify.mockResolvedValue(true);
+      mockAccountsService.verifyPassword.mockResolvedValue(true);
       mockRepo.upsertByUserId.mockImplementation(async (r: EmailChangeRequest) => r);
     });
 
@@ -127,10 +117,7 @@ describe("EmailChangeRequestsService", () => {
       const result = await service.request(currentUser, "new@x.com", "hunter2", headers);
 
       expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
-      expect(mockPassword.verify).toHaveBeenCalledWith({
-        hash: "stored-hash",
-        password: "hunter2",
-      });
+      expect(mockAccountsService.verifyPassword).toHaveBeenCalledWith("user-1", "hunter2");
       expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
       const persisted = mockRepo.upsertByUserId.mock.calls[0][0] as EmailChangeRequest;
       expect(persisted.newEmail).toBe("new@x.com");
@@ -187,7 +174,7 @@ describe("EmailChangeRequestsService", () => {
     });
 
     it("rejects with ValueError when password is wrong and creates no session", async () => {
-      mockPassword.verify.mockResolvedValue(false);
+      mockAccountsService.verifyPassword.mockResolvedValue(false);
 
       await expect(service.request(currentUser, "new@x.com", "wrong", headers)).rejects.toThrow(
         ValueError,
@@ -197,36 +184,6 @@ describe("EmailChangeRequestsService", () => {
       expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
       expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
       expect(mockEmail.send).not.toHaveBeenCalled();
-    });
-
-    it("rejects with ValueError when no credential account exists", async () => {
-      mockInternalAdapter.findUserByEmail.mockResolvedValue({
-        user: { id: "user-1", email: "current@x.com" },
-        accounts: [],
-      });
-
-      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
-        ValueError,
-      );
-
-      expect(mockAuth.api.signInEmail).not.toHaveBeenCalled();
-      expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
-      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
-    });
-
-    it("rejects with ValueError when the email resolves to a different user", async () => {
-      mockInternalAdapter.findUserByEmail.mockResolvedValue({
-        user: { id: "other-user", email: "current@x.com" },
-        accounts: [{ providerId: "credential", password: "stored-hash" }],
-      });
-
-      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
-        ValueError,
-      );
-
-      expect(mockPassword.verify).not.toHaveBeenCalled();
-      expect(mockRepo.upsertByUserId).not.toHaveBeenCalled();
-      expect(mockAuth.api.changeEmail).not.toHaveBeenCalled();
     });
 
     it("replaces an existing pending request atomically", async () => {
