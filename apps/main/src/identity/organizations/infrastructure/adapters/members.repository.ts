@@ -4,6 +4,8 @@ import { Model, Types } from "mongoose";
 import { Member } from "../../domain/member";
 import { MemberMapper } from "../mappers/member.mapper";
 import { Member as MemberSchema } from "../schemas/member.schema";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { ObjectId } from "mongodb";
 
 @Injectable()
 export class MembersRepository {
@@ -25,8 +27,19 @@ export class MembersRepository {
     return MemberMapper.toDomain(document);
   }
 
+  async findOneByIdOrFail(id: string): Promise<Member> {
+    const member = await this.findOneById(id);
+    if (!member) {
+      throw new NotFoundInDatabaseException(Member.name);
+    }
+    return member;
+  }
+
   async findOneById(id: string): Promise<Member | null> {
-    const document = await this.memberModel.findById(id);
+    if (!ObjectId.isValid(id)) {
+      return null;
+    }
+    const document = await this.memberModel.findOne({ _id: new ObjectId(id) });
     if (!document) return null;
     return MemberMapper.toDomain(document);
   }

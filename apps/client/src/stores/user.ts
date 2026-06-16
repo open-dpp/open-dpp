@@ -28,7 +28,7 @@ export interface IUserStore {
   memberRole: Ref<MemberRoleDtoType | undefined>;
   updateUserBySession: (session: { user: BetterAuthSession } | null) => void;
   fetchMemberRole: (organizationId: string) => Promise<void>;
-  asSubject: () => Subject;
+  asSubject: (ignoreMemberRoleForAdmin?: boolean) => Subject;
 }
 
 export const useUserStore = defineStore("user", (): IUserStore => {
