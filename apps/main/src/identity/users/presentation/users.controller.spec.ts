@@ -347,6 +347,28 @@ describe("UsersController", () => {
       expect(persisted!.email).toBe(user.email);
     });
 
+    it("rate-limits the endpoint per user, returning 429 after the allowed number of requests", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+
+      // The endpoint allows 3 requests per hour (per-user tracker). The first 3 are accepted; the
+      // 4th is throttled. Proves the route-scoped UserOrIpThrottlerGuard is active on this endpoint.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const accepted = await request(app.getHttpServer())
+          .post("/users/me/email-change")
+          .set("Cookie", userCookie)
+          .send({ newEmail: `${randomUUID()}@test.test`, currentPassword: TEST_PASSWORD });
+        expect(accepted.status).toBe(202);
+      }
+
+      const throttled = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail: `${randomUUID()}@test.test`, currentPassword: TEST_PASSWORD });
+      expect(throttled.status).toBe(429);
+    });
+
     it("does not create an orphaned session when verifying the current password", async () => {
       const { user } = await betterAuthHelper.createUser();
       const userCookie = await betterAuthHelper.signAsUser(user.id);

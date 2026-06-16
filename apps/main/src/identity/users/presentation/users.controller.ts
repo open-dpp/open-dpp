@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import type {
@@ -29,6 +30,7 @@ import {
   UpdateProfileDtoSchema,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { UserOrIpThrottlerGuard } from "../../../common/throttler/user-or-ip.throttler-guard";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session as SessionDomainEntity } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
@@ -88,6 +90,7 @@ export class UsersController {
 
   @Post("me/email-change")
   @HttpCode(HttpStatus.ACCEPTED)
+  @UseGuards(UserOrIpThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 3600_000 } })
   async requestEmailChange(
     @AuthSession() session: SessionDomainEntity,

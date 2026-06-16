@@ -1,5 +1,6 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { EmailModule } from "../../email/email.module";
 import { AuthModule } from "../auth/auth.module";
 import { EmailChangeRequestsModule } from "../email-change-requests/email-change-requests.module";
@@ -26,6 +27,12 @@ import { OrganizationsRepository } from "../organizations/infrastructure/adapter
       { name: InvitationDoc.name, schema: InvitationSchema },
       { name: Organization.name, schema: OrganizationSchema },
     ]),
+    // Throttling is scoped to this module's sensitive endpoint (POST /users/me/email-change),
+    // which opts in via `@UseGuards(UserOrIpThrottlerGuard)` + `@Throttle(...)`. Registering it
+    // here (not globally in AppModule) keeps the throttler available to every UsersModule consumer
+    // — including isolated test modules — and leaves all other endpoints unthrottled.
+    // ThrottlerModule is @Global, so this single registration still serves the whole app.
+    ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 1000 }]),
     forwardRef(() => AuthModule),
     EmailChangeRequestsModule,
     EmailModule,
