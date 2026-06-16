@@ -33,6 +33,7 @@ import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { ApiVersionsType } from "../../api-version";
+import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -136,13 +137,14 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       userContext.subject,
       organizationId,
     );
+
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelElement(
       correlationId,
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelElementRequest.create({ body, version }),
       userContext,
       undefined,
       version,
@@ -170,7 +172,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelElementRequest.create({ body, version }),
       userContext,
       idShortPath,
       version,

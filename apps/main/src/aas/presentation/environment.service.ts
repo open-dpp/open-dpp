@@ -23,7 +23,6 @@ import {
   SubmodelJsonSchema,
   SubmodelModificationDto,
   SubmodelPaginationResponseDto,
-  SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDto,
   SubmodelResponseDto,
   ValueRequestDto,
@@ -50,7 +49,7 @@ import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
+import { ISubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
@@ -80,6 +79,9 @@ import {
   reverseMigrateSubmodelElementLinks,
   reverseMigrateSubmodelLinks,
 } from "../infrastructure/migrate-links";
+import { SubmodelElementRequest } from "./requests/submodel-element.request";
+import { SubmodelPaginationResponse } from "./responses/submodel-pagination.response";
+import { SubmodelResponse } from "./responses/submodel.response";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -247,12 +249,8 @@ export class EnvironmentService {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map((p) => this.submodelRepository.findOneOrFail(p)));
     const ability = await this.loadAbility(environment, subject);
-    const pagingResult = PagingResult.create({ pagination, items: submodels }).toPlain({ ability });
-    const migratedResult = {
-      ...pagingResult,
-      result: pagingResult.result.map((s) => this.migrateSubmodelResponse(s, version)),
-    };
-    return SubmodelPaginationResponseDtoSchema.parse(migratedResult);
+    const pagingResult = PagingResult.create({ pagination, items: submodels });
+    return SubmodelPaginationResponse.create({ pagingResult, version, ability }).toJSON();
   }
 
   async modifySubmodel(
@@ -451,14 +449,8 @@ export class EnvironmentService {
     version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const ability = await this.loadAbility(environment, subject);
-    const result = (await this.findSubmodelByIdOrFail(environment, submodelId)).toPlain({
-      ability,
-    });
-    if (isEmptyObject(result)) {
-      throw new ForbiddenError();
-    }
-
-    return SubmodelJsonSchema.parse(this.migrateSubmodelResponse(result, version));
+    const result = await this.findSubmodelByIdOrFail(environment, submodelId);
+    return SubmodelResponse.create({ submodel: result, version, ability }).toJSON();
   }
 
   async getSubmodelValue(
@@ -500,7 +492,7 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    submodelElementPlain: SubmodelElementRequestDto,
+    submodelElementBody: SubmodelElementRequest,
     userContext: UserContext,
     idShortPath: IdShortPath | undefined,
     version: ApiVersionsType,
@@ -509,10 +501,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const submodelElement = submodel
       .withTracking()
-      .addSubmodelElement(
-        parseSubmodelElement(this.migrateSubmodelElementRequest(submodelElementPlain, version)),
-        { idShortPath, ability },
-      );
+      .addSubmodelElement(submodelElementBody.toDomain(), { idShortPath, ability });
     const activity = SubmodelElementAddedActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,
