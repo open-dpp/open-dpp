@@ -6,6 +6,7 @@ import { Permalink } from "./permalink";
 
 describe("Permalink", () => {
   const baseInput = () => ({
+    kind: "presentation" as const,
     presentationConfigurationId: randomUUID(),
   });
 
@@ -268,5 +269,292 @@ describe("Permalink", () => {
     });
 
     expect(restored.publishedUrl).toBeNull();
+  });
+
+  describe("polymorphism & new fields", () => {
+    const upiId = randomUUID();
+    const configId = randomUUID();
+
+    // (1) create for a presentation permalink defaults kind, primary, uniqueProductIdentifierId, gs1ResolverBase, gs1DataAttributes
+    it("create for a presentation permalink defaults new fields correctly", () => {
+      const permalink = Permalink.create(baseInput());
+      expect(permalink.kind).toBe("presentation");
+      expect(permalink.primary).toBe(false);
+      expect(permalink.uniqueProductIdentifierId).toBeNull();
+      expect(permalink.gs1ResolverBase).toBeNull();
+      expect(permalink.gs1DataAttributes).toBeNull();
+    });
+
+    // (2) create for gs1-link succeeds and exposes readonly fields
+    it("create for a gs1-link permalink succeeds and exposes readonly fields", () => {
+      const permalink = Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+      });
+      expect(permalink.kind).toBe("gs1-link");
+      expect(permalink.uniqueProductIdentifierId).toBe(upiId);
+      expect(permalink.presentationConfigurationId).toBeNull();
+      expect(permalink.primary).toBe(false);
+      expect(permalink.gs1ResolverBase).toBeNull();
+      expect(permalink.gs1DataAttributes).toBeNull();
+    });
+
+    // (3) create throws ValueError when gs1-link lacks uniqueProductIdentifierId
+    it("create throws ValueError when gs1-link lacks uniqueProductIdentifierId", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "gs1-link",
+          presentationConfigurationId: null,
+          uniqueProductIdentifierId: undefined as unknown as string,
+        }),
+      ).toThrow(ValueError);
+    });
+
+    // (4) throws ValueError when presentation has null/missing presentationConfigurationId
+    it("create throws ValueError when presentation permalink has null presentationConfigurationId", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "presentation",
+          presentationConfigurationId: null as unknown as string,
+        }),
+      ).toThrow(ValueError);
+    });
+
+    // (5) throws ValueError when a presentation permalink is given gs1ResolverBase/gs1DataAttributes
+    it("create throws ValueError when presentation permalink is given gs1ResolverBase", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "presentation",
+          presentationConfigurationId: configId,
+          gs1ResolverBase: "https://id.acme.com",
+        } as Parameters<typeof Permalink.create>[0]),
+      ).toThrow(ValueError);
+    });
+
+    it("create throws ValueError when presentation permalink is given gs1DataAttributes", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "presentation",
+          presentationConfigurationId: configId,
+          gs1DataAttributes: { "17": "251231" },
+        } as Parameters<typeof Permalink.create>[0]),
+      ).toThrow(ValueError);
+    });
+
+    // (6) toPlain() includes new fields and round-trips through fromPlain for both kinds
+    it("toPlain includes new fields and round-trips through fromPlain for presentation kind", () => {
+      const original = Permalink.create({
+        kind: "presentation",
+        presentationConfigurationId: configId,
+        slug: "my-product",
+      });
+      const plain = original.toPlain();
+      expect(plain.kind).toBe("presentation");
+      expect(plain.primary).toBe(false);
+      expect(plain.uniqueProductIdentifierId).toBeNull();
+      expect(plain.gs1ResolverBase).toBeNull();
+      expect(plain.gs1DataAttributes).toBeNull();
+
+      const restored = Permalink.fromPlain({
+        ...plain,
+        createdAt: plain.createdAt.toISOString(),
+        updatedAt: plain.updatedAt.toISOString(),
+      });
+      expect(restored.kind).toBe("presentation");
+      expect(restored.primary).toBe(false);
+      expect(restored.uniqueProductIdentifierId).toBeNull();
+      expect(restored.gs1ResolverBase).toBeNull();
+      expect(restored.gs1DataAttributes).toBeNull();
+    });
+
+    it("toPlain includes new fields and round-trips through fromPlain for gs1-link kind", () => {
+      const original = Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+        gs1ResolverBase: "https://id.acme.com",
+        gs1DataAttributes: { "17": "251231" },
+      });
+      const plain = original.toPlain();
+      expect(plain.kind).toBe("gs1-link");
+      expect(plain.uniqueProductIdentifierId).toBe(upiId);
+      expect(plain.gs1ResolverBase).toBe("https://id.acme.com");
+      expect(plain.gs1DataAttributes).toEqual({ "17": "251231" });
+
+      const restored = Permalink.fromPlain({
+        ...plain,
+        createdAt: plain.createdAt.toISOString(),
+        updatedAt: plain.updatedAt.toISOString(),
+      });
+      expect(restored.kind).toBe("gs1-link");
+      expect(restored.uniqueProductIdentifierId).toBe(upiId);
+      expect(restored.gs1ResolverBase).toBe("https://id.acme.com");
+      expect(restored.gs1DataAttributes).toEqual({ "17": "251231" });
+    });
+
+    // (7) fromPlain rehydrates a legacy doc (defaults)
+    it("fromPlain rehydrates a legacy doc lacking kind/primary/gs1 fields with defaults", () => {
+      const isoNow = new Date().toISOString();
+      const restored = Permalink.fromPlain({
+        id: randomUUID(),
+        slug: null,
+        presentationConfigurationId: configId,
+        createdAt: isoNow,
+        updatedAt: isoNow,
+      });
+      expect(restored.kind).toBe("presentation");
+      expect(restored.primary).toBe(false);
+      expect(restored.uniqueProductIdentifierId).toBeNull();
+      expect(restored.gs1ResolverBase).toBeNull();
+      expect(restored.gs1DataAttributes).toBeNull();
+    });
+  });
+
+  describe("new withX methods", () => {
+    const configId = randomUUID();
+    const upiId = randomUUID();
+
+    const makePresentation = () =>
+      Permalink.create({
+        kind: "presentation",
+        presentationConfigurationId: configId,
+        slug: "my-product",
+        baseUrl: "https://passports.example.com",
+      });
+
+    const makeGs1Link = () =>
+      Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+      });
+
+    const makePublishedGs1Link = () =>
+      makeGs1Link().withPublishedUrl("https://id.example.com/01/04006381333931");
+
+    // (1) withPrimary
+    it("withPrimary(true) returns a new instance with primary:true, bumps updatedAt, preserves createdAt", () => {
+      const original = makePresentation();
+      const originalUpdatedAt = original.updatedAt.getTime();
+      const createdAt = original.createdAt.getTime();
+
+      const next = original.withPrimary(true);
+
+      expect(next).not.toBe(original);
+      expect(next.primary).toBe(true);
+      expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(originalUpdatedAt);
+      expect(next.createdAt.getTime()).toBe(createdAt);
+    });
+
+    it("withPrimary(false) clears primary", () => {
+      const original = makePresentation().withPrimary(true);
+      const next = original.withPrimary(false);
+      expect(next.primary).toBe(false);
+    });
+
+    // (2) withGs1ResolverBase on a gs1-link returns new instance with canonicalised value
+    it("withGs1ResolverBase sets the url on a gs1-link and canonicalises it", () => {
+      const original = makeGs1Link();
+      const next = original.withGs1ResolverBase("https://id.acme.com");
+      expect(next).not.toBe(original);
+      expect(next.gs1ResolverBase).toBe("https://id.acme.com");
+    });
+
+    it("withGs1ResolverBase(null) clears the gs1 resolver base", () => {
+      const original = makeGs1Link().withGs1ResolverBase("https://id.acme.com");
+      const next = original.withGs1ResolverBase(null);
+      expect(next.gs1ResolverBase).toBeNull();
+    });
+
+    // (3) withGs1ResolverBase throws ValueError on an invalid URL
+    it("withGs1ResolverBase throws ValueError on an invalid URL", () => {
+      const original = makeGs1Link();
+      expect(() => original.withGs1ResolverBase("not-a-url")).toThrow(ValueError);
+    });
+
+    // (4) withGs1ResolverBase throws ValueError on a presentation permalink
+    it("withGs1ResolverBase throws ValueError on a presentation permalink", () => {
+      const original = makePresentation();
+      expect(() => original.withGs1ResolverBase("https://id.acme.com")).toThrow(ValueError);
+    });
+
+    // (5) withGs1DataAttributes on a gs1-link returns a new instance
+    it("withGs1DataAttributes sets valid attributes on a gs1-link", () => {
+      const original = makeGs1Link();
+      const next = original.withGs1DataAttributes({ "17": "251231" });
+      expect(next).not.toBe(original);
+      expect(next.gs1DataAttributes).toEqual({ "17": "251231" });
+    });
+
+    it("withGs1DataAttributes(null) clears the data attributes", () => {
+      const original = makeGs1Link().withGs1DataAttributes({ "17": "251231" });
+      const next = original.withGs1DataAttributes(null);
+      expect(next.gs1DataAttributes).toBeNull();
+    });
+
+    it("withGs1DataAttributes throws ValueError on an invalid AI map", () => {
+      const original = makeGs1Link();
+      // "01" is a key AI (identifier), not a data attribute
+      expect(() => original.withGs1DataAttributes({ "01": "04006381333931" })).toThrow(ValueError);
+    });
+
+    it("withGs1DataAttributes throws ValueError on a presentation permalink", () => {
+      const original = makePresentation();
+      expect(() => original.withGs1DataAttributes({ "17": "251231" })).toThrow(ValueError);
+    });
+
+    // (6) freeze decision: withPrimary is ALLOWED post-publish
+    it("withPrimary is allowed after publish (primary governs resolution)", () => {
+      const frozen = makePresentation().withPublishedUrl(
+        "https://passports.example.com/p/my-product",
+      );
+      expect(() => frozen.withPrimary(true)).not.toThrow();
+      const next = frozen.withPrimary(true);
+      expect(next.primary).toBe(true);
+    });
+
+    // (6) withGs1ResolverBase follows assertNotPublished (throws once published)
+    it("withGs1ResolverBase throws ValueError once published", () => {
+      const frozen = makePublishedGs1Link();
+      expect(() => frozen.withGs1ResolverBase("https://id.acme.com")).toThrow(ValueError);
+    });
+
+    // (6) withGs1DataAttributes follows assertNotPublished (throws once published)
+    it("withGs1DataAttributes throws ValueError once published", () => {
+      const frozen = makePublishedGs1Link();
+      expect(() => frozen.withGs1DataAttributes({ "17": "251231" })).toThrow(ValueError);
+    });
+
+    // (7) each gs1 mutator preserves id, slug, baseUrl, publishedUrl, kind, uniqueProductIdentifierId
+    it("withGs1ResolverBase preserves id, slug, baseUrl, publishedUrl, kind, uniqueProductIdentifierId", () => {
+      const original = Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+      });
+      const next = original.withGs1ResolverBase("https://id.acme.com");
+      expect(next.id).toBe(original.id);
+      expect(next.slug).toBe(original.slug);
+      expect(next.baseUrl).toBe(original.baseUrl);
+      expect(next.publishedUrl).toBe(original.publishedUrl);
+      expect(next.kind).toBe(original.kind);
+      expect(next.uniqueProductIdentifierId).toBe(original.uniqueProductIdentifierId);
+    });
+
+    it("withGs1DataAttributes preserves id, slug, baseUrl, publishedUrl, kind, uniqueProductIdentifierId", () => {
+      const original = Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+      });
+      const next = original.withGs1DataAttributes({ "17": "251231" });
+      expect(next.id).toBe(original.id);
+      expect(next.slug).toBe(original.slug);
+      expect(next.baseUrl).toBe(original.baseUrl);
+      expect(next.publishedUrl).toBe(original.publishedUrl);
+      expect(next.kind).toBe(original.kind);
+      expect(next.uniqueProductIdentifierId).toBe(original.uniqueProductIdentifierId);
+    });
   });
 });

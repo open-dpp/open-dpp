@@ -33,7 +33,7 @@ factories, and the Vue frontend.
    domain holds only `referenceId`, no passport handle), mirroring today's `loadDraftPassportForWrite`.
 3. **Permalink is polymorphic.** A permalink is either a **presentation** permalink (references a
    presentation configuration) or a **gs1-link** permalink (references a UPI; at most one such
-   permalink per UPI; may *also* reference a presentation configuration; carries a nullable GS1
+   permalink per UPI; may _also_ reference a presentation configuration; carries a nullable GS1
    data-attributes map + its own nullable GS1 resolver base). `presentationConfigurationId` is
    nullable.
 4. **Primary presentation permalink.** A passport may have several presentation permalinks; exactly
@@ -42,9 +42,9 @@ factories, and the Vue frontend.
 5. **Guarded delete.** Cannot delete a published permalink (`publishedUrl` set = frozen) nor the
    last/primary presentation permalink. GS1-link permalinks delete freely when unpublished.
 6. **GS1 Digital Link assembly.** `gs1ResolverBase` + UPI key-path (`/01/{gtin}/10/{batch}/21/{serial}`)
-   + the permalink's GS1 data-attribute query (`?17=251231&3103=000189`). Scan resolution:
-   key → UPI → its GS1-link permalink → render its own presentation config if set, else fall back
-   to the passport's primary permalink.
+   - the permalink's GS1 data-attribute query (`?17=251231&3103=000189`). Scan resolution:
+     key → UPI → its GS1-link permalink → render its own presentation config if set, else fall back
+     to the passport's primary permalink.
 7. **GS1 data attributes** are a map keyed by AI string; each key must be a known **non-key**
    (data-attribute) GS1 AI and each value validated against that AI's format/length. Implemented
    from a **battle-tested GS1 AI source vendored into `packages/dto`** (the GS1 DigitalLinkToolkit
@@ -112,6 +112,7 @@ number.
 ### PART A — Shared GS1 data-attributes foundation (`packages/dto`)
 
 #### Slice 1 — Vendor the GS1 AI table as a typed, attributed constant
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/gs1-ai-table.generated.ts` (new),
   `packages/dto/src/gs1/gs1-ai-table.generated.spec.ts` (new)
@@ -125,23 +126,25 @@ number.
   provenance header (read via `fs`).
 - **Implementation:** Vendor the GS1 DigitalLinkToolkit.js `aitable` (476 AIs), reshaped from array
   to a `Record` keyed by `ai`. Define `Gs1AiTableEntry { ai; title; format; type:'I'|'Q'|'D';
-  fixedLength; regex; shortcode?; checkDigit?; qualifiers? }`. Header: provenance URL + pinned commit
+fixedLength; regex; shortcode?; checkDigit?; qualifiers? }`. Header: provenance URL + pinned commit
   SHA, "DO NOT EDIT BY HAND", Apache-2.0 notice. Pure data + types, no I/O. **Zero** new runtime deps.
 - **Acceptance:** spec GREEN; no dependency added to `packages/dto/package.json`.
 - **Depends on:** —
 
 #### Slice 2 — `isGs1DataAttributeAi` predicate (non-key classification)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/gs1-digital-link.ts`, `packages/dto/src/gs1/gs1-digital-link.spec.ts`
 - **Failing test(s) first:** add `describe('isGs1DataAttributeAi')` — true for `"17"`, `"3103"`,
   `"11"`; false for key/identifier AIs `"01"`, `"10"`, `"21"`; false for unknown `"9999"`; false for
   junk `"abc"`, `""`, `" 17"`; does not mutate input.
 - **Implementation:** `export const isGs1DataAttributeAi = (ai: string): boolean =>
-  GS1_AI_TABLE[ai]?.type === 'D'`. <10 lines, pure.
+GS1_AI_TABLE[ai]?.type === 'D'`. <10 lines, pure.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 1
 
 #### Slice 3 — `isValidGs1DataAttributeValue` (per-AI value format/length)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/gs1-digital-link.ts`, `packages/dto/src/gs1/gs1-digital-link.spec.ts`
 - **Failing test(s) first:** add `describe('isValidGs1DataAttributeValue')` — `"17"` accepts `"251231"`,
@@ -156,6 +159,7 @@ number.
 - **Depends on:** 2
 
 #### Slice 4 — `Gs1DataAttributesSchema` (Zod map keyed by validated AI → validated value)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/gs1-data-attributes.dto.ts` (new),
   `packages/dto/src/gs1/gs1-data-attributes.dto.spec.ts` (new)
@@ -167,14 +171,15 @@ number.
   `path` includes `"17"` for the bad-value case); does not mutate input; importable in a pure module
   (no DOM/Node-only globals at import time).
 - **Implementation:** `Gs1DataAttributesSchema = z.record(z.string(), z.string()).check(ctx => { for
-  each [ai,value]: !isGs1DataAttributeAi(ai) → issue path [ai] "\"${ai}\" is not a known GS1
-  data-attribute AI"; else !isValidGs1DataAttributeValue(ai,value) → issue path [ai] "value for AI
-  \"${ai}\" is invalid" }).meta({ id: 'Gs1DataAttributes' })`. Export `type Gs1DataAttributes`. Reuse
+each [ai,value]: !isGs1DataAttributeAi(ai) → issue path [ai] "\"${ai}\" is not a known GS1
+data-attribute AI"; else !isValidGs1DataAttributeValue(ai,value) → issue path [ai] "value for AI
+\"${ai}\" is invalid" }).meta({ id: 'Gs1DataAttributes' })`. Export `type Gs1DataAttributes`. Reuse
   the key-AI constants `GS1_AI_GTIN/BATCH/SERIAL` indirectly through `isGs1DataAttributeAi`.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 3
 
 #### Slice 5 — `buildGs1DataAttributeQuery` (canonical, validated query string)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/gs1-digital-link.ts`, `packages/dto/src/gs1/gs1-digital-link.spec.ts`
 - **Failing test(s) first:** add `describe('buildGs1DataAttributeQuery')` — empty/undefined/null →
@@ -189,6 +194,7 @@ number.
 - **Depends on:** 3
 
 #### Slice 6 — Thread data attributes into `buildGs1DigitalLink` (path + query)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/gs1-digital-link.ts`, `packages/dto/src/gs1/gs1-digital-link.spec.ts`
 - **Failing test(s) first:** extend `describe('buildGs1DigitalLink')` — with no `dataAttributes` output
@@ -198,12 +204,13 @@ number.
   query is always appended after the serial segment.
 - **Implementation:** add optional `dataAttributes?: Record<string,string> | null` to
   `Gs1DigitalLinkParts`; at the end of `buildGs1DigitalLink` do `url +=
-  buildGs1DataAttributeQuery(parts.dataAttributes)`. Leave the existing GTIN/batch/serial logic and
+buildGs1DataAttributeQuery(parts.dataAttributes)`. Leave the existing GTIN/batch/serial logic and
   `formatGs1ElementString` untouched.
 - **Acceptance:** spec GREEN; all pre-existing `buildGs1DigitalLink` tests still pass.
 - **Depends on:** 5
 
 #### Slice 7 — Barrel-export the GS1 data-attributes schema + helpers
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/index.ts`, `packages/dto/src/gs1/gs1-data-attributes.barrel.spec.ts` (new)
 - **Failing test(s) first:** `gs1-data-attributes.barrel.spec.ts` — import from the package root and
@@ -219,6 +226,7 @@ number.
 ### PART B — UPI & Permalink shared DTOs (`packages/dto`)
 
 #### Slice 8 — Move `ExternalIdentifierType` to `@open-dpp/dto` + add `Gs1GranularitySchema`
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/gs1/external-identifier-type.ts` (new) or
   `packages/dto/src/unique-product-identifier/...`, `packages/dto/src/index.ts`,
@@ -232,11 +240,12 @@ number.
 - **Depends on:** —
 
 #### Slice 9 — `UniqueProductIdentifierListItemDtoSchema` + list schema (read shape)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/unique-product-identifier/unique-product-identifier-list-item.dto.ts`
   (new), `.../unique-product-identifier-list-item.dto.spec.ts` (new), `packages/dto/src/index.ts`
 - **Failing test(s) first:** parses a GS1 row `{uuid, referenceId, type:'GS1', gtin:<GTIN-14>, batch?,
-  serial?, granularity:'batch', digitalLink:(url|null), passportPublished:boolean}`; a system row
+serial?, granularity:'batch', digitalLink:(url|null), passportPublished:boolean}`; a system row
   `{type:'OPEN_DPP_UUID', gtin:null, batch:null, serial:null, granularity:null}`; a GTIN/EAN row
   (`type:'GTIN'`, gtin present, granularity `'model'`, no `digitalLink` required); rejects a GS1 row
   with a non-normalized 13-digit gtin (must be GTIN-14 via `Gtin14Schema`); rejects an unknown type;
@@ -249,6 +258,7 @@ number.
 - **Depends on:** 8
 
 #### Slice 10 — `CreateGs1UniqueProductIdentifierRequestSchema` (create DTO)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/unique-product-identifier/create-unique-product-identifier.dto.ts` (new),
   `.../create-unique-product-identifier.dto.spec.ts` (new), `packages/dto/src/index.ts`
@@ -257,13 +267,14 @@ number.
   rejects a missing `referenceId`; rejects an invalid GTIN check digit; rejects a batch outside
   CSET-82 / over-length serial; **no `type` field, no data attributes**.
 - **Implementation:** `z.object({ referenceId: z.uuid(), gtin: GtinInputSchema, batch:
-  Cset82ComponentInputSchema.optional(), serial: Cset82ComponentInputSchema.optional() })
-  .meta({ id: 'CreateGs1UniqueProductIdentifierRequest' })`. GS1-only by construction (no type field).
+Cset82ComponentInputSchema.optional(), serial: Cset82ComponentInputSchema.optional() })
+.meta({ id: 'CreateGs1UniqueProductIdentifierRequest' })`. GS1-only by construction (no type field).
   Export inferred type.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 9
 
 #### Slice 11 — `UpdateGs1UniqueProductIdentifierRequestSchema` (update DTO)
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/unique-product-identifier/update-unique-product-identifier.dto.ts` (new),
   `.../update-unique-product-identifier.dto.spec.ts` (new), `packages/dto/src/index.ts`
@@ -277,24 +288,25 @@ number.
 - **Depends on:** 10
 
 #### Slice 12 — `PermalinkKind` discriminator + nullable `presentationConfigurationId` in `PermalinkDtoSchema`
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/permalinks/permalink.dto.ts`, `packages/dto/src/permalinks/permalink.dto.spec.ts`
 - **Failing test(s) first:** new `describe('PermalinkDtoSchema polymorphism')` — (1) parses a
   presentation permalink `{kind:'presentation', presentationConfigurationId:<uuid>,
-  uniqueProductIdentifierId:null, primary:true, gs1ResolverBase:null, gs1DataAttributes:null,
-  …timestamps}`; (2) parses a gs1-link permalink `{kind:'gs1-link', presentationConfigurationId:null,
-  uniqueProductIdentifierId:<uuid>, primary:false, gs1ResolverBase:'https://id.acme.com',
-  gs1DataAttributes:{'17':'251231'}}`; (3) accepts `presentationConfigurationId:null`; (4) rejects an
+uniqueProductIdentifierId:null, primary:true, gs1ResolverBase:null, gs1DataAttributes:null,
+…timestamps}`; (2) parses a gs1-link permalink `{kind:'gs1-link', presentationConfigurationId:null,
+uniqueProductIdentifierId:<uuid>, primary:false, gs1ResolverBase:'https://id.acme.com',
+gs1DataAttributes:{'17':'251231'}}`; (3) accepts `presentationConfigurationId:null`; (4) rejects an
   unknown `kind`; (5) rejects a gs1-link with `uniqueProductIdentifierId:null`; (6) rejects a
   presentation permalink with non-null `uniqueProductIdentifierId` OR `gs1ResolverBase` OR
   `gs1DataAttributes`; (7) parses a legacy doc lacking `kind/primary/uniqueProductIdentifierId/gs1*`
   → defaults `kind:'presentation'`, `primary:false`, the rest `null`.
 - **Implementation:** add `PermalinkKind = {PRESENTATION:'presentation', GS1_LINK:'gs1-link'} as const`
-  + `PermalinkKindSchema`. Rework `PermalinkDtoSchema` base fields `{id, kind (default
-  'presentation'), slug, baseUrl, publishedUrl, presentationConfigurationId: z.uuid().nullable(),
-  uniqueProductIdentifierId: z.uuid().nullable().default(null), primary: z.boolean().default(false),
-  gs1ResolverBase: PermalinkBaseUrlSchema.nullable().default(null), gs1DataAttributes:
-  Gs1DataAttributesSchema.nullable().default(null), createdAt, updatedAt}`.
+  - `PermalinkKindSchema`. Rework `PermalinkDtoSchema` base fields `{id, kind (default
+'presentation'), slug, baseUrl, publishedUrl, presentationConfigurationId: z.uuid().nullable(),
+uniqueProductIdentifierId: z.uuid().nullable().default(null), primary: z.boolean().default(false),
+gs1ResolverBase: PermalinkBaseUrlSchema.nullable().default(null), gs1DataAttributes:
+Gs1DataAttributesSchema.nullable().default(null), createdAt, updatedAt}`.
 - **⚠️ REQUIRED shape — keep `PermalinkDtoSchema` a `ZodObject`; enforce the cross-field invariants with
   `.check()`/`.superRefine`, NOT `z.discriminatedUnion`.** `PermalinkDtoSchema` must remain a single
   `ZodObject` because (1) `PermalinkPublicDtoSchema = PermalinkDtoSchema.extend({…})` and
@@ -313,45 +325,47 @@ number.
 - **Depends on:** 4
 
 #### Slice 13 — `PermalinkInvariantsSchema` (create-time) made polymorphic
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/permalinks/permalink.dto.ts`, `packages/dto/src/permalinks/permalink.dto.spec.ts`
 - **Failing test(s) first:** new `describe('PermalinkInvariantsSchema')` — (1) accepts presentation
   create `{kind:'presentation', presentationConfigurationId:<uuid>, slug:null}`; (2) accepts gs1-link
   `{kind:'gs1-link', uniqueProductIdentifierId:<uuid>, presentationConfigurationId:null,
-  gs1ResolverBase:null, gs1DataAttributes:null}`; (3) accepts a gs1-link that also sets
+gs1ResolverBase:null, gs1DataAttributes:null}`; (3) accepts a gs1-link that also sets
   `presentationConfigurationId:<uuid>`; (4) rejects a gs1-link without `uniqueProductIdentifierId`;
   (5) rejects a presentation create with `uniqueProductIdentifierId` set; (6) **presentation kind
   REQUIRES a non-null `presentationConfigurationId`**.
 - **Implementation:** rework `PermalinkInvariantsSchema` into a discriminated union over `kind`:
   presentation ⇒ `presentationConfigurationId: z.uuid()` (non-null), UPI + gs1 fields forbidden;
   gs1-link ⇒ `uniqueProductIdentifierId: z.uuid()` required, `presentationConfigurationId:
-  z.uuid().nullable()`, `gs1ResolverBase: PermalinkBaseUrlSchema.nullable().optional()`,
+z.uuid().nullable()`, `gs1ResolverBase: PermalinkBaseUrlSchema.nullable().optional()`,
   `gs1DataAttributes: Gs1DataAttributesSchema.nullable().optional()`; `slug:
-  PermalinkSlugSchema.nullable()`, `baseUrl: PermalinkBaseUrlSchema.nullable().optional()` in both.
+PermalinkSlugSchema.nullable()`, `baseUrl: PermalinkBaseUrlSchema.nullable().optional()` in both.
 - **A discriminated union IS safe here** (unlike `PermalinkDtoSchema` in Slice 12): nothing calls
   `.extend()` on `PermalinkInvariantsSchema`, and its only consumer is the domain `create()` which does a
   single `PermalinkInvariantsSchema.parse({ kind, presentationConfigurationId, uniqueProductIdentifierId,
-  gs1ResolverBase, gs1DataAttributes, slug, baseUrl })` (one call, not field-wise — verified at
+gs1ResolverBase, gs1DataAttributes, slug, baseUrl })` (one call, not field-wise — verified at
   permalink.ts:36). When Slice 17 reworks `create()`, it must build the discriminator object with `kind`
   defaulting to `'presentation'` BEFORE calling `.parse()` so the union resolves the correct variant.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 12
 
 #### Slice 14 — `PermalinkCreateRequestSchema` + extended `PermalinkUpdateRequestSchema`
+
 - **Layer:** dto
 - **Files:** `packages/dto/src/permalinks/permalink.dto.ts`, `packages/dto/src/permalinks/permalink.dto.spec.ts`
 - **Failing test(s) first:** `describe('PermalinkCreateRequestSchema')` — (1) parses presentation
   `{kind:'presentation', presentationConfigurationId:<uuid>, slug?, baseUrl?}`; (2) parses gs1-link
   `{kind:'gs1-link', uniqueProductIdentifierId:<uuid>, presentationConfigurationId?:<uuid>|null,
-  gs1ResolverBase?, gs1DataAttributes?, slug?}`; (3) rejects gs1-link without
+gs1ResolverBase?, gs1DataAttributes?, slug?}`; (3) rejects gs1-link without
   `uniqueProductIdentifierId`; (4) rejects presentation with `gs1ResolverBase`/`gs1DataAttributes`.
   `describe('PermalinkUpdateRequestSchema')` — (5) still accepts `{slug, baseUrl}`; (6) accepts
   `{primary:true}`; (7) accepts `{gs1ResolverBase, gs1DataAttributes}`; (8) accepts
   `{presentationConfigurationId:<uuid>|null}`; (9) does NOT accept changing `kind` (absent/stripped).
 - **Implementation:** `PermalinkCreateRequestSchema = z.discriminatedUnion('kind',
-  [presentationCreate, gs1LinkCreate]).meta({ id: 'PermalinkCreateRequest' })`. Extend
+[presentationCreate, gs1LinkCreate]).meta({ id: 'PermalinkCreateRequest' })`. Extend
   `PermalinkUpdateRequestSchema` with `primary: z.boolean().optional()`, `gs1ResolverBase:
-  PermalinkBaseUrlSchema.nullish()`, `gs1DataAttributes: Gs1DataAttributesSchema.nullish()`,
+PermalinkBaseUrlSchema.nullish()`, `gs1DataAttributes: Gs1DataAttributesSchema.nullish()`,
   `presentationConfigurationId: z.uuid().nullish()`. Export `PermalinkCreateRequest` +
   `PermalinkUpdateRequest`.
 - **Acceptance:** spec GREEN.
@@ -362,6 +376,7 @@ number.
 ### PART C — Domain entities (`apps/main/.../domain`)
 
 #### Slice 15 — UPI domain: `granularity` derived value
+
 - **Layer:** domain
 - **Files:** `apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts`,
   `.../unique.product.identifier.spec.ts`
@@ -375,18 +390,19 @@ number.
 - **Depends on:** —
 
 #### Slice 16 — UPI domain: `toListItem` (derives granularity + digitalLink)
+
 - **Layer:** domain
 - **Files:** `apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts`,
   `.../unique.product.identifier.spec.ts`
 - **Failing test(s) first:** `describe('toListItem')` — GS1 UPI with gtin+batch+serial → `{uuid,
-  referenceId, type:'GS1', gtin:<GTIN-14>, batch, serial, granularity:'item', digitalLink:
-  '<base>/01/<gtin>/10/<batch>/21/<serial>'}` when called as
+referenceId, type:'GS1', gtin:<GTIN-14>, batch, serial, granularity:'item', digitalLink:
+'<base>/01/<gtin>/10/<batch>/21/<serial>'}` when called as
   `upi.toListItem({resolverBase:'https://id.example.com', passportPublished:false})`; bare-GTIN GS1
   UPI → granularity `'model'`, `digitalLink:'<base>/01/<gtin>'`; non-GS1 → `{gtin:null,batch:null,
-  serial:null,granularity:null,digitalLink:null}`; `passportPublished` passed through verbatim. The
+serial:null,granularity:null,digitalLink:null}`; `passportPublished` passed through verbatim. The
   returned object parses against `UniqueProductIdentifierListItemDtoSchema` (import from `@open-dpp/dto`).
 - **Implementation:** add `toListItem({resolverBase, passportPublished}: {resolverBase?: string;
-  passportPublished: boolean})` returning `this.granularity` + `digitalLink` (computed via
+passportPublished: boolean})` returning `this.granularity` + `digitalLink` (computed via
   `this.buildDigitalLink(resolverBase)` only when gs1 present AND resolverBase provided, else null).
   **Build the result by explicitly SELECTING the list-item fields (uuid, referenceId, type, gtin, batch,
   serial, granularity, digitalLink, passportPublished) — do NOT spread `toPlain()` wholesale.** This is a
@@ -399,13 +415,14 @@ number.
 - **Depends on:** 9, 15
 
 #### Slice 17 — Permalink domain: `kind`, `primary`, nullable config, GS1 fields on create/fromPlain/toPlain
+
 - **Layer:** domain
 - **Files:** `apps/main/src/permalink/domain/permalink.ts`, `apps/main/src/permalink/domain/permalink.spec.ts`
 - **Failing test(s) first:** modify `baseInput()` to include `kind:'presentation'` (or rely on
   default). Add `describe('polymorphism & new fields')` — (1) `create` for a presentation permalink
   defaults `kind:'presentation'`, `primary:false`, `uniqueProductIdentifierId:null`,
   `gs1ResolverBase:null`, `gs1DataAttributes:null`; (2) `create` for `{kind:'gs1-link',
-  uniqueProductIdentifierId:<uuid>, presentationConfigurationId:null}` succeeds and exposes the
+uniqueProductIdentifierId:<uuid>, presentationConfigurationId:null}` succeeds and exposes the
   readonly fields; (3) `create` throws `ValueError` when gs1-link lacks `uniqueProductIdentifierId`;
   (4) throws `ValueError` when presentation has null/missing `presentationConfigurationId`; (5) throws
   `ValueError` when a presentation permalink is given `gs1ResolverBase`/`gs1DataAttributes`; (6)
@@ -413,16 +430,17 @@ number.
   `fromPlain` rehydrates a legacy doc (defaults). Existing `toPlain`/`fromPlain` round-trip and
   "non-uuid presentationConfigurationId" tests stay valid for presentation kind.
 - **Implementation:** extend the private ctor with `kind, primary, uniqueProductIdentifierId,
-  gs1ResolverBase, gs1DataAttributes` (after `presentationConfigurationId`; update both static
+gs1ResolverBase, gs1DataAttributes` (after `presentationConfigurationId`; update both static
   constructions). `presentationConfigurationId` type → `string|null`. `create()` parses
   `PermalinkInvariantsSchema` (kind-discriminated, defaults `kind:'presentation'`, `primary:false`);
   `fromPlain` parses `PermalinkDtoSchema` (legacy defaults); both wrap `ZodError` as `ValueError`.
   `toPlain()` returns all fields (pass the GS1 map through as-is).
 - **Acceptance:** spec GREEN (modified + new); run `cd apps/main && NODE_OPTIONS=--experimental-vm-modules
-  pnpm exec jest src/permalink/domain/permalink.spec.ts`.
+pnpm exec jest src/permalink/domain/permalink.spec.ts`.
 - **Depends on:** 13
 
 #### Slice 18 — Permalink domain: `withPrimary` / `withGs1ResolverBase` / `withGs1DataAttributes`
+
 - **Layer:** domain
 - **Files:** `apps/main/src/permalink/domain/permalink.ts`, `apps/main/src/permalink/domain/permalink.spec.ts`
 - **Failing test(s) first:** `describe('new withX methods')` — (1) `withPrimary(true)` returns a new
@@ -455,6 +473,7 @@ number.
 > "DECISION" slice from the repo draft is folded into this note rather than a standalone slice.
 
 #### Slice 19 — Permalink schema/repo: persist `organizationId`, `primary`, nullable `presentationConfigurationId`
+
 - **Layer:** infra
 - **Files:** `apps/main/src/permalink/infrastructure/permalink.schema.ts`,
   `apps/main/src/permalink/infrastructure/permalink.repository.ts`,
@@ -474,6 +493,7 @@ number.
 - **Depends on:** 12, 17
 
 #### Slice 20 — Permalink schema/repo: persist GS1-link fields (`uniqueProductIdentifierId`, `gs1ResolverBase`, `gs1DataAttributes`)
+
 - **Layer:** infra
 - **Files:** `apps/main/src/permalink/infrastructure/permalink.schema.ts`,
   `apps/main/src/permalink/infrastructure/permalink.repository.ts`,
@@ -492,6 +512,7 @@ number.
 - **Depends on:** 19, 4
 
 #### Slice 21 — Permalink repo: `deleteById`
+
 - **Layer:** infra
 - **Files:** `apps/main/src/permalink/infrastructure/permalink.repository.ts`,
   `.../permalink.repository.spec.ts`
@@ -503,6 +524,7 @@ number.
 - **Depends on:** 19
 
 #### Slice 22 — Permalink repo: `findPrimaryByPassportId`, `findGs1LinkByUpiId`, `findAllByOrganizationId`
+
 - **Layer:** infra
 - **Files:** `apps/main/src/permalink/infrastructure/permalink.repository.ts`,
   `apps/main/src/permalink/infrastructure/permalink.schema.ts`,
@@ -516,10 +538,10 @@ number.
     (null UPI ref) is never matched.
   - `findAllByOrganizationId` — 3 permalinks for orgA (mix of kinds) + 1 for orgB; returns exactly
     orgA's 3 sorted `createdAt` desc; orgB absent; with `limit:2` the first `PagingResult` has 2 items
-    + non-null cursor, the cursor returns the remainder with no overlap. **Tiebreaker test:** seed at
-    least two orgA permalinks with IDENTICAL `createdAt` and assert that paging through them with
-    `limit:1` each step returns every permalink exactly once (no overlap, no loss) — this exercises the
-    `_id` tiebreaker, not just distinct timestamps.
+    - non-null cursor, the cursor returns the remainder with no overlap. **Tiebreaker test:** seed at
+      least two orgA permalinks with IDENTICAL `createdAt` and assert that paging through them with
+      `limit:1` each step returns every permalink exactly once (no overlap, no loss) — this exercises the
+      `_id` tiebreaker, not just distinct timestamps.
 - **⚠️ Pagination correctness — do NOT reuse the generic `findAllByOrganizationId` helper as-is for
   permalinks.** The generic helper in `lib/repositories.ts` sorts and cursor-filters on a Mongo field
   literally named `id` (`.sort({ createdAt: -1, id: -1 })` and `id: { $lt: decodeCursor(...).id }`,
@@ -544,6 +566,7 @@ number.
 - **Depends on:** 19, 20
 
 #### Slice 23 — UPI presentation DTO re-exports shared schemas (single source of truth)
+
 - **Layer:** infra/dto-glue
 - **Files:** `apps/main/src/unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema.ts`,
   `.../unique-product-identifier-dto.schema.spec.ts` (new)
@@ -561,6 +584,7 @@ number.
 - **Depends on:** 8, 9, 10, 11
 
 #### Slice 24 — UPI schema/repo: persist `organizationId` + `findAllByOrganizationId` (custom cursor query)
+
 - **Layer:** infra (+ domain field)
 - **Files:** `apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts`,
   `apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.ts`,
@@ -575,7 +599,7 @@ number.
   `{organizationId, createdAt:-1, _id:-1}`; update `save` (`findOneAndUpdate $set`) and
   `convertToDomain` to carry it; UPI domain (`create`/`createGs1`/`loadFromDb`/`toPlain`) gains
   `organizationId` (sourced from the owning passport). Implement `findAllByOrganizationId(orgId,
-  options?:{pagination?})` as a **custom** query mirroring `activity.repository.ts findByAggregateId`
+options?:{pagination?})` as a **custom** query mirroring `activity.repository.ts findByAggregateId`
   — `find({organizationId, …cursorFilter}).sort({createdAt:-1,_id:-1}).limit()`, building the cursor
   from the **doc's** `createdAt + _id`. Returns `PagingResult<UniqueProductIdentifier>`.
 - **⚠️ Regression note (cross-slice with Slice 16/60):** this slice adds `organizationId` to UPI
@@ -590,6 +614,7 @@ number.
 - **Depends on:** 15 (domain) ; 23 (org field consumers compile)
 
 #### Slice 25 — Permalink schema-version bump + migrate-on-read backfill (`primary` + null GS1 fields + org tolerance)
+
 - **Layer:** infra
 - **Files:** `apps/main/src/permalink/infrastructure/permalink.schema.ts`,
   `apps/main/src/permalink/infrastructure/permalink.repository.ts`,
@@ -598,7 +623,7 @@ number.
   - "saves a permalink at the latest schema version (1.3.0) with primary defaulted true and GS1 fields
     null" — save, read the RAW doc via `connection.collection('permalinks').findOne({_id})`, assert
     `_schemaVersion === '1.3.0'`, `primary === true` (default), `uniqueProductIdentifierId/gs1ResolverBase/
-    gs1DataAttributes === null`.
+gs1DataAttributes === null`.
   - "migrates a legacy permalink (1.2.0, no primary/GS1 fields) to primary=true with null GS1 fields"
     — insert a raw legacy doc with `_schemaVersion:'1.2.0'`, `presentationConfigurationId` set, no
     new fields, via `.save({validateBeforeSave:false})`; `findOneOrFail` returns `primary:true`, the
@@ -620,9 +645,9 @@ number.
     a backfill job).
 - **Implementation:** add `v1_3_0:'1.3.0'` to `PermalinkDocVersion`; default `_schemaVersion` to it.
   Add a pure per-doc `migrate1_2_0To1_3_0(plain)` → `{ ...plain, primary: plain.primary ?? false,
-  uniqueProductIdentifierId: plain.uniqueProductIdentifierId ?? null, gs1ResolverBase:
-  plain.gs1ResolverBase ?? null, gs1DataAttributes: plain.gs1DataAttributes ?? null, _schemaVersion:
-  v1_3_0 }`. **NOTE the default is `false`, not `true`** — a per-doc migration cannot see siblings, so it
+uniqueProductIdentifierId: plain.uniqueProductIdentifierId ?? null, gs1ResolverBase:
+plain.gs1ResolverBase ?? null, gs1DataAttributes: plain.gs1DataAttributes ?? null, _schemaVersion:
+v1_3_0 }`. **NOTE the default is `false`, not `true`** — a per-doc migration cannot see siblings, so it
   must NOT unconditionally mint a primary (that is the multi-primary bug). Add `fromPlainWithMigration(plain)`
   (guard `_schemaVersion <= v1_2_0`) → step → `fromPlain`. Route `findOne`/`findOneOrFail` and the
   **inline** `Permalink.fromPlain` calls in `findBySlug`/`findByPresentationConfigurationId` through it.
@@ -640,6 +665,7 @@ number.
 - **Depends on:** 19, 20, 22
 
 #### Slice 25.1 — Eager backfill runner: populate `organizationId` + normalize `primary` (one-shot, idempotent)
+
 - **Layer:** infra/service (one-shot migration)
 - **Files:** `apps/main/src/permalink/infrastructure/permalink-backfill.service.ts` (new),
   `apps/main/src/unique-product-identifier/infrastructure/upi-backfill.service.ts` (new) — or a single
@@ -682,6 +708,7 @@ number.
 - **Depends on:** 19, 20, 24, 25 ; PassportRepository (`findByIds`, Slice 34)
 
 #### Slice 26 — UPI: no-GS1-backfill regression (and schema-version no-op)
+
 - **Layer:** infra
 - **Files:** `apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts`
 - **⚠️ This is a CHARACTERIZATION / regression test — expected GREEN on first run (NOT a RED→GREEN cycle).**
@@ -703,6 +730,7 @@ number.
 ### PART E — Application services & GS1 resolver (`apps/main/.../application`)
 
 #### Slice 27 — `resolveToPassport` tolerates a nullable `presentationConfigurationId`
+
 - **Layer:** service
 - **Files:** `apps/main/src/permalink/application/services/permalink.application.service.ts`,
   `.../permalink.application.service.spec.ts`
@@ -718,6 +746,7 @@ number.
 - **Depends on:** 17, 12
 
 #### Slice 28 — `resolveGs1ResolverBase` pure helper (per-permalink override beats the cascade)
+
 - **Layer:** service
 - **Files:** `apps/main/src/permalink/application/services/permalink.application.service.ts`,
   `apps/main/src/permalink/application/services/resolve-public-url.spec.ts`
@@ -732,6 +761,7 @@ number.
 - **Depends on:** 17
 
 #### Slice 29 — Primary management (first presentation permalink is primary; `setPrimary` moves the flag)
+
 - **Layer:** service
 - **Files:** `apps/main/src/permalink/application/services/permalink.application.service.ts`,
   `.../permalink.application.service.spec.ts`
@@ -753,6 +783,7 @@ number.
 - **Depends on:** 27, 22, 18
 
 #### Slice 30 — Public resolution uses the passport's PRIMARY permalink (not `permalink[0]`)
+
 - **Layer:** service
 - **Files:** `apps/main/src/unique-product-identifier/application/services/gs1-identity.service.ts`,
   `.../gs1-identity.service.spec.ts`, `.../permalink.application.service.spec.ts`,
@@ -785,6 +816,7 @@ number.
 - **Depends on:** 29, 22, 18 (`withPrimary` for the seed fix)
 
 #### Slice 31 — `resolveGs1KeyToPublicUrl` resolves per-UPI (own config else passport primary)
+
 - **Layer:** service
 - **Files:** `apps/main/src/unique-product-identifier/application/services/gs1-identity.service.ts`,
   `.../gs1-identity.service.spec.ts`
@@ -805,8 +837,8 @@ number.
   silent about it today.)
 - **Implementation:** (1) `findByGs1Key` → upi or 404; (2) `findGs1LinkByUpiId(upi.uuid)`; (3)
   `target = (gs1Link with non-null presentationConfigurationId) ? gs1Link :
-  findPrimaryByPassportId(upi.referenceId)` (404 if none); (4) `resolveToPassport(target.id,
-  undefined)` — note this resolves the publish-gate + rendered passport from `target`'s OWN config (which,
+findPrimaryByPassportId(upi.referenceId)` (404 if none); (4) `resolveToPassport(target.id,
+undefined)` — note this resolves the publish-gate + rendered passport from `target`'s OWN config (which,
   in the own-config branch, may be a different passport than the UPI's `referenceId`); (5)
   `resolvePublicUrlWithFreeze(...)`. (The Digital-Link STRING assembly — UPI key path + `?`+attributes —
   is a separate read/DTO concern surfaced on `PermalinkPublicDto` and rendered by the QR in Slices 71/75;
@@ -821,6 +853,7 @@ number.
 - **Depends on:** 30, 27, 22
 
 #### Slice 32 — `UpiCollectionService.create` (GS1 UPI for a DRAFT passport; duplicate key → 409)
+
 - **Layer:** service
 - **Files:** `apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts` (new),
   `.../upi-collection.service.spec.ts` (new),
@@ -841,6 +874,7 @@ number.
 - **Depends on:** 10, 24, 16
 
 #### Slice 33 — `UpiCollectionService.update` / `delete` (single UPI by id, draft-only, system rows read-only)
+
 - **Layer:** service
 - **Files:** `apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts`,
   `.../upi-collection.service.spec.ts`, `apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.ts`
@@ -854,7 +888,7 @@ number.
 - **Implementation:** add `update`/`delete` to `UpiCollectionService`. **Guard location + status:** the
   system-row read-only check lives in the SERVICE (the UPI domain has no system/read-only concept) — as
   the first check in both methods: `if (upi.type !== ExternalIdentifierType.GS1) throw new
-  ConflictException('System unique product identifiers are read-only')`. Then load its passport, assert
+ConflictException('System unique product identifiers are read-only')`. Then load its passport, assert
   `isDraft()` else `ConflictException`. `update` → `withGs1` + `save` (dup-key → `ConflictException`).
   `delete` → a NEW repo `deleteById(uuid)` (single-id; must NOT nuke siblings). **409 Conflict is the
   pinned status for all read-only / draft-freeze / duplicate-key rejections** (consistent with the
@@ -863,6 +897,7 @@ number.
 - **Depends on:** 32, 11
 
 #### Slice 34 — `UpiCollectionService.list` (org-scoped, all UPIs, system rows flagged read-only)
+
 - **Layer:** service
 - **Files:** `apps/main/src/unique-product-identifier/application/services/upi-collection.service.ts`,
   `.../upi-collection.service.spec.ts`,
@@ -898,6 +933,7 @@ number.
 - **Depends on:** 32, 24, 16 ; PassportRepository (`findByIds`)
 
 #### Slice 35 — Permalink service: `createPresentationPermalink` (extra, non-primary)
+
 - **Layer:** service
 - **Files:** `apps/main/src/permalink/application/services/permalink.application.service.ts`,
   `.../permalink.application.service.spec.ts`
@@ -912,6 +948,7 @@ number.
 - **Depends on:** 29
 
 #### Slice 36 — Permalink service: `createGs1LinkPermalink` (one per UPI; optional own config/base/attrs)
+
 - **Layer:** service
 - **Files:** `apps/main/src/permalink/application/services/permalink.application.service.ts`,
   `.../permalink.application.service.spec.ts`
@@ -922,13 +959,14 @@ number.
   key/value surfaces as `ValueError` (delegated to domain/DTO); (d) a gs1-link permalink is never
   primary.
 - **Implementation:** `createGs1LinkPermalink({uniqueProductIdentifierId, presentationConfigurationId?,
-  gs1ResolverBase?, gs1DataAttributes?}, options?)` — build via `Permalink.create` (gs1-link variant);
+gs1ResolverBase?, gs1DataAttributes?}, options?)` — build via `Permalink.create` (gs1-link variant);
   enforce one-per-UPI with `findGs1LinkByUpiId` pre-check + `isDuplicateKeyError` → Conflict (the
   partial unique index from Slice 20 is the backstop); persist via `repo.save`.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 27, 17, 14, 22, 20
 
 #### Slice 37 — Permalink service: `deletePermalink` (guarded)
+
 - **Layer:** service
 - **Files:** `apps/main/src/permalink/application/services/permalink.application.service.ts`,
   `.../permalink.application.service.spec.ts`
@@ -944,6 +982,7 @@ number.
 - **Depends on:** 29, 36, 21, 22
 
 #### Slice 38 — Retire the 1:1 `Gs1IdentityService` write methods
+
 - **Layer:** service
 - **Files:** `apps/main/src/unique-product-identifier/application/services/gs1-identity.service.ts`,
   `apps/main/src/unique-product-identifier/unique.product.identifier.module.ts`,
@@ -953,12 +992,12 @@ number.
   primary) tests; **KEEP `getIdentity`** (it still backs the read-only `GET /:id/gs1-identity` in
   Slice 44, re-pinned to the "newest GS1 UPI" semantic) — its describe stays here or moves with Slice 44,
   but it is NOT deleted; assert the file no longer references `deleteByReferenceIdAndType` and no longer
-  performs any GS1 **write** via `findByReferenceIdAndType(GS1)` (a GS1 *read* in `getIdentity` is allowed).
+  performs any GS1 **write** via `findByReferenceIdAndType(GS1)` (a GS1 _read_ in `getIdentity` is allowed).
 - **Implementation:** delete only the WRITE methods `setIdentity`/`removeIdentity` (and their 1:1 repo
   usage). **Retain `getIdentity`** (newest-GS1 read for the kept GET) and `resolveGs1KeyToPublicUrl`.
   Move `getResolverBase` into the shared `Gs1ResolverBaseService` consumed by `UpiCollectionService` +
   the resolver. Update module providers/exports.
-- **Acceptance:** spec GREEN; no remaining 1:1 GS1 *write* path in the service layer; `getIdentity` and
+- **Acceptance:** spec GREEN; no remaining 1:1 GS1 _write_ path in the service layer; `getIdentity` and
   the resolver still present and green.
 - **Depends on:** 32, 33, 34, 31
 
@@ -967,6 +1006,7 @@ number.
 ### PART F — Controllers + OpenAPI (`apps/main/.../presentation`, `apps/main/src/open-api-docs`)
 
 #### Slice 39 — OpenAPI: UPI collection paths
+
 - **Layer:** openapi
 - **Files:** `apps/main/src/open-api-docs/unique-product-identifier.paths.ts` (new),
   `.../unique-product-identifier.paths.spec.ts` (new)
@@ -982,6 +1022,7 @@ number.
 - **Depends on:** 9, 10, 11
 
 #### Slice 40 — OpenAPI: Permalink list + CRUD + set-primary paths
+
 - **Layer:** openapi
 - **Files:** `apps/main/src/open-api-docs/permalink.paths.ts`, `.../permalink.paths.spec.ts`
 - **Failing test(s) first:** extend the spec — `permalinkPaths` now exports `/permalinks` with `get`
@@ -990,12 +1031,13 @@ number.
   `createAasPaths('p')` assertions still pass; no duplicate keys.
 - **Implementation:** add org-scoped backoffice routes alongside the public `/p` routes. `/permalinks`
   GET → `PermalinkListDtoSchema`, POST → 201 Permalink DTO + `PermalinkCreateRequestSchema`;
-  `/permalinks/{id}` PATCH → Permalink DTO (slug/baseUrl/gs1*), DELETE → 204;
+  `/permalinks/{id}` PATCH → Permalink DTO (slug/baseUrl/gs1\*), DELETE → 204;
   `/permalinks/{id}/primary` POST → Permalink DTO. Keep the public block unchanged.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 12, 14
 
 #### Slice 41 — `UpiController` GET (org-scoped list)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts` (new),
   `.../unique-product-identifier.controller.spec.ts` (new),
@@ -1012,6 +1054,7 @@ number.
 - **Depends on:** 34, 39
 
 #### Slice 42 — `UpiController` POST (create GS1 for a DRAFT passport)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts`,
   `.../unique-product-identifier.controller.spec.ts`
@@ -1022,12 +1065,13 @@ number.
   → 400.
 - **Implementation:** `@Post()` — `@Body(new ZodValidationPipe(CreateGs1UniqueProductIdentifierRequestSchema))`.
   Reuse `SubjectAttributes.create` + `loadDigitalProductDocumentAndCheckOwnership(body.referenceId,
-  subject, orgId)` (403) and reject `!passport.isDraft()` (409). Delegate to
+subject, orgId)` (403) and reject `!passport.isDraft()` (409). Delegate to
   `UpiCollectionService.create(...)`; map `isDuplicateKeyError` → 409.
 - **Acceptance:** `-t create` GREEN.
 - **Depends on:** 41, 32
 
 #### Slice 43 — `UpiController` GET/PATCH/DELETE by id (edit/delete GS1 only while draft)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.ts`,
   `.../unique-product-identifier.controller.spec.ts`
@@ -1045,13 +1089,14 @@ number.
 - **Depends on:** 42, 33
 
 #### Slice 44 — `Gs1IdentityController`: retire PUT/DELETE writes, keep GET (pinned multiplicity semantic)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/unique-product-identifier/presentation/gs1-identity.controller.ts`,
   `.../gs1-identity.controller.spec.ts`,
   `apps/main/src/unique-product-identifier/application/services/gs1-identity.service.ts`
   (`getIdentity` must be RE-pinned, not deleted — see note; Slice 38 deletes only `setIdentity`/`removeIdentity`)
 - **⚠️ PINNED GET SEMANTIC under many-GS1-per-passport (ADR-0002: `findByReferenceIdAndType` "must change
-  to per-UPI lookups").** "Primary" is undefined for UPIs (primary is a *permalink* concept), and
+  to per-UPI lookups").** "Primary" is undefined for UPIs (primary is a _permalink_ concept), and
   `findByReferenceIdAndType(passportId, GS1)` returns an arbitrary "newest" row when several exist
   (repository.ts:96-127). **Decision for v1: `GET /passports/:id/gs1-identity` returns the MOST-RECENTLY-
   CREATED GS1 UPI's identity, and 404 when the passport has no GS1 UPI.** This is a deliberate
@@ -1078,13 +1123,14 @@ number.
 - **Depends on:** 43
 
 #### Slice 45 — `PermalinkController` GET `/permalinks` (org list, both kinds, primary flag)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/permalink/presentation/permalink.controller.ts`,
   `.../permalink.controller.spec.ts`
 - **Failing test(s) first:** extend — (a) GET `/permalinks` with org header + member cookie → 200
   array of all permalinks of the org, each carrying `id`, `primary`, and (for gs1-link) the UPI ref +
   GS1 fields; (b) cross-org excluded; (c) missing org header → 400; (d) non-member → 403; public `/p`
-  + `/p/:id` + AAS tests stay green.
+  - `/p/:id` + AAS tests stay green.
 - **Implementation:** `@Get('/permalinks')` — `@OrganizationId()`, `@MemberRoleDecorator()` (403).
   Delegate to a new `PermalinkApplicationService.listByOrganization(orgId)` (uses
   `findAllByOrganizationId`). Serialize via the polymorphic list DTO (resolve publicUrl for
@@ -1095,39 +1141,42 @@ number.
   `repo.findAllByOrganizationId` + serialization (small, folded into this slice).
 
 #### Slice 46 — `PermalinkController` POST `/permalinks` (create gs1-link or presentation)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/permalink/presentation/permalink.controller.ts`,
   `.../permalink.controller.spec.ts`
 - **Failing test(s) first:** (a) POST a gs1-link `{kind:'gs1-link', uniqueProductIdentifierId,
-  presentationConfigurationId?, gs1DataAttributes?, gs1ResolverBase?}` → 201 (UPI ref + nullable
+presentationConfigurationId?, gs1DataAttributes?, gs1ResolverBase?}` → 201 (UPI ref + nullable
   config); (b) a SECOND gs1-link for the SAME UPI → 409; (c) POST a presentation
   `{kind:'presentation', presentationConfigurationId}` → 201 (additional, non-primary); (d)
   cross-org/non-member → 403; (e) invalid `gs1DataAttributes` → 400; (f) missing org header → 400.
 - **Implementation:** `@Post('/permalinks')` —
   `@Body(new ZodValidationPipe(PermalinkCreateRequestSchema))`. Resolve the target passport (via
   `uniqueProductIdentifierId → upi.referenceId` for gs1-link, or `presentationConfigurationId →
-  config.referenceId` for presentation), run ownership (403). Delegate to
+config.referenceId` for presentation), run ownership (403). Delegate to
   `createGs1LinkPermalink`/`createPresentationPermalink`; map the one-per-UPI conflict → 409.
 - **Acceptance:** `-t "POST /permalinks"` GREEN.
 - **Depends on:** 45, 14, 4, 36, 35
 
 #### Slice 47 — `PermalinkController` PATCH `/permalinks/:id` (extend to gs1 fields; keep slug/baseUrl)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/permalink/presentation/permalink.controller.ts`,
   `.../permalink.controller.spec.ts`
 - **Failing test(s) first:** (a) PATCH a gs1-link permalink setting `gs1DataAttributes={'17':'251231'}`
-  + `gs1ResolverBase` → 200, reflected; (b) invalid AI value → 400; (c) slug/baseUrl still works
-  (regression); (d) PATCH a PUBLISHED presentation permalink's slug → 409/locked; (e) cross-org → 403.
+  - `gs1ResolverBase` → 200, reflected; (b) invalid AI value → 400; (c) slug/baseUrl still works
+    (regression); (d) PATCH a PUBLISHED presentation permalink's slug → 409/locked; (e) cross-org → 403.
 - **Implementation:** add `@Patch('/permalinks/:id')` (leave the public `PATCH /p/:id` as-is for
   back-compat) — `@Body(new ZodValidationPipe(PermalinkUpdateRequestSchema))` (now accepting nullable
   `gs1DataAttributes` + `gs1ResolverBase` + `primary`). Reuse ownership + the publish-freeze handling.
   Extend `PermalinkApplicationService.updatePermalink(id, {slug?,baseUrl?,gs1DataAttributes?,
-  gs1ResolverBase?})` (domain-driven via `withGs1ResolverBase`/`withGs1DataAttributes`). Map dup slug
+gs1ResolverBase?})` (domain-driven via `withGs1ResolverBase`/`withGs1DataAttributes`). Map dup slug
   → 409.
 - **Acceptance:** `-t "PATCH /permalinks"` GREEN; slug/baseUrl regression green.
 - **Depends on:** 46, 14, 4, 18
 
 #### Slice 48 — `PermalinkController` DELETE `/permalinks/:id` (guarded)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/permalink/presentation/permalink.controller.ts`,
   `.../permalink.controller.spec.ts`
@@ -1140,6 +1189,7 @@ number.
 - **Depends on:** 47, 37
 
 #### Slice 49 — `PermalinkController` POST `/permalinks/:id/primary` (set primary)
+
 - **Layer:** controller
 - **Files:** `apps/main/src/permalink/presentation/permalink.controller.ts`,
   `.../permalink.controller.spec.ts`
@@ -1156,6 +1206,7 @@ number.
 - **Depends on:** 48, 29, 18
 
 #### Slice 50 — OpenAPI: wire new path docs into the document
+
 - **Layer:** openapi
 - **Files:** `apps/main/src/open-api-docs/index.ts`, `apps/main/src/open-api-docs/index.spec.ts` (new
   or extend)
@@ -1173,6 +1224,7 @@ number.
 ### PART G — Typed API client (`packages/api-client`)
 
 #### Slice 51 — `uniqueProductIdentifiers` namespace: `list` + `getByUuid`
+
 - **Layer:** api-client
 - **Files:** `packages/api-client/src/dpp/unique-product-identifiers/unique-product-identifiers.namespace.ts` (new),
   `.../unique-product-identifiers.dtos.ts` (new), `.../unique-product-identifiers.namespace.spec.ts` (new)
@@ -1187,17 +1239,19 @@ number.
 - **Depends on:** 9
 
 #### Slice 52 — `uniqueProductIdentifiers.create`
+
 - **Layer:** api-client
 - **Files:** `.../unique-product-identifiers.namespace.ts`, `.../unique-product-identifiers.dtos.ts`,
   `.../unique-product-identifiers.namespace.spec.ts`
 - **Failing test(s) first:** `create({referenceId:'p-1', gtin:'04006381333931', batch:'LOT-1',
-  serial:'SN-1'})` → `post('/unique-product-identifiers', <verbatim body>)`.
+serial:'SN-1'})` → `post('/unique-product-identifiers', <verbatim body>)`.
 - **Implementation:** `create(data: CreateGs1UniqueProductIdentifierRequest)` →
   `post(endpoint, data)`; import the request type from the dtos shim.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 51, 10
 
 #### Slice 53 — `uniqueProductIdentifiers.update` + `delete`
+
 - **Layer:** api-client
 - **Files:** `.../unique-product-identifiers.namespace.ts`, `.../unique-product-identifiers.dtos.ts`,
   `.../unique-product-identifiers.namespace.spec.ts`
@@ -1210,6 +1264,7 @@ number.
 - **Depends on:** 52, 11
 
 #### Slice 54 — Permalink namespace: `listByOrganization`, `create`, `update`/`delete`/`setPrimary`
+
 - **Layer:** api-client
 - **Files:** `packages/api-client/src/dpp/permalinks/permalinks.namespace.ts`,
   `packages/api-client/src/dpp/permalinks/permalinks.dtos.ts`,
@@ -1217,12 +1272,12 @@ number.
 - **Failing test(s) first:** new spec — `list()` → `get('/permalinks')` (backoffice collection, org
   via header); REGRESSION: `getByPassport('p-1')` still `get('/p?passportId=p-1')`, `getById('slug')`
   still `get('/p/slug')`; `create({kind:'gs1-link', uniqueProductIdentifierId:'upi-1',
-  presentationConfigurationId:null, gs1DataAttributes:{...}, gs1ResolverBase:'...'})` → `post('/permalinks',
-  <verbatim>)` (and a presentation-kind body too); `updateById('pl-1', {slug:'s', baseUrl:null})` →
+presentationConfigurationId:null, gs1DataAttributes:{...}, gs1ResolverBase:'...'})` → `post('/permalinks',
+<verbatim>)` (and a presentation-kind body too); `updateById('pl-1', {slug:'s', baseUrl:null})` →
   `patch('/permalinks/pl-1', <verbatim>)`; `delete('pl-1')` → `delete('/permalinks/pl-1')`;
   `setPrimary('pl-1')` → `post('/permalinks/pl-1/primary')` (no body); all encode the id.
 - **Implementation:** add `backofficeEndpoint='/permalinks'`; `list()`, `create(data:
-  PermalinkCreateRequest)`, `updateById(id, data: PermalinkUpdateRequest)` (NOTE: the EXISTING public
+PermalinkCreateRequest)`, `updateById(id, data: PermalinkUpdateRequest)` (NOTE: the EXISTING public
   `update(id,body)` targets `/p/:id` — to avoid a name clash, **rename the legacy public method to
   `updateByResolver`** and use `updateById` for the backoffice CRUD; this plan picks that resolution),
   `delete(id)` (`<void>`), `setPrimary(id)`. Keep the `aas` sub-namespace + the public resolver methods.
@@ -1237,11 +1292,12 @@ number.
   keeping `apps/client` building between Slices 54 and 76.
 
 #### Slice 55 — Register namespaces on `DppApiClient` + index exports
+
 - **Layer:** api-client
 - **Files:** `packages/api-client/src/dpp/dpp-api-client.ts`, `packages/api-client/src/index.ts`,
   `packages/api-client/src/dpp/dpp-api-client.spec.ts` (new)
 - **Failing test(s) first:** `new DppApiClient({})` → `client.uniqueProductIdentifiers instanceof
-  UniqueProductIdentifiersNamespace` and `client.permalinks instanceof PermalinksNamespace`; import
+UniqueProductIdentifiersNamespace` and `client.permalinks instanceof PermalinksNamespace`; import
   both classes + the new request types from the package index (pins the re-exports; resolves under
   `tsc --noEmit`).
 - **Implementation:** declare + instantiate `public uniqueProductIdentifiers!` in
@@ -1251,6 +1307,7 @@ number.
 - **Depends on:** 53, 54
 
 #### Slice 56 — Remove the superseded 1:1 GS1 write surface from `PassportNamespace`
+
 - **Layer:** api-client (breaking)
 - **Files:** `packages/api-client/src/dpp/passport/passports.namespace.ts`,
   `packages/api-client/src/dpp/passport/gs1-identity.dtos.ts`, `packages/api-client/src/index.ts`,
@@ -1269,7 +1326,7 @@ number.
   this removal must land after Slice 76, not Slice 73 — otherwise `pnpm run build` (apps/client) breaks
   on the toolbar's dangling `getGs1Identity` reference.
 - **Pre-condition (verify before landing):** `grep -rn "getGs1Identity\|setGs1Identity\|deleteGs1Identity"
-  apps/client/src` returns nothing (all production call sites removed; only the deleted dialogs' specs,
+apps/client/src` returns nothing (all production call sites removed; only the deleted dialogs' specs,
   which are removed in Slice 76, may have referenced them).
 - **Acceptance:** spec GREEN; `tsc --noEmit` clean; no dangling imports; the grep above is empty.
 - **Depends on:** 55, 76
@@ -1283,13 +1340,14 @@ number.
 > none of the new polymorphic fields (`primary`, `kind`, `uniqueProductIdentifierId`, `gs1ResolverBase`,
 > `gs1DataAttributes`). Backend specs in Parts D–F that need permalinks with the new fields **must NOT
 > wait for these factory slices**: they construct permalinks via the DOMAIN (`Permalink.create({ kind,
-> … })`) or inline plain objects passed to `Permalink.fromPlain` / `repo.save`, exactly as the existing
+… })`) or inline plain objects passed to `Permalink.fromPlain` / `repo.save`, exactly as the existing
 > repo/service specs already do. The Part H factories (58/59) exist for the FRONTEND + DTO/cross-layer
 > specs that want one canonical builder; they are not a prerequisite for any backend RED. (If a future
 > author prefers a single updated factory consumed by every layer, pull Slices 58/59 to immediately after
 > Slice 12 — but as sequenced here, backend-via-domain is the rule and Part H ordering is correct.)
 
 #### Slice 57 — `gs1DataAttributesPlainFactory`
+
 - **Layer:** testing
 - **Files:** `packages/testing/src/fixtures/gs1/gs1-data-attributes.factory.ts` (new),
   `packages/testing/src/index.ts`, `.../gs1-data-attributes.factory.spec.ts` (new)
@@ -1302,6 +1360,7 @@ number.
 - **Depends on:** 4
 
 #### Slice 58 — Extend `permalinksPlainFactory` (polymorphic)
+
 - **Layer:** testing
 - **Files:** `packages/testing/src/fixtures/permalinks/permalinks.factory.ts`,
   `.../permalinks.factory.spec.ts` (new)
@@ -1319,6 +1378,7 @@ number.
 - **Depends on:** 57, 12
 
 #### Slice 59 — `permalinkPublicPlainFactory`
+
 - **Layer:** testing
 - **Files:** `packages/testing/src/fixtures/permalinks/permalink-public.factory.ts` (new),
   `packages/testing/src/index.ts`, `.../permalink-public.factory.spec.ts` (new)
@@ -1332,6 +1392,7 @@ number.
 - **Depends on:** 58, 12
 
 #### Slice 60 — `uniqueProductIdentifierPlainFactory` (+ list)
+
 - **Layer:** testing
 - **Files:** `packages/testing/src/fixtures/unique-product-identifier/unique-product-identifier.factory.ts` (new),
   `packages/testing/src/index.ts`, `.../unique-product-identifier.factory.spec.ts` (new)
@@ -1340,12 +1401,13 @@ number.
   batch/serial when requested); `referenceId` overridable; an array of mixed rows parses against the
   UPI list/list-item schema.
 - **Implementation:** factory typed against the UPI list-item / canonical DTO; default `{uuid, referenceId
-  (overridable), type:'OPEN_DPP_UUID', gtin:null}`; transient `type`/`gs1` + `gtin`/`batch`/`serial`
+(overridable), type:'OPEN_DPP_UUID', gtin:null}`; transient `type`/`gs1` + `gtin`/`batch`/`serial`
   with a known-valid GTIN-14 (e.g. `'04006381333931'`). Export from `index.ts`.
 - **Acceptance:** spec GREEN.
 - **Depends on:** 9
 
 #### Slice 61 — UPI create/update request factories
+
 - **Layer:** testing
 - **Files:** `packages/testing/src/fixtures/unique-product-identifier/unique-product-identifier-create-request.factory.ts` (new),
   `.../unique-product-identifier-update-request.factory.ts` (new), `packages/testing/src/index.ts`,
@@ -1360,6 +1422,7 @@ number.
 - **Depends on:** 10, 11, 60
 
 #### Slice 62 — Permalink create/update request factories
+
 - **Layer:** testing
 - **Files:** `packages/testing/src/fixtures/permalinks/permalink-request.factory.ts` (new),
   `packages/testing/src/index.ts`, `.../permalink-request.factory.spec.ts` (new)
@@ -1379,6 +1442,7 @@ number.
 ### PART I — Frontend: UPI list + dialogs + route (`apps/client`)
 
 #### Slice 63 — `useUniqueProductIdentifiers` composable
+
 - **Layer:** fe-composable
 - **Files:** `apps/client/src/composables/unique-product-identifiers.ts` (new), `.../*.spec.ts` (new)
 - **Failing test(s) first:** mirror `passports.spec.ts`; mock `../lib/api-client`
@@ -1388,12 +1452,13 @@ number.
   `createGs1Upi({referenceId, gtin, batch?, serial?})` calls create and resolves; (3) `deleteUpi(uuid)`
   calls deleteById; loading resets to false even on rejection (try/finally).
 - **Implementation:** export `useUniqueProductIdentifiers()` → `{upis, loading,
-  fetchUniqueProductIdentifiers, createGs1Upi, deleteUpi}`. Import `apiClient` + types from
+fetchUniqueProductIdentifiers, createGs1Upi, deleteUpi}`. Import `apiClient` + types from
   `@open-dpp/dto` + `PagingResult`. No router push in create. <400 lines, immutable.
 - **Acceptance:** `pnpm exec vitest run src/composables/unique-product-identifiers.spec.ts` GREEN.
 - **Depends on:** 9, 55
 
 #### Slice 64 — i18n keys for the UPI list, create dialog, GS1 link prompt
+
 - **Layer:** fe-i18n
 - **Files:** `apps/client/src/translations/en-US.json`, `de-DE.json`,
   `apps/client/src/translations/translations-upi.spec.ts` (new)
@@ -1417,6 +1482,7 @@ number.
 - **Depends on:** —
 
 #### Slice 65 — `UniqueProductIdentifierCreateDialog` (draft-passport picker + GTIN + qualifiers, GS1-only)
+
 - **Layer:** fe-component
 - **Files:** `apps/client/src/components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue` (new),
   `.../*.spec.ts` (new)
@@ -1424,18 +1490,19 @@ number.
   i18n, mock api-client + const) — (1) renders a draft-passport Select + GTIN/batch/serial inputs
   (`data-testid` `upi-create-passport`/`-gtin`/`-batch`/`-serial`); (2) an invalid batch/serial shows
   an error + disables submit (live `isValidCset82Component`); (3) clicking submit with a chosen draft
-  + valid GTIN invokes the create handler with `{referenceId:<selectedPassportId>, gtin, batch,
-  serial}`; (4) with NO draft passports submit is disabled + a `noDraftPassports` notice. Click the
-  Button, not form submit.
+  - valid GTIN invokes the create handler with `{referenceId:<selectedPassportId>, gtin, batch,
+serial}`; (4) with NO draft passports submit is disabled + a `noDraftPassports` notice. Click the
+    Button, not form submit.
 - **Implementation:** `defineModel<boolean>('visible')`; props: a `createGs1Upi` callback + a
   draftPassports list (prop or fetch via `passports.getAll({filter:{status:[Draft]}})`). PrimeVue
   Dialog + Select + InputText. GS1-only (no type picker). Live-validate batch/serial; surface 400 →
   `gtinInvalid`, 409 → `duplicate`. `canSubmit = draftSelected && gtin.trim() && !componentError &&
-  !busy`. On success `emit('created', upi)`. Plain `submit()` handler (avoid the jsdom hang). <400 lines.
+!busy`. On success `emit('created', upi)`. Plain `submit()` handler (avoid the jsdom hang). <400 lines.
 - **Acceptance:** `pnpm exec vitest run .../UniqueProductIdentifierCreateDialog.spec.ts` GREEN.
 - **Depends on:** 63, 64, 9
 
 #### Slice 66 — `Gs1DigitalLinkPromptDialog` (the "add a GS1 Digital Link?" step)
+
 - **Layer:** fe-component
 - **Files:** `apps/client/src/components/unique-product-identifier/Gs1DigitalLinkPromptDialog.vue` (new),
   `.../*.spec.ts` (new)
@@ -1449,6 +1516,7 @@ number.
 - **Depends on:** 64
 
 #### Slice 67 — `UniqueProductIdentifierListView` (org-scoped table; system read-only; create → prompt)
+
 - **Layer:** fe-view
 - **Files:** `apps/client/src/view/unique-product-identifiers/UniqueProductIdentifierListView.vue` (new),
   `.../*.spec.ts` (new)
@@ -1476,6 +1544,7 @@ number.
 - **Depends on:** 63, 65, 66
 
 #### Slice 68 — Route `/organizations/:organizationId/unique-product-identifiers`
+
 - **Layer:** fe-routing
 - **Files:** `apps/client/src/router/routes/unique-product-identifiers/unique-product-identifiers.ts` (new),
   `.../*.spec.ts` (new), `apps/client/src/router/routes/organizations.ts`
@@ -1489,6 +1558,7 @@ number.
 - **Depends on:** 67, 64
 
 #### Slice 69 — Sidebar entry → UPI list
+
 - **Layer:** fe-navigation
 - **Files:** `apps/client/src/components/navigation/SidebarContent.vue`,
   `apps/client/src/components/navigation/SidebarContent.spec.ts` (new or extend)
@@ -1505,6 +1575,7 @@ number.
 ### PART J — Frontend: Permalink list + CRUD + QR (`apps/client`)
 
 #### Slice 70 — `Gs1DataAttributesField` (AI-keyed map editor with per-AI validation)
+
 - **Layer:** fe-component
 - **Files:** `apps/client/src/components/permalinks/Gs1DataAttributesField.vue` (new), `.../*.spec.ts` (new)
 - **Failing test(s) first:** (a) adding a known non-key AI (`17`) + a valid value emits
@@ -1518,6 +1589,7 @@ number.
 - **Depends on:** 7
 
 #### Slice 71 — `Gs1LinkQrCode` (render the QR from a GS1 Digital Link permalink)
+
 - **Layer:** fe-component
 - **Files:** `apps/client/src/components/permalinks/Gs1LinkQrCode.vue` (new), `.../*.spec.ts` (new)
 - **Failing test(s) first:** given a gs1-link `PermalinkPublicDto` whose resolved Digital Link is
@@ -1533,13 +1605,14 @@ number.
 - **Depends on:** 6, 54
 
 #### Slice 72 — `PermalinkCreateGs1LinkDialog` (pick a UPI + data attributes + resolver base)
+
 - **Layer:** fe-component
 - **Files:** `apps/client/src/components/permalinks/PermalinkCreateGs1LinkDialog.vue` (new), `.../*.spec.ts` (new)
 - **Failing test(s) first:** with `uniqueProductIdentifiers.list` (or a UPI list source) mocked +
   `permalinks.create` mocked — (a) the UPI Select lists UPIs (label shows GTIN + key qualifiers); (b)
   selecting a UPI that already has a gs1-link permalink disables create + shows the "at most one per
   UPI" message; (c) Save calls `permalinks.create` with `{kind:'gs1-link', uniqueProductIdentifierId:
-  upi.id, gs1DataAttributes, gs1ResolverBase, presentationConfigurationId?}` + emits `created`; (d) a
+upi.id, gs1DataAttributes, gs1ResolverBase, presentationConfigurationId?}` + emits `created`; (d) a
   409 surfaces an inline error and keeps the dialog open; (e) Save blocked when no UPI chosen.
 - **Implementation:** Dialog + UPI Select (from the UPI list namespace) + embedded
   `Gs1DataAttributesField` + optional `gs1ResolverBase` InputText + optional presentation-config
@@ -1548,6 +1621,7 @@ number.
 - **Depends on:** 70, 54, 51
 
 #### Slice 73 — `PermalinkEditDialog` (polymorphic) + retire `Gs1SettingsDialog`/`PermalinkSettingsDialog` call sites
+
 - **Layer:** fe-component
 - **Files:** `apps/client/src/components/permalinks/PermalinkEditDialog.vue` (new), `.../*.spec.ts` (new)
 - **Failing test(s) first:** given a `PermalinkPublicDto` — (a) a PRESENTATION permalink shows
@@ -1565,13 +1639,14 @@ number.
   before the dialog files are deleted in Slice 76.
 
 #### Slice 74 — `PermalinkListView` (org-scoped table: both kinds + kind/primary/published columns + create)
+
 - **Layer:** fe-view
 - **Files:** `apps/client/src/view/permalinks/PermalinkListView.vue` (new), `.../*.spec.ts` (new)
 - **Failing test(s) first:** mirror `PassportListView.spec` (mock api-client/const/router/stores; stub
   DataTable+Column+Button) — `permalinks.listByOrganization` returns a presentation permalink (primary)
-  + a gs1-link permalink. Assert: (a) both rows render; (b) a kind indicator ('Presentation' vs 'GS1
-  Digital Link') + a Primary badge on the primary row; (c) the public URL is shown/linkable; (d) a
-  'Create GS1 link' header action toggles the create dialog; (e) the list re-fetches after `created`.
+  - a gs1-link permalink. Assert: (a) both rows render; (b) a kind indicator ('Presentation' vs 'GS1
+    Digital Link') + a Primary badge on the primary row; (c) the public URL is shown/linkable; (d) a
+    'Create GS1 link' header action toggles the create dialog; (e) the list re-fetches after `created`.
 - **Implementation:** `<DataTable :value=permalinks>` with columns kind / publicUrl / primary /
   published(frozen) / actions. Load via `permalinks.listByOrganization(indexStore.selectedOrganization)`
   on mount. Header action opens `PermalinkCreateGs1LinkDialog`; reload on `created`. Row actions slot
@@ -1580,6 +1655,7 @@ number.
 - **Depends on:** 54, 72
 
 #### Slice 74.1 — Register the `/organizations/:organizationId/permalinks` route (BEFORE deep-links push to it)
+
 - **Layer:** fe-routing
 - **Files:** `apps/client/src/router/routes/permalinks.ts` (new),
   `apps/client/src/router/routes/organizations.ts`, `apps/client/src/router/routes/permalinks.spec.ts` (new)
@@ -1599,6 +1675,7 @@ number.
 - **Depends on:** 74
 
 #### Slice 75 — Permalink list row actions: edit + show-QR (gs1-link rows only)
+
 - **Layer:** fe-view
 - **Files:** `apps/client/src/view/permalinks/PermalinkListView.vue`,
   `apps/client/src/view/permalinks/PermalinkListView.actions.spec.ts` (new)
@@ -1612,6 +1689,7 @@ number.
 - **Depends on:** 71, 73, 74
 
 #### Slice 76 — Permalink list: set-primary + guarded delete; then DELETE the three legacy toolbar dialogs
+
 - **Layer:** fe-view + cleanup
 - **Files:** `apps/client/src/view/permalinks/PermalinkListView.vue`,
   `apps/client/src/view/permalinks/PermalinkListView.delete-primary.spec.ts` (new),
@@ -1632,17 +1710,18 @@ number.
     `PassportQrCodeDialog` still opens.
 - **Implementation:** extend the list actions: Set-primary (hidden on the current primary), guarded
   Delete via `useConfirm`/`<ConfirmDialog>` with `canDelete = !published && !(presentation && (primary
-  || only-presentation-permalink))` (derive 'last presentation permalink' from the loaded list).
+|| only-presentation-permalink))` (derive 'last presentation permalink' from the loaded list).
   Replace the three toolbar `command:` handlers with deep-links; remove the three dialog mounts +
   imports + `gs1Identity`/`loadGs1Identity` refs; keep `PassportQrCodeDialog`. Then delete the three
   dead dialog files + specs (grep to confirm no remaining references).
 - **Acceptance:** both new view specs + the toolbar spec GREEN; `grep -rn
-  "PermalinkSettingsDialog\|Gs1SettingsDialog\|Gs1QrCodeDialog" apps/client/src` returns nothing after
+"PermalinkSettingsDialog\|Gs1SettingsDialog\|Gs1QrCodeDialog" apps/client/src` returns nothing after
   deletion.
 - **Depends on:** 74, 75, 68 (UPI route for the `?referenceId` deep-link target), 74.1 (permalink route
   for the `?passportId` deep-link target — both routes MUST exist before the toolbar pushes to them)
 
 #### Slice 77 — Permalink list honors `?passportId` filter (toolbar deep-links land filtered)
+
 - **Layer:** fe-view
 - **Files:** `apps/client/src/view/permalinks/PermalinkListView.vue`,
   `apps/client/src/view/permalinks/PermalinkListView.filter.spec.ts` (new)
@@ -1657,6 +1736,7 @@ number.
 - **Depends on:** 74
 
 #### Slice 78 — Permalink sidebar entry + i18n (route already registered in Slice 74.1)
+
 - **Layer:** fe-navigation/i18n
 - **Files:** `apps/client/src/components/navigation/SidebarContent.vue`,
   `apps/client/src/translations/en-US.json`, `de-DE.json`,
@@ -1667,7 +1747,7 @@ number.
 - **Failing test(s) first:** sidebar spec — a nav item `to` `/organizations/<org>/permalinks`, hidden
   when no org (`show() === false`); i18n parity for the `permalink.list.*` keys.
 - **Implementation:** add a sidebar item (reuse `LinkIcon`), `show: () => indexStore.selectedOrganization
-  !== null`; add the `permalink.list.*` i18n keys to both locale files.
+!== null`; add the `permalink.list.*` i18n keys to both locale files.
 - **Acceptance:** the sidebar spec GREEN; i18n parity holds.
 - **Depends on:** 74.1 (route exists), 74
 
@@ -1862,31 +1942,31 @@ graph TD
 
 ## 4. Coverage matrix (decision → slice)
 
-| # | Resolved decision (CONTEXT.md / ADR) | Slice(s) |
-|---|---|---|
-| D1 | UPI is first-class, owns its GS1 identity, references a passport (ADR-0002) | 8, 9, 15, 16, 23, 24, 60 (UPI domain already first-class; these formalize the contract) |
-| D2 | A passport may have MANY GS1 UPIs; each GS1 key globally unique | 24, 32, 42 (DB partial unique index pre-exists; create relies on it for the 409) |
-| D3 | UPI lifecycle freeze: create/edit/delete only while passport is draft | 32, 33, 42, 43 |
-| D4 | 1:1 `PUT/DELETE /passports/:id/gs1-identity` superseded by UPI-collection API | 38, 41, 42, 43, 44, 51, 52, 53, 56 |
-| D4a | `findByReferenceIdAndType(GS1)` (assumed 1-per-passport) must change under many-GS1; kept `GET /:id/gs1-identity` pinned to NEWEST GS1 UPI; the two `OPEN_DPP_UUID` callers (chat.gateway, passport.controller) unaffected | 38, 44 |
-| D5 | Permalink polymorphic (presentation OR gs1-link); `presentationConfigurationId` nullable | 12, 13, 17, 19, 27 |
-| D6 | gs1-link references a UPI; at most one such permalink per UPI | 20, 36, 46 (partial unique index + service guard) |
-| D7 | gs1-link may ALSO reference a presentation configuration (incl. cross-passport; config's passport gates resolution) | 12, 13, 14, 17, 31, 36 |
-| D8 | gs1-link carries a nullable GS1 data-attributes map | 4, 12, 17, 18, 20, 47, 70 |
-| D9 | gs1-link carries its own nullable GS1 resolver base | 12, 17, 18, 20, 28, 47 |
-| D10 | A passport may have several presentation permalinks; exactly one PRIMARY (incl. under migration) | 17, 18, 19, 25, 25.1, 29, 49 |
-| D11 | Resolution uses the primary instead of `permalink[0]` (incl. fixing the existing gs1-resolver seed helper) | 22, 30, 31 |
-| D12 | Guarded delete: no published, no last/primary presentation permalink; gs1-link deletes freely | 21, 37, 48, 76 |
-| D13 | GS1 Digital Link = resolverBase + UPI key-path + data-attribute query | 6, 71 |
-| D14 | Scan resolution: key → UPI → its gs1-link permalink → own config else passport primary | 31 |
-| D15 | GS1 data attributes: map keyed by AI; non-key AI keys only; value validated per AI; battle-tested GS1 source in `packages/dto` | 1, 2, 3, 4, 5, 7 |
-| D16 | Per-permalink `gs1ResolverBase` OVERRIDES the cascade (branding→instance→`OPEN_DPP_URL`) | 28, 47 |
-| D17 | UPI list (frontend): org-scoped; all UPIs; system rows read-only; GTIN/EAN shown not creatable; create GS1 only then "add a GS1 Digital Link?" prompt | 63, 64, 65, 66, 67, 68, 69, 34, 41 |
-| D18 | Permalink list (frontend): org-scoped; all permalinks; full CRUD; create gs1-link by picking a UPI; presentation gains primary + guarded delete | 45–49, 54, 72, 73, 74, 74.1, 75, 76, 78 |
-| D19 | Replace the three DPP-toolbar dialogs with deep-links into the two filtered lists; QR from a gs1-link permalink | 71, 76, 77 (and 67's `?referenceId` UPI deep-link target) |
-| D20 | Migration: backfill `primary` (+ null GS1 fields) on existing permalinks; existing GS1 UPIs stay link-less and use fallback | 25, 25.1, 26 |
-| D21 | Org-scoping requires `organizationId` denormalized onto both docs (settled in §1); eager backfill so org lists are complete | 19, 24, 25.1 |
-| D22 | Test factories mirror all new/changed shapes | 57, 58, 59, 60, 61, 62 |
+| #   | Resolved decision (CONTEXT.md / ADR)                                                                                                                                                                                       | Slice(s)                                                                                |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| D1  | UPI is first-class, owns its GS1 identity, references a passport (ADR-0002)                                                                                                                                                | 8, 9, 15, 16, 23, 24, 60 (UPI domain already first-class; these formalize the contract) |
+| D2  | A passport may have MANY GS1 UPIs; each GS1 key globally unique                                                                                                                                                            | 24, 32, 42 (DB partial unique index pre-exists; create relies on it for the 409)        |
+| D3  | UPI lifecycle freeze: create/edit/delete only while passport is draft                                                                                                                                                      | 32, 33, 42, 43                                                                          |
+| D4  | 1:1 `PUT/DELETE /passports/:id/gs1-identity` superseded by UPI-collection API                                                                                                                                              | 38, 41, 42, 43, 44, 51, 52, 53, 56                                                      |
+| D4a | `findByReferenceIdAndType(GS1)` (assumed 1-per-passport) must change under many-GS1; kept `GET /:id/gs1-identity` pinned to NEWEST GS1 UPI; the two `OPEN_DPP_UUID` callers (chat.gateway, passport.controller) unaffected | 38, 44                                                                                  |
+| D5  | Permalink polymorphic (presentation OR gs1-link); `presentationConfigurationId` nullable                                                                                                                                   | 12, 13, 17, 19, 27                                                                      |
+| D6  | gs1-link references a UPI; at most one such permalink per UPI                                                                                                                                                              | 20, 36, 46 (partial unique index + service guard)                                       |
+| D7  | gs1-link may ALSO reference a presentation configuration (incl. cross-passport; config's passport gates resolution)                                                                                                        | 12, 13, 14, 17, 31, 36                                                                  |
+| D8  | gs1-link carries a nullable GS1 data-attributes map                                                                                                                                                                        | 4, 12, 17, 18, 20, 47, 70                                                               |
+| D9  | gs1-link carries its own nullable GS1 resolver base                                                                                                                                                                        | 12, 17, 18, 20, 28, 47                                                                  |
+| D10 | A passport may have several presentation permalinks; exactly one PRIMARY (incl. under migration)                                                                                                                           | 17, 18, 19, 25, 25.1, 29, 49                                                            |
+| D11 | Resolution uses the primary instead of `permalink[0]` (incl. fixing the existing gs1-resolver seed helper)                                                                                                                 | 22, 30, 31                                                                              |
+| D12 | Guarded delete: no published, no last/primary presentation permalink; gs1-link deletes freely                                                                                                                              | 21, 37, 48, 76                                                                          |
+| D13 | GS1 Digital Link = resolverBase + UPI key-path + data-attribute query                                                                                                                                                      | 6, 71                                                                                   |
+| D14 | Scan resolution: key → UPI → its gs1-link permalink → own config else passport primary                                                                                                                                     | 31                                                                                      |
+| D15 | GS1 data attributes: map keyed by AI; non-key AI keys only; value validated per AI; battle-tested GS1 source in `packages/dto`                                                                                             | 1, 2, 3, 4, 5, 7                                                                        |
+| D16 | Per-permalink `gs1ResolverBase` OVERRIDES the cascade (branding→instance→`OPEN_DPP_URL`)                                                                                                                                   | 28, 47                                                                                  |
+| D17 | UPI list (frontend): org-scoped; all UPIs; system rows read-only; GTIN/EAN shown not creatable; create GS1 only then "add a GS1 Digital Link?" prompt                                                                      | 63, 64, 65, 66, 67, 68, 69, 34, 41                                                      |
+| D18 | Permalink list (frontend): org-scoped; all permalinks; full CRUD; create gs1-link by picking a UPI; presentation gains primary + guarded delete                                                                            | 45–49, 54, 72, 73, 74, 74.1, 75, 76, 78                                                 |
+| D19 | Replace the three DPP-toolbar dialogs with deep-links into the two filtered lists; QR from a gs1-link permalink                                                                                                            | 71, 76, 77 (and 67's `?referenceId` UPI deep-link target)                               |
+| D20 | Migration: backfill `primary` (+ null GS1 fields) on existing permalinks; existing GS1 UPIs stay link-less and use fallback                                                                                                | 25, 25.1, 26                                                                            |
+| D21 | Org-scoping requires `organizationId` denormalized onto both docs (settled in §1); eager backfill so org lists are complete                                                                                                | 19, 24, 25.1                                                                            |
+| D22 | Test factories mirror all new/changed shapes                                                                                                                                                                               | 57, 58, 59, 60, 61, 62                                                                  |
 
 **Previously flagged, NOW COVERED by a slice (post-review):**
 
@@ -1902,7 +1982,7 @@ graph TD
 
 **Decisions with NO implementing slice (deliberately out of scope):**
 
-- **Calendar validation of date AIs (e.g. AI 17 expiry).** Slices 3/4 validate GS1 *syntax* (N6),
+- **Calendar validation of date AIs (e.g. AI 17 expiry).** Slices 3/4 validate GS1 _syntax_ (N6),
   not a real calendar date. Intentionally out of scope for v1 (matches the GS1 toolkit). No slice.
 - **`formatGs1ElementString` rendering data attributes.** Slice 6 deliberately leaves it identity-only.
   No slice renders `(17) 251231` in the element string. Flagged, not planned.
@@ -1956,11 +2036,11 @@ the HTTP surface all hold before the client is rebuilt against them.
 8. **Part H (57-62)** — factories. Run `cd packages/testing && pnpm exec jest && pnpm exec tsc --noEmit`.
 9. **Part I (63-69)** — frontend UPI list/dialogs/route. Run
    `cd apps/client && pnpm exec vitest run src/composables/unique-product-identifiers.spec.ts
-   src/components/unique-product-identifier src/view/unique-product-identifiers
-   src/router/routes/unique-product-identifiers src/components/navigation src/translations/translations-upi.spec.ts`.
+src/components/unique-product-identifier src/view/unique-product-identifiers
+src/router/routes/unique-product-identifiers src/components/navigation src/translations/translations-upi.spec.ts`.
 10. **Part J (70-78)** — frontend permalink list/CRUD/QR + toolbar cleanup. Run
     `cd apps/client && pnpm exec vitest run src/components/permalinks src/view/permalinks
-    src/router/routes/permalinks.spec.ts src/components/digital-product-document/DigitalProductDocumentToolbar.spec.ts`.
+src/router/routes/permalinks.spec.ts src/components/digital-product-document/DigitalProductDocumentToolbar.spec.ts`.
 
 #### ✅ Full-stack-green checkpoint (definition of done)
 
@@ -1979,6 +2059,7 @@ grep -rn "PermalinkSettingsDialog\|Gs1SettingsDialog\|Gs1QrCodeDialog" apps/clie
 ```
 
 Single-test reminders:
+
 - backend: `cd apps/main && NODE_OPTIONS=--experimental-vm-modules pnpm exec jest <file>`
 - packages: `cd packages/<pkg> && pnpm exec jest <relative-spec-path>`
 - frontend: `cd apps/client && pnpm exec vitest run src/path/to/file.spec.ts`
@@ -2173,7 +2254,7 @@ deferred** (not blocking, but worth tracking).
   sidebar + i18n only.
 - **Pinned reject statuses.** Slices 33/43 (system-row read-only / draft-freeze / duplicate) → **409
   Conflict** (no 409/400 alternation); guard lives in the service (`if (upi.type !== GS1) throw
-  ConflictException`). Slices 29/49 set-primary on a gs1-link → **409**, cross-passport → **404** (each
+ConflictException`). Slices 29/49 set-primary on a gs1-link → **409**, cross-passport → **404** (each
   case asserts its exact exception).
 - **Relabelled non-RED "failing tests".** Slice 26 (UPI no-backfill) is a characterization test (expected
   GREEN on first run). Slice 64 (i18n) is a structural parity test; its key list is the single source for
@@ -2186,7 +2267,7 @@ deferred** (not blocking, but worth tracking).
 - **No DB-level exactly-one-primary constraint.** Enforced by service orchestration (Slices 29, 49) +
   migration normalization (Slices 25, 25.1). A direct DB partial-unique is impractical (no `passportId`
   column on `PermalinkDoc`). Risk: a defect in orchestration could transiently produce zero/multiple
-  primaries; resolution still returns *a* primary via `findPrimaryByPassportId` + `limit 1`.
+  primaries; resolution still returns _a_ primary via `findPrimaryByPassportId` + `limit 1`.
 - **Eager backfill is operational, not auto-run.** Slice 25.1 must be invoked once per existing instance
   before the UPI/Permalink lists are complete. Until then, migrate-on-read tolerates missing
   `organizationId` but org-scoped lists omit un-backfilled legacy rows. Gate rollout on running it.

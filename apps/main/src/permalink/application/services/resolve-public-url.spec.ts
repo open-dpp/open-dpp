@@ -1,8 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
+import { PermalinkKind } from "@open-dpp/dto";
 import { Branding } from "../../../branding/domain/branding";
 import { Permalink } from "../../domain/permalink";
-import { resolveFallbackBaseUrl, resolvePublicUrl } from "./permalink.application.service";
+import {
+  resolveFallbackBaseUrl,
+  resolveGs1ResolverBase,
+  resolvePublicUrl,
+} from "./permalink.application.service";
 
 const ENV_FALLBACK = "https://instance.example.com";
 
@@ -109,6 +114,100 @@ describe("resolvePublicUrl", () => {
     const result = resolvePublicUrl(permalink, null, ENV_FALLBACK);
 
     expect(result).toEqual(`${ENV_FALLBACK}/acme-widget`);
+  });
+});
+
+function makeGs1Permalink(
+  opts: { gs1ResolverBase?: string | null } = {},
+): Permalink {
+  return Permalink.create({
+    kind: PermalinkKind.GS1_LINK,
+    uniqueProductIdentifierId: randomUUID(),
+    gs1ResolverBase: opts.gs1ResolverBase ?? null,
+  });
+}
+
+describe("resolveGs1ResolverBase", () => {
+  it("returns the permalink's gs1ResolverBase when set, overriding branding gs1ResolverBaseUrl", () => {
+    const permalink = makeGs1Permalink({
+      gs1ResolverBase: "https://resolver.override.example.com",
+    });
+    const branding = Branding.create({
+      organizationId: "org",
+      gs1ResolverBaseUrl: "https://resolver.branding.example.com",
+    });
+
+    const result = resolveGs1ResolverBase(permalink, branding, "https://instance.example.com");
+
+    expect(result).toEqual("https://resolver.override.example.com");
+  });
+
+  it("returns the permalink's gs1ResolverBase, overriding the instance fallback", () => {
+    const permalink = makeGs1Permalink({
+      gs1ResolverBase: "https://resolver.override.example.com",
+    });
+    const branding = Branding.create({ organizationId: "org" });
+
+    const result = resolveGs1ResolverBase(permalink, branding, "https://instance.example.com");
+
+    expect(result).toEqual("https://resolver.override.example.com");
+  });
+
+  it("falls back to branding.gs1ResolverBaseUrl when permalink.gs1ResolverBase is null", () => {
+    const permalink = makeGs1Permalink({ gs1ResolverBase: null });
+    const branding = Branding.create({
+      organizationId: "org",
+      gs1ResolverBaseUrl: "https://resolver.branding.example.com",
+    });
+
+    const result = resolveGs1ResolverBase(permalink, branding, "https://instance.example.com");
+
+    expect(result).toEqual("https://resolver.branding.example.com");
+  });
+
+  it("falls back to the instance (OPEN_DPP_URL) when both permalink.gs1ResolverBase and branding.gs1ResolverBaseUrl are null", () => {
+    const permalink = makeGs1Permalink({ gs1ResolverBase: null });
+    const branding = Branding.create({ organizationId: "org" });
+
+    const result = resolveGs1ResolverBase(permalink, branding, "https://instance.example.com");
+
+    expect(result).toEqual("https://instance.example.com");
+  });
+
+  it("falls back to the instance (OPEN_DPP_URL) when branding is null", () => {
+    const permalink = makeGs1Permalink({ gs1ResolverBase: null });
+
+    const result = resolveGs1ResolverBase(permalink, null, "https://instance.example.com");
+
+    expect(result).toEqual("https://instance.example.com");
+  });
+
+  it("canonicalises the override — lowercases host", () => {
+    const permalink = makeGs1Permalink({
+      gs1ResolverBase: "https://RESOLVER.Example.COM",
+    });
+
+    const result = resolveGs1ResolverBase(permalink, null, "https://instance.example.com");
+
+    expect(result).toEqual("https://resolver.example.com");
+  });
+
+  it("canonicalises the override — drops trailing slash", () => {
+    const permalink = makeGs1Permalink({
+      gs1ResolverBase: "https://resolver.example.com/",
+    });
+
+    const result = resolveGs1ResolverBase(permalink, null, "https://instance.example.com");
+
+    expect(result).toEqual("https://resolver.example.com");
+  });
+
+  it("canonicalises the instance fallback — drops trailing slash", () => {
+    const permalink = makeGs1Permalink({ gs1ResolverBase: null });
+
+    const result = resolveGs1ResolverBase(permalink, null, "https://instance.example.com/");
+
+    expect(result).toEqual("https://instance.example.com");
   });
 });
 

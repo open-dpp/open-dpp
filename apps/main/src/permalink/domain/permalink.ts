@@ -1,8 +1,12 @@
 import { randomUUID } from "node:crypto";
 import {
+  Gs1DataAttributes,
+  Gs1DataAttributesSchema,
   PermalinkBaseUrlSchema,
   PermalinkDtoSchema,
   PermalinkInvariantsSchema,
+  PermalinkKind,
+  PermalinkKindType,
   PermalinkPublishedUrlSchema,
   PermalinkSlugSchema,
 } from "@open-dpp/dto";
@@ -18,26 +22,60 @@ export class Permalink implements IPersistable, HasCreatedAt {
     public readonly slug: string | null,
     public readonly baseUrl: string | null,
     public readonly publishedUrl: string | null,
-    public readonly presentationConfigurationId: string,
+    public readonly presentationConfigurationId: string | null,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public readonly kind: PermalinkKindType,
+    public readonly primary: boolean,
+    public readonly uniqueProductIdentifierId: string | null,
+    public readonly gs1ResolverBase: string | null,
+    public readonly gs1DataAttributes: Gs1DataAttributes | null,
+    public readonly organizationId: string | null,
   ) {}
 
   static create(data: {
     id?: string;
-    presentationConfigurationId: string;
+    kind?: PermalinkKindType;
+    presentationConfigurationId?: string | null;
+    uniqueProductIdentifierId?: string | null;
+    primary?: boolean;
     slug?: string | null;
     baseUrl?: string | null;
+    gs1ResolverBase?: string | null;
+    gs1DataAttributes?: Gs1DataAttributes | null;
     createdAt?: Date;
     updatedAt?: Date;
+    organizationId?: string | null;
   }): Permalink {
     let parsed;
     try {
-      parsed = PermalinkInvariantsSchema.parse({
-        presentationConfigurationId: data.presentationConfigurationId,
+      const kind = data.kind ?? PermalinkKind.PRESENTATION;
+      const baseFields = {
+        kind,
         slug: data.slug ?? null,
         baseUrl: data.baseUrl ?? null,
-      });
+      };
+      let invariantsInput: Record<string, unknown>;
+      if (kind === PermalinkKind.GS1_LINK) {
+        invariantsInput = {
+          ...baseFields,
+          uniqueProductIdentifierId: data.uniqueProductIdentifierId,
+          presentationConfigurationId: data.presentationConfigurationId ?? null,
+          gs1ResolverBase: data.gs1ResolverBase ?? null,
+          gs1DataAttributes: data.gs1DataAttributes ?? null,
+        };
+      } else {
+        // For presentation kind, pass the gs1 fields so the schema can reject them if set
+        invariantsInput = {
+          ...baseFields,
+          presentationConfigurationId: data.presentationConfigurationId,
+          ...(data.gs1ResolverBase !== undefined && { gs1ResolverBase: data.gs1ResolverBase }),
+          ...(data.gs1DataAttributes !== undefined && {
+            gs1DataAttributes: data.gs1DataAttributes,
+          }),
+        };
+      }
+      parsed = PermalinkInvariantsSchema.parse(invariantsInput);
       if (data.id !== undefined) {
         z.uuid().parse(data.id);
       }
@@ -49,14 +87,39 @@ export class Permalink implements IPersistable, HasCreatedAt {
       throw error;
     }
     const now = DateTime.now();
+    const kind = parsed.kind;
+    const presentationConfigurationId =
+      kind === PermalinkKind.PRESENTATION
+        ? (parsed as { presentationConfigurationId: string }).presentationConfigurationId
+        : ((parsed as { presentationConfigurationId?: string | null }).presentationConfigurationId ??
+          null);
+    const uniqueProductIdentifierId =
+      kind === PermalinkKind.GS1_LINK
+        ? (parsed as { uniqueProductIdentifierId: string }).uniqueProductIdentifierId
+        : null;
+    const gs1ResolverBase =
+      kind === PermalinkKind.GS1_LINK
+        ? ((parsed as { gs1ResolverBase?: string | null }).gs1ResolverBase ?? null)
+        : null;
+    const gs1DataAttributes =
+      kind === PermalinkKind.GS1_LINK
+        ? ((parsed as { gs1DataAttributes?: Gs1DataAttributes | null }).gs1DataAttributes ?? null)
+        : null;
+
     return new Permalink(
       data.id ?? randomUUID(),
-      parsed.slug,
+      parsed.slug ?? null,
       parsed.baseUrl ?? null,
       null,
-      parsed.presentationConfigurationId,
+      presentationConfigurationId,
       data.createdAt ?? now,
       data.updatedAt ?? now,
+      kind,
+      data.primary ?? false,
+      uniqueProductIdentifierId,
+      gs1ResolverBase,
+      gs1DataAttributes,
+      data.organizationId ?? null,
     );
   }
 
@@ -71,6 +134,9 @@ export class Permalink implements IPersistable, HasCreatedAt {
       }
       throw error;
     }
+    const rawData = data as Record<string, unknown>;
+    const organizationId =
+      typeof rawData.organizationId === "string" ? rawData.organizationId : null;
     return new Permalink(
       parsed.id,
       parsed.slug,
@@ -79,16 +145,28 @@ export class Permalink implements IPersistable, HasCreatedAt {
       parsed.presentationConfigurationId,
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
+      parsed.kind,
+      parsed.primary,
+      parsed.uniqueProductIdentifierId,
+      parsed.gs1ResolverBase,
+      parsed.gs1DataAttributes,
+      organizationId,
     );
   }
 
   toPlain() {
     return {
       id: this.id,
+      kind: this.kind,
       slug: this.slug,
       baseUrl: this.baseUrl,
       publishedUrl: this.publishedUrl,
       presentationConfigurationId: this.presentationConfigurationId,
+      primary: this.primary,
+      uniqueProductIdentifierId: this.uniqueProductIdentifierId,
+      gs1ResolverBase: this.gs1ResolverBase,
+      gs1DataAttributes: this.gs1DataAttributes,
+      organizationId: this.organizationId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -115,6 +193,12 @@ export class Permalink implements IPersistable, HasCreatedAt {
       this.presentationConfigurationId,
       this.createdAt,
       DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      this.gs1DataAttributes,
+      this.organizationId,
     );
   }
 
@@ -139,6 +223,12 @@ export class Permalink implements IPersistable, HasCreatedAt {
       this.presentationConfigurationId,
       this.createdAt,
       DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      this.gs1DataAttributes,
+      this.organizationId,
     );
   }
 
@@ -161,6 +251,12 @@ export class Permalink implements IPersistable, HasCreatedAt {
       this.presentationConfigurationId,
       this.createdAt,
       DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      this.gs1DataAttributes,
+      this.organizationId,
     );
   }
 
@@ -168,5 +264,134 @@ export class Permalink implements IPersistable, HasCreatedAt {
     if (this.publishedUrl !== null) {
       throw new ValueError("Cannot modify a published permalink; slug and baseUrl are locked.");
     }
+  }
+
+  withPresentationConfigurationId(configId: string | null): Permalink {
+    this.assertNotPublished();
+    return new Permalink(
+      this.id,
+      this.slug,
+      this.baseUrl,
+      this.publishedUrl,
+      configId,
+      this.createdAt,
+      DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      this.gs1DataAttributes,
+      this.organizationId,
+    );
+  }
+
+  withPrimary(primary: boolean): Permalink {
+    // primary governs resolution — not frozen post-publish (per Slice 18 design decision)
+    return new Permalink(
+      this.id,
+      this.slug,
+      this.baseUrl,
+      this.publishedUrl,
+      this.presentationConfigurationId,
+      this.createdAt,
+      DateTime.now(),
+      this.kind,
+      primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      this.gs1DataAttributes,
+      this.organizationId,
+    );
+  }
+
+  /**
+   * Return a NEW Permalink with the organizationId set.
+   * Used by the backfill runner to denormalize the owning passport's org.
+   * Not frozen post-publish — org assignment is an infrastructure concern.
+   */
+  withOrganizationId(organizationId: string): Permalink {
+    return new Permalink(
+      this.id,
+      this.slug,
+      this.baseUrl,
+      this.publishedUrl,
+      this.presentationConfigurationId,
+      this.createdAt,
+      DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      this.gs1DataAttributes,
+      organizationId,
+    );
+  }
+
+  private assertGs1Kind(): void {
+    if (this.kind !== PermalinkKind.GS1_LINK) {
+      throw new ValueError("This operation is only allowed on a gs1-link permalink.");
+    }
+  }
+
+  withGs1ResolverBase(url: string | null): Permalink {
+    this.assertGs1Kind();
+    this.assertNotPublished();
+    let validated: string | null = null;
+    if (url !== null) {
+      const result = PermalinkBaseUrlSchema.safeParse(url);
+      if (!result.success) {
+        const details = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+        throw new ValueError(`Invalid Permalink GS1 resolver base: ${details.join("; ")}`, {
+          cause: result.error,
+        });
+      }
+      validated = result.data;
+    }
+    return new Permalink(
+      this.id,
+      this.slug,
+      this.baseUrl,
+      this.publishedUrl,
+      this.presentationConfigurationId,
+      this.createdAt,
+      DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      validated,
+      this.gs1DataAttributes,
+      this.organizationId,
+    );
+  }
+
+  withGs1DataAttributes(attrs: Gs1DataAttributes | null): Permalink {
+    this.assertGs1Kind();
+    this.assertNotPublished();
+    let validated: Gs1DataAttributes | null = null;
+    if (attrs !== null) {
+      const result = Gs1DataAttributesSchema.safeParse(attrs);
+      if (!result.success) {
+        const details = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+        throw new ValueError(`Invalid GS1 data attributes: ${details.join("; ")}`, {
+          cause: result.error,
+        });
+      }
+      validated = result.data;
+    }
+    return new Permalink(
+      this.id,
+      this.slug,
+      this.baseUrl,
+      this.publishedUrl,
+      this.presentationConfigurationId,
+      this.createdAt,
+      DateTime.now(),
+      this.kind,
+      this.primary,
+      this.uniqueProductIdentifierId,
+      this.gs1ResolverBase,
+      validated,
+      this.organizationId,
+    );
   }
 }

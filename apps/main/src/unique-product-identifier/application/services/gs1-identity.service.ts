@@ -1,16 +1,12 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { canonicaliseBaseUrl, Gs1IdentityResponse } from "@open-dpp/dto";
-import { EnvService } from "@open-dpp/env";
-import { Branding } from "../../../branding/domain/branding";
-import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
+import { type Gs1IdentityResponse } from "@open-dpp/dto";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
-import {
-  type Gs1IdentityInput,
-  UniqueProductIdentifier,
-} from "../../domain/unique.product.identifier";
+import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../infrastructure/unique-product-identifier.repository";
 import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
+import { Gs1ResolverBaseService } from "./gs1-resolver-base.service";
+import { Branding } from "../../../branding/domain/branding";
 
 /** The full assembled GS1 key a public resolver request carries. */
 export interface Gs1KeyInput {
@@ -22,11 +18,13 @@ export interface Gs1KeyInput {
 /**
  * Application service for a passport's GS1 identity.
  *
- * Owns the GS1 write path (set the identity — GTIN normalized to GTIN-14 plus an
- * optional batch/serial), the read path (return the identity plus the
- * server-assembled GS1 Digital Link), and the public resolution path (turn a
- * scanned full key into the passport's permalink URL, publish-gated via the
- * permalink).
+ * Owns the GS1 read path (return the newest-GS1-UPI identity plus the
+ * server-assembled GS1 Digital Link, backing the kept GET /:id/gs1-identity)
+ * and the public resolution path (turn a scanned full key into the passport's
+ * permalink URL, publish-gated via the permalink).
+ *
+ * The write path (set/remove identity) has been retired to `UpiCollectionService`
+ * (Slice 38). The resolver-base cascade is now owned by `Gs1ResolverBaseService`.
  */
 @Injectable()
 export class Gs1IdentityService {
@@ -36,80 +34,8 @@ export class Gs1IdentityService {
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly permalinkRepository: PermalinkRepository,
-    private readonly envService: EnvService,
-    private readonly instanceSettingsService: InstanceSettingsService,
+    private readonly gs1ResolverBaseService: Gs1ResolverBaseService,
   ) {}
-
-  /**
-   * Resolve the GS1 resolver base for assembling a passport's Digital Links via
-   * the cascade: per-organization branding override → instance-level setting →
-   * default (the canonicalised instance root `OPEN_DPP_URL`, bare — NOT the
-   * permalink `/p` base).
-   *
-   * The instance setting already folds in its env override (`OPEN_DPP_GS1_RESOLVER_BASE_URL`)
-   * via {@link InstanceSettingsService}. The resolved value is canonicalised
-   * (host lowercased, trailing slash dropped). A blank override is treated as
-   * absent. When `organizationId` is omitted, the per-org override is skipped.
-   */
-  async getResolverBase(organizationId?: string): Promise<string> {
-    const orgOverride = organizationId ? await this.loadOrgResolverOverride(organizationId) : null;
-    if (orgOverride) {
-      return canonicaliseBaseUrl(orgOverride);
-    }
-    const instanceSetting = await this.loadInstanceResolverSetting();
-    if (instanceSetting) {
-      return canonicaliseBaseUrl(instanceSetting);
-    }
-    return canonicaliseBaseUrl(this.envService.get("OPEN_DPP_URL"));
-  }
-
-  /**
-   * Load an organization's GS1 resolver override from its branding, tolerating a
-   * missing branding row (returns null so the cascade falls through). A blank
-   * value is treated as absent.
-   */
-  private async loadOrgResolverOverride(organizationId: string): Promise<string | null> {
-    try {
-      const branding = await this.permalinkApplicationService.loadBranding(organizationId);
-      return nonBlankOrNull(branding.gs1ResolverBaseUrl);
-    } catch (error) {
-      this.logger.warn(
-        `Branding load failed for organizationId=${organizationId}; resolving GS1 base without the per-org override`,
-        error instanceof Error ? error.stack : String(error),
-      );
-      return null;
-    }
-  }
-
-  /** Load the instance-level GS1 resolver setting (already env-overridden). */
-  private async loadInstanceResolverSetting(): Promise<string | null> {
-    const settings = await this.instanceSettingsService.getSettings();
-    return nonBlankOrNull(settings.gs1ResolverBaseUrl.value);
-  }
-
-  /**
-   * Set (create or replace) a passport's GS1 identity from raw input: a GTIN plus
-   * an optional batch / serial. Omitting batch / serial clears them.
-   *
-   * Goes through the domain entity so the GTIN is mod-10 validated and normalized
-   * to GTIN-14 and the batch/serial are CSET-82/length validated, then persists
-   * via the repository (never a field-level $set of domain state).
-   */
-  async setIdentity(
-    passportId: string,
-    input: Omit<Gs1IdentityInput, "gtin"> & { gtin: string },
-    organizationId?: string,
-  ): Promise<Gs1IdentityResponse> {
-    const existing = await this.uniqueProductIdentifierRepository.findByReferenceIdAndType(
-      passportId,
-      ExternalIdentifierType.GS1,
-    );
-    const next = existing
-      ? existing.withGs1(input)
-      : UniqueProductIdentifier.createGs1({ referenceId: passportId, ...input });
-    const saved = await this.uniqueProductIdentifierRepository.save(next);
-    return this.toResponse(saved, organizationId);
-  }
 
   /** Return a passport's GS1 identity, or null when it has none. */
   async getIdentity(
@@ -127,29 +53,22 @@ export class Gs1IdentityService {
   }
 
   /**
-   * Remove a passport's GS1 identity.
-   *
-   * Type-filtered to the `GS1` row so the canonical `OPEN_DPP_UUID` UPI (media,
-   * downloads, AI chat) is never affected. Removing a passport without a GS1
-   * identity is a no-op (idempotent); the controller surfaces "nothing to remove"
-   * as a 404 by checking for the identity first.
-   */
-  async removeIdentity(passportId: string): Promise<void> {
-    await this.uniqueProductIdentifierRepository.deleteByReferenceIdAndType(
-      passportId,
-      ExternalIdentifierType.GS1,
-    );
-  }
-
-  /**
    * Resolve a scanned full GS1 key (gtin + optional batch + optional serial) to
    * the passport's public permalink URL.
    *
-   * Publish-gating and branding are inherited from the permalink: an unpublished
+   * Resolution order (per-UPI first, fallback to passport primary):
+   * 1. Find the UPI by its exact GS1 key.
+   * 2. Look up the UPI's own GS1-link permalink (if any).
+   * 3. If the gs1-link permalink has a non-null `presentationConfigurationId`,
+   *    render THAT permalink (its config's passport governs the publish gate).
+   * 4. Otherwise (no gs1-link, or gs1-link has null config), fall back to the
+   *    passport's PRIMARY presentation permalink.
+   *
+   * Publish-gating is inherited from whichever permalink is selected: an unpublished
    * passport (with anonymous access) makes `resolveToPassport` throw NotFound.
    *
-   * @throws NotFoundException when no GS1 UPI carries the exact key or the passport
-   * has no permalink.
+   * @throws NotFoundException when no GS1 UPI carries the exact key, or when
+   * neither a usable gs1-link config nor a passport primary exists.
    */
   async resolveGs1KeyToPublicUrl(key: Gs1KeyInput): Promise<string> {
     const upi = await this.uniqueProductIdentifierRepository.findByGs1Key({
@@ -160,21 +79,35 @@ export class Gs1IdentityService {
     if (!upi) {
       throw new NotFoundException(`No passport found for GS1 key ${JSON.stringify(key)}`);
     }
-    const permalinks = await this.permalinkRepository.findAllByPassportId(upi.referenceId);
-    const permalink = permalinks[0];
-    if (!permalink) {
-      throw new NotFoundException(`No permalink found for passport ${upi.referenceId}`);
+
+    // Step 2 & 3: Check for a gs1-link permalink with its own presentation config.
+    const gs1LinkPermalink = await this.permalinkRepository.findGs1LinkByUpiId(upi.uuid);
+    let targetPermalink =
+      gs1LinkPermalink?.presentationConfigurationId != null ? gs1LinkPermalink : undefined;
+
+    // Step 4: Fall back to the passport's primary presentation permalink when no
+    // usable gs1-link config was found.
+    if (!targetPermalink) {
+      targetPermalink = await this.permalinkRepository.findPrimaryByPassportId(upi.referenceId);
     }
+
+    if (!targetPermalink) {
+      throw new NotFoundException(
+        `No usable permalink found for GS1 key ${JSON.stringify(key)}`,
+      );
+    }
+
     // Anonymous resolution: pass no access context so the permalink applies its
-    // publish gate (unpublished → NotFound).
+    // publish gate (unpublished → NotFound). The config's passport governs the gate
+    // in the gs1-link-with-own-config branch.
     const { passport } = await this.permalinkApplicationService.resolveToPassport(
-      permalink.id,
+      targetPermalink.id,
       undefined,
     );
     const branding = await this.loadBrandingForPin(passport.organizationId);
     const fallbackEnvUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();
     const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
-      permalink,
+      targetPermalink,
       passport,
       branding,
       fallbackEnvUrl,
@@ -203,7 +136,7 @@ export class Gs1IdentityService {
     upi: UniqueProductIdentifier,
     organizationId?: string,
   ): Promise<Gs1IdentityResponse> {
-    const resolverBase = await this.getResolverBase(organizationId);
+    const resolverBase = await this.gs1ResolverBaseService.getResolverBase(organizationId);
     return {
       uuid: upi.uuid,
       referenceId: upi.referenceId,
@@ -213,13 +146,4 @@ export class Gs1IdentityService {
       digitalLink: upi.buildDigitalLink(resolverBase),
     };
   }
-}
-
-/** Trim a nullable string, returning null for empty/blank values. */
-function nonBlankOrNull(value: string | null | undefined): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? null : trimmed;
 }

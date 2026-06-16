@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 import { z } from "zod";
 import { canonicaliseBaseUrl } from "../shared/permalink-base-url.schema";
+import { GS1_AI_TABLE } from "./gs1-ai-table.generated";
 
 /**
  * Zero-dependency GS1 Digital Link helpers, shared by the client and the server.
@@ -157,6 +158,87 @@ export const GS1_AI_BATCH = "10";
 /** The GS1 Application Identifier for a serial number. */
 export const GS1_AI_SERIAL = "21";
 
+/**
+ * Returns true when `ai` is a known GS1 data-attribute (non-key) Application
+ * Identifier — i.e. `type === 'D'` in the vendored GS1 AI table.
+ *
+ * Returns false for primary identifiers (type I), key qualifiers (type Q),
+ * unknown AIs, and any non-string/empty input.
+ */
+export function isGs1DataAttributeAi(ai: string): boolean {
+  return GS1_AI_TABLE[ai]?.type === "D";
+}
+
+/** Memoised per-AI compiled regex cache (anchored). */
+const _regexCache = new Map<string, RegExp>();
+
+/**
+ * Returns true when `value` is a valid value for the given GS1 data-attribute
+ * Application Identifier `ai`.
+ *
+ * Validates by:
+ * 1. Looking up `ai` in the vendored GS1 AI table; returns false if absent or
+ *    if the entry is not a data attribute (type !== 'D').
+ * 2. Rejecting an empty `value` (length must be ≥ 1).
+ * 3. Compiling an anchored `RegExp` from the table entry's `regex` fragment,
+ *    memoised in a module-level `Map<string, RegExp>`.
+ *
+ * Pure function, no I/O, no mutation.
+ */
+export function isValidGs1DataAttributeValue(ai: string, value: string): boolean {
+  const entry = GS1_AI_TABLE[ai];
+  if (!entry || entry.type !== "D") {
+    return false;
+  }
+  if (value.length < 1) {
+    return false;
+  }
+  let re = _regexCache.get(ai);
+  if (!re) {
+    re = new RegExp("^(?:" + entry.regex + ")$");
+    _regexCache.set(ai, re);
+  }
+  return re.test(value);
+}
+
+/**
+ * Build the canonical GS1 data-attribute query string from a map of validated AI → value pairs.
+ *
+ * - Returns `''` when `attributes` is empty, null, or undefined.
+ * - Iterates keys in ascending ASCII (lexicographic) order for deterministic output.
+ * - Validates each AI via `isGs1DataAttributeAi` and each value via `isValidGs1DataAttributeValue`;
+ *   throws `Error` on the first invalid entry.
+ * - Percent-encodes values via `encodeURIComponent`.
+ * - Prefixes the result with `'?'` only when at least one pair is present.
+ *
+ * Pure function, no I/O, no mutation. <30 lines.
+ */
+export function buildGs1DataAttributeQuery(
+  attributes: Record<string, string> | null | undefined,
+): string {
+  if (!attributes) {
+    return "";
+  }
+  // Use Object.entries (value typed as string) rather than keys + index access, so the
+  // helper type-checks under a consumer with noUncheckedIndexedAccess (e.g. apps/client,
+  // which type-checks this source directly). Sort ascending by AI for a canonical query.
+  const sortedEntries = Object.entries(attributes).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  if (sortedEntries.length === 0) {
+    return "";
+  }
+  const pairs: string[] = [];
+  for (const [ai, value] of sortedEntries) {
+    if (!isGs1DataAttributeAi(ai)) {
+      throw new Error(`"${ai}" is not a known GS1 data-attribute AI`);
+    }
+    if (!isValidGs1DataAttributeValue(ai, value)) {
+      throw new Error(`value for AI "${ai}" is invalid: "${value}"`);
+    }
+    pairs.push(`${ai}=${encodeURIComponent(value)}`);
+  }
+  return "?" + pairs.join("&");
+}
+
 export interface Gs1DigitalLinkParts {
   /** A GTIN; normalized to GTIN-14 before assembly. */
   gtin: string;
@@ -164,6 +246,12 @@ export interface Gs1DigitalLinkParts {
   batch?: string | null;
   /** Optional serial (AI `21`), CSET-82, ≤ 20 chars. */
   serial?: string | null;
+  /**
+   * Optional GS1 data-attribute map (non-key AIs only). When set, the pairs are
+   * sorted in ascending AI order, validated, and appended as a query string after
+   * the last path segment. Pass `null` or omit to emit no query string.
+   */
+  dataAttributes?: Record<string, string> | null;
 }
 
 /**
@@ -225,6 +313,7 @@ export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkP
   if (serial !== undefined) {
     url += `/${GS1_AI_SERIAL}/${encodeComponent(serial)}`;
   }
+  url += buildGs1DataAttributeQuery(parts.dataAttributes);
   return url;
 }
 

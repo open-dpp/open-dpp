@@ -35,7 +35,6 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
-import { ExternalIdentifierType } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 
 describe("Gs1IdentityController", () => {
@@ -91,41 +90,61 @@ describe("Gs1IdentityController", () => {
     return passport;
   }
 
-  it("PUT assigns a GTIN to a draft passport and returns its Digital Link", async () => {
+  // ---------------------------------------------------------------------------
+  // GET /passports/:id/gs1-identity
+  // ---------------------------------------------------------------------------
+
+  it("GET returns the most-recently-created GS1 UPI's identity when the passport has two", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createPassport(org!.id);
+    const repo = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
+
+    // First UPI: serial SN-FIRST
+    await repo.save(
+      UniqueProductIdentifier.createGs1({
+        referenceId: passport.id,
+        gtin: VALID_GTIN13,
+        serial: "SN-FIRST",
+      }),
+    );
+
+    // Small delay so that the second UPI gets a later createdAt timestamp.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Second (most-recent) UPI: serial SN-SECOND
+    await repo.save(
+      UniqueProductIdentifier.createGs1({
+        referenceId: passport.id,
+        gtin: VALID_GTIN13,
+        serial: "SN-SECOND",
+      }),
+    );
 
     const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
+      .get(`${basePath}/${passport.id}/gs1-identity`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: VALID_GTIN13 });
+      .send();
 
     expect(response.status).toEqual(200);
+    // Must be the SECOND (most-recently-created) UPI's serial, not the first.
+    expect(response.body.serial).toEqual("SN-SECOND");
     expect(response.body.gtin).toEqual(VALID_GTIN13_AS_14);
-    expect(response.body.referenceId).toEqual(passport.id);
-    expect(response.body.digitalLink).toMatch(new RegExp(`/01/${VALID_GTIN13_AS_14}$`));
-
-    const gs1 = await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .findByReferenceIdAndType(passport.id, ExternalIdentifierType.GS1);
-    expect(gs1?.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
   });
 
-  it("PUT rejects an invalid GTIN (bad check digit) with 400", async () => {
+  it("GET returns 404 when the passport has no GS1 identity", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createPassport(org!.id);
 
     const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
+      .get(`${basePath}/${passport.id}/gs1-identity`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: "4006381333930" });
+      .send();
 
-    expect(response.status).toEqual(400);
+    expect(response.status).toEqual(404);
   });
 
   it("GET returns the assigned GS1 identity", async () => {
@@ -147,254 +166,6 @@ describe("Gs1IdentityController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body.gtin).toEqual("00012345678905");
-  });
-
-  it("GET returns 404 when the passport has no GS1 identity", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-
-    const response = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send();
-
-    expect(response.status).toEqual(404);
-  });
-
-  it("PUT rejects a GTIN already used by another passport with 409", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const sharedGtin = "00111111111117";
-    const other = await createPassport(org!.id);
-    await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .save(UniqueProductIdentifier.createGs1({ referenceId: other.id, gtin: sharedGtin }));
-    const passport = await createPassport(org!.id);
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: sharedGtin });
-
-    expect(response.status).toEqual(409);
-  });
-
-  it("PUT rejects assigning a GTIN to a published passport with 409", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id, { published: true });
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: "00222222222224" });
-
-    expect(response.status).toEqual(409);
-  });
-
-  it("PUT edits an existing GS1 identity on a draft passport", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-    await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .save(
-        UniqueProductIdentifier.createGs1({ referenceId: passport.id, gtin: "00990000000103" }),
-      );
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: "00990000000103", serial: "SN-NEW" });
-
-    expect(response.status).toEqual(200);
-    expect(response.body.serial).toEqual("SN-NEW");
-  });
-
-  it("DELETE removes a GS1 identity from a draft passport and keeps the canonical UUID", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-    await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .save(
-        UniqueProductIdentifier.createGs1({ referenceId: passport.id, gtin: "00990000000110" }),
-      );
-
-    const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send();
-
-    expect(response.status).toEqual(204);
-
-    const repo = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
-    expect(
-      await repo.findByReferenceIdAndType(passport.id, ExternalIdentifierType.GS1),
-    ).toBeUndefined();
-    // The canonical OPEN_DPP_UUID UPI must survive the GS1 removal.
-    const canonical = await repo.findByReferenceIdAndType(
-      passport.id,
-      ExternalIdentifierType.OPEN_DPP_UUID,
-    );
-    expect(canonical).toBeDefined();
-  });
-
-  it("DELETE returns 404 when the draft passport has no GS1 identity", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-
-    const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send();
-
-    expect(response.status).toEqual(404);
-  });
-
-  it("DELETE rejects removing a GS1 identity from a published passport with 409", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id, { published: true });
-    await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .save(
-        UniqueProductIdentifier.createGs1({ referenceId: passport.id, gtin: "00990000000127" }),
-      );
-
-    const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send();
-
-    expect(response.status).toEqual(409);
-
-    // The frozen identity must remain intact after a rejected removal.
-    const repo = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
-    expect(
-      await repo.findByReferenceIdAndType(passport.id, ExternalIdentifierType.GS1),
-    ).toBeDefined();
-  });
-
-  it("PUT assigns a GTIN with batch and serial and returns the full Digital Link", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: VALID_GTIN13, batch: "LOT-42", serial: "SN-001" });
-
-    expect(response.status).toEqual(200);
-    expect(response.body.gtin).toEqual(VALID_GTIN13_AS_14);
-    expect(response.body.batch).toEqual("LOT-42");
-    expect(response.body.serial).toEqual("SN-001");
-    expect(response.body.digitalLink).toMatch(
-      new RegExp(`/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001$`),
-    );
-  });
-
-  it("PUT clears a previously-set batch / serial when omitted", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-    await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .save(
-        UniqueProductIdentifier.createGs1({
-          referenceId: passport.id,
-          gtin: "88000000000107",
-          batch: "OLD-LOT",
-          serial: "OLD-SN",
-        }),
-      );
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: "88000000000107", batch: "", serial: "" });
-
-    expect(response.status).toEqual(200);
-    expect(response.body.batch).toBeNull();
-    expect(response.body.serial).toBeNull();
-  });
-
-  it("PUT rejects a serial outside CSET-82 with 400", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const passport = await createPassport(org!.id);
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: VALID_GTIN13, serial: "bad value" });
-
-    expect(response.status).toEqual(400);
-  });
-
-  it("PUT allows two passports to share a GTIN with distinct serials", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const sharedGtin = "00075678164125";
-    const first = await createPassport(org!.id);
-    const second = await createPassport(org!.id);
-
-    const firstResponse = await request(app.getHttpServer())
-      .put(`${basePath}/${first.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: sharedGtin, serial: "SN-A" });
-    expect(firstResponse.status).toEqual(200);
-
-    const secondResponse = await request(app.getHttpServer())
-      .put(`${basePath}/${second.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: sharedGtin, serial: "SN-B" });
-    expect(secondResponse.status).toEqual(200);
-  });
-
-  it("PUT builds the Digital Link against the organization's resolver override", async () => {
-    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const gtin = "00445566778800";
-    await ctx
-      .getModuleRef()
-      .get(BrandingRepository)
-      .save(
-        Branding.create({
-          organizationId: org!.id,
-          gs1ResolverBaseUrl: "https://id.acme.example",
-        }),
-      );
-    const passport = await createPassport(org!.id);
-
-    const response = await request(app.getHttpServer())
-      .put(`${basePath}/${passport.id}/gs1-identity`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin });
-
-    expect(response.status).toEqual(200);
-    expect(response.body.digitalLink).toEqual(`https://id.acme.example/01/${gtin}`);
   });
 
   it("GET reflects the organization's resolver override in the Digital Link", async () => {
@@ -426,29 +197,48 @@ describe("Gs1IdentityController", () => {
     expect(response.body.digitalLink).toEqual(`https://id.override.example/01/${gtin}`);
   });
 
-  it("PUT rejects a duplicate full key (same gtin + serial) with 409", async () => {
+  // ---------------------------------------------------------------------------
+  // PUT and DELETE routes are retired — they must now respond 404 (not found)
+  // ---------------------------------------------------------------------------
+
+  it("PUT /:id/gs1-identity → 404 (write route retired in Slice 44)", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
-    const sharedGtin = "00036000291452";
-    const other = await createPassport(org!.id);
-    await ctx
-      .getModuleRef()
-      .get(UniqueProductIdentifierRepository)
-      .save(
-        UniqueProductIdentifier.createGs1({
-          referenceId: other.id,
-          gtin: sharedGtin,
-          serial: "DUP-SN",
-        }),
-      );
     const passport = await createPassport(org!.id);
 
     const response = await request(app.getHttpServer())
       .put(`${basePath}/${passport.id}/gs1-identity`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
-      .send({ gtin: sharedGtin, serial: "DUP-SN" });
+      .send({ gtin: VALID_GTIN13 });
 
-    expect(response.status).toEqual(409);
+    expect(response.status).toEqual(404);
+  });
+
+  it("DELETE /:id/gs1-identity → 404 (write route retired in Slice 44)", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const passport = await createPassport(org!.id);
+    // Seed a GS1 UPI so the old DELETE would have returned 204; now the retired
+    // route must return 404 (route-not-found). Use a unique serial to avoid GS1
+    // key-index conflicts across tests (the index covers gtin+batch+serial).
+    await ctx
+      .getModuleRef()
+      .get(UniqueProductIdentifierRepository)
+      .save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: VALID_GTIN13,
+          serial: "DELETE-RETIRE-TEST",
+        }),
+      );
+
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${passport.id}/gs1-identity`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+
+    expect(response.status).toEqual(404);
   });
 });

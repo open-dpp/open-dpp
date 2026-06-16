@@ -754,7 +754,6 @@
     "notfound": "Could not find permalink. Please contact your administrator.",
     "settings": {
       "title": "Permalink settings",
-      "open": "Permalink settings",
       "loadError": "Could not load permalink settings.",
       "saveError": "Could not save permalink settings.",
       "saveSuccess": "Permalink settings saved.",
@@ -781,11 +780,93 @@
           "instance": "Base URL inherited from the instance default."
         }
       }
+    },
+    "createGs1Link": {
+      "title": "Create GS1 Digital Link",
+      "selectUpi": "Select UPI",
+      "upiAlreadyLinked": "This UPI already has a GS1 Digital Link permalink.",
+      "gs1ResolverBase": {
+        "label": "GS1 Resolver Base URL (optional)",
+        "placeholder": "e.g. https://id.example.com"
+      },
+      "gs1DataAttributes": "GS1 Data Attributes (optional)",
+      "conflict": "A GS1 Digital Link permalink for this UPI already exists.",
+      "submit": "Create"
+    },
+    "edit": {
+      "title": "Edit Permalink",
+      "saveSuccess": "Permalink saved.",
+      "saveError": "Could not save permalink.",
+      "slugConflict": "This slug is already in use by another permalink.",
+      "locked": "This permalink is published and can no longer be changed.",
+      "slug": {
+        "label": "Short name",
+        "placeholder": "Last path segment of the URL"
+      },
+      "baseUrl": {
+        "label": "Custom base URL"
+      },
+      "gs1ResolverBase": {
+        "label": "GS1 Resolver Base URL (optional)",
+        "placeholder": "e.g. https://id.example.com"
+      },
+      "gs1DataAttributes": "GS1 Data Attributes (optional)"
+    },
+    "list": {
+      "setPrimary": "Set primary",
+      "delete": "Delete",
+      "deletePrimaryTooltip": "Cannot delete the primary or last presentation permalink",
+      "deletePublishedTooltip": "Cannot delete a published permalink",
+      "deleteConfirmMessage": "Are you sure you want to delete this permalink?",
+      "deleteConfirmHeader": "Delete Permalink",
+      "deleteSuccess": "Permalink deleted.",
+      "deleteError": "Could not delete permalink.",
+      "setPrimarySuccess": "Primary permalink updated.",
+      "setPrimaryError": "Could not update primary permalink.",
+      "label": "Permalink | Permalinks",
+      "kind": "Kind",
+      "publicUrl": "Public URL",
+      "primary": "Primary",
+      "published": "Published",
+      "kindPresentation": "Presentation",
+      "kindGs1Link": "GS1 Digital Link",
+      "createGs1Link": "Create GS1 link",
+      "empty": "No permalinks found.",
+      "actions": "Actions"
+    }
+  },
+  "uniqueProductIdentifiers": {
+    "label": "Unique Product Identifier | Unique Product Identifiers",
+    "list": {
+      "type": "Type",
+      "gtin": "GTIN",
+      "batch": "Batch / Lot",
+      "serial": "Serial",
+      "reference": "Passport",
+      "systemReadOnly": "System (read-only)",
+      "empty": "No unique product identifiers found."
+    },
+    "create": {
+      "title": "Create GS1 Unique Product Identifier",
+      "selectDraftPassport": "Select a draft passport",
+      "gtin": "GTIN",
+      "batch": "Batch / Lot (optional)",
+      "serial": "Serial (optional)",
+      "submit": "Create",
+      "noDraftPassports": "No draft passports available. A GS1 unique product identifier can only be created for a draft passport.",
+      "gtinInvalid": "Enter a valid GTIN (8, 12, 13, or 14 digits with a correct check digit).",
+      "componentInvalid": "Use up to 20 GS1 characters (letters, digits and !\"%&'()*+,-./:;<=>?_).",
+      "duplicate": "This GS1 identity (GTIN, batch and serial) is already assigned to another passport."
+    },
+    "gs1LinkPrompt": {
+      "title": "Add a GS1 Digital Link?",
+      "question": "Would you like to add a GS1 Digital Link permalink for this identifier?",
+      "addLink": "Add GS1 Digital Link",
+      "skip": "Skip"
     }
   },
   "gs1": {
     "settings": {
-      "open": "GS1 identity",
       "title": "GS1 identity",
       "description": "Assign a manufacturer-issued GTIN to render a GS1-compatible (Digital Link) QR code that resolves to this passport.",
       "loadError": "Could not load the GS1 identity.",
@@ -826,6 +907,24 @@
         "label": "GS1 element string"
       },
       "empty": "No GS1 identity assigned yet. Assign one in the GS1 identity settings to generate a GS1 QR code."
+    }
+  },
+  "gs1DataAttributes": {
+    "addRow": "Add row",
+    "aiPlaceholder": "AI (e.g. 17)",
+    "valuePlaceholder": "Value",
+    "remove": "Remove",
+    "keyAiBlocked": "AI \"{ai}\" is a primary identifier or key qualifier and cannot be used as a data attribute.",
+    "unknownAi": "Unknown AI.",
+    "invalidValue": "Value does not match the format for AI \"{ai}\"."
+  },
+  "gs1LinkQrCode": {
+    "empty": "No GS1 Digital Link permalink.",
+    "digitalLink": {
+      "label": "GS1 Digital Link"
+    },
+    "elementString": {
+      "label": "GS1 element string"
     }
   }
 }

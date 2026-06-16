@@ -4,7 +4,7 @@ The GS1 Digital Link (the QR target) needs to be a managed, listable record that
 
 ## Considered Options
 
-- **Separate `Gs1DigitalLink` entity** — rejected: it duplicates the resolver, list, and reference plumbing, and the product model treats the digital link *as* a permalink ("the permalink for the GS1 Digital Link"). One resolver concept, one list, one endpoint surface won out.
+- **Separate `Gs1DigitalLink` entity** — rejected: it duplicates the resolver, list, and reference plumbing, and the product model treats the digital link _as_ a permalink ("the permalink for the GS1 Digital Link"). One resolver concept, one list, one endpoint surface won out.
 
 ## Consequences
 

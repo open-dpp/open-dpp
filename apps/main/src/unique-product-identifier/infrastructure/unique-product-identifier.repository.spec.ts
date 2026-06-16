@@ -15,6 +15,7 @@ import { UniqueProductIdentifierRepository } from "./unique-product-identifier.r
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
+  UniqueProductIdentifierSchemaVersion,
 } from "./unique-product-identifier.schema";
 
 describe("uniqueProductIdentifierRepository", () => {
@@ -49,6 +50,10 @@ describe("uniqueProductIdentifierRepository", () => {
     uniqueProductIdentifierDoc = module.get<Model<UniqueProductIdentifierDoc>>(
       getModelToken(UniqueProductIdentifierDoc.name),
     );
+    // Build the partial unique index on (gtin, batch, serial) up front. Mongoose autoIndex
+    // is async; under the full parallel suite the uniqueness tests below can otherwise run
+    // before the index exists and see a duplicate insert succeed. Mirrors permalink.repository.spec.
+    await uniqueProductIdentifierDoc.syncIndexes();
   });
 
   it("should create unique product identifier with external id", async () => {
@@ -378,6 +383,192 @@ describe("uniqueProductIdentifierRepository", () => {
       serial: "SN-7",
     });
     expect(found!.uuid).toBe(upi.uuid);
+  });
+
+  // Slice 24: organizationId + findAllByOrganizationId
+  it("persists and loads organizationId on a UPI", async () => {
+    const referenceId = uuid4();
+    const orgId = uuid4();
+    const upi = UniqueProductIdentifier.create({ referenceId, organizationId: orgId });
+    const saved = await uniqueProductIdentifierRepository.save(upi);
+    expect(saved.organizationId).toBe(orgId);
+    const found = await uniqueProductIdentifierRepository.findOneOrFail(saved.uuid);
+    expect(found.organizationId).toBe(orgId);
+  });
+
+  it("findAllByOrganizationId returns the org's UPIs (system + GS1) newest-first, excluding other orgs", async () => {
+    const orgA = uuid4();
+    const orgB = uuid4();
+    const ref1 = uuid4();
+    const ref2 = uuid4();
+    const ref3 = uuid4();
+    const upiA1 = UniqueProductIdentifier.create({ referenceId: ref1, organizationId: orgA });
+    const upiA2 = UniqueProductIdentifier.createGs1({
+      referenceId: ref2,
+      organizationId: orgA,
+      gtin: "00777777777779",
+    });
+    const upiB = UniqueProductIdentifier.create({ referenceId: ref3, organizationId: orgB });
+    await uniqueProductIdentifierRepository.save(upiA1);
+    // Ensure ordering: make upiA1 older
+    await uniqueProductIdentifierDoc.updateOne(
+      { _id: upiA1.uuid },
+      { $set: { createdAt: new Date(Date.now() - 10000) } },
+    );
+    await uniqueProductIdentifierRepository.save(upiA2);
+    await uniqueProductIdentifierRepository.save(upiB);
+
+    const result = await uniqueProductIdentifierRepository.findAllByOrganizationId(orgA);
+    const uuids = result.items.map((u) => u.uuid);
+    expect(uuids).toContain(upiA1.uuid);
+    expect(uuids).toContain(upiA2.uuid);
+    expect(uuids).not.toContain(upiB.uuid);
+    // newest-first: upiA2 should come before upiA1
+    expect(uuids.indexOf(upiA2.uuid)).toBeLessThan(uuids.indexOf(upiA1.uuid));
+  });
+
+  it("findAllByOrganizationId paginates via cursor", async () => {
+    const orgC = uuid4();
+    const ref4 = uuid4();
+    const ref5 = uuid4();
+    const upiC1 = UniqueProductIdentifier.create({ referenceId: ref4, organizationId: orgC });
+    const upiC2 = UniqueProductIdentifier.create({ referenceId: ref5, organizationId: orgC });
+    await uniqueProductIdentifierRepository.save(upiC1);
+    // Make upiC1 older so upiC2 is newest
+    await uniqueProductIdentifierDoc.updateOne(
+      { _id: upiC1.uuid },
+      { $set: { createdAt: new Date(Date.now() - 20000) } },
+    );
+    await uniqueProductIdentifierRepository.save(upiC2);
+
+    const page1 = await uniqueProductIdentifierRepository.findAllByOrganizationId(orgC, {
+      pagination: { limit: 1 },
+    });
+    expect(page1.items).toHaveLength(1);
+    expect(page1.pagination.cursor).not.toBeNull();
+    // newest first, so page1 should have upiC2
+    expect(page1.items[0].uuid).toBe(upiC2.uuid);
+
+    const page2 = await uniqueProductIdentifierRepository.findAllByOrganizationId(orgC, {
+      pagination: { limit: 1, cursor: page1.pagination.cursor! },
+    });
+    expect(page2.items).toHaveLength(1);
+    expect(page2.items[0].uuid).toBe(upiC1.uuid);
+    // No overlap
+    expect(page2.items[0].uuid).not.toBe(page1.items[0].uuid);
+  });
+
+  // Slice 26 — UPI no-GS1-backfill regression (characterization test)
+  // These tests pin existing read-time behaviour so future schema changes can't silently break it.
+  // Expected GREEN on first run — no production code change required.
+  describe("Slice 26 — no-GS1-backfill regression", () => {
+    it("reads a legacy UPI doc with no gtin/batch/serial as a canonical OPEN_DPP_UUID identity with null GS1 fields", async () => {
+      const legacyUuid = uuid4();
+      const legacyReferenceId = uuid4();
+      // Insert a raw legacy doc bypassing Mongoose validation (simulates a v1.0.0 row
+      // written before the type/gtin fields existed).
+      const legacyDoc = new uniqueProductIdentifierDoc({
+        _id: legacyUuid,
+        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
+        referenceId: legacyReferenceId,
+        // Deliberately omit: type, gtin, batch, serial
+      });
+      await legacyDoc.save({ validateBeforeSave: false });
+
+      const found = await uniqueProductIdentifierRepository.findOne(legacyUuid);
+      expect(found).toBeDefined();
+      expect(found!.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+      expect(found!.gs1).toBeUndefined();
+      // toPlain() should carry null for GS1 fields
+      const plain = found!.toPlain();
+      expect(plain.gtin).toBeNull();
+      expect(plain.batch).toBeNull();
+      expect(plain.serial).toBeNull();
+    });
+
+    it("reading a legacy UPI doc does not rewrite the stored doc (_schemaVersion stays 1.0.0, gtin stays absent)", async () => {
+      const legacyUuid = uuid4();
+      const legacyReferenceId = uuid4();
+      const legacyDoc = new uniqueProductIdentifierDoc({
+        _id: legacyUuid,
+        _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
+        referenceId: legacyReferenceId,
+        // Deliberately omit: type, gtin, batch, serial
+      });
+      await legacyDoc.save({ validateBeforeSave: false });
+
+      // Read through the repository (triggers convertToDomain, no storage write)
+      await uniqueProductIdentifierRepository.findOne(legacyUuid);
+
+      // Now verify the raw stored document is unchanged
+      const rawDoc = await uniqueProductIdentifierDoc.findById(legacyUuid).lean();
+      expect(rawDoc?._schemaVersion).toBe(UniqueProductIdentifierSchemaVersion.v1_0_0);
+      // gtin should still be absent (or null if the schema default injected it)
+      // What matters: it was NOT mutated to something unexpected by the read
+      expect(rawDoc?.gtin ?? null).toBeNull();
+    });
+  });
+
+  describe("findAllByReferencedIdPaginated (passport-scoped, paginated)", () => {
+    it("returns a passport's UPIs (system + GS1) newest-first, excluding other passports", async () => {
+      const passportA = uuid4();
+      const passportB = uuid4();
+      const system = UniqueProductIdentifier.create({
+        referenceId: passportA,
+        organizationId: uuid4(),
+      });
+      const gs1 = UniqueProductIdentifier.createGs1({
+        referenceId: passportA,
+        organizationId: uuid4(),
+        gtin: "00999999999993",
+      });
+      const other = UniqueProductIdentifier.create({ referenceId: passportB });
+      await uniqueProductIdentifierRepository.save(system);
+      // Make the system row older so the GS1 row is newest.
+      await uniqueProductIdentifierDoc.updateOne(
+        { _id: system.uuid },
+        { $set: { createdAt: new Date(Date.now() - 10000) } },
+      );
+      await uniqueProductIdentifierRepository.save(gs1);
+      await uniqueProductIdentifierRepository.save(other);
+
+      const result =
+        await uniqueProductIdentifierRepository.findAllByReferencedIdPaginated(passportA);
+      const uuids = result.items.map((u) => u.uuid);
+      expect(uuids).toContain(system.uuid);
+      expect(uuids).toContain(gs1.uuid);
+      expect(uuids).not.toContain(other.uuid);
+      // newest-first: gs1 (newer) before system (older)
+      expect(uuids.indexOf(gs1.uuid)).toBeLessThan(uuids.indexOf(system.uuid));
+    });
+
+    it("paginates a passport's UPIs via cursor (no overlap, no loss)", async () => {
+      const passport = uuid4();
+      const u1 = UniqueProductIdentifier.create({ referenceId: passport });
+      const u2 = UniqueProductIdentifier.create({ referenceId: passport });
+      await uniqueProductIdentifierRepository.save(u1);
+      await uniqueProductIdentifierDoc.updateOne(
+        { _id: u1.uuid },
+        { $set: { createdAt: new Date(Date.now() - 20000) } },
+      );
+      await uniqueProductIdentifierRepository.save(u2);
+
+      const page1 = await uniqueProductIdentifierRepository.findAllByReferencedIdPaginated(
+        passport,
+        { pagination: { limit: 1 } },
+      );
+      expect(page1.items).toHaveLength(1);
+      expect(page1.pagination.cursor).not.toBeNull();
+      expect(page1.items[0].uuid).toBe(u2.uuid); // newest first
+
+      const page2 = await uniqueProductIdentifierRepository.findAllByReferencedIdPaginated(
+        passport,
+        { pagination: { limit: 1, cursor: page1.pagination.cursor! } },
+      );
+      expect(page2.items).toHaveLength(1);
+      expect(page2.items[0].uuid).toBe(u1.uuid);
+      expect(page2.items[0].uuid).not.toBe(page1.items[0].uuid);
+    });
   });
 
   afterAll(async () => {

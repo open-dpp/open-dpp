@@ -3,13 +3,18 @@ import type {
   DigitalProductDocumentStatusModificationDto,
   GetAllActivitiesParamsDto,
   GetAllParamsDto,
-  Gs1IdentityRequest,
-  Gs1IdentityResponse,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
+  PermalinkPaginationDto,
+  UniqueProductIdentifierPaginationDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
+
+export interface PassportListParams {
+  limit?: number;
+  cursor?: string;
+}
 
 import { AasNamespace } from "../aas/aasNamespace";
 import {
@@ -58,23 +63,32 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     );
   }
 
-  public async getGs1Identity(passportId: string) {
-    return await this.axiosInstance.get<Gs1IdentityResponse>(
-      `${this.passportEndpoint}/${passportId}/gs1-identity`,
-    );
+  /**
+   * Passport-scoped permalink list (presentation + gs1-link union), cursor
+   * paginated. Returns the standard `{ paging_metadata, result }` envelope. This
+   * is what the per-passport backoffice list view calls — the org-scoped
+   * `/permalinks` endpoint is kept for API consumers only.
+   */
+  public async getPermalinks(passportId: string, params?: PassportListParams) {
+    const url = `${this.passportEndpoint}/${encodeURIComponent(passportId)}/permalinks`;
+    if (params) {
+      return await this.axiosInstance.get<PermalinkPaginationDto>(url, { params });
+    }
+    return await this.axiosInstance.get<PermalinkPaginationDto>(url);
   }
 
-  public async setGs1Identity(passportId: string, data: Gs1IdentityRequest) {
-    return await this.axiosInstance.put<Gs1IdentityResponse>(
-      `${this.passportEndpoint}/${passportId}/gs1-identity`,
-      data,
-    );
-  }
-
-  public async deleteGs1Identity(passportId: string) {
-    return await this.axiosInstance.delete<void>(
-      `${this.passportEndpoint}/${passportId}/gs1-identity`,
-    );
+  /**
+   * Passport-scoped UPI list (OPEN_DPP_UUID + GS1), cursor paginated. Returns the
+   * standard `{ paging_metadata, result }` envelope. This is what the per-passport
+   * backoffice list view calls — the org-scoped `/unique-product-identifiers`
+   * endpoint is kept for API consumers only.
+   */
+  public async getUniqueProductIdentifiers(passportId: string, params?: PassportListParams) {
+    const url = `${this.passportEndpoint}/${encodeURIComponent(passportId)}/unique-product-identifiers`;
+    if (params) {
+      return await this.axiosInstance.get<UniqueProductIdentifierPaginationDto>(url, { params });
+    }
+    return await this.axiosInstance.get<UniqueProductIdentifierPaginationDto>(url);
   }
 
   public async deleteById(id: string) {

@@ -9,13 +9,21 @@ export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
   v1_2_0: "1.2.0",
+  v1_3_0: "1.3.0",
 } as const;
 
 export type UniqueProductIdentifierSchemaVersion_TYPE =
   (typeof UniqueProductIdentifierSchemaVersion)[keyof typeof UniqueProductIdentifierSchemaVersion];
 
+/**
+ * The MongoDB collection name for UPI documents. Exported so other repositories
+ * (e.g. the permalink passport-scoped union query) can `$lookup` against it
+ * without re-declaring the literal or taking a Mongoose-model DI dependency.
+ */
+export const UNIQUE_PRODUCT_IDENTIFIER_COLLECTION = "unique_product_identifiers";
+
 @Schema({
-  collection: "unique_product_identifiers",
+  collection: UNIQUE_PRODUCT_IDENTIFIER_COLLECTION,
   timestamps: true,
 })
 export class UniqueProductIdentifierDoc extends Document {
@@ -25,6 +33,9 @@ export class UniqueProductIdentifierDoc extends Document {
 
   @Prop({ required: true })
   referenceId: string;
+
+  @Prop({ type: String, required: false, default: null })
+  organizationId?: string | null;
 
   @Prop({
     default: ExternalIdentifierType.OPEN_DPP_UUID,
@@ -55,7 +66,7 @@ export class UniqueProductIdentifierDoc extends Document {
   serial?: string | null;
 
   @Prop({
-    default: UniqueProductIdentifierSchemaVersion.v1_2_0,
+    default: UniqueProductIdentifierSchemaVersion.v1_3_0,
     enum: Object.values(UniqueProductIdentifierSchemaVersion),
     type: String,
   }) // Track schema version
@@ -73,6 +84,7 @@ export const UniqueProductIdentifierSchema = SchemaFactory.createForClass(
 
 UniqueProductIdentifierSchema.index({ referenceId: 1 });
 UniqueProductIdentifierSchema.index({ type: 1 });
+UniqueProductIdentifierSchema.index({ organizationId: 1, createdAt: -1, _id: -1 });
 // Global uniqueness of the FULL assembled GS1 key (gtin, batch, serial). The
 // partial filter scopes the constraint to GS1 rows (only those carry a string
 // gtin), so OPEN_DPP_UUID rows (gtin = null) are never affected. Because batch

@@ -81,17 +81,20 @@ export class UniqueProductIdentifier {
   public readonly referenceId: string;
   public readonly type: ExternalIdentifierTypeValue;
   public readonly gs1?: Gs1Identity;
+  public readonly organizationId: string | null;
 
   private constructor(
     uuid: string,
     referenceId: string,
     type: ExternalIdentifierTypeValue,
     gs1?: Gs1Identity,
+    organizationId: string | null = null,
   ) {
     this.uuid = uuid;
     this.referenceId = referenceId;
     this.type = type;
     this.gs1 = gs1;
+    this.organizationId = organizationId;
     this.assertInvariants();
   }
 
@@ -114,11 +117,14 @@ export class UniqueProductIdentifier {
     externalUUID?: string;
     referenceId: string;
     type?: ExternalIdentifierTypeValue;
+    organizationId?: string | null;
   }): UniqueProductIdentifier {
     return new UniqueProductIdentifier(
       data.externalUUID ?? randomUUID(),
       data.referenceId,
       data.type ?? ExternalIdentifierType.OPEN_DPP_UUID,
+      undefined,
+      data.organizationId ?? null,
     );
   }
 
@@ -136,12 +142,14 @@ export class UniqueProductIdentifier {
     gtin: string;
     batch?: string | null;
     serial?: string | null;
+    organizationId?: string | null;
   }): UniqueProductIdentifier {
     return new UniqueProductIdentifier(
       data.externalUUID ?? randomUUID(),
       data.referenceId,
       ExternalIdentifierType.GS1,
       normalizeGs1Identity(data),
+      data.organizationId ?? null,
     );
   }
 
@@ -152,6 +160,7 @@ export class UniqueProductIdentifier {
     gtin?: string | null;
     batch?: string | null;
     serial?: string | null;
+    organizationId?: string | null;
   }) {
     const type = data.type ?? ExternalIdentifierType.OPEN_DPP_UUID;
     const gs1 =
@@ -162,7 +171,27 @@ export class UniqueProductIdentifier {
             ...(data.serial !== null && data.serial !== undefined ? { serial: data.serial } : {}),
           }
         : undefined;
-    return new UniqueProductIdentifier(data.uuid, data.referenceId, type, gs1);
+    return new UniqueProductIdentifier(
+      data.uuid,
+      data.referenceId,
+      type,
+      gs1,
+      data.organizationId ?? null,
+    );
+  }
+
+  /**
+   * Return a NEW UPI with the organizationId set.
+   * Used by the backfill runner to denormalize the owning passport's org.
+   */
+  withOrganizationId(organizationId: string): UniqueProductIdentifier {
+    return new UniqueProductIdentifier(
+      this.uuid,
+      this.referenceId,
+      this.type,
+      this.gs1,
+      organizationId,
+    );
   }
 
   /**
@@ -192,6 +221,26 @@ export class UniqueProductIdentifier {
   }
 
   /**
+   * The granularity implied by the GS1 identity's key structure:
+   * - `'item'` when a serial number (AI 21) is present (serial dominates)
+   * - `'batch'` when a batch/lot (AI 10) is present but no serial
+   * - `'model'` when only a GTIN (AI 01) is present
+   * - `null` for non-GS1 UPIs (no GS1 identity)
+   */
+  get granularity(): "model" | "batch" | "item" | null {
+    if (!this.gs1) {
+      return null;
+    }
+    if (this.gs1.serial !== undefined) {
+      return "item";
+    }
+    if (this.gs1.batch !== undefined) {
+      return "batch";
+    }
+    return "model";
+  }
+
+  /**
    * Build the uncompressed GS1 Digital Link this UPI's identity encodes, listing
    * present AIs in canonical order `01 -> 10 -> 21`.
    *
@@ -210,6 +259,39 @@ export class UniqueProductIdentifier {
     });
   }
 
+  /**
+   * Build a read-only list-item snapshot suitable for the org-scoped UPI list.
+   *
+   * Fields are selected explicitly (not spread from `toPlain()`) so that future
+   * additions to `toPlain()` (e.g. `organizationId` in Slice 24) never leak into
+   * the list-item shape or break the `UniqueProductIdentifierListItemDtoSchema` parse.
+   *
+   * `digitalLink` is assembled only when this UPI has a GS1 identity AND a
+   * `resolverBase` is provided; otherwise it is `null`.
+   */
+  toListItem({
+    resolverBase,
+    passportPublished,
+  }: {
+    resolverBase?: string;
+    passportPublished: boolean;
+  }) {
+    const digitalLink =
+      this.gs1 && resolverBase ? this.buildDigitalLink(resolverBase) : null;
+
+    return {
+      uuid: this.uuid,
+      referenceId: this.referenceId,
+      type: this.type,
+      gtin: this.gs1?.gtin ?? null,
+      batch: this.gs1?.batch ?? null,
+      serial: this.gs1?.serial ?? null,
+      granularity: this.granularity,
+      digitalLink,
+      passportPublished,
+    };
+  }
+
   toPlain() {
     return {
       uuid: this.uuid,
@@ -218,6 +300,7 @@ export class UniqueProductIdentifier {
       gtin: this.gs1?.gtin ?? null,
       batch: this.gs1?.batch ?? null,
       serial: this.gs1?.serial ?? null,
+      organizationId: this.organizationId,
     };
   }
 }

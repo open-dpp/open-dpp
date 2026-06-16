@@ -100,7 +100,8 @@ describe("Gs1ResolverController", () => {
       organizationId,
       referenceId: passport.id,
     });
-    const permalink = Permalink.create({ presentationConfigurationId: config.id });
+    // Mark the permalink primary so findPrimaryByPassportId can resolve it.
+    const permalink = Permalink.create({ presentationConfigurationId: config.id }).withPrimary(true);
     const upi = UniqueProductIdentifier.createGs1({
       referenceId: passport.id,
       gtin: options.gtin,

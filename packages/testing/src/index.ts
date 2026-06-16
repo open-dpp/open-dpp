@@ -1,3 +1,4 @@
+export * from "./fixtures/gs1/gs1-data-attributes.factory";
 export * from "./fixtures/aas/aas.factory";
 export * from "./fixtures/aas/security.factory";
 export * from "./fixtures/aas/submodel-element-modification.factory";
@@ -6,6 +7,11 @@ export * from "./fixtures/aas/submodel.factory";
 export * from "./fixtures/aas/submodel.modification.factory";
 export * from "./fixtures/passports/passports.factory";
 export * from "./fixtures/permalinks/permalinks.factory";
+export * from "./fixtures/permalinks/permalink-public.factory";
 export * from "./fixtures/templates/templates.factory";
 export * from "./fixtures/organizations/invitations.factory";
 export * from "./fixtures/activity-history/activity.factory";
+export * from "./fixtures/unique-product-identifier/unique-product-identifier.factory";
+export * from "./fixtures/unique-product-identifier/unique-product-identifier-create-request.factory";
+export * from "./fixtures/unique-product-identifier/unique-product-identifier-update-request.factory";
+export * from "./fixtures/permalinks/permalink-request.factory";

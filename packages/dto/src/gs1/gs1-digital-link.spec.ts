@@ -1,13 +1,16 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  buildGs1DataAttributeQuery,
   buildGs1DigitalLink,
   Cset82ComponentSchema,
   formatGs1ElementString,
   GS1_CSET82_MAX_LENGTH,
   Gtin14Schema,
   GtinInputSchema,
+  isGs1DataAttributeAi,
   isValidCset82Component,
   isValidGtinCheckDigit,
+  isValidGs1DataAttributeValue,
   normalizeToGtin14,
 } from "./gs1-digital-link";
 
@@ -206,6 +209,96 @@ describe("buildGs1DigitalLink", () => {
       }),
     ).toThrow();
   });
+
+  // Slice 6: dataAttributes threading
+
+  it("produces byte-identical output with no dataAttributes (regression)", () => {
+    const withoutField = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      batch: "LOT-42",
+      serial: "SN-001",
+    });
+    const withUndefined = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      batch: "LOT-42",
+      serial: "SN-001",
+      dataAttributes: undefined,
+    });
+    expect(withUndefined).toBe(withoutField);
+    expect(withoutField).toBe(
+      `https://id.example.com/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+    );
+  });
+
+  it("appends a single data-attribute query string after the serial segment", () => {
+    const url = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      batch: "LOT-42",
+      serial: "SN-001",
+      dataAttributes: { "17": "251231" },
+    });
+    expect(url).toBe(
+      `https://id.example.com/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001?17=251231`,
+    );
+  });
+
+  it("appends multiple data-attribute pairs in canonical ascending-AI order", () => {
+    const url = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      batch: "LOT-42",
+      serial: "SN-001",
+      dataAttributes: { "3103": "000189", "17": "251231" },
+    });
+    expect(url).toBe(
+      `https://id.example.com/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001?17=251231&3103=000189`,
+    );
+  });
+
+  it("produces no query string for an empty dataAttributes object", () => {
+    const url = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      dataAttributes: {},
+    });
+    expect(url).toBe(`https://id.example.com/01/${VALID_GTIN13_AS_14}`);
+  });
+
+  it("produces no query string for null dataAttributes", () => {
+    const url = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      dataAttributes: null,
+    });
+    expect(url).toBe(`https://id.example.com/01/${VALID_GTIN13_AS_14}`);
+  });
+
+  it("query is always appended AFTER the serial segment (not before)", () => {
+    const url = buildGs1DigitalLink("https://id.example.com", {
+      gtin: VALID_GTIN13_AS_14,
+      serial: "SN-001",
+      dataAttributes: { "17": "251231" },
+    });
+    // Must end with ?17=251231 — query after /21/SN-001
+    expect(url).toBe(
+      `https://id.example.com/01/${VALID_GTIN13_AS_14}/21/SN-001?17=251231`,
+    );
+  });
+
+  it("throws when dataAttributes contains an unknown AI", () => {
+    expect(() =>
+      buildGs1DigitalLink("https://id.example.com", {
+        gtin: VALID_GTIN13_AS_14,
+        dataAttributes: { "9999": "123456" },
+      }),
+    ).toThrow();
+  });
+
+  it("throws when dataAttributes contains an invalid value for a known AI", () => {
+    expect(() =>
+      buildGs1DigitalLink("https://id.example.com", {
+        gtin: VALID_GTIN13_AS_14,
+        dataAttributes: { "17": "bad" },
+      }),
+    ).toThrow();
+  });
 });
 
 describe("isValidCset82Component", () => {
@@ -310,5 +403,142 @@ describe("formatGs1ElementString", () => {
         batch: "X".repeat(GS1_CSET82_MAX_LENGTH + 1),
       }),
     ).toThrow();
+  });
+});
+
+describe("isGs1DataAttributeAi", () => {
+  it("returns true for known data-attribute (type D) AIs", () => {
+    expect(isGs1DataAttributeAi("17")).toBe(true);
+    expect(isGs1DataAttributeAi("3103")).toBe(true);
+    expect(isGs1DataAttributeAi("11")).toBe(true);
+  });
+
+  it("returns false for key identifier AIs (type I)", () => {
+    expect(isGs1DataAttributeAi("01")).toBe(false);
+  });
+
+  it("returns false for key qualifier AIs (type Q)", () => {
+    expect(isGs1DataAttributeAi("10")).toBe(false);
+    expect(isGs1DataAttributeAi("21")).toBe(false);
+  });
+
+  it("returns false for unknown AIs", () => {
+    expect(isGs1DataAttributeAi("9999")).toBe(false);
+  });
+
+  it("returns false for junk input", () => {
+    expect(isGs1DataAttributeAi("abc")).toBe(false);
+    expect(isGs1DataAttributeAi("")).toBe(false);
+    expect(isGs1DataAttributeAi(" 17")).toBe(false);
+  });
+
+  it("does not mutate input", () => {
+    const ai = "17";
+    const snapshot = ai;
+    isGs1DataAttributeAi(ai);
+    expect(ai).toBe(snapshot);
+  });
+});
+
+describe("isValidGs1DataAttributeValue", () => {
+  // AI "17" — Expiration date, N6 (fixed-length 6 digits)
+  it('accepts a valid value for AI "17" (fixed-length 6 digits)', () => {
+    expect(isValidGs1DataAttributeValue("17", "251231")).toBe(true);
+  });
+
+  it('rejects a too-short value for AI "17"', () => {
+    expect(isValidGs1DataAttributeValue("17", "25123")).toBe(false);
+  });
+
+  it('rejects a too-long value for AI "17"', () => {
+    expect(isValidGs1DataAttributeValue("17", "2512311")).toBe(false);
+  });
+
+  it('rejects a non-numeric value for AI "17"', () => {
+    expect(isValidGs1DataAttributeValue("17", "2512AB")).toBe(false);
+  });
+
+  // AI "3103" — Net weight, kilograms, N6 (fixed-length 6 digits)
+  it('accepts a valid value for AI "3103" (fixed-length 6 digits)', () => {
+    expect(isValidGs1DataAttributeValue("3103", "000189")).toBe(true);
+  });
+
+  it('rejects a too-short value for AI "3103"', () => {
+    expect(isValidGs1DataAttributeValue("3103", "18")).toBe(false);
+  });
+
+  it('rejects a non-numeric value for AI "3103"', () => {
+    expect(isValidGs1DataAttributeValue("3103", "abcdef")).toBe(false);
+  });
+
+  // AI "240" — Additional product identification, X..30 (variable-length CSET-82, up to 30 chars)
+  it('accepts an in-range CSET-82 string for AI "240" (variable-length)', () => {
+    expect(isValidGs1DataAttributeValue("240", "PART-ABC-123")).toBe(true);
+  });
+
+  it('rejects an over-length value for AI "240" (> 30 chars)', () => {
+    expect(isValidGs1DataAttributeValue("240", "X".repeat(31))).toBe(false);
+  });
+
+  it('rejects an out-of-charset value for AI "240" (space not in regex charset)', () => {
+    expect(isValidGs1DataAttributeValue("240", "has space")).toBe(false);
+  });
+
+  // Edge cases
+  it("returns false for an unknown AI", () => {
+    expect(isValidGs1DataAttributeValue("9999", "anything")).toBe(false);
+  });
+
+  it("returns false for a key qualifier AI (type Q)", () => {
+    expect(isValidGs1DataAttributeValue("21", "SN001")).toBe(false);
+  });
+
+  it("returns false for an empty value", () => {
+    expect(isValidGs1DataAttributeValue("17", "")).toBe(false);
+  });
+});
+
+describe("buildGs1DataAttributeQuery", () => {
+  it("returns empty string for undefined input", () => {
+    expect(buildGs1DataAttributeQuery(undefined)).toBe("");
+  });
+
+  it("returns empty string for null input", () => {
+    expect(buildGs1DataAttributeQuery(null)).toBe("");
+  });
+
+  it("returns empty string for empty object", () => {
+    expect(buildGs1DataAttributeQuery({})).toBe("");
+  });
+
+  it("builds a single-key query string with leading ?", () => {
+    expect(buildGs1DataAttributeQuery({ "17": "251231" })).toBe("?17=251231");
+  });
+
+  it("builds a multi-key query string in ascending AI order", () => {
+    expect(buildGs1DataAttributeQuery({ "17": "251231", "3103": "000189" })).toBe(
+      "?17=251231&3103=000189",
+    );
+  });
+
+  it("produces the same string regardless of insertion order (ascending AI sort)", () => {
+    // Insert in reverse order: "3103" before "17"
+    const reverseOrder: Record<string, string> = {};
+    reverseOrder["3103"] = "000189";
+    reverseOrder["17"] = "251231";
+    expect(buildGs1DataAttributeQuery(reverseOrder)).toBe("?17=251231&3103=000189");
+  });
+
+  it("percent-encodes values with reserved characters (e.g. '/' → '%2F')", () => {
+    // AI "240" is X..30 (variable-length CSET-82) — valid, can contain '/'
+    expect(buildGs1DataAttributeQuery({ "240": "A/B" })).toBe("?240=A%2FB");
+  });
+
+  it("throws on an unknown AI key", () => {
+    expect(() => buildGs1DataAttributeQuery({ "9999": "123456" })).toThrow();
+  });
+
+  it("throws on an invalid value for a known data-attribute AI", () => {
+    expect(() => buildGs1DataAttributeQuery({ "17": "bad" })).toThrow();
   });
 });

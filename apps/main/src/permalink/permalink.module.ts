@@ -12,8 +12,10 @@ import {
   PresentationConfigurationSchema,
 } from "../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
+import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema";
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
+import { PermalinkBackfillService } from "./infrastructure/permalink-backfill.service";
 import { PermalinkApplicationService } from "./application/services/permalink.application.service";
 import { PermalinkController } from "./presentation/permalink.controller";
 
@@ -29,11 +31,12 @@ import { PermalinkController } from "./presentation/permalink.controller";
     UsersModule,
     InstanceSettingsModule,
     forwardRef(() => PassportsModule),
+    forwardRef(() => UniqueProductIdentifierModule),
     BrandingModule,
     PresentationConfigurationsModule,
   ],
   controllers: [PermalinkController],
-  providers: [PermalinkRepository, PermalinkApplicationService],
-  exports: [PermalinkRepository, PermalinkApplicationService],
+  providers: [PermalinkRepository, PermalinkApplicationService, PermalinkBackfillService],
+  exports: [PermalinkRepository, PermalinkApplicationService, PermalinkBackfillService],
 })
 export class PermalinkModule {}

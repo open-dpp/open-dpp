@@ -1,21 +1,22 @@
 import { z } from "zod";
+import {
+  CreateGs1UniqueProductIdentifierRequestSchema,
+  ExternalIdentifierType,
+  ExternalIdentifierTypeSchema,
+  type ExternalIdentifierTypeValue,
+  UniqueProductIdentifierListItemDtoSchema,
+  UpdateGs1UniqueProductIdentifierRequestSchema,
+} from "@open-dpp/dto";
 
-export const ExternalIdentifierType = {
-  OPEN_DPP_UUID: "OPEN_DPP_UUID",
-  GS1: "GS1",
-  GTIN: "GTIN",
-  EAN: "EAN",
-} as const;
-
-export type ExternalIdentifierTypeValue =
-  (typeof ExternalIdentifierType)[keyof typeof ExternalIdentifierType];
-
-export const ExternalIdentifierTypeSchema = z.enum([
-  ExternalIdentifierType.OPEN_DPP_UUID,
-  ExternalIdentifierType.GS1,
-  ExternalIdentifierType.GTIN,
-  ExternalIdentifierType.EAN,
-]);
+// Re-export shared schemas from @open-dpp/dto (single source of truth).
+export {
+  CreateGs1UniqueProductIdentifierRequestSchema,
+  ExternalIdentifierType,
+  ExternalIdentifierTypeSchema,
+  type ExternalIdentifierTypeValue,
+  UniqueProductIdentifierListItemDtoSchema,
+  UpdateGs1UniqueProductIdentifierRequestSchema,
+};
 
 export const UniqueProductIdentifierDtoSchema = z.object({
   uuid: z.string(),
