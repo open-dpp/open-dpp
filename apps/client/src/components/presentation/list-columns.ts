@@ -1,4 +1,4 @@
-import type { LanguageType, SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
+import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
 import { useAasUtils } from "../../composables/aas-utils";
 
 export interface ColumnDef {

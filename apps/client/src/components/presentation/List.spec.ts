@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { KeyTypes } from "@open-dpp/dto";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { KeyTypes, Language } from "@open-dpp/dto";
 import type {
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
 import { buildColumns } from "./list-columns";
+import { mount } from "@vue/test-utils";
+import { defineComponent } from "vue";
 
 function makeFileRow(): SubmodelElementCollectionResponseDto {
   const value: SubmodelElementResponseDto[] = [
@@ -66,9 +68,48 @@ function makePropertyOnlyRow(): SubmodelElementCollectionResponseDto {
   } as unknown as SubmodelElementCollectionResponseDto;
 }
 
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key,
+    locale: { value: Language["en-US"] },
+  }),
+  createI18n: () => ({
+    global: {
+      t: (key: string) => key,
+      locale: { value: Language["en-US"] },
+    },
+    install: () => {},
+  }),
+}));
+
+
 describe("buildColumns", () => {
+  const mountedWrappers: Array<ReturnType<typeof mount>> = [];
+
+  function buildColumnsWithHarness(content: SubmodelElementCollectionResponseDto[]) {
+    const Harness = defineComponent({
+      name: "use-aas-utils-harness",
+      setup() {
+        const result = buildColumns(content);
+        return { result };
+      },
+      template: "<div></div>",
+    });
+
+    const wrapper = mount(Harness);
+    mountedWrappers.push(wrapper);
+
+    return wrapper.vm.result;
+  }
+
+  afterEach(() => {
+    mountedWrappers.splice(0).forEach((w) => {
+      w.unmount();
+    });
+  });
+
   it("returns an empty array when content is empty", () => {
-    expect(buildColumns([])).toEqual([]);
+    expect(buildColumnsWithHarness([])).toEqual([]);
   });
 
   it("returns an empty array when the first row has no value", () => {
@@ -82,33 +123,33 @@ describe("buildColumns", () => {
       embeddedDataSpecifications: [],
       value: undefined,
     } as unknown as SubmodelElementCollectionResponseDto;
-    expect(buildColumns([row])).toEqual([])
-;
+    const result = buildColumnsWithHarness([row]);
+    expect(result).toEqual([]);
   });
 
   it("sets minWidth on File-type columns", () => {
-    const cols = buildColumns([makeFileRow()]);
+    const cols = buildColumnsWithHarness([makeFileRow()]);
     const fileCol = cols.find((c) => c.field === "photo");
     expect(fileCol).toBeDefined();
     expect(fileCol?.style).toMatchObject({ minWidth: "200px" });
   });
 
   it("does not set minWidth on non-File columns", () => {
-    const cols = buildColumns([makeFileRow()]);
+    const cols = buildColumnsWithHarness([makeFileRow()]);
     const nameCol = cols.find((c) => c.field === "name");
     expect(nameCol).toBeDefined();
     expect(nameCol?.style).toBeUndefined();
   });
 
   it("no column has minWidth when there are only Property columns", () => {
-    const cols = buildColumns([makePropertyOnlyRow()]);
+    const cols = buildColumnsWithHarness([makePropertyOnlyRow()]);
     for (const col of cols) {
       expect(col.style).toBeUndefined();
     }
   });
 
   it("uses the first available displayName as header", () => {
-    const cols = buildColumns([makeFileRow()]);
+    const cols = buildColumnsWithHarness([makeFileRow()]);
     const fileCol = cols.find((c) => c.field === "photo");
     expect(fileCol?.header).toBe("Photo");
   });

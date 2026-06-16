@@ -386,7 +386,7 @@ describe("passportController", () => {
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({
         environment: {
-          assetAdministrationShells: [{ displayName: [{ language: "en", text: "rollback" }] }],
+          assetAdministrationShells: [{ displayName: [{ language: "en-US", text: "rollback" }] }],
         },
       });
 

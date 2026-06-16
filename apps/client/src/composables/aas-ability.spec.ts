@@ -1,7 +1,7 @@
 import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasAbilityProps } from "./aas-ability.ts";
-import { MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
+import { Language, MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
 import { securityPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
