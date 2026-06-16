@@ -263,10 +263,6 @@ export function createAasTestContext<T>(
     createEntity: CreateEntity,
     saveEntity: SaveEntity,
   ) {
-    const { org, userCookie } = await getOrganizationAndUserWithCookie();
-
-    const passport = await createEntity(org!.id);
-
     const submodel = Submodel.create({
       idShort: "testSubmodel",
       submodelElements: [
@@ -277,6 +273,17 @@ export function createAasTestContext<T>(
         }),
       ],
     });
+    return await createSubmodel(submodel, createEntity, saveEntity);
+  }
+
+  async function createSubmodel(
+    submodel: Submodel,
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const passport = await createEntity(org!.id);
     await addPolicy(
       subject,
       IdShortPath.create({ path: submodel.idShort }),
@@ -387,8 +394,48 @@ export function createAasTestContext<T>(
       .send(body);
 
     expect(responseV1.status).toEqual(HttpStatusCode.Created);
-    expect(responseV1.body.submodelElements[0].modelType).toEqual(refElement.modelType);
-    expect(responseV1.body.submodelElements[0].value).toEqual(refElement.value);
+    expect(responseV1.body.submodelElements).toContainEqual(expect.objectContaining(refElement));
+  }
+  async function assertPostSubmodelElementV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodel(
+      Submodel.create({ idShort: "testSubmodel" }),
+      createEntity,
+      saveEntity,
+    );
+    const refElement = createReferenceElementRequestDto();
+
+    const responseV1 = await request(app.getHttpServer())
+      .post(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(refElement);
+
+    expect(responseV1.status).toEqual(HttpStatusCode.Created);
+    expect(responseV1.body).toMatchObject(refElement);
+  }
+
+  async function assertPostSubmodelElementAtIdShortPathV1(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie, passport, submodel } = await createSubmodel(
+      Submodel.create({
+        idShort: "testSubmodel",
+        submodelElements: [SubmodelElementCollection.create({ idShort: "subSection" })],
+      }),
+      createEntity,
+      saveEntity,
+    );
+    const refElement = createReferenceElementRequestDto();
+
+    const responseV1 = await request(app.getHttpServer())
+      .post(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements/subSection`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(refElement);
+
+    expect(responseV1.status).toEqual(HttpStatusCode.Created);
+    expect(responseV1.body).toMatchObject(refElement);
   }
 
   async function assertGetSubmodelElementByIdV1(
@@ -1394,7 +1441,9 @@ export function createAasTestContext<T>(
       deleteRow: assertDeleteRow,
       deleteSubmodel: assertDeleteSubmodel,
       deleteSubmodelElement: assertDeleteSubmodelElement,
+      postSubmodelElementV1: assertPostSubmodelElementV1,
       postSubmodelElement: assertPostSubmodelElement,
+      postSubmodelElementAtIdShortPathV1: assertPostSubmodelElementAtIdShortPathV1,
       postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
       downloadActivities: assertDownloadActivities,
     },

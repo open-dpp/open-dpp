@@ -129,6 +129,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: SubmodelElementRequestDto,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -143,6 +144,8 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       body,
       userContext,
+      undefined,
+      version,
     );
   }
 
@@ -154,6 +157,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: SubmodelElementRequestDto,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -169,6 +173,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       body,
       userContext,
       idShortPath,
+      version,
     );
   }
 

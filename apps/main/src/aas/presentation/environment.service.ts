@@ -74,6 +74,7 @@ import { SubmodelAddedActivity } from "../../activity-history/domain/activities/
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
 import { ApiVersions, ApiVersionsType } from "../../api-version";
 import {
+  migrateSubmodelElementLinks,
   migrateSubmodelLinks,
   reverseMigrateLinksInValueRepresentation,
   reverseMigrateSubmodelElementLinks,
@@ -501,13 +502,17 @@ export class EnvironmentService {
     submodelId: string,
     submodelElementPlain: SubmodelElementRequestDto,
     userContext: UserContext,
-    idShortPath?: IdShortPath,
+    idShortPath: IdShortPath | undefined,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const submodelElement = submodel
       .withTracking()
-      .addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath, ability });
+      .addSubmodelElement(
+        parseSubmodelElement(this.migrateSubmodelElementRequest(submodelElementPlain, version)),
+        { idShortPath, ability },
+      );
     const activity = SubmodelElementAddedActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,
@@ -522,7 +527,9 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(submodelElement.toPlain());
+      return SubmodelElementSchema.parse(
+        this.migrateSubmodelElementResponse(submodelElement.toPlain(), version),
+      );
     } finally {
       await session.endSession();
     }
@@ -980,24 +987,33 @@ export class EnvironmentService {
     }
   }
 
+  private migrateSubmodelElementRequest(
+    submodelElement: SubmodelElementRequestDto,
+    version: ApiVersionsType,
+  ) {
+    return this.migrate(migrateSubmodelElementLinks, version, submodelElement);
+  }
+
   private migrateSubmodelRequest(submodelPlain: SubmodelRequestDto, version: ApiVersionsType) {
-    return version === ApiVersions.v1 ? migrateSubmodelLinks(submodelPlain) : submodelPlain;
+    return this.migrate(migrateSubmodelLinks, version, submodelPlain);
   }
 
   private migrateSubmodelResponse(submodelPlain: any, version: ApiVersionsType) {
-    return version === ApiVersions.v1 ? reverseMigrateSubmodelLinks(submodelPlain) : submodelPlain;
+    return this.migrate(reverseMigrateSubmodelLinks, version, submodelPlain);
   }
 
   private migrateSubmodelElementResponse(submodelElementPlain: any, version: ApiVersionsType) {
-    return version === ApiVersions.v1
-      ? reverseMigrateSubmodelElementLinks(submodelElementPlain)
-      : submodelElementPlain;
+    return this.migrate(reverseMigrateSubmodelElementLinks, version, submodelElementPlain);
   }
 
   private migrateValueResponse(input: any, version: ApiVersionsType) {
-    const migratedResult =
-      version === ApiVersions.v1 ? reverseMigrateLinksInValueRepresentation(input) : input;
-    return ValueSchema.parse(migratedResult);
+    return ValueSchema.parse(
+      this.migrate(reverseMigrateLinksInValueRepresentation, version, input),
+    );
+  }
+
+  private migrate(apiVersion1Callback: (input: any) => any, version: ApiVersionsType, input: any) {
+    return version === ApiVersions.v1 ? apiVersion1Callback(input) : input;
   }
 
   private async getFirstAssetAdministrationShell(

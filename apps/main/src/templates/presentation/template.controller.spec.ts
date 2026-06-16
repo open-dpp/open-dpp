@@ -183,6 +183,7 @@ describe("templateController", () => {
   });
 
   it(`/POST submodel element`, async () => {
+    await ctx.asserts.postSubmodelElementV1(createTemplate, saveTemplate);
     await ctx.asserts.postSubmodelElement(createTemplate);
   });
 
@@ -219,6 +220,7 @@ describe("templateController", () => {
   });
 
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
+    await ctx.asserts.postSubmodelElementAtIdShortPathV1(createTemplate, saveTemplate);
     await ctx.asserts.postSubmodelElementAtIdShortPath(createTemplate);
   });
 

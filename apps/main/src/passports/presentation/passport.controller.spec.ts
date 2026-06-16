@@ -502,6 +502,7 @@ describe("passportController", () => {
   });
 
   it(`/POST submodel element`, async () => {
+    await ctx.asserts.postSubmodelElementV1(createPassport, savePassport);
     await ctx.asserts.postSubmodelElement(createPassport);
   });
 
@@ -538,6 +539,7 @@ describe("passportController", () => {
   });
 
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
+    await ctx.asserts.postSubmodelElementAtIdShortPathV1(createPassport, savePassport);
     await ctx.asserts.postSubmodelElementAtIdShortPath(createPassport);
   });
 
