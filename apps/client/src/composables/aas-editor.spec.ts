@@ -20,7 +20,7 @@ import {
   UserRoleDto,
 } from "@open-dpp/dto";
 import {
-  allPermissionsAllow,
+  allPermissionsPlainAllow,
   securityPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -186,7 +186,7 @@ describe("aasEditor composable", () => {
                 memberRole: MemberRoleDto.MEMBER,
               },
               object: { idShortPath: submodel1.idShort },
-              permissions: allPermissionsAllow,
+              permissions: allPermissionsPlainAllow,
             },
             {
               subject: {

@@ -32,7 +32,7 @@ import {
 } from "@open-dpp/exception";
 import {
   aasPlainFactory,
-  allPermissionsAllow,
+  allPermissionsPlainAllow,
   propertyInputPlainFactory,
   securityPlainFactory,
   SecurityPlainTransientParams,
@@ -287,7 +287,7 @@ export function createAasTestContext<T>(
     await addPolicy(
       subject,
       IdShortPath.create({ path: submodel.idShort }),
-      allPermissionsAllow.map(Permission.fromPlain),
+      allPermissionsPlainAllow.map(Permission.fromPlain),
     );
     passport.getEnvironment().addSubmodel(submodel);
     await submodelRepository.save(submodel);

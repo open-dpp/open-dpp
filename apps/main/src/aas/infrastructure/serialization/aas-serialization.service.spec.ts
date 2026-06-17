@@ -5,7 +5,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { allPermissionsAllow } from "@open-dpp/testing";
+import { allPermissionsPlainAllow } from "@open-dpp/testing";
 import { generateMongoConfig } from "../../../database/config";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
@@ -684,13 +684,13 @@ describe("aasSerializationService", () => {
               object: createAasObject(
                 IdShortPath.create({ path: expandedEnv.submodels[0].idShort }),
               ),
-              permissions: allPermissionsAllow.map(Permission.fromPlain),
+              permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PermissionPerObject.create({
               object: createAasObject(
                 IdShortPath.create({ path: expandedEnv.submodels[1].idShort }),
               ),
-              permissions: allPermissionsAllow.map(Permission.fromPlain),
+              permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
           ],
         }),

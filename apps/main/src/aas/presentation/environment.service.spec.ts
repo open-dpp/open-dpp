@@ -19,7 +19,7 @@ import {
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError } from "@open-dpp/exception";
 import {
-  allPermissionsAllow,
+  allPermissionsPlainAllow,
   securityPlainFactory,
   SecurityPlainTransientParams,
 } from "@open-dpp/testing";
@@ -85,6 +85,8 @@ import { SubmodelAdded } from "../../activity-history/domain/change-events/submo
 import { SubmodelReferenceDeleted } from "../../activity-history/domain/change-events/submodel-reference-deleted";
 import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
 import { SubmodelDeleted } from "../../activity-history/domain/change-events/submodel-deleted";
+import { SubmodelElementRequest } from "./requests/submodel-element.request";
+import { ApiVersions } from "../../api-version";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -95,6 +97,7 @@ describe("environmentService", () => {
   let conceptDescriptionRepository: ConceptDescriptionRepository;
   let connection: Connection;
   let activityRepository: ActivityRepository;
+  const latestVersion = ApiVersions.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -497,6 +500,7 @@ describe("environmentService", () => {
       submodelPlain,
       saveEnvironment,
       admin,
+      latestVersion,
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
@@ -522,19 +526,19 @@ describe("environmentService", () => {
             PolicyAdded.create({
               object: submodelObject,
               userRole: UserRole.ADMIN,
-              value: allPermissionsAllow.map(Permission.fromPlain),
+              value: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PolicyAdded.create({
               object: submodelObject,
               userRole: UserRole.USER,
               memberRole: MemberRole.OWNER,
-              value: allPermissionsAllow.map(Permission.fromPlain),
+              value: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PolicyAdded.create({
               object: submodelObject,
               userRole: UserRole.USER,
               memberRole: MemberRole.MEMBER,
-              value: allPermissionsAllow.map(Permission.fromPlain),
+              value: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PolicyAdded.create({
               object: submodelObject,
@@ -576,12 +580,16 @@ describe("environmentService", () => {
       qualifiers: [],
       embeddedDataSpecifications: [],
     };
+    const request = SubmodelElementRequest.create({
+      body: propertyPlain,
+      version: ApiVersions.v2,
+    });
     await environmentService.addSubmodelElement(
       correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      propertyPlain,
+      request,
       admin,
     );
 
@@ -740,26 +748,38 @@ describe("environmentService", () => {
   it("should return submodels for subject", async () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const pagination = Pagination.create({ limit: 10 });
-    let submodels = await environmentService.getSubmodels(environment, pagination, admin.subject);
+    let submodels = await environmentService.getSubmodels(
+      environment,
+      pagination,
+      admin.subject,
+      latestVersion,
+    );
     expect(submodels.result).toEqual([SubmodelJsonSchema.parse(submodel1.toPlain())]);
 
-    submodels = await environmentService.getSubmodels(environment, pagination, member.subject);
+    submodels = await environmentService.getSubmodels(
+      environment,
+      pagination,
+      member.subject,
+      latestVersion,
+    );
     expect(submodels.result).toEqual([]);
   });
 
   it("should return submodel by id for subject", async () => {
     const { environment, admin, submodel1 } = await createDefaultEnvironment();
+
     const result = await environmentService.getSubmodelById(
       environment,
       submodel1.id,
       admin.subject,
+      latestVersion,
     );
     expect(result).toEqual(SubmodelJsonSchema.parse(submodel1.toPlain()));
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelById(environment, submodel1.id, anonymous),
+      environmentService.getSubmodelById(environment, submodel1.id, anonymous, latestVersion),
     ).rejects.toThrow(new ForbiddenError());
   });
 
@@ -772,6 +792,7 @@ describe("environmentService", () => {
       submodel1.id,
       pagination,
       admin.subject,
+      latestVersion,
     );
     expect(submodelElements.result).toEqual([
       SubmodelElementSchema.parse(submodelElementCollection1.toPlain()),
@@ -782,6 +803,7 @@ describe("environmentService", () => {
       submodel1.id,
       pagination,
       member.subject,
+      latestVersion,
     );
     expect(submodelElements.result).toEqual([]);
   });
@@ -797,12 +819,19 @@ describe("environmentService", () => {
       submodel1.id,
       idShortPath,
       admin.subject,
+      latestVersion,
     );
     expect(submodelElement).toEqual(SubmodelElementSchema.parse(property1.toPlain()));
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, anonymous),
+      environmentService.getSubmodelElementById(
+        environment,
+        submodel1.id,
+        idShortPath,
+        anonymous,
+        latestVersion,
+      ),
     ).rejects.toThrow(new ForbiddenError());
   });
 
@@ -817,6 +846,7 @@ describe("environmentService", () => {
       submodel1.id,
       idShortPath,
       admin.subject,
+      latestVersion,
     );
     expect(submodelElement).toEqual(property1.value);
 
@@ -824,7 +854,13 @@ describe("environmentService", () => {
 
     //
     await expect(
-      environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, anonymous),
+      environmentService.getSubmodelElementValue(
+        environment,
+        submodel1.id,
+        idShortPath,
+        anonymous,
+        latestVersion,
+      ),
     ).rejects.toThrow(new ForbiddenError());
   });
 
@@ -835,6 +871,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       admin.subject,
+      latestVersion,
     );
     expect(submodelValue).toEqual({
       subSection1: {
@@ -847,7 +884,7 @@ describe("environmentService", () => {
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelValue(environment, submodel1.id, anonymous),
+      environmentService.getSubmodelValue(environment, submodel1.id, anonymous, latestVersion),
     ).rejects.toThrow(new ForbiddenError("Cannot access submodel section1"));
   });
 
