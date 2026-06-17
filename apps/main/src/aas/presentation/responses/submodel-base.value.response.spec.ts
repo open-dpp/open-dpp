@@ -4,7 +4,8 @@ import { Property } from "../../domain/submodel-base/property";
 import { Security } from "../../domain/security/security";
 import { allPermissionsAllowFactory, memberFactory } from "../../../fixtures/security-fixtures";
 import { Submodel } from "../../domain/submodel-base/submodel";
-import { SubmodelValueResponse } from "./submodel.value.response";
+import { SubmodelBaseValueResponse } from "./submodel-base.value.response";
+import { IdShortPath } from "../../domain/common/id-short-path";
 
 describe("SubmodelValueResponse", () => {
   const property = Property.create({
@@ -21,7 +22,7 @@ describe("SubmodelValueResponse", () => {
 
   describe("v1 migration", () => {
     it("converts AnyUri Property to ReferenceElement with ExternalReference", () => {
-      const response = SubmodelValueResponse.create({
+      const response = SubmodelBaseValueResponse.create({
         submodel,
         version: ApiVersions.v1,
         ability,
@@ -35,11 +36,26 @@ describe("SubmodelValueResponse", () => {
         },
       });
     });
+
+    it("converts AnyUri Property with idShortPath link to ReferenceElement with ExternalReference", () => {
+      const response = SubmodelBaseValueResponse.create({
+        submodel,
+        idShortPath: IdShortPath.create({ path: "link" }),
+        version: ApiVersions.v1,
+        ability,
+      });
+
+      const result = response.toJSON();
+      expect(result).toEqual({
+        type: ReferenceTypes.ExternalReference,
+        keys: [{ type: KeyTypes.GlobalReference, value: "https://example.com" }],
+      });
+    });
   });
 
   describe("v2 (no migration)", () => {
     it("keeps AnyUri Property as Property", () => {
-      const response = SubmodelValueResponse.create({
+      const response = SubmodelBaseValueResponse.create({
         submodel,
         version: ApiVersions.v2,
         ability,
@@ -47,6 +63,18 @@ describe("SubmodelValueResponse", () => {
 
       const result = response.toJSON();
       expect(result).toEqual({ link: property.value });
+    });
+
+    it("keeps AnyUri Property with IdShortPath link as Property", () => {
+      const response = SubmodelBaseValueResponse.create({
+        submodel,
+        idShortPath: IdShortPath.create({ path: "link" }),
+        version: ApiVersions.v2,
+        ability,
+      });
+
+      const result = response.toJSON();
+      expect(result).toEqual(property.value);
     });
   });
 });

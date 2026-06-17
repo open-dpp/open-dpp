@@ -37,7 +37,6 @@ import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
 import { Template } from "../../templates/domain/template";
-import { isEmptyObject } from "../../utils";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { IdShortPath } from "../domain/common/id-short-path";
@@ -83,7 +82,7 @@ import { SubmodelElementPaginationResponse } from "./responses/submodel-element-
 import { SubmodelElementResponse } from "./responses/submodel-element.response";
 import { SubmodelPaginationResponse } from "./responses/submodel-pagination.response";
 import { SubmodelResponse } from "./responses/submodel.response";
-import { SubmodelValueResponse } from "./responses/submodel.value.response";
+import { SubmodelBaseValueResponse } from "./responses/submodel-base.value.response";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -323,7 +322,10 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], options);
         }
       });
-      return SubmodelJsonSchema.parse(this.migrateSubmodelResponse(submodel.toPlain(), version));
+      return SubmodelResponse.create({
+        submodel,
+        version,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -464,7 +466,7 @@ export class EnvironmentService {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
     const ability = await this.loadAbility(environment, subject);
-    return SubmodelValueResponse.create({ submodel, version, ability }).toJSON();
+    return SubmodelBaseValueResponse.create({ submodel, version, ability }).toJSON();
   }
 
   async getSubmodelElements(
@@ -510,9 +512,10 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(
-        this.migrateSubmodelElementResponse(submodelElement.toPlain(), submodelElementBody.version),
-      );
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: submodelElementBody.version,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -836,12 +839,12 @@ export class EnvironmentService {
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject);
-
-    const result = submodel.getValueRepresentation({ idShortPath, options: { ability } });
-    if (result === undefined || isEmptyObject(result)) {
-      throw new ForbiddenError();
-    }
-    return this.migrateValueResponse(result, version);
+    return SubmodelBaseValueResponse.create({
+      submodel,
+      idShortPath,
+      version,
+      ability,
+    }).toJSON();
   }
 
   async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {

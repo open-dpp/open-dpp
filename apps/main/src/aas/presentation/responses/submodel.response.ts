@@ -10,9 +10,9 @@ export class SubmodelResponse {
   private constructor(
     public readonly submodel: Submodel,
     public readonly version: ApiVersionsType,
-    public readonly ability: AasAbility,
+    public readonly ability: AasAbility | undefined,
   ) {}
-  static create(data: { submodel: Submodel; version: ApiVersionsType; ability: AasAbility }) {
+  static create(data: { submodel: Submodel; version: ApiVersionsType; ability?: AasAbility }) {
     return new SubmodelResponse(data.submodel, data.version, data.ability);
   }
 

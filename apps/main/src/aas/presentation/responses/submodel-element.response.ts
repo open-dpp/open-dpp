@@ -10,13 +10,13 @@ export class SubmodelElementResponse {
   private constructor(
     public readonly submodelElement: ISubmodelElement,
     public readonly version: ApiVersionsType,
-    public readonly ability: AasAbility,
+    public readonly ability: AasAbility | undefined,
   ) {}
 
   static create(data: {
     submodelElement: ISubmodelElement;
     version: ApiVersionsType;
-    ability: AasAbility;
+    ability?: AasAbility;
   }) {
     return new SubmodelElementResponse(data.submodelElement, data.version, data.ability);
   }
