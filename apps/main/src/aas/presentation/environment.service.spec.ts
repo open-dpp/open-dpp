@@ -1184,6 +1184,10 @@ describe("environmentService", () => {
       idShort: col1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
+    const modificationRequest = SubmodelElementModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
     await environmentService.modifyColumn(
       correlationId,
       digitalProductDocumentId,
@@ -1191,7 +1195,7 @@ describe("environmentService", () => {
       submodel1.id,
       listIdShortPath,
       col1.idShort,
-      modification,
+      modificationRequest,
       admin,
     );
 
@@ -1228,7 +1232,7 @@ describe("environmentService", () => {
         submodel1.id,
         listIdShortPath,
         col1.idShort,
-        modification,
+        modificationRequest,
         member,
       ),
     ).rejects.toThrow(
@@ -1259,6 +1263,7 @@ describe("environmentService", () => {
         listIdShortPath,
         col1.idShort,
         member,
+        latestVersion,
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -1274,6 +1279,7 @@ describe("environmentService", () => {
       listIdShortPath,
       col1.idShort,
       admin,
+      latestVersion,
     );
 
     expect(list.value[0].value.map((e: any) => e.idShort)).not.toContain(col1.idShort);

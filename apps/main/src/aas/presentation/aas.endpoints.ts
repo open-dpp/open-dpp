@@ -216,6 +216,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
@@ -249,6 +250,7 @@ export interface IAasDeleteEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementListResponseDto>;
   deleteRowFromSubmodelElementList: (
     correlationId: string,

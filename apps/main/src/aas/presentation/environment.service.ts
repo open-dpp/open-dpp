@@ -14,7 +14,6 @@ import {
   Permissions,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
-  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
@@ -603,7 +602,7 @@ export class EnvironmentService {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject, userId);
     const submodelElement = submodel.modifyValueOfSubmodelElement(
-      modificationRequest,
+      modificationRequest.toDomain(),
       idShortPath,
       {
         ability,
@@ -685,14 +684,14 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfColumn: string,
-    modifications: SubmodelElementModificationDto,
+    modificationRequest: SubmodelElementModificationRequest,
     userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const modifiedSubmodelElement = submodel
       .withTracking()
-      .modifyColumn(idShortPath, idShortOfColumn, modifications, { ability });
+      .modifyColumn(idShortPath, idShortOfColumn, modificationRequest.toDomain(), { ability });
 
     const activity = ColumnModifiedActivity.create({
       userId: userContext.userId,
@@ -709,7 +708,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElement,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -723,6 +726,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -751,7 +755,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }

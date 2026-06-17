@@ -120,10 +120,6 @@ import type { Response } from "express";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
-import {
-  migrateSubmodelElementLinks,
-  reverseMigrateSubmodelLinks,
-} from "../../aas/infrastructure/migrate-links";
 import { type ApiVersionsType } from "../../api-version";
 
 @Controller({ path: "/templates", version: ["1", "2"] })
@@ -503,22 +499,20 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const migratedBody = version === "1" ? reverseMigrateSubmodelLinks(body) : body;
-    const response =
-      await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
-        correlationId,
-        organizationId,
-        id,
-        submodelId,
-        idShortPath,
-        idShortOfColumn,
-        migratedBody,
-        { subject, userId },
-      );
-    return version === "1" ? migrateSubmodelElementLinks(response) : response;
+    return await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      body,
+      { subject, userId },
+      version,
+    );
   }
 
   @ApiDeleteColumn()
@@ -532,6 +526,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
@@ -542,6 +537,7 @@ export class TemplateController
       idShortPath,
       idShortOfColumn,
       { subject, userId },
+      version,
     );
   }
 

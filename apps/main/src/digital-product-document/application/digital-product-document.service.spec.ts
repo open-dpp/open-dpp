@@ -159,6 +159,7 @@ describe("DigitalProductDocumentService", () => {
         "col1",
         { idShort: "col1" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -218,6 +219,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "col1",
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
     await expect(
