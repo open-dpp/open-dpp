@@ -445,6 +445,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: ValueRequestDto,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -457,7 +458,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      ValueModificationRequest.create({ body, version }),
       idShortPath,
       userContext,
     );

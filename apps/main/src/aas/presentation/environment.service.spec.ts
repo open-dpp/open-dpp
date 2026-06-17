@@ -1382,6 +1382,10 @@ describe("environmentService", () => {
     const oldValue1 = property1.value;
     const oldValue2 = property2.value;
     const modification = { [property1.idShort]: "new value 1", [property2.idShort]: "new value 2" };
+    const modificationRequest = ValueModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}`,
     });
@@ -1390,7 +1394,7 @@ describe("environmentService", () => {
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       idShortPathToProperty1,
       admin,
     );
@@ -1442,7 +1446,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         idShortPathToProperty1,
         member,
       ),

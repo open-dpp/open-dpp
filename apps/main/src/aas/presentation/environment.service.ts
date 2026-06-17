@@ -16,15 +16,10 @@ import {
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
-  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
-  SubmodelElementSchema,
   SubmodelPaginationResponseDto,
-  SubmodelRequestDto,
   SubmodelResponseDto,
-  ValueRequestDto,
   ValueResponseDto,
-  ValueSchema,
 } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 
@@ -66,14 +61,7 @@ import { ColumnDeletedActivity } from "../../activity-history/domain/activities/
 import { RowDeletedActivity } from "../../activity-history/domain/activities/row-deleted.activity";
 import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
-import { ApiVersions, ApiVersionsType } from "../../api-version";
-import {
-  migrateSubmodelElementLinks,
-  migrateSubmodelLinks,
-  reverseMigrateLinksInValueRepresentation,
-  reverseMigrateSubmodelElementLinks,
-  reverseMigrateSubmodelLinks,
-} from "../infrastructure/migrate-links";
+import { ApiVersionsType } from "../../api-version";
 import { SubmodelElementRequest } from "./requests/submodel-element.request";
 import { SubmodelElementPaginationResponse } from "./responses/submodel-element-pagination.response";
 import { SubmodelElementResponse } from "./responses/submodel-element.response";
@@ -608,15 +596,19 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: ValueRequestDto,
+    modificationRequest: ValueModificationRequest,
     idShortPath: IdShortPath,
     { subject, userId }: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject, userId);
-    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, {
-      ability,
-    });
+    const submodelElement = submodel.modifyValueOfSubmodelElement(
+      modificationRequest,
+      idShortPath,
+      {
+        ability,
+      },
+    );
     const activity = SubmodelElementValueModifiedActivity.create({
       digitalProductDocumentId,
       userId,
@@ -632,7 +624,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -990,35 +986,6 @@ export class EnvironmentService {
     for (const conceptDescriptionId of environment.conceptDescriptions) {
       await this.conceptDescriptionRepository.deleteById(conceptDescriptionId, { session });
     }
-  }
-
-  private migrateSubmodelElementRequest(
-    submodelElement: SubmodelElementRequestDto,
-    version: ApiVersionsType,
-  ) {
-    return this.migrate(migrateSubmodelElementLinks, version, submodelElement);
-  }
-
-  private migrateSubmodelRequest(submodelPlain: SubmodelRequestDto, version: ApiVersionsType) {
-    return this.migrate(migrateSubmodelLinks, version, submodelPlain);
-  }
-
-  private migrateSubmodelResponse(submodelPlain: any, version: ApiVersionsType) {
-    return this.migrate(reverseMigrateSubmodelLinks, version, submodelPlain);
-  }
-
-  private migrateSubmodelElementResponse(submodelElementPlain: any, version: ApiVersionsType) {
-    return this.migrate(reverseMigrateSubmodelElementLinks, version, submodelElementPlain);
-  }
-
-  private migrateValueResponse(input: any, version: ApiVersionsType) {
-    return ValueSchema.parse(
-      this.migrate(reverseMigrateLinksInValueRepresentation, version, input),
-    );
-  }
-
-  private migrate(apiVersion1Callback: (input: any) => any, version: ApiVersionsType, input: any) {
-    return version === ApiVersions.v1 ? apiVersion1Callback(input) : input;
   }
 
   private async getFirstAssetAdministrationShell(

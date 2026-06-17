@@ -184,6 +184,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "col1" }),
         {},
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
