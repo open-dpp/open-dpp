@@ -24,7 +24,6 @@ import {
   DigitalProductDocumentEntity,
   IDigitalProductDocumentRepository,
 } from "../infrastructure/digital-product-document-repository.interface";
-import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { Pagination } from "../../pagination/pagination";
 import archiver, { Archiver } from "archiver";
@@ -35,6 +34,7 @@ import { ActivityTypesType } from "../../activity-history/domain/activities/acti
 import { ApiVersionsType } from "../../api-version";
 import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
 import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
+import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel.modification.request";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -105,6 +105,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     position: number | undefined,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -120,6 +121,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortPath,
       userContext,
       position,
+      version,
     );
   }
 
@@ -207,6 +209,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: SubmodelModificationDto,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -219,7 +222,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelModificationRequest.create({ body, version }),
       userContext,
     );
   }

@@ -88,6 +88,7 @@ import { SubmodelDeleted } from "../../activity-history/domain/change-events/sub
 import { SubmodelElementRequest } from "./requests/submodel-element.request";
 import { ApiVersions } from "../../api-version";
 import { SubmodelRequest } from "./requests/submodel.request";
+import { SubmodelModificationRequest } from "./requests/submodel.modification.request";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -698,6 +699,7 @@ describe("environmentService", () => {
       listIdShortPath,
       admin,
       position,
+      latestVersion,
     );
     const row2IdShort = changedList.value[1].idShort;
 
@@ -905,12 +907,16 @@ describe("environmentService", () => {
       idShort: submodel1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
+    const modificationRequest = SubmodelModificationRequest.create({
+      body: modification,
+      version: ApiVersions.v2,
+    });
     await environmentService.modifySubmodel(
       correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       admin,
     );
 
@@ -946,7 +952,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         member,
       ),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));

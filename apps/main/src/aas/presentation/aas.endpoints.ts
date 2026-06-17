@@ -144,6 +144,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
@@ -167,6 +168,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelResponseDto>;
   modifyValueOfSubmodel: (
     correlationId: string,

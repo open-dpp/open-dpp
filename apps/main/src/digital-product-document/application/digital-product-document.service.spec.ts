@@ -52,6 +52,7 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { ApiVersions } from "../../api-version";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -60,6 +61,7 @@ describe("DigitalProductDocumentService", () => {
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
   let connection: Connection;
+  const latestVersion = ApiVersions.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -143,6 +145,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         { idShort: "demo" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -250,6 +253,7 @@ describe("DigitalProductDocumentService", () => {
         passport.id,
         { idShort: "sub" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -271,6 +275,7 @@ describe("DigitalProductDocumentService", () => {
         },
         undefined,
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -283,6 +288,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "sub" }),
         undefined,
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -302,6 +308,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -321,6 +328,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
   });
