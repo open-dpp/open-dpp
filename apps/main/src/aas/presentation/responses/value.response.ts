@@ -7,7 +7,7 @@ import { IdShortPath } from "../../domain/common/id-short-path";
 import { isEmptyObject } from "../../../utils";
 import { ForbiddenError } from "@open-dpp/exception";
 
-export class SubmodelBaseValueResponse {
+export class ValueResponse {
   private constructor(
     public readonly submodel: Submodel,
     public readonly idShortPath: IdShortPath | undefined,
@@ -20,12 +20,7 @@ export class SubmodelBaseValueResponse {
     version: ApiVersionsType;
     ability: AasAbility;
   }) {
-    return new SubmodelBaseValueResponse(
-      data.submodel,
-      data.idShortPath,
-      data.version,
-      data.ability,
-    );
+    return new ValueResponse(data.submodel, data.idShortPath, data.version, data.ability);
   }
 
   toJSON(): ValueResponseDto {

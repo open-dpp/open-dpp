@@ -179,6 +179,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
     correlationId: string,

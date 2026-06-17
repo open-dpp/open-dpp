@@ -35,6 +35,7 @@ import { ApiVersionsType } from "../../api-version";
 import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
 import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
 import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel.modification.request";
+import { ValueModificationRequest } from "../../aas/presentation/requests/value-modification.request";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -234,6 +235,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: ValueRequestDto,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -246,7 +248,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      ValueModificationRequest.create({ body, version }),
       userContext,
     );
   }

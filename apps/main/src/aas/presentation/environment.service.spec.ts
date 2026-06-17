@@ -89,6 +89,7 @@ import { SubmodelElementRequest } from "./requests/submodel-element.request";
 import { ApiVersions } from "../../api-version";
 import { SubmodelRequest } from "./requests/submodel.request";
 import { SubmodelModificationRequest } from "./requests/submodel.modification.request";
+import { ValueModificationRequest } from "./requests/value-modification.request";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -974,13 +975,17 @@ describe("environmentService", () => {
         property1: "Test",
       },
     };
+    const modificationRequest = ValueModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
 
     await environmentService.modifyValueOfSubmodel(
       correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       admin,
     );
 
@@ -1016,7 +1021,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         member,
       ),
     ).rejects.toThrow(

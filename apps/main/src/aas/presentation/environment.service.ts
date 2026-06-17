@@ -19,7 +19,6 @@ import {
   SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelElementSchema,
-  SubmodelJsonSchema,
   SubmodelPaginationResponseDto,
   SubmodelRequestDto,
   SubmodelResponseDto,
@@ -80,10 +79,11 @@ import { SubmodelElementPaginationResponse } from "./responses/submodel-element-
 import { SubmodelElementResponse } from "./responses/submodel-element.response";
 import { SubmodelPaginationResponse } from "./responses/submodel-pagination.response";
 import { SubmodelResponse } from "./responses/submodel.response";
-import { SubmodelBaseValueResponse } from "./responses/submodel-base.value.response";
+import { ValueResponse } from "./responses/value.response";
 import { SubmodelRequest } from "./requests/submodel.request";
 import { SubmodelElementListResponse } from "./responses/submodel-element-list.response";
 import { SubmodelModificationRequest } from "./requests/submodel.modification.request";
+import { ValueModificationRequest } from "./requests/value-modification.request";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -468,7 +468,7 @@ export class EnvironmentService {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
     const ability = await this.loadAbility(environment, subject);
-    return SubmodelBaseValueResponse.create({ submodel, version, ability }).toJSON();
+    return ValueResponse.create({ submodel, version, ability }).toJSON();
   }
 
   async getSubmodelElements(
@@ -528,12 +528,12 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: ValueRequestDto,
+    modificationRequest: ValueModificationRequest,
     userContext: UserContext,
   ) {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject);
-    submodel.modifyValue(modification, { ability });
+    submodel.modifyValue(modificationRequest.toDomain(), { ability });
 
     const activity = SubmodelValueModifiedActivity.create({
       digitalProductDocumentId,
@@ -550,7 +550,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
+      return SubmodelResponse.create({
+        submodel,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -852,7 +856,7 @@ export class EnvironmentService {
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject);
-    return SubmodelBaseValueResponse.create({
+    return ValueResponse.create({
       submodel,
       idShortPath,
       version,

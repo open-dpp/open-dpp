@@ -4,10 +4,10 @@ import { Property } from "../../domain/submodel-base/property";
 import { Security } from "../../domain/security/security";
 import { allPermissionsAllowFactory, memberFactory } from "../../../fixtures/security-fixtures";
 import { Submodel } from "../../domain/submodel-base/submodel";
-import { SubmodelBaseValueResponse } from "./submodel-base.value.response";
+import { ValueResponse } from "./value.response";
 import { IdShortPath } from "../../domain/common/id-short-path";
 
-describe("SubmodelValueResponse", () => {
+describe("ValueResponse", () => {
   const property = Property.create({
     idShort: "link",
     valueType: DataTypeDef.AnyUri,
@@ -22,7 +22,7 @@ describe("SubmodelValueResponse", () => {
 
   describe("v1 migration", () => {
     it("converts AnyUri Property to ReferenceElement with ExternalReference", () => {
-      const response = SubmodelBaseValueResponse.create({
+      const response = ValueResponse.create({
         submodel,
         version: ApiVersions.v1,
         ability,
@@ -38,7 +38,7 @@ describe("SubmodelValueResponse", () => {
     });
 
     it("converts AnyUri Property with idShortPath link to ReferenceElement with ExternalReference", () => {
-      const response = SubmodelBaseValueResponse.create({
+      const response = ValueResponse.create({
         submodel,
         idShortPath: IdShortPath.create({ path: "link" }),
         version: ApiVersions.v1,
@@ -55,7 +55,7 @@ describe("SubmodelValueResponse", () => {
 
   describe("v2 (no migration)", () => {
     it("keeps AnyUri Property as Property", () => {
-      const response = SubmodelBaseValueResponse.create({
+      const response = ValueResponse.create({
         submodel,
         version: ApiVersions.v2,
         ability,
@@ -66,7 +66,7 @@ describe("SubmodelValueResponse", () => {
     });
 
     it("keeps AnyUri Property with IdShortPath link as Property", () => {
-      const response = SubmodelBaseValueResponse.create({
+      const response = ValueResponse.create({
         submodel,
         idShortPath: IdShortPath.create({ path: "link" }),
         version: ApiVersions.v2,
