@@ -82,8 +82,9 @@ import { SubmodelResponse } from "./responses/submodel.response";
 import { ValueResponse } from "./responses/value.response";
 import { SubmodelRequest } from "./requests/submodel.request";
 import { SubmodelElementListResponse } from "./responses/submodel-element-list.response";
-import { SubmodelModificationRequest } from "./requests/submodel.modification.request";
+import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
 import { ValueModificationRequest } from "./requests/value-modification.request";
+import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -565,15 +566,19 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: SubmodelElementModificationDto,
+    modificationRequest: SubmodelElementModificationRequest,
     idShortPath: IdShortPath,
     { subject, userId }: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject, userId);
-    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, {
-      ability,
-    });
+    const submodelElement = submodel.modifySubmodelElement(
+      modificationRequest.toDomain(),
+      idShortPath,
+      {
+        ability,
+      },
+    );
     const activity = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId,
       userId,
@@ -588,7 +593,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }

@@ -88,8 +88,9 @@ import { SubmodelDeleted } from "../../activity-history/domain/change-events/sub
 import { SubmodelElementRequest } from "./requests/submodel-element.request";
 import { ApiVersions } from "../../api-version";
 import { SubmodelRequest } from "./requests/submodel.request";
-import { SubmodelModificationRequest } from "./requests/submodel.modification.request";
+import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
 import { ValueModificationRequest } from "./requests/value-modification.request";
+import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -1045,6 +1046,10 @@ describe("environmentService", () => {
       idShort: property1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en" })],
     };
+    const modificationRequest = SubmodelElementModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
@@ -1053,7 +1058,7 @@ describe("environmentService", () => {
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       idShortPathToProperty1,
       admin,
     );
@@ -1088,7 +1093,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         idShortPathToProperty1,
         member,
       ),

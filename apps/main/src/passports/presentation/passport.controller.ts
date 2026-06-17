@@ -133,7 +133,6 @@ import { ActivityTypesType } from "../../activity-history/domain/activities/acti
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
 import {
   migrateSubmodelElementLinks,
-  reverseMigrateSubmodelElementLinks,
   reverseMigrateSubmodelLinks,
 } from "../../aas/infrastructure/migrate-links";
 import { ApiVersions, type ApiVersionsType } from "../../api-version";
@@ -768,20 +767,19 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const migratedBody = version === "1" ? reverseMigrateSubmodelElementLinks(body) : body;
-    const response = await this.passportService.digitalProductDocumentService.modifySubmodelElement(
+    return await this.passportService.digitalProductDocumentService.modifySubmodelElement(
       correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
-      migratedBody,
+      body,
       { subject, userId },
+      version,
     );
-    return version === "1" ? migrateSubmodelElementLinks(response) : response;
   }
 
   @ApiPatchSubmodelElementValue()
