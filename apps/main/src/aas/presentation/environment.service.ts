@@ -83,6 +83,7 @@ import { SubmodelElementResponse } from "./responses/submodel-element.response";
 import { SubmodelPaginationResponse } from "./responses/submodel-pagination.response";
 import { SubmodelResponse } from "./responses/submodel.response";
 import { SubmodelBaseValueResponse } from "./responses/submodel-base.value.response";
+import { SubmodelRequest } from "./requests/submodel.request";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -291,16 +292,13 @@ export class EnvironmentService {
     correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
-    submodelPlain: SubmodelRequestDto,
+    submodelRequest: SubmodelRequest,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
     userContext: UserContext,
-    version: ApiVersionsType,
   ): Promise<SubmodelResponseDto> {
     const aas = await this.getFirstAssetAdministrationShell(environment);
 
-    const submodel = environment
-      .withTracking()
-      .addSubmodel(Submodel.fromPlain(this.migrateSubmodelRequest(submodelPlain, version)));
+    const submodel = environment.withTracking().addSubmodel(submodelRequest.toDomain());
     aas.withTracking().addSubmodel(submodel);
     const activity = SubmodelAddedActivity.create({
       digitalProductDocumentId,
@@ -324,7 +322,7 @@ export class EnvironmentService {
       });
       return SubmodelResponse.create({
         submodel,
-        version,
+        version: submodelRequest.version,
       }).toJSON();
     } finally {
       await session.endSession();

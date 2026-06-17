@@ -87,6 +87,7 @@ import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-eve
 import { SubmodelDeleted } from "../../activity-history/domain/change-events/submodel-deleted";
 import { SubmodelElementRequest } from "./requests/submodel-element.request";
 import { ApiVersions } from "../../api-version";
+import { SubmodelRequest } from "./requests/submodel.request";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -490,6 +491,10 @@ describe("environmentService", () => {
       qualifiers: [],
       embeddedDataSpecifications: [],
     };
+    const request = SubmodelRequest.create({
+      body: submodelPlain,
+      version: ApiVersions.v2,
+    });
 
     async function saveEnvironment(_options: DbSessionOptions) {}
 
@@ -497,10 +502,9 @@ describe("environmentService", () => {
       correlationId,
       digitalProductDocumentId,
       environment,
-      submodelPlain,
+      request,
       saveEnvironment,
       admin,
-      latestVersion,
     );
 
     const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);

@@ -34,6 +34,7 @@ import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { ApiVersionsType } from "../../api-version";
 import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
+import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
@@ -61,10 +62,9 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       correlationId,
       id,
       item.getEnvironment(),
-      body,
+      SubmodelRequest.create({ body, version }),
       this.saveEnvironmentCallback(item),
       userContext,
-      version,
     );
   }
 
@@ -146,8 +146,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       SubmodelElementRequest.create({ body, version }),
       userContext,
-      undefined,
-      version,
     );
   }
 
@@ -175,7 +173,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       SubmodelElementRequest.create({ body, version }),
       userContext,
       idShortPath,
-      version,
     );
   }
 
