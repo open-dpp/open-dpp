@@ -132,6 +132,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
     correlationId: string,

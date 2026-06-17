@@ -47,7 +47,6 @@ import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { ISubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
@@ -84,6 +83,7 @@ import { SubmodelPaginationResponse } from "./responses/submodel-pagination.resp
 import { SubmodelResponse } from "./responses/submodel.response";
 import { SubmodelBaseValueResponse } from "./responses/submodel-base.value.response";
 import { SubmodelRequest } from "./requests/submodel.request";
+import { SubmodelElementListResponse } from "./responses/submodel-element-list.response";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -627,16 +627,18 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
-    column: ISubmodelElement,
+    columnRequest: SubmodelElementRequest,
     userContext: UserContext,
     position?: number,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
-    const modifiedSubmodelElementList = submodel.withTracking().addColumn(idShortPath, column, {
-      position,
-      ability,
-    });
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .addColumn(idShortPath, columnRequest.toDomain(), {
+        position,
+        ability,
+      });
 
     const activity = ColumnAddedActivity.create({
       userId: userContext.userId,
@@ -653,7 +655,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version: columnRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }

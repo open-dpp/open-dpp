@@ -631,10 +631,15 @@ describe("environmentService", () => {
       submodel1,
       row1,
     } = await createEnvironmentWithList();
-    const column = Property.create({
+    const body = SubmodelElementSchema.parse({
+      modelType: KeyTypes.Property,
       idShort: "column1",
       valueType: DataTypeDef.String,
       value: "test",
+    });
+    const request = SubmodelElementRequest.create({
+      body,
+      version: ApiVersions.v2,
     });
     const position = 1;
 
@@ -644,7 +649,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       listIdShortPath,
-      column,
+      request,
       admin,
       position,
     );
@@ -665,7 +670,7 @@ describe("environmentService", () => {
           changes: [
             ColumnAdded.create({
               path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "column1"]),
-              value: column,
+              value: Property.fromPlain(body),
               position,
             }),
           ],

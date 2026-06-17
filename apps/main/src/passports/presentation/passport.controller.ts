@@ -583,22 +583,20 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
-    @ApiVersion() version?: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const migratedBody = version === "1" ? reverseMigrateSubmodelElementLinks(body) : body;
-    const response =
-      await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
-        correlationId,
-        organizationId,
-        id,
-        submodelId,
-        idShortPath,
-        migratedBody,
-        position,
-        { subject, userId },
-      );
-    return version === "1" ? migrateSubmodelElementLinks(response) : response;
+    return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body,
+      position,
+      { subject, userId },
+      version,
+    );
   }
 
   @ApiPatchColumn()

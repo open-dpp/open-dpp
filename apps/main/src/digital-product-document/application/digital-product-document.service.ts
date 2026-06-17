@@ -77,6 +77,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     body: SubmodelElementRequestDto,
     position: number | undefined,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -84,14 +85,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       organizationId,
     );
     this.archiveGuard(item);
-    const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(
       correlationId,
       id,
       item.getEnvironment(),
       submodelId,
       idShortPath,
-      column,
+      SubmodelElementRequest.create({ body, version }),
       userContext,
       position,
     );
