@@ -1,24 +1,24 @@
 import {
-  type AssetAdministrationShellResponseDto,
-  DigitalProductDocumentStatusDto,
-  type SubmodelResponseDto,
-} from "@open-dpp/dto";
-import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
-import type { Component } from "vue";
-import type { AasEditorProps, IAasEditor } from "./aas-editor.ts";
-import {
   AasSubmodelElements,
+  type AssetAdministrationShellResponseDto,
   AssetKind,
   DataTypeDef,
+  DigitalProductDocumentStatusDto,
   KeyTypes,
   Language,
   MemberRoleDto,
   ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementSchema,
+  type SubmodelResponseDto,
   UserRoleDto,
 } from "@open-dpp/dto";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
+import type { Component } from "vue";
+import { defineComponent } from "vue";
+import type { AasEditorProps, IAasEditor } from "./aas-editor.ts";
+import { useAasEditor } from "./aas-editor.ts";
 import {
   allPermissionsPlainAllow,
   securityPlainFactory,
@@ -32,13 +32,11 @@ import { omit } from "lodash";
 import { createPinia, setActivePinia } from "pinia";
 import { v4 as uuid4 } from "uuid";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { defineComponent } from "vue";
 import AssetAdministrationShellEditor from "../components/aas/AssetAdministrationShellEditor.vue";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
-import ReferenceElementCreateEditor from "../components/aas/ReferenceElementCreateEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
@@ -48,7 +46,6 @@ import SubmodelElementListEditor from "../components/aas/SubmodelElementListEdit
 import apiClient from "../lib/api-client.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { generatedErrorHandlingStoreMock } from "../testing-utils/error-handling-store-mock.ts";
-import { useAasEditor } from "./aas-editor.ts";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -947,19 +944,12 @@ describe("aasEditor composable", () => {
 
       const data = {
         idShort: "newProperty",
-        value: {
-          type: ReferenceTypes.ExternalReference,
-          keys: [
-            {
-              type: KeyTypes.GlobalReference,
-              value: "https://example.com",
-            },
-          ],
-        },
+        value: "https://example.com",
+        modelType: KeyTypes.Property,
+        valueType: DataTypeDef.AnyUri,
       };
       const expectedRequestBody = {
         ...data,
-        modelType: KeyTypes.ReferenceElement,
         ...sharedCreationProps,
       };
       await assertCreationOfSubmodelElement(
@@ -967,7 +957,8 @@ describe("aasEditor composable", () => {
         data,
         expectedRequestBody,
         "aasEditor.link",
-        ReferenceElementCreateEditor,
+        PropertyCreateEditor,
+        { valueType: DataTypeDef.AnyUri },
       );
       await assertCreationOfSubmodelElementAtSubmodelElementLevel(
         aasEditor,
