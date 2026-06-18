@@ -142,6 +142,9 @@ export function migrateLinksInValueRepresentation(valueRepr: any): any {
   }
 
   if (urlParser.success && urlParser.data.type === ReferenceTypes.ExternalReference) {
+    if (urlParser.data.keys.length !== 1) {
+      return valueRepr;
+    }
     return urlParser.data.keys[0].value;
   } else {
     return valueRepr;
@@ -151,6 +154,16 @@ export function migrateLinksInValueRepresentation(valueRepr: any): any {
 export function reverseMigrateLinksInValueRepresentation(valueRepr: any): any {
   if (Array.isArray(valueRepr)) {
     return valueRepr.map(reverseMigrateLinksInValueRepresentation);
+  }
+
+  if (
+    valueRepr &&
+    typeof valueRepr === "object" &&
+    Array.isArray(valueRepr.keys) &&
+    (valueRepr.type === ReferenceTypes.ExternalReference ||
+      valueRepr.type === ReferenceTypes.ModelReference)
+  ) {
+    return valueRepr;
   }
 
   if (valueRepr && typeof valueRepr === "object") {

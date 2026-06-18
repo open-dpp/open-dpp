@@ -13,6 +13,7 @@ import PresentationComponentRenderer from "./components/PresentationComponentRen
 import List from "./List.vue";
 import Link from "./Link.vue";
 import SubmodelElementCollection from "./SubmodelElementCollection.vue";
+import { z } from "zod";
 
 const { element, path, config } = defineProps<{
   element: SubmodelElementResponseDto;
@@ -43,9 +44,13 @@ const { t } = useI18n();
           binary
         />
       </template>
-      <template v-else-if="element.valueType === DataTypeDef.AnyUri">
+      <template
+        v-else-if="
+          element.valueType === DataTypeDef.AnyUri && z.url().safeParse(element.value).success
+        "
+      >
         <a
-          :href="element.value as string"
+          :href="z.url().parse(element.value)"
           target="_blank"
           rel="noopener noreferrer"
           class="text-primary-500 mt-1 text-sm/6 hover:underline sm:mt-2"

@@ -519,7 +519,7 @@ export class EnvironmentService {
     userContext: UserContext,
   ) {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, userContext.subject);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     submodel.modifyValue(modificationRequest.toDomain(), { ability });
 
     const activity = SubmodelValueModifiedActivity.create({

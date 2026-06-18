@@ -6,7 +6,7 @@ export class SubmodelElementModificationRequest {
     private readonly body: SubmodelElementModificationDto,
     public readonly version: ApiVersionsType,
   ) {}
-  static create(data: { body: SubmodelModificationDto; version: ApiVersionsType }) {
+  static create(data: { body: SubmodelElementModificationDto; version: ApiVersionsType }) {
     return new SubmodelElementModificationRequest(data.body, data.version);
   }
 

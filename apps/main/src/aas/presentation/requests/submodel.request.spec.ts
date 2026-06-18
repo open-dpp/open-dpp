@@ -48,7 +48,7 @@ describe("SubmodelRequest", () => {
     it("keeps AnyUri Property as Property", () => {
       const request = SubmodelRequest.create({
         body: { id: randomUUID(), idShort: "testSubmodel", submodelElements: [propElement] },
-        version: ApiVersions.v1,
+        version: ApiVersions.v2,
       });
 
       const result = request.toDomain();
