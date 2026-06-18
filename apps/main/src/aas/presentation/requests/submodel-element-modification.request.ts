@@ -1,4 +1,4 @@
-import { SubmodelElementModificationDto, SubmodelModificationDto } from "@open-dpp/dto";
+import { SubmodelElementModificationDto } from "@open-dpp/dto";
 import { ApiVersionsType } from "../../../api-version";
 
 export class SubmodelElementModificationRequest {
