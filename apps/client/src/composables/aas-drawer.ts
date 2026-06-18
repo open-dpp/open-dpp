@@ -73,7 +73,6 @@ export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
 export const ColumnCreateEditorPropsSchema = z.discriminatedUnion("modelType", [
   z.object({ modelType: z.literal(AasSubmodelElements.Property), valueType: ValueTypeSchema }),
   z.object({ modelType: z.literal(AasSubmodelElements.File), contentType: z.string() }),
-  z.object({ modelType: z.literal(AasSubmodelElements.ReferenceElement) }),
 ]);
 export type ColumnCreateEditorProps = z.infer<typeof ColumnCreateEditorPropsSchema>;
 export type ColumnEditorProps = SubmodelElementResponseDto;

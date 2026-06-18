@@ -269,9 +269,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             />
             <span
               v-else-if="
-                (col.plain.modelType === AasSubmodelElements.Property ||
-                  col.plain.modelType === AasSubmodelElements.ReferenceElement) &&
-                cellData[field] != null
+                col.plain.modelType === AasSubmodelElements.Property && cellData[field] != null
               "
             >
               {{ formatCellValue(cellData[field], col) }}

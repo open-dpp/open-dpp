@@ -56,10 +56,6 @@ const { t } = useI18n();
         {{ element.value }}
       </template>
     </dd>
-    <Link
-      v-else-if="element.modelType === 'ReferenceElement'"
-      :model="element.value as ReferenceValue"
-    />
     <MediaFieldView
       v-else-if="element.modelType === 'File' && typeof element.value === 'string'"
       :media-id="element.value"

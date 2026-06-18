@@ -60,9 +60,6 @@ export function getVisualType(
   if (modelType === AasSubmodelElements.SubmodelElementList) {
     return translate(`${translatePrefix}.submodelElementList`);
   }
-  if (modelType === AasSubmodelElements.ReferenceElement) {
-    return translate(`${translatePrefix}.link`);
-  }
   if (modelType === AasSubmodelElements.File) {
     return translate(`${translatePrefix}.file`);
   }
