@@ -43,7 +43,7 @@ describe("apiClient", () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
-  const baseURL = "https://api.cloud.open-dpp.de";
+  const baseURL = `https://cloud.open-dpp.de/api`;
 
   describe("organizations", () => {
     it("should return organizations", async () => {

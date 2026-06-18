@@ -26,6 +26,6 @@ export class StatusApiClient implements IApiClient {
   }
 
   private createNewAxiosInstance() {
-    this.axiosInstance = createAxiosClient(this.options, "https://api.cloud.open-dpp.de");
+    this.axiosInstance = createAxiosClient(this.options, "https://cloud.open-dpp.de/api");
   }
 }

@@ -94,8 +94,8 @@ import { CorrelationIdService } from "../../common/middleware/correlation-id.ser
 import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
-import { DefaultApiVersion } from "../../api-version";
 import { HttpStatusCode } from "axios";
+import { AllVersions } from "../../api-version";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -180,7 +180,7 @@ export function createAasTestContext<T>(
     );
     app.enableVersioning({
       type: VersioningType.URI,
-      defaultVersion: DefaultApiVersion,
+      defaultVersion: AllVersions,
     });
     await app.init();
 

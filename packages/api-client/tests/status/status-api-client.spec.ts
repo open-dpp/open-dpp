@@ -7,7 +7,7 @@ describe("statusApiClient", () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  const baseURL = "https://api.cloud.open-dpp.de";
+  const baseURL = "https://cloud.open-dpp.de/api";
 
   it("should return status with version", async () => {
     const client = new StatusApiClient({ baseURL });

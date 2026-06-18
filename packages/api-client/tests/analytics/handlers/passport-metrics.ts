@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { MeasurementType, TimePeriod } from "../../../src";
 import { checkQueryParameters } from "../../utils";
 import { analyticsUrl } from "./index";
+import { LatestApiVersionDto } from "@open-dpp/dto";
 
 export const passportMetricQueryDto: PassportMetricQueryDto = {
   startDate: new Date("2025-01-01T12:00:00Z"),
@@ -26,8 +27,10 @@ export const pageViewDto = {
 };
 
 export const passportMetricHandler = [
-  http.post(`${analyticsUrl}/passport-metrics/page-views`, () => HttpResponse.json(pageViewDto)),
-  http.get(`${analyticsUrl}/passport-metrics`, ({ request }) => {
+  http.post(`${analyticsUrl}/v${LatestApiVersionDto}/passport-metrics/page-views`, () =>
+    HttpResponse.json(pageViewDto),
+  ),
+  http.get(`${analyticsUrl}/v${LatestApiVersionDto}/passport-metrics`, ({ request }) => {
     checkQueryParameters(request, {
       endDate: passportMetricQueryDto.endDate.toISOString(),
       startDate: passportMetricQueryDto.startDate.toISOString(),

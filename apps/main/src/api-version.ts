@@ -7,4 +7,6 @@ export const ApiVersions = {
 export const ApiVersionsEnum = z.enum(ApiVersions);
 export type ApiVersionsType = z.infer<typeof ApiVersionsEnum>;
 
-export const DefaultApiVersion = ApiVersions.v1;
+export const LatestApiVersion = ApiVersions.v2;
+
+export const AllVersions = Object.values(ApiVersions);

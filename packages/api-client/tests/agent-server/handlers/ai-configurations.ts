@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { http, HttpResponse } from "msw";
 import { AiProvider } from "../../../src/agent-server/ai-configuration/ai-configuration.dtos";
 import { agentServerURL } from "./index";
+import { LatestApiVersionDto } from "@open-dpp/dto";
 
 export const nowDate = new Date("2025-01-01T12:00:00Z");
 
@@ -19,10 +20,10 @@ export const aiConfigurationDto: AiConfigurationDto = {
 };
 
 export const aiConfigurationHandler = [
-  http.put(`${agentServerURL}/configurations`, () => {
+  http.put(`${agentServerURL}/v${LatestApiVersionDto}/configurations`, () => {
     return HttpResponse.json(aiConfigurationDto);
   }),
-  http.get(`${agentServerURL}/configurations`, () => {
+  http.get(`${agentServerURL}/v${LatestApiVersionDto}/configurations`, () => {
     return HttpResponse.json(aiConfigurationDto);
   }),
 ];

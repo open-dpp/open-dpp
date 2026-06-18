@@ -904,20 +904,20 @@ describe("passportController", () => {
     await templateRepository.save(template);
 
     const listResponse = await request(app.getHttpServer())
-      .get(`/v1/templates/${templateId}/presentation-configurations`)
+      .get(`/v2/templates/${templateId}/presentation-configurations`)
       .set(authHeaders)
       .send();
     expect(listResponse.status).toEqual(200);
     const defaultConfigId = listResponse.body[0].id;
 
     const patchResponse = await request(app.getHttpServer())
-      .patch(`/v1/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
+      .patch(`/v2/templates/${templateId}/presentation-configurations/${defaultConfigId}`)
       .set(authHeaders)
       .send({ elementDesign: { "DesignOfProduct.numericField": "BigNumber" } });
     expect(patchResponse.status).toEqual(200);
 
     const createVariantResponse = await request(app.getHttpServer())
-      .post(`/v1/templates/${templateId}/presentation-configurations`)
+      .post(`/v2/templates/${templateId}/presentation-configurations`)
       .set(authHeaders)
       .send({ label: "Variant A" });
     expect(createVariantResponse.status).toEqual(201);
