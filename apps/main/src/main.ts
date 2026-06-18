@@ -74,7 +74,11 @@ async function bootstrap() {
     });
 
     app.use((req: Request, res: Response, next: NextFunction) => {
-      if (req.url.startsWith("/api/") && !req.url.match(/^\/api\/v\d+(\/|$)/)) {
+      if (
+        req.url.startsWith("/api/") &&
+        !req.url.startsWith("/api/swagger") &&
+        !req.url.match(/^\/api\/v\d+(\/|$)/)
+      ) {
         return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersions.v1}`));
       }
 
