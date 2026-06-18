@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { PermalinkBaseUrlSchema } from "./permalink-base-url.schema";
+import { LatestApiVersionWithPrefixDto } from "../api-version.dto";
 
 describe("PermalinkBaseUrlSchema", () => {
   describe("accepts", () => {
@@ -47,10 +48,12 @@ describe("PermalinkBaseUrlSchema", () => {
     });
 
     it("accepts a nested path and preserves it", () => {
-      const result = PermalinkBaseUrlSchema.safeParse("https://example.com/dpp/v1");
+      const result = PermalinkBaseUrlSchema.safeParse(
+        `https://example.com/dpp/${LatestApiVersionWithPrefixDto}`,
+      );
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data).toBe("https://example.com/dpp/v1");
+        expect(result.data).toBe(`https://example.com/dpp/${LatestApiVersionWithPrefixDto}`);
       }
     });
 
@@ -80,7 +83,7 @@ describe("PermalinkBaseUrlSchema", () => {
       ["query string", "https://example.com?q=1"],
       ["fragment", "https://example.com#h"],
       ["double slash in path", "https://example.com//p"],
-      ["double slash mid-path", "https://example.com/dpp//v1"],
+      ["double slash mid-path", `https://example.com/dpp//${LatestApiVersionWithPrefixDto}`],
     ])("rejects %s ('%s')", (_label, input) => {
       const result = PermalinkBaseUrlSchema.safeParse(input);
       expect(result.success).toBe(false);

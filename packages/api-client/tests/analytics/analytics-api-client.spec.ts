@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { OpenDppClient } from "../../src";
 import { activeOrganization } from "../dpp/handlers/organization";
 import { expectWithDetailedError } from "../utils";
-import { analyticsUrl } from "./handlers";
 import {
   pageViewDto,
   passportMeasurementDto,
@@ -17,7 +16,7 @@ describe("analyticsApiClient", () => {
 
   describe("passport metrics", () => {
     const sdk = new OpenDppClient({
-      analytics: { baseURL: analyticsUrl },
+      analytics: { baseURL: "https://cloud.open-dpp.de/api" },
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should query passport metric", async () => {
@@ -31,7 +30,7 @@ describe("analyticsApiClient", () => {
 
     it("should add page view", async () => {
       const response = await sdk.analytics.passportMetric.addPageView({
-        uuid: randomUUID(),
+        permalink: randomUUID(),
         page: "http://example.com",
       });
 

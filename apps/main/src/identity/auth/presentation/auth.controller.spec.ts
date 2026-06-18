@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
+import { LatestApiVersionWithPrefix } from "../../../api-version";
 
 const mockHandler = jest.fn();
 const mockToNodeHandler = jest.fn().mockReturnValue(mockHandler);
@@ -53,7 +54,7 @@ describe("AuthController", () => {
   });
 
   it("should handle POST requests using better-auth handler", async () => {
-    const req = { method: "POST", url: "/api/v1/auth/some-path" } as any;
+    const req = { method: "POST", url: `/api/${LatestApiVersionWithPrefix}/auth/some-path` } as any;
     const res = { status: jest.fn() } as any;
 
     await controller.handleBetterAuthPostRequest(req, res);
@@ -63,7 +64,7 @@ describe("AuthController", () => {
   });
 
   it("should handle GET requests using better-auth handler", async () => {
-    const req = { method: "GET", url: "/api/v1/auth/some-path" } as any;
+    const req = { method: "GET", url: `/api/${LatestApiVersionWithPrefix}/auth/some-path` } as any;
     const res = { status: jest.fn() } as any;
 
     await controller.handleBetterAuthGetRequest(req, res);

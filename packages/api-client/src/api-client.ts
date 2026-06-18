@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
-import { ApiVersionsDtoType, LatestApiVersionDto } from "@open-dpp/dto";
+import { type ApiVersionsDtoType, LatestApiVersionDto } from "@open-dpp/dto";
 
 export interface IApiClient {
   setApiKey: (apiKey: string) => void;

@@ -7,10 +7,11 @@ import {
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/vue";
 import { API_URL } from "./const.ts";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
-  baseURL: `${API_URL}/v1/auth`,
+  baseURL: `${API_URL}/${LatestApiVersionWithPrefixDto}/auth`,
   plugins: [
     inferAdditionalFields({
       user: {

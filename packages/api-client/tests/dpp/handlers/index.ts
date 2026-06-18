@@ -1,3 +1,3 @@
-import { LatestApiVersionDto } from "@open-dpp/dto";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
-export const baseURL = `https://cloud.open-dpp.de/api/v${LatestApiVersionDto}`;
+export const baseURL = `https://cloud.open-dpp.de/api/${LatestApiVersionWithPrefixDto}`;

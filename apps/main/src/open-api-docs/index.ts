@@ -7,25 +7,25 @@ import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
 import { presentationConfigurationPaths } from "./presentation-configuration.paths";
 import { permalinkPaths } from "./permalink.paths";
-import { LatestApiVersion } from "../api-version";
+import { LatestApiVersionWithPrefix } from "../api-version";
 
 const document = createDocument({
   openapi: "3.1.0",
   info: {
     title: "open-dpp API",
-    version: LatestApiVersion,
+    version: LatestApiVersionWithPrefix,
   },
   servers: [
     {
-      url: `https://cloud.open-dpp.de/api/${LatestApiVersion}`,
+      url: `https://cloud.open-dpp.de/api/${LatestApiVersionWithPrefix}`,
       description: "Production server",
     },
     {
-      url: `https://demo.open-dpp.de/api/${LatestApiVersion}`,
+      url: `https://demo.open-dpp.de/api/${LatestApiVersionWithPrefix}`,
       description: "Test server",
     },
     {
-      url: `http://localhost:3000/api/${LatestApiVersion}`,
+      url: `http://localhost:3000/api/${LatestApiVersionWithPrefix}`,
       description: "Local development server",
     },
   ],

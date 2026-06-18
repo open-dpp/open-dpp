@@ -1,13 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import {
-  ConsoleLogger,
-  Logger,
-  ValidationPipe,
-  VERSION_NEUTRAL,
-  VersioningType,
-} from "@nestjs/common";
+import { ConsoleLogger, Logger, ValidationPipe, VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -22,7 +16,7 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
-import { AllVersions } from "./api-version";
+import { AllVersions, ApiVersions } from "./api-version";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
@@ -81,7 +75,7 @@ async function bootstrap() {
 
     app.use((req: Request, res: Response, next: NextFunction) => {
       if (req.url.startsWith("/api/") && !req.url.match(/^\/api\/v\d+(\/|$)/)) {
-        return res.redirect(308, req.url.replace(/^\/api/, "/api/v1"));
+        return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersions.v1}`));
       }
 
       next();

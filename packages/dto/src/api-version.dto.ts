@@ -8,3 +8,4 @@ export const ApiVersionsDtoEnum = z.enum(ApiVersionsDto);
 export type ApiVersionsDtoType = z.infer<typeof ApiVersionsDtoEnum>;
 
 export const LatestApiVersionDto = ApiVersionsDto.v2;
+export const LatestApiVersionWithPrefixDto = `v${LatestApiVersionDto}`;

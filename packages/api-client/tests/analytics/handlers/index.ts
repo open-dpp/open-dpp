@@ -1,1 +1,3 @@
-export const analyticsUrl = "https://analytics.cloud.open-dpp.de";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+
+export const analyticsUrl = `https://cloud.open-dpp.de/api/${LatestApiVersionWithPrefixDto}`;

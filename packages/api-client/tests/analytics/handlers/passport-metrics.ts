@@ -1,17 +1,16 @@
 import type { PassportMeasurementDto, PassportMetricQueryDto } from "../../../src";
+import { MeasurementType, TimePeriod } from "../../../src";
 
 import { randomUUID } from "node:crypto";
 import { http, HttpResponse } from "msw";
-import { MeasurementType, TimePeriod } from "../../../src";
 import { checkQueryParameters } from "../../utils";
 import { analyticsUrl } from "./index";
-import { LatestApiVersionDto } from "@open-dpp/dto";
 
 export const passportMetricQueryDto: PassportMetricQueryDto = {
   startDate: new Date("2025-01-01T12:00:00Z"),
   endDate: new Date("2025-02-01T12:00:00Z"),
   templateId: "t1",
-  modelId: "m1",
+  passportId: "p1",
   type: MeasurementType.PAGE_VIEWS,
   valueKey: "https://example.com/passport",
   period: TimePeriod.MONTH,
@@ -27,15 +26,13 @@ export const pageViewDto = {
 };
 
 export const passportMetricHandler = [
-  http.post(`${analyticsUrl}/v${LatestApiVersionDto}/passport-metrics/page-views`, () =>
-    HttpResponse.json(pageViewDto),
-  ),
-  http.get(`${analyticsUrl}/v${LatestApiVersionDto}/passport-metrics`, ({ request }) => {
+  http.post(`${analyticsUrl}/passport-metrics/page-views`, () => HttpResponse.json(pageViewDto)),
+  http.get(`${analyticsUrl}/passport-metrics`, ({ request }) => {
     checkQueryParameters(request, {
       endDate: passportMetricQueryDto.endDate.toISOString(),
       startDate: passportMetricQueryDto.startDate.toISOString(),
       templateId: passportMetricQueryDto.templateId,
-      modelId: passportMetricQueryDto.modelId || "",
+      passportId: passportMetricQueryDto.passportId || "",
       type: passportMetricQueryDto.type,
       valueKey: passportMetricQueryDto.valueKey,
       period: passportMetricQueryDto.period,

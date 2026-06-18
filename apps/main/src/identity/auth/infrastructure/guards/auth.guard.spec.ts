@@ -9,6 +9,7 @@ import { MembersRepository } from "../../../organizations/infrastructure/adapter
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { AuthGuard } from "./auth.guard";
+import { LatestApiVersionWithPrefix } from "../../../../api-version";
 
 describe("authGuard Allowlist Repro", () => {
   let guard: AuthGuard;
@@ -78,38 +79,38 @@ describe("authGuard Allowlist Repro", () => {
     } as ExecutionContext & { _request: any };
   };
 
-  it("should allow /api/v1/sse exactly", async () => {
-    const context = createMockContext("/api/v1/sse");
+  it(`should allow /api/${LatestApiVersionWithPrefix}/sse exactly`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse`);
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it("should NOT allow /api/v1/sse/something", async () => {
-    const context = createMockContext("/api/v1/sse/123");
+  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/sse/something`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse/123`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should allow /api/v1/sse?query=123", async () => {
-    const context = createMockContext("/api/v1/sse?foo=bar");
+  it(`should allow /api/${LatestApiVersionWithPrefix}/sse?query=123`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse?foo=bar`);
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it("should allow /api/v1/messages exactly", async () => {
-    const context = createMockContext("/api/v1/messages");
+  it(`should allow /api/${LatestApiVersionWithPrefix}/messages exactly`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/messages`);
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it("should NOT allow /api/v1/messages/something", async () => {
-    const context = createMockContext("/api/v1/messages/123");
+  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/messages/something`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/messages/123`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should NOT allow /api/v1/sse-extension (partial match prefix)", async () => {
-    const context = createMockContext("/api/v1/sse-extension");
+  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/sse-extension (partial match prefix)`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse-extension`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should NOT allow /api/v1/messages-extension (partial match prefix)", async () => {
-    const context = createMockContext("/api/v1/messages-extension");
+  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/messages-extension (partial match prefix)`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/messages-extension`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
@@ -129,7 +130,9 @@ describe("authGuard Allowlist Repro", () => {
 
     it("should deny access when API key is invalid", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue(null);
-      const context = createMockContext("/api/v1/items", { "x-api-key": "invalid-key" });
+      const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/items`, {
+        "x-api-key": "invalid-key",
+      });
 
       const result = await guard.canActivate(context);
 

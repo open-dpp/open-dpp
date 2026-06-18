@@ -7,6 +7,7 @@ import { OrganizationsModule } from "../identity/organizations/organizations.mod
 import { PassportsModule } from "../passports/passports.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { PassportTool } from "./passport.tool";
+import { LatestApiVersionWithPrefix } from "../api-version";
 
 @Module({
   imports: [
@@ -14,8 +15,8 @@ import { PassportTool } from "./passport.tool";
     McpModule.forRoot({
       name: "mcp-server",
       version: "1.0.0",
-      sseEndpoint: "/v1/sse",
-      messagesEndpoint: "/v1/messages",
+      sseEndpoint: `/${LatestApiVersionWithPrefix}/sse`,
+      messagesEndpoint: `/${LatestApiVersionWithPrefix}/messages`,
     }),
     UniqueProductIdentifierModule,
     AuthModule,

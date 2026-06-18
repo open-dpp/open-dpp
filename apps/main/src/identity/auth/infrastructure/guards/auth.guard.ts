@@ -9,6 +9,7 @@ import { Session } from "../../domain/session";
 import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decorator";
 import { randomUUID } from "node:crypto";
 import { MEMBER_HAS_ROLE } from "../../presentation/decorators/member-has-role.decorator";
+import { LatestApiVersionWithPrefix } from "../../../../api-version";
 
 /**
  * NestJS guard that handles authentication for protected routes
@@ -92,12 +93,15 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
-      const allowedPaths = ["/api/v1/sse", "/api/v1/messages"];
+      const allowedPaths = [
+        `/api/${LatestApiVersionWithPrefix}/sse`,
+        `/api/${LatestApiVersionWithPrefix}/messages`,
+      ];
       const path = url.split("?")[0];
       return allowedPaths.includes(path);
     }
 
-    const isBetterAuthUrl = url.startsWith("/api/v1/auth");
+    const isBetterAuthUrl = url.startsWith(`/api/${LatestApiVersionWithPrefix}/auth`);
     if (!isBetterAuthUrl) {
       const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {

@@ -61,6 +61,7 @@ import {
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
+import { LatestApiVersionWithPrefix } from "../../api-version";
 
 describe("passportController", () => {
   const basePathV2 = `/v2/passports`;
@@ -930,7 +931,7 @@ describe("passportController", () => {
     const passportId = createPassportResponse.body.id;
 
     const passportConfigsResponse = await request(app.getHttpServer())
-      .get(`/v1/passports/${passportId}/presentation-configurations`)
+      .get(`/${LatestApiVersionWithPrefix}/passports/${passportId}/presentation-configurations`)
       .set(authHeaders)
       .send();
     expect(passportConfigsResponse.status).toEqual(200);
@@ -995,14 +996,16 @@ describe("passportController", () => {
     ): Promise<void> {
       const { app } = ctx.globals();
       const listResponse = await request(app.getHttpServer())
-        .get(`/v1/passports/${passportId}/presentation-configurations`)
+        .get(`/${LatestApiVersionWithPrefix}/passports/${passportId}/presentation-configurations`)
         .set(authHeaders)
         .send();
       expect(listResponse.status).toEqual(200);
       const configId = listResponse.body[0].id;
 
       const patchResponse = await request(app.getHttpServer())
-        .patch(`/v1/passports/${passportId}/presentation-configurations/${configId}`)
+        .patch(
+          `/${LatestApiVersionWithPrefix}/passports/${passportId}/presentation-configurations/${configId}`,
+        )
         .set(authHeaders)
         .send({ elementDesign: entries });
       expect(patchResponse.status).toEqual(200);
