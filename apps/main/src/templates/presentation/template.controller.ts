@@ -578,6 +578,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
@@ -588,6 +589,7 @@ export class TemplateController
       idShortPath,
       idShortOfRow,
       { subject, userId },
+      version,
     );
   }
 

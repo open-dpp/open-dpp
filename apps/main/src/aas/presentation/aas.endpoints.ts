@@ -262,6 +262,7 @@ export interface IAasDeleteEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
+    version: ApiVersionsType,
   ) => Promise<SubmodelElementListResponseDto>;
   deletePolicyBySubjectAndObject: (
     correlationId: string,

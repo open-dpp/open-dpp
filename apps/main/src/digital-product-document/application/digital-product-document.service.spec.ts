@@ -231,6 +231,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "row1",
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 

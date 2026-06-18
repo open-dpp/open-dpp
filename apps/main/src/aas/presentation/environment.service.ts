@@ -12,7 +12,6 @@ import {
   AssetAdministrationShellResponseDto,
   AssetKind,
   Permissions,
-  SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -813,6 +812,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     idShortOfRow: string,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -841,7 +841,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }

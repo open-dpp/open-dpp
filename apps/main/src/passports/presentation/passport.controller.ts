@@ -685,6 +685,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
@@ -695,6 +696,7 @@ export class PassportController
       idShortPath,
       idShortOfRow,
       { subject, userId },
+      version,
     );
   }
 

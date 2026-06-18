@@ -1331,6 +1331,7 @@ describe("environmentService", () => {
         listIdShortPath,
         row1.idShort,
         member,
+        latestVersion,
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`),
@@ -1344,6 +1345,7 @@ describe("environmentService", () => {
       listIdShortPath,
       row1.idShort,
       admin,
+      latestVersion,
     );
 
     expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);

@@ -422,6 +422,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     idShortOfRow: string,
     userContext: UserContext,
+    version: ApiVersionsType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -437,6 +438,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortPath,
       idShortOfRow,
       userContext,
+      version,
     );
   }
 
