@@ -1,4 +1,3 @@
-import { describe, expect, it } from "@jest/globals";
 import { PermalinkBaseUrlSchema } from "./permalink-base-url.schema";
 import { LatestApiVersionWithPrefixDto } from "../api-version.dto";
 
@@ -10,7 +9,7 @@ describe("PermalinkBaseUrlSchema", () => {
       "https://passport.brand.io:8443",
       "https://xn--mller-kva.de",
       "https://example.com/",
-    ])("'%s'", (input) => {
+    ])("'%s'", (input: any) => {
       const result = PermalinkBaseUrlSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
@@ -84,7 +83,7 @@ describe("PermalinkBaseUrlSchema", () => {
       ["fragment", "https://example.com#h"],
       ["double slash in path", "https://example.com//p"],
       ["double slash mid-path", `https://example.com/dpp//${LatestApiVersionWithPrefixDto}`],
-    ])("rejects %s ('%s')", (_label, input) => {
+    ])("rejects %s ('%s')", (_label: any, input: any) => {
       const result = PermalinkBaseUrlSchema.safeParse(input);
       expect(result.success).toBe(false);
     });

@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from "axios";
 import axios from "axios";
-import { type ApiVersionsDtoType, LatestApiVersionDto } from "@open-dpp/dto";
+import { type ApiVersionsDtoType } from "@open-dpp/dto";
 
 export interface IApiClient {
   setApiKey: (apiKey: string) => void;
@@ -15,7 +15,7 @@ export interface ApiClientOptions extends AxiosRequestConfig {
 }
 
 export function createAxiosClient(options: ApiClientOptions, defaultBaseUrl: string) {
-  const baseURL = `${options.baseURL ?? defaultBaseUrl}/v${options.version ?? LatestApiVersionDto}`;
+  const baseURL = `${options.baseURL ?? defaultBaseUrl}/v${options.version ?? "2"}`;
   return axios.create({
     ...options,
     baseURL,
