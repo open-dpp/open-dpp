@@ -1,5 +1,11 @@
 import { Buffer } from "node:buffer";
-import { AasSubmodelElements, AasSubmodelElementsType, BlobJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  BlobJsonSchema,
+  KeyTypes,
+  KeyTypesType,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -11,11 +17,12 @@ import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { Pointer } from "./pointer";
 
 export class Blob implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly contentType: string,
@@ -34,14 +41,24 @@ export class Blob implements ISubmodelElement {
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
+  setParentPointer(parentPointer: Pointer) {
+    this._parentPointer = parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.Blob;
   }
 
   set displayName(value: Array<LanguageText>) {

@@ -44,7 +44,7 @@ describe("tableExtension", () => {
     table.addColumn(col1, { ability });
     const firstRowId = table.rows[0].idShort;
     const expHeaderRow = SubmodelElementCollection.create({ idShort: firstRowId });
-    expHeaderRow.setParentIdShortPath(submodelElementList.getIdShortPath());
+    expHeaderRow.setParentPointer(submodelElementList.getPointer());
     expHeaderRow.addSubmodelElement(col1, { ability });
     expect(table.rows).toEqual([expHeaderRow]);
 
@@ -56,7 +56,7 @@ describe("tableExtension", () => {
       idShort: secondRowId,
       value: [col1Row1WithEmptyValue],
     });
-    expRow1.setParentIdShortPath(submodelElementList.getIdShortPath());
+    expRow1.setParentPointer(submodelElementList.getPointer());
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
     expect(secondRowId).not.toEqual(firstRowId);
 
@@ -88,7 +88,7 @@ describe("tableExtension", () => {
         cloneSubmodelElement(col3, { value: undefined }),
       ],
     });
-    expRowAtPos1.setParentIdShortPath(submodelElementList.getIdShortPath());
+    expRowAtPos1.setParentPointer(submodelElementList.getPointer());
     expect(table.rows).toEqual([expHeaderRow, expRowAtPos1, expRow1]);
 
     expect(rowAtPos1Id).not.toEqual(secondRowId);
@@ -141,8 +141,8 @@ describe("tableExtension", () => {
     ).toBeTruthy();
     const onDelete = jest.fn();
     table.deleteColumn(col1.idShort, { ability, onDelete });
-    col1.setParentIdShortPath(table.rows[0].getIdShortPath());
-    col2.setParentIdShortPath(table.rows[0].getIdShortPath());
+    col1.setParentPointer(table.rows[0].getPointer());
+    col2.setParentPointer(table.rows[0].getPointer());
     expect(onDelete).toHaveBeenCalledWith(col1);
 
     expect(table.columns).toEqual([col2]);
@@ -169,12 +169,12 @@ describe("tableExtension", () => {
       propertyInputPlainFactory.build({ idShort: "col1", value: "10" }),
     );
     table.addColumn(col1, { ability });
-    col1.setParentIdShortPath(table.rows[0].getIdShortPath());
+    col1.setParentPointer(table.rows[0].getPointer());
     expect(table.columns).toEqual([col1]);
     // The header row is updated to the new row at position 0.
     table.addRow({ position: 0, ability });
     const expectedCol = cloneSubmodelElement(col1, { value: null });
-    expectedCol.setParentIdShortPath(table.rows[0].getIdShortPath());
+    expectedCol.setParentPointer(table.rows[0].getPointer());
     expect(table.columns).toEqual([expectedCol]);
   });
 
@@ -258,9 +258,9 @@ describe("tableExtension", () => {
     table.deleteRow(rowToDelete2.idShort, { ability, onDelete });
     expect(onDelete).toHaveBeenCalledWith(rowToDelete2);
     const expectedCol1 = cloneSubmodelElement(col1, { value: null });
-    expectedCol1.setParentIdShortPath(table.rows[0].getIdShortPath());
+    expectedCol1.setParentPointer(table.rows[0].getPointer());
     const expectedCol2 = cloneSubmodelElement(col2, { value: null });
-    expectedCol2.setParentIdShortPath(table.rows[0].getIdShortPath());
+    expectedCol2.setParentPointer(table.rows[0].getPointer());
     expect(table.columns).toEqual([expectedCol1, expectedCol2]);
     // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
     table.deleteRow(table.rows[0].idShort, { ability, onDelete });

@@ -27,7 +27,6 @@ import {
   ISubmodelBase,
   ISubmodelElement,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -40,11 +39,13 @@ import {
   withTrackingHelper,
 } from "../../../activity-history/domain/change-tracker";
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
+import { Pointer } from "./pointer";
 
 export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
   public readonly tracker;
+  private _parentPointer = Pointer.create({});
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -62,10 +63,18 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   ) {
     this.displayName = displayName;
     this.description = description;
-    setParentIdShortPaths(this, this.idShort);
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
     this.tracker = ChangeTracker.create({
       onStopCallback: () => this.administration.increaseVersion(),
     });
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
   }
 
   withTracking(changeTracker?: ChangeTracker) {
@@ -73,7 +82,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   }
 
   getIdShortPath(): IdShortPath {
-    return IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -216,6 +225,10 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     return tableExtension.getTableElement();
   }
 
+  getKeyType() {
+    return KeyTypes.Submodel;
+  }
+
   getValueRepresentation({
     idShortPath,
     options,
@@ -265,7 +278,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     let addedSubmodelElement: ISubmodelElement;
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
-      submodelElement.setParentIdShortPath(parent.getIdShortPath());
+      submodelElement.setParentPointer(parent.getPointer());
       addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
     } else {
       addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);

@@ -150,7 +150,7 @@ describe("submodel", () => {
       ability,
     });
     const row0 = submodelElementList.getSubmodelElements()[0];
-    col1.setParentIdShortPath(row0.getIdShortPath());
+    col1.setParentPointer(row0.getPointer());
     expect(row0.getSubmodelElements()).toEqual([col1]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -347,7 +347,7 @@ describe("submodel", () => {
       ability,
     });
     let tableExtension = new TableExtension(submodelElementList);
-    col1.setParentIdShortPath(tableExtension.rows[0].getIdShortPath());
+    col1.setParentPointer(tableExtension.rows[0].getPointer());
     expect(tableExtension.columns).toEqual([col1]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });

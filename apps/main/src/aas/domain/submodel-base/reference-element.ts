@@ -1,6 +1,8 @@
 import {
   AasSubmodelElements,
   AasSubmodelElementsType,
+  KeyTypes,
+  KeyTypesType,
   ReferenceElementJsonSchema,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -14,11 +16,12 @@ import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { Pointer } from "./pointer";
 
 export class ReferenceElement implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly extensions: Array<Extension>,
@@ -36,14 +39,24 @@ export class ReferenceElement implements ISubmodelElement {
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.ReferenceElement;
   }
 
   set displayName(value: Array<LanguageText>) {

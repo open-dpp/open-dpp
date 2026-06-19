@@ -1,7 +1,9 @@
 import {
   AasSubmodelElementsType,
   KeyTypesEnum,
+  KeyTypesType,
   Permissions,
+  ReferenceTypes,
   SubmodelBaseJsonSchema,
 } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
@@ -9,6 +11,7 @@ import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
 import { IdShortPath } from "../common/id-short-path";
+import { Key } from "../common/key";
 import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
 import { IReferable } from "../common/referable";
@@ -18,6 +21,7 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { AasAbility } from "../security/aas-ability";
 import { IVisitable } from "../visitor";
 import { getSubmodelClass } from "./submodel-registry";
+import { Pointer } from "./pointer";
 
 export interface SubmodelBaseProps {
   category?: string | null;
@@ -59,6 +63,14 @@ export interface IHasIdShortPath {
   getIdShortPath: () => IdShortPath;
 }
 
+export interface IHasReference {
+  getReference: () => Reference;
+}
+
+export interface IHasPointer {
+  getPointer: () => Pointer;
+}
+
 export interface IHasSubmodelElements {
   addSubmodelElement: (submodelElement: ISubmodelElement, options: AddOptions) => ISubmodelElement;
   getSubmodelElements: () => ISubmodelElement[];
@@ -68,20 +80,31 @@ export interface ISubmodelBase
   extends
     SubmodelBaseObjects,
     IHasIdShortPath,
+    IHasReference,
     IVisitable,
     IConvertableToPlain,
-    IHasSubmodelElements {}
+    IHasSubmodelElements,
+    IHasPointer {
+  getKeyType: () => KeyTypesType;
+}
 
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
   deleteSubmodelElement: (idShort: string, options: DeleteOptions) => ISubmodelElement;
-  setParentIdShortPath: (parentIdShortPath: IdShortPath) => void;
+  setParentPointer: (parentPointer: Pointer) => void;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
   const schema = z.object({ modelType: KeyTypesEnum });
   const AasClass = getSubmodelClass(schema.parse(submodelBase).modelType);
   return AasClass.fromPlain(submodelBase);
+}
+
+export function createDefaultReference(element: ISubmodelBase): Reference {
+  return Reference.create({
+    type: ReferenceTypes.ModelReference,
+    keys: [Key.create({ type: element.getKeyType(), value: element.idShort })],
+  });
 }
 
 export interface DeleteOptions {
@@ -111,19 +134,6 @@ export function deleteSubmodelElementOrFail(
   return submodelElementToDelete;
 }
 
-export function setParentIdShortPaths(
-  submodelBase: ISubmodelBase,
-  idShort: string,
-  parentIdShortPath?: IdShortPath,
-): void {
-  const idShortPath = parentIdShortPath
-    ? parentIdShortPath.addPathSegment(idShort)
-    : IdShortPath.create({ path: idShort });
-  submodelBase
-    .getSubmodelElements()
-    .forEach((element) => element.setParentIdShortPath(idShortPath));
-}
-
 export function cloneSubmodelElement(
   submodelElement: ISubmodelElement,
   override?: any,
@@ -135,11 +145,11 @@ export function cloneSubmodelElement(
 }
 
 export function addSubmodelElementOrFail(
-  parent: IHasSubmodelElements & IHasIdShortPath,
+  parent: IHasSubmodelElements & IHasIdShortPath & IHasPointer,
   submodelElement: ISubmodelElement,
   options: AddOptions,
 ): ISubmodelElement {
-  submodelElement.setParentIdShortPath(parent.getIdShortPath());
+  submodelElement.setParentPointer(parent.getPointer());
   if (!options.ability.can(Permissions.Create, parent.getIdShortPath())) {
     throw new ForbiddenError(`Missing permissions to add element to ${parent.getIdShortPath()}.`);
   }

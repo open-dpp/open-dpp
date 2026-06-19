@@ -2,6 +2,8 @@ import {
   AasSubmodelElements,
   AasSubmodelElementsType,
   DataTypeDefType,
+  KeyTypes,
+  KeyTypesType,
   SubmodelElementListJsonSchema,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
@@ -20,15 +22,15 @@ import {
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
+import { Pointer } from "./pointer";
 
 export class SubmodelElementList implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly typeValueListElement: AasSubmodelElementsType,
@@ -116,15 +118,25 @@ export class SubmodelElementList implements ISubmodelElement {
     );
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
-    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.SubmodelElementList;
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
@@ -146,7 +158,7 @@ export class SubmodelElementList implements ISubmodelElement {
         `Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`,
       );
     }
-    submodelElement.setParentIdShortPath(this.getIdShortPath());
+    submodelElement.setParentPointer(this.getPointer());
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 

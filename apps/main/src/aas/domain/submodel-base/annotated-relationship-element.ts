@@ -2,6 +2,8 @@ import {
   AasSubmodelElements,
   AasSubmodelElementsType,
   AnnotatedRelationshipElementJsonSchema,
+  KeyTypes,
+  KeyTypesType,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -20,15 +22,15 @@ import {
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
+import { Pointer } from "./pointer";
 
 export class AnnotatedRelationshipElement implements ISubmodelElement, IRelationshipElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer: Pointer = Pointer.create({});
 
   protected constructor(
     public readonly first: Reference,
@@ -48,15 +50,25 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
-    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.AnnotatedRelationshipElement;
   }
 
   set displayName(value: Array<LanguageText>) {
