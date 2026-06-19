@@ -43,8 +43,8 @@ export class Reference implements IVisitable {
     };
   }
 
-  addKey(key: Key) {
-    return this.keys.push(key);
+  addKey(key: Key): Reference {
+    return Reference.fromPlain({ ...this.toPlain(), keys: [...this.keys, key] });
   }
 
   constructIdShortPathsForType(type: KeyTypesType): IdShortPath[] {

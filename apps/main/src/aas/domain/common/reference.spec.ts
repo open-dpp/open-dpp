@@ -35,8 +35,8 @@ describe("reference", () => {
       keys: [],
     });
     const key = Key.create({ type: KeyTypes.Property, value: "prop1" });
-    reference.addKey(key);
-    expect(reference.keys).toEqual([key]);
+
+    expect(reference.addKey(key).keys).toEqual([key]);
   });
 
   it("should construct IdShortPaths", () => {
