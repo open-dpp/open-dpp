@@ -3,6 +3,7 @@ import { beforeAll, expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
+  allPermissionsAllow,
   propertyInputPlainFactory,
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
@@ -170,6 +171,116 @@ describe("submodel", () => {
     );
   });
 
+  it("should modify column in nested table", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(
+      submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodel.idShort }),
+      allPermissionsAllow.map(Permission.fromPlain),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "table1",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        SubmodelElementCollection.create({
+          idShort: "row1",
+          value: [
+            Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+            SubmodelElementList.create({
+              idShort: "table2",
+              typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+              value: [
+                SubmodelElementCollection.create({
+                  idShort: "row11",
+                  value: [
+                    Property.create({
+                      idShort: "col11",
+                      value: "30",
+                      valueType: DataTypeDef.Double,
+                    }),
+                  ],
+                }),
+                SubmodelElementCollection.create({
+                  idShort: "row12",
+                  value: [
+                    Property.create({
+                      idShort: "col12",
+                      value: "40",
+                      valueType: DataTypeDef.Double,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+        SubmodelElementCollection.create({
+          idShort: "row2",
+          value: [
+            Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+            SubmodelElementList.create({
+              idShort: "table2",
+              typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+              value: [
+                SubmodelElementCollection.create({
+                  idShort: "row21",
+                  value: [
+                    Property.create({
+                      idShort: "col11",
+                      value: "10",
+                      valueType: DataTypeDef.Double,
+                    }),
+                  ],
+                }),
+                SubmodelElementCollection.create({
+                  idShort: "row22",
+                  value: [
+                    Property.create({
+                      idShort: "col12",
+                      value: "20",
+                      valueType: DataTypeDef.Double,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    const newDisplayName = [
+      {
+        language: "de",
+        text: "CO2 Footprint New Text",
+      },
+    ];
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.modifyColumn(
+      IdShortPath.create({
+        path: "table1.row1.table2",
+      }),
+      "col11",
+      {
+        displayName: newDisplayName,
+      },
+      {
+        ability,
+      },
+    );
+    const col11Row21 = submodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "table1.row2.table2.row21.col11" }),
+    );
+    expect(col11Row21.toPlain()).toMatchObject({
+      displayName: newDisplayName,
+      value: "10",
+    });
+  });
+
   it("should modify column", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const security = Security.create({});
@@ -212,8 +323,6 @@ describe("submodel", () => {
   });
 
   it("should delete column", () => {
-    const digitalProductDocumentId = randomUUID();
-
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -249,7 +358,7 @@ describe("submodel", () => {
       submodel.deleteColumn(
         IdShortPath.create({ path: submodelElementList.idShort }),
         col1.idShort,
-        { ability: anonymousAbility, onDelete, digitalProductDocumentId },
+        { ability: anonymousAbility, onDelete },
       ),
     ).toThrow(
       new ForbiddenError(
@@ -260,7 +369,6 @@ describe("submodel", () => {
     submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, {
       ability,
       onDelete,
-      digitalProductDocumentId,
     });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.columns).toEqual([]);
@@ -297,8 +405,6 @@ describe("submodel", () => {
   });
 
   it("should delete row", () => {
-    const digitalProductDocumentId = randomUUID();
-
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -334,7 +440,6 @@ describe("submodel", () => {
       submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
         ability: anonymousAbility,
         onDelete,
-        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(
@@ -344,7 +449,6 @@ describe("submodel", () => {
     submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
       ability,
       onDelete,
-      digitalProductDocumentId,
     });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.rows).toEqual([row1]);
@@ -405,7 +509,6 @@ describe("submodel", () => {
   });
 
   it("should delete submodel element by idShortPath", () => {
-    const digitalProductDocumentId = randomUUID();
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -444,7 +547,6 @@ describe("submodel", () => {
       submodel.deleteSubmodelElement(path, {
         ability: anonymousAbility,
         onDelete,
-        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(
@@ -453,7 +555,7 @@ describe("submodel", () => {
     );
     expect(onDelete).not.toHaveBeenCalled();
 
-    submodel.deleteSubmodelElement(path, { ability, onDelete, digitalProductDocumentId });
+    submodel.deleteSubmodelElement(path, { ability, onDelete });
     expect(
       submodel.findSubmodelElement(
         IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }),

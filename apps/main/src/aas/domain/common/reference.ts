@@ -1,6 +1,13 @@
-import { ReferenceJsonSchema, ReferenceTypesType } from "@open-dpp/dto";
+import {
+  KeyTypesType,
+  ReferenceJsonSchema,
+  ReferenceTypes,
+  ReferenceTypesType,
+} from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "../visitor";
 import { Key } from "./key";
+import { IdShortPath } from "./id-short-path";
+import { ValueError } from "@open-dpp/exception";
 
 export class Reference implements IVisitable {
   private constructor(
@@ -34,6 +41,25 @@ export class Reference implements IVisitable {
       referredSemanticId: this.referredSemanticId?.toPlain(),
       keys: this.keys.map((k) => k.toPlain()),
     };
+  }
+
+  addKey(key: Key) {
+    return this.keys.push(key);
+  }
+
+  constructIdShortPathsForType(type: KeyTypesType): IdShortPath[] {
+    if (this.type !== ReferenceTypes.ModelReference) {
+      throw new ValueError("Only ModelReference can be constructed into IdShortPaths");
+    }
+    let idShortPath = IdShortPath.fromSegments([]);
+    const result: IdShortPath[] = [];
+    for (const key of this.keys) {
+      idShortPath = idShortPath.addPathSegment(key.value);
+      if (key.type === type) {
+        result.push(idShortPath);
+      }
+    }
+    return result;
   }
 
   equals(other: Reference): boolean {
