@@ -59,5 +59,8 @@ describe("reference", () => {
       IdShortPath.create({ path: "submodel1.table1.row1" }),
       IdShortPath.create({ path: "submodel1.table1.row1.table11.row11" }),
     ]);
+    expect(reference.asIdShortPath()).toEqual(
+      IdShortPath.create({ path: "submodel1.table1.row1.table11.row11.prop1" }),
+    );
   });
 });

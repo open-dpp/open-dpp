@@ -47,6 +47,13 @@ export class Reference implements IVisitable {
     return Reference.fromPlain({ ...this.toPlain(), keys: [...this.keys, key] });
   }
 
+  asIdShortPath(): IdShortPath {
+    if (this.type !== ReferenceTypes.ModelReference) {
+      throw new ValueError("Only ModelReference can be converted into IdShortPath");
+    }
+    return IdShortPath.fromSegments(this.keys.map((k) => k.value));
+  }
+
   constructIdShortPathsForType(type: KeyTypesType): IdShortPath[] {
     if (this.type !== ReferenceTypes.ModelReference) {
       throw new ValueError("Only ModelReference can be constructed into IdShortPaths");
