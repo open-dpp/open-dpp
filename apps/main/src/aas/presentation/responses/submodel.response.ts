@@ -1,9 +1,9 @@
 import { Submodel } from "../../domain/submodel-base/submodel";
 import {
   ApiVersionsDto,
-  ApiVersionsDtoType,
+  type ApiVersionsDtoType,
   SubmodelJsonSchema,
-  SubmodelResponseDto,
+  type SubmodelResponseDto,
 } from "@open-dpp/dto";
 import { AasAbility } from "../../domain/security/aas-ability";
 import { reverseMigrateSubmodelLinks } from "../../infrastructure/migrate-links";

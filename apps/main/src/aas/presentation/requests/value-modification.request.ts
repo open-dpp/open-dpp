@@ -1,4 +1,9 @@
-import { ApiVersionsDto, ApiVersionsDtoType, ValueRequestDto, ValueSchema } from "@open-dpp/dto";
+import {
+  ApiVersionsDto,
+  type ApiVersionsDtoType,
+  type ValueRequestDto,
+  ValueSchema,
+} from "@open-dpp/dto";
 import { migrateLinksInValueRepresentation } from "../../infrastructure/migrate-links";
 
 export class ValueModificationRequest {

@@ -64,8 +64,11 @@ import {
 import { DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
 
 describe("passportController", () => {
+  const basePathV1 = `/v1/passports`;
   const basePathV2 = `/v2/passports`;
+
   const ctx = createAasTestContext(
+    basePathV1,
     basePathV2,
     {
       imports: [PassportsModule, AasModule, PresentationConfigurationsModule, PermalinkModule],

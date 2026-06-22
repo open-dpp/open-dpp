@@ -42,8 +42,10 @@ import {
 } from "../../digital-product-document/domain/digital-product-document-status";
 
 describe("templateController", () => {
+  const basePathV1 = `/v1/templates`;
   const basePathV2 = `/v2/templates`;
   const ctx = createAasTestContext(
+    basePathV1,
     basePathV2,
     {
       imports: [TemplatesModule, PresentationConfigurationsModule],

@@ -1,6 +1,5 @@
-import {
+import type {
   ActivityPaginationDto,
-  AllApiVersions,
   ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
@@ -8,15 +7,9 @@ import {
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
-  DigitalProductDocumentStatusModificationDtoSchema,
   PassportDto,
-  PassportDtoSchema,
   PassportPaginationDto,
-  PassportPaginationDtoSchema,
   PassportRequestCreateDto,
-  PassportRequestCreateDtoSchema,
-  Populates,
-  PresentationReferenceType,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -28,6 +21,15 @@ import {
   SubmodelResponseDto,
   ValueRequestDto,
   ValueResponseDto,
+} from "@open-dpp/dto";
+import {
+  AllApiVersions,
+  DigitalProductDocumentStatusModificationDtoSchema,
+  PassportDtoSchema,
+  PassportPaginationDtoSchema,
+  PassportRequestCreateDtoSchema,
+  Populates,
+  PresentationReferenceType,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import { type Response } from "express";

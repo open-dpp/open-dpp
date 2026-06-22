@@ -39,9 +39,12 @@ import { PermalinkModule } from "../permalink.module";
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
 
 describe("PermalinkController", () => {
-  const basePath = "/v2/p";
+  const basePathV1 = "/v1/p";
+  const basePathV2 = "/v2/p";
+
   const ctx = createAasTestContext(
-    basePath,
+    basePathV1,
+    basePathV2,
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [

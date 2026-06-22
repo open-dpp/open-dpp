@@ -4,21 +4,23 @@ import { EnvironmentService, UserContext } from "../../aas/presentation/environm
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { Response } from "express";
 
-import {
-  ActivityPaginationDtoSchema,
+import type {
   ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
-  type SubmodelElementRequestDto,
+  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelModificationDto,
-  type SubmodelRequestDto,
+  SubmodelRequestDto,
   SubmodelResponseDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
+
+import { ActivityPaginationDtoSchema } from "@open-dpp/dto";
+
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { DbSessionOptions } from "../../database/query-options";
 import {

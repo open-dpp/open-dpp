@@ -11,22 +11,25 @@ import {
   Param,
   Patch,
 } from "@nestjs/common";
-import {
-  AllApiVersions,
+import type {
   ApiVersionsDtoType,
   AssetAdministrationShellPaginationResponseDto,
   PassportPermalinkBundleDto,
-  PassportPermalinkBundleDtoSchema,
-  PermalinkListDtoSchema,
-  PermalinkPublicDtoSchema,
   PermalinkUpdateRequest,
-  PermalinkUpdateRequestSchema,
-  PresentationReferenceType,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
   ValueResponseDto,
+} from "@open-dpp/dto";
+
+import {
+  AllApiVersions,
+  PassportPermalinkBundleDtoSchema,
+  PermalinkListDtoSchema,
+  PermalinkPublicDtoSchema,
+  PermalinkUpdateRequestSchema,
+  PresentationReferenceType,
 } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ZodValidationPipe } from "@open-dpp/exception";

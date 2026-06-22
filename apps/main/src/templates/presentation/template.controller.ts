@@ -22,7 +22,9 @@ import type {
   ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+
 import {
+  AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
   PresentationReferenceType,
@@ -122,7 +124,7 @@ import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.d
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller({ path: "/templates", version: ["1", "2"] })
+@Controller({ path: "/templates", version: AllApiVersions })
 export class TemplateController
   implements
     IAasReadEndpointsWithOrganizationId,

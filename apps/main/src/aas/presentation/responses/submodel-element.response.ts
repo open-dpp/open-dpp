@@ -1,8 +1,8 @@
 import { ISubmodelElement } from "../../domain/submodel-base/submodel-base";
 import {
   ApiVersionsDto,
-  ApiVersionsDtoType,
-  SubmodelElementResponseDto,
+  type ApiVersionsDtoType,
+  type SubmodelElementResponseDto,
   SubmodelElementSchema,
 } from "@open-dpp/dto";
 import { AasAbility } from "../../domain/security/aas-ability";

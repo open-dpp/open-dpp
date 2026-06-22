@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { ApiVersionsDto, ApiVersionsDtoEnum, ApiVersionsDtoType } from "@open-dpp/dto";
+import { ApiVersionsDto, ApiVersionsDtoEnum, type ApiVersionsDtoType } from "@open-dpp/dto";
 
 export const ApiVersion = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): ApiVersionsDtoType => {

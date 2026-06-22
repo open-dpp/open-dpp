@@ -1,5 +1,10 @@
 import { Submodel } from "../../domain/submodel-base/submodel";
-import { ApiVersionsDto, ApiVersionsDtoType, ValueResponseDto, ValueSchema } from "@open-dpp/dto";
+import {
+  ApiVersionsDto,
+  type ApiVersionsDtoType,
+  type ValueResponseDto,
+  ValueSchema,
+} from "@open-dpp/dto";
 import { AasAbility } from "../../domain/security/aas-ability";
 import { reverseMigrateLinksInValueRepresentation } from "../../infrastructure/migrate-links";
 import { IdShortPath } from "../../domain/common/id-short-path";

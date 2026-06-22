@@ -1,4 +1,8 @@
-import { ApiVersionsDto, ApiVersionsDtoType, SubmodelElementRequestDto } from "@open-dpp/dto";
+import {
+  ApiVersionsDto,
+  type ApiVersionsDtoType,
+  type SubmodelElementRequestDto,
+} from "@open-dpp/dto";
 import { ISubmodelElement, parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
 import { migrateSubmodelElementLinks } from "../../infrastructure/migrate-links";
 

@@ -2,8 +2,8 @@ import { PagingResult } from "../../../pagination/paging-result";
 import { ISubmodelElement } from "../../domain/submodel-base/submodel-base";
 import {
   ApiVersionsDto,
-  ApiVersionsDtoType,
-  SubmodelElementPaginationResponseDto,
+  type ApiVersionsDtoType,
+  type SubmodelElementPaginationResponseDto,
   SubmodelElementPaginationResponseDtoSchema,
 } from "@open-dpp/dto";
 import { AasAbility } from "../../domain/security/aas-ability";

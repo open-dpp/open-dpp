@@ -1,4 +1,4 @@
-import { ApiVersionsDto, ApiVersionsDtoType, SubmodelRequestDto } from "@open-dpp/dto";
+import { ApiVersionsDto, type ApiVersionsDtoType, type SubmodelRequestDto } from "@open-dpp/dto";
 import { migrateSubmodelLinks } from "../../infrastructure/migrate-links";
 import { Submodel } from "../../domain/submodel-base/submodel";
 

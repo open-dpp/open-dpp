@@ -3,16 +3,12 @@ import type { ClientSession, Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import {
+import type {
   ApiVersionsDtoType,
   AssetAdministrationShellCreateDto,
-  AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
-  AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
-  AssetKind,
-  Permissions,
   SubmodelElementListResponseDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -20,6 +16,14 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+
+import {
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellPaginationResponseDtoSchema,
+  AssetKind,
+  Permissions,
+} from "@open-dpp/dto";
+
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";

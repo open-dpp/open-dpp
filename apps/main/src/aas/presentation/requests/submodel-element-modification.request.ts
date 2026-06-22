@@ -1,4 +1,4 @@
-import { ApiVersionsDtoType, SubmodelElementModificationDto } from "@open-dpp/dto";
+import { type ApiVersionsDtoType, SubmodelElementModificationDto } from "@open-dpp/dto";
 
 export class SubmodelElementModificationRequest {
   private constructor(
