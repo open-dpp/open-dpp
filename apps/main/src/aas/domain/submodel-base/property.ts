@@ -17,6 +17,7 @@ import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { parse as parseUri } from "uri-js";
 
 export class Property implements ISubmodelElement {
   private _value: string | null = null;
@@ -103,6 +104,7 @@ export class Property implements ISubmodelElement {
         );
       }
     }
+
     if (value !== null) {
       if ([DataTypeDef.Double, DataTypeDef.Float].find((n) => n === valueType)) {
         parse(z.coerce.number());
@@ -114,7 +116,14 @@ export class Property implements ISubmodelElement {
       } else if (valueType === DataTypeDef.Boolean) {
         parse(z.union([z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")]));
       } else if (valueType === DataTypeDef.AnyUri) {
-        parse(z.url());
+        parse(
+          z
+            .string()
+            .min(1)
+            .refine((value) => !parseUri(value).error, {
+              message: parseUri(value).error,
+            }),
+        );
       } else {
         parse(z.string());
       }

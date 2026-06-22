@@ -73,24 +73,23 @@ async function bootstrap() {
       }
     });
 
-    app.use((req: Request, res: Response, next: NextFunction) => {
-      if (
-        req.url.startsWith("/api/") &&
-        !req.url.startsWith("/api/swagger") &&
-        !req.url.match(/^\/api\/v\d+(\/|$)/)
-      ) {
-        return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersionsDto.v1}`));
-      }
-
-      next();
-    });
-
     httpServer.on("upgrade", (req, socket, head) => {
       if (req.url && !req.url.startsWith("/api")) {
         proxy.ws(req, socket, head, { target: "http://localhost:5173" });
       }
     });
   }
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (
+      req.url.startsWith("/api/") &&
+      !req.url.startsWith("/api/swagger") &&
+      !req.url.match(/^\/api\/v\d+(\/|$)/)
+    ) {
+      return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersionsDto.v1}`));
+    }
+    next();
+  });
 
   app.setGlobalPrefix("api");
   app.enableVersioning({

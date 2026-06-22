@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type {
   PresentationConfigurationDto,
-  ReferenceValue,
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
@@ -11,9 +10,9 @@ import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import PresentationComponentRenderer from "./components/PresentationComponentRenderer.vue";
 import List from "./List.vue";
-import Link from "./Link.vue";
 import SubmodelElementCollection from "./SubmodelElementCollection.vue";
 import { z } from "zod";
+import { isSafeHref } from "../../lib/urls.ts";
 
 const { element, path, config } = defineProps<{
   element: SubmodelElementResponseDto;
@@ -44,13 +43,9 @@ const { t } = useI18n();
           binary
         />
       </template>
-      <template
-        v-else-if="
-          element.valueType === DataTypeDef.AnyUri && z.url().safeParse(element.value).success
-        "
-      >
+      <template v-else-if="element.valueType === DataTypeDef.AnyUri && isSafeHref(element.value)">
         <a
-          :href="z.url().parse(element.value)"
+          :href="String(element.value)"
           target="_blank"
           rel="noopener noreferrer"
           class="text-primary-500 mt-1 text-sm/6 hover:underline sm:mt-2"
