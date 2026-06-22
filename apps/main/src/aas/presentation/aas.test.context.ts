@@ -9,6 +9,7 @@ import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
   AasSubmodelElements,
+  AllApiVersions,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKind,
   DataTypeDef,
@@ -95,7 +96,6 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
 import { HttpStatusCode } from "axios";
-import { AllVersions } from "../../api-version";
 
 export function createAasTestContext<T>(
   basePath: string,
@@ -180,7 +180,7 @@ export function createAasTestContext<T>(
     );
     app.enableVersioning({
       type: VersioningType.URI,
-      defaultVersion: AllVersions,
+      defaultVersion: AllApiVersions,
     });
     await app.init();
 

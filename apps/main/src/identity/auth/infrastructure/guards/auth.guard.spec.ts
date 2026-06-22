@@ -9,7 +9,7 @@ import { MembersRepository } from "../../../organizations/infrastructure/adapter
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { AuthGuard } from "./auth.guard";
-import { LatestApiVersionWithPrefix } from "../../../../api-version";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 describe("authGuard Allowlist Repro", () => {
   let guard: AuthGuard;
@@ -79,38 +79,38 @@ describe("authGuard Allowlist Repro", () => {
     } as ExecutionContext & { _request: any };
   };
 
-  it(`should allow /api/${LatestApiVersionWithPrefix}/sse exactly`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse`);
+  it(`should allow /api/${LatestApiVersionWithPrefixDto}/sse exactly`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse`);
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/sse/something`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse/123`);
+  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/sse/something`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse/123`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it(`should allow /api/${LatestApiVersionWithPrefix}/sse?query=123`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse?foo=bar`);
+  it(`should allow /api/${LatestApiVersionWithPrefixDto}/sse?query=123`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse?foo=bar`);
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it(`should allow /api/${LatestApiVersionWithPrefix}/messages exactly`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/messages`);
+  it(`should allow /api/${LatestApiVersionWithPrefixDto}/messages exactly`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages`);
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/messages/something`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/messages/123`);
+  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/messages/something`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages/123`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/sse-extension (partial match prefix)`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/sse-extension`);
+  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/sse-extension (partial match prefix)`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/sse-extension`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it(`should NOT allow /api/${LatestApiVersionWithPrefix}/messages-extension (partial match prefix)`, async () => {
-    const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/messages-extension`);
+  it(`should NOT allow /api/${LatestApiVersionWithPrefixDto}/messages-extension (partial match prefix)`, async () => {
+    const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/messages-extension`);
     expect(await guard.canActivate(context)).toBe(false);
   });
 
@@ -130,7 +130,7 @@ describe("authGuard Allowlist Repro", () => {
 
     it("should deny access when API key is invalid", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue(null);
-      const context = createMockContext(`/api/${LatestApiVersionWithPrefix}/items`, {
+      const context = createMockContext(`/api/${LatestApiVersionWithPrefixDto}/items`, {
         "x-api-key": "invalid-key",
       });
 

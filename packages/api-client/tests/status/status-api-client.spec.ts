@@ -1,13 +1,14 @@
 import { OpenDppClient, StatusApiClient } from "../../src";
 import { statusResponse } from "./handlers";
 import { server } from "./msw.server";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("statusApiClient", () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  const baseURL = "https://cloud.open-dpp.de/api";
+  const baseURL = DEFAULT_API_URL;
 
   it("should return status with version", async () => {
     const client = new StatusApiClient({ baseURL });

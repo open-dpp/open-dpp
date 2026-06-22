@@ -1,6 +1,9 @@
 import { ISubmodelElement } from "../../domain/submodel-base/submodel-base";
-import { ApiVersionsType } from "../../../api-version";
-import { SubmodelElementListJsonSchema, SubmodelElementListResponseDto } from "@open-dpp/dto";
+import {
+  ApiVersionsDtoType,
+  SubmodelElementListJsonSchema,
+  SubmodelElementListResponseDto,
+} from "@open-dpp/dto";
 import { AasAbility } from "../../domain/security/aas-ability";
 import { SubmodelElementResponse } from "./submodel-element.response";
 
@@ -9,7 +12,7 @@ export class SubmodelElementListResponse {
 
   static create(data: {
     submodelElement: ISubmodelElement;
-    version: ApiVersionsType;
+    version: ApiVersionsDtoType;
     ability?: AasAbility;
   }) {
     return new SubmodelElementListResponse(SubmodelElementResponse.create(data));

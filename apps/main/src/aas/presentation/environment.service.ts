@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
+  ApiVersionsDtoType,
   AssetAdministrationShellCreateDto,
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationDto,
@@ -59,7 +60,6 @@ import { ColumnDeletedActivity } from "../../activity-history/domain/activities/
 import { RowDeletedActivity } from "../../activity-history/domain/activities/row-deleted.activity";
 import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
-import { ApiVersionsType } from "../../api-version";
 import { SubmodelElementRequest } from "./requests/submodel-element.request";
 import { SubmodelElementPaginationResponse } from "./responses/submodel-element-pagination.response";
 import { SubmodelElementResponse } from "./responses/submodel-element.response";
@@ -233,7 +233,7 @@ export class EnvironmentService {
     environment: Environment,
     pagination: Pagination,
     subject: SubjectAttributes,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map((p) => this.submodelRepository.findOneOrFail(p)));
@@ -439,7 +439,7 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     subject: SubjectAttributes,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const ability = await this.loadAbility(environment, subject);
     const result = await this.findSubmodelByIdOrFail(environment, submodelId);
@@ -450,7 +450,7 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     subject: SubjectAttributes,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
@@ -463,7 +463,7 @@ export class EnvironmentService {
     submodelId: string,
     pagination: Pagination,
     subject: SubjectAttributes,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const ability = await this.loadAbility(environment, subject);
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
@@ -725,7 +725,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -772,7 +772,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     userContext: UserContext,
     position: number | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
@@ -812,7 +812,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     idShortOfRow: string,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -856,7 +856,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
@@ -869,7 +869,7 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject);

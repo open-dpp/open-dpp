@@ -1,5 +1,4 @@
-import { ApiVersions } from "../../../api-version";
-import { KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { ApiVersionsDto, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { beforeAll } from "@jest/globals";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { ValueModificationRequest } from "./value-modification.request";
@@ -29,7 +28,7 @@ describe("ValueModificationRequest", () => {
     it("converts ReferenceElement to AnyUri Property", () => {
       const request = ValueModificationRequest.create({
         body,
-        version: ApiVersions.v1,
+        version: ApiVersionsDto.v1,
       });
 
       const result: any = request.toDomain();
@@ -41,7 +40,7 @@ describe("ValueModificationRequest", () => {
     it("keeps AnyUri Property as Property", () => {
       const request = ValueModificationRequest.create({
         body: body2,
-        version: ApiVersions.v2,
+        version: ApiVersionsDto.v2,
       });
 
       const result: any = request.toDomain();

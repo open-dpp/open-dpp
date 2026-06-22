@@ -1,15 +1,15 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { ApiVersions, ApiVersionsEnum, ApiVersionsType } from "../../api-version";
+import { ApiVersionsDto, ApiVersionsDtoEnum, ApiVersionsDtoType } from "@open-dpp/dto";
 
 export const ApiVersion = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): ApiVersionsType => {
+  (_data: unknown, ctx: ExecutionContext): ApiVersionsDtoType => {
     const request = ctx.switchToHttp().getRequest();
     return parseApiVersion(request.path);
   },
 );
 
-export function parseApiVersion(path: string): ApiVersionsType {
+export function parseApiVersion(path: string): ApiVersionsDtoType {
   const match = path.match(/v(\d+)/);
-  const parsingResult = ApiVersionsEnum.safeParse(match ? match[1] : ApiVersions.v1);
-  return parsingResult.success ? parsingResult.data : ApiVersions.v1;
+  const parsingResult = ApiVersionsDtoEnum.safeParse(match ? match[1] : ApiVersionsDto.v1);
+  return parsingResult.success ? parsingResult.data : ApiVersionsDto.v1;
 }

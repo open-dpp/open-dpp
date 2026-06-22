@@ -38,12 +38,13 @@ import {
   digitalProductDocumentId,
   periodParams,
 } from "./handlers/digital-product-documents";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("apiClient", () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
-  const baseURL = `https://cloud.open-dpp.de/api`;
+  const baseURL = DEFAULT_API_URL;
 
   describe("organizations", () => {
     it("should return organizations", async () => {

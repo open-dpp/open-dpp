@@ -1,12 +1,11 @@
-import { SubmodelModificationDto } from "@open-dpp/dto";
-import { ApiVersionsType } from "../../../api-version";
+import { ApiVersionsDtoType, SubmodelModificationDto } from "@open-dpp/dto";
 
 export class SubmodelModificationRequest {
   private constructor(
     private readonly body: SubmodelModificationDto,
-    public readonly version: ApiVersionsType,
+    public readonly version: ApiVersionsDtoType,
   ) {}
-  static create(data: { body: SubmodelModificationDto; version: ApiVersionsType }) {
+  static create(data: { body: SubmodelModificationDto; version: ApiVersionsDtoType }) {
     return new SubmodelModificationRequest(data.body, data.version);
   }
 

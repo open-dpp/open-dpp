@@ -37,7 +37,7 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import { DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
+import { ApiVersionsDto, DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 import { Response } from "express";
@@ -52,7 +52,6 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
-import { ApiVersions } from "../../api-version";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -61,7 +60,7 @@ describe("DigitalProductDocumentService", () => {
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
   let connection: Connection;
-  const latestVersion = ApiVersions.v2;
+  const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({

@@ -10,7 +10,7 @@ import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
 import { EmailService } from "../../email/email.service";
-import { LatestApiVersionWithPrefix } from "../../api-version";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
 
@@ -62,7 +62,7 @@ export const AuthProvider: Provider = {
 
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
-      basePath: `/api/${LatestApiVersionWithPrefix}/auth`,
+      basePath: `/api/${LatestApiVersionWithPrefixDto}/auth`,
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
       logger: {

@@ -1,5 +1,4 @@
-import { ApiVersions } from "../../../api-version";
-import { DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { ApiVersionsDto, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { SubmodelRequest } from "./submodel.request";
 import { randomUUID } from "node:crypto";
 import { beforeAll } from "@jest/globals";
@@ -34,7 +33,7 @@ describe("SubmodelRequest", () => {
     it("converts ReferenceElement to AnyUri Property", () => {
       const request = SubmodelRequest.create({
         body: { id: randomUUID(), idShort: "testSubmodel", submodelElements: [refElement] },
-        version: ApiVersions.v1,
+        version: ApiVersionsDto.v1,
       });
 
       const result = request.toDomain();
@@ -48,7 +47,7 @@ describe("SubmodelRequest", () => {
     it("keeps AnyUri Property as Property", () => {
       const request = SubmodelRequest.create({
         body: { id: randomUUID(), idShort: "testSubmodel", submodelElements: [propElement] },
-        version: ApiVersions.v2,
+        version: ApiVersionsDto.v2,
       });
 
       const result = request.toDomain();

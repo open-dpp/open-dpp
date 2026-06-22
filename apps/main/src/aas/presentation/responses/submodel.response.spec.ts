@@ -1,5 +1,4 @@
-import { ApiVersions } from "../../../api-version";
-import { DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { ApiVersionsDto, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { Property } from "../../domain/submodel-base/property";
 import { Security } from "../../domain/security/security";
 import { allPermissionsAllowFactory, memberFactory } from "../../../fixtures/security-fixtures";
@@ -23,7 +22,7 @@ describe("SubmodelElement", () => {
     it("converts AnyUri Property to ReferenceElement with ExternalReference", () => {
       const response = SubmodelResponse.create({
         submodel,
-        version: ApiVersions.v1,
+        version: ApiVersionsDto.v1,
         ability,
       });
 
@@ -41,7 +40,7 @@ describe("SubmodelElement", () => {
     it("keeps AnyUri Property as Property", () => {
       const response = SubmodelResponse.create({
         submodel,
-        version: ApiVersions.v2,
+        version: ApiVersionsDto.v2,
         ability,
       });
 

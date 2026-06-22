@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import { LatestApiVersionWithPrefixDto, PresentationReferenceType } from "@open-dpp/dto";
 import type { Model } from "mongoose";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
@@ -37,7 +37,6 @@ import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schem
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
 import { PermalinkModule } from "../permalink.module";
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
-import { LatestApiVersionWithPrefix } from "../../api-version";
 
 describe("PermalinkController", () => {
   const basePath = "/v2/p";
@@ -123,7 +122,7 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/${LatestApiVersionWithPrefix}/p/${fixture.id}`)
+      .get(`/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`)
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
@@ -137,7 +136,7 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink({ slug });
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p/${slug}`,
+      `/${LatestApiVersionWithPrefixDto}/p/${slug}`,
     );
 
     expect(response.status).toEqual(200);
@@ -146,7 +145,7 @@ describe("PermalinkController", () => {
 
   it(`/GET returns 404 for unknown permalink id`, async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p/${randomUUID()}`,
+      `/${LatestApiVersionWithPrefixDto}/p/${randomUUID()}`,
     );
 
     expect(response.status).toEqual(404);
@@ -154,7 +153,7 @@ describe("PermalinkController", () => {
 
   it(`/GET returns 404 for unknown slug`, async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p/nonexistent-slug`,
+      `/${LatestApiVersionWithPrefixDto}/p/nonexistent-slug`,
     );
 
     expect(response.status).toEqual(404);
@@ -164,7 +163,7 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink();
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p?passportId=${fixture.passport.id}`,
+      `/${LatestApiVersionWithPrefixDto}/p?passportId=${fixture.passport.id}`,
     );
 
     expect(response.status).toEqual(200);
@@ -175,7 +174,7 @@ describe("PermalinkController", () => {
 
   it(`/GET permalink by passport id returns empty array when missing`, async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p?passportId=${randomUUID()}`,
+      `/${LatestApiVersionWithPrefixDto}/p?passportId=${randomUUID()}`,
     );
 
     expect(response.status).toEqual(200);
@@ -186,7 +185,7 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink({ published: false });
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p?passportId=${fixture.passport.id}`,
+      `/${LatestApiVersionWithPrefixDto}/p?passportId=${fixture.passport.id}`,
     );
 
     expect(response.status).toEqual(200);
@@ -202,14 +201,14 @@ describe("PermalinkController", () => {
       ["", "missing passportId"],
     ])("rejects %s with 400 (%s)", async (queryString) => {
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p${queryString.length > 0 ? `?${queryString}` : ""}`,
+        `/${LatestApiVersionWithPrefixDto}/p${queryString.length > 0 ? `?${queryString}` : ""}`,
       );
       expect(response.status).toEqual(400);
     });
 
     it("returns 200 with empty list for a valid but unknown UUID", async () => {
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p?passportId=${randomUUID()}`,
+        `/${LatestApiVersionWithPrefixDto}/p?passportId=${randomUUID()}`,
       );
       expect(response.status).toEqual(200);
       expect(response.body).toEqual([]);
@@ -238,7 +237,7 @@ describe("PermalinkController", () => {
       const passport = await seedBarePassport(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -278,7 +277,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PermalinkRepository).save(existingPermalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -298,7 +297,7 @@ describe("PermalinkController", () => {
       const passport = await seedBarePassport(orgId);
 
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p?passportId=${passport.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`,
       );
 
       expect(response.status).toEqual(200);
@@ -320,7 +319,7 @@ describe("PermalinkController", () => {
       const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id);
 
@@ -344,7 +343,7 @@ describe("PermalinkController", () => {
       const ghostPassportId = randomUUID();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p?passportId=${ghostPassportId}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${ghostPassportId}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -364,7 +363,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -402,7 +401,7 @@ describe("PermalinkController", () => {
     await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p/${permalink.id}`,
+      `/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`,
     );
 
     expect(response.status).toEqual(404);
@@ -468,7 +467,7 @@ describe("PermalinkController", () => {
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -545,7 +544,7 @@ describe("PermalinkController", () => {
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug });
@@ -569,7 +568,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id, initialSlug);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: null });
@@ -585,7 +584,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "BAD SLUG" });
@@ -600,7 +599,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "new" });
@@ -617,7 +616,7 @@ describe("PermalinkController", () => {
       const { permalink: target } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${target.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${target.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: taken });
@@ -633,7 +632,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(ownerOrg.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id)
         .send({ slug: "trespass" });
@@ -646,7 +645,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .send({ slug: "anon" });
 
       expect([401, 403]).toContain(response.status);
@@ -676,7 +675,7 @@ describe("PermalinkController", () => {
 
       const slug = `slug-${randomUUID().slice(0, 8)}`;
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug });
@@ -691,7 +690,7 @@ describe("PermalinkController", () => {
         .betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${randomUUID()}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${randomUUID()}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "ghost" });
@@ -706,7 +705,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ baseUrl: "https://passports.example.com" });
@@ -733,7 +732,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${created.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${created.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ baseUrl: null });
@@ -749,7 +748,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ baseUrl: "https://example.com?q=1" });
@@ -765,7 +764,7 @@ describe("PermalinkController", () => {
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug, baseUrl: "https://passports.example.com" });
@@ -784,7 +783,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
 
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p/${fixture.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
       );
 
       expect(response.status).toEqual(200);
@@ -795,7 +794,7 @@ describe("PermalinkController", () => {
       const fixture = await createPassportWithPermalink();
 
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p/${fixture.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
       );
 
       expect(response.status).toEqual(200);
@@ -815,7 +814,7 @@ describe("PermalinkController", () => {
       await seedBranding(fixture.passport.organizationId, "https://branding.example.com");
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p`)
         .query({ passportId: fixture.passport.id });
 
       expect(response.status).toEqual(200);
@@ -827,7 +826,7 @@ describe("PermalinkController", () => {
       const fixture = await createPassportWithPermalink();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p`)
         .query({ passportId: fixture.passport.id });
 
       expect(response.status).toEqual(200);
@@ -842,7 +841,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p`)
         .query({ passportId: fixture.passport.id });
 
       expect(response.status).toEqual(200);
@@ -865,7 +864,7 @@ describe("PermalinkController", () => {
       expect((await repo.findOneOrFail(fixture.id)).publishedUrl).toBeNull();
 
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p/${fixture.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
       );
 
       expect(response.status).toEqual(200);
@@ -883,7 +882,7 @@ describe("PermalinkController", () => {
       await brandingModel.create({ organizationId: fixture.passport.organizationId });
 
       await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p/${fixture.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
       );
       const repo = ctx.getModuleRef().get(PermalinkRepository);
       const frozenUrl = (await repo.findOneOrFail(fixture.id)).publishedUrl;
@@ -894,7 +893,7 @@ describe("PermalinkController", () => {
       );
 
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/${LatestApiVersionWithPrefix}/p/${fixture.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
       );
 
       expect(response.status).toEqual(200);
@@ -925,7 +924,7 @@ describe("PermalinkController", () => {
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/${LatestApiVersionWithPrefix}/p/${permalink.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -953,7 +952,7 @@ describe("PermalinkController", () => {
     expect(countBefore).toEqual(1);
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/${LatestApiVersionWithPrefix}/p/${fixture.id}`,
+      `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
     );
 
     expect(response.status).toEqual(200);

@@ -5,6 +5,7 @@ import { expect, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import {
   AasSubmodelElements,
+  ApiVersionsDto,
   AssetKind,
   DataTypeDef,
   KeyTypes,
@@ -86,7 +87,6 @@ import { SubmodelReferenceDeleted } from "../../activity-history/domain/change-e
 import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
 import { SubmodelDeleted } from "../../activity-history/domain/change-events/submodel-deleted";
 import { SubmodelElementRequest } from "./requests/submodel-element.request";
-import { ApiVersions } from "../../api-version";
 import { SubmodelRequest } from "./requests/submodel.request";
 import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
 import { ValueModificationRequest } from "./requests/value-modification.request";
@@ -101,7 +101,7 @@ describe("environmentService", () => {
   let conceptDescriptionRepository: ConceptDescriptionRepository;
   let connection: Connection;
   let activityRepository: ActivityRepository;
-  const latestVersion = ApiVersions.v2;
+  const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -496,7 +496,7 @@ describe("environmentService", () => {
     };
     const request = SubmodelRequest.create({
       body: submodelPlain,
-      version: ApiVersions.v2,
+      version: ApiVersionsDto.v2,
     });
 
     async function saveEnvironment(_options: DbSessionOptions) {}
@@ -589,7 +589,7 @@ describe("environmentService", () => {
     };
     const request = SubmodelElementRequest.create({
       body: propertyPlain,
-      version: ApiVersions.v2,
+      version: ApiVersionsDto.v2,
     });
     await environmentService.addSubmodelElement(
       correlationId,
@@ -642,7 +642,7 @@ describe("environmentService", () => {
     });
     const request = SubmodelElementRequest.create({
       body,
-      version: ApiVersions.v2,
+      version: ApiVersionsDto.v2,
     });
     const position = 1;
 
@@ -911,7 +911,7 @@ describe("environmentService", () => {
     };
     const modificationRequest = SubmodelModificationRequest.create({
       body: modification,
-      version: ApiVersions.v2,
+      version: ApiVersionsDto.v2,
     });
     await environmentService.modifySubmodel(
       correlationId,

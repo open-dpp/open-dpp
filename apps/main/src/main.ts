@@ -16,7 +16,7 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
-import { AllVersions, ApiVersions } from "./api-version";
+import { AllApiVersions, ApiVersionsDto } from "@open-dpp/dto";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
@@ -79,7 +79,7 @@ async function bootstrap() {
         !req.url.startsWith("/api/swagger") &&
         !req.url.match(/^\/api\/v\d+(\/|$)/)
       ) {
-        return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersions.v1}`));
+        return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersionsDto.v1}`));
       }
 
       next();
@@ -96,7 +96,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
     // header: "X-API-VERSION",
-    defaultVersion: AllVersions,
+    defaultVersion: AllApiVersions,
   });
   app.enableCors({
     credentials: true,

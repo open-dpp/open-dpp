@@ -1,5 +1,10 @@
-import { ApiVersions } from "../../../api-version";
-import { DataTypeDef, KeyTypes, ReferenceTypes, SubmodelElementSchema } from "@open-dpp/dto";
+import {
+  ApiVersionsDto,
+  DataTypeDef,
+  KeyTypes,
+  ReferenceTypes,
+  SubmodelElementSchema,
+} from "@open-dpp/dto";
 import { SubmodelElementRequest } from "./submodel-element.request";
 import { beforeAll } from "@jest/globals";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
@@ -34,7 +39,7 @@ describe("SubmodelElementRequest", () => {
     it("converts ReferenceElement to AnyUri Property", () => {
       const request = SubmodelElementRequest.create({
         body: refElement,
-        version: ApiVersions.v1,
+        version: ApiVersionsDto.v1,
       });
 
       const result = request.toDomain();
@@ -49,7 +54,7 @@ describe("SubmodelElementRequest", () => {
     it("keeps AnyUri Property as Property", () => {
       const request = SubmodelElementRequest.create({
         body: propElement,
-        version: ApiVersions.v2,
+        version: ApiVersionsDto.v2,
       });
 
       const result = request.toDomain();

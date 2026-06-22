@@ -6,6 +6,7 @@ import { Response } from "express";
 
 import {
   ActivityPaginationDtoSchema,
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
@@ -31,7 +32,6 @@ import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-produ
 import { Period } from "../../time/period";
 import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
-import { ApiVersionsType } from "../../api-version";
 import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
 import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
 import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel-modification.request";
@@ -52,7 +52,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     body: SubmodelRequestDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -79,7 +79,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     body: SubmodelElementRequestDto,
     position: number | undefined,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -107,7 +107,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     position: number | undefined,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -134,7 +134,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: SubmodelElementRequestDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -161,7 +161,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: SubmodelElementRequestDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -211,7 +211,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: SubmodelModificationDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -236,7 +236,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: ValueRequestDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -263,7 +263,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortOfColumn: string,
     body: SubmodelModificationDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -291,7 +291,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: SubmodelElementModificationDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -369,7 +369,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -422,7 +422,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     idShortOfRow: string,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -450,7 +450,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: ValueRequestDto,
     userContext: UserContext,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,

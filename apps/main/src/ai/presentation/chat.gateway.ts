@@ -13,10 +13,10 @@ import { OptionalAuth } from "../../identity/auth/presentation/decorators/option
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ChatService } from "../chat.service";
-import { LatestApiVersionWithPrefix } from "../../api-version";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 @UseGuards(WebsocketAuthGuard)
-@WebSocketGateway({ cors: true, path: `/api/${LatestApiVersionWithPrefix}/ai-socket` })
+@WebSocketGateway({ cors: true, path: `/api/${LatestApiVersionWithPrefixDto}/ai-socket` })
 @UseFilters(new SocketIoExceptionFilter())
 export class ChatGateway {
   private readonly logger: Logger = new Logger(ChatGateway.name);

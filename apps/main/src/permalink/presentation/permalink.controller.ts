@@ -11,13 +11,15 @@ import {
   Param,
   Patch,
 } from "@nestjs/common";
-import type { PermalinkUpdateRequest } from "@open-dpp/dto";
 import {
+  AllApiVersions,
+  ApiVersionsDtoType,
   AssetAdministrationShellPaginationResponseDto,
   PassportPermalinkBundleDto,
   PassportPermalinkBundleDtoSchema,
   PermalinkListDtoSchema,
   PermalinkPublicDtoSchema,
+  PermalinkUpdateRequest,
   PermalinkUpdateRequestSchema,
   PresentationReferenceType,
   SubmodelElementPaginationResponseDto,
@@ -71,10 +73,9 @@ import {
   resolveFallbackBaseUrl,
 } from "../application/services/permalink.application.service";
 import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
-import { ApiVersions, type ApiVersionsType } from "../../api-version";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller({ version: [ApiVersions.v1, ApiVersions.v2] })
+@Controller({ version: AllApiVersions })
 export class PermalinkController {
   private readonly logger = new Logger(PermalinkController.name);
 
@@ -264,7 +265,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @ApiVersion() version: ApiVersionsType,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -288,7 +289,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @ApiVersion() version: ApiVersionsType,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -311,7 +312,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @ApiVersion() version: ApiVersionsType,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -336,7 +337,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @ApiVersion() version: ApiVersionsType,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -362,7 +363,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @ApiVersion() version: ApiVersionsType,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -387,7 +388,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @ApiVersion() version: ApiVersionsType,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,

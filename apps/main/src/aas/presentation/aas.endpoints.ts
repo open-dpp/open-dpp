@@ -1,4 +1,5 @@
 import type {
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
@@ -21,7 +22,6 @@ import { MemberRoleType } from "../../identity/organizations/domain/member-role.
 import { UserRoleType } from "../../identity/users/domain/user-role.enum";
 
 import { IdShortPath } from "../domain/common/id-short-path";
-import { ApiVersionsType } from "../../api-version";
 
 export interface IAasReadEndpointsWithOrganizationId {
   getShells: (
@@ -39,7 +39,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     cursor: string | undefined,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelPaginationResponseDto>;
   getSubmodelById: (
     organizationId: string,
@@ -47,7 +47,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     submodelId: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelResponseDto>;
   getSubmodelValue: (
     organizationId: string,
@@ -55,7 +55,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     submodelId: string,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<ValueResponseDto>;
   getSubmodelElements: (
     organizationId: string,
@@ -65,7 +65,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     cursor: string | undefined,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementPaginationResponseDto>;
   getSubmodelElementById: (
     organizationId: string,
@@ -74,7 +74,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     idShortPath: IdShortPath,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementResponseDto>;
   getSubmodelElementValue: (
     organizationId: string,
@@ -83,7 +83,7 @@ export interface IAasReadEndpointsWithOrganizationId {
     idShortPath: IdShortPath,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<ValueResponseDto>;
 }
 
@@ -96,7 +96,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
     correlationId: string,
@@ -107,7 +107,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementResponseDto>;
   createSubmodelElementAtIdShortPath: (
     correlationId: string,
@@ -119,7 +119,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementResponseDto>;
   addColumnToSubmodelElementList: (
     correlationId: string,
@@ -132,7 +132,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
     correlationId: string,
@@ -144,7 +144,7 @@ export interface IAasCreateEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
@@ -168,7 +168,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelResponseDto>;
   modifyValueOfSubmodel: (
     correlationId: string,
@@ -179,7 +179,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
     correlationId: string,
@@ -191,7 +191,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementResponseDto>;
   modifySubmodelElementValue: (
     correlationId: string,
@@ -203,7 +203,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementResponseDto>;
   modifyColumnOfSubmodelElementList: (
     correlationId: string,
@@ -216,7 +216,7 @@ export interface IAasModifyEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
@@ -250,7 +250,7 @@ export interface IAasDeleteEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
   deleteRowFromSubmodelElementList: (
     correlationId: string,
@@ -262,7 +262,7 @@ export interface IAasDeleteEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,
-    version: ApiVersionsType,
+    version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
   deletePolicyBySubjectAndObject: (
     correlationId: string,

@@ -4,7 +4,7 @@ import { EnvService } from "@open-dpp/env";
 import { Member } from "../../identity/organizations/domain/member";
 import { User } from "../../identity/users/domain/user";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
-import { LatestApiVersionWithPrefix } from "../../api-version";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 @Injectable()
 export class McpClientService implements OnModuleDestroy {
@@ -22,7 +22,7 @@ export class McpClientService implements OnModuleDestroy {
   }
 
   async connect() {
-    const url = `http://localhost:${this.configService.get("OPEN_DPP_PORT")}/api/${LatestApiVersionWithPrefix}/sse`;
+    const url = `http://localhost:${this.configService.get("OPEN_DPP_PORT")}/api/${LatestApiVersionWithPrefixDto}/sse`;
     // Create a new client instance
     this.client = new MultiServerMCPClient({
       throwOnLoadError: true,

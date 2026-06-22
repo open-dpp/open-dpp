@@ -1,6 +1,5 @@
 import { Submodel } from "../../domain/submodel-base/submodel";
-import { ApiVersions, ApiVersionsType } from "../../../api-version";
-import { ValueResponseDto, ValueSchema } from "@open-dpp/dto";
+import { ApiVersionsDto, ApiVersionsDtoType, ValueResponseDto, ValueSchema } from "@open-dpp/dto";
 import { AasAbility } from "../../domain/security/aas-ability";
 import { reverseMigrateLinksInValueRepresentation } from "../../infrastructure/migrate-links";
 import { IdShortPath } from "../../domain/common/id-short-path";
@@ -11,13 +10,13 @@ export class ValueResponse {
   private constructor(
     public readonly submodel: Submodel,
     public readonly idShortPath: IdShortPath | undefined,
-    public readonly version: ApiVersionsType,
+    public readonly version: ApiVersionsDtoType,
     public readonly ability: AasAbility,
   ) {}
   static create(data: {
     submodel: Submodel;
     idShortPath?: IdShortPath;
-    version: ApiVersionsType;
+    version: ApiVersionsDtoType;
     ability: AasAbility;
   }) {
     return new ValueResponse(data.submodel, data.idShortPath, data.version, data.ability);
@@ -34,7 +33,7 @@ export class ValueResponse {
     }
 
     const migratedResult =
-      this.version === ApiVersions.v1 ? reverseMigrateLinksInValueRepresentation(plain) : plain;
+      this.version === ApiVersionsDto.v1 ? reverseMigrateLinksInValueRepresentation(plain) : plain;
 
     return ValueSchema.parse(migratedResult);
   }

@@ -8,6 +8,7 @@ import {
   passportMetricQueryDto,
 } from "./handlers/passport-metrics";
 import { server } from "./msw.server";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("analyticsApiClient", () => {
   beforeAll(() => server.listen());
@@ -16,7 +17,7 @@ describe("analyticsApiClient", () => {
 
   describe("passport metrics", () => {
     const sdk = new OpenDppClient({
-      analytics: { baseURL: "https://cloud.open-dpp.de/api" },
+      analytics: { baseURL: DEFAULT_API_URL },
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should query passport metric", async () => {
