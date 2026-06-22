@@ -215,6 +215,19 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.modifyColumn(idShortOfColumn, data, options);
+
+    // TODO: Cleanup later
+    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
+    const parentLists = submodelElement
+      .getReference()
+      .constructIdShortPathsForType(KeyTypes.SubmodelElementList, { excludeSubmodel: true })
+      .filter((path) => !path.isEqual(idShortPath))
+      .map((path) => this.getListAsTableExtensionOrFail(path));
+
+    const colsToSync = parentLists.map((tableExtension) =>
+      tableExtension.columns.find((column) => column.idShort === idShortPath.last),
+    );
+
     return tableExtension.getTableElement();
   }
 

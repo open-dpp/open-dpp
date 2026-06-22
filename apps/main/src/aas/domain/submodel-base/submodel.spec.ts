@@ -172,10 +172,7 @@ describe("submodel", () => {
   });
 
   it("should modify column in nested table", () => {
-    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-    const submodel = Submodel.fromPlain(
-      submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
-    );
+    const submodel = Submodel.create({ idShort: "section1" });
     const security = Security.create({});
     security.addPolicy(
       member,

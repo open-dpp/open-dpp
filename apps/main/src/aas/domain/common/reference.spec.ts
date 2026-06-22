@@ -51,9 +51,18 @@ describe("reference", () => {
         Key.create({ type: KeyTypes.Property, value: "prop1" }),
       ],
     });
+
     expect(reference.constructIdShortPathsForType(KeyTypes.SubmodelElementList)).toEqual([
       IdShortPath.create({ path: "submodel1.table1" }),
       IdShortPath.create({ path: "submodel1.table1.row1.table11" }),
+    ]);
+    expect(
+      reference.constructIdShortPathsForType(KeyTypes.SubmodelElementList, {
+        excludeSubmodel: true,
+      }),
+    ).toEqual([
+      IdShortPath.create({ path: "table1" }),
+      IdShortPath.create({ path: "table1.row1.table11" }),
     ]);
     expect(reference.constructIdShortPathsForType(KeyTypes.SubmodelElementCollection)).toEqual([
       IdShortPath.create({ path: "submodel1.table1.row1" }),

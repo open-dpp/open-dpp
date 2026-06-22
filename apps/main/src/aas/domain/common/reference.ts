@@ -1,4 +1,5 @@
 import {
+  KeyTypes,
   KeyTypesType,
   ReferenceJsonSchema,
   ReferenceTypes,
@@ -54,13 +55,20 @@ export class Reference implements IVisitable {
     return IdShortPath.fromSegments(this.keys.map((k) => k.value));
   }
 
-  constructIdShortPathsForType(type: KeyTypesType): IdShortPath[] {
+  constructIdShortPathsForType(
+    type: KeyTypesType,
+    options?: { excludeSubmodel?: boolean },
+  ): IdShortPath[] {
+    const excludeSubmodel = options?.excludeSubmodel ?? false;
     if (this.type !== ReferenceTypes.ModelReference) {
       throw new ValueError("Only ModelReference can be constructed into IdShortPaths");
     }
     let idShortPath = IdShortPath.fromSegments([]);
     const result: IdShortPath[] = [];
     for (const key of this.keys) {
+      if (excludeSubmodel && key.type === KeyTypes.Submodel) {
+        continue;
+      }
       idShortPath = idShortPath.addPathSegment(key.value);
       if (key.type === type) {
         result.push(idShortPath);
