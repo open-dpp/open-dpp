@@ -761,15 +761,7 @@ export function createAasTestContext<T>(
       ProductCarbonFootprint_A1A3: {
         PCFCO2eq: "2.6300",
         PCFCalculationMethod: "GHG Protocol",
-        PCFFactSheet: {
-          type: "ExternalReference",
-          keys: [
-            {
-              type: "GlobalReference",
-              value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-            },
-          ],
-        },
+        PCFFactSheet: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
         PCFGoodsAddressHandover: {
           CityTown: "Kaiserslautern",
           Country: "Germany",
@@ -840,15 +832,7 @@ export function createAasTestContext<T>(
     expect(response.body).toEqual({
       PCFCO2eq: "2.6300",
       PCFCalculationMethod: "GHG Protocol",
-      PCFFactSheet: {
-        type: "ExternalReference",
-        keys: [
-          {
-            type: "GlobalReference",
-            value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-          },
-        ],
-      },
+      PCFFactSheet: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
       PCFGoodsAddressHandover: {
         CityTown: "Kaiserslautern",
         Country: "Germany",
