@@ -6,17 +6,17 @@ describe("LanguageTextCollectionChanged", () => {
   it("should generate replace and remove operations", () => {
     const oldValue = [
       LanguageText.create({
-        language: "en",
+        language: "en-US",
         text: "before",
       }),
       LanguageText.create({
-        language: "de",
+        language: "de-DE",
         text: "vorher",
       }),
     ];
     const newValue = [
       LanguageText.create({
-        language: "en",
+        language: "en-US",
         text: "after",
       }),
     ];
@@ -27,13 +27,13 @@ describe("LanguageTextCollectionChanged", () => {
     });
     expect(displayNameChanged.values).toEqual([
       {
-        lng: "en",
+        lng: "en-US",
         op: "replace",
         oldValue: "before",
         newValue: "after",
       },
       {
-        lng: "de",
+        lng: "de-DE",
         op: "remove",
         oldValue: "vorher",
         newValue: null,
@@ -44,21 +44,21 @@ describe("LanguageTextCollectionChanged", () => {
   it("should ignore replace with same text", () => {
     const oldValue = [
       LanguageText.create({
-        language: "en",
+        language: "en-US",
         text: "before",
       }),
       LanguageText.create({
-        language: "de",
+        language: "de-DE",
         text: "vorher",
       }),
     ];
     const newValue = [
       LanguageText.create({
-        language: "en",
+        language: "en-US",
         text: "before",
       }),
       LanguageText.create({
-        language: "de",
+        language: "de-DE",
         text: "vorher",
       }),
     ];
@@ -73,13 +73,13 @@ describe("LanguageTextCollectionChanged", () => {
   it("should generate add and remove operations", () => {
     const oldValue = [
       LanguageText.create({
-        language: "de",
+        language: "de-DE",
         text: "vorher",
       }),
     ];
     const newValue = [
       LanguageText.create({
-        language: "en",
+        language: "en-US",
         text: "after",
       }),
     ];
@@ -90,13 +90,13 @@ describe("LanguageTextCollectionChanged", () => {
     });
     expect(displayNameChanged.values).toEqual([
       {
-        lng: "en",
+        lng: "en-US",
         op: "add",
         oldValue: null,
         newValue: "after",
       },
       {
-        lng: "de",
+        lng: "de-DE",
         op: "remove",
         oldValue: "vorher",
         newValue: null,

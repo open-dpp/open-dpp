@@ -134,13 +134,13 @@ export const PropertySchemaV1_0 = z.object({
   valueId: ReferenceSchemaV1_0.nullable().optional(),
 });
 
-const SubmodelElementCollectionSchemaV1_0 = z.object({
+export const SubmodelElementCollectionSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("SubmodelElementCollection"),
   value: z.lazy(() => z.array(SubmodelElementSchemaV1_0)),
 });
 
-const SubmodelElementListSchemaV1_0 = z.object({
+export const SubmodelElementListSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("SubmodelElementList"),
   orderRelevant: z.boolean().nullable().optional(),
@@ -150,28 +150,28 @@ const SubmodelElementListSchemaV1_0 = z.object({
   value: z.lazy(() => z.array(SubmodelElementSchemaV1_0)),
 });
 
-const BlobSchemaV1_0 = z.object({
+export const BlobSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("Blob"),
   contentType: z.string(),
   value: z.string().nullable(),
 });
 
-const FileSchemaV1_0 = z.object({
+export const FileSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("File"),
   contentType: z.string(),
   value: z.string().nullable(),
 });
 
-const MultiLanguagePropertySchemaV1_0 = z.object({
+export const MultiLanguagePropertySchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("MultiLanguageProperty"),
   value: z.array(LanguageTextSchemaV1_0),
   valueId: ReferenceSchemaV1_0.nullable().optional(),
 });
 
-const RangeSchemaV1_0 = z.object({
+export const RangeSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("Range"),
   valueType: z.enum(DataTypeDefV1_0),
@@ -185,14 +185,14 @@ export const ReferenceElementSchemaV1_0 = z.object({
   value: ReferenceSchemaV1_0.nullable().optional(),
 });
 
-const RelationshipElementSchemaV1_0 = z.object({
+export const RelationshipElementSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("RelationshipElement"),
   first: ReferenceSchemaV1_0,
   second: ReferenceSchemaV1_0,
 });
 
-const AnnotatedRelationshipElementSchemaV1_0 = z.object({
+export const AnnotatedRelationshipElementSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("AnnotatedRelationshipElement"),
   first: ReferenceSchemaV1_0,
@@ -200,7 +200,7 @@ const AnnotatedRelationshipElementSchemaV1_0 = z.object({
   annotations: z.lazy(() => z.array(SubmodelElementSchemaV1_0)),
 });
 
-const EntitySchemaV1_0 = z.object({
+export const EntitySchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("Entity"),
   entityType: z.string(),

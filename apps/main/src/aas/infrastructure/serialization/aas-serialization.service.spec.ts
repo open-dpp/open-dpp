@@ -51,6 +51,7 @@ import { AasSerializationService } from "./aas-serialization.service";
 import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { aasExportSchemaJsonV4_0 } from "./export-schemas/aas-export-v4.schema";
 
 const adminPlain = {
   subjectAttribute: [
@@ -349,6 +350,41 @@ describe("aasSerializationService", () => {
   beforeEach(() => {
     mockMediaService.findByIds.mockReset();
     mockMediaService.findByIds.mockResolvedValue([]);
+  });
+
+  it.skip("should parse a parsing", async () => {
+    aasExportSchemaJsonV4_0.parse({
+      id: "asdfasdfasdf",
+      environment: {
+        assetAdministrationShells: [{
+
+        }],
+        submodels: [{
+          id: "bla bli blub",
+          idShort: "asdfasdfasdfasdfasdf",
+          displayName: [{
+            language: "en-US",
+            text: "Testing Submodel"
+          }],
+          description: [{
+            language: "en-US",
+            text: "Testing Submodel"
+          }],
+          kind: "Instance",
+          extensions: [],
+          category: "asdaff",
+          embeddedDataSpecifications: [],
+          qualifiers: [],
+          supplementalSemanticIds: [],
+          submodelElements: []
+        }],
+        conceptDescriptions: [],
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      format: "open-dpp:json",
+      version: "4.0"
+    })
   });
 
   it("should export a passport", async () => {

@@ -20,7 +20,7 @@ function makeProperty(overrides: Partial<PropertyResponseDto> = {}): TestElement
     idShort: "Revenue",
     valueType: DataTypeDef.Decimal,
     value: null,
-    displayName: [{ language: "en", text: "Annual Revenue" }],
+    displayName: [{ language: "en-US", text: "Annual Revenue" }],
     description: [],
     extensions: [],
     supplementalSemanticIds: [],
@@ -181,11 +181,11 @@ describe("BigNumber.sampleElement", () => {
         makeProperty({
           value: null,
           idShort: "MyField",
-          displayName: [{ language: "en", text: "My Custom Label" }],
+          displayName: [{ language: "en-US", text: "My Custom Label" }],
         }),
       );
       expect(result.element.idShort).toBe("MyField");
-      expect(result.element.displayName).toEqual([{ language: "en", text: "My Custom Label" }]);
+      expect(result.element.displayName).toEqual([{ language: "en-US", text: "My Custom Label" }]);
       expect((result.element as { value?: string | null }).value).toBe("1234567.89");
     });
   });

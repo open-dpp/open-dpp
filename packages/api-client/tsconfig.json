@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "allowJs": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,

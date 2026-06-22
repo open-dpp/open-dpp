@@ -36,7 +36,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 const i18n = createI18n({
-  locale: "en",
+  locale: "en-US",
   legacy: false,
   messages: {
     en: {

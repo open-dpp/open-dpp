@@ -25,7 +25,7 @@ export function buildEmptyExportPayload(assetKind: "Type" | "Instance" = "Type")
   return {
     id: randomUUID(),
     format: "open-dpp:json",
-    version: "1.0",
+    version: "4.0",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     environment: {
@@ -68,7 +68,7 @@ export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") 
   return {
     id: randomUUID(),
     format: "open-dpp:json",
-    version: "1.0",
+    version: "4.0",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     environment: {

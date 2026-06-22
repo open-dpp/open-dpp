@@ -29,7 +29,7 @@ vi.mock("../lib/api-client", () => ({
 vi.mock("primevue", () => ({
   usePrimeVue: vi.fn().mockReturnValue({
     config: {
-      locale: "en",
+      locale: "en-US",
     },
   }),
 }));

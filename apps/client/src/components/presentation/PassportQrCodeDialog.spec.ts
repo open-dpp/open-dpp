@@ -89,7 +89,7 @@ const ButtonStub = defineComponent({
 // ---------------------------------------------------------------------------
 
 const i18n = createI18n({
-  locale: "en",
+  locale: "en-US",
   legacy: false,
   messages: {
     en: {

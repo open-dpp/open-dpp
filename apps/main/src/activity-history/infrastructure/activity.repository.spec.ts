@@ -198,7 +198,7 @@ describe("activityRepository", () => {
         oldValue: [],
         newValue: [
           LanguageText.create({
-            language: "en",
+            language: "en-US",
             text: "newName",
           }),
         ],

@@ -734,7 +734,7 @@ export function createAasTestContext<T>(
           DisplayNameChanged.create({
             path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
             oldValue: [],
-            newValue: [LanguageText.create({ language: "en", text: "Author" })],
+            newValue: [LanguageText.create({ language: "en-US", text: "Author" })],
           }),
         ]),
       ),
@@ -750,7 +750,7 @@ export function createAasTestContext<T>(
           DisplayNameChanged.create({
             path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
             oldValue: [],
-            newValue: [LanguageText.create({ language: "en", text: "Model" })],
+            newValue: [LanguageText.create({ language: "en-US", text: "Model" })],
           }),
         ]),
       ),
@@ -783,7 +783,7 @@ export function createAasTestContext<T>(
           DisplayNameChanged.create({
             path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
             oldValue: [],
-            newValue: [LanguageText.create({ language: "en", text: "Author" })],
+            newValue: [LanguageText.create({ language: "en-US", text: "Author" })],
           }),
         ]),
       ),
@@ -799,7 +799,7 @@ export function createAasTestContext<T>(
           DisplayNameChanged.create({
             path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
             oldValue: [],
-            newValue: [LanguageText.create({ language: "en", text: "Model" })],
+            newValue: [LanguageText.create({ language: "en-US", text: "Model" })],
           }),
         ]),
       ),
