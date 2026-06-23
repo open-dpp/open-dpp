@@ -19,6 +19,7 @@ import { EnvironmentService } from "../../presentation/environment.service";
 import {
   mapAssetAdministrationShells,
   mapConceptDescriptions,
+  mapPresentationConfiguration,
   mapSubmodels,
 } from "./aas-import.mapper";
 import { AasExportVersion } from "./export-schemas/aas-export-shared";
@@ -40,7 +41,7 @@ interface ImportedEnvironmentData {
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
   conceptDescriptions: ConceptDescription[];
-  schema: AasExport;
+  schema: AasExportLatestVersion;
 }
 
 @Injectable()
@@ -159,7 +160,7 @@ export class AasSerializationService {
 
       const entity = entityFactory(environment);
 
-      const presentationConfiguration = buildImportedPresentationConfiguration({
+      const presentationConfiguration = mapPresentationConfiguration({
         schema,
         organizationId,
         referenceId: entity.id,
@@ -255,12 +256,9 @@ export class AasSerializationService {
         foreignMediaIds.has(element.value)
       ) {
         result = { ...element, value: null };
-      }
-
-      if (Array.isArray(element.value)) {
+      } else if (Array.isArray(element.value)) {
         const newValue = this.withNullifiedForeignFileValues(element.value, foreignMediaIds);
-        result =
-          result === element ? { ...element, value: newValue } : { ...result, value: newValue };
+        result = { ...element, value: newValue };
       }
 
       return result;
@@ -284,28 +282,6 @@ export class AasSerializationService {
       schema,
     };
   }
-}
-
-function buildImportedPresentationConfiguration(params: {
-  schema: AasExport;
-  organizationId: string;
-  referenceId: string;
-  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
-}): PresentationConfiguration | null {
-  const { schema, organizationId, referenceId, referenceType } = params;
-  if (
-    (schema.version === AasExportVersion.v3_0 || schema.version === AasExportVersion.v4_0) &&
-    schema.presentationConfiguration
-  ) {
-    return PresentationConfiguration.create({
-      organizationId,
-      referenceId,
-      referenceType,
-      elementDesign: schema.presentationConfiguration.elementDesign,
-      defaultComponents: schema.presentationConfiguration.defaultComponents,
-    });
-  }
-  return null;
 }
 
 function passportToHolder(passport: Passport): PresentationReferenceHolder {

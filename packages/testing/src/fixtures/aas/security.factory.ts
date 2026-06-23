@@ -28,7 +28,6 @@ export const permissionObjectPlainFactory = Factory.define<
   qualifiers: [],
   embeddedDataSpecifications: [],
   value: null,
-  modelType: AasSubmodelElements.ReferenceElement
 }));
 
 export interface SecurityPlainTransientParams {

@@ -1,4 +1,5 @@
 import { Security } from "../../../domain/security/security";
+import { migrateSubmodelLinks } from "../../migrate-links";
 import { AasExportVersion } from "./aas-export-shared";
 import {
   AasExportLatestVersion,
@@ -40,9 +41,12 @@ export function ParseWithMigration(data: unknown): AasExportLatestVersion {
     });
   }
   if (exportedAas.version === AasExportVersion.v3_0) {
-    //Nothing to do
     exportedAas = AasExportSchemas.parse({
       ...exportedAas,
+      environment: {
+        ...exportedAas.environment,
+        submodels: exportedAas.environment.submodels.map(migrateSubmodelLinks)
+      },
       createdAt: exportedAas.createdAt.toISOString(),
       updatedAt: exportedAas.updatedAt.toISOString(),
       version: AasExportVersion.v4_0,
