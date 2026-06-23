@@ -352,41 +352,6 @@ describe("aasSerializationService", () => {
     mockMediaService.findByIds.mockResolvedValue([]);
   });
 
-  it.skip("should parse a parsing", async () => {
-    aasExportSchemaJsonV4_0.parse({
-      id: "asdfasdfasdf",
-      environment: {
-        assetAdministrationShells: [{
-
-        }],
-        submodels: [{
-          id: "bla bli blub",
-          idShort: "asdfasdfasdfasdfasdf",
-          displayName: [{
-            language: "en-US",
-            text: "Testing Submodel"
-          }],
-          description: [{
-            language: "en-US",
-            text: "Testing Submodel"
-          }],
-          kind: "Instance",
-          extensions: [],
-          category: "asdaff",
-          embeddedDataSpecifications: [],
-          qualifiers: [],
-          supplementalSemanticIds: [],
-          submodelElements: []
-        }],
-        conceptDescriptions: [],
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      format: "open-dpp:json",
-      version: "4.0"
-    })
-  });
-
   it("should export a passport", async () => {
     const passport = Passport.create({
       id: randomUUID(),
@@ -405,7 +370,7 @@ describe("aasSerializationService", () => {
     const exportResult = await aasSerializationService.exportPassport(foundAas, subject);
     expect(exportResult).toBeDefined();
     expect(exportResult.format).toBe("open-dpp:json");
-    expect(exportResult.version).toBe(AasExportVersion.v3_0);
+    expect(exportResult.version).toBe(AasExportVersion.v4_0);
   });
 
   describe("importPassport - media ownership validation", () => {
@@ -836,7 +801,7 @@ describe("aasSerializationService", () => {
       const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const exportResult = await aasSerializationService.exportPassport(passport, subject);
 
-      expect(exportResult.version).toBe(AasExportVersion.v3_0);
+      expect(exportResult.version).toBe(AasExportVersion.v4_0);
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",

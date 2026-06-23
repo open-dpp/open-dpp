@@ -28,6 +28,8 @@ const LanguageTextSchemaV4_0 = z.object({
   text: z.string(),
 });
 
+let SubmodelElementSchemaV4_0: z.ZodType<any>;
+
 const PropertySchemaV4_0 = z.object({
   ...PropertySchemaV1_0.shape,
   modelType: z.literal("Property"),
@@ -40,6 +42,7 @@ const SubmodelElementCollectionSchemaV4_0 = z.object({
   modelType: z.literal("SubmodelElementCollection"),
   displayName: z.array(LanguageTextSchemaV4_0),
   description: z.array(LanguageTextSchemaV4_0),
+  value: z.lazy(() => z.array(SubmodelElementSchemaV4_0)),
 });
 
 const SubmodelElementListSchemaV4_0 = z.object({
@@ -47,6 +50,7 @@ const SubmodelElementListSchemaV4_0 = z.object({
   modelType: z.literal("SubmodelElementList"),
   displayName: z.array(LanguageTextSchemaV4_0),
   description: z.array(LanguageTextSchemaV4_0),
+  value: z.lazy(() => z.array(SubmodelElementSchemaV4_0)),
 });
 
 const BlobSchemaV4_0 = z.object({
@@ -66,6 +70,7 @@ const FileSchemaV4_0 = z.object({
 const MultiLanguagePropertySchemaV4_0 = z.object({
   ...MultiLanguagePropertySchemaV1_0.shape,
   modelType: z.literal("MultiLanguageProperty"),
+  value: z.array(LanguageTextSchemaV4_0),
   displayName: z.array(LanguageTextSchemaV4_0),
   description: z.array(LanguageTextSchemaV4_0),
 });
@@ -96,6 +101,7 @@ const AnnotatedRelationshipElementSchemaV4_0 = z.object({
   modelType: z.literal("AnnotatedRelationshipElement"),
   displayName: z.array(LanguageTextSchemaV4_0),
   description: z.array(LanguageTextSchemaV4_0),
+  annotations: z.lazy(() => z.array(SubmodelElementSchemaV4_0)),
 });
 
 const EntitySchemaV4_0 = z.object({
@@ -103,9 +109,9 @@ const EntitySchemaV4_0 = z.object({
   modelType: z.literal("Entity"),
   displayName: z.array(LanguageTextSchemaV4_0),
   description: z.array(LanguageTextSchemaV4_0),
+  statements: z.lazy(() => z.array(SubmodelElementSchemaV4_0)),
 });
 
-let SubmodelElementSchemaV4_0: z.ZodType<any>;
 
 SubmodelElementSchemaV4_0 = z.lazy(() =>
   z.discriminatedUnion("modelType", [

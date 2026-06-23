@@ -1,4 +1,7 @@
+import { MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
+import { allPermissionsAllow, securityPlainFactory, SecurityPlainTransientParams } from "@open-dpp/testing";
 import { randomUUID } from "node:crypto";
+import { Security } from "../src/aas/domain/security/security";
 
 export function baseElement() {
   return {
@@ -25,7 +28,7 @@ export function buildEmptyExportPayload(assetKind: "Type" | "Instance" = "Type")
   return {
     id: randomUUID(),
     format: "open-dpp:json",
-    version: "4.0",
+    version: "1.0",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     environment: {
@@ -35,7 +38,7 @@ export function buildEmptyExportPayload(assetKind: "Type" | "Instance" = "Type")
           extensions: [],
           category: null,
           idShort: "empty-shell",
-          displayName: [{ language: "en-US", text: "Empty" }],
+          displayName: [{ language: "en", text: "Empty" }],
           description: [],
           administration: null,
           embeddedDataSpecifications: [],
@@ -50,6 +53,7 @@ export function buildEmptyExportPayload(assetKind: "Type" | "Instance" = "Type")
           },
         },
       ],
+      
       submodels: [],
       conceptDescriptions: [],
     },
@@ -64,6 +68,21 @@ export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") 
     assetKind === "Type"
       ? "A template with all element types"
       : "A passport with all element types";
+
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.OWNER,
+          },
+          object: { idShortPath: "rich-submodel" },
+          permissions: allPermissionsAllow 
+        },
+      ],
+    };
+
+  const sec =  Security.fromPlain(securityPlainFactory.build(undefined, { transient: transientParams }))
 
   return {
     id: randomUUID(),
@@ -91,6 +110,7 @@ export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") 
             assetType: null,
             defaultThumbnails: [],
           },
+          security: sec.toPlain()
         },
       ],
       submodels: [

@@ -13,7 +13,7 @@ import type { z } from "zod";
 
 import { randomUUID } from "node:crypto";
 
-import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { AasSubmodelElements, AasSubmodelElementsEnum, PermissionKind, Permissions } from "@open-dpp/dto";
 import { Factory } from "fishery";
 import { propertyOutputPlainFactory } from "./submodel-element.factory";
 
@@ -28,6 +28,7 @@ export const permissionObjectPlainFactory = Factory.define<
   qualifiers: [],
   embeddedDataSpecifications: [],
   value: null,
+  modelType: AasSubmodelElements.ReferenceElement
 }));
 
 export interface SecurityPlainTransientParams {

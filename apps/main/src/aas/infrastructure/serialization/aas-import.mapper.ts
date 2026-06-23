@@ -24,16 +24,15 @@ import { Security } from "../../domain/security/security";
 import { SpecificAssetId } from "../../domain/specific-asset-id";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
-import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
-import { AasExport } from "./export-schemas/aas-export-types";
+import { AasExportVersionType } from "./export-schemas/aas-export-shared";
+import { AasExportLatestVersion } from "./export-schemas/aas-export-types";
 import { ReferenceSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
-import { AssetAdministrationShellV2_0 } from "./export-schemas/aas-export-v2.schema";
 
 type ReferenceSchema = z.infer<typeof ReferenceSchemaV1_0>;
-type ShellSchema = AasExport["environment"]["assetAdministrationShells"][number];
+type ShellSchema = AasExportLatestVersion["environment"]["assetAdministrationShells"][number];
 
-type SubmodelSchema = AasExport["environment"]["submodels"][number];
-type ConceptDescriptionSchema = AasExport["environment"]["conceptDescriptions"][number];
+type SubmodelSchema = AasExportLatestVersion["environment"]["submodels"][number];
+type ConceptDescriptionSchema = AasExportLatestVersion["environment"]["conceptDescriptions"][number];
 type ExtensionSchema = ShellSchema["extensions"][number];
 type QualifierSchema = SubmodelSchema["qualifiers"][number];
 
@@ -130,18 +129,8 @@ export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
 
 export function mapSecurity(
   shell: ShellSchema,
-  submodels: Submodel[],
-  version: AasExportVersionType,
 ): Security {
-  if (version === AasExportVersion.v1_0) {
-    const security = Security.create({});
-    submodels.forEach((submodel) => {
-      security.addDefaultPolicyForSubmodelIfNoExists(submodel);
-    });
-    return security;
-  } else {
-    return Security.fromPlain(AssetAdministrationShellV2_0.parse(shell).security);
-  }
+    return Security.fromPlain(shell.security);
 }
 
 export function mapAssetAdministrationShells(
@@ -194,7 +183,7 @@ export function mapAssetAdministrationShells(
       })
       .filter((ref): ref is ReferenceSchema => ref !== null);
 
-    const security = mapSecurity(shell, submodels, version);
+    const security = mapSecurity(shell);
 
     return AssetAdministrationShell.create({
       assetInformation,

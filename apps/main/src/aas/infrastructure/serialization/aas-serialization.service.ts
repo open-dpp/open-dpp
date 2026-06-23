@@ -26,9 +26,9 @@ import {
   AasExport,
   AasExportLatestVersion,
   aasExportSchemaJsonLatest,
-  AasExportSchemas,
 } from "./export-schemas/aas-export-types";
 import { extractMediaIds } from "./extract-media-ids";
+import { ParseWithMigration } from "./export-schemas/aas-export-migration";
 
 export {
   DataTypeDefV1_0,
@@ -87,7 +87,10 @@ export class AasSerializationService {
       expandedEnvironment,
       presentationConfiguration,
     );
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
+
+    const aasExportablePlain = aasExportable.toExportPlain(subject);
+
+    return aasExportSchemaJsonLatest.parse(aasExportablePlain);
   }
 
   async importPassport(
@@ -181,6 +184,7 @@ export class AasSerializationService {
       return entity;
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("error of zod", error);
         const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
         throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
       }
@@ -264,7 +268,7 @@ export class AasSerializationService {
   }
 
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
-    const schema = AasExportSchemas.parse(data);
+    const schema = ParseWithMigration(data);
 
     const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
 

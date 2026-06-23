@@ -135,7 +135,7 @@ export class Security implements ITrackable {
     }
   }
 
-  addDefaultPolicyForSubmodelIfNoExists(submodel: Submodel): void {
+  addDefaultPolicyForSubmodelIfNoExists(submodel: { idShort: string }): void {
     this.addDefaultPolicyForObjectIfNoExists(IdShortPath.create({ path: submodel.idShort }));
   }
 

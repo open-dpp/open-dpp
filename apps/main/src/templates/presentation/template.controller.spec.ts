@@ -355,7 +355,7 @@ describe("templateController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
-    expect(response.body.version).toEqual(AasExportVersion.v3_0);
+    expect(response.body.version).toEqual(AasExportVersion.v4_0);
     expect(response.body.id).toBeDefined();
     expect(response.body.environment).toBeDefined();
     expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
@@ -375,11 +375,15 @@ describe("templateController", () => {
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
+    console.log(exportResponse.text);
+
     const importResponse = await request(app.getHttpServer())
       .post(`${basePath}/import`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(exportResponse.body);
+
+    console.log(importResponse.body);
 
     expect(importResponse.status).toEqual(201);
     expect(importResponse.body.id).toBeDefined();
@@ -429,7 +433,7 @@ describe("templateController", () => {
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
-    expect(exportResponse.body.version).toEqual(AasExportVersion.v3_0);
+    expect(exportResponse.body.version).toEqual(AasExportVersion.v4_0);
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
@@ -520,8 +524,8 @@ describe("templateController", () => {
   });
 
   it("/POST import and /GET export template with all submodel element types", async () => {
-    const { betterAuthHelper, app } = ctx.globals();
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { betterAuthHelper, app, organizationId, userId } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getOrganizationAndUserWithCookie(organizationId, userId);
 
     const richPayload = buildRichExportPayload();
 
