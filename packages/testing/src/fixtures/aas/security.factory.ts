@@ -60,7 +60,7 @@ export const subjectPlainFactory = Factory.define<SubjectAttributesDto, SubjectP
   }),
 );
 
-export const allPermissionsAllow = Object.values(Permissions).map((permission) => ({
+export const allPermissionsPlainAllow = Object.values(Permissions).map((permission) => ({
   permission,
   kindOfPermission: PermissionKind.Allow,
 }));

@@ -5,6 +5,7 @@ import { expect, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import {
   AasSubmodelElements,
+  ApiVersionsDto,
   AssetKind,
   DataTypeDef,
   KeyTypes,
@@ -19,7 +20,7 @@ import {
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError } from "@open-dpp/exception";
 import {
-  allPermissionsAllow,
+  allPermissionsPlainAllow,
   securityPlainFactory,
   SecurityPlainTransientParams,
 } from "@open-dpp/testing";
@@ -85,6 +86,11 @@ import { SubmodelAdded } from "../../activity-history/domain/change-events/submo
 import { SubmodelReferenceDeleted } from "../../activity-history/domain/change-events/submodel-reference-deleted";
 import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
 import { SubmodelDeleted } from "../../activity-history/domain/change-events/submodel-deleted";
+import { SubmodelElementRequest } from "./requests/submodel-element.request";
+import { SubmodelRequest } from "./requests/submodel.request";
+import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
+import { ValueModificationRequest } from "./requests/value-modification.request";
+import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -95,6 +101,7 @@ describe("environmentService", () => {
   let conceptDescriptionRepository: ConceptDescriptionRepository;
   let connection: Connection;
   let activityRepository: ActivityRepository;
+  const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -487,6 +494,10 @@ describe("environmentService", () => {
       qualifiers: [],
       embeddedDataSpecifications: [],
     };
+    const request = SubmodelRequest.create({
+      body: submodelPlain,
+      version: ApiVersionsDto.v2,
+    });
 
     async function saveEnvironment(_options: DbSessionOptions) {}
 
@@ -494,7 +505,7 @@ describe("environmentService", () => {
       correlationId,
       digitalProductDocumentId,
       environment,
-      submodelPlain,
+      request,
       saveEnvironment,
       admin,
     );
@@ -522,19 +533,19 @@ describe("environmentService", () => {
             PolicyAdded.create({
               object: submodelObject,
               userRole: UserRole.ADMIN,
-              value: allPermissionsAllow.map(Permission.fromPlain),
+              value: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PolicyAdded.create({
               object: submodelObject,
               userRole: UserRole.USER,
               memberRole: MemberRole.OWNER,
-              value: allPermissionsAllow.map(Permission.fromPlain),
+              value: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PolicyAdded.create({
               object: submodelObject,
               userRole: UserRole.USER,
               memberRole: MemberRole.MEMBER,
-              value: allPermissionsAllow.map(Permission.fromPlain),
+              value: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PolicyAdded.create({
               object: submodelObject,
@@ -576,12 +587,16 @@ describe("environmentService", () => {
       qualifiers: [],
       embeddedDataSpecifications: [],
     };
+    const request = SubmodelElementRequest.create({
+      body: propertyPlain,
+      version: ApiVersionsDto.v2,
+    });
     await environmentService.addSubmodelElement(
       correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      propertyPlain,
+      request,
       admin,
     );
 
@@ -619,10 +634,15 @@ describe("environmentService", () => {
       submodel1,
       row1,
     } = await createEnvironmentWithList();
-    const column = Property.create({
+    const body = SubmodelElementSchema.parse({
+      modelType: KeyTypes.Property,
       idShort: "column1",
       valueType: DataTypeDef.String,
       value: "test",
+    });
+    const request = SubmodelElementRequest.create({
+      body,
+      version: ApiVersionsDto.v2,
     });
     const position = 1;
 
@@ -632,7 +652,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       listIdShortPath,
-      column,
+      request,
       admin,
       position,
     );
@@ -653,7 +673,7 @@ describe("environmentService", () => {
           changes: [
             ColumnAdded.create({
               path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "column1"]),
-              value: column,
+              value: Property.fromPlain(body),
               position,
             }),
           ],
@@ -681,6 +701,7 @@ describe("environmentService", () => {
       listIdShortPath,
       admin,
       position,
+      latestVersion,
     );
     const row2IdShort = changedList.value[1].idShort;
 
@@ -740,26 +761,38 @@ describe("environmentService", () => {
   it("should return submodels for subject", async () => {
     const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const pagination = Pagination.create({ limit: 10 });
-    let submodels = await environmentService.getSubmodels(environment, pagination, admin.subject);
+    let submodels = await environmentService.getSubmodels(
+      environment,
+      pagination,
+      admin.subject,
+      latestVersion,
+    );
     expect(submodels.result).toEqual([SubmodelJsonSchema.parse(submodel1.toPlain())]);
 
-    submodels = await environmentService.getSubmodels(environment, pagination, member.subject);
+    submodels = await environmentService.getSubmodels(
+      environment,
+      pagination,
+      member.subject,
+      latestVersion,
+    );
     expect(submodels.result).toEqual([]);
   });
 
   it("should return submodel by id for subject", async () => {
     const { environment, admin, submodel1 } = await createDefaultEnvironment();
+
     const result = await environmentService.getSubmodelById(
       environment,
       submodel1.id,
       admin.subject,
+      latestVersion,
     );
     expect(result).toEqual(SubmodelJsonSchema.parse(submodel1.toPlain()));
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelById(environment, submodel1.id, anonymous),
+      environmentService.getSubmodelById(environment, submodel1.id, anonymous, latestVersion),
     ).rejects.toThrow(new ForbiddenError());
   });
 
@@ -772,6 +805,7 @@ describe("environmentService", () => {
       submodel1.id,
       pagination,
       admin.subject,
+      latestVersion,
     );
     expect(submodelElements.result).toEqual([
       SubmodelElementSchema.parse(submodelElementCollection1.toPlain()),
@@ -782,6 +816,7 @@ describe("environmentService", () => {
       submodel1.id,
       pagination,
       member.subject,
+      latestVersion,
     );
     expect(submodelElements.result).toEqual([]);
   });
@@ -797,12 +832,19 @@ describe("environmentService", () => {
       submodel1.id,
       idShortPath,
       admin.subject,
+      latestVersion,
     );
     expect(submodelElement).toEqual(SubmodelElementSchema.parse(property1.toPlain()));
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, anonymous),
+      environmentService.getSubmodelElementById(
+        environment,
+        submodel1.id,
+        idShortPath,
+        anonymous,
+        latestVersion,
+      ),
     ).rejects.toThrow(new ForbiddenError());
   });
 
@@ -817,6 +859,7 @@ describe("environmentService", () => {
       submodel1.id,
       idShortPath,
       admin.subject,
+      latestVersion,
     );
     expect(submodelElement).toEqual(property1.value);
 
@@ -824,7 +867,13 @@ describe("environmentService", () => {
 
     //
     await expect(
-      environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, anonymous),
+      environmentService.getSubmodelElementValue(
+        environment,
+        submodel1.id,
+        idShortPath,
+        anonymous,
+        latestVersion,
+      ),
     ).rejects.toThrow(new ForbiddenError());
   });
 
@@ -835,6 +884,7 @@ describe("environmentService", () => {
       environment,
       submodel1.id,
       admin.subject,
+      latestVersion,
     );
     expect(submodelValue).toEqual({
       subSection1: {
@@ -847,7 +897,7 @@ describe("environmentService", () => {
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelValue(environment, submodel1.id, anonymous),
+      environmentService.getSubmodelValue(environment, submodel1.id, anonymous, latestVersion),
     ).rejects.toThrow(new ForbiddenError("Cannot access submodel section1"));
   });
 
@@ -859,12 +909,16 @@ describe("environmentService", () => {
       idShort: submodel1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en-US" })],
     };
+    const modificationRequest = SubmodelModificationRequest.create({
+      body: modification,
+      version: ApiVersionsDto.v2,
+    });
     await environmentService.modifySubmodel(
       correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       admin,
     );
 
@@ -900,7 +954,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         member,
       ),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));
@@ -922,13 +976,17 @@ describe("environmentService", () => {
         property1: "Test",
       },
     };
+    const modificationRequest = ValueModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
 
     await environmentService.modifyValueOfSubmodel(
       correlationId,
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       admin,
     );
 
@@ -964,7 +1022,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         member,
       ),
     ).rejects.toThrow(
@@ -988,6 +1046,10 @@ describe("environmentService", () => {
       idShort: property1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en-US" })],
     };
+    const modificationRequest = SubmodelElementModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
     });
@@ -996,7 +1058,7 @@ describe("environmentService", () => {
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       idShortPathToProperty1,
       admin,
     );
@@ -1031,7 +1093,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         idShortPathToProperty1,
         member,
       ),
@@ -1122,6 +1184,10 @@ describe("environmentService", () => {
       idShort: col1.idShort,
       displayName: [LanguageText.create({ text: "Test", language: "en-US" })],
     };
+    const modificationRequest = SubmodelElementModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
     await environmentService.modifyColumn(
       correlationId,
       digitalProductDocumentId,
@@ -1129,7 +1195,7 @@ describe("environmentService", () => {
       submodel1.id,
       listIdShortPath,
       col1.idShort,
-      modification,
+      modificationRequest,
       admin,
     );
 
@@ -1166,7 +1232,7 @@ describe("environmentService", () => {
         submodel1.id,
         listIdShortPath,
         col1.idShort,
-        modification,
+        modificationRequest,
         member,
       ),
     ).rejects.toThrow(
@@ -1197,6 +1263,7 @@ describe("environmentService", () => {
         listIdShortPath,
         col1.idShort,
         member,
+        latestVersion,
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -1212,6 +1279,7 @@ describe("environmentService", () => {
       listIdShortPath,
       col1.idShort,
       admin,
+      latestVersion,
     );
 
     expect(list.value[0].value.map((e: any) => e.idShort)).not.toContain(col1.idShort);
@@ -1263,6 +1331,7 @@ describe("environmentService", () => {
         listIdShortPath,
         row1.idShort,
         member,
+        latestVersion,
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`),
@@ -1276,6 +1345,7 @@ describe("environmentService", () => {
       listIdShortPath,
       row1.idShort,
       admin,
+      latestVersion,
     );
 
     expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);
@@ -1320,6 +1390,10 @@ describe("environmentService", () => {
     const oldValue1 = property1.value;
     const oldValue2 = property2.value;
     const modification = { [property1.idShort]: "new value 1", [property2.idShort]: "new value 2" };
+    const modificationRequest = ValueModificationRequest.create({
+      body: modification,
+      version: latestVersion,
+    });
     const idShortPathToProperty1 = IdShortPath.create({
       path: `${submodelElementCollection1.idShort}`,
     });
@@ -1328,7 +1402,7 @@ describe("environmentService", () => {
       digitalProductDocumentId,
       environment,
       submodel1.id,
-      modification,
+      modificationRequest,
       idShortPathToProperty1,
       admin,
     );
@@ -1380,7 +1454,7 @@ describe("environmentService", () => {
         digitalProductDocumentId,
         environment,
         submodel1.id,
-        modification,
+        modificationRequest,
         idShortPathToProperty1,
         member,
       ),

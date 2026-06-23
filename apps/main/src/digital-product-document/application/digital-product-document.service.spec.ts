@@ -37,7 +37,7 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import { DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
+import { ApiVersionsDto, DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 import { Response } from "express";
@@ -60,6 +60,7 @@ describe("DigitalProductDocumentService", () => {
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
   let connection: Connection;
+  const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -143,6 +144,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         { idShort: "demo" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -156,6 +158,7 @@ describe("DigitalProductDocumentService", () => {
         "col1",
         { idShort: "col1" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -168,6 +171,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "col1" }),
         { idShort: "col1" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -180,6 +184,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "col1" }),
         {},
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -213,6 +218,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "col1",
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -224,6 +230,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "row1",
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -250,6 +257,7 @@ describe("DigitalProductDocumentService", () => {
         passport.id,
         { idShort: "sub" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -271,6 +279,7 @@ describe("DigitalProductDocumentService", () => {
         },
         undefined,
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -283,6 +292,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "sub" }),
         undefined,
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -302,6 +312,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -321,6 +332,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
   });

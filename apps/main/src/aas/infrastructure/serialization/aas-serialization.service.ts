@@ -270,7 +270,7 @@ export class AasSerializationService {
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
     const schema = ParseWithMigration(data);
 
-    const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
+    const { submodels, idMapping } = mapSubmodels(schema.environment.submodels, schema.version);
 
     return {
       shells: mapAssetAdministrationShells(
@@ -293,16 +293,19 @@ function buildImportedPresentationConfiguration(params: {
   referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
 }): PresentationConfiguration | null {
   const { schema, organizationId, referenceId, referenceType } = params;
-  if (schema.version !== AasExportVersion.v3_0 || !schema.presentationConfiguration) {
-    return null;
+  if (
+    (schema.version === AasExportVersion.v3_0 || schema.version === AasExportVersion.v4_0) &&
+    schema.presentationConfiguration
+  ) {
+    return PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType,
+      elementDesign: schema.presentationConfiguration.elementDesign,
+      defaultComponents: schema.presentationConfiguration.defaultComponents,
+    });
   }
-  return PresentationConfiguration.create({
-    organizationId,
-    referenceId,
-    referenceType,
-    elementDesign: schema.presentationConfiguration.elementDesign,
-    defaultComponents: schema.presentationConfiguration.defaultComponents,
-  });
+  return null;
 }
 
 function passportToHolder(passport: Passport): PresentationReferenceHolder {

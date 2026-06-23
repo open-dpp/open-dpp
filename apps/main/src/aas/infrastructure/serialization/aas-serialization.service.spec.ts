@@ -5,7 +5,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { allPermissionsAllow } from "@open-dpp/testing";
+import { allPermissionsPlainAllow } from "@open-dpp/testing";
 import { generateMongoConfig } from "../../../database/config";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
@@ -685,13 +685,13 @@ describe("aasSerializationService", () => {
               object: createAasObject(
                 IdShortPath.create({ path: expandedEnv.submodels[0].idShort }),
               ),
-              permissions: allPermissionsAllow.map(Permission.fromPlain),
+              permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
             PermissionPerObject.create({
               object: createAasObject(
                 IdShortPath.create({ path: expandedEnv.submodels[1].idShort }),
               ),
-              permissions: allPermissionsAllow.map(Permission.fromPlain),
+              permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
             }),
           ],
         }),
@@ -771,6 +771,48 @@ describe("aasSerializationService", () => {
         exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails,
       ).toEqual([]);
     });
+  });
+
+  it("should import passport of version 3 and converts reference elements to properties", async () => {
+    const data = buildExportData({
+      version: AasExportVersion.v3_0,
+      submodelElements: [
+        {
+          extensions: [],
+          category: null,
+          idShort: "carbonFootprintStudy",
+          displayName: [
+            {
+              language: "de",
+              text: "Studie zum CO₂-Fußabdruck",
+            },
+            {
+              language: "en",
+              text: "Carbon footprint study",
+            },
+          ],
+          description: [],
+          semanticId: null,
+          supplementalSemanticIds: [],
+          qualifiers: [],
+          embeddedDataSpecifications: [],
+          modelType: "ReferenceElement",
+          value: null,
+        },
+      ],
+    });
+    const importResult = await aasSerializationService.importPassport(
+      data,
+      randomUUID(),
+      async (p, options) => {
+        await passportRepository.save(p, options);
+      },
+    );
+    const loaded = await passportRepository.findOneOrFail(importResult.id);
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const exported = await aasSerializationService.exportPassport(loaded, admin);
+    expect(exported.environment.submodels[0].submodelElements[0].modelType).toEqual("Property");
+    expect(exported.version).toEqual(AasExportVersion.v4_0);
   });
 
   describe("presentation configuration", () => {

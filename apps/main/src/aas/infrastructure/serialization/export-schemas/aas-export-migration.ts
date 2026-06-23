@@ -48,6 +48,15 @@ export function ParseWithMigration(data: unknown): AasExportLatestVersion {
       version: AasExportVersion.v4_0,
     });
   }
+  if (exportedAas.version === AasExportVersion.v4_0) {
+    //Nothing to do
+    exportedAas = AasExportSchemas.parse({
+      ...exportedAas,
+      createdAt: exportedAas.createdAt.toISOString(),
+      updatedAt: exportedAas.updatedAt.toISOString(),
+      version: AasExportVersion.v5_0,
+    });
+  }
 
   return aasExportSchemaJsonLatest.parse({
     ...exportedAas,

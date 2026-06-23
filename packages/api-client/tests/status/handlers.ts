@@ -1,6 +1,8 @@
 import { http, HttpResponse } from "msw";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { DEFAULT_API_URL } from "../../src/urls";
 
-const baseURL = "https://api.cloud.open-dpp.de";
+const baseURL = `${DEFAULT_API_URL}/${LatestApiVersionWithPrefixDto}`;
 
 export const statusResponse = { version: "0.1.0" };
 

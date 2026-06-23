@@ -38,12 +38,13 @@ import {
   digitalProductDocumentId,
   periodParams,
 } from "./handlers/digital-product-documents";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("apiClient", () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
-  const baseURL = "https://api.cloud.open-dpp.de";
+  const baseURL = DEFAULT_API_URL;
 
   describe("organizations", () => {
     it("should return organizations", async () => {
@@ -60,6 +61,15 @@ describe("apiClient", () => {
       });
       const response = await sdk.dpp.organizations.getInvitation(orgaInvitation.id);
       expect(response.data).toEqual(orgaInvitation);
+    });
+
+    it("should change member role", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      sdk.setActiveOrganizationId(activeOrganization.id);
+      const response = await sdk.dpp.organizations.changeMemberRole(randomUUID(), "owner");
+      expect(response.status).toEqual(200);
     });
   });
 

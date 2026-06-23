@@ -9,6 +9,7 @@ export const AasExportSchemas = z.discriminatedUnion("version", [
   aasExportSchemaJsonV2_0,
   aasExportSchemaJsonV3_0,
   aasExportSchemaJsonV4_0,
+  aasExportSchemaJsonV5_0,
 ]);
 
 export type AasExport = z.infer<typeof AasExportSchemas>;

@@ -18,6 +18,7 @@ import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 export const SubmodelDocSchemaVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
+  v1_2_0: "1.2.0",
 } as const;
 type SubmodelDocSchemaVersionType =
   (typeof SubmodelDocSchemaVersion)[keyof typeof SubmodelDocSchemaVersion];
@@ -28,7 +29,7 @@ export class SubmodelDoc extends Document<string> {
   declare _id: string;
 
   @Prop({
-    default: SubmodelDocSchemaVersion.v1_1_0,
+    default: SubmodelDocSchemaVersion.v1_2_0,
     enum: Object.values(SubmodelDocSchemaVersion),
     type: String,
   }) // Track schema version

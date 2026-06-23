@@ -8,6 +8,8 @@ import { SessionsService } from "../../application/services/sessions.service";
 import { Session } from "../../domain/session";
 import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decorator";
 import { randomUUID } from "node:crypto";
+import { MEMBER_HAS_ROLE } from "../../presentation/decorators/member-has-role.decorator";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 /**
  * NestJS guard that handles authentication for protected routes
@@ -91,12 +93,15 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
-      const allowedPaths = ["/api/sse", "/api/messages"];
+      const allowedPaths = [
+        `/api/${LatestApiVersionWithPrefixDto}/sse`,
+        `/api/${LatestApiVersionWithPrefixDto}/messages`,
+      ];
       const path = url.split("?")[0];
       return allowedPaths.includes(path);
     }
 
-    const isBetterAuthUrl = url.startsWith("/api/auth");
+    const isBetterAuthUrl = url.startsWith(`/api/${LatestApiVersionWithPrefixDto}/auth`);
     if (!isBetterAuthUrl) {
       const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
@@ -118,6 +123,20 @@ export class AuthGuard implements CanActivate {
     if (requiredRoles && requiredRoles.length > 0) {
       const userRole = request.user?.role;
       if (!userRole || !requiredRoles.includes(userRole)) {
+        throw new ForbiddenException({
+          code: "FORBIDDEN",
+          message: "Insufficient permissions",
+        });
+      }
+    }
+
+    const requiredMemberRoles = this.reflector.getAllAndOverride<string[]>(MEMBER_HAS_ROLE, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (requiredMemberRoles && requiredMemberRoles.length > 0) {
+      const memberRole = request.member?.role;
+      if (!memberRole || !requiredMemberRoles.includes(memberRole)) {
         throw new ForbiddenException({
           code: "FORBIDDEN",
           message: "Insufficient permissions",

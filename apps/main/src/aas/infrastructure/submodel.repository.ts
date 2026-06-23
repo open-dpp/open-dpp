@@ -7,6 +7,7 @@ import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDbSchema } from "./schemas/submodel-base/submodel-db-schema";
 import { SubmodelDoc, SubmodelDocSchemaVersion } from "./schemas/submodel.schema";
 import { LanguageTextDto } from "@open-dpp/dto";
+import { migrateSubmodelLinks } from "./migrate-links";
 
 @Injectable()
 export class SubmodelRepository {
@@ -23,7 +24,14 @@ export class SubmodelRepository {
     return Submodel.fromPlain(SubmodelDbSchema.encode(plain));
   }
 
-  migrate1_0_0To1_1_0(submodel: {
+  migrate1_0_0To1_1_0(plain: any) {
+    return {
+      ...migrateSubmodelLinks(plain),
+      _schemaVersion: SubmodelDocSchemaVersion.v1_1_0,
+    };
+  }
+
+  migrate1_1_0To1_2_0(submodel: {
     displayName: LanguageTextDto[];
     description: LanguageTextDto[];
   }) {
@@ -45,14 +53,19 @@ export class SubmodelRepository {
       ...submodel,
       displayName: mapCorrectLanguageTags(submodel.displayName),
       description: mapCorrectLanguageTags(submodel.description),
-      _schemaVersion: SubmodelDocSchemaVersion.v1_1_0,
-    };
+    }
   }
 
   async fromPlainWithMigration(plain: any): Promise<Submodel> {
     let migratedVersion = plain;
-    if (migratedVersion._schemaVersion === SubmodelDocSchemaVersion.v1_0_0) {
+    if (!migratedVersion._schemaVersion || migratedVersion._schemaVersion === SubmodelDocSchemaVersion.v1_0_0 )
+    {
       migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
+    }
+    if (
+      migratedVersion._schemaVersion === SubmodelDocSchemaVersion.v1_1_0
+    ) {
+      migratedVersion = this.migrate1_1_0To1_2_0(migratedVersion);
     }
     return this.fromPlain(migratedVersion);
   }
@@ -61,7 +74,7 @@ export class SubmodelRepository {
     return await save(
       submodel,
       this.submodelDoc,
-      SubmodelDocSchemaVersion.v1_1_0,
+      SubmodelDocSchemaVersion.v1_2_0,
       this.fromPlain,
       SubmodelDbSchema,
       options,

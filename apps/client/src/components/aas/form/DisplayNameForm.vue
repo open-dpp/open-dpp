@@ -58,7 +58,7 @@ function ignoreOptions(language: LanguageType): LanguageType[] {
         data-cy="add-display-name"
         :aria-label="t('common.add')"
         icon="pi pi-plus"
-        label="Sprache hinzufügen"
+        :label="t('aasEditor.addLanguage')"
         :disabled="remainingLanguages.length === 0 || props.disabled"
         @click="
           pushDisplayName({

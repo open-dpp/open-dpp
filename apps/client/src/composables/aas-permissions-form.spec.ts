@@ -3,7 +3,7 @@ import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasPermissionsFormProps } from "./aas-permissions-form.ts";
 import { MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
 import {
-  allPermissionsAllow,
+  allPermissionsPlainAllow,
   permissionObjectPlainFactory,
   propertyOutputPlainFactory,
   securityPlainFactory,
@@ -87,7 +87,7 @@ describe("aasPermissionsForm composable", () => {
         {
           subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
           object: { idShortPath: "section3" },
-          permissions: allPermissionsAllow,
+          permissions: allPermissionsPlainAllow,
         },
         {
           subject: { userRole: UserRoleDto.ADMIN },
@@ -163,7 +163,7 @@ describe("aasPermissionsForm composable", () => {
       permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
     ).toEqual({
       subject: member,
-      permissions: allPermissionsAllow.map((p) => p.permission),
+      permissions: allPermissionsPlainAllow.map((p) => p.permission),
       inheritsPermissionsOf: null,
     });
   });
@@ -248,7 +248,7 @@ describe("aasPermissionsForm composable", () => {
             memberRole: MemberRoleDto.MEMBER,
           },
           object: { idShortPath: "section3" },
-          permissions: allPermissionsAllow,
+          permissions: allPermissionsPlainAllow,
         },
         {
           subject: { userRole: UserRoleDto.ADMIN },

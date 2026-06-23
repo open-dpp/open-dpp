@@ -30,30 +30,18 @@ vi.mock("../../stores/media.ts", () => ({
   useMediaStore: () => ({ fetchMedia: vi.fn() }),
 }));
 
-const {
-  StubPropertyEditor,
-  StubPropertyCreateEditor,
-  StubFileEditor,
-  StubFileCreateEditor,
-  StubReferenceElementEditor,
-  StubReferenceElementCreateEditor,
-} = vi.hoisted(() => ({
-  StubPropertyEditor: { name: "PropertyEditor" },
-  StubPropertyCreateEditor: { name: "PropertyCreateEditor" },
-  StubFileEditor: { name: "FileEditor" },
-  StubFileCreateEditor: { name: "FileCreateEditor" },
-  StubReferenceElementEditor: { name: "ReferenceElementEditor" },
-  StubReferenceElementCreateEditor: { name: "ReferenceElementCreateEditor" },
-}));
+const { StubPropertyEditor, StubPropertyCreateEditor, StubFileEditor, StubFileCreateEditor } =
+  vi.hoisted(() => ({
+    StubPropertyEditor: { name: "PropertyEditor" },
+    StubPropertyCreateEditor: { name: "PropertyCreateEditor" },
+    StubFileEditor: { name: "FileEditor" },
+    StubFileCreateEditor: { name: "FileCreateEditor" },
+  }));
 
 vi.mock("./PropertyEditor.vue", () => ({ default: StubPropertyEditor }));
 vi.mock("./PropertyCreateEditor.vue", () => ({ default: StubPropertyCreateEditor }));
 vi.mock("./FileEditor.vue", () => ({ default: StubFileEditor }));
 vi.mock("./FileCreateEditor.vue", () => ({ default: StubFileCreateEditor }));
-vi.mock("./ReferenceElementEditor.vue", () => ({ default: StubReferenceElementEditor }));
-vi.mock("./ReferenceElementCreateEditor.vue", () => ({
-  default: StubReferenceElementCreateEditor,
-}));
 vi.mock("./SubmodelEditor.vue", () => ({ default: { name: "SubmodelEditor" } }));
 vi.mock("./SubmodelCreateEditor.vue", () => ({ default: { name: "SubmodelCreateEditor" } }));
 vi.mock("./SubmodelElementCollectionEditor.vue", () => ({
@@ -79,15 +67,9 @@ const LEAF_EDITOR_COMPONENTS = [
   StubPropertyCreateEditor,
   StubFileEditor,
   StubFileCreateEditor,
-  StubReferenceElementEditor,
-  StubReferenceElementCreateEditor,
 ];
 
-const EDIT_MODE_LEAF_EDITOR_COMPONENTS = [
-  StubPropertyEditor,
-  StubFileEditor,
-  StubReferenceElementEditor,
-];
+const EDIT_MODE_LEAF_EDITOR_COMPONENTS = [StubPropertyEditor, StubFileEditor];
 
 function makeComputeds(
   editorVNode: ReturnType<typeof useAasDrawer>["editorVNode"],
