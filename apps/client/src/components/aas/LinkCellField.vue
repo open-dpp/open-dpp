@@ -7,11 +7,11 @@ import TextFieldWithValidation from "../basics/TextFieldWithValidation.vue";
 
 const props = defineProps<{
   id: string;
-  modelValue: string | null;
+  modelValue: string | null | undefined;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string | null): void;
+  (e: "update:modelValue", value: string | null | undefined): void;
 }>();
 const url = z.url().nullable();
 const { value, errorMessage, setValue } = useField<string | null>(

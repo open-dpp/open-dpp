@@ -28,6 +28,7 @@ import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-exp
 import { AasExport } from "./export-schemas/aas-export-types";
 import { ReferenceSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
 import { AssetAdministrationShellV2_0 } from "./export-schemas/aas-export-v2.schema";
+import { migrateSubmodelElementLinks } from "../migrate-links";
 
 type ReferenceSchema = z.infer<typeof ReferenceSchemaV1_0>;
 type ShellSchema = AasExport["environment"]["assetAdministrationShells"][number];
@@ -217,7 +218,10 @@ export interface MappedSubmodels {
   idMapping: Map<string, string>;
 }
 
-export function mapSubmodels(submodels: SubmodelSchema[]): MappedSubmodels {
+export function mapSubmodels(
+  submodels: SubmodelSchema[],
+  version: AasExportVersionType,
+): MappedSubmodels {
   const idMapping = new Map<string, string>();
   const mapped = submodels.map((submodel) => {
     const newId = randomUUID();
@@ -242,10 +246,20 @@ export function mapSubmodels(submodels: SubmodelSchema[]): MappedSubmodels {
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(
         submodel.embeddedDataSpecifications,
       ),
-      submodelElements: submodel.submodelElements.map((element) => parseSubmodelElement(element)),
+      submodelElements: mapSubmodelElements(submodel.submodelElements, version),
     });
   });
   return { submodels: mapped, idMapping };
+}
+
+function mapSubmodelElements(submodelElements: any[], version: AasExportVersionType) {
+  const migratedSubmodelElements =
+    version === AasExportVersion.v1_0 ||
+    version === AasExportVersion.v2_0 ||
+    version === AasExportVersion.v3_0
+      ? submodelElements.map(migrateSubmodelElementLinks)
+      : submodelElements;
+  return migratedSubmodelElements.map((element) => parseSubmodelElement(element));
 }
 
 export function mapConceptDescriptions(cds: ConceptDescriptionSchema[]): ConceptDescription[] {

@@ -31,8 +31,11 @@ import { PermalinkModule } from "../../permalink.module";
 import { PermalinkApplicationService } from "./permalink.application.service";
 
 describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
+  const basePathV1 = "/v1/p";
+  const basePathV2 = "/v2/p";
   const ctx = createAasTestContext(
-    "/p",
+    basePathV1,
+    basePathV2,
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [

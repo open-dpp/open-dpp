@@ -1,0 +1,45 @@
+import { Submodel } from "../../domain/submodel-base/submodel";
+import {
+  ApiVersionsDto,
+  type ApiVersionsDtoType,
+  type ValueResponseDto,
+  ValueSchema,
+} from "@open-dpp/dto";
+import { AasAbility } from "../../domain/security/aas-ability";
+import { reverseMigrateLinksInValueRepresentation } from "../../infrastructure/migrate-links";
+import { IdShortPath } from "../../domain/common/id-short-path";
+import { isEmptyObject } from "../../../utils";
+import { ForbiddenError } from "@open-dpp/exception";
+
+export class ValueResponse {
+  private constructor(
+    public readonly submodel: Submodel,
+    public readonly idShortPath: IdShortPath | undefined,
+    public readonly version: ApiVersionsDtoType,
+    public readonly ability: AasAbility,
+  ) {}
+  static create(data: {
+    submodel: Submodel;
+    idShortPath?: IdShortPath;
+    version: ApiVersionsDtoType;
+    ability: AasAbility;
+  }) {
+    return new ValueResponse(data.submodel, data.idShortPath, data.version, data.ability);
+  }
+
+  toJSON(): ValueResponseDto {
+    const plain = this.submodel.getValueRepresentation({
+      idShortPath: this.idShortPath,
+      options: { ability: this.ability },
+    });
+
+    if (plain === undefined || (this.idShortPath && isEmptyObject(plain))) {
+      throw new ForbiddenError();
+    }
+
+    const migratedResult =
+      this.version === ApiVersionsDto.v1 ? reverseMigrateLinksInValueRepresentation(plain) : plain;
+
+    return ValueSchema.parse(migratedResult);
+  }
+}
