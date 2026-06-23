@@ -7,8 +7,9 @@ export const AasExportVersion = {
   v1_0: "1.0",
   v2_0: "2.0",
   v3_0: "3.0",
+  v4_0: "4.0",
 } as const;
 
 export const AasExportVersionEnum = z.enum(AasExportVersion);
-export const LatestAasExportVersion = AasExportVersion.v3_0;
+export const LatestAasExportVersion = AasExportVersion.v4_0;
 export type AasExportVersionType = z.infer<typeof AasExportVersionEnum>;

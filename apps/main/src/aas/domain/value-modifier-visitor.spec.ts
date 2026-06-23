@@ -87,6 +87,9 @@ describe("value modifier visitor", () => {
       }),
     ]);
 
+    submodel.modifyValueOfSubmodelElement(null, IdShortPath.create({ path: "prop1" }), { ability });
+    expect(property.value).toEqual(null);
+
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const abilityAnonymous = security.defineAbilityForSubject(anonymous);
     expect(() =>

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import type { ReferenceValue } from "@open-dpp/dto";
+import type { KeyTypesType, ReferenceValue } from "@open-dpp/dto";
 import { computed } from "vue";
+import { isSafeHref } from "../../lib/urls.ts";
 
 const { model } = defineProps<{
   model: ReferenceValue;
@@ -11,26 +12,23 @@ const property = computed(() => {
 });
 
 const safeHref = computed(() => {
-  const raw = property.value?.value?.trim();
-  if (!raw) return undefined;
-  try {
-    const parsed = new URL(raw);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : undefined;
-  } catch {
-    return undefined;
-  }
+  const raw = property?.value?.value.trim();
+  return raw && isSafeHref(raw) ? raw : undefined;
 });
 </script>
 
 <template>
   <dd>
     <a
-      v-if="model.type === 'ExternalReference' && property"
-      :href="property.value"
+      v-if="model.type === 'ExternalReference' && safeHref"
+      :href="safeHref"
       target="_blank"
       rel="noopener noreferrer"
       class="text-primary-500 mt-1 text-sm/6 hover:underline sm:mt-2"
       >{{ safeHref }}</a
     >
+    <span v-else-if="model.type === 'ExternalReference' && property?.value">
+      {{ property.value }}
+    </span>
   </dd>
 </template>

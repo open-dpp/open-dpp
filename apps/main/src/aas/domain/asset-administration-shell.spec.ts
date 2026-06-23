@@ -9,7 +9,7 @@ import {
   ReferenceTypes,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { allPermissionsAllow } from "@open-dpp/testing";
+import { allPermissionsPlainAllow } from "@open-dpp/testing";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
@@ -84,7 +84,7 @@ describe("assetAdministrationShell", () => {
     security.addPolicy(
       admin,
       IdShortPath.create({ path: submodelId2 }),
-      allPermissionsAllow.map(Permission.fromPlain),
+      allPermissionsPlainAllow.map(Permission.fromPlain),
     );
 
     const aas = AssetAdministrationShell.create({
@@ -100,7 +100,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: submodelId2 })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -120,12 +120,12 @@ describe("assetAdministrationShell", () => {
     security.addPolicy(
       admin,
       IdShortPath.create({ path: submodel1.idShort }),
-      allPermissionsAllow.map(Permission.fromPlain),
+      allPermissionsPlainAllow.map(Permission.fromPlain),
     );
     security.addPolicy(
       admin,
       IdShortPath.create({ path: submodel2.idShort }),
-      allPermissionsAllow.map(Permission.fromPlain),
+      allPermissionsPlainAllow.map(Permission.fromPlain),
     );
     const member = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -134,7 +134,7 @@ describe("assetAdministrationShell", () => {
     security.addPolicy(
       member,
       IdShortPath.create({ path: submodel1.idShort }),
-      allPermissionsAllow.map(Permission.fromPlain),
+      allPermissionsPlainAllow.map(Permission.fromPlain),
     );
 
     const aas = AssetAdministrationShell.create({
@@ -160,11 +160,11 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: copyS2.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -173,7 +173,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -193,7 +193,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -202,7 +202,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -276,7 +276,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -288,7 +288,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
@@ -300,7 +300,7 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
-            permissions: allPermissionsAllow.map(Permission.fromPlain),
+            permissions: allPermissionsPlainAllow.map(Permission.fromPlain),
           }),
         ],
       }),
