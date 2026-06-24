@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
-  allPermissionsAllow,
   propertyInputPlainFactory,
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
@@ -23,6 +22,7 @@ import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
+import { allPermissionsAllowFactory } from "../../../fixtures/security-fixtures";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -171,110 +171,260 @@ describe("submodel", () => {
     );
   });
 
-  it("should modify column in nested table", () => {
-    const submodel = Submodel.create({ idShort: "section1" });
-    const security = Security.create({});
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: submodel.idShort }),
-      allPermissionsAllow.map(Permission.fromPlain),
-    );
-    const ability = security.defineAbilityForSubject(member);
-    const submodelElementList = SubmodelElementList.create({
-      idShort: "table1",
-      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-      value: [
-        SubmodelElementCollection.create({
-          idShort: "row1",
-          value: [
-            Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
-            SubmodelElementList.create({
-              idShort: "table2",
-              typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-              value: [
-                SubmodelElementCollection.create({
-                  idShort: "row11",
-                  value: [
-                    Property.create({
-                      idShort: "col11",
-                      value: "30",
-                      valueType: DataTypeDef.Double,
-                    }),
-                  ],
-                }),
-                SubmodelElementCollection.create({
-                  idShort: "row12",
-                  value: [
-                    Property.create({
-                      idShort: "col12",
-                      value: "40",
-                      valueType: DataTypeDef.Double,
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
+  describe("nested table", () => {
+    function createSubmodelWithNestedTable() {
+      const submodel = Submodel.create({ idShort: "section1" });
+      const security = Security.create({});
+      security.addPolicy(
+        member,
+        IdShortPath.create({ path: submodel.idShort }),
+        allPermissionsAllowFactory.build(),
+      );
+      const ability = security.defineAbilityForSubject(member);
+      const submodelElementList = SubmodelElementList.create({
+        idShort: "table1",
+        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+        value: [
+          SubmodelElementCollection.create({
+            idShort: "row1",
+            value: [
+              Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+              SubmodelElementList.create({
+                idShort: "table2",
+                typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                value: [
+                  SubmodelElementCollection.create({
+                    idShort: "row11",
+                    value: [
+                      Property.create({
+                        idShort: "col1",
+                        value: "30",
+                        valueType: DataTypeDef.Double,
+                      }),
+                      SubmodelElementList.create({
+                        idShort: "table3",
+                        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                        value: [
+                          SubmodelElementCollection.create({
+                            idShort: "row111",
+                            value: [
+                              Property.create({
+                                idShort: "col1",
+                                value: "table1.row1.table2.row11.table3.row111.col1",
+                                valueType: DataTypeDef.String,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  SubmodelElementCollection.create({
+                    idShort: "row12",
+                    value: [
+                      Property.create({
+                        idShort: "col1",
+                        value: "40",
+                        valueType: DataTypeDef.Double,
+                      }),
+                      SubmodelElementList.create({
+                        idShort: "table3",
+                        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                        value: [
+                          SubmodelElementCollection.create({
+                            idShort: "row121",
+                            value: [
+                              Property.create({
+                                idShort: "col1",
+                                value: "table1.row1.table2.row12.table3.row121.col1",
+                                valueType: DataTypeDef.String,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  SubmodelElementCollection.create({
+                    idShort: "row13",
+                    value: [
+                      Property.create({
+                        idShort: "col11",
+                        value: "40",
+                        valueType: DataTypeDef.Double,
+                      }),
+                      SubmodelElementList.create({
+                        idShort: "table3",
+                        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                        value: [
+                          SubmodelElementCollection.create({
+                            idShort: "row131",
+                            value: [
+                              Property.create({
+                                idShort: "col1",
+                                value: "table1.row1.table2.row13.table3.row131.col1",
+                                valueType: DataTypeDef.String,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+          SubmodelElementCollection.create({
+            idShort: "row2",
+            value: [
+              Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+              SubmodelElementList.create({
+                idShort: "table2",
+                typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                value: [
+                  SubmodelElementCollection.create({
+                    idShort: "row21",
+                    value: [
+                      Property.create({
+                        idShort: "col1",
+                        value: "10",
+                        valueType: DataTypeDef.Double,
+                      }),
+                      SubmodelElementList.create({
+                        idShort: "table3",
+                        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                        value: [
+                          SubmodelElementCollection.create({
+                            idShort: "row211",
+                            value: [
+                              Property.create({
+                                idShort: "col1",
+                                value: "table1.row2.table2.row21.table3.row211.col1",
+                                valueType: DataTypeDef.String,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  SubmodelElementCollection.create({
+                    idShort: "row22",
+                    value: [
+                      Property.create({
+                        idShort: "col1",
+                        value: "20",
+                        valueType: DataTypeDef.Double,
+                      }),
+                      SubmodelElementList.create({
+                        idShort: "table3",
+                        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+                        value: [
+                          SubmodelElementCollection.create({
+                            idShort: "row221",
+                            value: [
+                              Property.create({
+                                idShort: "col1",
+                                value: "table1.row2.table2.row22.table3.row221.col1",
+                                valueType: DataTypeDef.String,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+      submodel.addSubmodelElement(submodelElementList, { ability });
+      return { submodel, ability };
+    }
+
+    it("should modify column of table2", () => {
+      const { submodel, ability } = createSubmodelWithNestedTable();
+      const newDisplayName = [
+        {
+          language: "de",
+          text: "CO2 Footprint New Text",
+        },
+      ];
+      submodel.modifyColumn(
+        IdShortPath.create({
+          path: "table1.row1.table2",
         }),
-        SubmodelElementCollection.create({
-          idShort: "row2",
-          value: [
-            Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
-            SubmodelElementList.create({
-              idShort: "table2",
-              typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-              value: [
-                SubmodelElementCollection.create({
-                  idShort: "row21",
-                  value: [
-                    Property.create({
-                      idShort: "col11",
-                      value: "10",
-                      valueType: DataTypeDef.Double,
-                    }),
-                  ],
-                }),
-                SubmodelElementCollection.create({
-                  idShort: "row22",
-                  value: [
-                    Property.create({
-                      idShort: "col12",
-                      value: "20",
-                      valueType: DataTypeDef.Double,
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
-    const newDisplayName = [
-      {
-        language: "de",
-        text: "CO2 Footprint New Text",
-      },
-    ];
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.modifyColumn(
-      IdShortPath.create({
-        path: "table1.row1.table2",
-      }),
-      "col11",
-      {
+        "col1",
+        {
+          idShort: "col1",
+          displayName: newDisplayName,
+        },
+        {
+          ability,
+        },
+      );
+      const col1Row21 = submodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "table1.row2.table2.row21.col1" }),
+      );
+      expect(col1Row21.toPlain()).toMatchObject({
         displayName: newDisplayName,
-      },
-      {
-        ability,
-      },
-    );
-    const col11Row21 = submodel.findSubmodelElementOrFail(
-      IdShortPath.create({ path: "table1.row2.table2.row21.col11" }),
-    );
-    expect(col11Row21.toPlain()).toMatchObject({
-      displayName: newDisplayName,
-      value: "10",
+        value: "10",
+      });
+    });
+
+    it("should modify column of table3", () => {
+      const { submodel, ability } = createSubmodelWithNestedTable();
+      const newDisplayName = [
+        {
+          language: "de",
+          text: "CO2 Footprint New Text",
+        },
+      ];
+
+      submodel.modifyColumn(
+        IdShortPath.create({
+          path: "table1.row1.table2.row11.table3",
+        }),
+        "col1",
+        {
+          idShort: "col1",
+          displayName: newDisplayName,
+        },
+        {
+          ability,
+        },
+      );
+      const col1Row221 = submodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "table1.row2.table2.row22.table3.row221.col1" }),
+      );
+      expect(col1Row221.toPlain()).toMatchObject({
+        displayName: newDisplayName,
+        value: "table1.row2.table2.row22.table3.row221.col1",
+      });
+    });
+
+    it("should add column to table3", () => {
+      const { submodel, ability } = createSubmodelWithNestedTable();
+      submodel.addColumn(
+        IdShortPath.create({
+          path: "table1.row1.table2.row11.table3",
+        }),
+        Property.create({ idShort: "newCol1", value: "10", valueType: DataTypeDef.Double }),
+        { ability },
+      );
+      const row221 = submodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "table1.row2.table2.row22.table3.row221" }),
+      );
+      expect(row221.getSubmodelElements()[1].toPlain()).toMatchObject(
+        Property.create({
+          idShort: "newCol1",
+          value: "10",
+          valueType: DataTypeDef.Double,
+        }).toPlain(),
+      );
     });
   });
 

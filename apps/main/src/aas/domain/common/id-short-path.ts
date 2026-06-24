@@ -58,6 +58,10 @@ export class IdShortPath {
     return this._segments.length === 0;
   }
 
+  slice(start: number, end?: number): IdShortPath {
+    return new IdShortPath(this._segments.slice(start, end));
+  }
+
   toString(): string {
     return this._segments.join(".");
   }

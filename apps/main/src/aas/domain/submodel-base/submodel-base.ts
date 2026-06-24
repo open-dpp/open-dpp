@@ -88,15 +88,10 @@ export interface ISubmodelBase
   getKeyType: () => KeyTypesType;
 }
 
-export interface IMergeOptions {
-  keepValues?: boolean;
-}
-
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
   deleteSubmodelElement: (idShort: string, options: DeleteOptions) => ISubmodelElement;
   setParentPointer: (parentPointer: Pointer) => void;
-  merge: (options?: IMergeOptions) => ISubmodelElement;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {

@@ -26,4 +26,10 @@ describe("id-short-path", () => {
       ),
     ).toBeTruthy();
   });
+
+  it("should slice correctly", () => {
+    expect(IdShortPath.create({ path: "path1.path2.path3.path4" }).slice(1)).toEqual(
+      IdShortPath.create({ path: "path2.path3.path4" }),
+    );
+  });
 });

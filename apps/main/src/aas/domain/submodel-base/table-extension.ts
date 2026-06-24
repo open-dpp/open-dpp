@@ -14,8 +14,6 @@ import { RowAdded } from "../../../activity-history/domain/change-events/row-add
 import { ColumnAdded } from "../../../activity-history/domain/change-events/column-added";
 import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
 import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
-import { ValueVisitor } from "../value-visitor";
-import { AasAbility } from "../security/aas-ability";
 
 export class TableExtension implements ITrackable {
   private headerRow: ISubmodelElement | undefined;
@@ -72,15 +70,6 @@ export class TableExtension implements ITrackable {
     );
   }
 
-  syncColumnToAllRows(column: ISubmodelElement, ability: AasAbility) {
-    for (const row of this.rows) {
-      const columnOfRow = row.getSubmodelElements().find((el) => el.idShort === column.idShort);
-      if (columnOfRow) {
-        columnOfRow = cloneSubmodelElement(column);
-      }
-    }
-  }
-
   modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
     if (Object.prototype.hasOwnProperty.call(data, "value")) {
       // Otherwise the value of the column would be propagated to all rows
@@ -88,7 +77,6 @@ export class TableExtension implements ITrackable {
     }
     const column = this.getColumnOrFail(idShort);
     column.accept(new ModifierVisitor(options).withTracking(this.tracker), { data });
-    this.syncColumnToAllRows(column);
 
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find((el) => el.idShort === idShort);
