@@ -461,10 +461,10 @@ describe("submodel", () => {
     const list = submodel.modifyColumn(
       IdShortPath.create({ path: submodelElementList.idShort }),
       col1.idShort,
-      { displayName: newDisplayNames },
+      { idShort: col1.idShort, displayName: newDisplayNames },
       { ability },
     );
-    expect(list.value[0].getSubmodelElements()[0].displayName).toEqual(
+    expect((list as SubmodelElementList).value[0].getSubmodelElements()[0].displayName).toEqual(
       newDisplayNames.map(LanguageText.fromPlain),
     );
   });

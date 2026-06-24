@@ -5,17 +5,14 @@ import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import {
-  ChangeTracker,
-  ITrackable,
-  withTrackingHelper,
-} from "../../../activity-history/domain/change-tracker";
+import { ChangeTracker, withTrackingHelper } from "../../../activity-history/domain/change-tracker";
 import { RowAdded } from "../../../activity-history/domain/change-events/row-added";
 import { ColumnAdded } from "../../../activity-history/domain/change-events/column-added";
 import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
 import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
+import { ITableExtendable } from "./table-extensable";
 
-export class TableExtension implements ITrackable {
+export class TableExtension implements ITableExtendable {
   private headerRow: ISubmodelElement | undefined;
   readonly tracker = ChangeTracker.create();
 

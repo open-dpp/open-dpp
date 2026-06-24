@@ -40,6 +40,8 @@ import {
 } from "../../../activity-history/domain/change-tracker";
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
 import { Pointer } from "./pointer";
+import { NestedTableExtension } from "./nested-table-extension";
+import { ITableExtendable } from "./table-extensable";
 
 export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   private _displayName: Array<LanguageText>;
@@ -178,9 +180,19 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     return submodelElement;
   }
 
-  private getListAsTableExtensionOrFail(idShortPath: IdShortPath) {
+  private getListAsTableExtensionOrFail(idShortPath: IdShortPath): ITableExtendable {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     if (submodelElement instanceof SubmodelElementList) {
+      if (
+        submodelElement.getReference().constructIdShortPathsForType(KeyTypes.SubmodelElementList)
+          .length > 1
+      ) {
+        return NestedTableExtension.create({
+          data: submodelElement,
+          findSubmodelElementOrFailCallback: (idShortPath: IdShortPath) =>
+            this.findSubmodelElementOrFail(idShortPath),
+        }).withTracking(this.tracker);
+      }
       return new TableExtension(submodelElement).withTracking(this.tracker);
     } else {
       throw new ValueError(
@@ -204,23 +216,6 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.addColumn(column, options);
-
-    // TODO: Cleanup later
-    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    const paths = submodelElement
-      .getReference()
-      .constructIdShortPathsForType(KeyTypes.SubmodelElementList, { excludeSubmodel: true })
-      .filter((path) => !path.isEqual(idShortPath));
-    const affectedParentRowPaths = this.collectAffectedParentRowPaths(paths);
-    for (const rowPath of affectedParentRowPaths) {
-      if (idShortPath.last) {
-        const path = rowPath.addPathSegment(idShortPath.last);
-        if (!path.isEqual(idShortPath)) {
-          const parentTableExtension = this.getListAsTableExtensionOrFail(path);
-          parentTableExtension.addColumn(column, options);
-        }
-      }
-    }
     return tableExtension.getTableElement();
   }
 
@@ -232,22 +227,6 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.modifyColumn(idShortOfColumn, data, options);
-
-    // TODO: Cleanup later
-    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    const paths = submodelElement
-      .getReference()
-      .constructIdShortPathsForType(KeyTypes.SubmodelElementList, { excludeSubmodel: true })
-      .filter((path) => !path.isEqual(idShortPath));
-    const affectedParentRowPaths = this.collectAffectedParentRowPaths(paths);
-    for (const path of affectedParentRowPaths) {
-      if (idShortPath.last) {
-        const tableExtension = this.getListAsTableExtensionOrFail(
-          path.addPathSegment(idShortPath.last),
-        );
-        tableExtension.modifyColumn(idShortOfColumn, data, options);
-      }
-    }
     return tableExtension.getTableElement();
   }
 
@@ -256,35 +235,6 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
 
     tableExtension.deleteColumn(idShortOfColumn, options);
     return tableExtension.getTableElement();
-  }
-
-  collectAffectedParentRowPaths(
-    tablePaths: IdShortPath[],
-    currentPath: IdShortPath | undefined = undefined,
-    currentTableIndex = 0,
-  ): IdShortPath[] {
-    const currentPathWithoutSection = currentPath ? currentPath.slice(1) : undefined;
-    if (tablePaths[currentTableIndex] && tablePaths[currentTableIndex].last) {
-      const currentTablePath = currentPathWithoutSection
-        ? currentPathWithoutSection.addPathSegment(tablePaths[currentTableIndex].last)
-        : tablePaths[currentTableIndex];
-      const table = this.getListAsTableExtensionOrFail(currentTablePath);
-      const rows = table.rows;
-      const result: IdShortPath[] = [];
-      for (const row of rows) {
-        result.push(
-          ...this.collectAffectedParentRowPaths(
-            tablePaths,
-            row.getIdShortPath(),
-            currentTableIndex + 1,
-          ),
-        );
-      }
-      return result;
-    } else if (currentPathWithoutSection) {
-      return [currentPathWithoutSection];
-    }
-    return [];
   }
 
   getKeyType() {
