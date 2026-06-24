@@ -1,28 +1,30 @@
 import { ModifierVisitorOptions } from "../modifier-visitor";
-import { AddOptions, DeleteOptions, ISubmodelElement } from "./submodel-base";
+import {
+  AddOptions,
+  DeleteOptions,
+  ISubmodelElement,
+  ISubmodelElementSearchable,
+} from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
 import { ChangeTracker, withTrackingHelper } from "../../../activity-history/domain/change-tracker";
-import { ITableExtendable } from "./table-extensable";
+import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table-extensable";
 import { IdShortPath } from "../common/id-short-path";
 import { TableExtension } from "./table-extension";
 import { KeyTypes } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
 
 export class NestedTableExtension implements ITableExtendable {
   readonly tracker = ChangeTracker.create();
 
   private constructor(
     private data: SubmodelElementList,
-    private readonly findSubmodelElementOrFailCallback: (
-      idShortPath: IdShortPath,
-    ) => ISubmodelElement,
+    private readonly submodelElementSearch: ISubmodelElementSearchable,
   ) {}
 
   static create(params: {
     data: SubmodelElementList;
-    findSubmodelElementOrFailCallback: (idShortPath: IdShortPath) => ISubmodelElement;
+    submodelElementSearch: ISubmodelElementSearchable;
   }) {
-    return new NestedTableExtension(params.data, params.findSubmodelElementOrFailCallback);
+    return new NestedTableExtension(params.data, params.submodelElementSearch);
   }
 
   withTracking(changeTracker?: ChangeTracker): this {
@@ -31,11 +33,11 @@ export class NestedTableExtension implements ITableExtendable {
 
   private performRecursive(operation: (tableExtension: TableExtension) => void) {
     const idShortPath = this.data.getIdShortPath().slice(1);
-    const paths = this.data
+    const parentTablePaths = this.data
       .getReference()
       .constructIdShortPathsForType(KeyTypes.SubmodelElementList, { excludeSubmodel: true })
       .filter((path: IdShortPath) => !path.isEqual(idShortPath));
-    const affectedParentRowPaths = this.collectAffectedParentRowPaths(paths);
+    const affectedParentRowPaths = this.collectAffectedParentRowPaths(parentTablePaths);
     for (const path of affectedParentRowPaths) {
       if (idShortPath.last) {
         const tableExtension = this.getListAsTableExtensionOrFail(
@@ -59,14 +61,10 @@ export class NestedTableExtension implements ITableExtendable {
   }
 
   getListAsTableExtensionOrFail(idShortPath: IdShortPath): TableExtension {
-    const submodelElement = this.findSubmodelElementOrFailCallback(idShortPath);
-    if (submodelElement instanceof SubmodelElementList) {
-      return new TableExtension(submodelElement).withTracking(this.tracker);
-    } else {
-      throw new ValueError(
-        `Cannot create table for submodel element with type ${submodelElement.getSubmodelElementType()}`,
-      );
-    }
+    const submodelElement = parseAsSubmodelElementListOrFail(
+      this.submodelElementSearch.findSubmodelElementOrFail(idShortPath),
+    );
+    return new TableExtension(submodelElement);
   }
 
   deleteColumn(idShort: string, options: DeleteOptions) {}

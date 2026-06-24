@@ -26,11 +26,11 @@ import {
   deleteSubmodelElementOrFail,
   ISubmodelBase,
   ISubmodelElement,
+  ISubmodelElementSearchable,
   parseSubmodelElement,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
-import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 import { SubmodelElementAdded } from "../../../activity-history/domain/change-events/submodel-element-added";
 import {
@@ -41,9 +41,11 @@ import {
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
 import { Pointer } from "./pointer";
 import { NestedTableExtension } from "./nested-table-extension";
-import { ITableExtendable } from "./table-extensable";
+import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table-extensable";
 
-export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
+export class Submodel
+  implements ISubmodelBase, IPersistable, ITrackable, ISubmodelElementSearchable
+{
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
   public readonly tracker;
@@ -181,24 +183,16 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   }
 
   private getListAsTableExtensionOrFail(idShortPath: IdShortPath): ITableExtendable {
-    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    if (submodelElement instanceof SubmodelElementList) {
-      if (
-        submodelElement.getReference().constructIdShortPathsForType(KeyTypes.SubmodelElementList)
-          .length > 1
-      ) {
-        return NestedTableExtension.create({
-          data: submodelElement,
-          findSubmodelElementOrFailCallback: (idShortPath: IdShortPath) =>
-            this.findSubmodelElementOrFail(idShortPath),
-        }).withTracking(this.tracker);
-      }
-      return new TableExtension(submodelElement).withTracking(this.tracker);
-    } else {
-      throw new ValueError(
-        `Cannot create table for submodel element with type ${submodelElement.getSubmodelElementType()}`,
-      );
-    }
+    const submodelElementList = parseAsSubmodelElementListOrFail(
+      this.findSubmodelElementOrFail(idShortPath),
+    );
+    const tableExtension = submodelElementList.isNested()
+      ? NestedTableExtension.create({
+          data: submodelElementList,
+          submodelElementSearch: this,
+        })
+      : new TableExtension(submodelElementList);
+    return tableExtension.withTracking(this.tracker);
   }
 
   addRow(idShortPath: IdShortPath, options: AddOptions) {

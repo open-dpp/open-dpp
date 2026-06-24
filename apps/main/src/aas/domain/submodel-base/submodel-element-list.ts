@@ -152,6 +152,12 @@ export class SubmodelElementList implements ISubmodelElement {
     return this.value;
   }
 
+  isNested(): boolean {
+    return (
+      this.getReference().constructIdShortPathsForType(KeyTypes.SubmodelElementList).length > 1
+    );
+  }
+
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
     if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
       throw new Error(

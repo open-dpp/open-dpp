@@ -76,6 +76,10 @@ export interface IHasSubmodelElements {
   getSubmodelElements: () => ISubmodelElement[];
 }
 
+export interface ISubmodelElementSearchable {
+  findSubmodelElementOrFail(idShortPath: IdShortPath): ISubmodelElement;
+}
+
 export interface ISubmodelBase
   extends
     SubmodelBaseObjects,
