@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements, KeyTypes } from "@open-dpp/dto";
+import { AasSubmodelElements } from "@open-dpp/dto";
 import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { AddOptions, DeleteOptions, ISubmodelElement } from "./submodel-base";
@@ -11,8 +11,7 @@ import { ColumnAdded } from "../../../activity-history/domain/change-events/colu
 import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
 import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
 import { ITableExtendable } from "./table-extensable";
-import { ITransformer } from "../copy-options";
-import { match, P } from "ts-pattern";
+import { TableRowCopyVisitor } from "./table-row-copy-visitor";
 
 export class TableExtension implements ITableExtendable {
   private headerRow: ISubmodelElement | undefined;
@@ -127,7 +126,7 @@ export class TableExtension implements ITableExtendable {
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
         const columnCopy = column.copy({
-          transformer: TableCopyTransformer.create(),
+          transformer: new TableRowCopyVisitor(),
         });
         if (columnCopy.isAllowed) {
           newRow.addSubmodelElement(columnCopy.value, {
@@ -179,58 +178,5 @@ export class TableExtension implements ITableExtendable {
         value: row,
       }),
     );
-  }
-}
-
-/**
- * Transformer used when copying table columns to new rows.
- * Ensures that new rows receive clean column templates without inheriting
- * data values from the source column.
- *
- * Transformation rules:
- * - Property and File elements: sets value to null
- * - SubmodelElementList with multiple items: keeps only the first item as template
- * - Other elements: no transformation applied
- */
-export class TableCopyTransformer implements ITransformer {
-  private constructor() {}
-
-  static create(): TableCopyTransformer {
-    return new TableCopyTransformer();
-  }
-
-  /**
-   * Transforms a plain object representation of a submodel element for table row copying.
-   * @param plain - The plain object to transform
-   * @returns The transformed plain object with values reset according to transformation rules
-   */
-  transform(plain: any): any {
-    return match(plain)
-      .with(
-        {
-          modelType: P.union(KeyTypes.Property, KeyTypes.File),
-          value: P.string,
-        },
-        () => ({
-          ...plain,
-          value: null,
-        }),
-      )
-      .with(
-        {
-          modelType: KeyTypes.SubmodelElementList,
-          value: P.select(
-            P.intersection(
-              P.array(),
-              P.when((value) => Array.isArray(value) && value.length > 1),
-            ),
-          ),
-        },
-        (value) => ({
-          ...plain,
-          value: [value[0]],
-        }),
-      )
-      .otherwise(() => plain);
   }
 }

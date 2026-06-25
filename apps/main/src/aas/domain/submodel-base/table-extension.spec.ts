@@ -1,5 +1,5 @@
 import { expect, jest } from "@jest/globals";
-import { AasSubmodelElements, PermissionKind, Permissions } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
@@ -13,11 +13,12 @@ import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableCopyTransformer, TableExtension } from "./table-extension";
+import { TableExtension } from "./table-extension";
 import { allPermissionsAllowFactory } from "../../../fixtures/security-fixtures";
 import { File } from "./file";
+import { TableRowCopyVisitor } from "./table-row-copy-visitor";
 
-const transformer = TableCopyTransformer.create();
+const transformer = new TableRowCopyVisitor();
 
 describe("tableExtension", () => {
   beforeAll(() => {
@@ -271,19 +272,23 @@ describe("tableExtension", () => {
   });
 });
 
-describe("NullifyValueOfLeafNodes", () => {
+describe("TableRowCopyVisitor", () => {
   it("should nullify value of leaf nodes", () => {
-    const prop = Property.fromPlain(
-      propertyInputPlainFactory.build({ idShort: "col1", value: "myValue" }),
-    );
+    const prop = Property.create({
+      idShort: "col1",
+      value: "myValue",
+      valueType: DataTypeDef.String,
+    });
     const file = File.create({
       idShort: "file",
       contentType: "text/plain",
       value: "fileValue",
     });
 
-    const transformer = TableCopyTransformer.create();
-    expect(transformer.transform(prop.toPlain())).toMatchObject({ value: null });
-    expect(transformer.transform(file.toPlain())).toMatchObject({ value: null });
+    prop.accept(new TableRowCopyVisitor());
+    expect(prop.value).toEqual(null);
+
+    file.accept(new TableRowCopyVisitor());
+    expect(file.value).toEqual(null);
   });
 });

@@ -147,14 +147,7 @@ export class SubmodelElementList implements ISubmodelElement {
   }
 
   copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
-    const submodelElementsCopy = this.value
-      .map((se) => se.copy(options))
-      .filter((se) => se.isAllowed)
-      .map((se) => se.value.toPlain(options));
-    return copySubmodelElement(this, {
-      ...options,
-      override: { value: submodelElementsCopy },
-    });
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
@@ -174,6 +167,9 @@ export class SubmodelElementList implements ISubmodelElement {
 
   setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
     this.value = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {

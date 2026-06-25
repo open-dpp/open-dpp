@@ -23,7 +23,6 @@ import { IVisitable } from "../visitor";
 import { getSubmodelClass } from "./submodel-registry";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
-import { isEmptyObject } from "../../../utils";
 import { AccessResult } from "../security/access-allowed";
 
 export interface SubmodelBaseProps {
@@ -164,16 +163,25 @@ export function addSubmodelElementOrFail(
   return submodelElement;
 }
 
-export function copySubmodelElement(
-  submodelElement: ISubmodelElement,
-  options?: ICopyOptions & { override?: any },
-): AccessResult<ISubmodelElement> {
-  const plainClone = { ...submodelElement.toPlain(options), ...options?.override };
-  const transformed = options?.transformer ? options.transformer.transform(plainClone) : plainClone;
-  if (isEmptyObject(transformed)) {
+export function copySubmodelElement(submodelElement: ISubmodelElement, options?: ICopyOptions) {
+  const submodelElementsCopy = submodelElement.getSubmodelElements().map((se) => se.copy(options));
+
+  if (
+    options?.ability === undefined ||
+    options.ability.can(Permissions.Read, submodelElement.getIdShortPath()) ||
+    submodelElementsCopy.some((se) => se.isAllowed)
+  ) {
+    const plainClone = submodelElement.toPlain(options);
+    const copy = parseSubmodelElement(plainClone);
+    copy.setSubmodelElements(
+      submodelElementsCopy.filter((se) => se.isAllowed).map((se) => se.value),
+    );
+    if (options?.transformer) {
+      copy.accept(options.transformer);
+    }
+    copy.setParentPointer(submodelElement.getPointer());
+    return AccessResult.allowed(copy);
+  } else {
     return AccessResult.denied();
   }
-  const copy = parseSubmodelElement(transformed);
-  copy.setParentPointer(submodelElement.getPointer());
-  return AccessResult.allowed(copy);
 }

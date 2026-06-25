@@ -145,15 +145,7 @@ export class Entity implements ISubmodelElement {
   }
 
   copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
-    const submodelElementsCopy = this.statements
-      .map((se) => se.copy(options))
-      .filter((se) => se.isAllowed)
-      .map((se) => se.value.toPlain(options));
-
-    return copySubmodelElement(this, {
-      ...options,
-      override: { statements: submodelElementsCopy },
-    });
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
@@ -163,6 +155,9 @@ export class Entity implements ISubmodelElement {
 
   setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
     this.statements = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
   }
 
   getSubmodelElements(): ISubmodelElement[] {

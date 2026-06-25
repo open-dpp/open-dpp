@@ -1,8 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
-import { KeyTypes, ModellingKindType, ReferenceTypes, SubmodelJsonSchema } from "@open-dpp/dto";
+import {
+  KeyTypes,
+  ModellingKindType,
+  Permissions,
+  ReferenceTypes,
+  SubmodelJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { isEmptyObject } from "../../../utils";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IdShortPath } from "../common/id-short-path";
 import { Key } from "../common/key";
@@ -337,6 +342,9 @@ export class Submodel
 
   setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
     this.submodelElements = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
   }
 
   getSubmodelElements(): ISubmodelElement[] {
@@ -344,25 +352,25 @@ export class Submodel
   }
 
   copy(options?: ICopyOptions): AccessResult<Submodel> {
-    const submodelElementsCopy = this.submodelElements
-      .map((se) => se.copy(options))
-      .filter((se) => se.isAllowed)
-      .map((se) => se.value.toPlain(options));
-    const noPermissionsToCopiedSubmodelElements =
-      this.submodelElements.length > 0 && submodelElementsCopy.length === 0;
-    const plain = noPermissionsToCopiedSubmodelElements
-      ? this.toPlain(options)
-      : { ...this.toPlain(options), submodelElements: submodelElementsCopy };
-    if (isEmptyObject(plain)) {
+    const submodelElementsCopy = this.getSubmodelElements().map((se) => se.copy(options));
+
+    if (
+      options?.ability === undefined ||
+      options?.ability?.can(Permissions.Read, this.getIdShortPath()) ||
+      submodelElementsCopy.some((se) => se.isAllowed)
+    ) {
+      const plainClone = this.toPlain(options);
+      const copy = Submodel.fromPlain({ ...plainClone, id: randomUUID() });
+      copy.setSubmodelElements(
+        submodelElementsCopy.filter((se) => se.isAllowed).map((se) => se.value),
+      );
+      if (options?.transformer) {
+        copy.accept(options.transformer);
+      }
+      return AccessResult.allowed(copy);
+    } else {
       return AccessResult.denied();
     }
-    const transformed = options?.transformer ? options.transformer.transform(plain) : plain;
-    return AccessResult.allowed(
-      Submodel.fromPlain({
-        ...transformed,
-        id: randomUUID(),
-      }),
-    );
   }
 }
 

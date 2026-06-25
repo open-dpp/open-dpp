@@ -4,7 +4,6 @@ import {
   AnnotatedRelationshipElementJsonSchema,
   KeyTypes,
   KeyTypesType,
-  Permissions,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -141,19 +140,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   }
 
   copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
-    const submodelElementsCopy = this.annotations.map((se) => se.copy(options));
-
-    if (
-      options?.ability?.can(Permissions.Read, this.getIdShortPath()) ||
-      submodelElementsCopy.some((se) => se.isAllowed)
-    ) {
-      return copySubmodelElement(this, {
-        ...options,
-        override: { annotations: submodelElementsCopy.filter((se) => se.isAllowed) },
-      });
-    } else {
-      return AccessResult.denied();
-    }
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
@@ -163,6 +150,9 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
 
   setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
     this.annotations = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
   }
 
   getSubmodelElements(): ISubmodelElement[] {

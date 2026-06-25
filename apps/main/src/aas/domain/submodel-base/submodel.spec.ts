@@ -523,9 +523,9 @@ describe("submodel", () => {
       { displayName: newDisplayNames },
       { ability },
     );
-    expect((list as SubmodelElementList).value[0].getSubmodelElements()[0].displayName).toEqual(
-      newDisplayNames.map(LanguageText.fromPlain),
-    );
+    expect(
+      (list as SubmodelElementList).getSubmodelElements()[0].getSubmodelElements()[0].displayName,
+    ).toEqual(newDisplayNames.map(LanguageText.fromPlain));
   });
 
   it("should delete column", () => {
@@ -904,14 +904,14 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop1, { ability });
     submodel.addSubmodelElement(prop2, { ability });
 
-    expect(submodel.copy({ ability }).value.submodelElements).toEqual([prop1]);
+    expect(submodel.copy({ ability }).value.getSubmodelElements()).toEqual([prop1]);
     ability = security.defineAbilityForSubject(anonymous);
     expect(submodel.copy({ ability })).toEqual(AccessResult.denied());
     security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
     ]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability }).value.submodelElements).toEqual([prop2]);
+    expect(submodel.copy({ ability }).value.getSubmodelElements()).toEqual([prop2]);
   });
 
   it("should get value representation for bill of material", () => {
