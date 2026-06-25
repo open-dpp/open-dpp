@@ -4,6 +4,7 @@ import {
   AnnotatedRelationshipElementJsonSchema,
   KeyTypes,
   KeyTypesType,
+  Permissions,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -47,7 +48,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly annotations: Array<ISubmodelElement>,
+    private annotations: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -140,19 +141,28 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   }
 
   copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
-    const submodelElementsCopy = this.annotations
-      .map((se) => se.copy(options))
-      .filter((se) => se.isAllowed)
-      .map((se) => se.value.toPlain(options));
-    return copySubmodelElement(this, {
-      ...options,
-      override: { annotations: submodelElementsCopy },
-    });
+    const submodelElementsCopy = this.annotations.map((se) => se.copy(options));
+
+    if (
+      options?.ability?.can(Permissions.Read, this.getIdShortPath()) ||
+      submodelElementsCopy.some((se) => se.isAllowed)
+    ) {
+      return copySubmodelElement(this, {
+        ...options,
+        override: { annotations: submodelElementsCopy.filter((se) => se.isAllowed) },
+      });
+    } else {
+      return AccessResult.denied();
+    }
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.annotations = submodelElements;
   }
 
   getSubmodelElements(): ISubmodelElement[] {

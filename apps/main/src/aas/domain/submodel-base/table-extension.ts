@@ -33,9 +33,10 @@ export class TableExtension implements ITableExtendable {
 
   private setHeaderRow() {
     this.headerRow =
-      this.data.value.length > 0 &&
-      this.data.value[0].getSubmodelElementType() === AasSubmodelElements.SubmodelElementCollection
-        ? this.data.value[0]
+      this.data.getSubmodelElements().length > 0 &&
+      this.data.getSubmodelElements()[0].getSubmodelElementType() ===
+        AasSubmodelElements.SubmodelElementCollection
+        ? this.data.getSubmodelElements()[0]
         : undefined;
   }
 

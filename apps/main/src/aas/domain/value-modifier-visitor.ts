@@ -254,7 +254,7 @@ export class ValueModifierVisitor
     const parsed = z.record(z.string(), z.any()).parse(context?.data);
 
     for (const [key, value] of Object.entries(parsed)) {
-      const foundElement = element.submodelElements.find((e) => e.idShort === key);
+      const foundElement = element.getSubmodelElements().find((e) => e.idShort === key);
       if (!foundElement) {
         throw new ValueError(
           `Could not find element with idShort ${key} within submodel ${element.idShort}.`,
@@ -271,7 +271,7 @@ export class ValueModifierVisitor
     const parsed = z.record(z.string(), z.any()).parse(context?.data);
 
     for (const [key, value] of Object.entries(parsed)) {
-      const foundElement = element.value.find((e) => e.idShort === key);
+      const foundElement = element.getSubmodelElements().find((e) => e.idShort === key);
       if (!foundElement) {
         throw new ValueError(
           `Could not find element with idShort ${key} within submodel element collection ${element.idShort}.`,
@@ -287,7 +287,7 @@ export class ValueModifierVisitor
   ): void {
     const parsed = z.record(z.string(), z.any()).array().parse(context?.data);
     for (const [index, row] of parsed.entries()) {
-      const target = element.value[index];
+      const target = element.getSubmodelElements()[index];
       if (!target) {
         throw new ValueError(
           `List index ${index} is out of bounds for submodel element list ${element.idShort}.`,

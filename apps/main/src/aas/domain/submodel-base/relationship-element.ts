@@ -143,6 +143,8 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     return this.accept(jsonVisitor, options?.context);
   }
 
+  setSubmodelElements(_submodelElements: Array<ISubmodelElement>): void {}
+
   getSubmodelElements(): ISubmodelElement[] {
     return [];
   }

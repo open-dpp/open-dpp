@@ -64,7 +64,7 @@ export class Submodel
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly submodelElements: Array<ISubmodelElement>,
+    private submodelElements: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -333,6 +333,10 @@ export class Submodel
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.submodelElements = submodelElements;
   }
 
   getSubmodelElements(): ISubmodelElement[] {

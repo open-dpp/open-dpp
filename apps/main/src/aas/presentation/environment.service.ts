@@ -471,8 +471,10 @@ export class EnvironmentService {
   ): Promise<SubmodelElementPaginationResponseDto> {
     const ability = await this.loadAbility(environment, subject);
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const pages = pagination.nextPages(submodel.submodelElements.map((e) => e.idShort));
-    const submodelElements = submodel.submodelElements.filter((e) => pages.includes(e.idShort));
+    const pages = pagination.nextPages(submodel.getSubmodelElements().map((e) => e.idShort));
+    const submodelElements = submodel
+      .getSubmodelElements()
+      .filter((e) => pages.includes(e.idShort));
     const pagingResult = PagingResult.create({ pagination, items: submodelElements });
     return SubmodelElementPaginationResponse.create({ pagingResult, version, ability }).toJSON();
   }

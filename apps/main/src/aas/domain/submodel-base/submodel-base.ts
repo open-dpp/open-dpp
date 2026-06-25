@@ -77,6 +77,7 @@ export interface IHasPointer {
 export interface IHasSubmodelElements {
   addSubmodelElement: (submodelElement: ISubmodelElement, options: AddOptions) => ISubmodelElement;
   getSubmodelElements: () => ISubmodelElement[];
+  setSubmodelElements: (submodelElements: ISubmodelElement[]) => void;
 }
 
 export interface ISubmodelElementSearchable {

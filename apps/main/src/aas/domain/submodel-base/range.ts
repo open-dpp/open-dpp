@@ -143,6 +143,8 @@ export class Range implements ISubmodelElement {
     return this.accept(jsonVisitor, options?.context);
   }
 
+  setSubmodelElements(_submodelElements: Array<ISubmodelElement>): void {}
+
   getSubmodelElements(): ISubmodelElement[] {
     return [];
   }

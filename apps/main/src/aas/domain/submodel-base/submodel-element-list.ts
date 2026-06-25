@@ -49,7 +49,7 @@ export class SubmodelElementList implements ISubmodelElement {
     public readonly orderRelevant: boolean | null = null,
     public readonly semanticIdListElement: Reference | null = null,
     public readonly valueTypeListElement: DataTypeDefType | null = null,
-    public readonly value: Array<ISubmodelElement>,
+    private value: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -170,6 +170,10 @@ export class SubmodelElementList implements ISubmodelElement {
     return (
       this.getReference().constructIdShortPathsForType(KeyTypes.SubmodelElementList).length > 1
     );
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.value = submodelElements;
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {

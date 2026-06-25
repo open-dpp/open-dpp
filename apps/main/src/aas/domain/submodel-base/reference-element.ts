@@ -133,6 +133,8 @@ export class ReferenceElement implements ISubmodelElement {
     return copySubmodelElement(this, options);
   }
 
+  setSubmodelElements(_submodelElements: Array<ISubmodelElement>): void {}
+
   getSubmodelElements(): ISubmodelElement[] {
     return [];
   }

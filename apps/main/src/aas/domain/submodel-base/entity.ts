@@ -47,7 +47,7 @@ export class Entity implements ISubmodelElement {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly statements: Array<ISubmodelElement>,
+    private statements: Array<ISubmodelElement>,
     public readonly globalAssetId: string | null = null,
     public readonly specificAssetIds: Array<SpecificAssetId>,
   ) {
@@ -159,6 +159,10 @@ export class Entity implements ISubmodelElement {
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.statements = submodelElements;
   }
 
   getSubmodelElements(): ISubmodelElement[] {

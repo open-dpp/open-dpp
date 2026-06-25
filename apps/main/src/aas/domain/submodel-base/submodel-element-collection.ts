@@ -44,7 +44,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Array<ISubmodelElement>,
+    private value: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -147,6 +147,10 @@ export class SubmodelElementCollection implements ISubmodelElement {
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.value = submodelElements;
   }
 
   getSubmodelElements(): ISubmodelElement[] {
