@@ -23,6 +23,7 @@ import {
 } from "./submodel-base";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class File implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -54,7 +55,7 @@ export class File implements ISubmodelElement {
     return this._parentPointer.getPointerToElement(this);
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
     return copySubmodelElement(this, options);
   }
 

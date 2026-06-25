@@ -969,8 +969,8 @@ export class EnvironmentService {
     for (const submodelId of environment.submodels) {
       const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
       const copy = submodel.copy();
-      if (copy) {
-        submodelsCopy.push(copy);
+      if (copy.isAllowed) {
+        submodelsCopy.push(copy.value);
       }
     }
     const aasCopy = (await this.getFirstAssetAdministrationShell(environment)).copy(submodelsCopy);

@@ -27,6 +27,7 @@ import {
 import { Pointer } from "./pointer";
 import { parse as parseUri } from "uri-js";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class Property implements ISubmodelElement {
   private _value: string | null = null;
@@ -186,7 +187,7 @@ export class Property implements ISubmodelElement {
     return this.accept(jsonVisitor, options?.context);
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
     return copySubmodelElement(this, options);
   }
 

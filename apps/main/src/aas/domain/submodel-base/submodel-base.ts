@@ -23,6 +23,8 @@ import { IVisitable } from "../visitor";
 import { getSubmodelClass } from "./submodel-registry";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { isEmptyObject } from "../../../utils";
+import { AccessResult } from "../security/access-allowed";
 
 export interface SubmodelBaseProps {
   category?: string | null;
@@ -97,7 +99,7 @@ export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
   deleteSubmodelElement: (idShort: string, options: DeleteOptions) => ISubmodelElement;
   setParentPointer: (parentPointer: Pointer) => void;
-  copy: (options?: ICopyOptions) => ISubmodelElement;
+  copy: (options?: ICopyOptions) => AccessResult<ISubmodelElement>;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
@@ -163,11 +165,14 @@ export function addSubmodelElementOrFail(
 
 export function copySubmodelElement(
   submodelElement: ISubmodelElement,
-  options?: ICopyOptions,
-): ISubmodelElement {
-  const plainClone = submodelElement.toPlain(options);
+  options?: ICopyOptions & { override?: any },
+): AccessResult<ISubmodelElement> {
+  const plainClone = { ...submodelElement.toPlain(options), ...options?.override };
   const transformed = options?.transformer ? options.transformer.transform(plainClone) : plainClone;
+  if (isEmptyObject(transformed)) {
+    return AccessResult.denied();
+  }
   const copy = parseSubmodelElement(transformed);
   copy.setParentPointer(submodelElement.getPointer());
-  return copy;
+  return AccessResult.allowed(copy);
 }

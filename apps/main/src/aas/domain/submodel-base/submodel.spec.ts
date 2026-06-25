@@ -23,6 +23,7 @@ import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 import { allPermissionsAllowFactory } from "../../../fixtures/security-fixtures";
+import { AccessResult } from "../security/access-allowed";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -439,6 +440,31 @@ describe("submodel", () => {
       expect(row221.getSubmodelElements()).toHaveLength(0);
     });
 
+    it("should add row to table1", () => {
+      const { submodel, ability } = createSubmodelWithNestedTable();
+      submodel.addRow(
+        IdShortPath.create({
+          path: "table1",
+        }),
+        { ability },
+      );
+      const value: any = submodel.getValueRepresentation({ options: { ability } });
+      const [_r1, _r2, newRow] = value.table1;
+      expect(newRow).toEqual({
+        col1: null,
+        table2: [
+          {
+            col1: null,
+            table3: [
+              {
+                col1: null,
+              },
+            ],
+          },
+        ],
+      });
+    });
+
     it("should add row to table3", () => {
       const { submodel, ability } = createSubmodelWithNestedTable();
       submodel.addRow(
@@ -448,12 +474,12 @@ describe("submodel", () => {
         { ability },
       );
       const table3OfRow11 = submodel.findSubmodelElementOrFail(
-        IdShortPath.create({ path: "table1.row1.table2.row11.table3" }), // IdShortPath.create({ path: "table1.row2.table2.row21.table3" }),
+        IdShortPath.create({ path: "table1.row1.table2.row11.table3" }),
       );
       const [row221, row222] = table3OfRow11.getSubmodelElements();
-      expect(row222.getSubmodelElements().map((e) => e.idShort)).toEqual(
-        row221.getSubmodelElements().map((e) => e.idShort),
-      );
+      expect(
+        row222.getSubmodelElements().map((e: any) => ({ idShort: e.idShort, value: e.value })),
+      ).toEqual(row221.getSubmodelElements().map((e) => ({ idShort: e.idShort, value: null })));
       const table3OfRow21 = submodel.findSubmodelElementOrFail(
         IdShortPath.create({ path: "table1.row2.table2.row21.table3" }),
       );
@@ -878,14 +904,14 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop1, { ability });
     submodel.addSubmodelElement(prop2, { ability });
 
-    expect(submodel.copy({ ability })!.submodelElements).toEqual([prop1]);
+    expect(submodel.copy({ ability }).value.submodelElements).toEqual([prop1]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability })).toEqual(undefined);
+    expect(submodel.copy({ ability })).toEqual(AccessResult.denied());
     security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
     ]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability })!.submodelElements).toEqual([prop2]);
+    expect(submodel.copy({ ability }).value.submodelElements).toEqual([prop2]);
   });
 
   it("should get value representation for bill of material", () => {
@@ -996,10 +1022,10 @@ describe("submodel", () => {
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
 
-    const copy = submodel.copy();
-    expect(copy?.tracker).toEqual(
+    const copy = submodel.copy().value;
+    expect(copy.tracker).toEqual(
       Submodel.fromPlain(
-        submodelDesignOfProductPlainFactory.build({ id: copy!.id }, { transient: { iriDomain } }),
+        submodelDesignOfProductPlainFactory.build({ id: copy.id }, { transient: { iriDomain } }),
       ).tracker,
     );
   });

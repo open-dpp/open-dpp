@@ -24,6 +24,7 @@ import {
 } from "./submodel-base";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class Range implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -133,7 +134,7 @@ export class Range implements ISubmodelElement {
     return visitor.visitRange(this, context);
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
     return copySubmodelElement(this, options);
   }
 

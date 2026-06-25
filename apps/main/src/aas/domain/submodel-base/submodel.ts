@@ -42,6 +42,7 @@ import { SubmodelElementDeleted } from "../../../activity-history/domain/change-
 import { Pointer } from "./pointer";
 import { NestedTableExtension } from "./nested-table-extension";
 import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table-extensable";
+import { AccessResult } from "../security/access-allowed";
 
 export class Submodel
   implements ISubmodelBase, IPersistable, ITrackable, ISubmodelElementSearchable
@@ -338,16 +339,26 @@ export class Submodel
     return this.submodelElements;
   }
 
-  copy(options?: ICopyOptions): Submodel | undefined {
-    const plain = this.toPlain(options);
+  copy(options?: ICopyOptions): AccessResult<Submodel> {
+    const submodelElementsCopy = this.submodelElements
+      .map((se) => se.copy(options))
+      .filter((se) => se.isAllowed)
+      .map((se) => se.value.toPlain(options));
+    const noPermissionsToCopiedSubmodelElements =
+      this.submodelElements.length > 0 && submodelElementsCopy.length === 0;
+    const plain = noPermissionsToCopiedSubmodelElements
+      ? this.toPlain(options)
+      : { ...this.toPlain(options), submodelElements: submodelElementsCopy };
     if (isEmptyObject(plain)) {
-      return undefined;
+      return AccessResult.denied();
     }
     const transformed = options?.transformer ? options.transformer.transform(plain) : plain;
-    return Submodel.fromPlain({
-      ...transformed,
-      id: randomUUID(),
-    });
+    return AccessResult.allowed(
+      Submodel.fromPlain({
+        ...transformed,
+        id: randomUUID(),
+      }),
+    );
   }
 }
 

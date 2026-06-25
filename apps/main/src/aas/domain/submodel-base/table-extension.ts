@@ -56,7 +56,10 @@ export class TableExtension implements ITableExtendable {
       this.addHeaderRow(options);
     }
     this.rows.forEach((row) => {
-      row.addSubmodelElement(column.copy(), options);
+      const columnCopy = column.copy();
+      if (columnCopy.isAllowed) {
+        row.addSubmodelElement(columnCopy.value, options);
+      }
     });
     const position = this.getColumnPosition(column.idShort);
     const value = this.columns[position];
@@ -123,11 +126,13 @@ export class TableExtension implements ITableExtendable {
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
         const columnCopy = column.copy({
-          transformer: NullifyValueOfLeafNodes.create(),
+          transformer: TableCopyTransformer.create(),
         });
-        newRow.addSubmodelElement(columnCopy, {
-          ability: options.ability,
-        });
+        if (columnCopy.isAllowed) {
+          newRow.addSubmodelElement(columnCopy.value, {
+            ability: options.ability,
+          });
+        }
       });
 
       if (options?.position === 0) {
@@ -176,11 +181,28 @@ export class TableExtension implements ITableExtendable {
   }
 }
 
-export class NullifyValueOfLeafNodes implements ITransformer {
+/**
+ * Transformer used when copying table columns to new rows.
+ * Ensures that new rows receive clean column templates without inheriting
+ * data values from the source column.
+ *
+ * Transformation rules:
+ * - Property and File elements: sets value to null
+ * - SubmodelElementList with multiple items: keeps only the first item as template
+ * - Other elements: no transformation applied
+ */
+export class TableCopyTransformer implements ITransformer {
   private constructor() {}
-  static create(): NullifyValueOfLeafNodes {
-    return new NullifyValueOfLeafNodes();
+
+  static create(): TableCopyTransformer {
+    return new TableCopyTransformer();
   }
+
+  /**
+   * Transforms a plain object representation of a submodel element for table row copying.
+   * @param plain - The plain object to transform
+   * @returns The transformed plain object with values reset according to transformation rules
+   */
   transform(plain: any): any {
     return match(plain)
       .with(
@@ -191,6 +213,21 @@ export class NullifyValueOfLeafNodes implements ITransformer {
         () => ({
           ...plain,
           value: null,
+        }),
+      )
+      .with(
+        {
+          modelType: KeyTypes.SubmodelElementList,
+          value: P.select(
+            P.intersection(
+              P.array(),
+              P.when((value) => Array.isArray(value) && value.length > 1),
+            ),
+          ),
+        },
+        (value) => ({
+          ...plain,
+          value: [value[0]],
         }),
       )
       .otherwise(() => plain);

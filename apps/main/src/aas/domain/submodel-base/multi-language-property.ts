@@ -23,6 +23,7 @@ import {
 } from "./submodel-base";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class MultiLanguageProperty implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -127,7 +128,7 @@ export class MultiLanguageProperty implements ISubmodelElement {
     return visitor.visitMultiLanguageProperty(this, context);
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
     return copySubmodelElement(this, options);
   }
 

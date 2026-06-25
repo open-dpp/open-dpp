@@ -29,6 +29,7 @@ import {
 } from "./submodel-base";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class Entity implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -143,8 +144,16 @@ export class Entity implements ISubmodelElement {
     return visitor.visitEntity(this, context);
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
-    return copySubmodelElement(this, options);
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    const submodelElementsCopy = this.statements
+      .map((se) => se.copy(options))
+      .filter((se) => se.isAllowed)
+      .map((se) => se.value.toPlain(options));
+
+    return copySubmodelElement(this, {
+      ...options,
+      override: { statements: submodelElementsCopy },
+    });
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {

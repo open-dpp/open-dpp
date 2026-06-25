@@ -23,6 +23,7 @@ import {
 } from "./submodel-base";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class IRelationshipElement {
   first: Reference;
@@ -71,7 +72,7 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     return KeyTypes.RelationshipElement;
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
     return copySubmodelElement(this, options);
   }
 

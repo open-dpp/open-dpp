@@ -23,6 +23,7 @@ import {
 } from "./submodel-base";
 import { Pointer } from "./pointer";
 import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class ReferenceElement implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -128,7 +129,7 @@ export class ReferenceElement implements ISubmodelElement {
     return this.accept(jsonVisitor, options?.context);
   }
 
-  copy(options?: ICopyOptions): ISubmodelElement {
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
     return copySubmodelElement(this, options);
   }
 
