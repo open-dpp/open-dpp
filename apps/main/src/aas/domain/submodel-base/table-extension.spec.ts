@@ -1,7 +1,7 @@
 import { expect, jest } from "@jest/globals";
 import { AasSubmodelElements, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { allPermissionsAllow, propertyInputPlainFactory } from "@open-dpp/testing";
+import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
@@ -11,10 +11,13 @@ import { Security } from "../security/security";
 import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
-import { cloneSubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableExtension } from "./table-extension";
+import { NullifyValueOfLeafNodes, TableExtension } from "./table-extension";
+import { allPermissionsAllowFactory } from "../../../fixtures/security-fixtures";
+import { File } from "./file";
+
+const transformer = NullifyValueOfLeafNodes.create();
 
 describe("tableExtension", () => {
   beforeAll(() => {
@@ -63,14 +66,14 @@ describe("tableExtension", () => {
     // Add third column
     const col3 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col3" }));
     expHeaderRow.addSubmodelElement(col3, { ability });
-    expRow1.addSubmodelElement(cloneSubmodelElement(col3), { ability });
+    expRow1.addSubmodelElement(col3.copy(), { ability });
     table.addColumn(col3, { ability });
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
 
     // Add second column between first and third
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     expHeaderRow.addSubmodelElement(col2, { position: 1, ability });
-    expRow1.addSubmodelElement(cloneSubmodelElement(col2), {
+    expRow1.addSubmodelElement(col2.copy(), {
       position: 1,
       ability,
     });
@@ -82,11 +85,7 @@ describe("tableExtension", () => {
     const rowAtPos1Id = table.rows[1].idShort;
     const expRowAtPos1 = SubmodelElementCollection.create({
       idShort: rowAtPos1Id,
-      value: [
-        cloneSubmodelElement(col1, { value: undefined }),
-        cloneSubmodelElement(col2, { value: undefined }),
-        cloneSubmodelElement(col3, { value: undefined }),
-      ],
+      value: [col1.copy({ transformer }), col2.copy({ transformer }), col3.copy({ transformer })],
     });
     expRowAtPos1.setParentPointer(submodelElementList.getPointer());
     expect(table.rows).toEqual([expHeaderRow, expRowAtPos1, expRow1]);
@@ -104,7 +103,7 @@ describe("tableExtension", () => {
     security.addPolicy(
       member,
       IdShortPath.create({ path: submodelElementList.idShort }),
-      allPermissionsAllow.map(Permission.fromPlain),
+      allPermissionsAllowFactory.build(),
     );
     const ability = security.defineAbilityForSubject(member);
     const table = new TableExtension(submodelElementList);
@@ -173,7 +172,7 @@ describe("tableExtension", () => {
     expect(table.columns).toEqual([col1]);
     // The header row is updated to the new row at position 0.
     table.addRow({ position: 0, ability });
-    const expectedCol = cloneSubmodelElement(col1, { value: null });
+    const expectedCol = col1.copy({ transformer });
     expectedCol.setParentPointer(table.rows[0].getPointer());
     expect(table.columns).toEqual([expectedCol]);
   });
@@ -257,13 +256,30 @@ describe("tableExtension", () => {
     const rowToDelete2 = table.rows[0];
     table.deleteRow(rowToDelete2.idShort, { ability, onDelete });
     expect(onDelete).toHaveBeenCalledWith(rowToDelete2);
-    const expectedCol1 = cloneSubmodelElement(col1, { value: null });
+    const expectedCol1 = col1.copy({ transformer });
     expectedCol1.setParentPointer(table.rows[0].getPointer());
-    const expectedCol2 = cloneSubmodelElement(col2, { value: null });
+    const expectedCol2 = col2.copy({ transformer });
     expectedCol2.setParentPointer(table.rows[0].getPointer());
     expect(table.columns).toEqual([expectedCol1, expectedCol2]);
     // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
     table.deleteRow(table.rows[0].idShort, { ability, onDelete });
     expect(table.columns).toEqual([]);
+  });
+});
+
+describe("NullifyValueOfLeafNodes", () => {
+  it("should nullify value of leaf nodes", () => {
+    const prop = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "myValue" }),
+    );
+    const file = File.create({
+      idShort: "file",
+      contentType: "text/plain",
+      value: "fileValue",
+    });
+
+    const transformer = NullifyValueOfLeafNodes.create();
+    expect(transformer.transform(prop.toPlain())).toMatchObject({ value: null });
+    expect(transformer.transform(file.toPlain())).toMatchObject({ value: null });
   });
 });

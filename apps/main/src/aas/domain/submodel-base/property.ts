@@ -18,9 +18,15 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  copySubmodelElement,
+  ISubmodelElement,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 import { Pointer } from "./pointer";
 import { parse as parseUri } from "uri-js";
+import { ICopyOptions } from "../copy-options";
 
 export class Property implements ISubmodelElement {
   private _value: string | null = null;
@@ -178,6 +184,10 @@ export class Property implements ISubmodelElement {
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  copy(options?: ICopyOptions): ISubmodelElement {
+    return copySubmodelElement(this, options);
   }
 
   getSubmodelElements(): ISubmodelElement[] {

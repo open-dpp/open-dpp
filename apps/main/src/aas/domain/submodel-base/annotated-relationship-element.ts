@@ -18,6 +18,7 @@ import { IRelationshipElement } from "./relationship-element";
 import {
   AddOptions,
   addSubmodelElementOrFail,
+  copySubmodelElement,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
@@ -26,6 +27,7 @@ import {
   submodelBasePropsFromPlain,
 } from "./submodel-base";
 import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
 
 export class AnnotatedRelationshipElement implements ISubmodelElement, IRelationshipElement {
   private _displayName: Array<LanguageText>;
@@ -134,6 +136,10 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitAnnotatedRelationshipElement(this, context);
+  }
+
+  copy(options?: ICopyOptions): ISubmodelElement {
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {

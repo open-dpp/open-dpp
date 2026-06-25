@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements } from "@open-dpp/dto";
+import { AasSubmodelElements, KeyTypes } from "@open-dpp/dto";
 import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
-import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
+import { AddOptions, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { ChangeTracker, withTrackingHelper } from "../../../activity-history/domain/change-tracker";
@@ -11,6 +11,8 @@ import { ColumnAdded } from "../../../activity-history/domain/change-events/colu
 import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
 import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
 import { ITableExtendable } from "./table-extensable";
+import { ITransformer } from "../copy-options";
+import { match, P } from "ts-pattern";
 
 export class TableExtension implements ITableExtendable {
   private headerRow: ISubmodelElement | undefined;
@@ -54,7 +56,7 @@ export class TableExtension implements ITableExtendable {
       this.addHeaderRow(options);
     }
     this.rows.forEach((row) => {
-      row.addSubmodelElement(cloneSubmodelElement(column), options);
+      row.addSubmodelElement(column.copy(), options);
     });
     const position = this.getColumnPosition(column.idShort);
     const value = this.columns[position];
@@ -72,9 +74,6 @@ export class TableExtension implements ITableExtendable {
       // Otherwise the value of the column would be propagated to all rows
       throw new ValueError("Column value modification is not supported.");
     }
-    const column = this.getColumnOrFail(idShort);
-    column.accept(new ModifierVisitor(options).withTracking(this.tracker), { data });
-
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find((el) => el.idShort === idShort);
       if (column) {
@@ -123,7 +122,9 @@ export class TableExtension implements ITableExtendable {
       newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
-        const columnCopy = cloneSubmodelElement(column, { value: undefined });
+        const columnCopy = column.copy({
+          transformer: NullifyValueOfLeafNodes.create(),
+        });
         newRow.addSubmodelElement(columnCopy, {
           ability: options.ability,
         });
@@ -172,5 +173,26 @@ export class TableExtension implements ITableExtendable {
         value: row,
       }),
     );
+  }
+}
+
+export class NullifyValueOfLeafNodes implements ITransformer {
+  private constructor() {}
+  static create(): NullifyValueOfLeafNodes {
+    return new NullifyValueOfLeafNodes();
+  }
+  transform(plain: any): any {
+    return match(plain)
+      .with(
+        {
+          modelType: P.union(KeyTypes.Property, KeyTypes.File),
+          value: P.string,
+        },
+        () => ({
+          ...plain,
+          value: null,
+        }),
+      )
+      .otherwise(() => plain);
   }
 }

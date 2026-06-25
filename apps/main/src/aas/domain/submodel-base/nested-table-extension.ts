@@ -31,6 +31,34 @@ export class NestedTableExtension implements ITableExtendable {
     return withTrackingHelper(changeTracker, this);
   }
 
+  addColumn(column: ISubmodelElement, options: AddOptions): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.addColumn(column, options);
+    });
+  }
+
+  modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
+    this.performRecursive((tableExtension) => {
+      tableExtension.modifyColumn(idShort, data, options);
+    });
+  }
+
+  deleteColumn(idShort: string, options: DeleteOptions) {
+    this.performRecursive((tableExtension) => {
+      tableExtension.deleteColumn(idShort, options);
+    });
+  }
+
+  addRow(options: AddOptions) {
+    new TableExtension(this.data).withTracking(this.tracker).addRow(options);
+  }
+
+  deleteRow(idShort: string, options: DeleteOptions) {}
+
+  getTableElement(): SubmodelElementList {
+    return this.data;
+  }
+
   private performRecursive(operation: (tableExtension: TableExtension) => void) {
     const idShortPath = this.data.getIdShortPath().slice(1);
     const parentTablePaths = this.data
@@ -48,36 +76,14 @@ export class NestedTableExtension implements ITableExtendable {
     }
   }
 
-  addColumn(column: ISubmodelElement, options: AddOptions): void {
-    this.performRecursive((tableExtension) => {
-      tableExtension.addColumn(column, options);
-    });
-  }
-
-  modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
-    this.performRecursive((tableExtension) => {
-      tableExtension.modifyColumn(idShort, data, options);
-    });
-  }
-
-  getListAsTableExtensionOrFail(idShortPath: IdShortPath): TableExtension {
+  private getListAsTableExtensionOrFail(idShortPath: IdShortPath): TableExtension {
     const submodelElement = parseAsSubmodelElementListOrFail(
       this.submodelElementSearch.findSubmodelElementOrFail(idShortPath),
     );
     return new TableExtension(submodelElement);
   }
 
-  deleteColumn(idShort: string, options: DeleteOptions) {}
-
-  addRow(options: AddOptions) {}
-
-  deleteRow(idShort: string, options: DeleteOptions) {}
-
-  getTableElement(): SubmodelElementList {
-    return this.data;
-  }
-
-  collectAffectedParentRowPaths(
+  private collectAffectedParentRowPaths(
     tablePaths: IdShortPath[],
     currentPath: IdShortPath | undefined = undefined,
     currentTableIndex = 0,

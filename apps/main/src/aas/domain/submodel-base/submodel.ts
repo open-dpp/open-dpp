@@ -186,7 +186,7 @@ export class Submodel
     const submodelElementList = parseAsSubmodelElementListOrFail(
       this.findSubmodelElementOrFail(idShortPath),
     );
-    const tableExtension = submodelElementList.isNested()
+    const tableExtension = submodelElementList.hasParentList()
       ? NestedTableExtension.create({
           data: submodelElementList,
           submodelElementSearch: this,
@@ -343,8 +343,9 @@ export class Submodel
     if (isEmptyObject(plain)) {
       return undefined;
     }
+    const transformed = options?.transformer ? options.transformer.transform(plain) : plain;
     return Submodel.fromPlain({
-      ...plain,
+      ...transformed,
       id: randomUUID(),
     });
   }

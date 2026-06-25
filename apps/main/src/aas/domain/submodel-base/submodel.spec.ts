@@ -359,7 +359,6 @@ describe("submodel", () => {
         }),
         "col1",
         {
-          idShort: "col1",
           displayName: newDisplayName,
         },
         {
@@ -390,7 +389,6 @@ describe("submodel", () => {
         }),
         "col1",
         {
-          idShort: "col1",
           displayName: newDisplayName,
         },
         {
@@ -425,6 +423,41 @@ describe("submodel", () => {
           valueType: DataTypeDef.Double,
         }).toPlain(),
       );
+    });
+    it("should delete column from table3", () => {
+      const { submodel, ability } = createSubmodelWithNestedTable();
+      submodel.deleteColumn(
+        IdShortPath.create({
+          path: "table1.row1.table2.row11.table3",
+        }),
+        "col1",
+        { ability, onDelete: () => {} },
+      );
+      const row221 = submodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "table1.row2.table2.row22.table3.row221" }),
+      );
+      expect(row221.getSubmodelElements()).toHaveLength(0);
+    });
+
+    it("should add row to table3", () => {
+      const { submodel, ability } = createSubmodelWithNestedTable();
+      submodel.addRow(
+        IdShortPath.create({
+          path: "table1.row1.table2.row11.table3",
+        }),
+        { ability },
+      );
+      const table3OfRow11 = submodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "table1.row1.table2.row11.table3" }), // IdShortPath.create({ path: "table1.row2.table2.row21.table3" }),
+      );
+      const [row221, row222] = table3OfRow11.getSubmodelElements();
+      expect(row222.getSubmodelElements().map((e) => e.idShort)).toEqual(
+        row221.getSubmodelElements().map((e) => e.idShort),
+      );
+      const table3OfRow21 = submodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "table1.row2.table2.row21.table3" }),
+      );
+      expect(table3OfRow21.getSubmodelElements()).toHaveLength(1);
     });
   });
 
@@ -461,7 +494,7 @@ describe("submodel", () => {
     const list = submodel.modifyColumn(
       IdShortPath.create({ path: submodelElementList.idShort }),
       col1.idShort,
-      { idShort: col1.idShort, displayName: newDisplayNames },
+      { displayName: newDisplayNames },
       { ability },
     );
     expect((list as SubmodelElementList).value[0].getSubmodelElements()[0].displayName).toEqual(

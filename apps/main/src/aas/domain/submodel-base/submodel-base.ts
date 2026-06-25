@@ -22,6 +22,7 @@ import { AasAbility } from "../security/aas-ability";
 import { IVisitable } from "../visitor";
 import { getSubmodelClass } from "./submodel-registry";
 import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
 
 export interface SubmodelBaseProps {
   category?: string | null;
@@ -96,6 +97,7 @@ export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
   deleteSubmodelElement: (idShort: string, options: DeleteOptions) => ISubmodelElement;
   setParentPointer: (parentPointer: Pointer) => void;
+  copy: (options?: ICopyOptions) => ISubmodelElement;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
@@ -138,16 +140,6 @@ export function deleteSubmodelElementOrFail(
   return submodelElementToDelete;
 }
 
-export function cloneSubmodelElement(
-  submodelElement: ISubmodelElement,
-  override?: any,
-): ISubmodelElement {
-  const clone = override
-    ? { ...submodelElement.toPlain(), ...override }
-    : submodelElement.toPlain();
-  return parseSubmodelElement(clone);
-}
-
 export function addSubmodelElementOrFail(
   parent: IHasSubmodelElements & IHasIdShortPath & IHasPointer,
   submodelElement: ISubmodelElement,
@@ -167,4 +159,15 @@ export function addSubmodelElementOrFail(
     submodelElements.push(submodelElement);
   }
   return submodelElement;
+}
+
+export function copySubmodelElement(
+  submodelElement: ISubmodelElement,
+  options?: ICopyOptions,
+): ISubmodelElement {
+  const plainClone = submodelElement.toPlain(options);
+  const transformed = options?.transformer ? options.transformer.transform(plainClone) : plainClone;
+  const copy = parseSubmodelElement(transformed);
+  copy.setParentPointer(submodelElement.getPointer());
+  return copy;
 }

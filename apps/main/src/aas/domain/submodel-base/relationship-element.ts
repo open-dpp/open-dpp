@@ -15,8 +15,14 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  copySubmodelElement,
+  ISubmodelElement,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
 
 export class IRelationshipElement {
   first: Reference;
@@ -63,6 +69,10 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
 
   getKeyType(): KeyTypesType {
     return KeyTypes.RelationshipElement;
+  }
+
+  copy(options?: ICopyOptions): ISubmodelElement {
+    return copySubmodelElement(this, options);
   }
 
   set displayName(value: Array<LanguageText>) {

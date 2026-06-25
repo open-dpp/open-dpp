@@ -15,8 +15,14 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  copySubmodelElement,
+  ISubmodelElement,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
 
 export class MultiLanguageProperty implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -119,6 +125,10 @@ export class MultiLanguageProperty implements ISubmodelElement {
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitMultiLanguageProperty(this, context);
+  }
+
+  copy(options?: ICopyOptions): ISubmodelElement {
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {

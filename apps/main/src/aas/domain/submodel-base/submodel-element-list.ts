@@ -18,6 +18,7 @@ import { IVisitor } from "../visitor";
 import {
   AddOptions,
   addSubmodelElementOrFail,
+  copySubmodelElement,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
@@ -26,6 +27,7 @@ import {
   submodelBasePropsFromPlain,
 } from "./submodel-base";
 import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
 
 export class SubmodelElementList implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -143,6 +145,10 @@ export class SubmodelElementList implements ISubmodelElement {
     return visitor.visitSubmodelElementList(this, context);
   }
 
+  copy(options?: ICopyOptions): ISubmodelElement {
+    return copySubmodelElement(this, options);
+  }
+
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
@@ -152,7 +158,7 @@ export class SubmodelElementList implements ISubmodelElement {
     return this.value;
   }
 
-  isNested(): boolean {
+  hasParentList(): boolean {
     return (
       this.getReference().constructIdShortPathsForType(KeyTypes.SubmodelElementList).length > 1
     );

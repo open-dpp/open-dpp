@@ -17,6 +17,7 @@ import { IVisitor } from "../visitor";
 import {
   AddOptions,
   addSubmodelElementOrFail,
+  copySubmodelElement,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
@@ -25,6 +26,7 @@ import {
   submodelBasePropsFromPlain,
 } from "./submodel-base";
 import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
 
 export class SubmodelElementCollection implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
@@ -128,6 +130,10 @@ export class SubmodelElementCollection implements ISubmodelElement {
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitSubmodelElementCollection(this, context);
+  }
+
+  copy(options?: ICopyOptions): ISubmodelElement {
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
