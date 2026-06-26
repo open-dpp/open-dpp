@@ -36,7 +36,7 @@ import {
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
-import { TableExtension } from "./table-extension";
+import { TableExtension } from "./table/table-extension";
 import { SubmodelElementAdded } from "../../../activity-history/domain/change-events/submodel-element-added";
 import {
   ChangeTracker,
@@ -45,8 +45,8 @@ import {
 } from "../../../activity-history/domain/change-tracker";
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
 import { Pointer } from "./pointer";
-import { NestedTableExtension } from "./nested-table-extension";
-import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table-extensable";
+import { NestedTableExtension } from "./table/nested-table-extension";
+import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table/table-extensable";
 import { AccessResult } from "../security/access-allowed";
 
 export class Submodel

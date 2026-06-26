@@ -1,7 +1,7 @@
-import { ITrackable } from "../../../activity-history/domain/change-tracker";
-import { AddOptions, DeleteOptions, ISubmodelElement } from "./submodel-base";
-import { ModifierVisitorOptions } from "../modifier-visitor";
-import { SubmodelElementList } from "./submodel-element-list";
+import { ITrackable } from "../../../../activity-history/domain/change-tracker";
+import { AddOptions, DeleteOptions, ISubmodelElement } from "../submodel-base";
+import { ModifierVisitorOptions } from "../../modifier-visitor";
+import { SubmodelElementList } from "../submodel-element-list";
 import { ValueError } from "@open-dpp/exception";
 
 export interface ITableExtendable extends ITrackable {

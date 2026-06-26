@@ -1,14 +1,17 @@
-import { ModifierVisitorOptions } from "../modifier-visitor";
+import { ModifierVisitorOptions } from "../../modifier-visitor";
 import {
   AddOptions,
   DeleteOptions,
   ISubmodelElement,
   ISubmodelElementSearchable,
-} from "./submodel-base";
-import { SubmodelElementList } from "./submodel-element-list";
-import { ChangeTracker, withTrackingHelper } from "../../../activity-history/domain/change-tracker";
+} from "../submodel-base";
+import { SubmodelElementList } from "../submodel-element-list";
+import {
+  ChangeTracker,
+  withTrackingHelper,
+} from "../../../../activity-history/domain/change-tracker";
 import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table-extensable";
-import { IdShortPath } from "../common/id-short-path";
+import { IdShortPath } from "../../common/id-short-path";
 import { TableExtension } from "./table-extension";
 import { KeyTypes } from "@open-dpp/dto";
 

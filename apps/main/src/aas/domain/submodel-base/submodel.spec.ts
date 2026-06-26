@@ -21,7 +21,7 @@ import { registerSubmodelElementClasses } from "./register-submodel-element-clas
 import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableExtension } from "./table-extension";
+import { TableExtension } from "./table/table-extension";
 import { allPermissionsAllowFactory } from "../../../fixtures/security-fixtures";
 import { AccessResult } from "../security/access-allowed";
 

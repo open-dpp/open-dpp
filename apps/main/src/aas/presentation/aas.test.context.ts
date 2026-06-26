@@ -80,7 +80,7 @@ import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
-import { TableExtension } from "../domain/submodel-base/table-extension";
+import { TableExtension } from "../domain/submodel-base/table/table-extension";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import {
@@ -646,10 +646,12 @@ export function createAasTestContext<T>(
 
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(
-      submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort,
+      submodels[1].getSubmodelElements()[submodels[1].getSubmodelElements().length - 1].idShort,
     );
     expect(response.body.result).toEqual(
-      SubmodelElementSchema.array().parse(submodels[1].submodelElements.map((s) => s.toPlain())),
+      SubmodelElementSchema.array().parse(
+        submodels[1].getSubmodelElements().map((s) => s.toPlain()),
+      ),
     );
   }
 
@@ -906,7 +908,7 @@ export function createAasTestContext<T>(
       .send(modificationBody);
     expect(response.status).toEqual(200);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
-    expect((foundSubmodel.submodelElements[0] as Property).value).toEqual("value new");
+    expect((foundSubmodel.getSubmodelElements()[0] as Property).value).toEqual("value new");
   }
 
   async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {

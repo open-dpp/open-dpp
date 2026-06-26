@@ -1,15 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { NotFoundError, ValueError } from "@open-dpp/exception";
-import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
-import { AddOptions, DeleteOptions, ISubmodelElement } from "./submodel-base";
-import { SubmodelElementCollection } from "./submodel-element-collection";
-import { SubmodelElementList } from "./submodel-element-list";
-import { ChangeTracker, withTrackingHelper } from "../../../activity-history/domain/change-tracker";
-import { RowAdded } from "../../../activity-history/domain/change-events/row-added";
-import { ColumnAdded } from "../../../activity-history/domain/change-events/column-added";
-import { ColumnDeleted } from "../../../activity-history/domain/change-events/column-deleted";
-import { RowDeleted } from "../../../activity-history/domain/change-events/row-deleted";
+import { ModifierVisitor, ModifierVisitorOptions } from "../../modifier-visitor";
+import { AddOptions, DeleteOptions, ISubmodelElement } from "../submodel-base";
+import { SubmodelElementCollection } from "../submodel-element-collection";
+import { SubmodelElementList } from "../submodel-element-list";
+import {
+  ChangeTracker,
+  withTrackingHelper,
+} from "../../../../activity-history/domain/change-tracker";
+import { RowAdded } from "../../../../activity-history/domain/change-events/row-added";
+import { ColumnAdded } from "../../../../activity-history/domain/change-events/column-added";
+import { ColumnDeleted } from "../../../../activity-history/domain/change-events/column-deleted";
+import { RowDeleted } from "../../../../activity-history/domain/change-events/row-deleted";
 import { ITableExtendable } from "./table-extensable";
 import { TableRowCopyVisitor } from "./table-row-copy-visitor";
 
