@@ -168,14 +168,20 @@ describe("tableExtension", () => {
 
     const subCol1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol1" }));
     const subCol2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol2" }));
-    const group = SubmodelElementCollection.create({ idShort: "group1", value: [subCol1, subCol2] });
+    const group = SubmodelElementCollection.create({
+      idShort: "group1",
+      value: [subCol1, subCol2],
+    });
     table.addColumn(group, { ability });
     table.addRow({ ability });
 
-    const onDelete = jest.fn();
-    table.deleteColumnFromGroup("group1", "subCol1", { ability, onDelete });
+    table.deleteColumnFromGroup("group1", "subCol1", { ability });
 
     for (const row of table.rows) {
+      const topLevel = row.getSubmodelElements().map((el) => el.idShort);
+      const groupIndex = topLevel.indexOf("group1");
+      // moved back to top level immediately after the group
+      expect(topLevel[groupIndex + 1]).toBe("subCol1");
       const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).not.toContain("subCol1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("subCol2");
@@ -215,6 +221,36 @@ describe("tableExtension", () => {
     ).toThrow(new ValueError("Column value modification is not supported."));
   });
 
+  it("should move top-level column into group across all rows", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
+    const group = SubmodelElementCollection.create({ idShort: "group1" });
+    table.addColumn(col1, { ability });
+    table.addColumn(group, { ability });
+    table.addRow({ ability });
+
+    table.moveColumnToGroup("col1", "group1", { ability });
+
+    for (const row of table.rows) {
+      const topLevelIds = row.getSubmodelElements().map((el) => el.idShort);
+      expect(topLevelIds).not.toContain("col1");
+      const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
+      expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("col1");
+    }
+  });
+
   it("should clear nested values in group column when adding a new row", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
@@ -239,7 +275,9 @@ describe("tableExtension", () => {
     table.addRow({ ability });
     const dataRow = table.rows[1];
     const dataGroup = dataRow.getSubmodelElements().find((el) => el.idShort === "group1");
-    const dataSubCol = dataGroup!.getSubmodelElements().find((el) => el.idShort === "subCol1") as Property;
+    const dataSubCol = dataGroup!
+      .getSubmodelElements()
+      .find((el) => el.idShort === "subCol1") as Property;
     expect(dataSubCol.value).toBeNull();
   });
 

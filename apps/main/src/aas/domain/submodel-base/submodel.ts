@@ -46,7 +46,7 @@ import {
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
 import { Pointer } from "./pointer";
 import { NestedTableExtension } from "./table/nested-table-extension";
-import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table/table-extensable";
+import { ITableExtendable, MoveOptions, parseAsSubmodelElementListOrFail } from "./table/table-extensable";
 import { AccessResult } from "../security/access-allowed";
 
 export class Submodel
@@ -263,10 +263,21 @@ export class Submodel
     idShortPath: IdShortPath,
     groupIdShort: string,
     idShortOfColumn: string,
-    options: DeleteOptions,
+    options: MoveOptions,
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.deleteColumnFromGroup(groupIdShort, idShortOfColumn, options);
+    return tableExtension.getTableElement();
+  }
+
+  moveColumnToGroup(
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    groupIdShort: string,
+    options: MoveOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.moveColumnToGroup(columnIdShort, groupIdShort, options);
     return tableExtension.getTableElement();
   }
 

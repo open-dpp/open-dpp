@@ -11,7 +11,7 @@ import {
   ChangeTracker,
   withTrackingHelper,
 } from "../../../../activity-history/domain/change-tracker";
-import { ITableExtendable, parseAsSubmodelElementListOrFail } from "./table-extensable";
+import { ITableExtendable, MoveOptions, parseAsSubmodelElementListOrFail } from "./table-extensable";
 import { IdShortPath } from "../../common/id-short-path";
 import { TableExtension } from "./table-extension";
 import { KeyTypes } from "@open-dpp/dto";
@@ -70,9 +70,15 @@ export class NestedTableExtension implements ITableExtendable {
     });
   }
 
-  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: DeleteOptions): void {
+  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: MoveOptions): void {
     this.performRecursive((tableExtension) => {
       tableExtension.deleteColumnFromGroup(groupIdShort, idShort, options);
+    });
+  }
+
+  moveColumnToGroup(columnIdShort: string, groupIdShort: string, options: MoveOptions): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.moveColumnToGroup(columnIdShort, groupIdShort, options);
     });
   }
 

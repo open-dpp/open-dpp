@@ -15,7 +15,7 @@ import { ColumnDeleted } from "../../../../activity-history/domain/change-events
 import { ColumnAddedToGroup } from "../../../../activity-history/domain/change-events/column-added-to-group";
 import { ColumnDeletedFromGroup } from "../../../../activity-history/domain/change-events/column-deleted-from-group";
 import { RowDeleted } from "../../../../activity-history/domain/change-events/row-deleted";
-import { ITableExtendable } from "./table-extensable";
+import { ITableExtendable, MoveOptions } from "./table-extensable";
 import { TableRowCopyVisitor } from "./table-row-copy-visitor";
 
 export class TableExtension implements ITableExtendable {
@@ -56,59 +56,6 @@ export class TableExtension implements ITableExtendable {
     return this.data.getSubmodelElements();
   }
 
-  addColumn(column: ISubmodelElement, options: AddOptions): void {
-    if (!this.headerRow) {
-      this.addHeaderRow(options);
-    }
-    this.rows.forEach((row) => {
-      const columnCopy = column.copy();
-      if (columnCopy.isAllowed) {
-        row.addSubmodelElement(columnCopy.value, options);
-      }
-    });
-    const position = this.getColumnPosition(column.idShort);
-    const value = this.columns[position];
-    this.tracker.track(
-      ColumnAdded.create({
-        path: value.getIdShortPath(),
-        position,
-        value,
-      }),
-    );
-  }
-
-  modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
-    if (Object.prototype.hasOwnProperty.call(data, "value")) {
-      // Otherwise the value of the column would be propagated to all rows
-      throw new ValueError("Column value modification is not supported.");
-    }
-    for (const row of this.rows) {
-      const column = row.getSubmodelElements().find((el) => el.idShort === idShort);
-      if (column) {
-        column.accept(new ModifierVisitor(options).withTracking(this.tracker), {
-          data: { ...data, idShort },
-        });
-      }
-    }
-  }
-
-  deleteColumn(idShort: string, options: DeleteOptions) {
-    const columnIndex = this.getColumnPosition(idShort);
-    const columnToDelete = this.columns[columnIndex];
-    for (const row of this.rows) {
-      row.deleteSubmodelElement(idShort, options);
-    }
-    if (columnToDelete) {
-      this.tracker.track(
-        ColumnDeleted.create({
-          position: columnIndex,
-          path: columnToDelete.getIdShortPath(),
-          value: columnToDelete,
-        }),
-      );
-    }
-  }
-
   private getGroupInRowOrFail(row: ISubmodelElement, groupIdShort: string): SubmodelElementCollection {
     const group = row.getSubmodelElements().find((el) => el.idShort === groupIdShort);
     if (!group) {
@@ -122,39 +69,29 @@ export class TableExtension implements ITableExtendable {
     return group;
   }
 
-  addColumnToGroup(groupIdShort: string, column: ISubmodelElement, options: AddOptions): void {
-    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
-    for (const row of this.rows) {
-      const group = this.getGroupInRowOrFail(row, groupIdShort);
-      const columnCopy = column.copy();
-      if (columnCopy.isAllowed) {
-        group.addSubmodelElement(columnCopy.value, options);
-      }
-    }
-    const position = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === column.idShort);
-    const value = headerGroup.getSubmodelElements()[position];
-    this.tracker.track(
-      ColumnAddedToGroup.create({
-        groupIdShort,
-        path: value.getIdShortPath(),
-        position,
-        value,
-      }),
-    );
+  private resolveContainer(row: ISubmodelElement, groupIdShort?: string): ISubmodelElement {
+    return groupIdShort ? this.getGroupInRowOrFail(row, groupIdShort) : row;
   }
 
-  modifyColumnInGroup(
-    groupIdShort: string,
+  private applyAddColumn(column: ISubmodelElement, options: AddOptions, groupIdShort?: string): void {
+    for (const row of this.rows) {
+      const container = this.resolveContainer(row, groupIdShort);
+      const copy = column.copy();
+      if (copy.isAllowed) {
+        container.addSubmodelElement(copy.value, options);
+      }
+    }
+  }
+
+  private applyModifyColumn(
     idShort: string,
     data: any,
     options: ModifierVisitorOptions,
+    groupIdShort?: string,
   ): void {
-    if (Object.prototype.hasOwnProperty.call(data, "value")) {
-      throw new ValueError("Column value modification is not supported.");
-    }
     for (const row of this.rows) {
-      const group = this.getGroupInRowOrFail(row, groupIdShort);
-      const column = group.getSubmodelElements().find((el) => el.idShort === idShort);
+      const container = this.resolveContainer(row, groupIdShort);
+      const column = container.getSubmodelElements().find((el) => el.idShort === idShort);
       if (column) {
         column.accept(new ModifierVisitor(options).withTracking(this.tracker), {
           data: { ...data, idShort },
@@ -163,24 +100,96 @@ export class TableExtension implements ITableExtendable {
     }
   }
 
-  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: DeleteOptions): void {
-    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
-    const columnIndex = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === idShort);
-    const columnToDelete = headerGroup.getSubmodelElements()[columnIndex];
+  private applyDeleteColumn(idShort: string, options: DeleteOptions, groupIdShort?: string): void {
     for (const row of this.rows) {
-      const group = this.getGroupInRowOrFail(row, groupIdShort);
-      group.deleteSubmodelElement(idShort, options);
+      const container = this.resolveContainer(row, groupIdShort);
+      container.deleteSubmodelElement(idShort, options);
     }
+  }
+
+  addColumn(column: ISubmodelElement, options: AddOptions): void {
+    if (!this.headerRow) {
+      this.addHeaderRow(options);
+    }
+    this.applyAddColumn(column, options);
+    const position = this.getColumnPosition(column.idShort);
+    const value = this.columns[position];
+    this.tracker.track(ColumnAdded.create({ path: value.getIdShortPath(), position, value }));
+  }
+
+  modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
+    if (Object.prototype.hasOwnProperty.call(data, "value")) {
+      throw new ValueError("Column value modification is not supported.");
+    }
+    this.applyModifyColumn(idShort, data, options);
+  }
+
+  deleteColumn(idShort: string, options: DeleteOptions) {
+    const columnIndex = this.getColumnPosition(idShort);
+    const columnToDelete = this.columns[columnIndex];
+    this.applyDeleteColumn(idShort, options);
     if (columnToDelete) {
       this.tracker.track(
-        ColumnDeletedFromGroup.create({
-          groupIdShort,
+        ColumnDeleted.create({
           position: columnIndex,
           path: columnToDelete.getIdShortPath(),
           value: columnToDelete,
         }),
       );
     }
+  }
+
+  addColumnToGroup(groupIdShort: string, column: ISubmodelElement, options: AddOptions): void {
+    this.applyAddColumn(column, options, groupIdShort);
+    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
+    const position = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === column.idShort);
+    const value = headerGroup.getSubmodelElements()[position];
+    this.tracker.track(ColumnAddedToGroup.create({ groupIdShort, path: value.getIdShortPath(), position, value }));
+  }
+
+  modifyColumnInGroup(groupIdShort: string, idShort: string, data: any, options: ModifierVisitorOptions): void {
+    if (Object.prototype.hasOwnProperty.call(data, "value")) {
+      throw new ValueError("Column value modification is not supported.");
+    }
+    this.applyModifyColumn(idShort, data, options, groupIdShort);
+  }
+
+  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: MoveOptions): void {
+    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
+    const columnIndex = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === idShort);
+    const columnToMove = headerGroup.getSubmodelElements()[columnIndex];
+    const groupPosition = this.getColumnPosition(groupIdShort);
+    this.applyDeleteColumn(idShort, { ability: options.ability, onDelete: () => {} }, groupIdShort);
+    if (columnToMove) {
+      this.applyAddColumn(columnToMove, { ability: options.ability, position: groupPosition + 1 });
+      this.tracker.track(
+        ColumnDeletedFromGroup.create({
+          groupIdShort,
+          position: columnIndex,
+          path: columnToMove.getIdShortPath(),
+          value: columnToMove,
+        }),
+      );
+      const newPosition = this.getColumnPosition(idShort);
+      const addedValue = this.columns[newPosition];
+      this.tracker.track(ColumnAdded.create({ path: addedValue.getIdShortPath(), position: newPosition, value: addedValue }));
+    }
+  }
+
+  moveColumnToGroup(columnIdShort: string, groupIdShort: string, options: MoveOptions): void {
+    const column = this.getColumnOrFail(columnIdShort);
+    const deletedPosition = this.getColumnPosition(columnIdShort);
+    this.applyDeleteColumn(columnIdShort, { ability: options.ability, onDelete: () => {} });
+    this.applyAddColumn(column, { ability: options.ability }, groupIdShort);
+    this.tracker.track(
+      ColumnDeleted.create({ position: deletedPosition, path: column.getIdShortPath(), value: column }),
+    );
+    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
+    const addedPosition = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === columnIdShort);
+    const addedValue = headerGroup.getSubmodelElements()[addedPosition];
+    this.tracker.track(
+      ColumnAddedToGroup.create({ groupIdShort, path: addedValue.getIdShortPath(), position: addedPosition, value: addedValue }),
+    );
   }
 
   private generateRowIdShort() {
