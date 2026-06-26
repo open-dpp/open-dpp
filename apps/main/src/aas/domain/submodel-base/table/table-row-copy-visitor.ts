@@ -119,9 +119,11 @@ export class TableRowCopyVisitor implements IVisitor<TableRowCopyVisitorContextT
   visitSubmodel(_element: Submodel, _context?: TableRowCopyVisitorContextType): void {}
 
   visitSubmodelElementCollection(
-    _element: SubmodelElementCollection,
+    element: SubmodelElementCollection,
     _context?: TableRowCopyVisitorContextType,
-  ): void {}
+  ): void {
+    element.getSubmodelElements().forEach((child) => child.accept(this));
+  }
 
   visitSubmodelElementList(
     element: SubmodelElementList,

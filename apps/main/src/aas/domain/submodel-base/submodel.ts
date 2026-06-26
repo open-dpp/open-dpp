@@ -232,8 +232,41 @@ export class Submodel
 
   deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-
     tableExtension.deleteColumn(idShortOfColumn, options);
+    return tableExtension.getTableElement();
+  }
+
+  addColumnToGroup(
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    column: ISubmodelElement,
+    options: AddOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.addColumnToGroup(groupIdShort, column, options);
+    return tableExtension.getTableElement();
+  }
+
+  modifyColumnInGroup(
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    data: unknown,
+    options: ModifierVisitorOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.modifyColumnInGroup(groupIdShort, idShortOfColumn, data, options);
+    return tableExtension.getTableElement();
+  }
+
+  deleteColumnFromGroup(
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    options: DeleteOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.deleteColumnFromGroup(groupIdShort, idShortOfColumn, options);
     return tableExtension.getTableElement();
   }
 

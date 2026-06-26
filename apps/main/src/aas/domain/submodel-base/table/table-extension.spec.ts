@@ -121,6 +121,128 @@ describe("tableExtension", () => {
     // modify property prop1 via modifySubmodelElement
   });
 
+  it("should add column to a group and propagate to all rows", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    // Add a group column (SubmodelElementCollection with no children yet)
+    const group = SubmodelElementCollection.create({ idShort: "group1" });
+    table.addColumn(group, { ability });
+    table.addRow({ ability });
+    table.addRow({ ability });
+
+    // Add a sub-column to the group — must appear in every row's group
+    const subCol = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol1" }));
+    table.addColumnToGroup("group1", subCol, { ability });
+
+    for (const row of table.rows) {
+      const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
+      expect(rowGroup).toBeDefined();
+      expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("subCol1");
+    }
+  });
+
+  it("should delete column from group across all rows", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    const subCol1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol1" }));
+    const subCol2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol2" }));
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [subCol1, subCol2] });
+    table.addColumn(group, { ability });
+    table.addRow({ ability });
+
+    const onDelete = jest.fn();
+    table.deleteColumnFromGroup("group1", "subCol1", { ability, onDelete });
+
+    for (const row of table.rows) {
+      const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
+      expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).not.toContain("subCol1");
+      expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("subCol2");
+    }
+  });
+
+  it("should modify column within a group across all rows", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    const subCol = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol1" }));
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [subCol] });
+    table.addColumn(group, { ability });
+    table.addRow({ ability });
+
+    const newDisplayName = [{ language: "en", text: "Updated" }];
+    table.modifyColumnInGroup("group1", "subCol1", { displayName: newDisplayName }, { ability });
+
+    for (const row of table.rows) {
+      const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
+      const col = rowGroup!.getSubmodelElements().find((el) => el.idShort === "subCol1");
+      expect(col!.displayName).toEqual(newDisplayName.map(LanguageText.fromPlain));
+    }
+
+    expect(() =>
+      table.modifyColumnInGroup("group1", "subCol1", { value: "bad" }, { ability }),
+    ).toThrow(new ValueError("Column value modification is not supported."));
+  });
+
+  it("should clear nested values in group column when adding a new row", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    const subColWithValue = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "subCol1", value: "hello" }),
+    );
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [subColWithValue] });
+    table.addColumn(group, { ability });
+
+    // The data row should have the sub-column's value cleared
+    table.addRow({ ability });
+    const dataRow = table.rows[1];
+    const dataGroup = dataRow.getSubmodelElements().find((el) => el.idShort === "group1");
+    const dataSubCol = dataGroup!.getSubmodelElements().find((el) => el.idShort === "subCol1") as Property;
+    expect(dataSubCol.value).toBeNull();
+  });
+
   it("should delete column", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,

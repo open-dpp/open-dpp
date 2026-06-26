@@ -5,6 +5,7 @@ import {
   ISubmodelElement,
   ISubmodelElementSearchable,
 } from "../submodel-base";
+
 import { SubmodelElementList } from "../submodel-element-list";
 import {
   ChangeTracker,
@@ -49,6 +50,29 @@ export class NestedTableExtension implements ITableExtendable {
   deleteColumn(idShort: string, options: DeleteOptions) {
     this.performRecursive((tableExtension) => {
       tableExtension.deleteColumn(idShort, options);
+    });
+  }
+
+  addColumnToGroup(groupIdShort: string, column: ISubmodelElement, options: AddOptions): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.addColumnToGroup(groupIdShort, column, options);
+    });
+  }
+
+  modifyColumnInGroup(
+    groupIdShort: string,
+    idShort: string,
+    data: any,
+    options: ModifierVisitorOptions,
+  ): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.modifyColumnInGroup(groupIdShort, idShort, data, options);
+    });
+  }
+
+  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: DeleteOptions): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.deleteColumnFromGroup(groupIdShort, idShort, options);
     });
   }
 

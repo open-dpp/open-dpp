@@ -12,6 +12,8 @@ import {
 import { RowAdded } from "../../../../activity-history/domain/change-events/row-added";
 import { ColumnAdded } from "../../../../activity-history/domain/change-events/column-added";
 import { ColumnDeleted } from "../../../../activity-history/domain/change-events/column-deleted";
+import { ColumnAddedToGroup } from "../../../../activity-history/domain/change-events/column-added-to-group";
+import { ColumnDeletedFromGroup } from "../../../../activity-history/domain/change-events/column-deleted-from-group";
 import { RowDeleted } from "../../../../activity-history/domain/change-events/row-deleted";
 import { ITableExtendable } from "./table-extensable";
 import { TableRowCopyVisitor } from "./table-row-copy-visitor";
@@ -99,6 +101,80 @@ export class TableExtension implements ITableExtendable {
     if (columnToDelete) {
       this.tracker.track(
         ColumnDeleted.create({
+          position: columnIndex,
+          path: columnToDelete.getIdShortPath(),
+          value: columnToDelete,
+        }),
+      );
+    }
+  }
+
+  private getGroupInRowOrFail(row: ISubmodelElement, groupIdShort: string): SubmodelElementCollection {
+    const group = row.getSubmodelElements().find((el) => el.idShort === groupIdShort);
+    if (!group) {
+      throw new NotFoundError("ColumnGroup", groupIdShort);
+    }
+    if (!(group instanceof SubmodelElementCollection)) {
+      throw new ValueError(
+        `Element "${groupIdShort}" is not a SubmodelElementCollection and cannot be used as a ColumnGroup`,
+      );
+    }
+    return group;
+  }
+
+  addColumnToGroup(groupIdShort: string, column: ISubmodelElement, options: AddOptions): void {
+    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
+    for (const row of this.rows) {
+      const group = this.getGroupInRowOrFail(row, groupIdShort);
+      const columnCopy = column.copy();
+      if (columnCopy.isAllowed) {
+        group.addSubmodelElement(columnCopy.value, options);
+      }
+    }
+    const position = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === column.idShort);
+    const value = headerGroup.getSubmodelElements()[position];
+    this.tracker.track(
+      ColumnAddedToGroup.create({
+        groupIdShort,
+        path: value.getIdShortPath(),
+        position,
+        value,
+      }),
+    );
+  }
+
+  modifyColumnInGroup(
+    groupIdShort: string,
+    idShort: string,
+    data: any,
+    options: ModifierVisitorOptions,
+  ): void {
+    if (Object.prototype.hasOwnProperty.call(data, "value")) {
+      throw new ValueError("Column value modification is not supported.");
+    }
+    for (const row of this.rows) {
+      const group = this.getGroupInRowOrFail(row, groupIdShort);
+      const column = group.getSubmodelElements().find((el) => el.idShort === idShort);
+      if (column) {
+        column.accept(new ModifierVisitor(options).withTracking(this.tracker), {
+          data: { ...data, idShort },
+        });
+      }
+    }
+  }
+
+  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: DeleteOptions): void {
+    const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
+    const columnIndex = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === idShort);
+    const columnToDelete = headerGroup.getSubmodelElements()[columnIndex];
+    for (const row of this.rows) {
+      const group = this.getGroupInRowOrFail(row, groupIdShort);
+      group.deleteSubmodelElement(idShort, options);
+    }
+    if (columnToDelete) {
+      this.tracker.track(
+        ColumnDeletedFromGroup.create({
+          groupIdShort,
           position: columnIndex,
           path: columnToDelete.getIdShortPath(),
           value: columnToDelete,
