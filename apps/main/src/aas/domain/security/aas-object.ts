@@ -5,3 +5,7 @@ import { ReferenceElement } from "../submodel-base/reference-element";
 export function createAasObject(path: IdShortPath): ReferenceElement {
   return ReferenceElement.create({ idShort: path.toString() });
 }
+
+export function createAasObjectFromString(path: string): ReferenceElement {
+  return createAasObject(IdShortPath.create({ path }));
+}

@@ -537,15 +537,7 @@ describe("submodel", () => {
       idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFFactSheet" }),
       options: { ability },
     });
-    expect(element).toEqual({
-      type: "ExternalReference",
-      keys: [
-        {
-          type: "GlobalReference",
-          value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-        },
-      ],
-    });
+    expect(element).toEqual("http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf");
   });
 
   it("should get values readable by specified subject", () => {

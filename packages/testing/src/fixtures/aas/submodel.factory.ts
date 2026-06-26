@@ -794,17 +794,10 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<
           ],
         },
         {
-          modelType: "ReferenceElement",
+          modelType: "Property",
+          valueType: "xs:anyUri",
           idShort: "PCFFactSheet",
-          value: {
-            keys: [
-              {
-                type: "GlobalReference",
-                value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-              },
-            ],
-            type: "ExternalReference",
-          },
+          value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
         },
       ],
     },

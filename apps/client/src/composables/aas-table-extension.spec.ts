@@ -5,7 +5,6 @@ import {
   DataTypeDef,
   KeyTypes,
   Language,
-  ReferenceTypes,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
 } from "@open-dpp/dto";
@@ -86,8 +85,9 @@ describe("aasTableExtension composable", () => {
     },
     {
       idShort: "Column4",
-      modelType: AasSubmodelElements.ReferenceElement,
+      modelType: AasSubmodelElements.Property,
       displayName: [{ language: "en", text: "Link" }],
+      valueType: DataTypeDef.AnyUri,
     },
   ];
   const colsWithValue = [
@@ -106,15 +106,7 @@ describe("aasTableExtension composable", () => {
     },
     {
       ...cols[3],
-      value: {
-        type: ReferenceTypes.ExternalReference,
-        keys: [
-          {
-            type: KeyTypes.GlobalReference,
-            value: "https://example.com/my-link",
-          },
-        ],
-      },
+      value: "https://example.com/my-link",
     },
   ];
   const submodelElementList = SubmodelElementListJsonSchema.parse({
@@ -183,7 +175,7 @@ describe("aasTableExtension composable", () => {
           modelType: AasSubmodelElements.File,
           contentType: "application/octet-stream",
         },
-        Column4: { modelType: AasSubmodelElements.ReferenceElement },
+        Column4: { modelType: AasSubmodelElements.Property },
       },
       {
         idShort: "row1",
@@ -194,9 +186,7 @@ describe("aasTableExtension composable", () => {
           contentType: "text/plain",
         },
         Column4: {
-          modelType: AasSubmodelElements.ReferenceElement,
-          type: ReferenceTypes.ExternalReference,
-          keyType: KeyTypes.GlobalReference,
+          modelType: AasSubmodelElements.Property,
         },
       },
     ]);
@@ -354,8 +344,8 @@ describe("aasTableExtension composable", () => {
     {
       label: "aasEditor.link",
       component: ColumnCreateEditor,
-      data: {},
-      modelType: AasSubmodelElements.ReferenceElement,
+      data: { valueType: DataTypeDef.AnyUri },
+      modelType: AasSubmodelElements.Property,
     },
   ])("should add $label column", async ({ label, component, data, modelType }) => {
     const mockOnHideDrawer = vi.fn();
@@ -497,15 +487,7 @@ describe("aasTableExtension composable", () => {
           Column1: "My material",
           Column2: "50",
           Column3: { contentType: "text/plain", value: "pathToFile" },
-          Column4: {
-            type: ReferenceTypes.ExternalReference,
-            keys: [
-              {
-                type: KeyTypes.GlobalReference,
-                value: "https://example.com/my-link",
-              },
-            ],
-          },
+          Column4: "https://example.com/my-link",
         },
       ],
     );
@@ -728,7 +710,7 @@ describe("aasTableExtension composable", () => {
             modelType: AasSubmodelElements.File,
             contentType: "application/octet-stream",
           },
-          Column4: { modelType: AasSubmodelElements.ReferenceElement },
+          Column4: { modelType: AasSubmodelElements.Property },
         },
       ]),
     );
@@ -819,7 +801,7 @@ describe("aasTableExtension composable", () => {
             modelType: AasSubmodelElements.File,
             contentType: "application/octet-stream",
           },
-          Column4: { modelType: AasSubmodelElements.ReferenceElement },
+          Column4: { modelType: AasSubmodelElements.Property },
         },
         {
           idShort: "row1",
@@ -830,9 +812,7 @@ describe("aasTableExtension composable", () => {
             contentType: "text/plain",
           },
           Column4: {
-            modelType: AasSubmodelElements.ReferenceElement,
-            type: ReferenceTypes.ExternalReference,
-            keyType: KeyTypes.GlobalReference,
+            modelType: AasSubmodelElements.Property,
           },
         },
         {
@@ -843,7 +823,7 @@ describe("aasTableExtension composable", () => {
             modelType: AasSubmodelElements.File,
             contentType: "application/octet-stream",
           },
-          Column4: { modelType: AasSubmodelElements.ReferenceElement },
+          Column4: { modelType: AasSubmodelElements.Property },
         },
       ]),
     );

@@ -71,6 +71,7 @@
     "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
+    "addLanguage": "Add language",
     "drawerTabs": {
       "data": "Data",
       "presentation": "Presentation"

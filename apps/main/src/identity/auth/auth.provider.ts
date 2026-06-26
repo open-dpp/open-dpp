@@ -17,6 +17,7 @@ import {
   findPendingEmailChangeForUser,
 } from "../email-change-requests/infrastructure/email-change-gate";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
 
@@ -107,7 +108,7 @@ export const AuthProvider: Provider = {
 
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
-      basePath: "/api/auth",
+      basePath: `/api/${LatestApiVersionWithPrefixDto}/auth`,
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
       logger: {
