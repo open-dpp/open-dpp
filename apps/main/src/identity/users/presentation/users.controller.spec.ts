@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { type Connection, Types } from "mongoose";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -331,7 +332,7 @@ describe("UsersController", () => {
       expect(notification.templateProperties.newEmail).toBe(newEmail);
 
       const revokeUrl = new URL(notification.templateProperties.revokeUrl);
-      expect(revokeUrl.pathname).toBe("/api/users/email-change/revoke");
+      expect(revokeUrl.pathname).toBe(`/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke`);
       const revokeToken = revokeUrl.searchParams.get("token");
       expect(typeof revokeToken).toBe("string");
       const secret = moduleRef.get<EnvService>(EnvService).get("OPEN_DPP_AUTH_SECRET");

@@ -100,6 +100,10 @@ watch(currentPassword, () => {
 });
 
 async function sendVerification() {
+  // Guard against re-entrancy: the button is disabled while submitting, but the panel's
+  // keydown handler routes Enter (incl. from the password field) straight here, so a fast
+  // double Enter could otherwise fire two requests for this non-idempotent flow.
+  if (emailSubmitting.value) return;
   const candidate = newEmail.value.trim();
   const parsed = newEmailSchema.safeParse(candidate);
   if (!parsed.success) {

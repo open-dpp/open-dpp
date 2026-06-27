@@ -1,5 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { EmailChangeNotificationMail } from "../../../../email/domain/email-change-notification-mail";
@@ -112,7 +113,7 @@ export class EmailChangeRequestsService {
       this.envService.get("OPEN_DPP_AUTH_SECRET"),
       REVOKE_TOKEN_TTL_MS,
     );
-    const revokeUrl = `${this.envService.get("OPEN_DPP_URL")}/api/users/email-change/revoke?token=${encodeURIComponent(revokeToken)}`;
+    const revokeUrl = `${this.envService.get("OPEN_DPP_URL")}/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke?token=${encodeURIComponent(revokeToken)}`;
 
     try {
       await this.emailService.send(
