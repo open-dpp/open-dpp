@@ -2,8 +2,6 @@ import { Account } from "../../domain/account";
 import { AccountDocument } from "../schemas/account.schema";
 
 export class AccountMapper {
-  // Read-only mapping (ADR-0002): there is no `toPersistence` — better-auth owns all writes to
-  // the `account` collection. `_id`/`userId` are ObjectId in storage and stringified for the domain.
   static toDomain(document: AccountDocument): Account {
     return Account.loadFromDb({
       id: document._id.toString(),

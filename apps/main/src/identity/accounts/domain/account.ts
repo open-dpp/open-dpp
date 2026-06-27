@@ -1,6 +1,3 @@
-// Read-only domain mirror of a better-auth Account (see ADR-0002). There is intentionally no
-// `create()` factory: better-auth is the sole writer of accounts, and minting one here would
-// generate an id better-auth never issued. Instances are only ever rehydrated via `loadFromDb`.
 export interface AccountProps {
   userId: string;
   accountId: string;

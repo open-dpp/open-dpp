@@ -115,9 +115,6 @@ describe("Better Auth Schema Sync", () => {
     const unknownFields = rawFields.filter((f) => !schemaFields.has(f));
 
     expect(unknownFields).toEqual([]);
-    // ADR-0002: AccountsRepository matches by userId as an ObjectId. Assert Better Auth still
-    // stores it that way, so a future storage-type change fails loudly here instead of becoming
-    // a silent "wrong password" in the email-change flow.
     expect(rawAccount.userId).toBeInstanceOf(ObjectId);
   });
 });

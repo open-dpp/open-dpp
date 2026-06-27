@@ -332,7 +332,9 @@ describe("UsersController", () => {
       expect(notification.templateProperties.newEmail).toBe(newEmail);
 
       const revokeUrl = new URL(notification.templateProperties.revokeUrl);
-      expect(revokeUrl.pathname).toBe(`/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke`);
+      expect(revokeUrl.pathname).toBe(
+        `/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke`,
+      );
       const revokeToken = revokeUrl.searchParams.get("token");
       expect(typeof revokeToken).toBe("string");
       const secret = moduleRef.get<EnvService>(EnvService).get("OPEN_DPP_AUTH_SECRET");
@@ -353,8 +355,6 @@ describe("UsersController", () => {
       const userCookie = await betterAuthHelper.signAsUser(user.id);
       emailSendMock.mockClear();
 
-      // The endpoint allows 3 requests per hour (per-user tracker). The first 3 are accepted; the
-      // 4th is throttled. Proves the route-scoped UserOrIpThrottlerGuard is active on this endpoint.
       for (let attempt = 0; attempt < 3; attempt++) {
         const accepted = await request(app.getHttpServer())
           .post("/users/me/email-change")
@@ -541,7 +541,6 @@ describe("UsersController", () => {
       expect(responseA.status).toBe(202);
       expect(responseA.body.pendingEmailChange?.newEmail).toBe(sharedNewEmail);
 
-      // Previously this second request collided on a unique newEmail index and threw E11000 (500).
       const responseB = await request(app.getHttpServer())
         .post("/users/me/email-change")
         .set("Cookie", userBCookie)
@@ -567,8 +566,6 @@ describe("UsersController", () => {
         .send({ newEmail, currentPassword: TEST_PASSWORD });
       expect(response.status).toBe(202);
 
-      // The verification email to the new address (the link contains /verify-email?token=)
-      // must be the tailored change-email template addressed to the new email.
       const verificationCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
         const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
           ?.templateProperties?.link;
@@ -584,7 +581,6 @@ describe("UsersController", () => {
       expect(verification.to).toBe(newEmail);
       expect(verification.templateProperties.newEmail).toBe(newEmail);
 
-      // The generic signup verification template must NOT be used for a change-email verification.
       const genericVerifyCall = (emailSendMock.mock.calls as unknown[][]).find(
         (args) => (args[0] as { type?: string } | undefined)?.type === "VERIFY_EMAIL",
       );

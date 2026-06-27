@@ -43,7 +43,6 @@ describe("EmailChangeRequestMapper", () => {
       newEmail: "new@example.com",
       requestedAt: new Date("2026-05-02T10:00:00Z"),
     });
-    // previousEmail is internal persistence only and must never leak into the DTO.
     expect(dto).not.toHaveProperty("previousEmail");
   });
 });

@@ -4,16 +4,11 @@ import { HydratedDocument, Schema as MongooseSchema, SchemaTypes, Types } from "
 
 export type AccountDocument = HydratedDocument<Account>;
 
-// Read-only mirror of better-auth's `account` collection (see ADR-0002). Better Auth is the
-// sole writer; the app only reads this to verify a User's current password. `_id` and `userId`
-// are persisted by better-auth as ObjectId — typing them faithfully is what lets the repository
-// match by userId (a string-typed `userId` would silently never match the stored ObjectId).
 @Schema({ collection: "account", autoCreate: process.env.NODE_ENV === "test" })
 export class Account {
   @Prop({ type: SchemaTypes.ObjectId, required: true })
   _id: Types.ObjectId;
 
-  // Better Auth stores userId as ObjectId; Mixed lets an ObjectId query value pass through uncast.
   @Prop({ type: MongooseSchema.Types.Mixed, required: true })
   userId: Types.ObjectId | string;
 

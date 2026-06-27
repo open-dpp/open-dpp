@@ -57,11 +57,6 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     SubjectAttributes.create({ userRole: UserRole.USER }),
   );
 
-  // The unique-index race-recovery test relies on the unique index on
-  // `presentationConfigurationId` actually being enforced. Mongoose builds indexes
-  // asynchronously after connect, so under the full parallel suite the build can lag — a
-  // duplicate insert then succeeds instead of rejecting, silently skipping the recovery path.
-  // Force the indexes to exist before any test runs (each suite has its own isolated DB).
   beforeAll(async () => {
     await ctx
       .getModuleRef()

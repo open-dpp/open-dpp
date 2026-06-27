@@ -12,16 +12,8 @@ import { EmailChangeRequest } from "../../domain/email-change-request";
 import { signRevokeToken } from "../../domain/revoke-token";
 import { EmailChangeRequestsRepository } from "../../infrastructure/adapters/email-change-requests.repository";
 
-// Lifetime of the revoke token embedded in the "your email is being changed" notification.
-// Independent of the verification-token / shadow-row TTL: the revoke link should stay usable
-// for a while after the request lapses so a user can still neutralize an unwanted change.
 const REVOKE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
-/**
- * The subset of a User the email-change use case needs. Accepting this rather than the full
- * User entity keeps the service decoupled from the users module while letting a User be
- * passed directly.
- */
 export interface EmailChangeRequester {
   id: string;
   email: string;
@@ -48,13 +40,6 @@ export class EmailChangeRequestsService {
     await this.repository.deleteByUserId(userId);
   }
 
-  /**
-   * Owns the full "request an email change" use case: it verifies the requester's password,
-   * records the authorizing Email Change Request (carrying `previousEmail`), kicks off
-   * better-auth's verification flow, and sends the revoke-notification to the *current*
-   * address. Any failure after the row is written rolls the row back so no orphaned pending
-   * change is left behind.
-   */
   async request(
     user: EmailChangeRequester,
     newEmail: string,
@@ -84,9 +69,6 @@ export class EmailChangeRequestsService {
           newEmail,
           callbackURL: `${this.envService.get("OPEN_DPP_URL")}/profile`,
         },
-        // BetterAuthHeaders is an interface (no implicit index signature), so it is not
-        // directly assignable to better-auth's `HeadersInit`. The cast is runtime-safe:
-        // extractBetterAuthHeaders only ever populates string values.
         headers: headers as Record<string, string>,
       });
     } catch (error) {

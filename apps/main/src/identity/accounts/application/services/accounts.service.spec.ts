@@ -15,11 +15,6 @@ import { UsersModule } from "../../../users/users.module";
 import { AccountsModule } from "../../accounts.module";
 import { AccountsService } from "./accounts.service";
 
-/**
- * Integration test against a real Better Auth credential account (default password
- * `password1234`), so the hash comparison runs through Better Auth's actual verifier rather than
- * a mock. See ADR-0002.
- */
 describe("AccountsService.verifyPassword (integration)", () => {
   let app: INestApplication;
   let service: AccountsService;

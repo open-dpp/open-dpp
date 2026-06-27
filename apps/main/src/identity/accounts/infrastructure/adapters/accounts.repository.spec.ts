@@ -15,11 +15,6 @@ import { UsersModule } from "../../../users/users.module";
 import { AccountsModule } from "../../accounts.module";
 import { AccountsRepository } from "./accounts.repository";
 
-/**
- * Faithful integration test: accounts are created by Better Auth (which stores `userId` as an
- * ObjectId), so this exercises the exact storage type the repository must coerce against — the
- * landmine that a hand-seeded string `userId` would have hidden.
- */
 describe("AccountsRepository (integration)", () => {
   let app: INestApplication;
   let repository: AccountsRepository;
@@ -75,7 +70,6 @@ describe("AccountsRepository (integration)", () => {
     const malicious = { $ne: null } as unknown as string;
 
     expect(await repository.findCredentialByUserId(malicious)).toBeNull();
-    // the legitimate lookup still resolves, proving the previous call was neutralized, not broken
     expect(await repository.findCredentialByUserId(user.id)).not.toBeNull();
   });
 });

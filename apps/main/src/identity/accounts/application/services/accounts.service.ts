@@ -12,14 +12,6 @@ export class AccountsService {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
-  /**
-   * Verifies `plaintext` against the User's password credential (see ADR-0002).
-   *
-   * Returns `false` when the User has no password credential or the password does not match.
-   * Infrastructure failures (DB, hasher) are logged and re-thrown — never swallowed into `false` —
-   * so an outage is not reported to the User as an incorrect password. The hash and the better-auth
-   * verifier never leave this method.
-   */
   async verifyPassword(userId: string, plaintext: string): Promise<boolean> {
     try {
       const account = await this.accountsRepository.findCredentialByUserId(userId);

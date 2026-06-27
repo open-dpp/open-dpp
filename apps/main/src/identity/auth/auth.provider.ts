@@ -22,21 +22,10 @@ import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 export const AUTH = "auth";
 
 interface VerificationTokenPayload {
-  /** The address the token was issued for. For a change-email token this is the PREVIOUS email. */
   email?: string;
-  /** Present only on a change-email verification token: the NEW address being moved to. */
   updateTo?: string;
 }
 
-/**
- * Decodes the better-auth verification JWT carried on the request context.
- *
- * This depends on better-auth issuing an HS256 JWT whose payload carries `email` (the previous
- * address for a change-email token) and, for change-email verifications, `updateTo` (the new
- * address). We only read the unverified payload here; better-auth itself verifies the token's
- * signature before it ever drives a `user.update`, so this decode is used purely to identify the
- * flow, never to authorize it.
- */
 function decodeVerificationToken(context: unknown): VerificationTokenPayload | undefined {
   const token = (context as { query?: { token?: unknown } } | null | undefined)?.query?.token;
   if (typeof token !== "string") {
@@ -178,9 +167,6 @@ export const AuthProvider: Provider = {
       },
       emailVerification: {
         sendOnSignUp: true,
-        // Token lifetime and the Email Change Request shadow-row TTL are coupled to one value
-        // (see ADR-0001 / EMAIL_CHANGE_REQUEST_TTL_SECONDS) so the verification window and the
-        // authorizing row cannot drift apart.
         expiresIn: EMAIL_CHANGE_REQUEST_TTL_SECONDS,
         sendVerificationEmail: async ({
           user,
@@ -192,9 +178,6 @@ export const AuthProvider: Provider = {
           token: string;
         }) => {
           const firstName = (user as any).firstName ?? "User";
-          // Distinguish a change-email verification from the signup verification by decoding the
-          // token: `updateTo` is present only when verifying a move to a new address. In that case
-          // better-auth passes `user.email` already set to the NEW address.
           const decoded = decodeVerificationToken({ query: { token } });
           if (decoded?.updateTo) {
             await emailService.send(
@@ -263,12 +246,8 @@ export const AuthProvider: Provider = {
             before: async (data, context) => {
               const newEmail = (data as { email?: unknown } | null | undefined)?.email;
               if (typeof newEmail !== "string") {
-                // Not an email update (e.g. profile/name change): nothing to gate, allow it.
                 return;
               }
-              // Resolve the originating identity from the signed verification token FIRST, so the
-              // gate no longer depends on `newEmail` being globally unique (per ADR-0001 there is
-              // no cross-user address reservation). `email` in the token is the PREVIOUS address.
               const previousEmail = decodeVerificationToken(context)?.email;
               if (!previousEmail) {
                 logger.warn(
@@ -285,8 +264,6 @@ export const AuthProvider: Provider = {
                 );
                 return false;
               }
-              // Allow only when an Email Change Request exists for THAT user and authorizes THIS
-              // exact new address. This binds the (revocable) authorization to the token's subject.
               const pending = await findPendingEmailChangeForUser(db, targetUser._id.toString());
               if (!pending || pending.newEmail !== newEmail) {
                 logger.warn(
@@ -302,8 +279,6 @@ export const AuthProvider: Provider = {
                   return;
                 }
 
-                // Use the previousEmail persisted on the request rather than re-parsing the token
-                // (per ADR-0001 the after-hook is decoupled from the token format).
                 try {
                   await emailService.send(
                     EmailChangeCompletedMail.create({

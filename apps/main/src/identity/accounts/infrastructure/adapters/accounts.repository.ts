@@ -5,14 +5,8 @@ import { Account } from "../../domain/account";
 import { AccountMapper } from "../mappers/account.mapper";
 import { AccountDocument, Account as AccountSchemaClass } from "../schemas/account.schema";
 
-// better-auth's providerId for the email+password credential account.
 const CREDENTIAL_PROVIDER_ID = "credential";
 
-/**
- * Read-only access to better-auth's `account` collection (see ADR-0002). better-auth is the sole
- * writer; this repository intentionally exposes no `save`/`update`/`delete` — writing accounts
- * here would bypass better-auth's credential invariants.
- */
 @Injectable()
 export class AccountsRepository {
   constructor(
@@ -20,8 +14,6 @@ export class AccountsRepository {
     private readonly accountModel: Model<AccountDocument>,
   ) {}
 
-  // Better Auth stores userId as ObjectId, so a string query value must be coerced or it never
-  // matches. Mirrors MembersRepository's handling of the same better-auth reference type.
   private toObjectIdIfValid(id: string): Types.ObjectId | string {
     return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
   }
