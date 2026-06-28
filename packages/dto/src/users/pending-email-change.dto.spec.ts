@@ -19,4 +19,29 @@ describe("PendingEmailChangeDtoSchema", () => {
       }),
     ).toThrow();
   });
+
+  it("rejects a missing newEmail", () => {
+    expect(() =>
+      PendingEmailChangeDtoSchema.parse({
+        requestedAt: "2026-05-02T10:00:00Z",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a missing requestedAt", () => {
+    expect(() =>
+      PendingEmailChangeDtoSchema.parse({
+        newEmail: "new@example.com",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a requestedAt that is not a date", () => {
+    expect(() =>
+      PendingEmailChangeDtoSchema.parse({
+        newEmail: "new@example.com",
+        requestedAt: "not-a-date",
+      }),
+    ).toThrow();
+  });
 });

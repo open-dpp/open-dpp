@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Language } from "@open-dpp/dto";
 import { NotFoundError, NotFoundInDatabaseException } from "@open-dpp/exception";
@@ -50,6 +51,25 @@ describe("UsersService", () => {
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
     expect(result).toBe(savedUser);
+  });
+
+  it("returns the saved user and logs an error when the password-reset email fails to send", async () => {
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const smtpError = new Error("smtp down");
+    mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+    const result = await service.createUser("test@example.com", "John", "Doe");
+
+    expect(result).toBe(savedUser);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+
+    errorSpy.mockRestore();
   });
 
   it("should throw if save returns null", async () => {

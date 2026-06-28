@@ -64,6 +64,30 @@ describe("userMapper", () => {
     });
   });
 
+  it("maps null firstName/lastName/name to undefined in persistence", () => {
+    const namelessUser = User.loadFromDb({
+      id: new ObjectId().toString(),
+      email: "anon@example.com",
+      firstName: null,
+      lastName: null,
+      emailVerified: false,
+      role: UserRole.USER,
+      createdAt: now,
+      updatedAt: now,
+      banned: false,
+      banReason: null,
+      banExpires: null,
+      preferredLanguage: Language.en,
+    });
+    expect(namelessUser.name).toBeNull();
+
+    const persistence = UserMapper.toPersistence(namelessUser);
+
+    expect(persistence.firstName).toBeUndefined();
+    expect(persistence.lastName).toBeUndefined();
+    expect(persistence.name).toBeUndefined();
+  });
+
   it("should map from persistence to domain", () => {
     const domain = UserMapper.toDomain(validUserDocument);
 

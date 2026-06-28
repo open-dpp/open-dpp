@@ -117,6 +117,26 @@ describe("UsersRepository", () => {
       expect(signIn).toBeDefined();
       expect(signIn.user.email).toBe(email);
     });
+
+    it("returns null when better-auth rejects a duplicate email", async () => {
+      const seeded = await seedUser();
+
+      const duplicate = User.create({
+        email: seeded.email,
+        firstName: "Duplicate",
+        lastName: "User",
+        role: UserRole.USER,
+      });
+
+      const result = await repository.save(duplicate, "another-password-1234");
+
+      expect(result).toBeNull();
+
+      const stillThere = await repository.findOneByEmail(seeded.email);
+      expect(stillThere).toBeInstanceOf(User);
+      expect(stillThere!.id).toBe(seeded.id);
+      expect(stillThere!.firstName).toBe("John");
+    });
   });
 
   describe("findOneById", () => {

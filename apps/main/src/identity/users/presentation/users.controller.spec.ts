@@ -22,7 +22,10 @@ import { AuthModule } from "../../auth/auth.module";
 import { AUTH } from "../../auth/auth.provider";
 import { AuthGuard } from "../../auth/infrastructure/guards/auth.guard";
 import { EmailChangeRequestsService } from "../../email-change-requests/application/services/email-change-requests.service";
-import { verifyRevokeToken } from "../../email-change-requests/domain/revoke-token";
+import {
+  signRevokeToken,
+  verifyRevokeToken,
+} from "../../email-change-requests/domain/revoke-token";
 import { EMAIL_CHANGE_REQUEST_COLLECTION } from "../../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { InvitationStatus } from "../../organizations/domain/invitation-status.enum";
 import { OrganizationsModule } from "../../organizations/organizations.module";
@@ -291,6 +294,29 @@ describe("UsersController", () => {
       expect(response.status).toBe(200);
       const after = await usersRepository.findOneById(user.id);
       expect(after!.updatedAt.getTime()).toBe(before!.updatedAt.getTime());
+    });
+
+    it("preserves the pending email change in the response when an unrelated profile field is patched", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      const requestResponse = await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+      expect(requestResponse.status).toBe(202);
+
+      const response = await request(app.getHttpServer())
+        .patch("/users/me")
+        .set("Cookie", userCookie)
+        .send({ firstName: "Renamed" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.user.firstName).toBe("Renamed");
+      expect(response.body.pendingEmailChange?.newEmail).toBe(newEmail);
+      expect(response.body.pendingEmailChange?.requestedAt).toBeDefined();
     });
   });
 
@@ -853,6 +879,215 @@ describe("UsersController", () => {
 
       const persistedB = await usersRepository.findOneById(userB.id);
       expect(persistedB!.email).toBe(userB.email);
+    });
+  });
+
+  describe("email-change gate (auth.provider databaseHooks.user.update)", () => {
+    it("blocks a direct in-process user.email write that has no verification-token context and leaves the email unchanged", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      emailSendMock.mockClear();
+      const auth = moduleRef.get<Auth>(AUTH);
+      const ctx = await (auth as any).$context;
+      const attemptedEmail = `${randomUUID()}@test.test`;
+
+      // No verification-token context => the before-hook cannot resolve previousEmail and returns
+      // false (auth.provider.ts:251-256), so updateWithHooks short-circuits to null and skips the write.
+      const result = await ctx.internalAdapter.updateUser(user.id, { email: attemptedEmail });
+      expect(result).toBeNull();
+
+      const afterBlocked = await usersRepository.findOneById(user.id);
+      expect(afterBlocked!.email).toBe(user.email);
+
+      // Control: a non-email field write is not email-specific, so the same path DOES persist.
+      const updated = await ctx.internalAdapter.updateUser(user.id, { firstName: "GateControl" });
+      expect(updated).not.toBeNull();
+      const afterControl = await usersRepository.findOneById(user.id);
+      expect(afterControl!.firstName).toBe("GateControl");
+      expect(afterControl!.email).toBe(user.email);
+    });
+
+    it("still applies the email change and clears the pending row when the EMAIL_CHANGE_COMPLETED courtesy mail fails", async () => {
+      const auth = moduleRef.get<Auth>(AUTH);
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      const verifyEmailCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      expect(verifyEmailCall).toBeDefined();
+      const verifyLink = (verifyEmailCall![0] as { templateProperties: { link: string } })
+        .templateProperties.link;
+      const token = new URL(verifyLink).searchParams.get("token");
+      expect(typeof token).toBe("string");
+
+      emailSendMock.mockClear();
+      emailSendMock.mockImplementation(async (mail: unknown) => {
+        if ((mail as { type?: string }).type === "EMAIL_CHANGE_COMPLETED") {
+          throw new Error("SMTP unavailable");
+        }
+      });
+
+      try {
+        try {
+          await (auth.api as any).verifyEmail({
+            query: { token, callbackURL: "/" },
+            headers: { cookie: userCookie },
+            asResponse: true,
+          });
+        } catch {}
+
+        // The throwing courtesy-mail branch (auth.provider.ts:294-299) was actually exercised.
+        const completedCall = (emailSendMock.mock.calls as unknown[][]).find(
+          (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_COMPLETED",
+        );
+        expect(completedCall).toBeDefined();
+
+        // Despite the caught send error, the email change is durable...
+        const persisted = await usersRepository.findOneById(user.id);
+        expect(persisted!.email).toBe(newEmail);
+
+        // ...and the pending row is still cleared (auth.provider.ts:301).
+        const pendingRow = await moduleRef
+          .get<EmailChangeRequestsService>(EmailChangeRequestsService)
+          .findByUserId(user.id);
+        expect(pendingRow).toBeNull();
+      } finally {
+        emailSendMock.mockReset();
+      }
+    });
+
+    it("runs the update hooks but sends no EMAIL_CHANGE_COMPLETED when a signup verification flips emailVerified with no pending change", async () => {
+      const auth = moduleRef.get<Auth>(AUTH);
+      const email = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      // Do NOT use betterAuthHelper.createUser (it auto-verifies, making the verify route a no-op).
+      // Sign up fresh + unverified so the verification actually flips emailVerified.
+      await (auth.api as any).signUpEmail({
+        body: {
+          firstName: "Fresh",
+          lastName: "Signup",
+          name: "Fresh Signup",
+          email,
+          password: TEST_PASSWORD,
+        },
+      });
+
+      const verifyEmailCall = (emailSendMock.mock.calls as unknown[][]).find((args) => {
+        const link = (args[0] as { templateProperties?: { link?: string } } | undefined)
+          ?.templateProperties?.link;
+        return typeof link === "string" && link.includes("/verify-email?token=");
+      });
+      expect(verifyEmailCall).toBeDefined();
+      const verifyLink = (verifyEmailCall![0] as { templateProperties: { link: string } })
+        .templateProperties.link;
+      const token = new URL(verifyLink).searchParams.get("token");
+      expect(typeof token).toBe("string");
+
+      emailSendMock.mockClear();
+      try {
+        await (auth.api as any).verifyEmail({
+          query: { token, callbackURL: "/" },
+          asResponse: true,
+        });
+      } catch {}
+
+      // No pending change for this user => the after-hook early-returns (auth.provider.ts:277-279).
+      const completedCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_COMPLETED",
+      );
+      expect(completedCall).toBeUndefined();
+
+      // The update path still ran (emailVerified flipped true), proving the hooks executed.
+      const persisted = await usersRepository.findOneByEmail(email);
+      expect(persisted!.emailVerified).toBe(true);
+    });
+
+    // TODO(auth.provider.ts:258-265): the before-hook `if (!targetUser) return false` guard is
+    // genuinely unreachable from the live stack — better-auth's email-verification.mjs:172
+    // short-circuits with USER_NOT_FOUND before the user.update write runs, so a verification token
+    // can never carry a subject email that resolves to no user. Honest coverage needs a prod refactor
+    // (export the hook as a pure fn). Skipped, not faked.
+    it.skip("blocks a verification-token write whose subject email matches no user (auth.provider.ts:258-265)", () => {});
+
+    // TODO(auth.provider.ts:302-303): the after-hook outer catch only fires if clearing the pending
+    // row itself throws. Forcing that requires monkeypatching the shared connection.db.collection
+    // used across the whole suite (brittle, leaks into sibling tests). Deferred.
+    it.skip("logs and swallows when clearing the EmailChangeRequest after the update fails (auth.provider.ts:302-303)", () => {});
+  });
+
+  describe("GET /users/email-change/revoke (anonymous boundary)", () => {
+    it("revokes a real pending change via the public link with NO session (302 → ?status=ok) and clears the pending row", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
+
+      await request(app.getHttpServer())
+        .post("/users/me/email-change")
+        .set("Cookie", userCookie)
+        .send({ newEmail, currentPassword: TEST_PASSWORD });
+
+      const notificationCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === "EMAIL_CHANGE_NOTIFICATION",
+      );
+      expect(notificationCall).toBeDefined();
+      const revokeUrl = (notificationCall![0] as { templateProperties: { revokeUrl: string } })
+        .templateProperties.revokeUrl;
+      const token = new URL(revokeUrl).searchParams.get("token");
+      expect(typeof token).toBe("string");
+
+      const emailChangeRequestsService = moduleRef.get<EmailChangeRequestsService>(
+        EmailChangeRequestsService,
+      );
+      expect(await emailChangeRequestsService.findByUserId(user.id)).not.toBeNull();
+
+      // Public link, NO cookie. CRITICAL: .redirects(0) so supertest does not chase the off-host
+      // OPEN_DPP_URL Location header.
+      const response = await request(app.getHttpServer())
+        .get("/users/email-change/revoke")
+        .query({ token: token! })
+        .redirects(0);
+
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toMatch(/\?status=ok$/);
+      expect(await emailChangeRequestsService.findByUserId(user.id)).toBeNull();
+    });
+
+    it("rejects a tampered token via the public link with NO session (302 → ?status=invalid)", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const secret = moduleRef.get<EnvService>(EnvService).get("OPEN_DPP_AUTH_SECRET");
+
+      // A well-formed, SAME-LENGTH token whose signature has been tampered: it passes the length
+      // guard in verifyRevokeToken but fails timingSafeEqual => ValueError => ?status=invalid.
+      const validToken = signRevokeToken(
+        { userId: user.id, requestId: randomUUID() },
+        secret,
+        60_000,
+      );
+      const [body, sig] = validToken.split(".");
+      const tamperedSig = (sig[0] === "A" ? "B" : "A") + sig.slice(1);
+      const tamperedToken = `${body}.${tamperedSig}`;
+      expect(tamperedToken.length).toBe(validToken.length);
+
+      const response = await request(app.getHttpServer())
+        .get("/users/email-change/revoke")
+        .query({ token: tamperedToken })
+        .redirects(0);
+
+      expect(response.status).toBe(302);
+      expect(response.status).not.toBe(500);
+      expect(response.headers.location).toMatch(/\?status=invalid$/);
+      expect(response.headers["set-cookie"]).toBeUndefined();
     });
   });
 

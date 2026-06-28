@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
+import { ValueError } from "@open-dpp/exception";
 import { EmailChangeRequest } from "./email-change-request";
 
 describe("EmailChangeRequest", () => {
@@ -43,7 +44,7 @@ describe("EmailChangeRequest", () => {
         newEmail: "new@example.com",
         previousEmail: "old@example.com",
       }),
-    ).toThrow();
+    ).toThrow(ValueError);
   });
 
   it("rejects empty newEmail", () => {
@@ -53,7 +54,7 @@ describe("EmailChangeRequest", () => {
         newEmail: "",
         previousEmail: "old@example.com",
       }),
-    ).toThrow();
+    ).toThrow(ValueError);
   });
 
   it("rejects empty previousEmail", () => {
@@ -63,6 +64,6 @@ describe("EmailChangeRequest", () => {
         newEmail: "new@example.com",
         previousEmail: "",
       }),
-    ).toThrow();
+    ).toThrow(ValueError);
   });
 });

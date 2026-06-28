@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
@@ -24,7 +25,11 @@ describe("EmailChangeRequestsService", () => {
   const currentUser = { id: "user-1", email: "current@x.com", firstName: "Ada" };
   const headers = { cookie: "session=abc" } as const;
 
+  let errorSpy: ReturnType<typeof jest.spyOn>;
+
   beforeEach(async () => {
+    errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
     mockRepo = {
       save: jest.fn(),
       findByUserId: jest.fn(),
@@ -64,6 +69,10 @@ describe("EmailChangeRequestsService", () => {
     }).compile();
 
     service = module.get(EmailChangeRequestsService);
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
   });
 
   describe("findByUserId", () => {
@@ -199,7 +208,9 @@ describe("EmailChangeRequestsService", () => {
     it("rolls back the row when better-auth.changeEmail fails", async () => {
       mockAuth.api.changeEmail.mockRejectedValue(new Error("auth boom"));
 
-      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow();
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
+        "auth boom",
+      );
 
       expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
@@ -209,10 +220,28 @@ describe("EmailChangeRequestsService", () => {
     it("hard-cancels and throws when the notification email fails to send", async () => {
       mockEmail.send.mockRejectedValue(new Error("SMTP unavailable"));
 
-      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow();
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
+        "SMTP unavailable",
+      );
 
       expect(mockAuth.api.changeEmail).toHaveBeenCalledTimes(1);
       expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
+    });
+
+    it("propagates the rollback error when changeEmail AND deleteByUserId both reject", async () => {
+      mockAuth.api.changeEmail.mockRejectedValue(new Error("auth boom"));
+      mockRepo.deleteByUserId.mockRejectedValue(new Error("rollback failed"));
+
+      // The catch block awaits the rollback (deleteByUserId) BEFORE re-throwing
+      // the original error, so when the rollback itself rejects that rejection
+      // propagates first — masking the original "auth boom".
+      await expect(service.request(currentUser, "new@x.com", "hunter2", headers)).rejects.toThrow(
+        "rollback failed",
+      );
+
+      expect(mockRepo.upsertByUserId).toHaveBeenCalledTimes(1);
+      expect(mockRepo.deleteByUserId).toHaveBeenCalledWith("user-1");
+      expect(mockEmail.send).not.toHaveBeenCalled();
     });
 
     it("rejects when newEmail equals currentEmail", async () => {

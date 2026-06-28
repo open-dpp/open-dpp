@@ -48,10 +48,6 @@ export class UsersService {
     return await this.usersRepository.findOneOrFail(id);
   }
 
-  async findByEmail(email: string) {
-    return this.usersRepository.findOneByEmail(email);
-  }
-
   async findAllByIds(ids: Array<string>): Promise<User[]> {
     return this.usersRepository.findAllByIds(ids);
   }
