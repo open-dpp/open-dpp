@@ -2,7 +2,7 @@ import { Controller, Get, HttpStatus, Logger, Query, Redirect } from "@nestjs/co
 import { EnvService } from "@open-dpp/env";
 import { AllowAnonymous } from "../../auth/presentation/decorators/allow-anonymous.decorator";
 import { EmailChangeRequestsService } from "../application/services/email-change-requests.service";
-import { verifyRevokeToken } from "../domain/revoke-token";
+import { type RevokeTokenPayload, verifyRevokeToken } from "../domain/revoke-token";
 
 @Controller("users/email-change")
 export class RevokeEmailChangeController {
@@ -20,13 +20,21 @@ export class RevokeEmailChangeController {
     const baseUrl = this.envService.get("OPEN_DPP_URL");
     const okUrl = `${baseUrl}/account/email-change-revoked?status=ok`;
     const invalidUrl = `${baseUrl}/account/email-change-revoked?status=invalid`;
+    const errorUrl = `${baseUrl}/account/email-change-revoked?status=error`;
 
     if (!token) {
       return { url: invalidUrl, statusCode: HttpStatus.FOUND };
     }
 
+    let payload: RevokeTokenPayload;
     try {
-      const payload = verifyRevokeToken(token, this.envService.get("OPEN_DPP_AUTH_SECRET"));
+      payload = verifyRevokeToken(token, this.envService.get("OPEN_DPP_AUTH_SECRET"));
+    } catch (error) {
+      this.logger.warn(`revoke: invalid token`, error);
+      return { url: invalidUrl, statusCode: HttpStatus.FOUND };
+    }
+
+    try {
       const existing = await this.emailChangeRequestsService.findByUserId(payload.userId);
       if (existing && existing.id === payload.requestId) {
         await this.emailChangeRequestsService.hardCancel(payload.userId);
@@ -37,8 +45,8 @@ export class RevokeEmailChangeController {
       }
       return { url: okUrl, statusCode: HttpStatus.FOUND };
     } catch (error) {
-      this.logger.warn(`revoke: invalid token`, error);
-      return { url: invalidUrl, statusCode: HttpStatus.FOUND };
+      this.logger.error(`revoke: failed to revoke email change for user ${payload.userId}`, error);
+      return { url: errorUrl, statusCode: HttpStatus.FOUND };
     }
   }
 }

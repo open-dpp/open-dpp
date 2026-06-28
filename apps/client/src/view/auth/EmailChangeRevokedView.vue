@@ -6,7 +6,11 @@ import { useRoute } from "vue-router";
 const { t } = useI18n();
 const route = useRoute();
 
-const isSuccess = computed(() => route.query.status === "ok");
+const status = computed(() => {
+  if (route.query.status === "ok") return "ok";
+  if (route.query.status === "error") return "error";
+  return "invalid";
+});
 </script>
 
 <template>
@@ -22,21 +26,31 @@ const isSuccess = computed(() => route.query.status === "ok");
       <template #title>
         <p class="py-2 text-center">
           {{
-            isSuccess
+            status === "ok"
               ? t("auth.emailChangeRevoked.successTitle")
-              : t("auth.emailChangeRevoked.invalidTitle")
+              : status === "error"
+                ? t("auth.emailChangeRevoked.errorTitle")
+                : t("auth.emailChangeRevoked.invalidTitle")
           }}
         </p>
       </template>
       <template #content>
         <div class="flex flex-col gap-5">
           <Message
-            v-if="isSuccess"
+            v-if="status === 'ok'"
             data-testid="revoke-success"
             severity="success"
             :closable="false"
           >
             {{ t("auth.emailChangeRevoked.successBody") }}
+          </Message>
+          <Message
+            v-else-if="status === 'error'"
+            data-testid="revoke-error"
+            severity="warn"
+            :closable="false"
+          >
+            {{ t("auth.emailChangeRevoked.errorBody") }}
           </Message>
           <Message v-else data-testid="revoke-invalid" severity="error" :closable="false">
             {{ t("auth.emailChangeRevoked.invalidBody") }}

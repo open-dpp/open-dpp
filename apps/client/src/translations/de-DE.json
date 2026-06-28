@@ -713,6 +713,8 @@
       "successBody": "Die ausstehende E-Mail-Änderung wurde widerrufen. Deine Konto-E-Mail-Adresse wurde nicht geändert.",
       "invalidTitle": "Dieser Link ist nicht mehr gültig",
       "invalidBody": "Der Widerruf-Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Wenn du die Änderung nicht angefordert hast, melde dich an und überprüfe dein Konto.",
+      "errorTitle": "Etwas ist schiefgelaufen",
+      "errorBody": "Die E-Mail-Änderung konnte gerade nicht widerrufen werden. Bitte versuche den Link in einem Moment erneut. Falls es weiterhin fehlschlägt, melde dich an und überprüfe dein Konto.",
       "ctaSignIn": "Zur Anmeldung"
     }
   },

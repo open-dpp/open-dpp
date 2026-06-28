@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { EmailChangeRequestsService } from "../application/services/email-change-requests.service";
@@ -127,5 +128,47 @@ describe("RevokeEmailChangeController", () => {
     });
     expect(mockService.findByUserId).not.toHaveBeenCalled();
     expect(mockService.hardCancel).not.toHaveBeenCalled();
+  });
+
+  it("redirects to ?status=error (not invalid) when hardCancel fails, so a system failure is not masked as a bad link", async () => {
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const existing = EmailChangeRequest.create({
+      userId: "user-1",
+      newEmail: "new@x.com",
+      previousEmail: "old@x.com",
+    });
+    mockService.findByUserId.mockResolvedValue(existing);
+    mockService.hardCancel.mockRejectedValue(new Error("mongo down"));
+    const token = signRevokeToken(
+      { userId: existing.userId, requestId: existing.id },
+      SECRET,
+      60_000,
+    );
+
+    const result = await controller.revoke(token);
+
+    expect(result).toEqual({
+      url: `${BASE_URL}/account/email-change-revoked?status=error`,
+      statusCode: 302,
+    });
+    expect(mockService.hardCancel).toHaveBeenCalledWith("user-1");
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it("redirects to ?status=error when the request lookup fails", async () => {
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    mockService.findByUserId.mockRejectedValue(new Error("mongo down"));
+    const token = signRevokeToken({ userId: "user-1", requestId: "req-1" }, SECRET, 60_000);
+
+    const result = await controller.revoke(token);
+
+    expect(result).toEqual({
+      url: `${BASE_URL}/account/email-change-revoked?status=error`,
+      statusCode: 302,
+    });
+    expect(mockService.hardCancel).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });

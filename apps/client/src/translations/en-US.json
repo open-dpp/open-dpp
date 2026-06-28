@@ -713,6 +713,8 @@
       "successBody": "The pending email change has been revoked. Your account email has not been changed.",
       "invalidTitle": "This link is no longer valid",
       "invalidBody": "The revoke link may have expired or already been used. If you didn't request the change, sign in and review your account.",
+      "errorTitle": "Something went wrong",
+      "errorBody": "We couldn't revoke the email change just now. Please try the link again in a moment. If it keeps failing, sign in and review your account.",
       "ctaSignIn": "Go to sign in"
     }
   },
