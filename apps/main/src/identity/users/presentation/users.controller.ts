@@ -24,7 +24,6 @@ import type {
 } from "@open-dpp/dto";
 import {
   CreateUserDtoSchema,
-  InvitationResponseSchema,
   RequestEmailChangeDtoSchema,
   SetUserRoleDtoSchema,
   UpdateProfileDtoSchema,
@@ -38,10 +37,7 @@ import { UserEmailDecorator } from "../../auth/presentation/decorators/user-emai
 import { UserHasRole } from "../../auth/presentation/decorators/user-has-role.decorator";
 import { EmailChangeRequestsService } from "../../email-change-requests/application/services/email-change-requests.service";
 import { EmailChangeRequestMapper } from "../../email-change-requests/infrastructure/mappers/email-change-request.mapper";
-import { InvitationPopulateDecorator } from "../../organizations/application/invitation-populate-decorator";
-import { Invitation } from "../../organizations/domain/invitation";
-import { InvitationsRepository } from "../../organizations/infrastructure/adapters/invitations.repository";
-import { OrganizationsRepository } from "../../organizations/infrastructure/adapters/organizations.repository";
+import { OrganizationsService } from "../../organizations/application/services/organizations.service";
 import { UsersService } from "../application/services/users.service";
 import { UserRole, UserRoleEnum } from "../domain/user-role.enum";
 import { UserMapper } from "../infrastructure/mappers/user.mapper";
@@ -52,8 +48,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly emailChangeRequestsService: EmailChangeRequestsService,
-    private readonly organizationRepository: OrganizationsRepository,
-    private readonly invitationsRepository: InvitationsRepository,
+    private readonly organizationsService: OrganizationsService,
   ) {}
 
   @Post()
@@ -136,21 +131,6 @@ export class UsersController {
     @UserEmailDecorator() email: string,
     @InvitationStatusQueryParam() status: InvitationStatusDtoType | undefined,
   ): Promise<InvitationResponseDto[]> {
-    const invitations = await this.invitationsRepository.findByEmail(email);
-    const filteredInvitations = status
-      ? invitations.filter((i) => i.status === status)
-      : invitations;
-    const populatedInvitations = await Promise.all(
-      filteredInvitations.map(async (i: Invitation) => {
-        const decorator = new InvitationPopulateDecorator(
-          i,
-          this.organizationRepository,
-          this.usersService,
-        );
-
-        return (await decorator.populate()).toPlain();
-      }),
-    );
-    return InvitationResponseSchema.array().parse(populatedInvitations);
+    return this.organizationsService.getInvitationsForEmail(email, status);
   }
 }
