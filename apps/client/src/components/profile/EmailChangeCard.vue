@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { MeDto } from "@open-dpp/dto";
 import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -181,7 +180,6 @@ function handleEmailKeydown(event: KeyboardEvent) {
 
 <template>
   <section class="flex flex-col gap-3" aria-labelledby="profile-form-email-heading">
-    <ConfirmDialog />
     <h2
       id="profile-form-email-heading"
       class="text-ink m-0 text-xl leading-snug font-semibold tracking-tight"
