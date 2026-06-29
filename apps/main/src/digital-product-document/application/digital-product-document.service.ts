@@ -391,6 +391,128 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
   }
 
+  async addColumnToGroupInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    body: SubmodelElementRequestDto,
+    position: number | undefined,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.addColumnToGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      SubmodelElementRequest.create({ body, version }),
+      userContext,
+      position,
+    );
+  }
+
+  async modifyColumnInGroupOfSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    body: SubmodelModificationDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.modifyColumnInGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      SubmodelElementModificationRequest.create({ body, version }),
+      userContext,
+    );
+  }
+
+  async deleteColumnFromGroupInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.deleteColumnFromGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      userContext,
+      version,
+    );
+  }
+
+  async moveColumnToGroupInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    columnIdShort: string,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveColumnToGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      columnIdShort,
+      userContext,
+      version,
+    );
+  }
+
   async deletePolicyBySubjectAndObject(
     correlationId: string,
     organizationId: string,

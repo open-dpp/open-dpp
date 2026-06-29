@@ -23,6 +23,8 @@ import { DigitalProductDocumentStatusChanged } from "./digital-product-document-
 import { ReferenceElementValueChanged } from "./reference-element-value-changed";
 import { ColumnAddedToGroup } from "./column-added-to-group";
 import { ColumnDeletedFromGroup } from "./column-deleted-from-group";
+import { ColumnModifiedInGroup } from "./column-modified-in-group";
+import { ColumnMovedToGroup } from "./column-moved-to-group";
 
 export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);
@@ -52,4 +54,6 @@ export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.ReferenceElementValueChanged, ReferenceElementValueChanged);
   registerChangeEvent(ChangeEventTypes.ColumnAddedToGroup, ColumnAddedToGroup);
   registerChangeEvent(ChangeEventTypes.ColumnDeletedFromGroup, ColumnDeletedFromGroup);
+  registerChangeEvent(ChangeEventTypes.ColumnModifiedInGroup, ColumnModifiedInGroup);
+  registerChangeEvent(ChangeEventTypes.ColumnMovedToGroup, ColumnMovedToGroup);
 }

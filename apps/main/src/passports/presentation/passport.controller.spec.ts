@@ -534,6 +534,22 @@ describe("passportController", () => {
     await ctx.asserts.deleteColumn(createPassport, savePassport);
   });
 
+  it("/POST add column to group", async () => {
+    await ctx.asserts.addColumnToGroup(createPassport, savePassport);
+  });
+
+  it("/PATCH modify column in group", async () => {
+    await ctx.asserts.modifyColumnInGroup(createPassport, savePassport);
+  });
+
+  it("/DELETE column from group", async () => {
+    await ctx.asserts.deleteColumnFromGroup(createPassport, savePassport);
+  });
+
+  it("/POST move column to group", async () => {
+    await ctx.asserts.moveColumnToGroup(createPassport, savePassport);
+  });
+
   it("/POST add row", async () => {
     await ctx.asserts.addRow(createPassport, savePassport);
   });

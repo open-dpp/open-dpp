@@ -213,6 +213,22 @@ describe("templateController", () => {
     await ctx.asserts.deleteColumn(createTemplate, saveTemplate);
   });
 
+  it("/POST add column to group", async () => {
+    await ctx.asserts.addColumnToGroup(createTemplate, saveTemplate);
+  });
+
+  it("/PATCH modify column in group", async () => {
+    await ctx.asserts.modifyColumnInGroup(createTemplate, saveTemplate);
+  });
+
+  it("/DELETE column from group", async () => {
+    await ctx.asserts.deleteColumnFromGroup(createTemplate, saveTemplate);
+  });
+
+  it("/POST move column to group", async () => {
+    await ctx.asserts.moveColumnToGroup(createTemplate, saveTemplate);
+  });
+
   it("/POST add row", async () => {
     await ctx.asserts.addRow(createTemplate, saveTemplate);
   });

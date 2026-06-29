@@ -60,6 +60,7 @@ import { SubjectAttributes } from "../../aas/domain/security/subject-attributes"
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
+  ApiDeleteColumnFromGroup,
   ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
@@ -71,13 +72,16 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiMoveColumnToGroup,
   ApiPatchColumn,
+  ApiPatchColumnInGroup,
   ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
   ApiPatchSubmodelValue,
   ApiPostColumn,
+  ApiPostColumnToGroup,
   ApiPostRow,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
@@ -87,6 +91,7 @@ import {
   ColumnParam,
   CursorQueryParam,
   DeletePolicyRequestBody,
+  GroupIdShortParam,
   IdParam,
   IdShortPathParam,
   PositionQueryParam,
@@ -644,6 +649,122 @@ export class PassportController
       submodelId,
       idShortPath,
       idShortOfColumn,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPostColumnToGroup()
+  async addColumnToGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @PositionQueryParam() position: number | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.addColumnToGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      body,
+      position,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPatchColumnInGroup()
+  async modifyColumnInGroupOfSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() idShortOfColumn: string,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.modifyColumnInGroupOfSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiDeleteColumnFromGroup()
+  async deleteColumnFromGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() idShortOfColumn: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.deleteColumnFromGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveColumnToGroup()
+  async moveColumnToGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() columnIdShort: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.moveColumnToGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      columnIdShort,
       { subject, userId },
       version,
     );
