@@ -35,7 +35,7 @@ test("request shows the pending state and sends both verification + revoke-notif
     subjectContains: "Your email is being changed",
     since,
   });
-  expect(MailpitClient.getRevokeLink(notification)).toContain("/users/email-change/revoke?token");
+  expect(MailpitClient.getRevokeLink(notification)).toContain("/account/email-change-revoke?token");
 });
 
 test("hard-cancel clears the pending request and the captured verify link becomes a no-op", async ({

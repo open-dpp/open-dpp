@@ -1,8 +1,22 @@
-import { Controller, Get, HttpStatus, Logger, Query, Redirect } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Logger, Post, Query } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { z } from "zod";
 import { AllowAnonymous } from "../../auth/presentation/decorators/allow-anonymous.decorator";
 import { EmailChangeRequestsService } from "../application/services/email-change-requests.service";
 import { type RevokeTokenPayload, verifyRevokeToken } from "../domain/revoke-token";
+
+const RevokeEmailChangeBodySchema = z.object({ token: z.string() });
+type RevokeEmailChangeBody = z.infer<typeof RevokeEmailChangeBodySchema>;
+
+export interface RevokeResult {
+  status: "ok" | "invalid" | "error";
+}
+
+export interface RevokeInfo {
+  valid: boolean;
+  newEmail?: string;
+}
 
 @Controller("users/email-change")
 export class RevokeEmailChangeController {
@@ -13,17 +27,18 @@ export class RevokeEmailChangeController {
     private readonly envService: EnvService,
   ) {}
 
-  @Get("revoke")
+  // State-changing revoke. Must be a POST (not a prefetchable GET) so enterprise
+  // mail link-scanners (Outlook SafeLinks, AV gateways) cannot auto-cancel a
+  // legitimate pending email change by merely fetching the link.
+  @Post("revoke")
+  @HttpCode(HttpStatus.OK)
   @AllowAnonymous()
-  @Redirect()
-  async revoke(@Query("token") token: string): Promise<{ url: string; statusCode: number }> {
-    const baseUrl = this.envService.get("OPEN_DPP_URL");
-    const okUrl = `${baseUrl}/account/email-change-revoked?status=ok`;
-    const invalidUrl = `${baseUrl}/account/email-change-revoked?status=invalid`;
-    const errorUrl = `${baseUrl}/account/email-change-revoked?status=error`;
-
+  async revoke(
+    @Body(new ZodValidationPipe(RevokeEmailChangeBodySchema)) body: RevokeEmailChangeBody,
+  ): Promise<RevokeResult> {
+    const token = body.token;
     if (!token) {
-      return { url: invalidUrl, statusCode: HttpStatus.FOUND };
+      return { status: "invalid" };
     }
 
     let payload: RevokeTokenPayload;
@@ -31,7 +46,7 @@ export class RevokeEmailChangeController {
       payload = verifyRevokeToken(token, this.envService.get("OPEN_DPP_AUTH_SECRET"));
     } catch (error) {
       this.logger.warn(`revoke: invalid token`, error);
-      return { url: invalidUrl, statusCode: HttpStatus.FOUND };
+      return { status: "invalid" };
     }
 
     try {
@@ -43,10 +58,43 @@ export class RevokeEmailChangeController {
           `revoke: idempotent no-op for user ${payload.userId} (token requestId ${payload.requestId})`,
         );
       }
-      return { url: okUrl, statusCode: HttpStatus.FOUND };
+      return { status: "ok" };
     } catch (error) {
       this.logger.error(`revoke: failed to revoke email change for user ${payload.userId}`, error);
-      return { url: errorUrl, statusCode: HttpStatus.FOUND };
+      return { status: "error" };
+    }
+  }
+
+  // Side-effect-free context lookup for the confirmation page. Safe to prefetch:
+  // it never mutates state, it only confirms the token and (when it matches a
+  // pending request) returns the target email so the page can show context.
+  @Get("revoke/info")
+  @AllowAnonymous()
+  async revokeInfo(@Query("token") token: string): Promise<RevokeInfo> {
+    if (!token) {
+      return { valid: false };
+    }
+
+    let payload: RevokeTokenPayload;
+    try {
+      payload = verifyRevokeToken(token, this.envService.get("OPEN_DPP_AUTH_SECRET"));
+    } catch (error) {
+      this.logger.warn(`revoke-info: invalid token`, error);
+      return { valid: false };
+    }
+
+    try {
+      const existing = await this.emailChangeRequestsService.findByUserId(payload.userId);
+      if (existing && existing.id === payload.requestId) {
+        return { valid: true, newEmail: existing.newEmail };
+      }
+      return { valid: true };
+    } catch (error) {
+      this.logger.error(
+        `revoke-info: failed to load email change for user ${payload.userId}`,
+        error,
+      );
+      return { valid: false };
     }
   }
 }

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { LanguageType } from "@open-dpp/dto";
 import { BaseEmail } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 
@@ -11,6 +12,7 @@ export interface EmailChangeCompletedMailCreateProps {
   to: string;
   subject: string;
   templateProperties: EmailChangeCompletedMailTemplateProps;
+  language?: LanguageType;
 }
 
 export class EmailChangeCompletedMail extends BaseEmail {
@@ -19,6 +21,7 @@ export class EmailChangeCompletedMail extends BaseEmail {
     to: string,
     subject: string,
     templateProperties: EmailChangeCompletedMailTemplateProps,
+    language?: LanguageType,
   ) {
     super(
       id,
@@ -27,6 +30,7 @@ export class EmailChangeCompletedMail extends BaseEmail {
       to,
       subject,
       templateProperties,
+      language,
     );
   }
 
@@ -36,6 +40,7 @@ export class EmailChangeCompletedMail extends BaseEmail {
       data.to,
       data.subject,
       data.templateProperties,
+      data.language,
     );
   }
 }

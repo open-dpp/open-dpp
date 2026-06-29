@@ -129,6 +129,6 @@ export class MailpitClient {
   }
 
   static getRevokeLink(msg: MailpitMessage): string {
-    return firstHref(msg, /href="([^"]*\/users\/email-change\/revoke\?token[^"]*)"/);
+    return firstHref(msg, /href="([^"]*\/account\/email-change-revoke\?token[^"]*)"/);
   }
 }

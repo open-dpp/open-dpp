@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { AccountsService } from "../../../accounts/application/services/accounts.service";
@@ -159,7 +158,7 @@ describe("EmailChangeRequestsService", () => {
 
       const revokeUrl = new URL(mail.templateProperties.revokeUrl);
       expect(revokeUrl.origin + revokeUrl.pathname).toBe(
-        `https://open-dpp.test/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke`,
+        "https://open-dpp.test/account/email-change-revoke",
       );
       const token = revokeUrl.searchParams.get("token");
       expect(typeof token).toBe("string");

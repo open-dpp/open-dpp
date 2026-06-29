@@ -94,7 +94,20 @@ function applyMe(next: MeDto) {
 }
 
 function onEmailUpdated(next: MeDto) {
-  applyMe(next);
+  // Refresh only email-related state. Do NOT call resetForm or reassign
+  // locale here: the EmailChangeCard lives on this view and emits "updated"
+  // on email request/cancel, so unsaved name/language edits and the form's
+  // dirty state must be preserved.
+  if (user.value) {
+    user.value = { ...user.value, email: next.user.email };
+  }
+  pendingEmailChange.value = toPendingEmailChange(next);
+  // Keep the diff baseline's email in sync so it never desyncs from the
+  // displayed email. Name/language baselines are intentionally untouched
+  // (email is not part of computeProfileDiff, so the diff stays correct).
+  if (original.value) {
+    original.value = { ...original.value, email: next.user.email };
+  }
 }
 
 onMounted(async () => {

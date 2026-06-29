@@ -32,6 +32,23 @@ describe("RequestEmailChangeDtoSchema", () => {
     ).toThrow();
   });
 
+  it("accepts a currentPassword at the maximum length", () => {
+    const parsed = RequestEmailChangeDtoSchema.parse({
+      newEmail: "new@example.com",
+      currentPassword: "a".repeat(1024),
+    });
+    expect(parsed.currentPassword).toBe("a".repeat(1024));
+  });
+
+  it("rejects a currentPassword longer than 1024 characters", () => {
+    expect(() =>
+      RequestEmailChangeDtoSchema.parse({
+        newEmail: "new@example.com",
+        currentPassword: "a".repeat(1025),
+      }),
+    ).toThrow();
+  });
+
   it("rejects an invalid email", () => {
     expect(() =>
       RequestEmailChangeDtoSchema.parse({

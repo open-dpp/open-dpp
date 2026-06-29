@@ -708,6 +708,14 @@
       "rememberLogin": "Logindaten wieder eingefallen?",
       "ctaSignIn": "Jetzt anmelden"
     },
+    "emailChangeRevokeConfirm": {
+      "title": "E-Mail-Änderung abbrechen?",
+      "bodyWithEmail": "Für dein Konto wurde eine E-Mail-Änderung zu {email} angefordert. Wenn du das nicht warst, brich sie jetzt ab, um deine aktuelle Adresse zu behalten.",
+      "body": "Für dein Konto wurde eine E-Mail-Änderung angefordert. Wenn du das nicht warst, brich sie jetzt ab, um deine aktuelle Adresse zu behalten.",
+      "loading": "Anfrage wird geprüft…",
+      "cancelButton": "E-Mail-Änderung abbrechen",
+      "ctaSignIn": "Zur Anmeldung"
+    },
     "emailChangeRevoked": {
       "successTitle": "E-Mail-Änderung abgebrochen",
       "successBody": "Die ausstehende E-Mail-Änderung wurde widerrufen. Deine Konto-E-Mail-Adresse wurde nicht geändert.",

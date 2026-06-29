@@ -1,11 +1,13 @@
 import { Logger, Provider } from "@nestjs/common";
 import { getConnectionToken } from "@nestjs/mongoose";
+import { LanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
 import { Connection, Types } from "mongoose";
+import type { Db } from "mongodb";
 import { EmailChangeCompletedMail } from "../../email/domain/email-change-completed-mail";
 import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
@@ -24,6 +26,11 @@ export const AUTH = "auth";
 interface VerificationTokenPayload {
   email?: string;
   updateTo?: string;
+}
+
+function resolveUserLanguage(user: unknown): LanguageType {
+  const preferred = (user as { preferredLanguage?: unknown } | null | undefined)?.preferredLanguage;
+  return preferred === "de" ? "de" : "en";
 }
 
 function decodeVerificationToken(context: unknown): VerificationTokenPayload | undefined {
@@ -46,6 +53,63 @@ function decodeVerificationToken(context: unknown): VerificationTokenPayload | u
     };
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * Seeds the env-configured admin (OPEN_DPP_AUTH_ADMIN_USERNAME/PASSWORD) ONLY when
+ * no admin account exists yet. This makes the env admin a one-time bootstrap seed
+ * instead of a value re-created on every startup: once any admin exists — including
+ * after an admin changes their own email — seeding is skipped, so the env
+ * credentials can never silently resurrect a second admin account.
+ *
+ * Exported for unit testing.
+ */
+export async function ensureAdminSeeded(
+  db: Db,
+  // Structural type: the better-auth `Auth` generic does not unify across the import
+  // boundary (duplicate better-call types + this app's user additionalFields), and
+  // `createUser` is added at runtime by the admin plugin and absent from the static
+  // api type — so we only require `api` and call createUser dynamically, as before.
+  auth: { api: Record<string, any> },
+  config: EnvService,
+  logger: Logger,
+): Promise<void> {
+  const adminUsername = config.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
+  const adminPassword = config.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+  if (!adminUsername || !adminPassword) {
+    return;
+  }
+
+  try {
+    const existingAdmin = await db
+      .collection("user")
+      .findOne({ role: "admin" }, { projection: { _id: 1 } });
+    if (existingAdmin) {
+      logger.log("Admin account already exists; skipping admin seeding.");
+      return;
+    }
+
+    await auth.api.createUser({
+      body: {
+        name: "open-dpp admin",
+        data: {
+          firstName: "open-dpp",
+          lastName: "admin",
+          emailVerified: true,
+        },
+        email: adminUsername,
+        password: adminPassword,
+        role: "admin",
+      },
+    });
+    logger.log("Admin Account created");
+  } catch (error) {
+    if (error instanceof APIError) {
+      logger.warn("Account with set admin username already exists and wont be updated.");
+    } else {
+      logger.error("Failed to create admin account", error);
+    }
   }
 }
 
@@ -184,6 +248,7 @@ export const AuthProvider: Provider = {
               EmailChangeVerificationMail.create({
                 to: user.email,
                 subject: "Confirm your new email address",
+                language: resolveUserLanguage(user),
                 templateProperties: {
                   firstName,
                   newEmail: user.email,
@@ -284,6 +349,7 @@ export const AuthProvider: Provider = {
                     EmailChangeCompletedMail.create({
                       to: user.email,
                       subject: "Your email address was changed",
+                      language: resolveUserLanguage(user),
                       templateProperties: {
                         firstName: (user as { firstName?: string }).firstName ?? "User",
                         previousEmail: pending.previousEmail,
@@ -347,35 +413,7 @@ export const AuthProvider: Provider = {
       }),
     });
 
-    const isAuthAdminProvided =
-      !!configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") &&
-      !!configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
-    if (isAuthAdminProvided) {
-      const adminUsername = configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
-      const adminPassword = configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
-      try {
-        await (auth.api as any).createUser({
-          body: {
-            name: "open-dpp admin",
-            data: {
-              firstName: "open-dpp",
-              lastName: "admin",
-              emailVerified: true,
-            },
-            email: adminUsername,
-            password: adminPassword,
-            role: "admin",
-          },
-        });
-        logger.log("Admin Account created");
-      } catch (error) {
-        if (error instanceof APIError) {
-          logger.warn("Account with set admin username already exists and wont be updated.");
-        } else {
-          logger.error("Failed to create admin account", error);
-        }
-      }
-    }
+    await ensureAdminSeeded(db, auth, configService, logger);
     logger.log("Auth initialized");
 
     return auth;

@@ -6,6 +6,10 @@ import { expect, test } from "../fixtures";
 
 const PROFILE = `${EnvConfig.OPEN_DPP_URL}/profile`;
 
+// The revoke notification now links to the public, non-prefetchable confirmation
+// page (/account/email-change-revoke?token=...), so a mail link-scanner cannot
+// auto-cancel the change; MailpitClient.getRevokeLink matches that frontend link.
+//
 // ADR-0001 end-to-end: revoking from the OLD-address notification link must
 // permanently defeat an otherwise-valid verification link clicked afterwards.
 test("revoking via the notification link blocks a later, still-valid verification link", async ({
@@ -38,8 +42,10 @@ test("revoking via the notification link blocks a later, still-valid verificatio
   });
   const verifyLink = MailpitClient.getVerifyLink(verification);
 
-  // 1) Revoke via the public link (backend 302 -> the revoked view).
+  // 1) Open the confirmation page and explicitly confirm the cancel (POST).
+  //    The final status view is reused (?status=ok).
   await page.goto(revokeLink);
+  await page.getByTestId("confirm-revoke").click();
   await expect(page).toHaveURL(/\/account\/email-change-revoked\?status=ok/);
   await expect(page.getByTestId("revoke-success")).toBeVisible();
 

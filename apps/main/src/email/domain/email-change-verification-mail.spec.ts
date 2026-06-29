@@ -43,4 +43,16 @@ describe("EmailChangeVerificationMail", () => {
 
     expect(mail.templateProperties).toEqual(createProps.templateProperties);
   });
+
+  it("should default the language to 'en' when none is provided", () => {
+    const mail = EmailChangeVerificationMail.create(createProps);
+
+    expect(mail.language).toBe("en");
+  });
+
+  it("should carry the provided language", () => {
+    const mail = EmailChangeVerificationMail.create({ ...createProps, language: "de" });
+
+    expect(mail.language).toBe("de");
+  });
 });

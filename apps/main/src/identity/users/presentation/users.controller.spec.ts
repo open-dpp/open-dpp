@@ -5,7 +5,6 @@ import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { type Connection, Types } from "mongoose";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -358,9 +357,7 @@ describe("UsersController", () => {
       expect(notification.templateProperties.newEmail).toBe(newEmail);
 
       const revokeUrl = new URL(notification.templateProperties.revokeUrl);
-      expect(revokeUrl.pathname).toBe(
-        `/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke`,
-      );
+      expect(revokeUrl.pathname).toBe("/account/email-change-revoke");
       const revokeToken = revokeUrl.searchParams.get("token");
       expect(typeof revokeToken).toBe("string");
       const secret = moduleRef.get<EnvService>(EnvService).get("OPEN_DPP_AUTH_SECRET");
@@ -1025,8 +1022,8 @@ describe("UsersController", () => {
     it.skip("logs and swallows when clearing the EmailChangeRequest after the update fails (auth.provider.ts:302-303)", () => {});
   });
 
-  describe("GET /users/email-change/revoke (anonymous boundary)", () => {
-    it("revokes a real pending change via the public link with NO session (302 → ?status=ok) and clears the pending row", async () => {
+  describe("POST /users/email-change/revoke (anonymous boundary)", () => {
+    it("revokes a real pending change via the public link with NO session (200 → status:ok) and clears the pending row", async () => {
       const { user } = await betterAuthHelper.createUser();
       const userCookie = await betterAuthHelper.signAsUser(user.id);
       const newEmail = `${randomUUID()}@test.test`;
@@ -1051,19 +1048,19 @@ describe("UsersController", () => {
       );
       expect(await emailChangeRequestsService.findByUserId(user.id)).not.toBeNull();
 
-      // Public link, NO cookie. CRITICAL: .redirects(0) so supertest does not chase the off-host
-      // OPEN_DPP_URL Location header.
+      // Public POST, NO cookie. The HMAC revoke token is the unguessable secret; a
+      // state-changing POST (not a prefetchable GET) prevents mail link-scanners from
+      // auto-cancelling a legitimate pending change.
       const response = await request(app.getHttpServer())
-        .get("/users/email-change/revoke")
-        .query({ token: token! })
-        .redirects(0);
+        .post("/users/email-change/revoke")
+        .send({ token: token! });
 
-      expect(response.status).toBe(302);
-      expect(response.headers.location).toMatch(/\?status=ok$/);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ status: "ok" });
       expect(await emailChangeRequestsService.findByUserId(user.id)).toBeNull();
     });
 
-    it("rejects a tampered token via the public link with NO session (302 → ?status=invalid)", async () => {
+    it("rejects a tampered token via the public link with NO session (200 → status:invalid)", async () => {
       const { user } = await betterAuthHelper.createUser();
       const secret = moduleRef.get<EnvService>(EnvService).get("OPEN_DPP_AUTH_SECRET");
 
@@ -1080,13 +1077,12 @@ describe("UsersController", () => {
       expect(tamperedToken.length).toBe(validToken.length);
 
       const response = await request(app.getHttpServer())
-        .get("/users/email-change/revoke")
-        .query({ token: tamperedToken })
-        .redirects(0);
+        .post("/users/email-change/revoke")
+        .send({ token: tamperedToken });
 
-      expect(response.status).toBe(302);
+      expect(response.status).toBe(200);
       expect(response.status).not.toBe(500);
-      expect(response.headers.location).toMatch(/\?status=invalid$/);
+      expect(response.body).toEqual({ status: "invalid" });
       expect(response.headers["set-cookie"]).toBeUndefined();
     });
   });

@@ -1,6 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { LanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { EmailChangeNotificationMail } from "../../../../email/domain/email-change-notification-mail";
@@ -18,6 +18,7 @@ export interface EmailChangeRequester {
   id: string;
   email: string;
   firstName: string | null;
+  preferredLanguage?: LanguageType;
 }
 
 @Injectable()
@@ -95,13 +96,14 @@ export class EmailChangeRequestsService {
       this.envService.get("OPEN_DPP_AUTH_SECRET"),
       REVOKE_TOKEN_TTL_MS,
     );
-    const revokeUrl = `${this.envService.get("OPEN_DPP_URL")}/api/${LatestApiVersionWithPrefixDto}/users/email-change/revoke?token=${encodeURIComponent(revokeToken)}`;
+    const revokeUrl = `${this.envService.get("OPEN_DPP_URL")}/account/email-change-revoke?token=${encodeURIComponent(revokeToken)}`;
 
     try {
       await this.emailService.send(
         EmailChangeNotificationMail.create({
           to: user.email,
           subject: "Your email is being changed",
+          language: user.preferredLanguage ?? "en",
           templateProperties: {
             firstName: user.firstName ?? "User",
             currentEmail: user.email,

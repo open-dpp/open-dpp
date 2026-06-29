@@ -1,3 +1,4 @@
+import { LanguageType } from "@open-dpp/dto";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 
 export type BaseEmailType =
@@ -14,6 +15,7 @@ export interface BaseEmailCreateProps {
   to: string;
   subject: string;
   templateProperties: BaseEmailTemplateProperties;
+  language?: LanguageType;
 }
 
 export class BaseEmail {
@@ -23,6 +25,7 @@ export class BaseEmail {
   public readonly to: string;
   public readonly subject: string;
   public readonly templateProperties: BaseEmailTemplateProperties;
+  public readonly language: LanguageType;
 
   constructor(
     id: string,
@@ -31,6 +34,7 @@ export class BaseEmail {
     to: string,
     subject: string,
     templateProperties: BaseEmailTemplateProperties,
+    language: LanguageType = "en",
   ) {
     this.id = id;
     this.type = type;
@@ -38,5 +42,6 @@ export class BaseEmail {
     this.to = to;
     this.subject = subject;
     this.templateProperties = templateProperties;
+    this.language = language;
   }
 }

@@ -77,4 +77,18 @@ export const userHandlers = [
   http.delete(`${baseURL}/users/me/email-change`, async () => {
     return HttpResponse.json(meResponse, { status: 200 });
   }),
+  http.post(`${baseURL}/users/email-change/revoke`, async ({ request }) => {
+    const body = (await request.json()) as { token?: unknown };
+    if (typeof body?.token !== "string" || body.token.length === 0) {
+      return HttpResponse.json({ status: "invalid" }, { status: 200 });
+    }
+    return HttpResponse.json({ status: "ok" }, { status: 200 });
+  }),
+  http.get(`${baseURL}/users/email-change/revoke/info`, async ({ request }) => {
+    const token = new URL(request.url).searchParams.get("token");
+    if (!token) {
+      return HttpResponse.json({ valid: false }, { status: 200 });
+    }
+    return HttpResponse.json({ valid: true, newEmail: "new@example.com" }, { status: 200 });
+  }),
 ];
