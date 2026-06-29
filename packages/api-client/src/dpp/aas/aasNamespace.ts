@@ -187,6 +187,60 @@ export class AasNamespace {
     );
   }
 
+  public async addColumnToGroupInSubmodelElementList(
+    id: string,
+    submodelId: string,
+    idShortPath: string,
+    groupIdShort: string,
+    data: SubmodelElementRequestDto,
+    params: TableModificationParamsDto,
+  ) {
+    return this.axiosInstance.post<SubmodelElementListResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/groups/${groupIdShort}/columns`,
+      data,
+      { params },
+    );
+  }
+
+  public async modifyColumnInGroupOfSubmodelElementList(
+    id: string,
+    submodelId: string,
+    idShortPath: string,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    data: SubmodelElementModificationDto,
+  ) {
+    return this.axiosInstance.patch<SubmodelElementListResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/groups/${groupIdShort}/columns/${idShortOfColumn}`,
+      data,
+    );
+  }
+
+  public async deleteColumnFromGroupInSubmodelElementList(
+    id: string,
+    submodelId: string,
+    idShortPath: string,
+    groupIdShort: string,
+    idShortOfColumn: string,
+  ) {
+    return this.axiosInstance.delete<SubmodelElementListResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/groups/${groupIdShort}/columns/${idShortOfColumn}`,
+    );
+  }
+
+  public async moveColumnToGroupInSubmodelElementList(
+    id: string,
+    submodelId: string,
+    idShortPath: string,
+    groupIdShort: string,
+    idShortOfColumn: string,
+  ) {
+    return this.axiosInstance.post<SubmodelElementListResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/groups/${groupIdShort}/columns/${idShortOfColumn}/move`,
+      undefined,
+    );
+  }
+
   public async addRowToSubmodelElementList(
     id: string,
     submodelId: string,
