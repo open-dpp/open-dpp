@@ -46,6 +46,9 @@ export class User {
 
   @Prop({ required: true, type: String, enum: Object.values(UserRole) })
   role: UserRoleType;
+
+  @Prop({ default: "en" })
+  preferredLanguage: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

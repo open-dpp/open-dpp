@@ -35,7 +35,7 @@ export class InvitationsRepository {
   }
 
   async findByEmail(email: string): Promise<Invitation[]> {
-    const documents = await this.invitationModel.find({ email });
+    const documents = await this.invitationModel.find({ email: { $eq: email } });
     return documents.map(InvitationMapper.toDomain);
   }
 
@@ -49,7 +49,7 @@ export class InvitationsRepository {
       ? { $in: [organizationId, new ObjectId(organizationId)] }
       : organizationId;
     const rawDoc = await this.invitationModel.collection.findOne({
-      email,
+      email: { $eq: email },
       organizationId: orgIdFilter,
       expiresAt: { $gte: new Date() },
       status: InvitationStatus.PENDING,

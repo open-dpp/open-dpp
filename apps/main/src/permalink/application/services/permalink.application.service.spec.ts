@@ -57,6 +57,13 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     SubjectAttributes.create({ userRole: UserRole.USER }),
   );
 
+  beforeAll(async () => {
+    await ctx
+      .getModuleRef()
+      .get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name))
+      .syncIndexes();
+  });
+
   async function seedPassport() {
     const passport = Passport.create({
       id: randomUUID(),

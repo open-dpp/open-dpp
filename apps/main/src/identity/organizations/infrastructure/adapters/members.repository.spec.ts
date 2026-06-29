@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { Types } from "mongoose";
+import { Error as MongooseError, Types } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
@@ -163,6 +163,66 @@ describe("MembersRepository", () => {
     );
 
     expect(result).toBeNull();
+  });
+
+  describe("NoSQL injection defense", () => {
+    async function expectNoLeak<T>(query: () => Promise<T[] | T | null>): Promise<void> {
+      try {
+        const result = await query();
+        if (Array.isArray(result)) {
+          expect(result).toEqual([]);
+        } else {
+          expect(result).toBeNull();
+        }
+      } catch (error) {
+        if (error instanceof MongooseError.CastError) {
+          return;
+        }
+        throw error;
+      }
+    }
+
+    it("findByUserId does not leak rows for an operator-shaped userId", async () => {
+      const userId = new Types.ObjectId().toHexString();
+      await repository.save(
+        Member.create({
+          organizationId: new Types.ObjectId().toHexString(),
+          userId,
+          role: MemberRole.MEMBER,
+        }),
+      );
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() => repository.findByUserId(malicious));
+      expect(await repository.findByUserId(userId)).toHaveLength(1);
+    });
+
+    it("findByOrganizationId does not leak rows for an operator-shaped organizationId", async () => {
+      const organizationId = new Types.ObjectId().toHexString();
+      await repository.save(
+        Member.create({
+          organizationId,
+          userId: new Types.ObjectId().toHexString(),
+          role: MemberRole.MEMBER,
+        }),
+      );
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() => repository.findByOrganizationId(malicious));
+      expect(await repository.findByOrganizationId(organizationId)).toHaveLength(1);
+    });
+
+    it("findOneByUserIdAndOrganizationId does not leak rows for operator-shaped values", async () => {
+      const userId = new Types.ObjectId().toHexString();
+      const organizationId = new Types.ObjectId().toHexString();
+      await repository.save(Member.create({ organizationId, userId, role: MemberRole.OWNER }));
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() =>
+        repository.findOneByUserIdAndOrganizationId(malicious, organizationId),
+      );
+      await expectNoLeak(() => repository.findOneByUserIdAndOrganizationId(userId, malicious));
+    });
   });
 
   it("should update an existing member on save and return the updated member", async () => {

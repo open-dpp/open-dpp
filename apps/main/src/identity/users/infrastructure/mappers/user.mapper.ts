@@ -1,8 +1,27 @@
+import { Language, LanguageEnum, LanguageType, UserDto } from "@open-dpp/dto";
+import { Logger } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 import { User, UserDbProps } from "../../domain/user";
 import { UserDocument, User as UserSchema } from "../schemas/user.schema";
 
 export class UserMapper {
+  private static readonly logger = new Logger(UserMapper.name);
+
+  static toDto(entity: User): UserDto {
+    return {
+      id: entity.id,
+      email: entity.email,
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+      name: entity.name,
+      image: entity.image,
+      emailVerified: entity.emailVerified,
+      preferredLanguage: entity.preferredLanguage,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    };
+  }
+
   static toDomain(document: UserDocument): User {
     const props: UserDbProps = {
       id: document._id.toString(),
@@ -18,6 +37,10 @@ export class UserMapper {
       banned: document.banned,
       banReason: document.banReason,
       banExpires: document.banExpires,
+      preferredLanguage: UserMapper.parsePreferredLanguage(
+        document.preferredLanguage,
+        document._id.toString(),
+      ),
     };
     return User.loadFromDb(props);
   }
@@ -37,6 +60,20 @@ export class UserMapper {
       banned: entity.banned,
       banReason: entity.banReason ?? null,
       banExpires: entity.banExpires ?? null,
+      preferredLanguage: entity.preferredLanguage,
     } as UserSchema;
+  }
+
+  private static parsePreferredLanguage(value: unknown, userId?: string): LanguageType {
+    const parsed = LanguageEnum.safeParse(value);
+    if (parsed.success) {
+      return parsed.data;
+    }
+    if (value !== undefined && value !== null) {
+      UserMapper.logger.warn(
+        `Unsupported preferredLanguage "${String(value)}" for user ${userId ?? "(unknown)"}; falling back to ${Language.en}`,
+      );
+    }
+    return Language.en;
   }
 }

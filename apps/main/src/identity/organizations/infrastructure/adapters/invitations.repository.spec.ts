@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { Model, Types } from "mongoose";
+import { Error as MongooseError, Model, Types } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { AUTH } from "../../../auth/auth.provider";
 import { Invitation } from "../../domain/invitation";
@@ -179,6 +179,50 @@ describe("InvitationsRepository", () => {
     const result = await repository.findByEmail(email);
     expect(result).toHaveLength(2);
     expect(result.every((i) => i.email === email)).toBe(true);
+  });
+
+  describe("NoSQL injection defense", () => {
+    async function expectNoLeak<T>(query: () => Promise<T[] | T | null>): Promise<void> {
+      try {
+        const result = await query();
+        if (Array.isArray(result)) {
+          expect(result).toEqual([]);
+        } else {
+          expect(result).toBeNull();
+        }
+      } catch (error) {
+        if (!(error instanceof MongooseError.CastError)) {
+          throw error;
+        }
+      }
+    }
+
+    it("findByEmail does not leak rows for an operator-shaped email", async () => {
+      const email = "real-invitee@example.com";
+      await invitationModel.create({
+        _id: new Types.ObjectId().toHexString(),
+        email,
+        organizationId: new Types.ObjectId().toHexString(),
+        inviterId: new Types.ObjectId().toHexString(),
+        role: MemberRole.MEMBER,
+        status: InvitationStatus.PENDING,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() => repository.findByEmail(malicious));
+      expect(await repository.findByEmail(email)).toHaveLength(1);
+    });
+
+    it("findOneUnexpiredByEmailAndOrganization does not leak rows for an operator-shaped email", async () => {
+      const organizationId = new Types.ObjectId().toHexString();
+
+      const malicious = { $ne: null } as unknown as string;
+      await expectNoLeak(() =>
+        repository.findOneUnexpiredByEmailAndOrganization(malicious, organizationId),
+      );
+    });
   });
 
   it("should save an invitation via BetterAuth API", async () => {
