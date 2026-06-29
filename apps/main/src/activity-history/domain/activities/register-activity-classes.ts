@@ -12,6 +12,10 @@ import { PolicyDeletedActivity } from "./policy-deleted.activity";
 import { ColumnAddedActivity } from "./column-added.activity";
 import { ColumnModifiedActivity } from "./column-modified.activity";
 import { ColumnDeletedActivity } from "./column-deleted.activity";
+import { ColumnAddedToGroupActivity } from "./column-added-to-group.activity";
+import { ColumnModifiedInGroupActivity } from "./column-modified-in-group.activity";
+import { ColumnDeletedFromGroupActivity } from "./column-deleted-from-group.activity";
+import { ColumnMovedToGroupActivity } from "./column-moved-to-group.activity";
 import { RowDeletedActivity } from "./row-deleted.activity";
 import { SubmodelAddedActivity } from "./submodel-added.activity";
 import { SubmodelDeletedActivity } from "./submodel-deleted.activity";
@@ -39,6 +43,10 @@ export function registerActivityClasses(): void {
   registerActivity(ActivityTypes.RowDeleted, RowDeletedActivity);
   registerActivity(ActivityTypes.ColumnModified, ColumnModifiedActivity);
   registerActivity(ActivityTypes.ColumnDeleted, ColumnDeletedActivity);
+  registerActivity(ActivityTypes.ColumnAddedToGroup, ColumnAddedToGroupActivity);
+  registerActivity(ActivityTypes.ColumnModifiedInGroup, ColumnModifiedInGroupActivity);
+  registerActivity(ActivityTypes.ColumnDeletedFromGroup, ColumnDeletedFromGroupActivity);
+  registerActivity(ActivityTypes.ColumnMovedToGroup, ColumnMovedToGroupActivity);
   registerActivity(
     ActivityTypes.DigitalProductDocumentStatusChanged,
     DigitalProductDocumentStatusChangedActivity,
