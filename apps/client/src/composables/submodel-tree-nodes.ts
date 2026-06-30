@@ -3,7 +3,7 @@ import type { ComputedRef } from "vue";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { resolveLanguageTexts } from "./display-name";
+import { resolveLanguageTexts } from "./language-text.ts";
 
 function mapToTreeNodes(
   elements: SubmodelTreeElement[],

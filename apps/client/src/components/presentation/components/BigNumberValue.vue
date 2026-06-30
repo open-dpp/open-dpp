@@ -2,7 +2,7 @@
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { resolveLanguageTexts } from "../../../composables/display-name";
+import { resolveLanguageTexts } from "../../../composables/language-text.ts";
 
 const { element } = defineProps<{
   element: SubmodelElementResponseDto;

@@ -1,5 +1,5 @@
 import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
-import { resolveLanguageTexts } from "../../composables/display-name";
+import { resolveLanguageTexts } from "../../composables/language-text.ts";
 
 export interface ColumnDef {
   header: string;

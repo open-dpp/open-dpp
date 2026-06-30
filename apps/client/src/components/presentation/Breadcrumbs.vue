@@ -3,7 +3,7 @@ import { HomeIcon } from "@heroicons/vue/20/solid";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import { useLanguageTexts } from "../../composables/display-name";
+import { useLanguageTexts } from "../../composables/language-text.ts";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
-import { useLanguageTexts } from "../../composables/display-name";
+import { useLanguageTexts } from "../../composables/language-text.ts";
 import { usePresentationDispatch } from "./presentation-dispatch";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 

@@ -1,8 +1,8 @@
-import type { DisplayName } from "./display-name";
+import type { DisplayName } from "./language-text.ts";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { describe, expect, it, vi } from "vitest";
 import { computed, ref } from "vue";
-import { resolveLanguageTexts } from "./display-name";
+import { resolveLanguageTexts } from "./language-text.ts";
 import { useSubmodelTreeNodes } from "./submodel-tree-nodes";
 
 vi.mock("vue-i18n", () => ({
