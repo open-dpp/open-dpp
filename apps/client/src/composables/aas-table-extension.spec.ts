@@ -32,6 +32,10 @@ const mocks = vi.hoisted(() => {
     deleteRowFromSubmodelElementList: vi.fn(),
     modifyColumnOfSubmodelElementList: vi.fn(),
     modifyValueOfSubmodelElement: vi.fn(),
+    addColumnToGroupInSubmodelElementList: vi.fn(),
+    modifyColumnInGroupOfSubmodelElementList: vi.fn(),
+    deleteColumnFromGroupInSubmodelElementList: vi.fn(),
+    moveColumnToGroupInSubmodelElementList: vi.fn(),
   };
 });
 
@@ -48,6 +52,11 @@ vi.mock("../lib/api-client", () => ({
           deleteRowFromSubmodelElementList: mocks.deleteRowFromSubmodelElementList,
           modifyColumnOfSubmodelElementList: mocks.modifyColumnOfSubmodelElementList,
           modifyValueOfSubmodelElement: mocks.modifyValueOfSubmodelElement,
+          addColumnToGroupInSubmodelElementList: mocks.addColumnToGroupInSubmodelElementList,
+          modifyColumnInGroupOfSubmodelElementList: mocks.modifyColumnInGroupOfSubmodelElementList,
+          deleteColumnFromGroupInSubmodelElementList:
+            mocks.deleteColumnFromGroupInSubmodelElementList,
+          moveColumnToGroupInSubmodelElementList: mocks.moveColumnToGroupInSubmodelElementList,
         },
       },
     },
@@ -713,6 +722,573 @@ describe("aasTableExtension composable", () => {
           Column4: { modelType: AasSubmodelElements.Property },
         },
       ]),
+    );
+  });
+
+  const groupCol = {
+    idShort: "Group1",
+    modelType: AasSubmodelElements.SubmodelElementCollection,
+    displayName: [{ language: "en", text: "Dimensions" }],
+    value: [
+      {
+        idShort: "SubCol1",
+        valueType: DataTypeDef.String,
+        modelType: AasSubmodelElements.Property,
+        displayName: [{ language: "en", text: "Width" }],
+      },
+      {
+        idShort: "SubCol2",
+        valueType: DataTypeDef.Double,
+        modelType: AasSubmodelElements.Property,
+        displayName: [{ language: "en", text: "Height" }],
+      },
+    ],
+  };
+
+  const submodelElementListWithGroup = SubmodelElementListJsonSchema.parse({
+    idShort: "List",
+    typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    value: [
+      {
+        idShort: "row0",
+        modelType: AasSubmodelElements.SubmodelElementCollection,
+        value: [
+          { ...cols[0] },
+          {
+            ...groupCol,
+            value: [
+              { ...groupCol.value[0] },
+              { ...groupCol.value[1] },
+            ],
+          },
+        ],
+      },
+      {
+        idShort: "row1",
+        modelType: AasSubmodelElements.SubmodelElementCollection,
+        value: [
+          { ...colsWithValue[0] },
+          {
+            ...groupCol,
+            value: [
+              { ...groupCol.value[0], value: "120" },
+              { ...groupCol.value[1], value: "80" },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  it("should init rows correctly with a group column", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { rows, rowsContext } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      translate,
+      selectedLanguage: Language.en,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    expect(rows.value).toEqual([
+      { idShort: "row0", Column1: null, "Group1__SubCol1": null, "Group1__SubCol2": null },
+      { idShort: "row1", Column1: "Wood", "Group1__SubCol1": "120", "Group1__SubCol2": "80" },
+    ]);
+    expect(rowsContext.value).toEqual([
+      {
+        idShort: "row0",
+        Column1: { modelType: AasSubmodelElements.Property },
+        "Group1__SubCol1": { modelType: AasSubmodelElements.Property },
+        "Group1__SubCol2": { modelType: AasSubmodelElements.Property },
+      },
+      {
+        idShort: "row1",
+        Column1: { modelType: AasSubmodelElements.Property },
+        "Group1__SubCol1": { modelType: AasSubmodelElements.Property },
+        "Group1__SubCol2": { modelType: AasSubmodelElements.Property },
+      },
+    ]);
+  });
+
+  it("should compute columns with a group (children)", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columns, flatColumns, hasGroups } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      translate,
+      selectedLanguage: Language.en,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    expect(hasGroups.value).toBe(true);
+    expect(columns.value).toEqual([
+      { idShort: "Column1", label: "Material", plain: SubmodelElementSchema.parse(cols[0]), children: undefined },
+      {
+        idShort: "Group1",
+        label: "Dimensions",
+        plain: expect.objectContaining({ idShort: "Group1", modelType: AasSubmodelElements.SubmodelElementCollection }),
+        children: [
+          { idShort: "SubCol1", label: "Width", plain: expect.objectContaining({ idShort: "SubCol1" }), children: undefined },
+          { idShort: "SubCol2", label: "Height", plain: expect.objectContaining({ idShort: "SubCol2" }), children: undefined },
+        ],
+      },
+    ]);
+    expect(flatColumns.value).toEqual([
+      expect.objectContaining({ idShort: "Column1", field: "Column1" }),
+      expect.objectContaining({ idShort: "SubCol1", field: "Group1__SubCol1", groupIdShort: "Group1" }),
+      expect.objectContaining({ idShort: "SubCol2", field: "Group1__SubCol2", groupIdShort: "Group1" }),
+    ]);
+  });
+
+  it("should add a group column type", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
+    });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    buildColumnMenu({ position: 2 });
+    const groupItem = columnMenu.value.find((e) => e.label === "aasEditor.columnGroup")!;
+    expect(groupItem).toBeDefined();
+    groupItem.command!({} as MenuItemCommandEvent);
+    expect(drawerVisible.value).toBeTruthy();
+    await waitFor(() =>
+      expect(editorVNode.value!.props.data).toEqual({
+        modelType: AasSubmodelElements.SubmodelElementCollection,
+      }),
+    );
+
+    const groupColumnData = {
+      idShort: "MyGroup",
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      displayName: [{ language: "en", text: "My Group" }],
+    };
+    const submodelElementListWithNewGroup = {
+      ...submodelElementList,
+      value: submodelElementList.value.map((row: any) => ({
+        ...row,
+        value: [...row.value, { ...groupColumnData, value: [] }],
+      })),
+    };
+
+    mocks.addColumnToSubmodelElementList.mockResolvedValue({
+      data: submodelElementListWithNewGroup,
+      status: HTTPCode.CREATED,
+    });
+
+    await editorVNode.value!.props.callback!(groupColumnData);
+
+    expect(mocks.addColumnToSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      SubmodelElementSchema.parse(groupColumnData),
+      { position: 2 },
+    );
+  });
+
+  it("should add a sub-column to a group via the group header menu", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
+    });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    buildColumnMenu({ position: 1, isGroupHeader: true, groupIdShort: "Group1" });
+    const addSubColumnSection = columnMenu.value.find(
+      (c) => c.label === "aasEditor.table.addSubColumn",
+    )!;
+    expect(addSubColumnSection).toBeDefined();
+    const textItem = addSubColumnSection.items!.find((e) => e.label === "aasEditor.textField")!;
+    textItem.command!({} as MenuItemCommandEvent);
+    expect(drawerVisible.value).toBeTruthy();
+    await waitFor(() =>
+      expect(editorVNode.value!.props.data).toEqual({
+        modelType: AasSubmodelElements.Property,
+        valueType: DataTypeDef.String,
+      }),
+    );
+
+    const newSubColData = {
+      idShort: "SubCol3",
+      modelType: AasSubmodelElements.Property,
+      valueType: DataTypeDef.String,
+      displayName: [{ language: "en", text: "Depth" }],
+    };
+    const updatedList = {
+      ...submodelElementListWithGroup,
+      value: submodelElementListWithGroup.value.map((row: any) => ({
+        ...row,
+        value: row.value.map((col: any) =>
+          col.idShort === "Group1"
+            ? { ...col, value: [...col.value, newSubColData] }
+            : col,
+        ),
+      })),
+    };
+
+    mocks.addColumnToGroupInSubmodelElementList.mockResolvedValue({
+      data: updatedList,
+      status: HTTPCode.CREATED,
+    });
+
+    await editorVNode.value!.props.callback!(newSubColData);
+
+    expect(mocks.addColumnToGroupInSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      "Group1",
+      SubmodelElementSchema.parse(newSubColData),
+      { position: 2 },
+    );
+  });
+
+  it("should modify a sub-column in a group", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
+    });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    buildColumnMenu({ position: 0, addColumnActions: true, groupIdShort: "Group1" });
+    const editItem = columnMenu.value
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "common.edit")!;
+    editItem.command!({} as MenuItemCommandEvent);
+    expect(drawerVisible.value).toBeTruthy();
+    expect(editorVNode.value!.component).toEqual(ColumnEditor);
+
+    const updatedSubColData = {
+      ...groupCol.value[0],
+      displayName: [{ language: "en", text: "Width (cm)" }],
+    };
+    const updatedList = {
+      ...submodelElementListWithGroup,
+      value: submodelElementListWithGroup.value.map((row: any) => ({
+        ...row,
+        value: row.value.map((col: any) =>
+          col.idShort === "Group1"
+            ? { ...col, value: [updatedSubColData, col.value[1]] }
+            : col,
+        ),
+      })),
+    };
+
+    mocks.modifyColumnInGroupOfSubmodelElementList.mockResolvedValue({
+      data: updatedList,
+      status: HTTPCode.OK,
+    });
+
+    await editorVNode.value!.props.callback!(updatedSubColData);
+
+    expect(mocks.modifyColumnInGroupOfSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      "Group1",
+      "SubCol1",
+      updatedSubColData,
+    );
+    await waitFor(() => expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor));
+  });
+
+  it("should remove a sub-column from a group (ungroup)", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const openAutoConfirm = async (data: ConfirmationOptions) => {
+      data.accept!();
+    };
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu, columns } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: openAutoConfirm,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    buildColumnMenu({ position: 0, addColumnActions: true, groupIdShort: "Group1" });
+    const removeFromGroupItem = columnMenu.value
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "aasEditor.table.removeFromGroup")!;
+
+    const updatedList = {
+      ...submodelElementListWithGroup,
+      value: submodelElementListWithGroup.value.map((row: any) => ({
+        ...row,
+        value: [
+          row.value[0],
+          { ...row.value[1], value: [row.value[1].value[1]] },
+        ],
+      })),
+    };
+
+    mocks.deleteColumnFromGroupInSubmodelElementList.mockResolvedValue({
+      status: HTTPCode.OK,
+      data: updatedList,
+    });
+
+    removeFromGroupItem.command!({} as MenuItemCommandEvent);
+
+    expect(mocks.deleteColumnFromGroupInSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      "Group1",
+      "SubCol1",
+    );
+    await waitFor(() => {
+      const group = columns.value.find((c) => c.idShort === "Group1");
+      expect(group?.children).toHaveLength(1);
+      expect(group?.children![0]!.idShort).toBe("SubCol2");
+    });
+  });
+
+  it("should move a top-level column into a group", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
+    });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    buildColumnMenu({ position: 0, addColumnActions: true });
+    const moveToGroupSection = columnMenu.value
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "aasEditor.table.moveToGroup")!;
+
+    expect(moveToGroupSection.disabled).toBeFalsy();
+    expect(moveToGroupSection.items).toHaveLength(1);
+    const firstGroupItem = moveToGroupSection.items![0]!;
+    expect(firstGroupItem.label).toBe("Dimensions");
+
+    const updatedList = {
+      ...submodelElementListWithGroup,
+      value: submodelElementListWithGroup.value.map((row: any) => ({
+        ...row,
+        value: [
+          {
+            ...row.value[1],
+            value: [...row.value[1].value, row.value[0]],
+          },
+        ],
+      })),
+    };
+
+    mocks.moveColumnToGroupInSubmodelElementList.mockResolvedValue({
+      data: updatedList,
+      status: HTTPCode.OK,
+    });
+
+    await firstGroupItem.command!({} as MenuItemCommandEvent);
+
+    expect(mocks.moveColumnToGroupInSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      "Group1",
+      "Column1",
+    );
+    await waitFor(() => expect(drawerVisible.value).toBeTruthy());
+    await waitFor(() => expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor));
+  });
+
+  it("should show move-to-group disabled when no groups exist", () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    buildColumnMenu({ position: 0, addColumnActions: true });
+    const moveToGroupItem = columnMenu.value
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "aasEditor.table.moveToGroup")!;
+
+    expect(moveToGroupItem.disabled).toBe(true);
+    expect(moveToGroupItem.items).toBeUndefined();
+  });
+
+  it("should modify cell in a group column using __ compound field key", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { rows, onCellEditComplete } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({
+      data: submodelElementListWithGroup,
+      status: HTTPCode.OK,
+    });
+
+    await onCellEditComplete({
+      data: { ...rows.value[1]! },
+      newValue: "200",
+      field: "Group1__SubCol1",
+      index: 1,
+    });
+
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      [
+        { Column1: null, Group1: { SubCol1: null, SubCol2: null } },
+        { Column1: "Wood", Group1: { SubCol1: "200", SubCol2: "80" } },
+      ],
     );
   });
 

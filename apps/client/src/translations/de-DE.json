@@ -129,7 +129,13 @@
       "errorAddRow": "@:common.add der @:aasEditor.table.row @:common.failed",
       "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed",
       "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed",
-      "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
+      "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed",
+      "addSubColumn": "Unterspalte @.lower:common.add",
+      "moveToGroup": "In Gruppe verschieben",
+      "removeFromGroup": "Aus Gruppe entfernen",
+      "removeFromGroupConfirm": "Soll die @:aasEditor.table.column wirklich aus der Gruppe entfernt werden?",
+      "noGroupsAvailable": "Keine Gruppen vorhanden – zuerst eine Gruppenspalte hinzufügen",
+      "errorMoveColumn": "@:common.move der @:aasEditor.table.column in Gruppe @:common.failed"
     },
     "data": "Daten",
     "link": "Link",
@@ -151,6 +157,7 @@
     "dateTimeField": "Datum-Zeit-Feld",
     "booleanField": "Wahrheitswert",
     "numberField": "Zahlenfeld",
+    "columnGroup": "Spaltengruppe",
     "timezone": "Zeitzone",
     "type": "Typ",
     "error": "{method} @:common.failed"
