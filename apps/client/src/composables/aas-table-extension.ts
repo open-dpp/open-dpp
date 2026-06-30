@@ -109,8 +109,8 @@ export interface IAasTableExtension {
   buildRowMenu: (options: RowMenuOptions) => void;
   onCellEditComplete: (event: CellEditProps) => Promise<void>;
   formatCellValue: (value: string, column: Column) => Value;
-  resolveField: (data: Row, field: string) => Value;
-  setField: (data: Row, field: string, value: Value) => void;
+  resolveFieldValue: (data: Row, field: string) => Value;
+  setFieldValue: (data: Row, field: string, value: Value) => void;
   save: () => Promise<void>;
 }
 
@@ -157,7 +157,7 @@ export function useAasTableExtension({
 
   const hasGroups = computed(() => columns.value.some((col) => col.children !== undefined));
 
-  function resolveField(rowData: Row, field: string): Value {
+  function resolveFieldValue(rowData: Row, field: string): Value {
     const dotIndex = field.indexOf(".");
     if (dotIndex === -1) return rowData[field] as Value;
     const groupKey = field.slice(0, dotIndex);
@@ -166,7 +166,7 @@ export function useAasTableExtension({
     return group?.[subKey] ?? null;
   }
 
-  function setField(rowData: Row, field: string, value: Value): void {
+  function setFieldValue(rowData: Row, field: string, value: Value): void {
     const dotIndex = field.indexOf(".");
     if (dotIndex === -1) {
       rowData[field] = value;
@@ -208,7 +208,8 @@ export function useAasTableExtension({
     };
 
     const createFn = groupIdShort
-      ? (colData: SubmodelElementSharedRequestDto) => addColumnToGroup(groupIdShort, colData, options)
+      ? (colData: SubmodelElementSharedRequestDto) =>
+          addColumnToGroup(groupIdShort, colData, options)
       : (colData: SubmodelElementSharedRequestDto) => createColumn(colData, options);
 
     return match({ type, valueType })
@@ -219,8 +220,7 @@ export function useAasTableExtension({
             ...sharedDrawerProps,
             type: ColumnEditorKey,
             data: { modelType: type },
-            callback: async (colData: any) =>
-              createFn({ modelType: type, ...colData }),
+            callback: async (colData: any) => createFn({ modelType: type, ...colData }),
           });
         },
       }))
@@ -231,8 +231,7 @@ export function useAasTableExtension({
             ...sharedDrawerProps,
             type: ColumnEditorKey,
             data: { modelType: type, contentType: "application/octet-stream" },
-            callback: async (colData: FileRequestDto) =>
-              createFn({ modelType: type, ...colData }),
+            callback: async (colData: FileRequestDto) => createFn({ modelType: type, ...colData }),
           });
         },
       }))
@@ -402,18 +401,18 @@ export function useAasTableExtension({
   async function onCellEditComplete(event: CellEditProps) {
     const { data: rowData, newValue, field, index: editedRowIndex } = event;
     const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
-    if (resolveField(rowData, field) !== newValue) {
+    if (resolveFieldValue(rowData, field) !== newValue) {
       try {
         const modifications = rows.value.map((row, index) => {
           if (index === editedRowIndex) {
             const updated = { ...row };
-            setField(updated, field, newValue);
+            setFieldValue(updated, field, newValue);
             return convertRowToRequestDto(updated);
           }
           return convertRowToRequestDto(row);
         });
         if (await saveRows(modifications)) {
-          setField(rowData, field, newValue);
+          setFieldValue(rowData, field, newValue);
         } else {
           errorHandlingStore.logErrorWithNotification(errorMessage);
         }
@@ -808,7 +807,10 @@ export function useAasTableExtension({
         const column = getColumnAtIndexOrFail(options.position ?? 0);
         const groups = getGroupColumns();
 
-        const commonActionItems: MenuItem[] = [modifyColumnMenuItem(column), removeColumnMenuItem(column)];
+        const commonActionItems: MenuItem[] = [
+          modifyColumnMenuItem(column),
+          removeColumnMenuItem(column),
+        ];
         if (groups.length === 0) {
           commonActionItems.push(moveToGroupMenuItem());
         }
@@ -844,7 +846,11 @@ export function useAasTableExtension({
     }
 
     const subColPosition = groupColumn.children?.length ?? 0;
-    const subColMenuItems = buildAllColumnTypeMenuItems("pi pi-arrow-right", { position: subColPosition }, groupIdShort);
+    const subColMenuItems = buildAllColumnTypeMenuItems(
+      "pi pi-arrow-right",
+      { position: subColPosition },
+      groupIdShort,
+    );
 
     columnMenu.value = [
       {
@@ -1059,8 +1065,8 @@ export function useAasTableExtension({
     columnMenu,
     rowMenu,
     formatCellValue,
-    resolveField,
-    setField,
+    resolveFieldValue,
+    setFieldValue,
     save,
     buildColumnMenu,
     buildRowMenu,

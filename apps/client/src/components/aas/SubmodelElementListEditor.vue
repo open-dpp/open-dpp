@@ -84,8 +84,8 @@ const {
   buildColumnMenu,
   buildRowMenu,
   formatCellValue,
-  resolveField,
-  setField,
+  resolveFieldValue,
+  setFieldValue,
   save,
 } = useAasTableExtension({
   id: props.id,
@@ -211,7 +211,7 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
             v-for="(col, colIndex) in columns"
             :key="col.idShort"
             :colspan="col.children ? col.children.length : 1"
-            :rowspan="col.children ? 1 : (hasGroups ? 2 : 1)"
+            :rowspan="col.children ? 1 : hasGroups ? 2 : 1"
           >
             <template #header>
               <div class="flex items-center gap-2">
@@ -333,16 +333,16 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
               :id="`${rowIndex}-${field}`"
               v-model:content-type="resolveContext(rowIndex, field).contentType"
               :disabled="!canEdit"
-              :model-value="resolveField(cellData, field) ?? undefined"
+              :model-value="resolveFieldValue(cellData, field) ?? undefined"
               @update:model-value="(value) => onFileChange(value, cellData, rowIndex, field)"
             />
             <MediaFieldView
               v-else-if="
                 !canEdit &&
                 flatCol.plain.modelType === AasSubmodelElements.File &&
-                resolveField(cellData, field) != null
+                resolveFieldValue(cellData, field) != null
               "
-              :media-id="resolveField(cellData, field)!"
+              :media-id="resolveFieldValue(cellData, field)!"
             />
             <PropertyValue
               v-else-if="
@@ -353,7 +353,7 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
                   flatCol.plain.valueType === DataTypeDef.Boolean)
               "
               :id="`${rowIndex}-${field}`"
-              :model-value="resolveField(cellData, field)"
+              :model-value="resolveFieldValue(cellData, field)"
               :value-type="flatCol.plain.valueType"
               withinList
               @update:model-value="
@@ -369,10 +369,10 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
             <span
               v-else-if="
                 flatCol.plain.modelType === AasSubmodelElements.Property &&
-                resolveField(cellData, field) != null
+                resolveFieldValue(cellData, field) != null
               "
             >
-              {{ formatCellValue(resolveField(cellData, field) as string, flatCol) }}
+              {{ formatCellValue(resolveFieldValue(cellData, field) as string, flatCol) }}
             </span>
             <InputText v-else autofocus fluid readonly :disabled="!canEdit" />
           </div>
@@ -393,10 +393,10 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
           <PropertyValue
             v-if="flatCol.plain.modelType === AasSubmodelElements.Property"
             :id="`${rowIndex}-${field}`"
-            :model-value="resolveField(editorData, field)"
+            :model-value="resolveFieldValue(editorData, field)"
             :value-type="flatCol.plain.valueType"
             withinList
-            @update:model-value="(value) => setField(editorData, field, value ?? null)"
+            @update:model-value="(value) => setFieldValue(editorData, field, value ?? null)"
           />
         </template>
       </Column>

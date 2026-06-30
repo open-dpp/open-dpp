@@ -1,5 +1,5 @@
 import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
-import { resolveDisplayName } from "../../composables/display-name";
+import { resolveLanguageTexts } from "../../composables/display-name";
 
 export interface ColumnDef {
   header: string;
@@ -23,7 +23,7 @@ export function buildColumns(content: SubmodelElementCollectionResponseDto[]): C
   }
 
   return content[0].value.map((collectionElement) => {
-    const header = resolveDisplayName(
+    const header = resolveLanguageTexts(
       collectionElement.displayName as { language: "en" | "de"; text: string }[],
       "en",
       collectionElement.idShort,

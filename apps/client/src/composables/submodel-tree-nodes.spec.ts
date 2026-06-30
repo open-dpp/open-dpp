@@ -2,7 +2,7 @@ import type { DisplayName } from "./display-name";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { describe, expect, it, vi } from "vitest";
 import { computed, ref } from "vue";
-import { resolveDisplayName } from "./display-name";
+import { resolveLanguageTexts } from "./display-name";
 import { useSubmodelTreeNodes } from "./submodel-tree-nodes";
 
 vi.mock("vue-i18n", () => ({
@@ -30,29 +30,29 @@ describe("resolveDisplayName", () => {
   it("returns exact locale match", () => {
     const options = [createDisplayName("en", "English"), createDisplayName("de", "Deutsch")];
 
-    expect(resolveDisplayName(options, "de", fallback)).toBe("Deutsch");
+    expect(resolveLanguageTexts(options, "de", fallback)).toBe("Deutsch");
   });
 
   it("strips region suffix from locale before matching", () => {
     const options = [createDisplayName("en", "English"), createDisplayName("de", "Deutsch")];
 
-    expect(resolveDisplayName(options, "de-AT", fallback)).toBe("Deutsch");
+    expect(resolveLanguageTexts(options, "de-AT", fallback)).toBe("Deutsch");
   });
 
   it("falls back to English when locale not found", () => {
     const options = [createDisplayName("en", "English")];
 
-    expect(resolveDisplayName(options, "de", fallback)).toBe("English");
+    expect(resolveLanguageTexts(options, "de", fallback)).toBe("English");
   });
 
   it("falls back to first option when neither locale nor English found", () => {
     const options = [createDisplayName("de", "Deutsch")];
 
-    expect(resolveDisplayName(options, "fr", fallback)).toBe("Deutsch");
+    expect(resolveLanguageTexts(options, "fr", fallback)).toBe("Deutsch");
   });
 
   it("returns fallback string when options array is empty", () => {
-    expect(resolveDisplayName([], "en", fallback)).toBe("unknown");
+    expect(resolveLanguageTexts([], "en", fallback)).toBe("unknown");
   });
 });
 

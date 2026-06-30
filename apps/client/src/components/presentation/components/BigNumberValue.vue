@@ -2,7 +2,7 @@
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { resolveDisplayName } from "../../../composables/display-name";
+import { resolveLanguageTexts } from "../../../composables/display-name";
 
 const { element } = defineProps<{
   element: SubmodelElementResponseDto;
@@ -11,7 +11,7 @@ const { element } = defineProps<{
 const { locale } = useI18n();
 
 const label = computed(() =>
-  resolveDisplayName(element.displayName ?? [], locale.value, element.idShort),
+  resolveLanguageTexts(element.displayName ?? [], locale.value, element.idShort),
 );
 
 const formattedValue = computed(() => {

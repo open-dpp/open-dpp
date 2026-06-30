@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import type { DisplayName } from "../../composables/display-name";
-import { useDisplayName } from "../../composables/display-name";
+import { useLanguageTexts } from "../../composables/display-name";
 import SubmodelElement from "./SubmodelElement.vue";
 
 const { title, idShort, parentPathOverride } = defineProps<{
@@ -12,7 +12,7 @@ const { title, idShort, parentPathOverride } = defineProps<{
   submodelElements: SubmodelElementResponseDto[];
 }>();
 
-const { description: name } = useDisplayName(title);
+const { text: name } = useLanguageTexts(title);
 </script>
 
 <template>

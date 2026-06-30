@@ -1,13 +1,14 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import type { LanguageTextDto } from "@open-dpp/dto";
 
 export interface DisplayName {
   language: "en" | "de";
   text: string;
 }
 
-export function resolveDisplayName(
-  options: DisplayName[],
+export function resolveLanguageTexts(
+  options: LanguageTextDto[],
   locale: string,
   fallback: string,
 ): string {
@@ -26,12 +27,10 @@ export function resolveDisplayName(
   return option ? option.text : fallback;
 }
 
-export function useDisplayName(options: DisplayName[]) {
+export function useLanguageTexts(options: DisplayName[]) {
   const { locale, t } = useI18n();
 
-  const description = computed(() =>
-    resolveDisplayName(options, locale.value, t("common.unknownName")),
-  );
+  const text = computed(() => resolveLanguageTexts(options, locale.value, t("common.unknownName")));
 
-  return { description };
+  return { text };
 }

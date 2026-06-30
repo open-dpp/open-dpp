@@ -3,7 +3,7 @@ import { HomeIcon } from "@heroicons/vue/20/solid";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import { useDisplayName } from "../../composables/display-name";
+import { useLanguageTexts } from "../../composables/display-name";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 
@@ -71,7 +71,7 @@ function getLinkTarget(index: number) {
       </svg>
       <router-link class="text-gray-400 hover:text-gray-500" :to="getLinkTarget(index - 1)">
         <span>
-          {{ useDisplayName(breadcrumb.name).description }}
+          {{ useLanguageTexts(breadcrumb.name).text }}
         </span>
       </router-link>
     </div>

@@ -3,7 +3,7 @@ import type { ComputedRef } from "vue";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { resolveDisplayName } from "./display-name";
+import { resolveLanguageTexts } from "./display-name";
 
 function mapToTreeNodes(
   elements: SubmodelTreeElement[],
@@ -13,7 +13,7 @@ function mapToTreeNodes(
 ): TreeNode[] {
   return elements.map((element) => ({
     key: element.idShort,
-    label: resolveDisplayName(element.name, locale, fallbackLabel),
+    label: resolveLanguageTexts(element.name, locale, fallbackLabel),
     data: { parentId },
     children: mapToTreeNodes(element.children, locale, fallbackLabel, element.idShort),
   }));
