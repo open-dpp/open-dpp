@@ -147,7 +147,11 @@ function onFileChange(value: string | undefined, cellData: any, rowIndex: number
 }
 
 function resolveContext(rowIndex: number, field: string): any {
-  return rowsContext.value[rowIndex]?.[field];
+  const dotIndex = field.indexOf(".");
+  if (dotIndex === -1) return rowsContext.value[rowIndex]?.[field];
+  const groupKey = field.slice(0, dotIndex);
+  const subKey = field.slice(dotIndex + 1);
+  return rowsContext.value[rowIndex]?.[groupKey]?.[subKey];
 }
 
 onErrorCaptured((err) => {
@@ -199,16 +203,15 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
         </div>
       </template>
 
-      <!-- Multi-row header when groups are present -->
+      <!-- Always render ColumnGroup — v-if on ColumnGroup itself causes PrimeVue to duplicate body cells -->
       <ColumnGroup type="header">
         <Row>
-          Row action column spans both header rows
-          <Column :rowspan="2" :colspan="1" />
+          <Column :rowspan="hasGroups ? 2 : 1" />
           <Column
             v-for="(col, colIndex) in columns"
             :key="col.idShort"
             :colspan="col.children ? col.children.length : 1"
-            :rowspan="col.children ? 1 : 2"
+            :rowspan="col.children ? 1 : (hasGroups ? 2 : 1)"
           >
             <template #header>
               <div class="flex items-center gap-2">
@@ -246,8 +249,8 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
             </template>
           </Column>
         </Row>
-        <!-- Sub-column header row -->
-        <Row>
+        <!-- Sub-column header row: only rendered when groups exist -->
+        <Row v-if="hasGroups">
           <template v-for="col in columns" :key="col.idShort">
             <Column
               v-for="(subCol, subColIndex) in col.children"
@@ -300,8 +303,7 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
         :key="flatCol.field"
         :field="flatCol.field"
       >
-        <!-- Header only shown when no ColumnGroup is active -->
-        <template v-if="!hasGroups" #header>
+        <template #header>
           <div class="flex items-center gap-2">
             <Button
               :data-cy="`column-menu-${flatCol.idShort}`"

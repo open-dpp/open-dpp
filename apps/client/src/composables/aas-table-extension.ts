@@ -69,12 +69,9 @@ export type ColumnMenuOptions = TableModificationParamsDto & {
 };
 export type RowMenuOptions = TableModificationParamsDto;
 type Value = string | null;
-/**
- * Flat row: top-level columns use their idShort as key; sub-columns inside a
- * group use the compound key `${groupIdShort}__${subColIdShort}`.
- * No nested objects — PrimeVue DataTable cannot handle them in its value prop.
- */
-type Row = Record<string, Value>;
+type GroupFieldValue = Record<string, Value>;
+type RowFieldValue = Value | GroupFieldValue;
+type Row = Record<string, RowFieldValue>;
 
 export interface CellEditProps {
   data: Row;
@@ -151,7 +148,7 @@ export function useAasTableExtension({
       col.children
         ? col.children.map((subCol) => ({
             ...subCol,
-            field: `${col.idShort}__${subCol.idShort}`,
+            field: `${col.idShort}.${subCol.idShort}`,
             groupIdShort: col.idShort,
           }))
         : [{ ...col, field: col.idShort }],
@@ -161,11 +158,24 @@ export function useAasTableExtension({
   const hasGroups = computed(() => columns.value.some((col) => col.children !== undefined));
 
   function resolveField(rowData: Row, field: string): Value {
-    return rowData[field] ?? null;
+    const dotIndex = field.indexOf(".");
+    if (dotIndex === -1) return rowData[field] as Value;
+    const groupKey = field.slice(0, dotIndex);
+    const subKey = field.slice(dotIndex + 1);
+    const group = rowData[groupKey] as GroupFieldValue | undefined;
+    return group?.[subKey] ?? null;
   }
 
   function setField(rowData: Row, field: string, value: Value): void {
-    rowData[field] = value;
+    const dotIndex = field.indexOf(".");
+    if (dotIndex === -1) {
+      rowData[field] = value;
+      return;
+    }
+    const groupKey = field.slice(0, dotIndex);
+    const subKey = field.slice(dotIndex + 1);
+    if (!rowData[groupKey]) rowData[groupKey] = {};
+    (rowData[groupKey] as GroupFieldValue)[subKey] = value;
   }
 
   function buildColumnLabel(displayName: any[], idShort: string): string {
@@ -360,33 +370,31 @@ export function useAasTableExtension({
       .otherwise(() => null);
   }
 
+  function isGroupContext(context: any): boolean {
+    return context !== null && typeof context === "object" && !("modelType" in context);
+  }
+
   function convertRowToRequestDto(row: Row): ValueRequestDto {
     const rowContext = rowsContext.value.find((r) => r.idShort === row.idShort);
     if (!rowContext) {
       throw new Error(`Row context not found for idShort: ${row.idShort}`);
     }
 
-    // Collect group sub-values separately so we can nest them in the DTO.
-    const groups = new Map<string, Record<string, any>>();
-    const requestDto: Record<string, any> = {};
-
-    for (const [field, value] of Object.entries(row)) {
-      if (field === "idShort") continue;
-      const dunderIdx = field.indexOf("__");
-      if (dunderIdx !== -1) {
-        // Sub-column: key is `${groupIdShort}__${subColIdShort}`
-        const groupKey = field.slice(0, dunderIdx);
-        const subKey = field.slice(dunderIdx + 2);
-        if (!groups.has(groupKey)) groups.set(groupKey, {});
-        groups.get(groupKey)![subKey] = convertCell(value, rowContext[field]);
-      } else {
-        requestDto[field] = convertCell(value, rowContext[field]);
-      }
-    }
-
-    for (const [groupKey, subValues] of groups) {
-      requestDto[groupKey] = subValues;
-    }
+    const requestDto = Object.entries(row)
+      .filter(([field]) => field !== "idShort")
+      .reduce((acc, [field, value]) => {
+        const context = rowContext[field];
+        const fieldValue = isGroupContext(context)
+          ? Object.entries(value as GroupFieldValue).reduce(
+              (groupAcc, [subField, subValue]) => ({
+                ...groupAcc,
+                [subField]: convertCell(subValue, context[subField]),
+              }),
+              {},
+            )
+          : convertCell(value as Value, context);
+        return { ...acc, [field]: fieldValue };
+      }, {});
 
     return ValueSchema.parse(requestDto);
   }
@@ -418,6 +426,13 @@ export function useAasTableExtension({
   function convertDataToColumns(newData: SubmodelElementListResponseDto) {
     if (newData.value.length > 0) {
       const headerRow = SubmodelElementCollectionJsonSchema.parse(newData.value[0]);
+      const newColIds = new Set(headerRow.value.map((col: any) => col.idShort));
+      // Remove top-level columns no longer present (e.g. moved into a group)
+      for (let i = columns.value.length - 1; i >= 0; i--) {
+        if (!newColIds.has(columns.value[i]!.idShort)) {
+          columns.value.splice(i, 1);
+        }
+      }
       for (const [index, col] of headerRow.value.entries()) {
         const isGroup = col.modelType === AasSubmodelElements.SubmodelElementCollection;
         const children: Column[] | undefined = isGroup
@@ -485,36 +500,25 @@ export function useAasTableExtension({
       const rowToModify: Row = foundRow || { idShort: row.idShort };
       const rowContextToModify: RowContext = foundRowContext || { idShort: row.idShort };
 
-      // Build the set of valid flat keys for this row from the new data.
-      // Group sub-columns use compound key: `${groupIdShort}__${subColIdShort}`.
-      const validFlatKeys = new Set<string>();
-      for (const col of parsedRow.value) {
-        if (col.modelType === AasSubmodelElements.SubmodelElementCollection) {
-          for (const subCol of (col.value as any[]) ?? []) {
-            validFlatKeys.add(`${col.idShort}__${subCol.idShort}`);
-          }
-        } else {
-          validFlatKeys.add(col.idShort);
-        }
-      }
-
-      // Remove stale keys no longer present in the updated data.
+      const newColIds = new Set(parsedRow.value.map((col: any) => col.idShort));
       for (const key of Object.keys(rowToModify)) {
-        if (key !== "idShort" && !validFlatKeys.has(key)) {
+        if (key !== "idShort" && !newColIds.has(key)) {
           delete rowToModify[key];
           delete rowContextToModify[key];
         }
       }
 
-      // Populate flat keys from the response.
       for (const col of parsedRow.value) {
         if (col.modelType === AasSubmodelElements.SubmodelElementCollection) {
+          const groupValue: GroupFieldValue = {};
+          const groupContext: Record<string, any> = {};
           for (const subCol of (col.value as any[]) ?? []) {
-            const flatKey = `${col.idShort}__${subCol.idShort}`;
             const { value, context } = convertLeafColumn(subCol);
-            rowToModify[flatKey] = value;
-            rowContextToModify[flatKey] = context;
+            groupValue[subCol.idShort] = value;
+            groupContext[subCol.idShort] = context;
           }
+          rowToModify[col.idShort] = groupValue;
+          rowContextToModify[col.idShort] = groupContext;
         } else {
           const { value, context } = convertLeafColumn(col);
           rowToModify[col.idShort] = value;
@@ -725,29 +729,12 @@ export function useAasTableExtension({
     };
   }
 
-  function moveToGroupMenuItem(column: Column): MenuItem {
-    const label = translate(`${translateTablePrefix}.moveToGroup`);
-    const groups = getGroupColumns();
-
-    if (groups.length === 0) {
-      return {
-        label,
-        icon: "pi pi-objects-column",
-        disabled: true,
-        tooltip: translate(`${translateTablePrefix}.noGroupsAvailable`),
-      };
-    }
-
+  function moveToGroupMenuItem(): MenuItem {
     return {
-      label,
+      label: translate(`${translateTablePrefix}.moveToGroup`),
       icon: "pi pi-objects-column",
-      disabled: disableColumnEditing,
-      items: groups.map((group) => ({
-        label: group.label,
-        command: async () => {
-          await moveColumnToGroup(column, group.idShort);
-        },
-      })),
+      disabled: true,
+      tooltip: translate(`${translateTablePrefix}.noGroupsAvailable`),
     };
   }
 
@@ -819,10 +806,29 @@ export function useAasTableExtension({
     if (options.addColumnActions) {
       try {
         const column = getColumnAtIndexOrFail(options.position ?? 0);
-        columnMenu.value.push({
-          label: translate("common.actions"),
-          items: [modifyColumnMenuItem(column), removeColumnMenuItem(column), moveToGroupMenuItem(column)],
-        });
+        const groups = getGroupColumns();
+
+        const commonActionItems: MenuItem[] = [modifyColumnMenuItem(column), removeColumnMenuItem(column)];
+        if (groups.length === 0) {
+          commonActionItems.push(moveToGroupMenuItem());
+        }
+        columnMenu.value.push({ label: translate("common.actions"), items: commonActionItems });
+
+        // PrimeVue Menu only supports 2 levels, so group targets live in a
+        // separate top-level section rather than nested inside "common.actions".
+        if (groups.length > 0) {
+          columnMenu.value.push({
+            label: translate(`${translateTablePrefix}.moveToGroup`),
+            items: groups.map((group) => ({
+              label: group.label,
+              icon: "pi pi-objects-column",
+              disabled: !!disableColumnEditing,
+              command: async () => {
+                await moveColumnToGroup(column, group.idShort);
+              },
+            })),
+          });
+        }
       } catch (e) {
         errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
       }
@@ -953,11 +959,8 @@ export function useAasTableExtension({
         groupIdShort,
         column.idShort,
       );
-      if (response.status === HTTPCode.OK) {
-        await navigateBackToListView(
-          pathToList,
-          SubmodelElementListJsonSchema.parse(response.data),
-        );
+      if (response.status === HTTPCode.CREATED) {
+        updateListData(SubmodelElementListJsonSchema.parse(response.data));
       } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }

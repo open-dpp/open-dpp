@@ -805,21 +805,25 @@ describe("aasTableExtension composable", () => {
     });
 
     expect(rows.value).toEqual([
-      { idShort: "row0", Column1: null, "Group1__SubCol1": null, "Group1__SubCol2": null },
-      { idShort: "row1", Column1: "Wood", "Group1__SubCol1": "120", "Group1__SubCol2": "80" },
+      { idShort: "row0", Column1: null, Group1: { SubCol1: null, SubCol2: null } },
+      { idShort: "row1", Column1: "Wood", Group1: { SubCol1: "120", SubCol2: "80" } },
     ]);
     expect(rowsContext.value).toEqual([
       {
         idShort: "row0",
         Column1: { modelType: AasSubmodelElements.Property },
-        "Group1__SubCol1": { modelType: AasSubmodelElements.Property },
-        "Group1__SubCol2": { modelType: AasSubmodelElements.Property },
+        Group1: {
+          SubCol1: { modelType: AasSubmodelElements.Property },
+          SubCol2: { modelType: AasSubmodelElements.Property },
+        },
       },
       {
         idShort: "row1",
         Column1: { modelType: AasSubmodelElements.Property },
-        "Group1__SubCol1": { modelType: AasSubmodelElements.Property },
-        "Group1__SubCol2": { modelType: AasSubmodelElements.Property },
+        Group1: {
+          SubCol1: { modelType: AasSubmodelElements.Property },
+          SubCol2: { modelType: AasSubmodelElements.Property },
+        },
       },
     ]);
   });
@@ -863,8 +867,8 @@ describe("aasTableExtension composable", () => {
     ]);
     expect(flatColumns.value).toEqual([
       expect.objectContaining({ idShort: "Column1", field: "Column1" }),
-      expect.objectContaining({ idShort: "SubCol1", field: "Group1__SubCol1", groupIdShort: "Group1" }),
-      expect.objectContaining({ idShort: "SubCol2", field: "Group1__SubCol2", groupIdShort: "Group1" }),
+      expect.objectContaining({ idShort: "SubCol1", field: "Group1.SubCol1", groupIdShort: "Group1" }),
+      expect.objectContaining({ idShort: "SubCol2", field: "Group1.SubCol2", groupIdShort: "Group1" }),
     ]);
   });
 
@@ -1149,7 +1153,7 @@ describe("aasTableExtension composable", () => {
     const mockOpenConfirmDialog = vi.fn();
     const mockCan = vi.fn();
 
-    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+    const { openDrawer } = useAasDrawer({
       onHideDrawer: mockOnHideDrawer,
       can: mockCan,
     });
@@ -1158,7 +1162,7 @@ describe("aasTableExtension composable", () => {
       idShortPath: "Path.To.List",
       idShortPathIncludingSubmodel: "s1p.Path.To.List",
     };
-    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+    const { columnMenu, buildColumnMenu, columns, rows } = useAasTableExtension({
       id: aasId,
       pathToList,
       initialData: submodelElementListWithGroup,
@@ -1172,11 +1176,11 @@ describe("aasTableExtension composable", () => {
     });
 
     buildColumnMenu({ position: 0, addColumnActions: true });
+    // When groups exist, group targets are rendered as a separate top-level section
+    // (PrimeVue Menu only supports 2 levels — nesting inside "common.actions" would break clicks)
     const moveToGroupSection = columnMenu.value
-      .find((c) => c.label === "common.actions")!
-      .items!.find((e) => e.label === "aasEditor.table.moveToGroup")!;
+      .find((c) => c.label === "aasEditor.table.moveToGroup")!;
 
-    expect(moveToGroupSection.disabled).toBeFalsy();
     expect(moveToGroupSection.items).toHaveLength(1);
     const firstGroupItem = moveToGroupSection.items![0]!;
     expect(firstGroupItem.label).toBe("Dimensions");
@@ -1196,7 +1200,7 @@ describe("aasTableExtension composable", () => {
 
     mocks.moveColumnToGroupInSubmodelElementList.mockResolvedValue({
       data: updatedList,
-      status: HTTPCode.OK,
+      status: HTTPCode.CREATED,
     });
 
     await firstGroupItem.command!({} as MenuItemCommandEvent);
@@ -1208,8 +1212,21 @@ describe("aasTableExtension composable", () => {
       "Group1",
       "Column1",
     );
-    await waitFor(() => expect(drawerVisible.value).toBeTruthy());
-    await waitFor(() => expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor));
+    // updateListData is called directly so the reactive state reflects the move immediately
+    await waitFor(() => {
+      expect(columns.value).toHaveLength(1);
+      const group = columns.value.find((c) => c.idShort === "Group1");
+      expect(group?.children).toHaveLength(3);
+      expect(group?.children?.map((c) => c.idShort)).toEqual(["SubCol1", "SubCol2", "Column1"]);
+    });
+    await waitFor(() => {
+      expect(rows.value[0]).toEqual(
+        expect.objectContaining({ Group1: { SubCol1: null, SubCol2: null, Column1: null } }),
+      );
+      expect(rows.value[1]).toEqual(
+        expect.objectContaining({ Group1: { SubCol1: "120", SubCol2: "80", Column1: "Wood" } }),
+      );
+    });
   });
 
   it("should show move-to-group disabled when no groups exist", () => {
@@ -1245,7 +1262,7 @@ describe("aasTableExtension composable", () => {
     expect(moveToGroupItem.items).toBeUndefined();
   });
 
-  it("should modify cell in a group column using __ compound field key", async () => {
+  it("should modify cell in a group column using dot-notation field", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
     const mockCan = vi.fn();
@@ -1277,7 +1294,7 @@ describe("aasTableExtension composable", () => {
     await onCellEditComplete({
       data: { ...rows.value[1]! },
       newValue: "200",
-      field: "Group1__SubCol1",
+      field: "Group1.SubCol1",
       index: 1,
     });
 
