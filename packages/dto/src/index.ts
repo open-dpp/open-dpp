@@ -78,3 +78,7 @@ export * from "./users/user.dto";
 export * from "./activity-history/activity-history.dto";
 export * from "./activity-history/change-event-types.dto";
 export * from "./activity-history/activity-types.dto";
+export * from "./unique-product-identifier/unique-product-identifier-list-item.dto";
+export * from "./unique-product-identifier/create-unique-product-identifier.dto";
+export * from "./unique-product-identifier/create-internal-unique-product-identifier.dto";
+export * from "./unique-product-identifier/update-unique-product-identifier.dto";

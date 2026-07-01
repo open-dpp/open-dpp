@@ -8,7 +8,6 @@ import {
 } from "../../lib/digital-product-document.ts";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { useRouterUtils } from "../../composables/router-utils.ts";
-import PermalinkSettingsDialog from "./PermalinkSettingsDialog.vue";
 import { useRoute, useRouter } from "vue-router";
 
 const { t } = useI18n();
@@ -33,7 +32,6 @@ async function fetchDPD(id: string) {
 }
 
 const qrCodeDialogVisible = ref<boolean>(false);
-const permalinkSettingsDialogVisible = ref<boolean>(false);
 
 async function onDeleteButtonClicked(item: DigitalProductDocumentDto) {
   await deleteDPD(item.id, async () => {
@@ -60,14 +58,32 @@ async function navigateToActivityHistory() {
   await router.push(`${route.path}/activities`);
 }
 
+async function navigateTo(routeName: string, passportId: string) {
+  await router.push({
+    name: routeName,
+    params: { organizationId: route.params.organizationId, passportId },
+  });
+}
+
 const status = computed(() => model.value?.lastStatusChange.currentStatus);
 
 const permalinkActions = computed(() => [
   {
-    label: t("permalink.settings.open"),
-    icon: "pi pi-cog",
+    label: t("permalink.list.label", 2),
+    icon: "pi pi-link",
     command: () => {
-      permalinkSettingsDialogVisible.value = true;
+      if (model.value?.id) {
+        navigateTo("passportPermalinks", model.value.id);
+      }
+    },
+  },
+  {
+    label: t("uniqueProductIdentifiers.label", 2),
+    icon: "pi pi-barcode",
+    command: () => {
+      if (model.value?.id) {
+        navigateTo("passportUniqueProductIdentifiers", model.value.id);
+      }
     },
   },
 ]);
@@ -155,10 +171,5 @@ const permalinkActions = computed(() => [
     :passportId="model.id"
     :status="status"
     @publish="onPublishButtonClicked(model)"
-  />
-  <PermalinkSettingsDialog
-    v-if="type === DigitalProductDocumentType.Passport && model"
-    v-model:visible="permalinkSettingsDialogVisible"
-    :passportId="model.id"
   />
 </template>

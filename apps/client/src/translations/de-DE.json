@@ -741,7 +741,6 @@
     "notfound": "Permalink konnte nicht gefunden werden, bitte Administrator kontaktieren.",
     "settings": {
       "title": "Permalink-Einstellungen",
-      "open": "Permalink-Einstellungen",
       "loadError": "Permalink-Einstellungen konnten nicht geladen werden.",
       "saveError": "Permalink-Einstellungen konnten nicht gespeichert werden.",
       "saveSuccess": "Permalink-Einstellungen gespeichert.",
@@ -768,6 +767,157 @@
           "instance": "Basis-URL vom Instanz-Standard geerbt."
         }
       }
+    },
+    "createGs1Link": {
+      "title": "GS1 Digital Link erstellen",
+      "selectUpi": "UPI auswählen",
+      "upiAlreadyLinked": "Dieser UPI hat bereits einen GS1 Digital Link Permalink.",
+      "baseUrl": {
+        "label": "Produktpass Basis-URL (optional)",
+        "placeholder": "z. B. https://id.example.com"
+      },
+      "gs1DataAttributes": "GS1 Datenattribute (optional)",
+      "conflict": "Ein GS1 Digital Link Permalink für diesen UPI existiert bereits.",
+      "submit": "Erstellen"
+    },
+    "edit": {
+      "title": "Permalink bearbeiten",
+      "type": {
+        "label": "Typ",
+        "presentation": "Präsentation",
+        "gs1Link": "GS1 Digital Link"
+      },
+      "saveSuccess": "Permalink gespeichert.",
+      "saveError": "Permalink konnte nicht gespeichert werden.",
+      "slugConflict": "Dieser Slug wird bereits von einem anderen Permalink verwendet.",
+      "locked": "Dieser Permalink ist veröffentlicht und kann nicht mehr geändert werden.",
+      "slug": {
+        "label": "Kurzname",
+        "placeholder": "Ende der URL des Passes"
+      },
+      "baseUrl": {
+        "label": "Produktpass Basis-URL"
+      },
+      "gs1DataAttributes": "GS1 Datenattribute (optional)"
+    },
+    "list": {
+      "setPrimary": "Als primär festlegen",
+      "delete": "Löschen",
+      "deletePrimaryTooltip": "Primärer oder letzter Präsentations-Permalink kann nicht gelöscht werden",
+      "deletePublishedTooltip": "Veröffentlichter Permalink kann nicht gelöscht werden",
+      "deleteConfirmMessage": "Soll dieser Permalink wirklich gelöscht werden?",
+      "deleteConfirmHeader": "Permalink löschen",
+      "deleteSuccess": "Permalink gelöscht.",
+      "deleteError": "Permalink konnte nicht gelöscht werden.",
+      "setPrimarySuccess": "Primärer Permalink aktualisiert.",
+      "setPrimaryError": "Primärer Permalink konnte nicht aktualisiert werden.",
+      "label": "Permalink | Permalinks",
+      "kind": "Typ",
+      "publicUrl": "Öffentliche URL",
+      "primary": "Primär",
+      "published": "Veröffentlicht",
+      "kindPresentation": "Präsentation",
+      "kindGs1Link": "GS1 Digital Link",
+      "createGs1Link": "GS1-Link erstellen",
+      "empty": "Keine Permalinks gefunden.",
+      "actions": "Aktionen"
+    }
+  },
+  "uniqueProductIdentifiers": {
+    "label": "Eindeutiger Produktidentifikator | Eindeutige Produktidentifikatoren",
+    "list": {
+      "type": "Typ",
+      "gtin": "GTIN",
+      "batch": "Charge / Los",
+      "serial": "Seriennummer",
+      "reference": "Produktpass",
+      "systemReadOnly": "System (schreibgeschützt)",
+      "empty": "Keine eindeutigen Produktidentifikatoren gefunden."
+    },
+    "create": {
+      "title": "Eindeutigen Produktidentifikator erstellen",
+      "type": "Identifikatortyp",
+      "typeGs1": "GS1",
+      "typeInternal": "Intern (open-dpp)",
+      "description": "Identifizieren Sie diesen Produktpass über seine GS1-Schlüssel: eine GTIN und optional eine Charge/Los- und Seriennummer. Beispiel: GTIN 04006381333931, Charge LOT-42, Seriennummer SN-001.",
+      "internalDescription": "Ein interner open-dpp-Identifikator (eine UUID) wird automatisch für diesen Produktpass erzeugt. Er enthält keine GS1-Daten und erfordert keine Eingabe.",
+      "gtin": "GTIN",
+      "batch": "Charge / Los (optional)",
+      "serial": "Seriennummer (optional)",
+      "submit": "Erstellen",
+      "passportNotDraft": "Dieser Produktpass ist veröffentlicht. Ein eindeutiger Produktidentifikator kann nur erstellt werden, solange der Pass ein Entwurf ist.",
+      "gtinInvalid": "Geben Sie eine gültige GTIN ein (8, 12, 13 oder 14 Ziffern mit korrekter Prüfziffer).",
+      "componentInvalid": "Verwenden Sie bis zu 20 GS1-Zeichen (Buchstaben, Ziffern und !\"%&'()*+,-./:;<=>?_).",
+      "duplicate": "Diese GS1-Identität (GTIN, Charge und Seriennummer) ist bereits einem anderen Pass zugewiesen.",
+      "createFailed": "Der eindeutige Produktidentifikator konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    },
+    "gs1LinkPrompt": {
+      "title": "GS1 Digital Link hinzufügen?",
+      "question": "Möchten Sie einen GS1 Digital Link Permalink für diesen Identifikator hinzufügen?",
+      "addLink": "GS1 Digital Link hinzufügen",
+      "skip": "Überspringen"
+    }
+  },
+  "gs1": {
+    "settings": {
+      "title": "GS1-Identität",
+      "description": "Weisen Sie eine herstellerseitig vergebene GTIN zu, um einen GS1-kompatiblen (Digital Link) QR-Code zu erzeugen, der auf diesen Pass verweist.",
+      "loadError": "GS1-Identität konnte nicht geladen werden.",
+      "saveError": "GS1-Identität konnte nicht gespeichert werden.",
+      "saveSuccess": "GS1-Identität gespeichert.",
+      "removeError": "GS1-Identität konnte nicht entfernt werden.",
+      "removeSuccess": "GS1-Identität entfernt.",
+      "gtinInvalid": "Geben Sie eine gültige GTIN ein (8, 12, 13 oder 14 Ziffern mit korrekter Prüfziffer).",
+      "gtinConflict": "Diese GS1-Identität (GTIN, Charge und Seriennummer) ist bereits einem anderen Pass zugewiesen.",
+      "componentInvalid": "Verwenden Sie bis zu 20 GS1-Zeichen (Buchstaben, Ziffern und !\"%&'()*+,-./:;<=>?_).",
+      "draftOnly": "Eine GS1-Identität kann nur geändert werden, solange der Pass ein Entwurf ist.",
+      "frozenNotice": "Dieser Pass ist veröffentlicht, daher ist seine GS1-Identität eingefroren. Der GS1 Digital Link wird auf gescannte Datenträger gedruckt und muss stabil bleiben. Setzen Sie den Pass auf Entwurf zurück, um die Identität zu ändern oder zu entfernen.",
+      "gtin": {
+        "label": "GTIN",
+        "placeholder": "z. B. 4006381333931"
+      },
+      "batch": {
+        "label": "Charge / Los (optional)",
+        "placeholder": "z. B. LOT-42"
+      },
+      "serial": {
+        "label": "Seriennummer (optional)",
+        "placeholder": "z. B. SN-001"
+      },
+      "digitalLink": {
+        "label": "GS1 Digital Link"
+      },
+      "empty": "Noch keine GS1-Identität zugewiesen."
+    },
+    "qrCode": {
+      "open": "GS1 QR-Code",
+      "title": "GS1 QR-Code",
+      "loadError": "GS1-Identität für den QR-Code konnte nicht geladen werden.",
+      "digitalLink": {
+        "label": "GS1 Digital Link"
+      },
+      "elementString": {
+        "label": "GS1 Elementkette"
+      },
+      "empty": "Noch keine GS1-Identität zugewiesen. Weisen Sie in den GS1-Identitätseinstellungen eine zu, um einen GS1 QR-Code zu erzeugen."
+    }
+  },
+  "gs1DataAttributes": {
+    "addRow": "Zeile hinzufügen",
+    "aiPlaceholder": "AI (z.B. 17)",
+    "valuePlaceholder": "Wert",
+    "remove": "Entfernen",
+    "keyAiBlocked": "AI \"{ai}\" ist ein Primäridentifikator oder Schlüsselqualifikator und kann nicht als Datenattribut verwendet werden.",
+    "unknownAi": "Unbekannte AI.",
+    "invalidValue": "Wert entspricht nicht dem Format für AI \"{ai}\"."
+  },
+  "gs1LinkQrCode": {
+    "empty": "Kein GS1 Digital Link Permalink.",
+    "digitalLink": {
+      "label": "GS1 Digital Link"
+    },
+    "elementString": {
+      "label": "GS1 Elementstring"
     }
   }
 }
