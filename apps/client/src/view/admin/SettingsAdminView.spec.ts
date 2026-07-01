@@ -181,4 +181,10 @@ describe("SettingsAdminView — Danger Zone", () => {
     const urlInput = dangerZone.find("[data-testid='url-input']");
     expect(urlInput.exists()).toBe(true);
   });
+
+  it("does not render a GS1 resolver domain section", async () => {
+    const wrapper = mountView();
+    await nextTick();
+    expect(wrapper.find("[data-testid='gs1-resolver-section']").exists()).toBe(false);
+  });
 });

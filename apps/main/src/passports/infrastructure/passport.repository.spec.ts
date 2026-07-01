@@ -279,6 +279,47 @@ describe("passportRepository", () => {
     );
   });
 
+  it("findByIds — returns a Map keyed by passport id for all matching ids", async () => {
+    const orgId = randomUUID();
+    const p1 = Passport.create({
+      id: randomUUID(),
+      organizationId: orgId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [randomUUID()],
+        conceptDescriptions: [],
+      }),
+    });
+    const p2 = Passport.create({
+      id: randomUUID(),
+      organizationId: orgId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    });
+    await passportRepository.save(p1);
+    await passportRepository.save(p2);
+
+    const result = await passportRepository.findByIds([p1.id, p2.id]);
+
+    expect(result.size).toBe(2);
+    expect(result.get(p1.id)).toEqual(p1);
+    expect(result.get(p2.id)).toEqual(p2);
+  });
+
+  it("findByIds — returns empty map when ids list is empty", async () => {
+    const result = await passportRepository.findByIds([]);
+    expect(result.size).toBe(0);
+  });
+
+  it("findByIds — ignores ids that do not exist in the DB", async () => {
+    const missingId = randomUUID();
+    const result = await passportRepository.findByIds([missingId]);
+    expect(result.size).toBe(0);
+  });
+
   afterAll(async () => {
     await module.close();
   });

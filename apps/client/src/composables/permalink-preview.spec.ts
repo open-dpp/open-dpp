@@ -10,9 +10,13 @@ const isoNow = "2026-05-12T00:00:00.000Z";
 function makePermalink(overrides: Partial<PermalinkPublicDto> = {}): PermalinkPublicDto {
   return {
     id: permalinkId,
+    kind: "presentation",
     slug: null,
     baseUrl: null,
     presentationConfigurationId: configId,
+    uniqueProductIdentifierId: null,
+    primary: false,
+    gs1DataAttributes: null,
     createdAt: isoNow,
     updatedAt: isoNow,
     publicUrl: `https://instance.example.com/p/${permalinkId}`,
