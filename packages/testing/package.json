@@ -40,12 +40,16 @@
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
+    "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.24",
     "@types/supertest": "^6.0.3",
     "jest": "^30.3.0",
     "typescript": "^5.9.3"
   },
   "jest": {
+    "moduleNameMapper": {
+      "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
+    },
     "testEnvironment": "node",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
@@ -67,7 +71,10 @@
           }
         }
       ]
-    }
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!.*(@open-dpp|uuid))"
+    ]
   },
   "packageManager": "pnpm@11.6.0"
 }
