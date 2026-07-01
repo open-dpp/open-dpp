@@ -7,7 +7,6 @@ import { User } from "../identity/users/domain/user";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
-import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
@@ -18,7 +17,6 @@ export class ChatService {
 
   private readonly mcpClientService: McpClientService;
   private readonly aiService: AiService;
-  private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
   private readonly aiConfigurationService: AiConfigurationService;
   private readonly policyService: PolicyService;
   private readonly passportRepository: PassportRepository;
@@ -26,36 +24,24 @@ export class ChatService {
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
-    uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
     passportRepository: PassportRepository,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
-    this.uniqueProductIdentifierRepository = uniqueProductIdentifierRepository;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
     this.passportRepository = passportRepository;
   }
 
-  async askAgent(
-    query: string,
-    uniqueProductIdentifierUuid: string,
-    user: User | null,
-    member: Member | null,
-  ) {
-    this.logger.log(
-      `Resolve passport from UniqueProductIdentifier: ${uniqueProductIdentifierUuid}`,
-    );
-    const uniqueProductIdentifier = await this.uniqueProductIdentifierRepository.findOneOrFail(
-      uniqueProductIdentifierUuid,
-    );
-    const passport = await this.passportRepository.findOne(uniqueProductIdentifier.referenceId);
+  async askAgent(query: string, passportId: string, user: User | null, member: Member | null) {
+    // ADR 0006: the AI agent operates on the passport directly (the system prompt is
+    // keyed by passportId); resolve it without the canonical UPI indirection.
+    this.logger.log(`Resolve passport: ${passportId}`);
+    const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
-      throw new Error(
-        `Product passport for UniqueProductIdentifier ${uniqueProductIdentifierUuid} not found`,
-      );
+      throw new Error(`Product passport ${passportId} not found`);
     }
 
     // Check quota BEFORE processing

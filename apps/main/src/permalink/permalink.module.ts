@@ -6,6 +6,7 @@ import { BrandingModule } from "../branding/branding.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { InstanceSettingsModule } from "../instance-settings/instance-settings.module";
+import { MediaModule } from "../media/media.module";
 import { PassportsModule } from "../passports/passports.module";
 import {
   PresentationConfigurationDoc,
@@ -16,6 +17,7 @@ import { UniqueProductIdentifierModule } from "../unique-product-identifier/uniq
 import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema";
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
 import { PermalinkApplicationService } from "./application/services/permalink.application.service";
+import { MediaPermalinkController } from "./presentation/media-permalink.controller";
 import { PermalinkController } from "./presentation/permalink.controller";
 
 @Module({
@@ -29,12 +31,14 @@ import { PermalinkController } from "./presentation/permalink.controller";
     OrganizationsModule,
     UsersModule,
     InstanceSettingsModule,
+    // ADR 0006: public, permalink-gated media reads (MediaModule exports MediaService).
+    MediaModule,
     forwardRef(() => PassportsModule),
     forwardRef(() => UniqueProductIdentifierModule),
     BrandingModule,
     PresentationConfigurationsModule,
   ],
-  controllers: [PermalinkController],
+  controllers: [PermalinkController, MediaPermalinkController],
   providers: [PermalinkRepository, PermalinkApplicationService],
   exports: [PermalinkRepository, PermalinkApplicationService],
 })

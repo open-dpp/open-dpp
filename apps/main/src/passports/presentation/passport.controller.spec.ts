@@ -301,7 +301,7 @@ describe("passportController", () => {
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
 
     const upids = await upidService.findAllByReferencedId(response.body.id);
-    expect(upids).toHaveLength(1);
+    expect(upids).toHaveLength(0); // ADR 0006: passports no longer auto-mint a canonical UPI
   });
 
   it(`/POST Create passport from template`, async () => {
@@ -364,7 +364,7 @@ describe("passportController", () => {
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
 
     const upids = await upidService.findAllByReferencedId(response.body.id);
-    expect(upids).toHaveLength(1);
+    expect(upids).toHaveLength(0); // ADR 0006: passports no longer auto-mint a canonical UPI
   });
 
   it(`/POST rolls back the whole transaction when permalink creation fails mid-create`, async () => {
@@ -602,7 +602,7 @@ describe("passportController", () => {
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
     const upids = await upidService.findAllByReferencedId(importResponse.body.id);
-    expect(upids).toHaveLength(1);
+    expect(upids).toHaveLength(0); // ADR 0006: passports no longer auto-mint a canonical UPI
   });
 
   it("/POST import passport with invalid data returns 400", async () => {
@@ -736,7 +736,7 @@ describe("passportController", () => {
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
     const upids = await upidService.findAllByReferencedId(importResponse.body.id);
-    expect(upids).toHaveLength(1);
+    expect(upids).toHaveLength(0); // ADR 0006: passports no longer auto-mint a canonical UPI
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
@@ -773,7 +773,7 @@ describe("passportController", () => {
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
     const upids = await upidService.findAllByReferencedId(importResponse.body.id);
-    expect(upids).toHaveLength(1);
+    expect(upids).toHaveLength(0); // ADR 0006: passports no longer auto-mint a canonical UPI
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)

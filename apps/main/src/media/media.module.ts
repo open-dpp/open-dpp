@@ -2,6 +2,7 @@ import { HttpModule } from "@nestjs/axios";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { MediaDbSchema, MediaDoc } from "./infrastructure/media.schema";
 import { MediaService } from "./infrastructure/media.service";
 import { MediaController } from "./presentation/media.controller";
@@ -16,6 +17,7 @@ import { MediaController } from "./presentation/media.controller";
     ]),
     HttpModule,
     EnvModule,
+    OrganizationsModule,
   ],
   providers: [MediaService],
   controllers: [MediaController],

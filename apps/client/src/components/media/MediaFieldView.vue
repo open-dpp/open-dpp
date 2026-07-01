@@ -5,20 +5,20 @@ import { useI18n } from "vue-i18n";
 import { useMediaFile } from "../../composables/media-file.ts";
 import MediaPreview from "./MediaPreview.vue";
 
-const props = defineProps<{ mediaId: string }>();
+const props = defineProps<{ mediaId: string; permalinkIdOrSlug?: string }>();
 const { t } = useI18n();
 
 const { download, mediaInfo, fileUrl } = useMediaFile();
 
 onMounted(async () => {
-  await download(props.mediaId);
+  await download(props.mediaId, props.permalinkIdOrSlug);
 });
 </script>
 
 <template>
   <div v-if="mediaInfo" class="flex max-w-full flex-col gap-4">
     <div class="flex w-full flex-row gap-4">
-      <MediaPreview :media="mediaInfo" class="h-40 min-w-[160px]" />
+      <MediaPreview :media="mediaInfo" :object-url="fileUrl" class="h-40 min-w-[160px]" />
       <a
         v-if="fileUrl"
         :download="mediaInfo.title"
