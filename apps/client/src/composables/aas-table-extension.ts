@@ -36,6 +36,7 @@ import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
 import { match, P } from "ts-pattern";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { formatPropertyValue } from "../lib/property-value.ts";
+import { resolveLanguageTexts } from "./language-text.ts";
 
 interface AasTableExtensionProps {
   id: string;
@@ -179,7 +180,7 @@ export function useAasTableExtension({
   }
 
   function buildColumnLabel(displayName: any[], idShort: string): string {
-    return displayName?.find((d: any) => d.language === selectedLanguage)?.text ?? idShort;
+    return resolveLanguageTexts(displayName, selectedLanguage, idShort);
   }
 
   function buildColumnTypeMenuItem(
