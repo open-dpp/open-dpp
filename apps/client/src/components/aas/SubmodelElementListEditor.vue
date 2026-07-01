@@ -159,18 +159,7 @@ onErrorCaptured((err) => {
   return false; // stops error from bubbling further
 });
 
-watch(
-  () => flatColumns.value,
-  async (newValue) => {
-    console.log(newValue);
-  },
-  { immediate: true, deep: true },
-);
-
-console.log(rows.value);
-
 const missingPermissionsMsg = t("aasEditor.security.missingPermission");
-const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
 </script>
 
 <template>
@@ -190,7 +179,23 @@ const sales = ref([{ product: "3", bla: "blub", blub: "19" }]);
         :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
       />
     </FormContainer>
-    <DataTable :value="sales" tableStyle="min-width: 50rem" showGridlines>
+    <DataTable
+      scrollable
+      edit-mode="cell"
+      data-key="idShort"
+      :value="rows"
+      @cell-edit-complete="
+        (event) =>
+          onCellEditComplete({
+            data: event.data,
+            field: event.field,
+            index: event.index,
+            newValue: event.newValue,
+          })
+      "
+      tableStyle="min-width: 50rem"
+      showGridlines
+    >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
