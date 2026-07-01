@@ -3,6 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
 import { AasModule } from "../aas/aas.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { MediaModule } from "../media/media.module";
 import { BrandingRepository } from "./infrastructure/branding.repository";
 import { BrandingDoc, BrandingSchema } from "./infrastructure/branding.schema";
 import { BrandingController } from "./presentation/branding.controller";
@@ -18,6 +19,7 @@ import { BrandingController } from "./presentation/branding.controller";
     AasModule,
     OrganizationsModule,
     EnvModule,
+    MediaModule,
   ],
   controllers: [BrandingController],
   providers: [BrandingRepository],

@@ -20,6 +20,19 @@ export class BrandingRepository {
     private readonly BrandingDoc: MongooseModel<BrandingDoc>,
   ) {}
 
+  /**
+   * Whether `mediaId` is the EFFECTIVE branding logo of `organizationId`, resolved through the
+   * same source that advertises it (`findOneByOrganizationId`) — so it also covers the legacy
+   * `organization.logo` fallback for orgs that have no `BrandingDoc` yet.
+   *
+   * Gates the public logo route: callers pass the MEDIA's owning org, so an org can only ever
+   * expose its own designated logo — never another org's media by pointing its branding at it.
+   */
+  async isOrganizationLogo(mediaId: string, organizationId: string): Promise<boolean> {
+    const branding = await this.findOneByOrganizationId(organizationId);
+    return branding.logo === mediaId;
+  }
+
   async findOneByOrganizationId(organizationId: string): Promise<Branding> {
     const brandingDoc = await this.BrandingDoc.findOne({ organizationId });
 
@@ -54,7 +67,7 @@ export class BrandingRepository {
         throw new NotFoundException("Organization not found");
       }
 
-      brandingDoc = new this.BrandingDoc({ _schemaVersion: BrandingDocVersion.v1_1_0 });
+      brandingDoc = new this.BrandingDoc({ _schemaVersion: BrandingDocVersion.v1_2_0 });
 
       if (activeOrganization.logo) {
         this.logger.debug("migrating old to new logo");
@@ -64,7 +77,7 @@ export class BrandingRepository {
 
     const plain = branding.toPlain();
     brandingDoc.set({
-      _schemaVersion: BrandingDocVersion.v1_1_0,
+      _schemaVersion: BrandingDocVersion.v1_2_0,
       ...plain,
       logo: plain.logo ?? orgLogoFallback,
     });

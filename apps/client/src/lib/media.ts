@@ -10,6 +10,6 @@ export function revokeObjectUrl(url: string) {
 
 export interface MediaFile {
   blob: Blob | null;
-  mediaInfo: MediaInfo;
+  mediaInfo?: MediaInfo;
   url: string;
 }

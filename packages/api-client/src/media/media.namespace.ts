@@ -11,13 +11,6 @@ export class MediaNamespace {
     });
   }
 
-  async downloadMediaOfDataField(uuid: string, dataFieldId: string) {
-    return await this.axiosInstance.get<Blob>(
-      `${this.mediaEndpoint}/dpp/${uuid}/${dataFieldId}/download`,
-      { responseType: "blob" },
-    );
-  }
-
   async getMediaInfo(id: string) {
     return this.axiosInstance.get<MediaInfoDto>(`${this.mediaEndpoint}/${id}/info`);
   }
@@ -26,9 +19,20 @@ export class MediaNamespace {
     return this.axiosInstance.get<MediaInfoDto[]>(`${this.mediaEndpoint}/by-organization`);
   }
 
-  async getMediaInfoOfDataField(uuid: string, dataFieldId: string) {
+  // --- ADR 0006 (Design C): public file media gated through the permalink, by mediaId ---
+
+  /** Public, permalink-gated media info (access dies with the permalink). */
+  async getPermalinkMediaInfo(permalinkIdOrSlug: string, mediaId: string) {
     return this.axiosInstance.get<MediaInfoDto>(
-      `${this.mediaEndpoint}/dpp/${uuid}/${dataFieldId}/info`,
+      `${this.mediaEndpoint}/permalink/${encodeURIComponent(permalinkIdOrSlug)}/by-id/${encodeURIComponent(mediaId)}/info`,
+    );
+  }
+
+  /** Public, permalink-gated media download. */
+  async downloadPermalinkMedia(permalinkIdOrSlug: string, mediaId: string) {
+    return this.axiosInstance.get<Blob>(
+      `${this.mediaEndpoint}/permalink/${encodeURIComponent(permalinkIdOrSlug)}/by-id/${encodeURIComponent(mediaId)}/download`,
+      { responseType: "blob" },
     );
   }
 
@@ -37,16 +41,6 @@ export class MediaNamespace {
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> {
     const url = `${this.mediaEndpoint}/organization-profile`;
-    return this.uploadMedia(url, file, onUploadProgress);
-  }
-
-  async uploadDppMedia(
-    uuid: string,
-    dataFieldId: string,
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> {
-    const url = `${this.mediaEndpoint}/dpp/${uuid}/${dataFieldId}`;
     return this.uploadMedia(url, file, onUploadProgress);
   }
 

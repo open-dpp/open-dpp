@@ -44,7 +44,6 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
-  NotFoundException,
   Param,
   Post,
   Put,
@@ -112,7 +111,6 @@ import { PagingResult } from "../../pagination/paging-result";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
@@ -143,7 +141,6 @@ export class PassportController
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
-    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
     @Inject(forwardRef(() => PermalinkApplicationService))
@@ -193,26 +190,6 @@ export class PassportController
         organizationId,
       );
     return PassportDtoSchema.parse(passport.toPlain());
-  }
-
-  @Get(":id/unique-product-identifier")
-  async getUniqueProductIdentifierOfPassport(
-    @OrganizationId() organizationId: string,
-    @IdParam() id: string,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-  ): Promise<{ uuid: string }> {
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-      id,
-      subject,
-      organizationId,
-    );
-    const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(id);
-    if (!upi) {
-      throw new NotFoundException(`No UniqueProductIdentifier found for passport ${id}`);
-    }
-    return { uuid: upi.uuid };
   }
 
   @Delete(":id")
@@ -299,10 +276,9 @@ export class PassportController
       environment,
     });
 
-    const upid = passport.createUniqueProductIdentifier();
-
+    // ADR 0006: passports no longer auto-mint a canonical OPEN_DPP_UUID UPI. Media keys
+    // on the passportId and presentation resolves via permalinks, so no UPI is needed.
     const saved = await this.environmentService.withTransaction(async (options) => {
-      await this.uniqueProductIdentifierRepository.save(upid, options);
       const persisted = await this.passportRepository.save(passport, options);
       const snapshotConfigs =
         await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
@@ -948,9 +924,8 @@ export class PassportController
       body,
       organizationId,
       async (p, options) => {
+        // ADR 0006: no canonical UPI auto-mint on import.
         await this.passportRepository.save(p, options);
-        const upid = p.createUniqueProductIdentifier();
-        await this.uniqueProductIdentifierRepository.save(upid, options);
       },
       async (p, options) => {
         const importedConfigs = await this.presentationConfigurationService.findExistingForPassport(
