@@ -654,6 +654,40 @@ describe("aasTableExtension composable", () => {
     expect(rowsContext.value.every((r) => !Object.hasOwn(r, columnToDelete))).toBeTruthy();
   });
 
+  it("should notify on an unexpected status when deleting a column", async () => {
+    const openAutoConfirm = async (data: ConfirmationOptions) => {
+      data.accept!();
+    };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: vi.fn(), can: vi.fn() });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      errorHandlingStore,
+      openConfirm: openAutoConfirm,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+    buildColumnMenu({ position: 1, addColumnActions: true });
+    const removeColumnButton = columnMenu.value
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "common.remove")!;
+
+    mocks.deleteColumnFromSubmodelElementList.mockResolvedValue({ status: HTTPCode.BAD_REQUEST });
+
+    removeColumnButton.command!({} as MenuItemCommandEvent);
+
+    await waitFor(() => expect(errorHandlingStore.logErrorWithNotification).toHaveBeenCalled());
+  });
+
   it("should delete row", async () => {
     const mockOnHideDrawer = vi.fn();
     const openAutoConfirm = async (data: ConfirmationOptions) => {
@@ -723,6 +757,38 @@ describe("aasTableExtension composable", () => {
         },
       ]),
     );
+  });
+
+  it("should notify on an unexpected status when deleting a row", async () => {
+    const openAutoConfirm = async (data: ConfirmationOptions) => {
+      data.accept!();
+    };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: vi.fn(), can: vi.fn() });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { rowMenu, buildRowMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      errorHandlingStore,
+      openConfirm: openAutoConfirm,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+    buildRowMenu({ position: 1 });
+    const removeRowButton = rowMenu.value.find((e) => e.label === "common.remove")!;
+
+    mocks.deleteRowFromSubmodelElementList.mockResolvedValue({ status: HTTPCode.BAD_REQUEST });
+
+    removeRowButton.command!({} as MenuItemCommandEvent);
+
+    await waitFor(() => expect(errorHandlingStore.logErrorWithNotification).toHaveBeenCalled());
   });
 
   const groupCol = {
@@ -1146,6 +1212,42 @@ describe("aasTableExtension composable", () => {
       expect(group?.children).toHaveLength(1);
       expect(group?.children![0]!.idShort).toBe("SubCol2");
     });
+  });
+
+  it("should notify on an unexpected status when removing a sub-column from a group", async () => {
+    const openAutoConfirm = async (data: ConfirmationOptions) => {
+      data.accept!();
+    };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: vi.fn(), can: vi.fn() });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementListWithGroup,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: openAutoConfirm,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+    buildColumnMenu({ position: 0, addColumnActions: true, groupIdShort: "Group1" });
+    const removeFromGroupItem = columnMenu.value
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "aasEditor.table.removeFromGroup")!;
+
+    mocks.deleteColumnFromGroupInSubmodelElementList.mockResolvedValue({
+      status: HTTPCode.BAD_REQUEST,
+    });
+
+    removeFromGroupItem.command!({} as MenuItemCommandEvent);
+
+    await waitFor(() => expect(errorHandlingStore.logErrorWithNotification).toHaveBeenCalled());
   });
 
   it("should move a top-level column into a group", async () => {

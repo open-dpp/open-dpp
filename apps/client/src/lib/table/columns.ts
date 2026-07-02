@@ -46,6 +46,19 @@ export function isGroupColumn(column: Column): boolean {
   return column.children !== undefined;
 }
 
+/** Flattens group columns into their sub-columns for DataTable rendering. */
+export function flattenColumns(columns: Column[]): FlatColumn[] {
+  return columns.flatMap((col) =>
+    col.children
+      ? col.children.map((subCol) => ({
+          ...subCol,
+          field: `${col.idShort}.${subCol.idShort}`,
+          groupIdShort: col.idShort,
+        }))
+      : [{ ...col, field: col.idShort }],
+  );
+}
+
 export function resolveFieldValue(rowData: Row, field: string): Value {
   const dotIndex = field.indexOf(".");
   if (dotIndex === -1) return rowData[field] as Value;

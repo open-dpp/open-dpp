@@ -5,6 +5,7 @@ import {
   convertDataToColumns,
   convertDataToRows,
   convertRowToRequestDto,
+  flattenColumns,
   isGroupColumn,
   resolveFieldValue,
   setFieldValue,
@@ -63,6 +64,25 @@ describe("isGroupColumn", () => {
     const group: Column = { idShort: "Group1", label: "Group1", plain: {}, children: [] };
     expect(isGroupColumn(scalar)).toBe(false);
     expect(isGroupColumn(group)).toBe(true);
+  });
+});
+
+describe("flattenColumns", () => {
+  it("passes a scalar column through with its own idShort as the field", () => {
+    const scalar: Column = { idShort: "Column1", label: "Column1", plain: {} };
+    expect(flattenColumns([scalar])).toEqual([{ ...scalar, field: "Column1" }]);
+  });
+
+  it("flattens a group column's children into dot-notation fields", () => {
+    const group: Column = {
+      idShort: "Group1",
+      label: "Group1",
+      plain: {},
+      children: [{ idShort: "Sub1", label: "Sub1", plain: {} }],
+    };
+    expect(flattenColumns([group])).toEqual([
+      { idShort: "Sub1", label: "Sub1", plain: {}, field: "Group1.Sub1", groupIdShort: "Group1" },
+    ]);
   });
 });
 
