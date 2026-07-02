@@ -17,6 +17,7 @@ import { TableExtension } from "./table-extension";
 import { allPermissionsAllowFactory } from "../../../../fixtures/security-fixtures";
 import { File } from "../file";
 import { TableRowCopyVisitor } from "./table-row-copy-visitor";
+import { ValueVisitor } from "../../value-visitor";
 
 const transformer = new TableRowCopyVisitor();
 
@@ -166,8 +167,12 @@ describe("tableExtension", () => {
     const ability = security.defineAbilityForSubject(member);
     const table = new TableExtension(submodelElementList);
 
-    const subCol1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol1" }));
-    const subCol2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol2" }));
+    const subCol1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "subCol1", value: "v_subCol1" }),
+    );
+    const subCol2 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "subCol2", value: "v_subCol2" }),
+    );
     const group = SubmodelElementCollection.create({
       idShort: "group1",
       value: [subCol1, subCol2],
@@ -186,6 +191,12 @@ describe("tableExtension", () => {
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).not.toContain("subCol1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("subCol2");
     }
+
+    const valueRepr = submodelElementList.accept(new ValueVisitor({ ability }));
+    expect(valueRepr).toEqual([
+      { group1: { subCol2: "v_subCol2" }, subCol1: "v_subCol1" },
+      { group1: { subCol2: null }, subCol1: null },
+    ]);
   });
 
   it("should modify column within a group across all rows", () => {
@@ -235,7 +246,9 @@ describe("tableExtension", () => {
     const ability = security.defineAbilityForSubject(member);
     const table = new TableExtension(submodelElementList);
 
-    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "10" }),
+    );
     const group = SubmodelElementCollection.create({ idShort: "group1" });
     table.addColumn(col1, { ability });
     table.addColumn(group, { ability });
@@ -249,6 +262,9 @@ describe("tableExtension", () => {
       const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("col1");
     }
+    const valueVisitor = new ValueVisitor({ ability });
+    const valueRepr = submodelElementList.accept(valueVisitor);
+    expect(valueRepr).toMatchObject([{ group1: { col1: "10" } }, { group1: { col1: null } }]);
   });
 
   it("should clear nested values in group column when adding a new row", () => {
