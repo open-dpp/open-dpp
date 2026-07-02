@@ -232,6 +232,13 @@ export class TableExtension implements ITableExtendable {
           value: addedValue,
         }),
       );
+
+      // A group can never exist empty: if ejecting this sub-column left the
+      // group with no children, delete the now-empty group shell too.
+      const headerGroupAfterEject = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
+      if (headerGroupAfterEject.getSubmodelElements().length === 0) {
+        this.deleteColumn(groupIdShort, { ability: options.ability, onDelete: () => {} });
+      }
     }
   }
 

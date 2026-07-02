@@ -215,6 +215,8 @@ describe("tableExtension", () => {
 
     for (const row of table.rows) {
       const topLevel = row.getSubmodelElements().map((el) => el.idShort);
+      // the group survives since a sibling sub-column remains
+      expect(topLevel).toContain("group1");
       const groupIndex = topLevel.indexOf("group1");
       // moved back to top level immediately after the group
       expect(topLevel[groupIndex + 1]).toBe("subCol1");
@@ -228,6 +230,42 @@ describe("tableExtension", () => {
       { group1: { subCol2: "v_subCol2" }, subCol1: "v_subCol1" },
       { group1: { subCol2: null }, subCol1: null },
     ]);
+  });
+
+  it("should cascade-delete the group when ejecting its last remaining sub-column", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    const onlySubCol = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "onlySubCol", value: "v_onlySubCol" }),
+    );
+    const group = SubmodelElementCollection.create({
+      idShort: "group1",
+      value: [onlySubCol],
+    });
+    table.addColumn(group, { ability });
+    table.addRow({ ability });
+
+    table.deleteColumnFromGroup("group1", "onlySubCol", { ability });
+
+    for (const row of table.rows) {
+      const topLevel = row.getSubmodelElements().map((el) => el.idShort);
+      // the ejected column survives at top level
+      expect(topLevel).toContain("onlySubCol");
+      // the now-empty group is gone entirely, not just empty
+      expect(topLevel).not.toContain("group1");
+    }
+    expect(table.columns.map((c) => c.idShort)).not.toContain("group1");
   });
 
   it("should modify column within a group across all rows", () => {
