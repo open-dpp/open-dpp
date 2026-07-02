@@ -136,13 +136,17 @@ describe("tableExtension", () => {
     const ability = security.defineAbilityForSubject(member);
     const table = new TableExtension(submodelElementList);
 
-    // Add a group column (SubmodelElementCollection with no children yet)
-    const group = SubmodelElementCollection.create({ idShort: "group1" });
+    // Add a group column — groups can never be created empty, so it must
+    // already carry its first sub-column at creation time.
+    const initialSubCol = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "initialSubCol" }),
+    );
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [initialSubCol] });
     table.addColumn(group, { ability });
     table.addRow({ ability });
     table.addRow({ ability });
 
-    // Add a sub-column to the group — must appear in every row's group
+    // Add a second sub-column to the group — must appear in every row's group
     const subCol = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "subCol1" }));
     table.addColumnToGroup("group1", subCol, { ability });
 
@@ -151,6 +155,33 @@ describe("tableExtension", () => {
       expect(rowGroup).toBeDefined();
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("subCol1");
     }
+  });
+
+  it("should reject adding an empty group column", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+
+    const emptyGroupWithExplicitValue = SubmodelElementCollection.create({
+      idShort: "group1",
+      value: [],
+    });
+    expect(() => table.addColumn(emptyGroupWithExplicitValue, { ability })).toThrow(ValueError);
+
+    const emptyGroupWithoutValue = SubmodelElementCollection.create({ idShort: "group2" });
+    expect(() => table.addColumn(emptyGroupWithoutValue, { ability })).toThrow(ValueError);
+
+    // No side effects: the rejected calls must not have created a header row.
+    expect(table.rows).toEqual([]);
   });
 
   it("should delete column from group across all rows", () => {
@@ -249,7 +280,11 @@ describe("tableExtension", () => {
     const col1 = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "col1", value: "10" }),
     );
-    const group = SubmodelElementCollection.create({ idShort: "group1" });
+    // Groups can never be created empty — seed it with a placeholder child.
+    const initialSubCol = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "initialSubCol", value: "some-value" }),
+    );
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [initialSubCol] });
     table.addColumn(col1, { ability });
     table.addColumn(group, { ability });
     table.addRow({ ability });
@@ -264,7 +299,10 @@ describe("tableExtension", () => {
     }
     const valueVisitor = new ValueVisitor({ ability });
     const valueRepr = submodelElementList.accept(valueVisitor);
-    expect(valueRepr).toMatchObject([{ group1: { col1: "10" } }, { group1: { col1: null } }]);
+    expect(valueRepr).toMatchObject([
+      { group1: { col1: "10", initialSubCol: "some-value" } },
+      { group1: { col1: null, initialSubCol: null } },
+    ]);
   });
 
   it("should clear nested values in group column when adding a new row", () => {

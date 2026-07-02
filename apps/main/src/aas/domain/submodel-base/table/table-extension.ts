@@ -115,6 +115,11 @@ export class TableExtension implements ITableExtendable {
   }
 
   addColumn(column: ISubmodelElement, options: AddOptions): void {
+    if (column instanceof SubmodelElementCollection && column.getSubmodelElements().length === 0) {
+      throw new ValueError(
+        `Cannot add an empty group column "${column.idShort}". Groups must be created with at least one sub-column.`,
+      );
+    }
     if (!this.headerRow) {
       this.addHeaderRow(options);
     }

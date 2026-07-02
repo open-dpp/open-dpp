@@ -355,9 +355,15 @@ describe("NestedTableExtension", () => {
   // Returns a fresh submodel that already has a group1 column added to all table3 instances.
   function createSubmodelWithGroupInTable3() {
     const { submodel, ability } = createSubmodelWithNestedTable();
-    submodel.addColumn(table3Path, SubmodelElementCollection.create({ idShort: "group1" }), {
-      ability,
-    });
+    // Groups can never be created empty — seed it with a placeholder child.
+    submodel.addColumn(
+      table3Path,
+      SubmodelElementCollection.create({
+        idShort: "group1",
+        value: [Property.create({ idShort: "initialSubCol", valueType: DataTypeDef.String })],
+      }),
+      { ability },
+    );
     return { submodel, ability };
   }
 
