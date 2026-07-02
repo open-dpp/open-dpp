@@ -1,6 +1,6 @@
 import { expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { MemberRole } from "../../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../../identity/users/domain/user-role.enum";
@@ -30,6 +30,22 @@ describe("tableExtension", () => {
     userRole: UserRole.USER,
     memberRole: MemberRole.MEMBER,
   });
+
+  function createTable(idShort = "list") {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort,
+    });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelElementList.idShort }),
+      allPermissionsAllowFactory.build(),
+    );
+    const ability = security.defineAbilityForSubject(member);
+    const table = new TableExtension(submodelElementList);
+    return { submodelElementList, ability, table };
+  }
 
   it("should add columns and rows", () => {
     const submodelElementList = SubmodelElementList.create({
@@ -158,18 +174,7 @@ describe("tableExtension", () => {
   });
 
   it("should reject adding an empty group column", () => {
-    const submodelElementList = SubmodelElementList.create({
-      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-      idShort: "list",
-    });
-    const security = Security.create({});
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: submodelElementList.idShort }),
-      allPermissionsAllowFactory.build(),
-    );
-    const ability = security.defineAbilityForSubject(member);
-    const table = new TableExtension(submodelElementList);
+    const { table, ability } = createTable();
 
     const emptyGroupWithExplicitValue = SubmodelElementCollection.create({
       idShort: "group1",
@@ -233,18 +238,7 @@ describe("tableExtension", () => {
   });
 
   it("should cascade-delete the group when ejecting its last remaining sub-column", () => {
-    const submodelElementList = SubmodelElementList.create({
-      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-      idShort: "list",
-    });
-    const security = Security.create({});
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: submodelElementList.idShort }),
-      allPermissionsAllowFactory.build(),
-    );
-    const ability = security.defineAbilityForSubject(member);
-    const table = new TableExtension(submodelElementList);
+    const { table, ability } = createTable();
 
     const onlySubCol = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "onlySubCol", value: "v_onlySubCol" }),
@@ -341,6 +335,87 @@ describe("tableExtension", () => {
       { group1: { col1: "10", initialSubCol: "some-value" } },
       { group1: { col1: null, initialSubCol: null } },
     ]);
+  });
+
+  it("should create a group from an existing top-level column, migrating its per-row values", () => {
+    const { table, ability, submodelElementList } = createTable();
+
+    const before = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "before", value: "v_before" }),
+    );
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "row0-value" }),
+    );
+    const after = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "after", value: "v_after" }),
+    );
+    table.addColumn(before, { ability });
+    table.addColumn(col1, { ability });
+    table.addColumn(after, { ability });
+    table.addRow({ ability });
+    // Give row1's col1 a distinct value directly, to verify migration copies
+    // real per-row values rather than just the header row's shape.
+    const row1Col1 = table.rows[1]
+      .getSubmodelElements()
+      .find((el) => el.idShort === "col1") as Property;
+    row1Col1.value = "row1-value";
+
+    const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
+    table.createGroupFromColumn("col1", newGroup, { ability });
+
+    const topLevelIds = table.columns.map((c) => c.idShort);
+    expect(topLevelIds).toEqual(["before", "group1", "after"]);
+
+    for (const row of table.rows) {
+      const topLevel = row.getSubmodelElements().map((el) => el.idShort);
+      expect(topLevel).not.toContain("col1");
+      const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
+      expect(rowGroup).toBeDefined();
+      expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toEqual(["col1"]);
+    }
+
+    const valueRepr = submodelElementList.accept(new ValueVisitor({ ability }));
+    expect(valueRepr).toEqual([
+      { before: "v_before", group1: { col1: "row0-value" }, after: "v_after" },
+      { before: null, group1: { col1: "row1-value" }, after: null },
+    ]);
+  });
+
+  it("should throw NotFoundError when creating a group from a non-existent column", () => {
+    const { table, ability } = createTable();
+    table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" })), {
+      ability,
+    });
+
+    const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
+    expect(() => table.createGroupFromColumn("doesNotExist", newGroup, { ability })).toThrow(
+      NotFoundError,
+    );
+  });
+
+  it("should throw ValueError when the new group's idShort collides with an existing column", () => {
+    const { table, ability } = createTable();
+    table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" })), {
+      ability,
+    });
+    table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" })), {
+      ability,
+    });
+
+    const collidingGroup = SubmodelElementCollection.create({ idShort: "col2" });
+    expect(() => table.createGroupFromColumn("col1", collidingGroup, { ability })).toThrow(
+      ValueError,
+    );
+  });
+
+  it("should throw ValueError when the provided group is not a SubmodelElementCollection", () => {
+    const { table, ability } = createTable();
+    table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" })), {
+      ability,
+    });
+
+    const notAGroup = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "group1" }));
+    expect(() => table.createGroupFromColumn("col1", notAGroup, { ability })).toThrow(ValueError);
   });
 
   it("should clear nested values in group column when adding a new row", () => {

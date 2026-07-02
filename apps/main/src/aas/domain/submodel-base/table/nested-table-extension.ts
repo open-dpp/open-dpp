@@ -82,6 +82,12 @@ export class NestedTableExtension implements ITableExtendable {
     });
   }
 
+  createGroupFromColumn(columnIdShort: string, group: ISubmodelElement, options: MoveOptions): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.createGroupFromColumn(columnIdShort, group, options);
+    });
+  }
+
   addRow(options: AddOptions) {
     new TableExtension(this.data).withTracking(this.tracker).addRow(options);
   }

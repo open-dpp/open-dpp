@@ -278,6 +278,46 @@ export class TableExtension implements ITableExtendable {
     );
   }
 
+  /**
+   * Creates a brand-new group column from `group` (expected to arrive with no
+   * children of its own) and migrates the existing top-level column identified
+   * by `columnIdShort` into it as its first (and initially only) sub-column,
+   * preserving that column's real per-row values. The new group replaces the
+   * migrated column's position among the top-level columns.
+   */
+  createGroupFromColumn(
+    columnIdShort: string,
+    group: ISubmodelElement,
+    options: MoveOptions,
+  ): void {
+    if (!(group instanceof SubmodelElementCollection)) {
+      throw new ValueError(
+        `Element "${group.idShort}" is not a SubmodelElementCollection and cannot be used as a ColumnGroup`,
+      );
+    }
+    this.getColumnOrFail(columnIdShort);
+    if (this.columns.some((c) => c.idShort === group.idShort)) {
+      throw new ValueError(`A column with idShort "${group.idShort}" already exists.`);
+    }
+    const position = this.getColumnPosition(columnIdShort);
+
+    // Insert the still-empty group shell at the wrapped column's position via
+    // the private applyAddColumn helper, bypassing addColumn's public "no
+    // empty groups" invariant on purpose: that invariant guards the public
+    // entry point against a caller *persisting* an empty group, but here the
+    // group is filled with the migrated column below before this method
+    // returns, so no empty-group state is ever observable.
+    this.applyAddColumn(group, { ability: options.ability, position });
+    const groupValue = this.columns[position];
+    this.tracker.track(
+      ColumnAdded.create({ path: groupValue.getIdShortPath(), position, value: groupValue }),
+    );
+
+    // Reuse the existing, already-tested move: migrates the column's real
+    // per-row values into the group and tracks ColumnDeleted + ColumnAddedToGroup.
+    this.moveColumnToGroup(columnIdShort, group.idShort, options);
+  }
+
   private generateRowIdShort() {
     return `row_${randomUUID()}`;
   }

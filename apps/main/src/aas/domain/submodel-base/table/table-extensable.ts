@@ -22,6 +22,7 @@ export interface ITableExtendable extends ITrackable {
   ): void;
   deleteColumnFromGroup(groupIdShort: string, idShort: string, options: MoveOptions): void;
   moveColumnToGroup(columnIdShort: string, groupIdShort: string, options: MoveOptions): void;
+  createGroupFromColumn(columnIdShort: string, group: ISubmodelElement, options: MoveOptions): void;
   addRow(options: AddOptions): void;
   deleteRow(idShort: string, options: DeleteOptions): void;
   getTableElement(): ISubmodelElement;
