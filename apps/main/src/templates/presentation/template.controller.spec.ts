@@ -229,6 +229,10 @@ describe("templateController", () => {
     await ctx.asserts.moveColumnToGroup(createTemplate, saveTemplate);
   });
 
+  it("/POST create group from column", async () => {
+    await ctx.asserts.createGroupFromColumn(createTemplate, saveTemplate);
+  });
+
   it("/POST add row", async () => {
     await ctx.asserts.addRow(createTemplate, saveTemplate);
   });

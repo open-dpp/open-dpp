@@ -1371,10 +1371,11 @@ export function createAasTestContext<T>(
     return { org, userCookie, entity, submodel, col1 };
   }
 
-  async function createTableWithColumnAndGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+  async function createEmpytTable(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
     const submodel = Submodel.fromPlain(
       submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
@@ -1382,6 +1383,18 @@ export function createAasTestContext<T>(
       idShort: "tableList",
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
+    return {
+      org,
+      userCookie,
+      entity,
+      submodel,
+      submodelElementList,
+    };
+  }
+
+  async function createTableWithColumnAndGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, submodel, submodelElementList, entity } =
+      await createEmpytTable(createEntity);
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     const group1 = SubmodelElementCollection.create({ idShort: "group1" });
@@ -1473,6 +1486,44 @@ export function createAasTestContext<T>(
     expect(bodyGroup1.value[0].idShort).toEqual(col1.idShort);
   }
 
+  async function assertCreateGroupFromColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, submodel, submodelElementList, entity } =
+      await createEmpytTable(createEntity);
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
+    row0.addSubmodelElement(col1, { ability });
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/groups`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({
+        columnIdShort: col1.idShort,
+        group: {
+          idShort: "group1",
+          modelType: KeyTypes.SubmodelElementCollection,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
+      });
+    expect(response.status).toEqual(201);
+    const bodyRow0 = response.body.value[0];
+    expect(bodyRow0.value.map((col: any) => col.idShort)).toEqual(["group1"]);
+    const bodyGroup1 = bodyRow0.value[0];
+    expect(bodyGroup1.value.map((col: any) => col.idShort)).toEqual([col1.idShort]);
+  }
+
   async function assertDeleteSubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
@@ -1554,6 +1605,7 @@ export function createAasTestContext<T>(
       modifyColumnInGroup: assertModifyColumnInGroup,
       deleteColumnFromGroup: assertDeleteColumnFromGroup,
       moveColumnToGroup: assertMoveColumnToGroup,
+      createGroupFromColumn: assertCreateGroupFromColumn,
       addRow: assertAddRow,
       deletePolicy: assertDeletePolicy,
       deleteRow: assertDeleteRow,
