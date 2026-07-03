@@ -236,6 +236,14 @@ export function aasHandlers(basePath: string) {
       },
     ),
     http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/rows`,
       async ({ request }) => {
         const errorResponse = checkQueryParameters(request, {

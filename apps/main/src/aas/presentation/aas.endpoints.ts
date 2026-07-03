@@ -7,6 +7,7 @@ import type {
 } from "@open-dpp/dto";
 import {
   AssetAdministrationShellPaginationResponseDto,
+  CreateGroupFromColumnDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
@@ -168,6 +169,18 @@ export interface IAasCreateEndpoints {
     idShortPath: IdShortPath,
     groupIdShort: string,
     columnIdShort: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+    userId: string,
+    version: ApiVersionsDtoType,
+  ) => Promise<SubmodelElementListResponseDto>;
+  createGroupFromColumnInSubmodelElementList: (
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: CreateGroupFromColumnDto,
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
     userId: string,

@@ -415,6 +415,19 @@ describe("apiClient", () => {
       expect(response.data).toEqual(submodelDesignOfProductElement0);
     });
 
+    it("should create a group from an existing column in submodel element list", async () => {
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.createGroupFromColumnInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "column1",
+        propertyModificationPlainFactory.build(),
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
     it("should add row to submodel element list", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.addRowToSubmodelElementList(
         aasWrapperId,

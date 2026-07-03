@@ -50,6 +50,7 @@ export * from "./aas/submodel-base/range-json-schema";
 export * from "./aas/submodel-base/reference-element-json-schema";
 export * from "./aas/submodel-base/relationship-element-json-schema";
 export * from "./aas/submodel-base/submodel-base-json-schema";
+export * from "./aas/submodel-base/create-group-from-column-schema";
 export * from "./aas/submodel-base/submodel-element-collection-json-schema";
 export * from "./aas/submodel-base/submodel-element-list-json-schema";
 export * from "./aas/submodel-base/submodel-element-modification-schema";

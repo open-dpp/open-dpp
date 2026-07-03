@@ -4,6 +4,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
+  CreateGroupFromColumnDto,
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
@@ -57,6 +58,7 @@ import {
   ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
+  ApiCreateGroupFromColumn,
   ApiDeleteSubmodelElementById,
   ApiGetShells,
   ApiGetSubmodelById,
@@ -82,6 +84,7 @@ import {
   AssetAdministrationShellIdParam,
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
+  CreateGroupFromColumnRequestBody,
   CursorQueryParam,
   DeletePolicyRequestBody,
   GroupIdShortParam,
@@ -659,6 +662,33 @@ export class TemplateController
       idShortPath,
       groupIdShort,
       columnIdShort,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiCreateGroupFromColumn()
+  async createGroupFromColumnInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @CreateGroupFromColumnRequestBody() body: CreateGroupFromColumnDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.createGroupFromColumnInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body.columnIdShort,
+      body.group,
       { subject, userId },
       version,
     );

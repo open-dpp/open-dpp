@@ -4,6 +4,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
+  CreateGroupFromColumnDto,
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
@@ -59,6 +60,7 @@ import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
+  ApiCreateGroupFromColumn,
   ApiDeleteColumn,
   ApiDeleteColumnFromGroup,
   ApiDeletePolicy,
@@ -89,6 +91,7 @@ import {
   AssetAdministrationShellIdParam,
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
+  CreateGroupFromColumnRequestBody,
   CursorQueryParam,
   DeletePolicyRequestBody,
   GroupIdShortParam,
@@ -765,6 +768,33 @@ export class PassportController
       idShortPath,
       groupIdShort,
       columnIdShort,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiCreateGroupFromColumn()
+  async createGroupFromColumnInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @CreateGroupFromColumnRequestBody() body: CreateGroupFromColumnDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.createGroupFromColumnInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body.columnIdShort,
+      body.group,
       { subject, userId },
       version,
     );

@@ -13,6 +13,7 @@ import {
 
 import {
   AssetAdministrationShellModificationSchema,
+  CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
@@ -126,6 +127,12 @@ export function ApiDeleteColumn(prefix?: string) {
 
 export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)));
+}
+
+export const ApiCreateGroupFromColumnPath = `${ApiGetSubmodelElementByIdPath}/groups`;
+
+export function ApiCreateGroupFromColumn(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiCreateGroupFromColumnPath, prefix)));
 }
 
 export const ApiPostColumnToGroupPath = `${ApiGetSubmodelElementByIdPath}/groups/:groupIdShort/columns`;
@@ -315,6 +322,8 @@ export const SubmodelModificationRequestBody = () =>
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
+export const CreateGroupFromColumnRequestBody = () =>
+  Body(new ZodValidationPipe(CreateGroupFromColumnSchema));
 export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));
