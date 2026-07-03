@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Cset82ComponentInputSchema, GtinInputSchema } from "../unique-product-identifiers/gs1/gs1-digital-link";
+import { Cset82ComponentInputSchema, GtinInputSchema } from "./gs1/gs1-digital-link";
 
 /**
  * Schema for updating an existing GS1 UniqueProductIdentifier.
