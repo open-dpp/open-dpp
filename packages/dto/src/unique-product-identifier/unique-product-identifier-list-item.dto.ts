@@ -2,8 +2,8 @@ import { z } from "zod";
 import {
   ExternalIdentifierTypeSchema,
   Gs1GranularitySchema,
-} from "../gs1/external-identifier-type";
-import { Cset82ComponentSchema, Gtin14Schema } from "../gs1/gs1-digital-link";
+} from "../unique-product-identifiers/gs1/external-identifier-type";
+import { Cset82ComponentSchema, Gtin14Schema } from "../unique-product-identifiers/gs1/gs1-digital-link";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 /**

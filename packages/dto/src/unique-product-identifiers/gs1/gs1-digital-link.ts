@@ -1,7 +1,14 @@
-/// <reference lib="dom" />
 import { z } from "zod";
-import { canonicaliseBaseUrl } from "../shared/permalink-base-url.schema";
-import { GS1_AI_TABLE } from "./gs1-ai-table.generated";
+import { canonicaliseBaseUrl } from "../../shared/permalink-base-url.schema";
+import { Gs1DataAttributeAi, Gs1KeyAi, Gs1QualifierAi } from "./gs1-ai-constants";
+import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
+
+/**
+ * Wide-typed view of the AI table for lookups keyed by a runtime string.
+ * GS1_AI_TABLE itself has literal keys (`as const satisfies`), so indexing it
+ * with an arbitrary string would be a type error.
+ */
+const AI_TABLE: Readonly<Record<string, Gs1AiTableEntry>> = GS1_AI_TABLE;
 
 /**
  * Zero-dependency GS1 Digital Link helpers, shared by the client and the server.
@@ -89,8 +96,6 @@ export const GtinInputSchema = z.string().transform((value, ctx) => {
   }
 });
 
-export type GtinInput = z.infer<typeof GtinInputSchema>;
-
 /**
  * Zod schema for an already-normalized GTIN-14 (exactly 14 digits, valid check
  * digit). Use this where the value is expected to be canonical (stored value,
@@ -151,22 +156,22 @@ export const Cset82ComponentInputSchema = z
   .transform((value) => (value.length === 0 ? undefined : value))
   .pipe(Cset82ComponentSchema.optional());
 
-/** The GS1 Application Identifier for a GTIN. */
-export const GS1_AI_GTIN = "01";
-/** The GS1 Application Identifier for a batch / lot number. */
-export const GS1_AI_BATCH = "10";
-/** The GS1 Application Identifier for a serial number. */
-export const GS1_AI_SERIAL = "21";
+/** The GS1 Application Identifier for a GTIN. Compat alias for {@link Gs1KeyAi.GLOBAL_TRADE_ITEM_NUMBER}. */
+export const GS1_AI_GTIN = Gs1KeyAi.GLOBAL_TRADE_ITEM_NUMBER;
+/** The GS1 Application Identifier for a batch / lot number. Compat alias for {@link Gs1QualifierAi.BATCH_OR_LOT_NUMBER}. */
+export const GS1_AI_BATCH = Gs1QualifierAi.BATCH_OR_LOT_NUMBER;
+/** The GS1 Application Identifier for a serial number. Compat alias for {@link Gs1QualifierAi.SERIAL_NUMBER}. */
+export const GS1_AI_SERIAL = Gs1QualifierAi.SERIAL_NUMBER;
 
 /**
- * Returns true when `ai` is a known GS1 data-attribute (non-key) Application
+ * Type guard: true when `ai` is a known GS1 data-attribute (non-key) Application
  * Identifier — i.e. `type === 'D'` in the vendored GS1 AI table.
  *
  * Returns false for primary identifiers (type I), key qualifiers (type Q),
  * unknown AIs, and any non-string/empty input.
  */
-export function isGs1DataAttributeAi(ai: string): boolean {
-  return GS1_AI_TABLE[ai]?.type === "D";
+export function isGs1DataAttributeAi(ai: string): ai is Gs1DataAttributeAi {
+  return AI_TABLE[ai]?.type === "D";
 }
 
 /**
@@ -182,7 +187,7 @@ export function isGs1DataAttributeAi(ai: string): boolean {
  * Pure function, no I/O, no mutation.
  */
 export function isValidGs1DataAttributeValue(ai: string, value: string): boolean {
-  const entry = GS1_AI_TABLE[ai];
+  const entry = AI_TABLE[ai];
   if (!entry || entry.type !== "D") {
     return false;
   }
@@ -202,32 +207,26 @@ export function isValidGs1DataAttributeValue(ai: string, value: string): boolean
  * - Percent-encodes values via `encodeURIComponent`.
  * - Prefixes the result with `'?'` only when at least one pair is present.
  *
- * Pure function, no I/O, no mutation. <30 lines.
+ * Pure function, no I/O, no mutation.
  */
 export function buildGs1DataAttributeQuery(
   attributes: Record<string, string> | null | undefined,
 ): string {
-  if (!attributes) {
-    return "";
-  }
   // Use Object.entries (value typed as string) rather than keys + index access, so the
   // helper type-checks under a consumer with noUncheckedIndexedAccess (e.g. apps/client,
   // which type-checks this source directly). Sort ascending by AI for a canonical query.
-  const sortedEntries = Object.entries(attributes).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  if (sortedEntries.length === 0) {
-    return "";
-  }
-  const pairs: string[] = [];
-  for (const [ai, value] of sortedEntries) {
-    if (!isGs1DataAttributeAi(ai)) {
-      throw new Error(`"${ai}" is not a known GS1 data-attribute AI`);
-    }
-    if (!isValidGs1DataAttributeValue(ai, value)) {
-      throw new Error(`value for AI "${ai}" is invalid: "${value}"`);
-    }
-    pairs.push(`${ai}=${encodeURIComponent(value)}`);
-  }
-  return "?" + pairs.join("&");
+  const pairs = Object.entries(attributes ?? {})
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([ai, value]) => {
+      if (!isGs1DataAttributeAi(ai)) {
+        throw new Error(`"${ai}" is not a known GS1 data-attribute AI`);
+      }
+      if (!isValidGs1DataAttributeValue(ai, value)) {
+        throw new Error(`value for AI "${ai}" is invalid: "${value}"`);
+      }
+      return `${ai}=${encodeURIComponent(value)}`;
+    });
+  return pairs.length === 0 ? "" : "?" + pairs.join("&");
 }
 
 export interface Gs1DigitalLinkParts {
@@ -256,11 +255,8 @@ function normalizeOptionalComponent(
   value: string | null | undefined,
   label: string,
 ): string | undefined {
-  if (value === null || value === undefined) {
-    return undefined;
-  }
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
     return undefined;
   }
   if (!isValidCset82Component(trimmed)) {

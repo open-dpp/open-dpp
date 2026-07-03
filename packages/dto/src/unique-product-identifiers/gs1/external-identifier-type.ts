@@ -15,15 +15,9 @@ export const ExternalIdentifierType = {
   EAN: "EAN",
 } as const;
 
-export type ExternalIdentifierTypeValue =
-  (typeof ExternalIdentifierType)[keyof typeof ExternalIdentifierType];
+export const ExternalIdentifierTypeSchema = z.enum(ExternalIdentifierType);
 
-export const ExternalIdentifierTypeSchema = z.enum([
-  ExternalIdentifierType.OPEN_DPP_UUID,
-  ExternalIdentifierType.GS1,
-  ExternalIdentifierType.GTIN,
-  ExternalIdentifierType.EAN,
-]);
+export type ExternalIdentifierTypeValue = z.infer<typeof ExternalIdentifierTypeSchema>;
 
 /**
  * The GS1 granularity level implied by which key qualifiers are present on a UPI.

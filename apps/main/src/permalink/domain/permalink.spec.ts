@@ -455,7 +455,8 @@ describe("Permalink", () => {
     it("withGs1DataAttributes throws ValueError on an invalid AI map", () => {
       const original = makeGs1Link();
       // "01" is a key AI (identifier), not a data attribute
-      expect(() => original.withGs1DataAttributes({ "01": "04006381333931" })).toThrow(ValueError);
+      const invalid: Record<string, string> = { "01": "04006381333931" };
+      expect(() => original.withGs1DataAttributes(invalid)).toThrow(ValueError);
     });
 
     it("withGs1DataAttributes throws ValueError on a presentation permalink", () => {

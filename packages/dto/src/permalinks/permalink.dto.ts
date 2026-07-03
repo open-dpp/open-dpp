@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BrandingDtoSchema } from "../branding/branding.dto";
-import { Gs1DataAttributesSchema } from "../gs1/gs1-data-attributes.dto";
+import { Gs1DataAttributesSchema } from "../unique-product-identifiers/gs1/gs1-data-attributes.dto";
 import { PassportDtoSchema } from "../passports/passport.dto";
 import { PresentationConfigurationDtoSchema } from "../presentation-configurations/presentation-configuration.dto";
 import { DateTimeSchema } from "../shared/digital-product-document.schemas";
