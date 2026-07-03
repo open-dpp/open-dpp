@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table.generated";
+import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
 
 describe("GS1_AI_TABLE", () => {
   it("is a non-empty Record keyed by AI string", () => {
@@ -80,7 +80,7 @@ describe("GS1_AI_TABLE", () => {
   });
 
   it("file text contains Apache-2.0 + GS1DigitalLinkToolkit provenance header", () => {
-    const filePath = path.resolve(__dirname, "gs1-ai-table.generated.ts");
+    const filePath = path.resolve(__dirname, "gs1-ai-table.ts");
     const fileText = fs.readFileSync(filePath, "utf-8");
     expect(fileText).toContain("GS1DigitalLinkToolkit");
     expect(fileText).toContain("Apache-2.0");

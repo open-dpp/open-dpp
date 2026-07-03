@@ -93,6 +93,57 @@ describe("Gs1DataAttributesSchema", () => {
     }
   });
 
+  it("reports the legacy human-readable message for an unknown AI key", () => {
+    const result = Gs1DataAttributesSchema.safeParse({ "99zz": "x" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.map((issue) => issue.message);
+      expect(messages).toContain('"99zz" is not a known GS1 data-attribute AI');
+    }
+  });
+
+  it("reports the legacy human-readable message for an invalid value", () => {
+    const result = Gs1DataAttributesSchema.safeParse({ "17": "2512" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.map((issue) => issue.message);
+      expect(messages).toContain('value for AI "17" is invalid');
+    }
+  });
+
+  it("never emits a huge issue message (guards against zod's default 456-value enum listing)", () => {
+    const inputs = [
+      { "99zz": "x" },
+      { "01": "04006381333931" },
+      { "17": "bad" },
+      "not-a-map",
+      // Unknown keys are echoed truncated, so even absurd input stays bounded.
+      { ["x".repeat(2048)]: "v" },
+    ];
+    for (const input of inputs) {
+      const result = Gs1DataAttributesSchema.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          expect(issue.message.length).toBeLessThan(200);
+        }
+      }
+    }
+  });
+
+  it("reports keys-first: unknown key + bad value for a valid key yields only the key issue", () => {
+    // zod skips .check() refinements when the base parse already failed, so the
+    // bad "17" value is not reported alongside the unknown-key issue. Pinned
+    // here as documented behavior (previously both were reported).
+    const result = Gs1DataAttributesSchema.safeParse({ "99zz": "x", "17": "bad" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.map((issue) => issue.message);
+      expect(messages).toContain('"99zz" is not a known GS1 data-attribute AI');
+      expect(messages).not.toContain('value for AI "17" is invalid');
+    }
+  });
+
   it("does not mutate the input object", () => {
     const input = { "17": "251231" };
     const snapshot = JSON.stringify(input);
@@ -107,11 +158,27 @@ describe("Gs1DataAttributesSchema", () => {
     expect(typeof Gs1DataAttributesSchema.safeParse).toBe("function");
   });
 
-  it("type Gs1DataAttributes is the inferred type — a Record<string, string>", () => {
+  it("type Gs1DataAttributes is the inferred type — a partial record keyed by known data-attribute AIs", () => {
     // Compile-time type check: ensure the type is assignable.
     const valid: Gs1DataAttributes = { "17": "251231" };
     const empty: Gs1DataAttributes = {};
     expect(valid).toEqual({ "17": "251231" });
     expect(empty).toEqual({});
+  });
+
+  it("type Gs1DataAttributes rejects fresh literals with non-data-attribute AI keys at compile time", () => {
+    // @ts-expect-error "01" is a key AI (type I), not a data-attribute AI
+    const invalid: Gs1DataAttributes = { "01": "04006381333931" };
+    expect(invalid).toEqual({ "01": "04006381333931" });
+  });
+
+  it("type Gs1DataAttributes stays assignable to and from Record<string, string>", () => {
+    // Compile-time assertions for downstream consumers: the free-text UI flow
+    // builds Record<string, string> maps (wide -> narrow), and generic helpers
+    // consume the parsed map as Record<string, string> (narrow -> wide).
+    const wide: Record<string, string> = { "17": "251231" };
+    const narrow: Gs1DataAttributes = wide;
+    const roundTripped: Record<string, string> = narrow;
+    expect(roundTripped).toEqual(wide);
   });
 });

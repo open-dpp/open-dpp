@@ -1,9 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
+import { Gs1DataAttributeAi, Gs1KeyAi, Gs1QualifierAi } from "./gs1-ai-constants";
 import {
   buildGs1DataAttributeQuery,
   buildGs1DigitalLink,
   Cset82ComponentSchema,
   formatGs1ElementString,
+  GS1_AI_BATCH,
+  GS1_AI_GTIN,
+  GS1_AI_SERIAL,
   GS1_CSET82_MAX_LENGTH,
   Gtin14Schema,
   GtinInputSchema,
@@ -435,6 +439,28 @@ describe("isGs1DataAttributeAi", () => {
     const snapshot = ai;
     isGs1DataAttributeAi(ai);
     expect(ai).toBe(snapshot);
+  });
+
+  it("narrows a string to Gs1DataAttributeAi (compile-time type-guard check)", () => {
+    const ai: string = "17";
+    if (isGs1DataAttributeAi(ai)) {
+      // Assignment only compiles if the guard narrowed `ai`.
+      const narrowed: Gs1DataAttributeAi = ai;
+      expect(narrowed).toBe("17");
+    } else {
+      throw new Error("expected '17' to be recognized as a data-attribute AI");
+    }
+  });
+});
+
+describe("GS1 AI compat aliases", () => {
+  it("re-point to the generated named constants", () => {
+    expect(GS1_AI_GTIN).toBe(Gs1KeyAi.GLOBAL_TRADE_ITEM_NUMBER);
+    expect(GS1_AI_BATCH).toBe(Gs1QualifierAi.BATCH_OR_LOT_NUMBER);
+    expect(GS1_AI_SERIAL).toBe(Gs1QualifierAi.SERIAL_NUMBER);
+    expect(GS1_AI_GTIN).toBe("01");
+    expect(GS1_AI_BATCH).toBe("10");
+    expect(GS1_AI_SERIAL).toBe("21");
   });
 });
 

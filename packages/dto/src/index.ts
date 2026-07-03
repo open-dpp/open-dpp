@@ -57,6 +57,8 @@ export * from "./aas/submodel-base/submodel-element-schema";
 export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
 export * from "./gs1/external-identifier-type";
+export * from "./gs1/gs1-ai-constants";
+export * from "./gs1/gs1-ai-table";
 export * from "./gs1/gs1-data-attributes.dto";
 export * from "./gs1/gs1-digital-link";
 export * from "./gs1/gs1-identity.dto";

@@ -1,61 +1,46 @@
 /**
- * Slice 7 — Barrel-export test.
- *
- * Imports from the **package root** (`@open-dpp/dto`) and asserts that
- * the GS1 data-attributes schema and helpers are reachable from there.
+ * Barrel-export smoke test: imports from the **package root** (`@open-dpp/dto`)
+ * and exercises the GS1 data-attributes schema and helpers from there.
  */
 import { describe, expect, it } from "@jest/globals";
-
-// Import from the package root barrel (not the individual module).
 import {
+  GS1_AI_GTIN,
+  GS1_AI_TABLE,
+  Gs1DataAttributeAi,
   Gs1DataAttributesSchema,
+  Gs1KeyAi,
+  Gs1QualifierAi,
   isGs1DataAttributeAi,
   isValidGs1DataAttributeValue,
   buildGs1DataAttributeQuery,
 } from "../index";
 import type { Gs1DataAttributes } from "../index";
 
-describe("gs1-data-attributes barrel export (Slice 7)", () => {
-  it("Gs1DataAttributesSchema is exported from the package root and is an object with safeParse", () => {
-    expect(typeof Gs1DataAttributesSchema).toBe("object");
-    expect(typeof Gs1DataAttributesSchema.safeParse).toBe("function");
-  });
-
-  it("isGs1DataAttributeAi is exported from the package root and is a function", () => {
-    expect(typeof isGs1DataAttributeAi).toBe("function");
-  });
-
-  it("isValidGs1DataAttributeValue is exported from the package root and is a function", () => {
-    expect(typeof isValidGs1DataAttributeValue).toBe("function");
-  });
-
-  it("buildGs1DataAttributeQuery is exported from the package root and is a function", () => {
-    expect(typeof buildGs1DataAttributeQuery).toBe("function");
-  });
-
-  it("type Gs1DataAttributes resolves (compile-time check via assignment)", () => {
-    // This is a compile-time type assertion: if Gs1DataAttributes did not export correctly,
-    // TypeScript would reject the assignment below.
+describe("gs1-data-attributes barrel export", () => {
+  it("exports the schema, helpers, and type from the package root (smoke-test)", () => {
+    // Compile-time type assertion: `pnpm check-ts` fails if the type is not
+    // exported (jest/swc strips types and the build tsconfig excludes specs).
     const attrs: Gs1DataAttributes = { "17": "251231" };
-    expect(attrs).toEqual({ "17": "251231" });
-  });
 
-  it("the exported symbols behave correctly (smoke-test)", () => {
-    // isGs1DataAttributeAi
     expect(isGs1DataAttributeAi("17")).toBe(true);
     expect(isGs1DataAttributeAi("01")).toBe(false);
 
-    // isValidGs1DataAttributeValue
     expect(isValidGs1DataAttributeValue("17", "251231")).toBe(true);
     expect(isValidGs1DataAttributeValue("17", "bad")).toBe(false);
 
-    // buildGs1DataAttributeQuery
-    expect(buildGs1DataAttributeQuery({ "17": "251231" })).toBe("?17=251231");
+    expect(buildGs1DataAttributeQuery(attrs)).toBe("?17=251231");
     expect(buildGs1DataAttributeQuery({})).toBe("");
     expect(buildGs1DataAttributeQuery(null)).toBe("");
 
-    // Gs1DataAttributesSchema
-    const result = Gs1DataAttributesSchema.safeParse({ "17": "251231" });
-    expect(result.success).toBe(true);
+    expect(Gs1DataAttributesSchema.safeParse(attrs).success).toBe(true);
+  });
+
+  it("exports the named AI constants and the vendored table from the package root", () => {
+    expect(Gs1KeyAi.GLOBAL_TRADE_ITEM_NUMBER).toBe("01");
+    expect(Gs1QualifierAi.BATCH_OR_LOT_NUMBER).toBe("10");
+    expect(Gs1DataAttributeAi.EXPIRATION_DATE).toBe("17");
+    expect(GS1_AI_GTIN).toBe(Gs1KeyAi.GLOBAL_TRADE_ITEM_NUMBER);
+    // Table entries carry human-readable titles (used by UI pickers downstream).
+    expect(GS1_AI_TABLE["17"].title).toBeTruthy();
   });
 });

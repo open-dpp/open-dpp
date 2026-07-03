@@ -10,6 +10,10 @@
  * This file vendors the `aitable` array from GS1DigitalLinkToolkit.js, reshaped
  * from an array to a Record keyed by AI string. Pure data + types, no I/O.
  * Zero new runtime dependencies.
+ *
+ * Typed `as const satisfies Readonly<Record<string, Gs1AiTableEntry>>` so the
+ * AI keys and entry fields keep their literal types (source of truth for the
+ * generated named constants in gs1-ai-constants.ts).
  */
 
 /**
@@ -46,7 +50,7 @@ export interface Gs1AiTableEntry {
  * Source: GS1DigitalLinkToolkit.js `aitable`, pinned to commit facedb875bcc71b12b16d7236c0d5edd48205bfa.
  * Apache-2.0 License.
  */
-export const GS1_AI_TABLE: Readonly<Record<string, Gs1AiTableEntry>> = {
+export const GS1_AI_TABLE = {
   "00": {
     ai: "00",
     title: "Serial Shipping Container Code (SSCC) ",
@@ -3901,4 +3905,4 @@ export const GS1_AI_TABLE: Readonly<Record<string, Gs1AiTableEntry>> = {
     fixedLength: false,
     regex: "([\\x21-\\x22\\x25-\\x2F\\x30-\\x3F\\x41-\\x5A\\x5F\\x61-\\x7A]{0,90})",
   },
-} as const;
+} as const satisfies Readonly<Record<string, Gs1AiTableEntry>>;
