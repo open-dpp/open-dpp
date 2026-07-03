@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { canonicaliseBaseUrl } from "../shared/permalink-base-url.schema";
+import { canonicaliseBaseUrl } from "../../shared/permalink-base-url.schema";
 import { Gs1DataAttributeAi, Gs1KeyAi, Gs1QualifierAi } from "./gs1-ai-constants";
 import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
 

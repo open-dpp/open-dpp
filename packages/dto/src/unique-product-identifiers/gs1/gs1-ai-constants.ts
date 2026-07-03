@@ -10,7 +10,7 @@
  * Licensed under the Apache-2.0 License.
  * Original copyright: © GS1, used under Apache-2.0.
  *
- * Naming rule (enforced by the drift guard in gs1-ai-constants.spec.ts):
+ * Naming rule:
  * title -> trim -> strip parentheticals -> uppercase -> collapse
  * non-alphanumeric runs to "_" -> strip leading/trailing "_"; members of a
  * same-name collision group within a kind carry a `_<AI>` suffix.
