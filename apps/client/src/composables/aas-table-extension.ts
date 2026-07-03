@@ -340,9 +340,22 @@ export function useAasTableExtension({
   }
 
   async function onCellEditComplete(event: CellEditProps) {
-    const { data: rowData, newValue, field, index: editedRowIndex } = event;
+    const { data: rowData, field, index: editedRowIndex } = event;
     const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
-    if (resolveFieldValue(rowData, field) !== newValue) {
+    // PrimeVue's cell-edit-complete resolves `newValue` via a flat lookup on
+    // `field`, so for dot-notation sub-column fields (e.g. "Group1.SubCol1")
+    // it can't find that literal key and reports `undefined` — even though
+    // the editor already wrote the real value into `rowData` via the
+    // dot-aware setFieldValue. Recover it from there in that case. (Every
+    // other caller of this function — onFileChange, and the Date/Boolean/
+    // DateTime body template — always coalesces to `null`, so `undefined`
+    // here can only mean this PrimeVue quirk.)
+    const newValueIsResolvable = event.newValue !== undefined;
+    const newValue = newValueIsResolvable ? event.newValue : resolveFieldValue(rowData, field);
+    // When newValue had to be recovered this way, the pre-edit snapshot was
+    // already overwritten by that same mutation, so there's nothing left to
+    // diff against — always attempt the save rather than silently skip it.
+    if (!newValueIsResolvable || resolveFieldValue(rowData, field) !== newValue) {
       try {
         const modifications = rows.value.map((row, index) => {
           if (index === editedRowIndex) {
@@ -354,6 +367,7 @@ export function useAasTableExtension({
         });
         const success = await tableMutations.saveRows(modifications, mutationDeps, errorMessage);
         if (success) {
+          console.log("Saved", rowData, field, newValue);
           setFieldValue(rowData, field, newValue);
         } else {
           errorHandlingStore.logErrorWithNotification(errorMessage);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
+import { DataTypeDefEnum, type SubmodelElementListModificationDto } from "@open-dpp/dto";
 import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -104,6 +104,11 @@ const {
   disableColumnDeletion: !canDeleteColumnsAndRows.value,
   disableColumnEditing: !canEdit.value,
 });
+
+const minPropertyColumnWidth: Record<any, string> = {
+  [DataTypeDef.Date]: "min-w-35",
+  [DataTypeDef.DateTime]: "min-w-50",
+};
 
 const showErrors = computed(() => submitCount.value > 0);
 
@@ -350,6 +355,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
               :media-id="resolveFieldValue(cellData, field)!"
             />
             <PropertyValue
+              :class="[minPropertyColumnWidth[flatCol.plain.valueType] ?? '']"
               v-else-if="
                 canEdit &&
                 flatCol.plain.modelType === AasSubmodelElements.Property &&
