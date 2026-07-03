@@ -284,6 +284,28 @@ describe("DigitalProductDocumentService", () => {
     ).rejects.toThrow(exception);
 
     await expect(
+      service.createGroupFromColumnInSubmodelElementList(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        IdShortPath.create({ path: "sub" }),
+        "col1",
+        {
+          idShort: "group1",
+          modelType: KeyTypes.SubmodelElementCollection,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
+        userContext,
+        latestVersion,
+      ),
+    ).rejects.toThrow(exception);
+
+    await expect(
       service.addRowToSubmodelElementList(
         correlationId,
         passport.organizationId,

@@ -513,6 +513,35 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     );
   }
 
+  async createGroupFromColumnInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    body: SubmodelElementRequestDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.createGroupFromColumn(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      columnIdShort,
+      SubmodelElementRequest.create({ body, version }),
+      userContext,
+    );
+  }
+
   async deletePolicyBySubjectAndObject(
     correlationId: string,
     organizationId: string,
