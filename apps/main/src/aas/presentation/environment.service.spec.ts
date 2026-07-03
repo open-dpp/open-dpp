@@ -79,6 +79,7 @@ import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { RowAdded } from "../../activity-history/domain/change-events/row-added";
 import { ColumnAdded } from "../../activity-history/domain/change-events/column-added";
 import { ColumnDeleted } from "../../activity-history/domain/change-events/column-deleted";
+import { ColumnAddedToGroup } from "../../activity-history/domain/change-events/column-added-to-group";
 import { RowDeleted } from "../../activity-history/domain/change-events/row-deleted";
 import { SubmodelReferenceAdded } from "../../activity-history/domain/change-events/submodel-reference-added";
 import { AddedSubmodelToEnv } from "../../activity-history/domain/change-events/added-submodel-to-env";
@@ -675,6 +676,85 @@ describe("environmentService", () => {
               path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "column1"]),
               value: Property.fromPlain(body),
               position,
+            }),
+          ],
+        }),
+      },
+    ]);
+  });
+
+  it("should create a group from an existing column", async () => {
+    const {
+      correlationId,
+      digitalProductDocumentId,
+      listIdShortPath,
+      environment,
+      admin,
+      submodel1,
+      row1,
+      col1,
+    } = await createEnvironmentWithList();
+    const groupBody = SubmodelElementSchema.parse({
+      modelType: KeyTypes.SubmodelElementCollection,
+      idShort: "group1",
+    });
+    const request = SubmodelElementRequest.create({
+      body: groupBody,
+      version: ApiVersionsDto.v2,
+    });
+
+    const col1BeforeGrouping = col1.copy().value;
+    const changedList: any = await environmentService.createGroupFromColumn(
+      correlationId,
+      digitalProductDocumentId,
+      environment,
+      submodel1.id,
+      listIdShortPath,
+      col1.idShort,
+      request,
+      admin,
+    );
+    const [row0, _] = changedList.value;
+    expect(row0.value.map((e: any) => e.idShort)).toEqual(["group1"]);
+    expect(row0.value[0].value.map((e: any) => e.idShort)).toEqual(["col1"]);
+
+    const foundActivities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+    expect(
+      foundActivities.items.map((e) => ({
+        correlationId: e.header.correlationId,
+        type: e.header.type,
+        payload: e.payload,
+      })),
+    ).toEqual([
+      {
+        correlationId,
+        type: ActivityTypes.ColumnGroupCreated,
+        payload: SubmodelActivityPayload.create({
+          submodelId: submodel1.id,
+          changes: [
+            ColumnAdded.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "group1"]),
+              position: 0,
+              value: SubmodelElementCollection.fromPlain(groupBody),
+            }),
+            ColumnDeleted.create({
+              path: IdShortPath.fromSegments([submodel1.idShort, "list", row1.idShort, "col1"]),
+              value: col1BeforeGrouping,
+              // col1 shifted from position 0 to 1 once the new group was
+              // inserted ahead of it (before col1 is migrated into it).
+              position: 1,
+            }),
+            ColumnAddedToGroup.create({
+              groupIdShort: "group1",
+              path: IdShortPath.fromSegments([
+                submodel1.idShort,
+                "list",
+                row1.idShort,
+                "group1",
+                "col1",
+              ]),
+              position: 0,
+              value: col1,
             }),
           ],
         }),

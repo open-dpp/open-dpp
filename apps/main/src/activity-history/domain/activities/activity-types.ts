@@ -18,6 +18,7 @@ export const ActivityTypes = {
   ColumnModifiedInGroup: "ColumnModifiedInGroup",
   ColumnDeletedFromGroup: "ColumnDeletedFromGroup",
   ColumnMovedToGroup: "ColumnMovedToGroup",
+  ColumnGroupCreated: "ColumnGroupCreated",
   SubmodelElementDeleted: "SubmodelElementDeleted",
   PolicyDeleted: "PolicyDeleted",
   DigitalProductDocumentStatusChanged: "DigitalProductDocumentStatusChanged",

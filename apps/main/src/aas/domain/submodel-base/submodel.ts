@@ -281,6 +281,17 @@ export class Submodel
     return tableExtension.getTableElement();
   }
 
+  createGroupFromColumn(
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    group: ISubmodelElement,
+    options: MoveOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.createGroupFromColumn(columnIdShort, group, options);
+    return tableExtension.getTableElement();
+  }
+
   getKeyType() {
     return KeyTypes.Submodel;
   }

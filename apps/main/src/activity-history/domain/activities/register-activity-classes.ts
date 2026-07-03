@@ -16,6 +16,7 @@ import { ColumnAddedToGroupActivity } from "./column-added-to-group.activity";
 import { ColumnModifiedInGroupActivity } from "./column-modified-in-group.activity";
 import { ColumnDeletedFromGroupActivity } from "./column-deleted-from-group.activity";
 import { ColumnMovedToGroupActivity } from "./column-moved-to-group.activity";
+import { ColumnGroupCreatedActivity } from "./column-group-created.activity";
 import { RowDeletedActivity } from "./row-deleted.activity";
 import { SubmodelAddedActivity } from "./submodel-added.activity";
 import { SubmodelDeletedActivity } from "./submodel-deleted.activity";
@@ -47,6 +48,7 @@ export function registerActivityClasses(): void {
   registerActivity(ActivityTypes.ColumnModifiedInGroup, ColumnModifiedInGroupActivity);
   registerActivity(ActivityTypes.ColumnDeletedFromGroup, ColumnDeletedFromGroupActivity);
   registerActivity(ActivityTypes.ColumnMovedToGroup, ColumnMovedToGroupActivity);
+  registerActivity(ActivityTypes.ColumnGroupCreated, ColumnGroupCreatedActivity);
   registerActivity(
     ActivityTypes.DigitalProductDocumentStatusChanged,
     DigitalProductDocumentStatusChangedActivity,

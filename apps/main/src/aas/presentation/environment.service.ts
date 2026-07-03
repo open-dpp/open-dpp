@@ -65,6 +65,7 @@ import { ColumnAddedToGroupActivity } from "../../activity-history/domain/activi
 import { ColumnModifiedInGroupActivity } from "../../activity-history/domain/activities/column-modified-in-group.activity";
 import { ColumnDeletedFromGroupActivity } from "../../activity-history/domain/activities/column-deleted-from-group.activity";
 import { ColumnMovedToGroupActivity } from "../../activity-history/domain/activities/column-moved-to-group.activity";
+import { ColumnGroupCreatedActivity } from "../../activity-history/domain/activities/column-group-created.activity";
 import { RowDeletedActivity } from "../../activity-history/domain/activities/row-deleted.activity";
 import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
@@ -938,6 +939,47 @@ export class EnvironmentService {
       return SubmodelElementListResponse.create({
         submodelElement: modifiedSubmodelElementList,
         version,
+        ability,
+      }).toJSON();
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async createGroupFromColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    groupRequest: SubmodelElementRequest,
+    userContext: UserContext,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .createGroupFromColumn(idShortPath, columnIdShort, groupRequest.toDomain(), { ability });
+
+    const activity = ColumnGroupCreatedActivity.create({
+      userId: userContext.userId,
+      digitalProductDocumentId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version: groupRequest.version,
         ability,
       }).toJSON();
     } finally {
