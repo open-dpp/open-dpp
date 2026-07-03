@@ -1448,11 +1448,9 @@ export function createAasTestContext<T>(
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
     expect(response.status).toEqual(200);
-    const bodyRow0 = response.body.value[0];
-    const bodyGroup1 = bodyRow0.value[0];
-    expect(bodyGroup1.idShort).toEqual("group1");
-    expect(bodyGroup1.value).toEqual([]);
-    expect(bodyRow0.value[1].idShort).toEqual(col1.idShort);
+    const [bodyRow0, _] = response.body.value;
+    // After deleting column1 from group1, group1 is empty and therefore deleted. That's why only column1 is left.
+    expect(bodyRow0.value.map((col: any) => col.idShort)).toEqual(["column1"]);
   }
 
   async function assertMoveColumnToGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
