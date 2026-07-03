@@ -5,6 +5,7 @@ import {
   addColumnToGroup,
   addRow,
   createColumn,
+  createGroupFromColumn,
   deleteColumn,
   deleteColumnFromGroup,
   deleteRow,
@@ -167,6 +168,27 @@ describe("moveColumnToGroup", () => {
       }),
     });
     const result = await moveColumnToGroup("Column1", "Group1", deps, "error", onSuccess);
+    expect(result).toBe(true);
+    expect(onSuccess).toHaveBeenCalledWith({ idShort: "List" });
+  });
+});
+
+describe("createGroupFromColumn", () => {
+  it("expects HTTPCode.CREATED", async () => {
+    const onSuccess = vi.fn();
+    const { deps } = makeDeps({
+      createGroupFromColumnInSubmodelElementList: vi.fn().mockResolvedValue({
+        status: HTTPCode.CREATED,
+        data: { idShort: "List" },
+      }),
+    });
+    const result = await createGroupFromColumn(
+      "Column1",
+      { idShort: "Group1", modelType: AasSubmodelElements.SubmodelElementCollection },
+      deps,
+      "error",
+      onSuccess,
+    );
     expect(result).toBe(true);
     expect(onSuccess).toHaveBeenCalledWith({ idShort: "List" });
   });

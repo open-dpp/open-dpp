@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => {
     modifyColumnInGroupOfSubmodelElementList: vi.fn(),
     deleteColumnFromGroupInSubmodelElementList: vi.fn(),
     moveColumnToGroupInSubmodelElementList: vi.fn(),
+    createGroupFromColumnInSubmodelElementList: vi.fn(),
   };
 });
 
@@ -57,6 +58,8 @@ vi.mock("../lib/api-client", () => ({
           deleteColumnFromGroupInSubmodelElementList:
             mocks.deleteColumnFromGroupInSubmodelElementList,
           moveColumnToGroupInSubmodelElementList: mocks.moveColumnToGroupInSubmodelElementList,
+          createGroupFromColumnInSubmodelElementList:
+            mocks.createGroupFromColumnInSubmodelElementList,
         },
       },
     },
@@ -822,10 +825,7 @@ describe("aasTableExtension composable", () => {
           { ...cols[0] },
           {
             ...groupCol,
-            value: [
-              { ...groupCol.value[0] },
-              { ...groupCol.value[1] },
-            ],
+            value: [{ ...groupCol.value[0] }, { ...groupCol.value[1] }],
           },
         ],
       },
@@ -920,25 +920,51 @@ describe("aasTableExtension composable", () => {
 
     expect(hasGroups.value).toBe(true);
     expect(columns.value).toEqual([
-      { idShort: "Column1", label: "Material", plain: SubmodelElementSchema.parse(cols[0]), children: undefined },
+      {
+        idShort: "Column1",
+        label: "Material",
+        plain: SubmodelElementSchema.parse(cols[0]),
+        children: undefined,
+      },
       {
         idShort: "Group1",
         label: "Dimensions",
-        plain: expect.objectContaining({ idShort: "Group1", modelType: AasSubmodelElements.SubmodelElementCollection }),
+        plain: expect.objectContaining({
+          idShort: "Group1",
+          modelType: AasSubmodelElements.SubmodelElementCollection,
+        }),
         children: [
-          { idShort: "SubCol1", label: "Width", plain: expect.objectContaining({ idShort: "SubCol1" }), children: undefined },
-          { idShort: "SubCol2", label: "Height", plain: expect.objectContaining({ idShort: "SubCol2" }), children: undefined },
+          {
+            idShort: "SubCol1",
+            label: "Width",
+            plain: expect.objectContaining({ idShort: "SubCol1" }),
+            children: undefined,
+          },
+          {
+            idShort: "SubCol2",
+            label: "Height",
+            plain: expect.objectContaining({ idShort: "SubCol2" }),
+            children: undefined,
+          },
         ],
       },
     ]);
     expect(flatColumns.value).toEqual([
       expect.objectContaining({ idShort: "Column1", field: "Column1" }),
-      expect.objectContaining({ idShort: "SubCol1", field: "Group1.SubCol1", groupIdShort: "Group1" }),
-      expect.objectContaining({ idShort: "SubCol2", field: "Group1.SubCol2", groupIdShort: "Group1" }),
+      expect.objectContaining({
+        idShort: "SubCol1",
+        field: "Group1.SubCol1",
+        groupIdShort: "Group1",
+      }),
+      expect.objectContaining({
+        idShort: "SubCol2",
+        field: "Group1.SubCol2",
+        groupIdShort: "Group1",
+      }),
     ]);
   });
 
-  it("should add a group column type", async () => {
+  it("should create a group from an existing column via 'New group'", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
     const mockCan = vi.fn();
@@ -965,10 +991,15 @@ describe("aasTableExtension composable", () => {
       callbackOfSubmodelElementListEditor,
     });
 
-    buildColumnMenu({ position: 2 });
-    const groupItem = columnMenu.value.find((e) => e.label === "aasEditor.columnGroup")!;
-    expect(groupItem).toBeDefined();
-    groupItem.command!({} as MenuItemCommandEvent);
+    buildColumnMenu({ position: 0, addColumnActions: true });
+    const moveToGroupSection = columnMenu.value.find(
+      (c) => c.label === "aasEditor.table.moveToGroup",
+    )!;
+    // No group columns exist yet, so the section only holds the trailing "+ New group" entry.
+    const expectedLabel = "aasEditor.table.newGroup";
+    expect(moveToGroupSection.items?.map((i) => i.label)).toEqual([expectedLabel]);
+    const newGroupItem = moveToGroupSection.items![0]!;
+    newGroupItem.command!({} as MenuItemCommandEvent);
     expect(drawerVisible.value).toBeTruthy();
     await waitFor(() =>
       expect(editorVNode.value!.props.data).toEqual({
@@ -983,26 +1014,36 @@ describe("aasTableExtension composable", () => {
     };
     const submodelElementListWithNewGroup = {
       ...submodelElementList,
-      value: submodelElementList.value.map((row: any) => ({
-        ...row,
-        value: [...row.value, { ...groupColumnData, value: [] }],
-      })),
+      value: submodelElementList.value.map((row: any) => {
+        const [column1, ...rest] = row.value;
+        return { ...row, value: [{ ...groupColumnData, value: [column1] }, ...rest] };
+      }),
     };
 
-    mocks.addColumnToSubmodelElementList.mockResolvedValue({
+    mocks.createGroupFromColumnInSubmodelElementList.mockResolvedValue({
       data: submodelElementListWithNewGroup,
       status: HTTPCode.CREATED,
     });
 
     await editorVNode.value!.props.callback!(groupColumnData);
 
-    expect(mocks.addColumnToSubmodelElementList).toHaveBeenCalledWith(
+    expect(mocks.createGroupFromColumnInSubmodelElementList).toHaveBeenCalledWith(
       aasId,
       pathToList.submodelId,
       pathToList.idShortPath,
+      "Column1",
       SubmodelElementSchema.parse(groupColumnData),
-      { position: 2 },
     );
+
+    // navigates back from group column editor to list editor
+    expect(drawerVisible.value).toBeTruthy();
+    expect(editorVNode.value!.props.path).toEqual(pathToList);
+    expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
+    expect(editorVNode.value!.props.data).toEqual({
+      ...SubmodelElementListJsonSchema.parse(submodelElementListWithNewGroup),
+      modelType: KeyTypes.SubmodelElementList,
+    });
+    expect(editorVNode.value!.props.callback).toEqual(callbackOfSubmodelElementListEditor);
   });
 
   it("should add a sub-column to a group via the group header menu", async () => {
@@ -1058,9 +1099,7 @@ describe("aasTableExtension composable", () => {
       value: submodelElementListWithGroup.value.map((row: any) => ({
         ...row,
         value: row.value.map((col: any) =>
-          col.idShort === "Group1"
-            ? { ...col, value: [...col.value, newSubColData] }
-            : col,
+          col.idShort === "Group1" ? { ...col, value: [...col.value, newSubColData] } : col,
         ),
       })),
     };
@@ -1126,9 +1165,7 @@ describe("aasTableExtension composable", () => {
       value: submodelElementListWithGroup.value.map((row: any) => ({
         ...row,
         value: row.value.map((col: any) =>
-          col.idShort === "Group1"
-            ? { ...col, value: [updatedSubColData, col.value[1]] }
-            : col,
+          col.idShort === "Group1" ? { ...col, value: [updatedSubColData, col.value[1]] } : col,
         ),
       })),
     };
@@ -1186,10 +1223,7 @@ describe("aasTableExtension composable", () => {
       ...submodelElementListWithGroup,
       value: submodelElementListWithGroup.value.map((row: any) => ({
         ...row,
-        value: [
-          row.value[0],
-          { ...row.value[1], value: [row.value[1].value[1]] },
-        ],
+        value: [row.value[0], { ...row.value[1], value: [row.value[1].value[1]] }],
       })),
     };
 
@@ -1280,12 +1314,16 @@ describe("aasTableExtension composable", () => {
     buildColumnMenu({ position: 0, addColumnActions: true });
     // When groups exist, group targets are rendered as a separate top-level section
     // (PrimeVue Menu only supports 2 levels — nesting inside "common.actions" would break clicks)
-    const moveToGroupSection = columnMenu.value
-      .find((c) => c.label === "aasEditor.table.moveToGroup")!;
+    const moveToGroupSection = columnMenu.value.find(
+      (c) => c.label === "aasEditor.table.moveToGroup",
+    )!;
 
-    expect(moveToGroupSection.items).toHaveLength(1);
-    const firstGroupItem = moveToGroupSection.items![0]!;
-    expect(firstGroupItem.label).toBe("Dimensions");
+    // The existing group plus the trailing "+ New group" entry.
+    expect(moveToGroupSection.items?.map((i) => i.label)).toEqual([
+      "Dimensions",
+      "aasEditor.table.newGroup",
+    ]);
+    const [firstGroupItem, _] = moveToGroupSection.items!;
 
     const updatedList = {
       ...submodelElementListWithGroup,
@@ -1305,7 +1343,7 @@ describe("aasTableExtension composable", () => {
       status: HTTPCode.CREATED,
     });
 
-    await firstGroupItem.command!({} as MenuItemCommandEvent);
+    await firstGroupItem!.command!({} as MenuItemCommandEvent);
 
     expect(mocks.moveColumnToGroupInSubmodelElementList).toHaveBeenCalledWith(
       aasId,
@@ -1331,7 +1369,7 @@ describe("aasTableExtension composable", () => {
     });
   });
 
-  it("should show move-to-group disabled when no groups exist", () => {
+  it("shows only '+ New group' in the move-to-group section when no groups exist", () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
     const mockCan = vi.fn();
@@ -1356,12 +1394,16 @@ describe("aasTableExtension composable", () => {
     });
 
     buildColumnMenu({ position: 0, addColumnActions: true });
-    const moveToGroupItem = columnMenu.value
-      .find((c) => c.label === "common.actions")!
-      .items!.find((e) => e.label === "aasEditor.table.moveToGroup")!;
+    // "common.actions" now only holds edit/remove — no disabled placeholder.
+    const actionsSection = columnMenu.value.find((c) => c.label === "common.actions")!;
+    expect(actionsSection.items!.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
 
-    expect(moveToGroupItem.disabled).toBe(true);
-    expect(moveToGroupItem.items).toBeUndefined();
+    // Move-to-group is its own always-present top-level section.
+    const moveToGroupSection = columnMenu.value.find(
+      (c) => c.label === "aasEditor.table.moveToGroup",
+    )!;
+    expect(moveToGroupSection.disabled).toBeUndefined();
+    expect(moveToGroupSection.items?.map((i) => i.label)).toEqual(["aasEditor.table.newGroup"]);
   });
 
   it("should modify cell in a group column using dot-notation field", async () => {

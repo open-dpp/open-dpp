@@ -132,10 +132,11 @@
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries",
       "addSubColumn": "@:common.add sub-column",
       "moveToGroup": "Move to group",
+      "newGroup": "New group",
       "removeFromGroup": "Remove from group",
       "removeFromGroupConfirm": "Should the @:aasEditor.table.column really be removed from the group?",
-      "noGroupsAvailable": "No groups available – add a group column first",
-      "errorMoveColumn": "@.capitalize:common.failed to move @:aasEditor.table.column to group"
+      "errorMoveColumn": "@.capitalize:common.failed to move @:aasEditor.table.column to group",
+      "errorCreateGroup": "@.capitalize:common.failed to create group"
     },
     "data": "Data",
     "link": "Link",
@@ -157,7 +158,6 @@
     "dateTimeField": "Date-time field",
     "booleanField": "Boolean field",
     "numberField": "Number field",
-    "columnGroup": "Column group",
     "timezone": "Timezone",
     "type": "Type",
     "error": "{method} @:common.failed"

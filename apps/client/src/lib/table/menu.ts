@@ -59,6 +59,10 @@ export interface TableMenuDeps {
   onRemoveColumn: (column: Column) => Promise<void>;
   onDeleteColumnFromGroup: (groupIdShort: string, subColumn: Column) => Promise<void>;
   onMoveColumnToGroup: (column: Column, groupIdShort: string) => Promise<void>;
+  onCreateGroupFromColumn: (
+    column: Column,
+    groupData: SubmodelElementSharedRequestDto,
+  ) => Promise<void>;
   onAddRow: (options: RowMenuOptions) => Promise<void>;
   onRemoveRow: (rowIndex: number) => Promise<void>;
 }
@@ -224,17 +228,6 @@ function buildAllColumnTypeMenuItems(
       undefined,
       groupIdShort,
     ),
-    ...(!groupIdShort
-      ? [
-          buildColumnTypeMenuItem(
-            translate(`${translatePrefix}.columnGroup`),
-            icon,
-            options,
-            AasSubmodelElements.SubmodelElementCollection,
-            deps,
-          ),
-        ]
-      : []),
   ];
 }
 
@@ -290,13 +283,27 @@ function removeColumnMenuItem(column: Column, deps: TableMenuDeps) {
   };
 }
 
-function moveToGroupMenuItem(deps: TableMenuDeps): MenuItem {
-  const { translate } = deps;
+function createGroupFromColumnMenuItem(column: Column, deps: TableMenuDeps): MenuItem {
+  const { translate, openDrawer, pathToList, disableColumnEditing } = deps;
+  const label = translate(`${translateTablePrefix}.newGroup`);
   return {
-    label: translate(`${translateTablePrefix}.moveToGroup`),
-    icon: "pi pi-objects-column",
-    disabled: true,
-    tooltip: translate(`${translateTablePrefix}.noGroupsAvailable`),
+    label,
+    icon: "pi pi-plus",
+    disabled: !!disableColumnEditing,
+    command: (_event: MenuItemCommandEvent) => {
+      openDrawer({
+        mode: EditorMode.CREATE,
+        title: label,
+        path: pathToList,
+        type: ColumnEditorKey,
+        data: { modelType: AasSubmodelElements.SubmodelElementCollection },
+        callback: async (groupData: any) =>
+          deps.onCreateGroupFromColumn(column, {
+            modelType: AasSubmodelElements.SubmodelElementCollection,
+            ...groupData,
+          }),
+      });
+    },
   };
 }
 
@@ -363,21 +370,19 @@ function buildTopLevelColumnMenu(options: ColumnMenuOptions, columns: Column[], 
       const column = getColumnAtIndexOrFail(columns, options.position ?? 0);
       const groups = getGroupColumns(columns);
 
-      const commonActionItems: MenuItem[] = [
-        modifyColumnMenuItem(column, deps),
-        removeColumnMenuItem(column, deps),
-      ];
-      if (groups.length === 0) {
-        commonActionItems.push(moveToGroupMenuItem(deps));
-      }
-      menu.push({ label: translate("common.actions"), items: commonActionItems });
+      menu.push({
+        label: translate("common.actions"),
+        items: [modifyColumnMenuItem(column, deps), removeColumnMenuItem(column, deps)],
+      });
 
       // PrimeVue Menu only supports 2 levels, so group targets live in a
       // separate top-level section rather than nested inside "common.actions".
-      if (groups.length > 0) {
-        menu.push({
-          label: translate(`${translateTablePrefix}.moveToGroup`),
-          items: groups.map((group) => ({
+      // Always present: existing groups as move-targets, plus a trailing
+      // entry to wrap this column into a brand-new group.
+      menu.push({
+        label: translate(`${translateTablePrefix}.moveToGroup`),
+        items: [
+          ...groups.map((group) => ({
             label: group.label,
             icon: "pi pi-objects-column",
             disabled: !!disableColumnEditing,
@@ -385,8 +390,9 @@ function buildTopLevelColumnMenu(options: ColumnMenuOptions, columns: Column[], 
               await deps.onMoveColumnToGroup(column, group.idShort);
             },
           })),
-        });
-      }
+          createGroupFromColumnMenuItem(column, deps),
+        ],
+      });
     } catch (e) {
       errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
     }

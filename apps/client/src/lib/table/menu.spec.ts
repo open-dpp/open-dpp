@@ -18,6 +18,7 @@ function makeDeps(overrides: Partial<TableMenuDeps> = {}): TableMenuDeps {
     onRemoveColumn: vi.fn(),
     onDeleteColumnFromGroup: vi.fn(),
     onMoveColumnToGroup: vi.fn(),
+    onCreateGroupFromColumn: vi.fn(),
     onAddRow: vi.fn(),
     onRemoveRow: vi.fn(),
     ...overrides,
@@ -27,7 +28,11 @@ function makeDeps(overrides: Partial<TableMenuDeps> = {}): TableMenuDeps {
 const scalarColumn: Column = {
   idShort: "Column1",
   label: "Column1",
-  plain: { idShort: "Column1", modelType: AasSubmodelElements.Property, valueType: DataTypeDef.String },
+  plain: {
+    idShort: "Column1",
+    modelType: AasSubmodelElements.Property,
+    valueType: DataTypeDef.String,
+  },
 };
 const groupColumn: Column = {
   idShort: "Group1",
@@ -55,24 +60,37 @@ describe("buildColumnMenu", () => {
       "aasEditor.dateTimeField",
       "aasEditor.link",
       "aasEditor.file",
-      "aasEditor.columnGroup",
     ]);
   });
 
-  it("adds a move-to-group section only when group columns exist", () => {
+  it("actions section holds only edit/remove; move-to-group section is always present", () => {
     const deps = makeDeps();
-    const withoutGroups = buildColumnMenu({ addColumnActions: true, position: 0 }, [scalarColumn], deps);
+    const withoutGroups = buildColumnMenu(
+      { addColumnActions: true, position: 0 },
+      [scalarColumn],
+      deps,
+    );
     const actionsSection = withoutGroups!.find((item) => item.label === "common.actions");
-    expect(actionsSection!.items).toHaveLength(3); // edit, remove, disabled move-to-group
+    expect(actionsSection!.items?.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
+
+    const moveToGroupMenuItem = withoutGroups!.find(
+      (item) => item.label === "aasEditor.table.moveToGroup",
+    );
+    expect(moveToGroupMenuItem!.items?.map((i) => i.label)).toEqual(["aasEditor.table.newGroup"]); // just "+ New group"
 
     const withGroups = buildColumnMenu(
       { addColumnActions: true, position: 0 },
       [scalarColumn, groupColumn],
       deps,
     );
-    const moveToGroupSection = withGroups!.find((item) => item.label === "aasEditor.table.moveToGroup");
+    const moveToGroupSection = withGroups!.find(
+      (item) => item.label === "aasEditor.table.moveToGroup",
+    );
     expect(moveToGroupSection).toBeDefined();
-    expect(moveToGroupSection!.items).toHaveLength(1);
+    expect(moveToGroupSection!.items?.map((i) => i.label)).toEqual([
+      "Group1",
+      "aasEditor.table.newGroup",
+    ]);
   });
 
   it("returns undefined (leave menu unchanged) when the column at position can't be resolved", () => {
@@ -168,6 +186,28 @@ describe("column menu commands delegate to the injected callbacks", () => {
     const moveSection = menu!.find((item) => item.label === "aasEditor.table.moveToGroup");
     await (moveSection!.items![0]!.command as any)();
     expect(deps.onMoveColumnToGroup).toHaveBeenCalledWith(scalarColumn, "Group1");
+  });
+
+  it("'+ New group' opens the drawer and its callback invokes onCreateGroupFromColumn", async () => {
+    let capturedCallback: ((data: any) => Promise<void>) | undefined;
+    const deps = makeDeps({
+      openDrawer: vi.fn((opts: any) => {
+        capturedCallback = opts.callback;
+      }),
+    });
+    const menu = buildColumnMenu({ addColumnActions: true, position: 0 }, [scalarColumn], deps);
+    const moveToGroupSection = menu!.find((item) => item.label === "aasEditor.table.moveToGroup");
+    const newGroupItem = moveToGroupSection!.items!.at(-1)!;
+    expect(newGroupItem.label).toEqual("aasEditor.table.newGroup");
+
+    (newGroupItem.command as any)();
+    expect(deps.openDrawer).toHaveBeenCalled();
+
+    await capturedCallback!({ idShort: "group1" });
+    expect(deps.onCreateGroupFromColumn).toHaveBeenCalledWith(scalarColumn, {
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "group1",
+    });
   });
 });
 

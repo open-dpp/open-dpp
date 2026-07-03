@@ -255,6 +255,21 @@ export function useAasTableExtension({
     );
   }
 
+  async function onCreateGroupFromColumn(
+    column: Column,
+    groupData: SubmodelElementSharedRequestDto,
+  ) {
+    await tableMutations.createGroupFromColumn(
+      column.idShort,
+      groupData,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorCreateGroup`),
+      (listData) => {
+        navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
   async function onAddRow(options: RowMenuOptions) {
     await tableMutations.addRow(
       options,
@@ -298,6 +313,7 @@ export function useAasTableExtension({
     onRemoveColumn,
     onDeleteColumnFromGroup,
     onMoveColumnToGroup,
+    onCreateGroupFromColumn,
     onAddRow,
     onRemoveRow,
   };

@@ -219,6 +219,30 @@ export async function moveColumnToGroup(
   });
 }
 
+export async function createGroupFromColumn(
+  columnIdShort: string,
+  groupData: SubmodelElementSharedRequestDto,
+  deps: TableMutationsDeps,
+  errorMessage: string,
+  onSuccess: (data: SubmodelElementListResponseDto) => void | Promise<void>,
+): Promise<boolean> {
+  const requestBody = SubmodelElementSchema.parse({ ...groupData });
+  return performMutation({
+    request: () =>
+      deps.aasNamespace.createGroupFromColumnInSubmodelElementList(
+        deps.id,
+        deps.pathToList.submodelId!,
+        deps.pathToList.idShortPath!,
+        columnIdShort,
+        requestBody,
+      ),
+    expectedStatus: HTTPCode.CREATED,
+    errorMessage,
+    errorHandlingStore: deps.errorHandlingStore,
+    onSuccess,
+  });
+}
+
 export async function addRow(
   options: RowMenuOptions,
   deps: TableMutationsDeps,
