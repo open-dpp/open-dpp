@@ -356,9 +356,7 @@ describe("UpiCollectionService.update", () => {
     });
 
     const updateRequest = uniqueProductIdentifierUpdateRequestPlainFactory.build();
-    await expect(service.update(upiUuid, updateRequest)).rejects.toThrow(
-      ConflictException,
-    );
+    await expect(service.update(upiUuid, updateRequest)).rejects.toThrow(ConflictException);
 
     expect(upiRepo.save).not.toHaveBeenCalled();
   });
@@ -399,9 +397,7 @@ describe("UpiCollectionService.update", () => {
     });
 
     const updateRequest = uniqueProductIdentifierUpdateRequestPlainFactory.build();
-    await expect(service.update(upiUuid, updateRequest)).rejects.toThrow(
-      ConflictException,
-    );
+    await expect(service.update(upiUuid, updateRequest)).rejects.toThrow(ConflictException);
 
     expect(upiRepo.save).not.toHaveBeenCalled();
   });
@@ -419,9 +415,7 @@ describe("UpiCollectionService.update", () => {
     });
 
     const updateRequest = uniqueProductIdentifierUpdateRequestPlainFactory.build();
-    await expect(service.update(upiUuid, updateRequest)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.update(upiUuid, updateRequest)).rejects.toThrow(NotFoundException);
   });
 });
 

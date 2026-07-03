@@ -71,4 +71,6 @@ export const permalinkGs1LinkCreateRequestPlainFactory = Factory.define<Gs1LinkC
 // ---------------------------------------------------------------------------
 
 /** Raw PermalinkUpdateRequest (no 'kind' — immutable after create); default is an empty update. */
-export const permalinkUpdateRequestPlainFactory = Factory.define<PermalinkUpdateRequest>(() => ({}));
+export const permalinkUpdateRequestPlainFactory = Factory.define<PermalinkUpdateRequest>(
+  () => ({}),
+);
