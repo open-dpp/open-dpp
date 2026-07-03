@@ -23,9 +23,14 @@ export interface FlatColumn extends Column {
 }
 
 export type Value = string | null;
-export type GroupFieldValue = Record<string, Value>;
-export type RowFieldValue = Value | GroupFieldValue;
-export type Row = Record<string, RowFieldValue>;
+/**
+ * Keyed by the same dot-notation string `flattenColumns` produces as a
+ * `FlatColumn.field` — including sub-columns, stored as a literal top-level
+ * key (e.g. "Group1.SubCol1"), not nested. This matches what PrimeVue's own
+ * `field`-based lookups expect; only `convertRowToRequestDto` reconstructs
+ * the nested shape the backend DTO actually needs.
+ */
+export type Row = Record<string, Value>;
 export type RowContext = Record<string, any>;
 
 const ValueMatcher = P.optional(P.union(P.string, null));
@@ -60,24 +65,11 @@ export function flattenColumns(columns: Column[]): FlatColumn[] {
 }
 
 export function resolveFieldValue(rowData: Row, field: string): Value {
-  const dotIndex = field.indexOf(".");
-  if (dotIndex === -1) return rowData[field] as Value;
-  const groupKey = field.slice(0, dotIndex);
-  const subKey = field.slice(dotIndex + 1);
-  const group = rowData[groupKey] as GroupFieldValue | undefined;
-  return group?.[subKey] ?? null;
+  return rowData[field] ?? null;
 }
 
 export function setFieldValue(rowData: Row, field: string, value: Value): void {
-  const dotIndex = field.indexOf(".");
-  if (dotIndex === -1) {
-    rowData[field] = value;
-    return;
-  }
-  const groupKey = field.slice(0, dotIndex);
-  const subKey = field.slice(dotIndex + 1);
-  if (!rowData[groupKey]) rowData[groupKey] = {};
-  (rowData[groupKey] as GroupFieldValue)[subKey] = value;
+  rowData[field] = value;
 }
 
 export function convertCell(value: Value, context: RowContext) {
@@ -100,31 +92,26 @@ export function convertCell(value: Value, context: RowContext) {
     .otherwise(() => null);
 }
 
-function isGroupContext(context: any): boolean {
-  return context !== null && typeof context === "object" && !("modelType" in context);
-}
-
+/** Converts a flat row (dot-notation keys) into the nested request DTO the backend expects. */
 export function convertRowToRequestDto(row: Row, rowsContext: RowContext[]): ValueRequestDto {
   const rowContext = rowsContext.find((r) => r.idShort === row.idShort);
   if (!rowContext) {
     throw new Error(`Row context not found for idShort: ${row.idShort}`);
   }
 
-  const requestDto = Object.entries(row)
-    .filter(([field]) => field !== "idShort")
-    .reduce((acc, [field, value]) => {
-      const context = rowContext[field];
-      const fieldValue = isGroupContext(context)
-        ? Object.entries(value as GroupFieldValue).reduce(
-            (groupAcc, [subField, subValue]) => ({
-              ...groupAcc,
-              [subField]: convertCell(subValue, context[subField]),
-            }),
-            {},
-          )
-        : convertCell(value as Value, context);
-      return { ...acc, [field]: fieldValue };
-    }, {});
+  const requestDto: Record<string, any> = {};
+  for (const [field, value] of Object.entries(row)) {
+    if (field === "idShort") continue; // skip Id of row
+    const converted = convertCell(value, rowContext[field]);
+    const dotIndex = field.indexOf(".");
+    if (dotIndex === -1) {
+      requestDto[field] = converted;
+    } else {
+      const groupKey = field.slice(0, dotIndex);
+      const subKey = field.slice(dotIndex + 1);
+      requestDto[groupKey] = { ...requestDto[groupKey], [subKey]: converted };
+    }
+  }
 
   return ValueSchema.parse(requestDto);
 }
@@ -216,29 +203,30 @@ export function convertDataToRows(
     const rowToModify: Row = foundRow || { idShort: row.idShort };
     const rowContextToModify: RowContext = foundRowContext || { idShort: row.idShort };
 
-    const newColIds = new Set(parsedRow.value.map((col: any) => col.idShort));
-    for (const key of Object.keys(rowToModify)) {
-      if (key !== "idShort" && !newColIds.has(key)) {
-        delete rowToModify[key];
-        delete rowContextToModify[key];
-      }
-    }
+    // dot-notation flat key (e.g. "Group1.SubCol1"), matching FlatColumn.field.
+    const newFieldKeys = new Set<string>();
 
     for (const col of parsedRow.value) {
       if (columnKindOf(col.modelType) === "group") {
-        const groupValue: GroupFieldValue = {};
-        const groupContext: Record<string, any> = {};
         for (const subCol of (col.value as any[]) ?? []) {
           const { value, context } = convertLeafColumn(subCol);
-          groupValue[subCol.idShort] = value;
-          groupContext[subCol.idShort] = context;
+          const flatKey = `${col.idShort}.${subCol.idShort}`;
+          rowToModify[flatKey] = value;
+          rowContextToModify[flatKey] = context;
+          newFieldKeys.add(flatKey);
         }
-        rowToModify[col.idShort] = groupValue;
-        rowContextToModify[col.idShort] = groupContext;
       } else {
         const { value, context } = convertLeafColumn(col);
         rowToModify[col.idShort] = value;
         rowContextToModify[col.idShort] = context;
+        newFieldKeys.add(col.idShort);
+      }
+    }
+
+    for (const key of Object.keys(rowToModify)) {
+      if (key !== "idShort" && !newFieldKeys.has(key)) {
+        delete rowToModify[key];
+        delete rowContextToModify[key];
       }
     }
 

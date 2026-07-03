@@ -152,11 +152,7 @@ function onFileChange(value: string | undefined, cellData: any, rowIndex: number
 }
 
 function resolveContext(rowIndex: number, field: string): any {
-  const dotIndex = field.indexOf(".");
-  if (dotIndex === -1) return rowsContext.value[rowIndex]?.[field];
-  const groupKey = field.slice(0, dotIndex);
-  const subKey = field.slice(dotIndex + 1);
-  return rowsContext.value[rowIndex]?.[groupKey]?.[subKey];
+  return rowsContext.value[rowIndex]?.[field];
 }
 
 onErrorCaptured((err) => {

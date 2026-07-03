@@ -22,18 +22,18 @@ describe("resolveFieldValue / setFieldValue", () => {
     expect(row.Column1).toBe("Steel");
   });
 
-  it("resolves and sets a dot-notation group field", () => {
-    const row: Row = { idShort: "row0", Group1: { Sub1: "Wood" } };
+  it("resolves and sets a dot-notation group field as a flat key", () => {
+    const row: Row = { idShort: "row0", "Group1.Sub1": "Wood" };
     expect(resolveFieldValue(row, "Group1.Sub1")).toBe("Wood");
     setFieldValue(row, "Group1.Sub1", "Steel");
-    expect(row.Group1).toEqual({ Sub1: "Steel" });
+    expect(row["Group1.Sub1"]).toBe("Steel");
   });
 
-  it("returns null for a missing group field and creates the group on set", () => {
+  it("returns null for a missing field and sets it directly", () => {
     const row: Row = { idShort: "row0" };
     expect(resolveFieldValue(row, "Group1.Sub1")).toBeNull();
     setFieldValue(row, "Group1.Sub1", "Wood");
-    expect(row.Group1).toEqual({ Sub1: "Wood" });
+    expect(row["Group1.Sub1"]).toBe("Wood");
   });
 });
 
@@ -100,15 +100,13 @@ describe("convertRowToRequestDto", () => {
     expect(convertRowToRequestDto(row, rowsContext)).toEqual({ Column1: "Wood" });
   });
 
-  it("converts a group row field-by-field using nested context", () => {
-    const row: Row = { idShort: "row0", Group1: { Sub1: "Wood", Sub2: "50" } };
+  it("reconstructs the nested Group shape from flat dot-notation keys", () => {
+    const row: Row = { idShort: "row0", "Group1.Sub1": "Wood", "Group1.Sub2": "50" };
     const rowsContext: RowContext[] = [
       {
         idShort: "row0",
-        Group1: {
-          Sub1: { modelType: AasSubmodelElements.Property },
-          Sub2: { modelType: AasSubmodelElements.Property },
-        },
+        "Group1.Sub1": { modelType: AasSubmodelElements.Property },
+        "Group1.Sub2": { modelType: AasSubmodelElements.Property },
       },
     ];
     expect(convertRowToRequestDto(row, rowsContext)).toEqual({
@@ -207,7 +205,7 @@ describe("convertDataToRows", () => {
     ]);
   });
 
-  it("builds nested group value/context for a group cell", () => {
+  it("builds a flat dot-notation value/context for a group cell", () => {
     const groupRow = {
       idShort: "row0",
       modelType: AasSubmodelElements.SubmodelElementCollection,
@@ -229,9 +227,9 @@ describe("convertDataToRows", () => {
     const rows: Row[] = [];
     const rowsContext: RowContext[] = [];
     convertDataToRows(rows, rowsContext, { value: [groupRow] } as any);
-    expect(rows[0]!.Group1).toEqual({ Sub1: "Wood" });
-    expect(rowsContext[0]!.Group1).toEqual({
-      Sub1: { modelType: AasSubmodelElements.Property },
+    expect(rows[0]!["Group1.Sub1"]).toBe("Wood");
+    expect(rowsContext[0]!["Group1.Sub1"]).toEqual({
+      modelType: AasSubmodelElements.Property,
     });
   });
 
@@ -243,6 +241,35 @@ describe("convertDataToRows", () => {
     convertDataToRows(rows, rowsContext, { value: [scalarRow] } as any);
     expect(rows[0]).not.toHaveProperty("Stale");
     expect(rowsContext[0]).not.toHaveProperty("Stale");
+  });
+
+  it("removes a stale dot-notation sub-column key no longer present in the group", () => {
+    const rows: Row[] = [{ idShort: "row0", "Group1.StaleSub": "value" }];
+    const rowsContext: RowContext[] = [
+      { idShort: "row0", "Group1.StaleSub": { modelType: AasSubmodelElements.Property } },
+    ];
+    const groupRow = {
+      idShort: "row0",
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        {
+          idShort: "Group1",
+          modelType: AasSubmodelElements.SubmodelElementCollection,
+          value: [
+            {
+              idShort: "Sub1",
+              modelType: AasSubmodelElements.Property,
+              valueType: DataTypeDef.String,
+              value: "Wood",
+            },
+          ],
+        },
+      ],
+    };
+    convertDataToRows(rows, rowsContext, { value: [groupRow] } as any);
+    expect(rows[0]).not.toHaveProperty("Group1.StaleSub");
+    expect(rowsContext[0]).not.toHaveProperty("Group1.StaleSub");
+    expect(rows[0]!["Group1.Sub1"]).toBe("Wood");
   });
 
   it("throws for a leaf column whose model type isn't Property or File", () => {

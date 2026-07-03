@@ -871,25 +871,21 @@ describe("aasTableExtension composable", () => {
     });
 
     expect(rows.value).toEqual([
-      { idShort: "row0", Column1: null, Group1: { SubCol1: null, SubCol2: null } },
-      { idShort: "row1", Column1: "Wood", Group1: { SubCol1: "120", SubCol2: "80" } },
+      { idShort: "row0", Column1: null, "Group1.SubCol1": null, "Group1.SubCol2": null },
+      { idShort: "row1", Column1: "Wood", "Group1.SubCol1": "120", "Group1.SubCol2": "80" },
     ]);
     expect(rowsContext.value).toEqual([
       {
         idShort: "row0",
         Column1: { modelType: AasSubmodelElements.Property },
-        Group1: {
-          SubCol1: { modelType: AasSubmodelElements.Property },
-          SubCol2: { modelType: AasSubmodelElements.Property },
-        },
+        "Group1.SubCol1": { modelType: AasSubmodelElements.Property },
+        "Group1.SubCol2": { modelType: AasSubmodelElements.Property },
       },
       {
         idShort: "row1",
         Column1: { modelType: AasSubmodelElements.Property },
-        Group1: {
-          SubCol1: { modelType: AasSubmodelElements.Property },
-          SubCol2: { modelType: AasSubmodelElements.Property },
-        },
+        "Group1.SubCol1": { modelType: AasSubmodelElements.Property },
+        "Group1.SubCol2": { modelType: AasSubmodelElements.Property },
       },
     ]);
   });
@@ -1361,10 +1357,18 @@ describe("aasTableExtension composable", () => {
     });
     await waitFor(() => {
       expect(rows.value[0]).toEqual(
-        expect.objectContaining({ Group1: { SubCol1: null, SubCol2: null, Column1: null } }),
+        expect.objectContaining({
+          "Group1.SubCol1": null,
+          "Group1.SubCol2": null,
+          "Group1.Column1": null,
+        }),
       );
       expect(rows.value[1]).toEqual(
-        expect.objectContaining({ Group1: { SubCol1: "120", SubCol2: "80", Column1: "Wood" } }),
+        expect.objectContaining({
+          "Group1.SubCol1": "120",
+          "Group1.SubCol2": "80",
+          "Group1.Column1": "Wood",
+        }),
       );
     });
   });
@@ -1438,59 +1442,6 @@ describe("aasTableExtension composable", () => {
     await onCellEditComplete({
       data: { ...rows.value[1]! },
       newValue: "200",
-      field: "Group1.SubCol1",
-      index: 1,
-    });
-
-    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
-      aasId,
-      pathToList.submodelId,
-      pathToList.idShortPath,
-      [
-        { Column1: null, Group1: { SubCol1: null, SubCol2: null } },
-        { Column1: "Wood", Group1: { SubCol1: "200", SubCol2: "80" } },
-      ],
-    );
-  });
-
-  it("recovers newValue from rowData when PrimeVue reports undefined for a dot-notation field", async () => {
-    const mockOnHideDrawer = vi.fn();
-    const mockOpenConfirmDialog = vi.fn();
-    const mockCan = vi.fn();
-
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
-    const pathToList = {
-      submodelId: "s1",
-      idShortPath: "Path.To.List",
-      idShortPathIncludingSubmodel: "s1p.Path.To.List",
-    };
-    const { rows, onCellEditComplete, setFieldValue } = useAasTableExtension({
-      id: aasId,
-      pathToList,
-      initialData: submodelElementListWithGroup,
-      aasNamespace: apiClient.dpp.templates.aas,
-      openConfirm: mockOpenConfirmDialog,
-      errorHandlingStore,
-      selectedLanguage: Language.en,
-      translate,
-      openDrawer,
-      callbackOfSubmodelElementListEditor,
-    });
-
-    mocks.modifyValueOfSubmodelElement.mockResolvedValue({
-      data: submodelElementListWithGroup,
-      status: HTTPCode.OK,
-    });
-
-    // Simulate the editor slot's own @update:model-value handler, which
-    // already writes the new value into the live row before cell-edit-complete fires.
-    setFieldValue(rows.value[1]!, "Group1.SubCol1", "200");
-
-    // Simulate PrimeVue's own newValue resolution, which is broken for
-    // dot-notation fields and reports undefined.
-    await onCellEditComplete({
-      data: rows.value[1]!,
-      newValue: undefined as any,
       field: "Group1.SubCol1",
       index: 1,
     });
