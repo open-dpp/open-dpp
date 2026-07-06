@@ -18,11 +18,13 @@ import {
 } from "../../composables/profile-form.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useNotificationStore } from "../../stores/notification.ts";
+import { useUserStore } from "../../stores/user.ts";
 import { convertLanguageToLocale } from "../../translations/i18n.ts";
 import EmailChangeCard from "./EmailChangeCard.vue";
 
 const { t, locale } = useI18n();
 const notificationStore = useNotificationStore();
+const userStore = useUserStore();
 
 const profileSchema = UpdateProfileDtoSchema;
 
@@ -84,6 +86,7 @@ function toPendingEmailChange(next: MeDto): { newEmail: string; requestedAt: Dat
 
 function applyMe(next: MeDto) {
   user.value = next.user;
+  userStore.setMe(next.user);
   pendingEmailChange.value = toPendingEmailChange(next);
   const formValues = mapUserToFormValues(next.user);
   original.value = formValues;
@@ -100,6 +103,7 @@ function onEmailUpdated(next: MeDto) {
   // dirty state must be preserved.
   if (user.value) {
     user.value = { ...user.value, email: next.user.email };
+    userStore.setMe(user.value);
   }
   pendingEmailChange.value = toPendingEmailChange(next);
   // Keep the diff baseline's email in sync so it never desyncs from the

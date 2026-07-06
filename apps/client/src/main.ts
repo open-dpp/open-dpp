@@ -68,6 +68,7 @@ async function startApp() {
   if (isSignedIn) {
     try {
       const me = await apiClient.dpp.users.getMe();
+      userStore.setMe(me.data.user);
       if (me.data.user.preferredLanguage) {
         (i18n.global.locale as unknown as { value: Locale }).value = convertLanguageToLocale(
           me.data.user.preferredLanguage,

@@ -22,6 +22,9 @@ test("editing first/last name persists across reload", async ({ makeDisposableUs
   await save.click();
   await expect(page.getByText("Profil aktualisiert")).toBeVisible();
 
+  // The header (top right) must show the new name without a reload.
+  await expect(page.getByText(`${first} ${last}`, { exact: true })).toBeVisible();
+
   await page.reload();
   await expect(page.locator("#profile-first-name")).toHaveValue(first, { timeout: 15000 });
   await expect(page.locator("#profile-last-name")).toHaveValue(last);
