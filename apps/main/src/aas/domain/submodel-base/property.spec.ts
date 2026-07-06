@@ -28,6 +28,11 @@ describe("property", () => {
       valueType: DataTypeDef.Boolean,
       errorMessage: "Invalid input",
     },
+    {
+      value: "http://",
+      valueType: DataTypeDef.AnyUri,
+      errorMessage: "HTTP URIs must have a host.",
+    },
   ])("should validate value attribute for $valueType", ({ value, valueType, errorMessage }) => {
     expect(() => Property.create({ idShort: "b1", value, valueType })).toThrow(
       new ValueError(`Invalid value for valueType ${valueType}: ${errorMessage}`),

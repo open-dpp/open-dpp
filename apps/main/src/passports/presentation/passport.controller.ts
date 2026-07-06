@@ -1,6 +1,9 @@
 import type {
   ActivityPaginationDto,
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
@@ -9,24 +12,23 @@ import type {
   PassportRequestCreateDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
+  SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
   SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
   SubmodelRequestDto,
+  SubmodelResponseDto,
   ValueRequestDto,
+  ValueResponseDto,
 } from "@open-dpp/dto";
 import {
-  AssetAdministrationShellPaginationResponseDto,
-  AssetAdministrationShellResponseDto,
+  AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
   Populates,
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementResponseDto,
-  SubmodelPaginationResponseDto,
-  SubmodelResponseDto,
-  ValueResponseDto,
   PresentationReferenceType,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
@@ -130,8 +132,9 @@ import {
 import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller("/passports")
+@Controller({ path: "/passports", version: AllApiVersions })
 export class PassportController
   implements
     IAasReadEndpointsWithOrganizationId,
@@ -380,6 +383,7 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -393,6 +397,7 @@ export class PassportController
       passport.getEnvironment(),
       pagination,
       subject,
+      version,
     );
   }
 
@@ -405,6 +410,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodel(
@@ -413,6 +419,7 @@ export class PassportController
       id,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -474,6 +481,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodel(
@@ -483,6 +491,7 @@ export class PassportController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -496,6 +505,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyValueOfSubmodel(
@@ -505,6 +515,7 @@ export class PassportController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -515,6 +526,7 @@ export class PassportController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -527,6 +539,7 @@ export class PassportController
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -537,6 +550,7 @@ export class PassportController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -549,6 +563,7 @@ export class PassportController
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -564,6 +579,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
@@ -575,6 +591,7 @@ export class PassportController
       body,
       position,
       { subject, userId },
+      version,
     );
   }
 
@@ -590,6 +607,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
@@ -601,6 +619,7 @@ export class PassportController
       idShortOfColumn,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -615,6 +634,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
@@ -625,6 +645,7 @@ export class PassportController
       idShortPath,
       idShortOfColumn,
       { subject, userId },
+      version,
     );
   }
 
@@ -639,6 +660,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.addRowToSubmodelElementList(
@@ -649,6 +671,7 @@ export class PassportController
       idShortPath,
       position,
       { subject, userId },
+      version,
     );
   }
 
@@ -663,6 +686,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
@@ -673,6 +697,7 @@ export class PassportController
       idShortPath,
       idShortOfRow,
       { subject, userId },
+      version,
     );
   }
 
@@ -686,6 +711,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodelElement(
@@ -695,6 +721,7 @@ export class PassportController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -739,6 +766,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodelElement(
@@ -749,6 +777,7 @@ export class PassportController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -763,6 +792,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodelElementValue(
@@ -773,6 +803,7 @@ export class PassportController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -785,6 +816,7 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -799,6 +831,7 @@ export class PassportController
       submodelId,
       pagination,
       subject,
+      version,
     );
   }
 
@@ -810,6 +843,7 @@ export class PassportController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -823,6 +857,7 @@ export class PassportController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 
@@ -837,6 +872,7 @@ export class PassportController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
@@ -847,6 +883,7 @@ export class PassportController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -858,6 +895,7 @@ export class PassportController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -871,6 +909,7 @@ export class PassportController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 

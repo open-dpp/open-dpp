@@ -160,7 +160,7 @@ export class ValueModifierVisitor
     const value = z
       .string()
       .nullish()
-      .parse(context?.data ?? element.value);
+      .parse(context?.data !== undefined ? context.data : element.value);
 
     if (value !== undefined) {
       const oldValue = element.value;

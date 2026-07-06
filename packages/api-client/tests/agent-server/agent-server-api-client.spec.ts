@@ -1,8 +1,8 @@
 import { AiProvider, OpenDppClient } from "../../src";
 import { activeOrganization } from "../dpp/handlers/organization";
-import { agentServerURL } from "./handlers";
 import { aiConfigurationDto } from "./handlers/ai-configurations";
 import { server } from "./msw.server";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("agentServerApiClient", () => {
   beforeAll(() => server.listen());
@@ -11,7 +11,7 @@ describe("agentServerApiClient", () => {
 
   describe("ai configuration", () => {
     const sdk = new OpenDppClient({
-      agentServer: { baseURL: agentServerURL },
+      agentServer: { baseURL: DEFAULT_API_URL },
     });
     sdk.setActiveOrganizationId(activeOrganization.id);
     it("should create ai configuration", async () => {

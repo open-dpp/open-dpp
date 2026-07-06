@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { AGENT_WEBSOCKET_URL } from "../const";
 import { useIndexStore } from "./index.ts";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export enum Sender {
   Bot = "Bot",
@@ -35,7 +36,7 @@ export const useAiAgentStore = defineStore("socket", () => {
     if (!socket.value) {
       socket.value = io(AGENT_WEBSOCKET_URL, {
         autoConnect: true,
-        path: "/api/ai-socket",
+        path: `/api/${LatestApiVersionWithPrefixDto}/ai-socket`,
         withCredentials: true,
         auth: {
           organizationId: indexStore.selectedOrganization,

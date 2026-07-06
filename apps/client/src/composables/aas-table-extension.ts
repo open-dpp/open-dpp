@@ -5,7 +5,6 @@ import type {
   FileRequestDto,
   LanguageType,
   PropertyRequestDto,
-  ReferenceElementRequestDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementSharedRequestDto,
@@ -17,7 +16,6 @@ import {
   DataTypeDef,
   KeyTypes,
   Language,
-  ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
@@ -129,10 +127,7 @@ export function useAasTableExtension({
     fieldLabel: string,
     icon: string,
     options: TableModificationParamsDto,
-    type:
-      | typeof AasSubmodelElements.File
-      | typeof AasSubmodelElements.Property
-      | typeof AasSubmodelElements.ReferenceElement,
+    type: typeof AasSubmodelElements.File | typeof AasSubmodelElements.Property,
     valueType?: DataTypeDefType,
   ) {
     const addColumLabel = translate(`${translateTablePrefix}.addFieldAsColumn`, {
@@ -170,18 +165,6 @@ export function useAasTableExtension({
             type: ColumnEditorKey,
             data: { modelType: type, valueType },
             callback: async (data: PropertyRequestDto) =>
-              createColumn({ modelType: type, ...data }, options),
-          });
-        },
-      }))
-      .with({ type: AasSubmodelElements.ReferenceElement }, ({ type }) => ({
-        ...labelIconAndDisableOption,
-        command: (_event: MenuItemCommandEvent) => {
-          openDrawer({
-            ...sharedDrawerProps,
-            type: ColumnEditorKey,
-            data: { modelType: type },
-            callback: async (data: ReferenceElementRequestDto) =>
               createColumn({ modelType: type, ...data }, options),
           });
         },
@@ -236,22 +219,6 @@ export function useAasTableExtension({
             modelType: AasSubmodelElements.Property,
           },
           ({ value }) => value,
-        )
-        .with(
-          {
-            modelType: AasSubmodelElements.ReferenceElement,
-            value: ValueMatcher,
-            type: P.optional(P.string),
-            keyType: P.optional(P.string),
-          },
-          ({ value, type, keyType }) => {
-            return value
-              ? {
-                  type: type ?? ReferenceTypes.ExternalReference,
-                  keys: [{ type: keyType ?? KeyTypes.GlobalReference, value }],
-                }
-              : null;
-          },
         )
         .otherwise(() => null);
     }
@@ -312,60 +279,32 @@ export function useAasTableExtension({
 
   function convertDataToRows(newData: SubmodelElementListResponseDto) {
     function convertColumn(v: any): { value: Value; context: any } {
-      return (
-        match(v)
-          .returnType<{ value: Value; context: any }>()
-          .with(
-            {
-              contentType: P.string,
-              modelType: AasSubmodelElements.File,
-              value: ValueMatcher,
-            },
-            ({ value, contentType, modelType }) => ({
-              value: value ?? null,
-              context: { contentType, modelType },
-            }),
-          )
-          .with(
-            {
-              modelType: AasSubmodelElements.Property,
-              value: ValueMatcher,
-            },
-            ({ value, modelType }) => ({
-              value: value ?? null,
-              context: { modelType },
-            }),
-          )
-          // Currently, only ReferenceElement values which are global references are supported
-          .with(
-            {
-              modelType: AasSubmodelElements.ReferenceElement,
-              value: P.optional(
-                P.union(
-                  {
-                    type: ReferenceTypes.ExternalReference,
-                    keys: P.array({
-                      type: KeyTypes.GlobalReference,
-                      value: P.string,
-                    }),
-                  },
-                  null,
-                ),
-              ),
-            },
-            ({ value }) => ({
-              value: value?.keys[0]?.value ?? null,
-              context: {
-                modelType: AasSubmodelElements.ReferenceElement,
-                type: value?.type,
-                keyType: value?.keys[0]?.type,
-              },
-            }),
-          )
-          .otherwise(() => {
-            throw new Error(`Unsupported model type: ${v.modelType}`);
-          })
-      );
+      return match(v)
+        .returnType<{ value: Value; context: any }>()
+        .with(
+          {
+            contentType: P.string,
+            modelType: AasSubmodelElements.File,
+            value: ValueMatcher,
+          },
+          ({ value, contentType, modelType }) => ({
+            value: value ?? null,
+            context: { contentType, modelType },
+          }),
+        )
+        .with(
+          {
+            modelType: AasSubmodelElements.Property,
+            value: ValueMatcher,
+          },
+          ({ value, modelType }) => ({
+            value: value ?? null,
+            context: { modelType },
+          }),
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported model type: ${v.modelType}`);
+        });
     }
     for (const [index, row] of newData.value.entries()) {
       const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);
@@ -552,16 +491,17 @@ export function useAasTableExtension({
         DataTypeDef.DateTime,
       ),
       buildColumnMenuItem(
+        translate(`${translatePrefix}.link`),
+        icon,
+        options,
+        AasSubmodelElements.Property,
+        DataTypeDef.AnyUri,
+      ),
+      buildColumnMenuItem(
         translate(`${translatePrefix}.file`),
         icon,
         options,
         AasSubmodelElements.File,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.link`),
-        icon,
-        options,
-        AasSubmodelElements.ReferenceElement,
       ),
     ];
     columnMenu.value = options.addColumnActions

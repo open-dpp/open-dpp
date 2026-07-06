@@ -1,6 +1,7 @@
 import type { AxiosInstance, AxiosResponse } from "axios";
 import type { ApiClientOptions, IApiClient } from "../api-client";
 import { createAxiosClient } from "../api-client";
+import { DEFAULT_API_URL } from "../urls";
 
 export class StatusApiClient implements IApiClient {
   private axiosInstance!: AxiosInstance;
@@ -26,6 +27,6 @@ export class StatusApiClient implements IApiClient {
   }
 
   private createNewAxiosInstance() {
-    this.axiosInstance = createAxiosClient(this.options, "https://api.cloud.open-dpp.de");
+    this.axiosInstance = createAxiosClient(this.options, DEFAULT_API_URL);
   }
 }
