@@ -1,9 +1,8 @@
-import type { DisplayName } from "./display-name";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { describe, expect, it, vi } from "vitest";
 import { computed, ref } from "vue";
-import { resolveDisplayName } from "./display-name";
 import { useSubmodelTreeNodes } from "./submodel-tree-nodes";
+import type { LanguageTextDto, LanguageType } from "@open-dpp/dto";
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
@@ -12,49 +11,17 @@ vi.mock("vue-i18n", () => ({
   }),
 }));
 
-function createDisplayName(language: "en" | "de", text: string): DisplayName {
+function createDisplayName(language: LanguageType, text: string): LanguageTextDto {
   return { language, text };
 }
 
 function createElement(
   idShort: string,
-  name: DisplayName[] = [],
+  name: LanguageTextDto[] = [],
   children: SubmodelTreeElement[] = [],
 ): SubmodelTreeElement {
   return { idShort, name, children, submodelElements: [] };
 }
-
-describe("resolveDisplayName", () => {
-  const fallback = "unknown";
-
-  it("returns exact locale match", () => {
-    const options = [createDisplayName("en", "English"), createDisplayName("de", "Deutsch")];
-
-    expect(resolveDisplayName(options, "de", fallback)).toBe("Deutsch");
-  });
-
-  it("strips region suffix from locale before matching", () => {
-    const options = [createDisplayName("en", "English"), createDisplayName("de", "Deutsch")];
-
-    expect(resolveDisplayName(options, "de-AT", fallback)).toBe("Deutsch");
-  });
-
-  it("falls back to English when locale not found", () => {
-    const options = [createDisplayName("en", "English")];
-
-    expect(resolveDisplayName(options, "de", fallback)).toBe("English");
-  });
-
-  it("falls back to first option when neither locale nor English found", () => {
-    const options = [createDisplayName("de", "Deutsch")];
-
-    expect(resolveDisplayName(options, "fr", fallback)).toBe("Deutsch");
-  });
-
-  it("returns fallback string when options array is empty", () => {
-    expect(resolveDisplayName([], "en", fallback)).toBe("unknown");
-  });
-});
 
 describe("useSubmodelTreeNodes", () => {
   it("maps a flat list of elements to tree nodes", () => {
@@ -100,7 +67,7 @@ describe("useSubmodelTreeNodes", () => {
 
     const { treeNodes } = useSubmodelTreeNodes(submodelTree);
 
-    expect(treeNodes.value[0]!.label).toBe("common.unknownName");
+    expect(treeNodes.value[0]!.label).toBe("common.untitled");
   });
 
   it("returns empty array for empty submodel tree", () => {

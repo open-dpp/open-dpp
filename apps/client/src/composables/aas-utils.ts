@@ -6,10 +6,10 @@ import type {
 import { match, P } from "ts-pattern";
 import { useI18n } from "vue-i18n";
 import { computed } from "vue";
-import { convertLocaleToLanguage } from "../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../translations/util";
 
 export interface IAasUtils {
-  parseLanguageTexts: (languageTexts: LanguageTextDto[], defaultText?: string) => string;
+  parseDisplayName: (displayNames: LanguageTextDto[]) => string;
   parseDisplayNameFromAas: (
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ) => string;
@@ -22,17 +22,15 @@ export function useAasUtils(): IAasUtils {
   const { t, locale } = useI18n();
   const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
 
-  function parseLanguageTexts(
-    languageTexts: LanguageTextDto[],
-    defaultText = t("common.untitled"),
-  ): string {
-    return languageTexts.find((d) => d.language === selectedLanguage.value)?.text ?? defaultText;
+  function parseDisplayName(displayNames: LanguageTextDto[]) {
+    const displayName = displayNames.find((d) => d.language === selectedLanguage.value);
+    return displayName?.text ?? t("common.untitled");
   }
 
   function parseDisplayNameFromAas(
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ): string {
-    return parseLanguageTexts(assetAdministrationShell.displayName);
+    return parseDisplayName(assetAdministrationShell.displayName);
   }
 
   function parseDisplayNameFromEnvironment(
@@ -52,5 +50,5 @@ export function useAasUtils(): IAasUtils {
       });
   }
 
-  return { parseDisplayNameFromAas, parseDisplayNameFromEnvironment, parseLanguageTexts };
+  return { parseDisplayName, parseDisplayNameFromAas, parseDisplayNameFromEnvironment };
 }

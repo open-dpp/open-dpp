@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { formatPropertyValue } from "../../lib/property-value.ts";
-import { ChangeEventDtoTypes, type DataTypeDefType } from "@open-dpp/dto";
+import type { DataTypeDefType } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 import { computed } from "vue";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import DiffViewer from "./DiffViewer.vue";
 import IdShortPath from "./IdShortPath.vue";
 

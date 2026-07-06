@@ -4,8 +4,9 @@ import { Language, LanguageEnum } from "@open-dpp/dto";
 import { useFieldArray } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { convertLocaleToLanguage } from "../../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../../translations/util";
 import DisplayNameRow from "./DisplayNameRow.vue";
+import { useLanguageSelect } from "../../../composables/language.ts";
 
 const props = defineProps<{
   submitAttempted: boolean;
@@ -18,6 +19,8 @@ const {
   remove: removeDisplayName,
 } = useFieldArray<LanguageTextDto>("displayName");
 
+const { preferredLanguages } = useLanguageSelect();
+
 const remainingLanguages = computed(() =>
   Object.keys(Language).filter(
     (l) => !displayName.value.map((f) => f.value.language).includes(LanguageEnum.parse(l)),
@@ -25,9 +28,14 @@ const remainingLanguages = computed(() =>
 );
 
 function nextLanguage(): LanguageType {
-  const bestMatch = remainingLanguages.value.find(
-    (l) => l === convertLocaleToLanguage(locale.value),
-  );
+  let bestMatch = remainingLanguages.value.find((l) => l === convertLocaleToLanguage(locale.value));
+
+  if (!bestMatch) {
+    bestMatch = preferredLanguages.value
+      .values()
+      .find((pl) => remainingLanguages.value.includes(pl));
+  }
+
   return LanguageEnum.parse(bestMatch ?? remainingLanguages.value[0]);
 }
 

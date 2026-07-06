@@ -94,8 +94,8 @@ watch(locale, (newLocale) => {
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
                 name="language"
               >
-                <option value="de-DE">Deutsch</option>
-                <option value="en-US">English</option>
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
               </select>
             </div>
           </div>

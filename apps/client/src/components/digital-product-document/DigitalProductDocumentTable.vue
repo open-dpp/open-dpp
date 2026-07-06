@@ -12,7 +12,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../../composables/aas-utils.ts";
 
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import TablePagination from "../pagination/TablePagination.vue";
 import DigitalProductDocumentStatusSelect from "./DigitalProductDocumentStatusSelect.vue";
 

@@ -97,6 +97,18 @@ describe("aasRepository", () => {
     const legacyDoc = new AasDoc({
       _id: id,
       _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_0_0,
+      displayName: [
+        {
+          language: "en",
+          text: "my-aas",
+        },
+      ],
+      description: [
+        {
+          language: "de",
+          text: "Eine schöne AAS",
+        },
+      ],
       assetInformation: {
         assetKind: "Instance",
         specificAssetIds: [],
@@ -110,23 +122,36 @@ describe("aasRepository", () => {
     });
     await legacyDoc.save({ validateBeforeSave: false });
     const foundAas = await aasRepository.findOneOrFail(id);
-    expect(foundAas).toEqual(
-      AssetAdministrationShell.fromPlain({
-        id,
-        assetInformation: {
-          assetKind: AssetKind.Instance,
-          defaultThumbnails: [
-            {
-              path: "https://example.png",
-              contentType: "image/png",
-            },
-          ],
-          specificAssetIds: [],
-          globalAssetId: id,
+
+    const expected = AssetAdministrationShell.fromPlain({
+      id,
+      displayName: [
+        {
+          language: "en",
+          text: "my-aas",
         },
-        security: Security.create({}).toPlain(),
-      }),
-    );
+      ],
+      description: [
+        {
+          language: "de",
+          text: "Eine schöne AAS",
+        },
+      ],
+      assetInformation: {
+        assetKind: AssetKind.Instance,
+        defaultThumbnails: [
+          {
+            path: "https://example.png",
+            contentType: "image/png",
+          },
+        ],
+        specificAssetIds: [],
+        globalAssetId: id,
+      },
+      security: Security.create({}).toPlain(),
+    });
+
+    expect(foundAas).toEqual(expected);
   });
 
   it(`should load and migrate aas without security from version $1.1.0 to 1.2.0`, async () => {

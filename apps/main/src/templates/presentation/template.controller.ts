@@ -828,7 +828,9 @@ export class TemplateController
         subject,
         organizationId,
       );
-    return await this.aasSerializationService.exportTemplate(template, subject);
+    const exportedTemplate = await this.aasSerializationService.exportTemplate(template, subject);
+
+    return exportedTemplate;
   }
 
   @Post("/import")

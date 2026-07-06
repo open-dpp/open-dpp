@@ -6,7 +6,6 @@ import { DbSessionOptions } from "../../../database/query-options";
 import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
-import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../../../templates/domain/template";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
@@ -19,16 +18,15 @@ import { EnvironmentService } from "../../presentation/environment.service";
 import {
   mapAssetAdministrationShells,
   mapConceptDescriptions,
+  mapPresentationConfiguration,
   mapSubmodels,
 } from "./aas-import.mapper";
-import { AasExportVersion } from "./export-schemas/aas-export-shared";
 import {
-  AasExport,
   AasExportLatestVersion,
   aasExportSchemaJsonLatest,
-  AasExportSchemas,
 } from "./export-schemas/aas-export-types";
 import { extractMediaIds } from "./extract-media-ids";
+import { ParseWithMigration } from "./export-schemas/aas-export-migration";
 
 export {
   DataTypeDefV1_0,
@@ -40,7 +38,7 @@ interface ImportedEnvironmentData {
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
   conceptDescriptions: ConceptDescription[];
-  schema: AasExport;
+  schema: AasExportLatestVersion;
 }
 
 @Injectable()
@@ -87,7 +85,10 @@ export class AasSerializationService {
       expandedEnvironment,
       presentationConfiguration,
     );
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
+
+    const aasExportablePlain = aasExportable.toExportPlain(subject);
+
+    return aasExportSchemaJsonLatest.parse(aasExportablePlain);
   }
 
   async importPassport(
@@ -156,7 +157,7 @@ export class AasSerializationService {
 
       const entity = entityFactory(environment);
 
-      const presentationConfiguration = buildImportedPresentationConfiguration({
+      const presentationConfiguration = mapPresentationConfiguration({
         schema,
         organizationId,
         referenceId: entity.id,
@@ -181,6 +182,7 @@ export class AasSerializationService {
       return entity;
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("error of zod", error);
         const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
         throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
       }
@@ -251,12 +253,9 @@ export class AasSerializationService {
         foreignMediaIds.has(element.value)
       ) {
         result = { ...element, value: null };
-      }
-
-      if (Array.isArray(element.value)) {
+      } else if (Array.isArray(element.value)) {
         const newValue = this.withNullifiedForeignFileValues(element.value, foreignMediaIds);
-        result =
-          result === element ? { ...element, value: newValue } : { ...result, value: newValue };
+        result = { ...element, value: newValue };
       }
 
       return result;
@@ -264,44 +263,17 @@ export class AasSerializationService {
   }
 
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
-    const schema = AasExportSchemas.parse(data);
+    const schema = ParseWithMigration(data);
 
-    const { submodels, idMapping } = mapSubmodels(schema.environment.submodels, schema.version);
+    const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
 
     return {
-      shells: mapAssetAdministrationShells(
-        schema.environment.assetAdministrationShells,
-        idMapping,
-        submodels,
-        schema.version,
-      ),
+      shells: mapAssetAdministrationShells(schema.environment.assetAdministrationShells, idMapping),
       submodels,
       conceptDescriptions: mapConceptDescriptions(schema.environment.conceptDescriptions),
       schema,
     };
   }
-}
-
-function buildImportedPresentationConfiguration(params: {
-  schema: AasExport;
-  organizationId: string;
-  referenceId: string;
-  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
-}): PresentationConfiguration | null {
-  const { schema, organizationId, referenceId, referenceType } = params;
-  if (
-    (schema.version === AasExportVersion.v3_0 || schema.version === AasExportVersion.v4_0) &&
-    schema.presentationConfiguration
-  ) {
-    return PresentationConfiguration.create({
-      organizationId,
-      referenceId,
-      referenceType,
-      elementDesign: schema.presentationConfiguration.elementDesign,
-      defaultComponents: schema.presentationConfiguration.defaultComponents,
-    });
-  }
-  return null;
 }
 
 function passportToHolder(passport: Passport): PresentationReferenceHolder {
