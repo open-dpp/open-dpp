@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropertyModificationDto } from "@open-dpp/dto";
+import { DataTypeDef, type PropertyModificationDto } from "@open-dpp/dto";
 import { Permissions, PropertyModificationSchema } from "@open-dpp/dto";
 import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -18,7 +18,7 @@ const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModific
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
-  value: z.nullish(z.string()),
+  value: props.data.valueType === DataTypeDef.AnyUri ? z.nullish(z.url()) : z.nullish(z.string()),
 });
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;

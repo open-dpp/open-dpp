@@ -71,6 +71,7 @@
     }
   },
   "aasEditor": {
+    "addLanguage": "Sprache hinzufügen",
     "drawerTabs": {
       "data": "Daten",
       "presentation": "Darstellung"
