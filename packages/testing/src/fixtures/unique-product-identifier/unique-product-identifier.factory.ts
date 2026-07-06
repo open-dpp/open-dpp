@@ -44,6 +44,7 @@ export const uniqueProductIdentifierPlainFactory = Factory.define<
       granularity,
       digitalLink: null,
       passportPublished: false,
+      permalink: null,
     };
   }
 
@@ -57,5 +58,6 @@ export const uniqueProductIdentifierPlainFactory = Factory.define<
     granularity: null,
     digitalLink: null,
     passportPublished: false,
+    permalink: null,
   };
 });

@@ -207,6 +207,7 @@ export class UniqueProductIdentifier {
       this.referenceId,
       ExternalIdentifierType.GS1,
       normalizeGs1Identity(input),
+      this.organizationId,
     );
   }
 
@@ -258,13 +259,18 @@ export class UniqueProductIdentifier {
    *
    * `digitalLink` is assembled only when this UPI has a GS1 identity AND a
    * `resolverBase` is provided; otherwise it is `null`.
+   *
+   * `permalink` is the gs1-link permalink summary resolved by the caller
+   * (list endpoints only); it defaults to `null` everywhere else.
    */
   toListItem({
     resolverBase,
     passportPublished,
+    permalink = null,
   }: {
     resolverBase?: string;
     passportPublished: boolean;
+    permalink?: { id: string; publicUrl: string } | null;
   }) {
     const digitalLink = this.gs1 && resolverBase ? this.buildDigitalLink(resolverBase) : null;
 
@@ -278,6 +284,7 @@ export class UniqueProductIdentifier {
       granularity: this.granularity,
       digitalLink,
       passportPublished,
+      permalink,
     };
   }
 

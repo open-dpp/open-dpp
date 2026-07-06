@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { PresentationReferenceType } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
@@ -13,7 +13,7 @@ import { Permalink } from "../domain/permalink";
 import { PermalinkDoc, PermalinkDocVersion } from "./permalink.schema";
 
 @Injectable()
-export class PermalinkRepository {
+export class PermalinkRepository implements OnApplicationBootstrap {
   private readonly permalinkDoc: MongooseModel<PermalinkDoc>;
   private readonly presentationConfigurationDoc: MongooseModel<PresentationConfigurationDoc>;
 
@@ -25,6 +25,18 @@ export class PermalinkRepository {
   ) {
     this.permalinkDoc = permalinkDoc;
     this.presentationConfigurationDoc = presentationConfigurationDoc;
+  }
+
+  /**
+   * Reconcile the collection's indexes with the schema definitions. Mongoose
+   * never updates an EXISTING index whose options changed (the partial filters
+   * on the unique indexes were added after early deployments), so a stale
+   * full-unique index survives forever and — with `null` counting as a value —
+   * rejects every second gs1-link insert with a misleading E11000.
+   * ponytail: syncIndexes also drops manually-added indexes on this collection.
+   */
+  async onApplicationBootstrap(): Promise<void> {
+    await this.permalinkDoc.syncIndexes();
   }
 
   /**
@@ -210,6 +222,41 @@ export class PermalinkRepository {
     if (!doc) return undefined;
     const plain = doc.toObject();
     return this.fromPlainWithMigration({ ...plain, id: plain._id });
+  }
+
+  /**
+   * Batch-load the gs1-link permalinks referencing the given UPI uuids,
+   * keyed by `uniqueProductIdentifierId`. At most one entry per UPI
+   * (partial unique index). Presentation permalinks never match.
+   */
+  async findGs1LinksByUpiIds(
+    upiUuids: string[],
+    options?: DbSessionOptions,
+  ): Promise<Map<string, Permalink>> {
+    if (upiUuids.length === 0) return new Map();
+    const docs = await this.permalinkDoc
+      .find({ uniqueProductIdentifierId: { $in: upiUuids } })
+      .session(options?.session ?? null);
+    const entries = await Promise.all(
+      docs.map(async (doc): Promise<[string, Permalink]> => {
+        const plain = doc.toObject();
+        const permalink = await this.fromPlainWithMigration({ ...plain, id: plain._id });
+        return [plain.uniqueProductIdentifierId as string, permalink];
+      }),
+    );
+    return new Map(entries);
+  }
+
+  /**
+   * Delete every gs1-link permalink referencing one of the given UPI uuids
+   * (cascade for passport deletion — presentation permalinks are handled by
+   * `deleteAllByPassportId`).
+   */
+  async deleteGs1LinksByUpiIds(upiUuids: string[], options?: DbSessionOptions): Promise<void> {
+    if (upiUuids.length === 0) return;
+    await this.permalinkDoc
+      .deleteMany({ uniqueProductIdentifierId: { $in: upiUuids } })
+      .session(options?.session ?? null);
   }
 
   async findAllByOrganizationId(

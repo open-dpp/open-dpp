@@ -174,6 +174,17 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(base.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
     });
 
+    it("withGs1 preserves organizationId (an edited GS1 UPI must not vanish from the org list)", () => {
+      const organizationId = randomUUID();
+      const base = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        organizationId,
+      });
+      const updated = base.withGs1({ gtin: VALID_GTIN13, batch: "LOT-42" });
+      expect(updated.organizationId).toBe(organizationId);
+    });
+
     it("withGs1 can clear a previously-set batch / serial", () => {
       const referenceId = randomUUID();
       const base = UniqueProductIdentifier.createGs1({
@@ -315,7 +326,20 @@ describe("UniqueProductIdentifier (GS1)", () => {
         granularity: "item",
         digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
         passportPublished: false,
+        permalink: null,
       });
+    });
+
+    it("passes a permalink summary through verbatim and defaults it to null", () => {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+      });
+      const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+      expect(
+        upi.toListItem({ passportPublished: false, permalink: summary }).permalink,
+      ).toEqual(summary);
+      expect(upi.toListItem({ passportPublished: false }).permalink).toBeNull();
     });
 
     it("returns granularity 'model' and a bare-GTIN digital link for a bare-GTIN GS1 UPI", () => {

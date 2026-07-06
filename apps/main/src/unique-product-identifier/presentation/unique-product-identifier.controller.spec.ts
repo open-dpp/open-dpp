@@ -36,6 +36,9 @@ import {
 } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
+import { PermalinkKind } from "@open-dpp/dto";
+import { Permalink } from "../../permalink/domain/permalink";
+import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
 import { PermalinkModule } from "../../permalink/permalink.module";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
@@ -330,6 +333,60 @@ describe("UniqueProductIdentifierController", () => {
       expect(gs1Row.gtin).toEqual("04006381333931");
       expect(gs1Row.batch).toEqual("LOT-1");
       expect(gs1Row.serial).toEqual("SN-1");
+    });
+
+    it("enriches a GS1 row with its gs1-link permalink summary; unlinked rows carry null", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id);
+      const moduleRef = ctx.getModuleRef();
+      const upiRepo = moduleRef.get(UniqueProductIdentifierRepository);
+      const linkedUpi = await upiRepo.save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `LN-${randomUUID().slice(0, 8)}`,
+          organizationId: org!.id,
+        }),
+      );
+      await upiRepo.save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `UN-${randomUUID().slice(0, 8)}`,
+          organizationId: org!.id,
+        }),
+      );
+      const permalink = await moduleRef.get(PermalinkRepository).save(
+        Permalink.create({
+          kind: PermalinkKind.GS1_LINK,
+          uniqueProductIdentifierId: linkedUpi.uuid,
+          presentationConfigurationId: null,
+          organizationId: org!.id,
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get(basePath)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      const rows = new Map(
+        response.body.result.map((row: { uuid: string }) => [row.uuid, row]),
+      ) as Map<string, { permalink: { id: string; publicUrl: string } | null }>;
+      const linkedRow = rows.get(linkedUpi.uuid);
+      expect(linkedRow?.permalink).toBeDefined();
+      expect(linkedRow?.permalink?.id).toEqual(permalink.id);
+      expect(linkedRow?.permalink?.publicUrl).toMatch(/^https?:\/\//);
+      const unlinkedRows = response.body.result.filter(
+        (row: { uuid: string }) => row.uuid !== linkedUpi.uuid,
+      );
+      expect(unlinkedRows.length).toBeGreaterThan(0);
+      for (const row of unlinkedRows) {
+        expect(row.permalink).toBeNull();
+      }
     });
 
     it("excludes UPIs belonging to other organizations", async () => {
@@ -725,6 +782,46 @@ describe("UniqueProductIdentifierController", () => {
       const types = response.body.result.map((r: { type: string }) => r.type);
       expect(types).toContain(ExternalIdentifierType.OPEN_DPP_UUID);
       expect(types).toContain(ExternalIdentifierType.GS1);
+    });
+
+    it("enriches a GS1 row with its gs1-link permalink summary in the passport-scoped list", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id);
+      const moduleRef = ctx.getModuleRef();
+      const linkedUpi = await moduleRef.get(UniqueProductIdentifierRepository).save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `PL-${randomUUID().slice(0, 8)}`,
+          organizationId: org!.id,
+        }),
+      );
+      const permalink = await moduleRef.get(PermalinkRepository).save(
+        Permalink.create({
+          kind: PermalinkKind.GS1_LINK,
+          uniqueProductIdentifierId: linkedUpi.uuid,
+          presentationConfigurationId: null,
+          organizationId: org!.id,
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      const linkedRow = response.body.result.find(
+        (row: { uuid: string }) => row.uuid === linkedUpi.uuid,
+      );
+      expect(linkedRow.permalink.id).toEqual(permalink.id);
+      expect(linkedRow.permalink.publicUrl).toMatch(/^https?:\/\//);
+      const systemRow = response.body.result.find(
+        (row: { type: string }) => row.type === ExternalIdentifierType.OPEN_DPP_UUID,
+      );
+      expect(systemRow.permalink).toBeNull();
     });
 
     it("paginates via ?limit and ?cursor — the second page does not overlap the first", async () => {

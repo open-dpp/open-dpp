@@ -23,7 +23,7 @@ The ubiquitous language for unique product identifiers and the public resolve su
 **Permalink** — A _public, resolvable URL_ pointing at a passport. The scannable artifact (the QR target). A passport may have several. Two `kind`s:
 
 - **Presentation permalink** — References a presentation configuration (`base/{slug|id}`). One per configuration (unique partial index on `presentationConfigurationId`).
-- **GS1 Digital Link permalink** — A permalink whose URL is rendered in GS1 Digital Link shape (`base/01/{gtin}/10/{batch}/21/{serial}`). It references a GS1 UPI **only to format that URL** — resolution still reaches the passport via the permalink's presentation configuration, _not_ via the UPI. One per UPI. See [ADR 0001](../adr/0001-polymorphic-permalink.md).
+- **GS1 Digital Link permalink** — A permalink whose URL is rendered in GS1 Digital Link shape (`base/01/{gtin}/10/{batch}/21/{serial}`). It references a GS1 UPI **only to format that URL** — resolution still reaches the passport via the permalink's presentation configuration, _not_ via the UPI. One per UPI. See [ADR 0001](../adr/0001-polymorphic-permalink.md). UPI list rows carry a `permalink: { id, publicUrl }` summary of this reference ([ADR 0007](../adr/0007-upi-list-permalink-summary.md)).
 
 **Primary permalink** — The presentation permalink a passport resolves through when several exist (ADR 0001). Governs resolution; not frozen on publish.
 

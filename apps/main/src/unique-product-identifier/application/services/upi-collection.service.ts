@@ -6,6 +6,7 @@ import {
 } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
+import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { isDuplicateKeyError } from "../../../lib/mongo-errors";
 import { Pagination } from "../../../pagination/pagination";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
@@ -38,7 +39,20 @@ export class UpiCollectionService {
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportRepository: PassportRepository,
     private readonly gs1ResolverBaseService: Gs1ResolverBaseService,
+    private readonly permalinkApplicationService: PermalinkApplicationService,
   ) {}
+
+  /**
+   * Batch-resolve the gs1-link permalink summaries for a page of UPIs
+   * (GS1 rows only — non-GS1 rows can never be referenced by a permalink).
+   */
+  private async loadPermalinkSummaries(
+    upis: UniqueProductIdentifier[],
+    organizationId: string,
+  ): Promise<Map<string, { id: string; publicUrl: string }>> {
+    const gs1Uuids = upis.filter((upi) => upi.gs1).map((upi) => upi.uuid);
+    return this.permalinkApplicationService.getGs1LinkSummariesByUpiIds(gs1Uuids, organizationId);
+  }
 
   /**
    * Fetch a single UPI by its uuid and assemble its list-item response shape.
@@ -269,6 +283,14 @@ export class UpiCollectionService {
       );
     }
 
+    // Cascade: a GS1 UPI may be referenced by a gs1-link permalink — delete it
+    // along with the UPI (a published/frozen permalink blocks the delete with 409).
+    // Without this, the permalink is orphaned: invisible in every list yet still
+    // occupying the one-per-UPI unique slot.
+    if (isGs1) {
+      await this.permalinkApplicationService.deleteGs1LinkForUpi(uuid);
+    }
+
     await this.uniqueProductIdentifierRepository.deleteById(uuid);
   }
 
@@ -313,11 +335,16 @@ export class UpiCollectionService {
     const passportMap = await this.passportRepository.findByIds(distinctReferenceIds);
 
     const resolverBase = await this.gs1ResolverBaseService.getResolverBase(organizationId);
+    const permalinkSummaries = await this.loadPermalinkSummaries(upis, organizationId);
 
     const items = upis.map((upi) => {
       const passport = passportMap.get(upi.referenceId);
       const passportPublished = passport?.isPublished() ?? false;
-      return upi.toListItem({ resolverBase, passportPublished });
+      return upi.toListItem({
+        resolverBase,
+        passportPublished,
+        permalink: permalinkSummaries.get(upi.uuid) ?? null,
+      });
     });
     return { items, cursor };
   }
@@ -354,8 +381,15 @@ export class UpiCollectionService {
     const passportPublished = passport?.isPublished() ?? false;
     const organizationId = passport?.organizationId ?? upis[0].organizationId ?? "";
     const resolverBase = await this.gs1ResolverBaseService.getResolverBase(organizationId);
+    const permalinkSummaries = await this.loadPermalinkSummaries(upis, organizationId);
 
-    const items = upis.map((upi) => upi.toListItem({ resolverBase, passportPublished }));
+    const items = upis.map((upi) =>
+      upi.toListItem({
+        resolverBase,
+        passportPublished,
+        permalink: permalinkSummaries.get(upi.uuid) ?? null,
+      }),
+    );
     return { items, cursor };
   }
 }

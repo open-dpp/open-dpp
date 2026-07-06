@@ -755,6 +755,7 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
     const created = await service.createGs1LinkPermalink({
       uniqueProductIdentifierId: upiUuid,
       gs1DataAttributes,
+      organizationId: randomUUID(),
     });
 
     expect(created.uniqueProductIdentifierId).toBe(upiUuid);
@@ -776,6 +777,7 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
 
     const created = await service.createGs1LinkPermalink({
       uniqueProductIdentifierId: upiUuid,
+      organizationId: randomUUID(),
     });
 
     expect(created.uniqueProductIdentifierId).toBe(upiUuid);
@@ -792,6 +794,7 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
     const created = await service.createGs1LinkPermalink({
       uniqueProductIdentifierId: upiUuid,
       presentationConfigurationId: configId,
+      organizationId: randomUUID(),
     });
 
     expect(created.uniqueProductIdentifierId).toBe(upiUuid);
@@ -804,11 +807,17 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
     // First one succeeds
-    await service.createGs1LinkPermalink({ uniqueProductIdentifierId: upiUuid });
+    await service.createGs1LinkPermalink({
+      uniqueProductIdentifierId: upiUuid,
+      organizationId: randomUUID(),
+    });
 
     // Second one for the same UPI must throw ConflictException
     await expect(
-      service.createGs1LinkPermalink({ uniqueProductIdentifierId: upiUuid }),
+      service.createGs1LinkPermalink({
+        uniqueProductIdentifierId: upiUuid,
+        organizationId: randomUUID(),
+      }),
     ).rejects.toThrow(ConflictException);
   });
 
@@ -822,6 +831,7 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
       service.createGs1LinkPermalink({
         uniqueProductIdentifierId: upiUuid,
         gs1DataAttributes: { "9999": "invalid-key" } as any,
+        organizationId: randomUUID(),
       }),
     ).rejects.toThrow(ValueError);
   });
@@ -833,11 +843,122 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
 
     const created = await service.createGs1LinkPermalink({
       uniqueProductIdentifierId: upiUuid,
+      organizationId: randomUUID(),
     });
 
     expect(created.primary).toBe(false);
     const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(created.id);
     expect(persisted.primary).toBe(false);
+  });
+
+  // (e) organizationId is stamped so org-scoped list/patch/delete work
+  it("(e) persists the caller's organizationId", async () => {
+    const organizationId = randomUUID();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const created = await service.createGs1LinkPermalink({
+      uniqueProductIdentifierId: randomUUID(),
+      organizationId,
+    });
+
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(created.id);
+    expect(persisted.organizationId).toBe(organizationId);
+  });
+
+  // (f) regression: a stale FULL-unique presentationConfigurationId index (no partial
+  // filter) makes every gs1-link insert (presentationConfigurationId: null) collide.
+  // That E11000 must NOT be misreported as "gs1-link already exists for this UPI".
+  it("(f) a duplicate-key on a different index is rethrown, not misreported as UPI conflict", async () => {
+    const model = ctx.getModuleRef().get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name));
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    // Simulate the legacy DB state: full unique index without the partial filter,
+    // plus one existing doc occupying the null slot. (Clear the collection first —
+    // the full unique index cannot build over earlier tests' null-config docs.)
+    await model.collection.deleteMany({});
+    await model.collection.dropIndex("presentationConfigurationId_1");
+    await model.collection.createIndex(
+      { presentationConfigurationId: 1 },
+      { unique: true, name: "presentationConfigurationId_1" },
+    );
+    await service.createGs1LinkPermalink({
+      uniqueProductIdentifierId: randomUUID(),
+      organizationId: randomUUID(),
+    });
+
+    try {
+      let thrown: unknown;
+      try {
+        await service.createGs1LinkPermalink({
+          uniqueProductIdentifierId: randomUUID(),
+          organizationId: randomUUID(),
+        });
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toBeDefined();
+      expect(thrown).not.toBeInstanceOf(ConflictException);
+    } finally {
+      // Restore the schema-defined partial index for the other tests.
+      await model.syncIndexes();
+    }
+  });
+});
+
+describe("PermalinkApplicationService.deleteGs1LinkForUpi", () => {
+  const ctx = createAasTestContext(
+    "/p",
+    {
+      imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
+      providers: [
+        PermalinkRepository,
+        PermalinkApplicationService,
+        PassportRepository,
+        BrandingRepository,
+        PresentationConfigurationRepository,
+      ],
+    },
+    [
+      { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    ],
+    PermalinkRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER }),
+  );
+
+  it("deletes the unpublished gs1-link permalink referencing the UPI", async () => {
+    const upiUuid = randomUUID();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const created = await service.createGs1LinkPermalink({
+      uniqueProductIdentifierId: upiUuid,
+      organizationId: randomUUID(),
+    });
+
+    await service.deleteGs1LinkForUpi(upiUuid);
+
+    const repository = ctx.getModuleRef().get(PermalinkRepository);
+    expect(await repository.findOne(created.id)).toBeUndefined();
+  });
+
+  it("is a no-op when the UPI has no gs1-link permalink", async () => {
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    await expect(service.deleteGs1LinkForUpi(randomUUID())).resolves.toBeUndefined();
+  });
+
+  it("throws ConflictException when the gs1-link permalink is published (frozen)", async () => {
+    const upiUuid = randomUUID();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const repository = ctx.getModuleRef().get(PermalinkRepository);
+    const created = await service.createGs1LinkPermalink({
+      uniqueProductIdentifierId: upiUuid,
+      organizationId: randomUUID(),
+    });
+    await repository.save(created.withPublishedUrl("https://frozen.example.com/x"));
+
+    await expect(service.deleteGs1LinkForUpi(upiUuid)).rejects.toThrow(ConflictException);
   });
 });
 
@@ -1070,6 +1191,94 @@ describe("PermalinkApplicationService.listByOrganization", () => {
 
     expect(result.items).toEqual([]);
     expect(result.cursor).toBeNull();
+  });
+});
+
+describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
+  const ctx = createAasTestContext(
+    "/p",
+    {
+      imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
+      providers: [
+        PermalinkRepository,
+        PermalinkApplicationService,
+        PassportRepository,
+        BrandingRepository,
+        PresentationConfigurationRepository,
+      ],
+    },
+    [
+      { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    ],
+    PermalinkRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER }),
+  );
+
+  async function seedGs1Link(organizationId: string, upiUuid: string) {
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upiUuid,
+      presentationConfigurationId: null,
+      gs1DataAttributes: null,
+      primary: false,
+      organizationId,
+    });
+    return await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
+  }
+
+  it("returns an empty map for empty input", async () => {
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const result = await service.getGs1LinkSummariesByUpiIds([], randomUUID());
+    expect(result.size).toBe(0);
+  });
+
+  it("returns summaries keyed by UPI uuid with a resolved publicUrl ending in the permalink id", async () => {
+    const organizationId = randomUUID();
+    const upiA = randomUUID();
+    const upiB = randomUUID();
+    const linkA = await seedGs1Link(organizationId, upiA);
+    await seedGs1Link(organizationId, upiB);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.getGs1LinkSummariesByUpiIds([upiA, upiB], organizationId);
+
+    expect(result.size).toBe(2);
+    const summaryA = result.get(upiA);
+    expect(summaryA?.id).toBe(linkA.id);
+    expect(summaryA?.publicUrl).toMatch(/^https?:\/\//);
+    expect(summaryA?.publicUrl.endsWith(`/${linkA.id}`)).toBe(true);
+  });
+
+  it("prefers the frozen publishedUrl over the computed publicUrl", async () => {
+    const organizationId = randomUUID();
+    const upiUuid = randomUUID();
+    const link = await seedGs1Link(organizationId, upiUuid);
+    const frozen = link.withPublishedUrl("https://frozen.example.com/my-link");
+    await ctx.getModuleRef().get(PermalinkRepository).save(frozen);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.getGs1LinkSummariesByUpiIds([upiUuid], organizationId);
+
+    expect(result.get(upiUuid)?.publicUrl).toBe("https://frozen.example.com/my-link");
+  });
+
+  it("omits UPIs without a gs1-link permalink", async () => {
+    const organizationId = randomUUID();
+    const upiWithLink = randomUUID();
+    await seedGs1Link(organizationId, upiWithLink);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.getGs1LinkSummariesByUpiIds(
+      [upiWithLink, randomUUID()],
+      organizationId,
+    );
+
+    expect(result.size).toBe(1);
+    expect(result.has(upiWithLink)).toBe(true);
   });
 });
 

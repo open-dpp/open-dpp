@@ -139,6 +139,21 @@ const ColumnStub = defineComponent({
   },
 });
 
+/** RouterLink stub that exposes its `to` target as a JSON attribute for assertions. */
+const RouterLinkStub = defineComponent({
+  name: "RouterLink",
+  inheritAttrs: false,
+  props: ["to"],
+  setup(props, { slots, attrs }) {
+    return () =>
+      h(
+        "a",
+        { "data-testid": attrs["data-testid"], "data-to": JSON.stringify(props.to) },
+        slots.default?.(),
+      );
+  },
+});
+
 const ButtonStub = defineComponent({
   name: "Button",
   inheritAttrs: false,
@@ -239,6 +254,8 @@ const i18n = createI18n({
           batch: "Batch / Lot",
           serial: "Serial",
           reference: "Passport",
+          permalink: "Permalink",
+          createPermalink: "Create permalink",
           systemReadOnly: "System (read-only)",
           empty: "No unique product identifiers found.",
         },
@@ -290,6 +307,7 @@ function mountView() {
         DataTable: DataTableStub,
         Column: ColumnStub,
         Button: ButtonStub,
+        RouterLink: RouterLinkStub,
         UniqueProductIdentifierCreateDialog: CreateDialogStub,
         Gs1DigitalLinkPromptDialog: PromptDialogStub,
       },
@@ -370,6 +388,66 @@ describe("UniqueProductIdentifierListView", () => {
     const gs1Row = wrapper.find("[data-testid='upi-row-gs1']");
     expect(gs1Row.exists()).toBe(true);
     expect(gs1Row.find("[data-testid='upi-delete-btn']").exists()).toBe(true);
+  });
+
+  it("(6a) GS1 row with a permalink renders an internal link showing the publicUrl", async () => {
+    const linkedUpi = uniqueProductIdentifierPlainFactory.build(
+      {
+        uuid: "linked-upi-uuid",
+        referenceId: "ref-222",
+        permalink: { id: "pl-1", publicUrl: "https://dpp.example.com/my-link" },
+      },
+      { transient: { gs1: true } },
+    );
+    listUpis.mockResolvedValueOnce({
+      data: { paging_metadata: { cursor: null }, result: [linkedUpi] },
+    });
+
+    const wrapper = mountView();
+    await nextTick();
+    await nextTick();
+
+    const link = wrapper.find("[data-testid='upi-permalink-link']");
+    expect(link.exists()).toBe(true);
+    expect(link.text()).toBe("https://dpp.example.com/my-link");
+    expect(JSON.parse(link.attributes("data-to")!)).toMatchObject({
+      name: "passportPermalinks",
+      params: { organizationId: "org-1", passportId: "p-1" },
+    });
+    expect(wrapper.find("[data-testid='upi-permalink-create']").exists()).toBe(false);
+  });
+
+  it("(6b) GS1 row without a permalink renders a 'Create permalink' CTA carrying ?createForUpi", async () => {
+    listUpis.mockResolvedValueOnce({
+      data: { paging_metadata: { cursor: null }, result: [GS1_UPI] },
+    });
+
+    const wrapper = mountView();
+    await nextTick();
+    await nextTick();
+
+    const cta = wrapper.find("[data-testid='upi-permalink-create']");
+    expect(cta.exists()).toBe(true);
+    expect(cta.text()).toBe("Create permalink");
+    expect(JSON.parse(cta.attributes("data-to")!)).toMatchObject({
+      name: "passportPermalinks",
+      params: { organizationId: "org-1", passportId: "p-1" },
+      query: { createForUpi: GS1_UPI.uuid },
+    });
+    expect(wrapper.find("[data-testid='upi-permalink-link']").exists()).toBe(false);
+  });
+
+  it("(6c) internal (OPEN_DPP_UUID) row renders neither link nor CTA", async () => {
+    listUpis.mockResolvedValueOnce({
+      data: { paging_metadata: { cursor: null }, result: [SYSTEM_UPI] },
+    });
+
+    const wrapper = mountView();
+    await nextTick();
+    await nextTick();
+
+    expect(wrapper.find("[data-testid='upi-permalink-link']").exists()).toBe(false);
+    expect(wrapper.find("[data-testid='upi-permalink-create']").exists()).toBe(false);
   });
 
   it("(3) header Add button opens the create dialog", async () => {

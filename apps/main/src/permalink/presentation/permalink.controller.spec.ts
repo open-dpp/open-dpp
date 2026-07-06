@@ -1350,6 +1350,14 @@ describe("PermalinkController", () => {
       expect(response.body.kind).toEqual(PermalinkKind.GS1_LINK);
       expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
       expect(response.body.id).toBeDefined();
+
+      // The permalink must be stamped with the passport's organization —
+      // otherwise it never shows in the org list and PATCH/DELETE 403.
+      const persisted = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(response.body.id);
+      expect(persisted.organizationId).toEqual(org.id);
     });
 
     it("(a-baseUrl) persists a custom baseUrl supplied when creating a gs1-link permalink", async () => {

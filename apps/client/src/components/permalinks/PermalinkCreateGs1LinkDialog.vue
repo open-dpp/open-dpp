@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { UniqueProductIdentifierListItemDto, PermalinkPublicDto } from "@open-dpp/dto";
 import { isAxiosError } from "axios";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import apiClient from "../../lib/api-client";
@@ -16,6 +16,8 @@ const model = defineModel<boolean>("visible");
 const props = defineProps<{
   /** UPI UUIDs that already have an existing gs1-link permalink (at most one per UPI). */
   existingGs1LinkUpiIds: string[];
+  /** Preselect this UPI in the Select (e.g. handed over via ?createForUpi=). */
+  preselectedUpiId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -32,7 +34,7 @@ const errorHandlingStore = useErrorHandlingStore();
 const upis = ref<UniqueProductIdentifierListItemDto[]>([]);
 const loadingUpis = ref(false);
 
-const selectedUpiId = ref<string | undefined>(undefined);
+const selectedUpiId = ref<string | undefined>(props.preselectedUpiId);
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
 
@@ -91,6 +93,13 @@ onMounted(async () => {
   await loadUpis();
 });
 
+watch(
+  () => props.preselectedUpiId,
+  (upiId) => {
+    if (upiId) selectedUpiId.value = upiId;
+  },
+);
+
 // ---------------------------------------------------------------------------
 // Submit
 // ---------------------------------------------------------------------------
@@ -118,7 +127,7 @@ async function submit() {
     if (status === 409) {
       conflictError.value = t("permalink.createGs1Link.conflict");
     } else {
-      errorHandlingStore.logErrorWithNotification(t("permalink.createGs1Link.conflict"), e);
+      errorHandlingStore.logErrorWithNotification(t("permalink.createGs1Link.createFailed"), e);
     }
   } finally {
     busy.value = false;

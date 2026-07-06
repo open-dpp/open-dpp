@@ -778,6 +778,7 @@
       },
       "gs1DataAttributes": "GS1 Data Attributes (optional)",
       "conflict": "A GS1 Digital Link permalink for this UPI already exists.",
+      "createFailed": "The permalink could not be created. Please try again.",
       "submit": "Create"
     },
     "edit": {
@@ -831,6 +832,8 @@
       "batch": "Batch / Lot",
       "serial": "Serial",
       "reference": "Passport",
+      "permalink": "Permalink",
+      "createPermalink": "Create permalink",
       "systemReadOnly": "System (read-only)",
       "empty": "No unique product identifiers found."
     },

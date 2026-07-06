@@ -148,6 +148,37 @@ onMounted(async () => {
       </Column>
       <Column field="referenceId" :header="t('uniqueProductIdentifiers.list.reference')" />
 
+      <!-- Permalink column: GS1 rows link to their gs1-link permalink (managed in the
+           passport's permalink list) or offer to create one; internal rows stay empty. -->
+      <Column :header="t('uniqueProductIdentifiers.list.permalink')">
+        <template #body="{ data }">
+          <RouterLink
+            v-if="data.permalink"
+            :to="{
+              name: 'passportPermalinks',
+              params: { organizationId: route.params.organizationId, passportId },
+            }"
+            class="block max-w-xs truncate text-primary hover:underline"
+            :title="data.permalink.publicUrl"
+            data-testid="upi-permalink-link"
+          >
+            {{ data.permalink.publicUrl }}
+          </RouterLink>
+          <RouterLink
+            v-else-if="data.type === 'GS1'"
+            :to="{
+              name: 'passportPermalinks',
+              params: { organizationId: route.params.organizationId, passportId },
+              query: { createForUpi: data.uuid },
+            }"
+            class="text-primary hover:underline"
+            data-testid="upi-permalink-create"
+          >
+            {{ t("uniqueProductIdentifiers.list.createPermalink") }}
+          </RouterLink>
+        </template>
+      </Column>
+
       <!-- Actions column: all listed UPIs (GS1 + internal) are deletable while draft (ADR 0006) -->
       <Column style="width: 5rem">
         <template #body="{ data }">

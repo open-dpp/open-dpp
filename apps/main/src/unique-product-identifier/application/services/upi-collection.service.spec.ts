@@ -51,6 +51,10 @@ function makeService(overrides?: {
   gs1ResolverBaseService?: Partial<{
     getResolverBase: jest.Mock;
   }>;
+  permalinkApplicationService?: Partial<{
+    getGs1LinkSummariesByUpiIds: jest.Mock;
+    deleteGs1LinkForUpi: jest.Mock;
+  }>;
 }) {
   const upiRepo = {
     save: jest.fn(async (upi: UniqueProductIdentifier) => upi),
@@ -75,12 +79,18 @@ function makeService(overrides?: {
     getResolverBase: jest.fn(async () => RESOLVER_BASE),
     ...overrides?.gs1ResolverBaseService,
   };
+  const permalinkApplicationService = {
+    getGs1LinkSummariesByUpiIds: jest.fn(async () => new Map()),
+    deleteGs1LinkForUpi: jest.fn(async () => undefined),
+    ...overrides?.permalinkApplicationService,
+  };
   const service = new UpiCollectionService(
     upiRepo as never,
     passportRepo as never,
     gs1ResolverBaseService as never,
+    permalinkApplicationService as never,
   );
-  return { service, upiRepo, passportRepo, gs1ResolverBaseService };
+  return { service, upiRepo, passportRepo, gs1ResolverBaseService, permalinkApplicationService };
 }
 
 describe("UpiCollectionService.create", () => {
@@ -537,6 +547,62 @@ describe("UpiCollectionService.delete", () => {
 
     await expect(service.delete(upiUuid)).rejects.toThrow(NotFoundException);
   });
+
+  it("(i) deleting a GS1 UPI cascades its gs1-link permalink before the row delete", async () => {
+    const existingUpi = makeGs1Upi();
+    const deleteGs1LinkForUpi = jest.fn(async () => undefined);
+
+    const { service, upiRepo } = makeService({
+      upiRepo: {
+        findOneOrFail: jest.fn(async () => existingUpi),
+        deleteById: jest.fn(async () => undefined),
+      },
+      passportRepo: { findOne: jest.fn(async () => makeDraftPassport(referenceId)) },
+      permalinkApplicationService: { deleteGs1LinkForUpi },
+    });
+
+    await service.delete(upiUuid);
+
+    expect(deleteGs1LinkForUpi).toHaveBeenCalledWith(upiUuid);
+    expect(upiRepo.deleteById).toHaveBeenCalledWith(upiUuid);
+  });
+
+  it("(j) a published (frozen) gs1-link permalink blocks the UPI delete", async () => {
+    const existingUpi = makeGs1Upi();
+    const deleteGs1LinkForUpi = jest.fn(async () => {
+      throw new ConflictException("published permalink");
+    });
+
+    const { service, upiRepo } = makeService({
+      upiRepo: {
+        findOneOrFail: jest.fn(async () => existingUpi),
+        deleteById: jest.fn(async () => undefined),
+      },
+      passportRepo: { findOne: jest.fn(async () => makeDraftPassport(referenceId)) },
+      permalinkApplicationService: { deleteGs1LinkForUpi },
+    });
+
+    await expect(service.delete(upiUuid)).rejects.toThrow(ConflictException);
+    expect(upiRepo.deleteById).not.toHaveBeenCalled();
+  });
+
+  it("(k) deleting an internal UPI does not touch the permalink service", async () => {
+    const internalUpi = makeSystemUpi();
+    const deleteGs1LinkForUpi = jest.fn(async () => undefined);
+
+    const { service } = makeService({
+      upiRepo: {
+        findOneOrFail: jest.fn(async () => internalUpi),
+        deleteById: jest.fn(async () => undefined),
+      },
+      passportRepo: { findOne: jest.fn(async () => makeDraftPassport(referenceId)) },
+      permalinkApplicationService: { deleteGs1LinkForUpi },
+    });
+
+    await service.delete(upiUuid);
+
+    expect(deleteGs1LinkForUpi).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -924,5 +990,117 @@ describe("UpiCollectionService.listByPassport", () => {
     });
     expect(result.cursor).toBe("next-cursor");
     expect(gs1ResolverBaseService.getResolverBase).toHaveBeenCalledWith(organizationId);
+  });
+});
+
+describe("UpiCollectionService permalink enrichment", () => {
+  const referenceId = randomUUID();
+  const organizationId = randomUUID();
+
+  function makeGs1Upi() {
+    return UniqueProductIdentifier.createGs1({
+      externalUUID: randomUUID(),
+      referenceId,
+      gtin: VALID_GTIN13,
+      organizationId,
+    });
+  }
+  function makeSystemUpi() {
+    return UniqueProductIdentifier.create({
+      externalUUID: randomUUID(),
+      referenceId,
+      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      organizationId,
+    });
+  }
+  function makeDraftPassportStub(id: string) {
+    return { id, organizationId, isDraft: () => true, isPublished: () => false };
+  }
+
+  it("list: GS1 row with a gs1-link permalink carries the summary; others null; one batched call with GS1 uuids only", async () => {
+    const linkedUpi = makeGs1Upi();
+    const unlinkedUpi = makeGs1Upi();
+    const systemUpi = makeSystemUpi();
+    const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+
+    const getGs1LinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
+    const { service } = makeService({
+      upiRepo: {
+        findAllByOrganizationId: jest.fn(async () =>
+          PagingResult.create({
+            pagination: Pagination.create({ limit: 100 }),
+            items: [linkedUpi, unlinkedUpi, systemUpi],
+          }),
+        ),
+      },
+      passportRepo: {
+        findByIds: jest.fn(async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]])),
+      },
+      permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
+    });
+
+    const result = await service.list(organizationId);
+
+    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledTimes(1);
+    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledWith(
+      [linkedUpi.uuid, unlinkedUpi.uuid],
+      organizationId,
+    );
+    const byUuid = new Map(result.items.map((i) => [i.uuid, i]));
+    expect(byUuid.get(linkedUpi.uuid)!.permalink).toEqual(summary);
+    expect(byUuid.get(unlinkedUpi.uuid)!.permalink).toBeNull();
+    expect(byUuid.get(systemUpi.uuid)!.permalink).toBeNull();
+  });
+
+  it("listByPassport: enriches GS1 rows via one batched call scoped to the passport's org", async () => {
+    const linkedUpi = makeGs1Upi();
+    const systemUpi = makeSystemUpi();
+    const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+
+    const getGs1LinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
+    const { service } = makeService({
+      upiRepo: {
+        findAllByReferencedIdPaginated: jest.fn(async () =>
+          PagingResult.create({
+            pagination: Pagination.create({ limit: 100 }),
+            items: [linkedUpi, systemUpi],
+          }),
+        ),
+      },
+      passportRepo: { findOne: jest.fn(async () => makeDraftPassportStub(referenceId)) },
+      permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
+    });
+
+    const result = await service.listByPassport(referenceId);
+
+    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledTimes(1);
+    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledWith([linkedUpi.uuid], organizationId);
+    const byUuid = new Map(result.items.map((i) => [i.uuid, i]));
+    expect(byUuid.get(linkedUpi.uuid)!.permalink).toEqual(summary);
+    expect(byUuid.get(systemUpi.uuid)!.permalink).toBeNull();
+  });
+
+  it("list: no GS1 rows on the page — the summary service is still called with an empty array (cheap no-op)", async () => {
+    const systemUpi = makeSystemUpi();
+    const getGs1LinkSummariesByUpiIds = jest.fn(async () => new Map());
+    const { service } = makeService({
+      upiRepo: {
+        findAllByOrganizationId: jest.fn(async () =>
+          PagingResult.create({
+            pagination: Pagination.create({ limit: 100 }),
+            items: [systemUpi],
+          }),
+        ),
+      },
+      passportRepo: {
+        findByIds: jest.fn(async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]])),
+      },
+      permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
+    });
+
+    const result = await service.list(organizationId);
+
+    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledWith([], organizationId);
+    expect(result.items[0].permalink).toBeNull();
   });
 });

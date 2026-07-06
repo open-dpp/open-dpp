@@ -353,6 +353,7 @@ export class PermalinkController {
     if (body.kind === PermalinkKind.GS1_LINK) {
       created = await this.permalinkApplicationService.createGs1LinkPermalink({
         uniqueProductIdentifierId: body.uniqueProductIdentifierId,
+        organizationId: passport.organizationId,
         presentationConfigurationId: body.presentationConfigurationId ?? null,
         gs1DataAttributes: body.gs1DataAttributes ?? null,
         baseUrl: body.baseUrl ?? null,

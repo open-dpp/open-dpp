@@ -778,6 +778,7 @@
       },
       "gs1DataAttributes": "GS1 Datenattribute (optional)",
       "conflict": "Ein GS1 Digital Link Permalink für diesen UPI existiert bereits.",
+      "createFailed": "Der Permalink konnte nicht erstellt werden. Bitte erneut versuchen.",
       "submit": "Erstellen"
     },
     "edit": {
@@ -831,6 +832,8 @@
       "batch": "Charge / Los",
       "serial": "Seriennummer",
       "reference": "Produktpass",
+      "permalink": "Permalink",
+      "createPermalink": "Permalink erstellen",
       "systemReadOnly": "System (schreibgeschützt)",
       "empty": "Keine eindeutigen Produktidentifikatoren gefunden."
     },

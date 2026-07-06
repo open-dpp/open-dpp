@@ -32,6 +32,12 @@ const permalinks = ref<PermalinkPublicDto[]>([]);
 const loading = ref(false);
 const createGs1DialogVisible = ref(false);
 
+// Deep link from the UPI table CTA: ?createForUpi=<uuid> auto-opens the
+// create dialog with that UPI preselected (param is stripped after opening).
+const preselectedUpiId = ref(
+  route.query.createForUpi ? String(route.query.createForUpi) : undefined,
+);
+
 // -------------------------------------------------------------------------
 // Pagination wiring (server-side cursor pagination, mirrors the other list views)
 // -------------------------------------------------------------------------
@@ -218,6 +224,10 @@ function kindLabel(kind: string): string {
 
 onMounted(async () => {
   await nextPage();
+  if (preselectedUpiId.value) {
+    createGs1DialogVisible.value = true;
+    changeQueryParams({ createForUpi: undefined });
+  }
 });
 </script>
 
@@ -336,6 +346,7 @@ onMounted(async () => {
     <PermalinkCreateGs1LinkDialog
       v-model:visible="createGs1DialogVisible"
       :existing-gs1-link-upi-ids="existingGs1LinkUpiIds()"
+      :preselected-upi-id="preselectedUpiId"
       @created="onPermalinkCreated"
     />
 

@@ -6,7 +6,7 @@ import { Test } from "@nestjs/testing";
 import { PresentationReferenceType } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";
-import type { Connection } from "mongoose";
+import type { Connection, Model } from "mongoose";
 
 import { generateMongoConfig } from "../../database/config";
 import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
@@ -334,6 +334,126 @@ describe("PermalinkRepository", () => {
 
     expect((await repository.findOneOrFail(nullFirst.id)).uniqueProductIdentifierId).toBeNull();
     expect((await repository.findOneOrFail(nullSecond.id)).uniqueProductIdentifierId).toBeNull();
+  });
+
+  it("findGs1LinksByUpiIds returns a map keyed by UPI uuid for the requested ids only", async () => {
+    const orgId = `org-${randomUUID().slice(0, 8)}`;
+    const upiA = randomUUID();
+    const upiB = randomUUID();
+    const upiUnrequested = randomUUID();
+
+    const linkA = Permalink.create({
+      kind: "gs1-link",
+      uniqueProductIdentifierId: upiA,
+      presentationConfigurationId: null,
+      organizationId: orgId,
+    });
+    const linkB = Permalink.create({
+      kind: "gs1-link",
+      uniqueProductIdentifierId: upiB,
+      presentationConfigurationId: null,
+      organizationId: orgId,
+    });
+    await repository.save(linkA);
+    await repository.save(linkB);
+    await repository.save(
+      Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upiUnrequested,
+        presentationConfigurationId: null,
+        organizationId: orgId,
+      }),
+    );
+    // Presentation permalink (null uniqueProductIdentifierId) must never match
+    await repository.save(
+      Permalink.create({ presentationConfigurationId: randomUUID(), organizationId: orgId }),
+    );
+
+    const found = await repository.findGs1LinksByUpiIds([upiA, upiB, randomUUID()]);
+
+    expect(found.size).toBe(2);
+    expect(found.get(upiA)?.id).toBe(linkA.id);
+    expect(found.get(upiB)?.id).toBe(linkB.id);
+  });
+
+  it("findGs1LinksByUpiIds returns an empty map for empty input", async () => {
+    const found = await repository.findGs1LinksByUpiIds([]);
+    expect(found.size).toBe(0);
+  });
+
+  it("deleteGs1LinksByUpiIds removes only the gs1-links of the given UPIs", async () => {
+    const orgId = `org-${randomUUID().slice(0, 8)}`;
+    const upiA = randomUUID();
+    const upiKeep = randomUUID();
+    const linkA = Permalink.create({
+      kind: "gs1-link",
+      uniqueProductIdentifierId: upiA,
+      presentationConfigurationId: null,
+      organizationId: orgId,
+    });
+    const linkKeep = Permalink.create({
+      kind: "gs1-link",
+      uniqueProductIdentifierId: upiKeep,
+      presentationConfigurationId: null,
+      organizationId: orgId,
+    });
+    const presentation = Permalink.create({
+      presentationConfigurationId: randomUUID(),
+      organizationId: orgId,
+    });
+    await repository.save(linkA);
+    await repository.save(linkKeep);
+    await repository.save(presentation);
+
+    await repository.deleteGs1LinksByUpiIds([upiA, randomUUID()]);
+
+    expect(await repository.findOne(linkA.id)).toBeUndefined();
+    expect(await repository.findOne(linkKeep.id)).toBeDefined();
+    expect(await repository.findOne(presentation.id)).toBeDefined();
+  });
+
+  it("onApplicationBootstrap reconciles a stale full-unique index with the schema's partial index", async () => {
+    const model = module.get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name));
+
+    // Simulate the legacy DB state: the index exists WITHOUT its partial filter.
+    // (Clear the collection first — a full unique index cannot build over the
+    // multiple presentationConfigurationId:null docs seeded by earlier tests.)
+    await model.collection.deleteMany({});
+    await model.collection.dropIndex("presentationConfigurationId_1");
+    await model.collection.createIndex(
+      { presentationConfigurationId: 1 },
+      { unique: true, name: "presentationConfigurationId_1" },
+    );
+
+    await repository.onApplicationBootstrap();
+
+    const index = (await model.collection.indexes()).find(
+      (i) => i.name === "presentationConfigurationId_1",
+    );
+    expect(index?.partialFilterExpression).toEqual({
+      presentationConfigurationId: { $type: "string" },
+    });
+
+    // Two gs1-links (both presentationConfigurationId: null) must now coexist.
+    const orgId = `org-${randomUUID().slice(0, 8)}`;
+    await repository.save(
+      Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: randomUUID(),
+        presentationConfigurationId: null,
+        organizationId: orgId,
+      }),
+    );
+    await expect(
+      repository.save(
+        Permalink.create({
+          kind: "gs1-link",
+          uniqueProductIdentifierId: randomUUID(),
+          presentationConfigurationId: null,
+          organizationId: orgId,
+        }),
+      ),
+    ).resolves.toBeDefined();
   });
 
   // Slice 21: deleteById

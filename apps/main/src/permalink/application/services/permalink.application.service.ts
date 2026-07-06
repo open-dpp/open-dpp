@@ -15,7 +15,7 @@ import { DbSessionOptions } from "../../../database/query-options";
 import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
 import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
 import { computePermalinkBaseUrlFallback } from "../../../lib/permalink-fallback";
-import { isDuplicateKeyError } from "../../../lib/mongo-errors";
+import { isDuplicateKeyError, isDuplicateKeyErrorOnField } from "../../../lib/mongo-errors";
 import { Pagination } from "../../../pagination/pagination";
 import { Passport } from "../../../passports/domain/passport";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
@@ -38,6 +38,7 @@ export interface PermalinkUpdate {
 
 export interface CreateGs1LinkPermalinkInput {
   uniqueProductIdentifierId: string;
+  organizationId: string;
   presentationConfigurationId?: string | null;
   gs1DataAttributes?: Gs1DataAttributes | null;
   baseUrl?: string | null;
@@ -311,18 +312,37 @@ export class PermalinkApplicationService {
       gs1DataAttributes: input.gs1DataAttributes ?? null,
       baseUrl: input.baseUrl ?? null,
       primary: false,
+      organizationId: input.organizationId,
     });
 
     try {
       return await this.permalinkRepository.save(permalink, options);
     } catch (error) {
-      if (isDuplicateKeyError(error)) {
+      // Only a collision on the UPI index means "already exists for this UPI";
+      // duplicates on other unique indexes (slug, presentationConfigurationId)
+      // must surface as what they are, not as a phantom UPI conflict.
+      if (isDuplicateKeyErrorOnField(error, "uniqueProductIdentifierId")) {
         throw new ConflictException(
           `A GS1-link permalink already exists for UPI ${input.uniqueProductIdentifierId}`,
         );
       }
       throw error;
     }
+  }
+
+  /**
+   * Delete the gs1-link permalink referencing a UPI (cascade for UPI deletion).
+   * No-op when none exists; a published (frozen) permalink blocks the delete.
+   */
+  async deleteGs1LinkForUpi(upiUuid: string, options?: DbSessionOptions): Promise<void> {
+    const permalink = await this.permalinkRepository.findGs1LinkByUpiId(upiUuid, options);
+    if (!permalink) return;
+    if (permalink.publishedUrl !== null) {
+      throw new ConflictException(
+        `UPI ${upiUuid} is referenced by the published permalink ${permalink.id} and cannot be deleted`,
+      );
+    }
+    await this.permalinkRepository.deleteById(permalink.id, options);
   }
 
   /**
@@ -470,6 +490,32 @@ export class PermalinkApplicationService {
       };
     });
     return { items, cursor: result.pagination.cursor };
+  }
+
+  /**
+   * Batch-resolve gs1-link permalink summaries for a page of UPI uuids,
+   * keyed by UPI uuid (max one gs1-link permalink per UPI). Used to enrich
+   * UPI list rows; publicUrl follows the same rule as `listByPassport`:
+   * `publishedUrl ?? resolvePublicUrl(permalink, branding, envUrl)`.
+   */
+  async getGs1LinkSummariesByUpiIds(
+    upiUuids: string[],
+    organizationId: string,
+  ): Promise<Map<string, { id: string; publicUrl: string }>> {
+    if (upiUuids.length === 0) return new Map();
+    const permalinks = await this.permalinkRepository.findGs1LinksByUpiIds(upiUuids);
+    if (permalinks.size === 0) return new Map();
+    const branding = await this.loadBranding(organizationId).catch(() => null);
+    const envUrl = await this.getPermalinkBaseUrl();
+    return new Map(
+      [...permalinks].map(([upiUuid, permalink]) => [
+        upiUuid,
+        {
+          id: permalink.id,
+          publicUrl: permalink.publishedUrl ?? resolvePublicUrl(permalink, branding, envUrl),
+        },
+      ]),
+    );
   }
 
   /**

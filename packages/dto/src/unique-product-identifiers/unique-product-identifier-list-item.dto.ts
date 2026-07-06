@@ -15,9 +15,22 @@ import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
  * - `granularity`       — derived: model | batch | item | null (null for non-GS1)
  * - `digitalLink`       — server-assembled GS1 Digital Link URL, or null when no resolver
  * - `passportPublished` — whether the owning passport is currently published
+ * - `permalink`         — summary of the gs1-link permalink referencing this UPI
+ *                         (max one per UPI), or null when none / non-GS1 / single-item reads
  *
  * No GS1 data attributes appear on this schema — the list item is a display-only snapshot.
  */
+export const UniqueProductIdentifierPermalinkSummaryDtoSchema = z
+  .object({
+    id: z.uuid(),
+    publicUrl: z.string().url(),
+  })
+  .meta({ id: "UniqueProductIdentifierPermalinkSummary" });
+
+export type UniqueProductIdentifierPermalinkSummaryDto = z.infer<
+  typeof UniqueProductIdentifierPermalinkSummaryDtoSchema
+>;
+
 export const UniqueProductIdentifierListItemDtoSchema = z
   .object({
     uuid: z.uuid(),
@@ -35,6 +48,9 @@ export const UniqueProductIdentifierListItemDtoSchema = z
       .nullish()
       .overwrite((v) => v ?? null),
     passportPublished: z.boolean(),
+    permalink: UniqueProductIdentifierPermalinkSummaryDtoSchema.nullish().overwrite(
+      (v) => v ?? null,
+    ),
   })
   .meta({ id: "UniqueProductIdentifierListItem" });
 
