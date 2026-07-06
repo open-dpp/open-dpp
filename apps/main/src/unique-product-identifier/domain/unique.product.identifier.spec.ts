@@ -336,9 +336,9 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13,
       });
       const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
-      expect(
-        upi.toListItem({ passportPublished: false, permalink: summary }).permalink,
-      ).toEqual(summary);
+      expect(upi.toListItem({ passportPublished: false, permalink: summary }).permalink).toEqual(
+        summary,
+      );
       expect(upi.toListItem({ passportPublished: false }).permalink).toBeNull();
     });
 

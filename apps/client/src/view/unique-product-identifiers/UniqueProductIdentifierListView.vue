@@ -158,7 +158,7 @@ onMounted(async () => {
               name: 'passportPermalinks',
               params: { organizationId: route.params.organizationId, passportId },
             }"
-            class="block max-w-xs truncate text-primary hover:underline"
+            class="text-primary block max-w-xs truncate hover:underline"
             :title="data.permalink.publicUrl"
             data-testid="upi-permalink-link"
           >

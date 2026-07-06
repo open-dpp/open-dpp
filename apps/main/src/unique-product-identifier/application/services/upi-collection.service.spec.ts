@@ -1034,7 +1034,9 @@ describe("UpiCollectionService permalink enrichment", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]])),
+        findByIds: jest.fn(
+          async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]]),
+        ),
       },
       permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
     });
@@ -1093,7 +1095,9 @@ describe("UpiCollectionService permalink enrichment", () => {
         ),
       },
       passportRepo: {
-        findByIds: jest.fn(async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]])),
+        findByIds: jest.fn(
+          async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]]),
+        ),
       },
       permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
     });
