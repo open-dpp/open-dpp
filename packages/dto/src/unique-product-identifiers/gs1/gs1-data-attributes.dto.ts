@@ -16,7 +16,7 @@ const unknownAiMessage = (input: unknown): string => {
  * Zod schema for a single GS1 data-attribute Application Identifier key.
  *
  * The custom error map replaces zod's default enum message, which would join
- * all 456 permitted values into one multi-kilobyte string.
+ * every permitted AI into one multi-kilobyte string.
  */
 const Gs1DataAttributeAiSchema = z.enum(Gs1DataAttributeAi, {
   error: (issue) => unknownAiMessage(issue.input),

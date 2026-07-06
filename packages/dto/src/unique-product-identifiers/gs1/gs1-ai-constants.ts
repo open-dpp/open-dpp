@@ -1,14 +1,17 @@
 /**
+ * @generated DO NOT EDIT BY HAND
+ *
+ * Regenerate with: pnpm gen:gs1  (scripts/gs1-generator/index.mts)
+ *
+ * Provenance: GS1 Application Identifier registry — https://ref.gs1.org/ai/
+ * Retrieved: 2026-07-06 (UTC), 541 entries
+ * Upstream payload SHA-256: 01e985153cb17c9492a07da87a3d934bfe737db8be0a436ba56a7849e4762224
+ *
+ * Data © GS1 AISBL, published under the GS1 terms of use (factual standards
+ * data, attribution given; no open-source license). See ADR 0001.
+ *
  * Named-constant enum objects for the GS1 Application Identifiers, one per AI
- * kind, following the ExternalIdentifierType pattern. One-shot derived from
- * the vendored table in gs1-ai-table.ts. Pure data + types, no I/O.
- *
- * Provenance (via the vendored table): GS1DigitalLinkToolkit.js —
- * https://github.com/gs1/GS1DigitalLinkToolkit.js
- * Commit: facedb875bcc71b12b16d7236c0d5edd48205bfa
- *
- * Licensed under the Apache-2.0 License.
- * Original copyright: © GS1, used under Apache-2.0.
+ * kind, derived from gs1-ai-table.ts. Pure data + types, no I/O.
  *
  * Naming rule:
  * title -> trim -> strip parentheticals -> uppercase -> collapse
@@ -18,6 +21,10 @@
 
 /** GS1 primary identifier (key) Application Identifiers (type 'I' in the vendored AI table), keyed by derived name. */
 export const Gs1KeyAi = {
+  /** AI 00 — Serial Shipping Container Code (SSCC) */
+  SERIAL_SHIPPING_CONTAINER_CODE: "00",
+  /** AI 01 — Global Trade Item Number (GTIN) */
+  GLOBAL_TRADE_ITEM_NUMBER: "01",
   /** AI 253 — Global Document Type Identifier (GDTI) */
   GLOBAL_DOCUMENT_TYPE_IDENTIFIER: "253",
   /** AI 255 — Global Coupon Number (GCN) */
@@ -26,26 +33,28 @@ export const Gs1KeyAi = {
   GLOBAL_IDENTIFICATION_NUMBER_FOR_CONSIGNMENT: "401",
   /** AI 402 — Global Shipment Identification Number (GSIN) */
   GLOBAL_SHIPMENT_IDENTIFICATION_NUMBER: "402",
-  /** AI 414 — Identification of a physical location - Global Location Number */
+  /** AI 414 — Identification of a physical location - Global Location Number (GLN) */
   IDENTIFICATION_OF_A_PHYSICAL_LOCATION_GLOBAL_LOCATION_NUMBER: "414",
-  /** AI 415 — Global Location Number of the invoicing party */
+  /** AI 415 — Global Location Number (GLN) of the invoicing party */
   GLOBAL_LOCATION_NUMBER_OF_THE_INVOICING_PARTY: "415",
+  /** AI 417 — Party Global Location Number (GLN) */
+  PARTY_GLOBAL_LOCATION_NUMBER: "417",
   /** AI 8003 — Global Returnable Asset Identifier (GRAI) */
   GLOBAL_RETURNABLE_ASSET_IDENTIFIER: "8003",
   /** AI 8004 — Global Individual Asset Identifier (GIAI) */
   GLOBAL_INDIVIDUAL_ASSET_IDENTIFIER: "8004",
-  /** AI 8006 — Identification of an individual trade item piece */
+  /** AI 8006 — Identification of an individual trade item piece (ITIP) */
   IDENTIFICATION_OF_AN_INDIVIDUAL_TRADE_ITEM_PIECE: "8006",
   /** AI 8010 — Component/Part Identifier (CPID) */
   COMPONENT_PART_IDENTIFIER: "8010",
-  /** AI 8017 — Global Service Relation Number - Provider */
-  GLOBAL_SERVICE_RELATION_NUMBER_PROVIDER: "8017",
-  /** AI 8018 — Global Service Relation Number - Recipient */
-  GLOBAL_SERVICE_RELATION_NUMBER_RECIPIENT: "8018",
-  /** AI 00 — Serial Shipping Container Code (SSCC) */
-  SERIAL_SHIPPING_CONTAINER_CODE: "00",
-  /** AI 01 — Global Trade Item Number (GTIN) */
-  GLOBAL_TRADE_ITEM_NUMBER: "01",
+  /** AI 8013 — Global Model Number (GMN) */
+  GLOBAL_MODEL_NUMBER: "8013",
+  /** AI 8017 — Global Service Relation Number (GSRN) to identify the relationship between an organisation offering services and the provider of services */
+  GLOBAL_SERVICE_RELATION_NUMBER_TO_IDENTIFY_THE_RELATIONSHIP_BETWEEN_AN_ORGANISATION_OFFERING_SERVICES_AND_THE_PROVIDER_OF_SERVICES:
+    "8017",
+  /** AI 8018 — Global Service Relation Number (GSRN) to identify the relationship between an organisation offering services and the recipient of services */
+  GLOBAL_SERVICE_RELATION_NUMBER_TO_IDENTIFY_THE_RELATIONSHIP_BETWEEN_AN_ORGANISATION_OFFERING_SERVICES_AND_THE_RECIPIENT_OF_SERVICES:
+    "8018",
 } as const;
 
 /** The union of Gs1KeyAi AI string values. */
@@ -59,12 +68,18 @@ export const Gs1QualifierAi = {
   SERIAL_NUMBER: "21",
   /** AI 22 — Consumer product variant */
   CONSUMER_PRODUCT_VARIANT: "22",
-  /** AI 254 — GLN extension component */
-  GLN_EXTENSION_COMPONENT: "254",
+  /** AI 235 — Third Party Controlled, Serialised Extension of Global Trade Item Number (GTIN) (TPX) */
+  THIRD_PARTY_CONTROLLED_SERIALISED_EXTENSION_OF_GLOBAL_TRADE_ITEM_NUMBER: "235",
+  /** AI 254 — Global Location Number (GLN) extension component */
+  GLOBAL_LOCATION_NUMBER_EXTENSION_COMPONENT: "254",
+  /** AI 7040 — GS1 UIC with Extension 1 and Importer index */
+  GS1_UIC_WITH_EXTENSION_1_AND_IMPORTER_INDEX: "7040",
   /** AI 8011 — Component/Part Identifier serial number (CPID SERIAL) */
   COMPONENT_PART_IDENTIFIER_SERIAL_NUMBER: "8011",
   /** AI 8019 — Service Relation Instance Number (SRIN) */
   SERVICE_RELATION_INSTANCE_NUMBER: "8019",
+  /** AI 8020 — Payment slip reference number */
+  PAYMENT_SLIP_REFERENCE_NUMBER: "8020",
 } as const;
 
 /** The union of Gs1QualifierAi AI string values. */
@@ -72,6 +87,8 @@ export type Gs1QualifierAi = (typeof Gs1QualifierAi)[keyof typeof Gs1QualifierAi
 
 /** GS1 data-attribute (non-key) Application Identifiers (type 'D' in the vendored AI table), keyed by derived name. */
 export const Gs1DataAttributeAi = {
+  /** AI 02 — Global Trade Item Number (GTIN) of contained trade items */
+  GLOBAL_TRADE_ITEM_NUMBER_OF_CONTAINED_TRADE_ITEMS: "02",
   /** AI 11 — Production date (YYMMDD) */
   PRODUCTION_DATE: "11",
   /** AI 12 — Due date (YYMMDD) */
@@ -86,30 +103,6 @@ export const Gs1DataAttributeAi = {
   EXPIRATION_DATE: "17",
   /** AI 20 — Internal product variant */
   INTERNAL_PRODUCT_VARIANT: "20",
-  /** AI 30 — Variable count of items (variable measure trade item) */
-  VARIABLE_COUNT_OF_ITEMS: "30",
-  /** AI 37 — Count of trade items */
-  COUNT_OF_TRADE_ITEMS: "37",
-  /** AI 90 — Information mutually agreed between trading partners */
-  INFORMATION_MUTUALLY_AGREED_BETWEEN_TRADING_PARTNERS: "90",
-  /** AI 91 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_91: "91",
-  /** AI 92 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_92: "92",
-  /** AI 93 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_93: "93",
-  /** AI 94 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_94: "94",
-  /** AI 95 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_95: "95",
-  /** AI 96 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_96: "96",
-  /** AI 97 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_97: "97",
-  /** AI 98 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_98: "98",
-  /** AI 99 — Company internal information */
-  COMPANY_INTERNAL_INFORMATION_99: "99",
   /** AI 240 — Additional product identification assigned by the manufacturer */
   ADDITIONAL_PRODUCT_IDENTIFICATION_ASSIGNED_BY_THE_MANUFACTURER: "240",
   /** AI 241 — Customer part number */
@@ -122,46 +115,8 @@ export const Gs1DataAttributeAi = {
   SECONDARY_SERIAL_NUMBER: "250",
   /** AI 251 — Reference to source entity */
   REFERENCE_TO_SOURCE_ENTITY: "251",
-  /** AI 400 — Customer's purchase order number */
-  CUSTOMER_S_PURCHASE_ORDER_NUMBER: "400",
-  /** AI 403 — Routing code */
-  ROUTING_CODE: "403",
-  /** AI 410 — Ship to - Deliver to Global Location Number */
-  SHIP_TO_DELIVER_TO_GLOBAL_LOCATION_NUMBER: "410",
-  /** AI 411 — Bill to - Invoice to Global Location Number */
-  BILL_TO_INVOICE_TO_GLOBAL_LOCATION_NUMBER: "411",
-  /** AI 412 — Purchased from Global Location Number */
-  PURCHASED_FROM_GLOBAL_LOCATION_NUMBER: "412",
-  /** AI 413 — Ship for - Deliver for - Forward to Global Location Number */
-  SHIP_FOR_DELIVER_FOR_FORWARD_TO_GLOBAL_LOCATION_NUMBER: "413",
-  /** AI 416 — GLN of the production or service location */
-  GLN_OF_THE_PRODUCTION_OR_SERVICE_LOCATION: "416",
-  /** AI 420 — Ship to - Deliver to postal code within a single postal authority */
-  SHIP_TO_DELIVER_TO_POSTAL_CODE_WITHIN_A_SINGLE_POSTAL_AUTHORITY: "420",
-  /** AI 421 — Ship to - Deliver to postal code with ISO country code */
-  SHIP_TO_DELIVER_TO_POSTAL_CODE_WITH_ISO_COUNTRY_CODE: "421",
-  /** AI 422 — Country of origin of a trade item */
-  COUNTRY_OF_ORIGIN_OF_A_TRADE_ITEM: "422",
-  /** AI 423 — Country of initial processing */
-  COUNTRY_OF_INITIAL_PROCESSING: "423",
-  /** AI 424 — Country of processing */
-  COUNTRY_OF_PROCESSING: "424",
-  /** AI 425 — Country of disassembly */
-  COUNTRY_OF_DISASSEMBLY: "425",
-  /** AI 426 — Country covering full process chain */
-  COUNTRY_COVERING_FULL_PROCESS_CHAIN: "426",
-  /** AI 427 — Country subdivision Of origin */
-  COUNTRY_SUBDIVISION_OF_ORIGIN: "427",
-  /** AI 710 — National Healthcare Reimbursement Number (NHRN) - Germany PZN */
-  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_GERMANY_PZN: "710",
-  /** AI 711 — National Healthcare Reimbursement Number (NHRN) - France CIP */
-  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_FRANCE_CIP: "711",
-  /** AI 712 — National Healthcare Reimbursement Number (NHRN) - Spain CN */
-  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_SPAIN_CN: "712",
-  /** AI 713 — National Healthcare Reimbursement Number (NHRN) - Brasil DRN */
-  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_BRASIL_DRN: "713",
-  /** AI 714 — National Healthcare Reimbursement Number (NHRN) - Portugal AIM */
-  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_PORTUGAL_AIM: "714",
+  /** AI 30 — Variable count of items (variable measure trade item) */
+  VARIABLE_COUNT_OF_ITEMS: "30",
   /** AI 3100 — Net weight, kilograms (variable measure trade item) */
   NET_WEIGHT_KILOGRAMS_3100: "3100",
   /** AI 3101 — Net weight, kilograms (variable measure trade item) */
@@ -798,6 +753,8 @@ export const Gs1DataAttributeAi = {
   LOGISTIC_VOLUME_CUBIC_YARDS_3694: "3694",
   /** AI 3695 — Logistic volume, cubic yards */
   LOGISTIC_VOLUME_CUBIC_YARDS_3695: "3695",
+  /** AI 37 — Count of trade items or trade item pieces contained in a logistic unit */
+  COUNT_OF_TRADE_ITEMS_OR_TRADE_ITEM_PIECES_CONTAINED_IN_A_LOGISTIC_UNIT: "37",
   /** AI 3900 — Applicable amount payable or Coupon value, local currency */
   APPLICABLE_AMOUNT_PAYABLE_OR_COUPON_VALUE_LOCAL_CURRENCY_3900: "3900",
   /** AI 3901 — Applicable amount payable or Coupon value, local currency */
@@ -886,19 +843,123 @@ export const Gs1DataAttributeAi = {
   PERCENTAGE_DISCOUNT_OF_A_COUPON_3942: "3942",
   /** AI 3943 — Percentage discount of a coupon */
   PERCENTAGE_DISCOUNT_OF_A_COUPON_3943: "3943",
+  /** AI 3950 — Amount Payable per unit of measure single monetary area (variable measure trade item) */
+  AMOUNT_PAYABLE_PER_UNIT_OF_MEASURE_SINGLE_MONETARY_AREA_3950: "3950",
+  /** AI 3951 — Amount Payable per unit of measure single monetary area (variable measure trade item) */
+  AMOUNT_PAYABLE_PER_UNIT_OF_MEASURE_SINGLE_MONETARY_AREA_3951: "3951",
+  /** AI 3952 — Amount Payable per unit of measure single monetary area (variable measure trade item) */
+  AMOUNT_PAYABLE_PER_UNIT_OF_MEASURE_SINGLE_MONETARY_AREA_3952: "3952",
+  /** AI 3953 — Amount Payable per unit of measure single monetary area (variable measure trade item) */
+  AMOUNT_PAYABLE_PER_UNIT_OF_MEASURE_SINGLE_MONETARY_AREA_3953: "3953",
+  /** AI 3954 — Amount Payable per unit of measure single monetary area (variable measure trade item) */
+  AMOUNT_PAYABLE_PER_UNIT_OF_MEASURE_SINGLE_MONETARY_AREA_3954: "3954",
+  /** AI 3955 — Amount Payable per unit of measure single monetary area (variable measure trade item) */
+  AMOUNT_PAYABLE_PER_UNIT_OF_MEASURE_SINGLE_MONETARY_AREA_3955: "3955",
+  /** AI 400 — Customers purchase order number */
+  CUSTOMERS_PURCHASE_ORDER_NUMBER: "400",
+  /** AI 403 — Routing code */
+  ROUTING_CODE: "403",
+  /** AI 410 — Ship to / Deliver to Global Location Number (GLN) */
+  SHIP_TO_DELIVER_TO_GLOBAL_LOCATION_NUMBER: "410",
+  /** AI 411 — Bill to / Invoice to Global Location Number (GLN) */
+  BILL_TO_INVOICE_TO_GLOBAL_LOCATION_NUMBER: "411",
+  /** AI 412 — Purchased from Global Location Number (GLN) */
+  PURCHASED_FROM_GLOBAL_LOCATION_NUMBER: "412",
+  /** AI 413 — Ship for / Deliver for - Forward to Global Location Number (GLN) */
+  SHIP_FOR_DELIVER_FOR_FORWARD_TO_GLOBAL_LOCATION_NUMBER: "413",
+  /** AI 416 — Global Location Number (GLN) of the production or service location */
+  GLOBAL_LOCATION_NUMBER_OF_THE_PRODUCTION_OR_SERVICE_LOCATION: "416",
+  /** AI 420 — Ship to / Deliver to postal code within a single postal authority */
+  SHIP_TO_DELIVER_TO_POSTAL_CODE_WITHIN_A_SINGLE_POSTAL_AUTHORITY: "420",
+  /** AI 421 — Ship to / Deliver to postal code with ISO country code */
+  SHIP_TO_DELIVER_TO_POSTAL_CODE_WITH_ISO_COUNTRY_CODE: "421",
+  /** AI 422 — Country of origin of a trade item */
+  COUNTRY_OF_ORIGIN_OF_A_TRADE_ITEM: "422",
+  /** AI 423 — Country of initial processing */
+  COUNTRY_OF_INITIAL_PROCESSING: "423",
+  /** AI 424 — Country of processing */
+  COUNTRY_OF_PROCESSING: "424",
+  /** AI 425 — Country of disassembly */
+  COUNTRY_OF_DISASSEMBLY: "425",
+  /** AI 426 — Country covering full process chain */
+  COUNTRY_COVERING_FULL_PROCESS_CHAIN: "426",
+  /** AI 427 — Country subdivision Of origin */
+  COUNTRY_SUBDIVISION_OF_ORIGIN: "427",
+  /** AI 4300 — Ship-to / Deliver-to company name */
+  SHIP_TO_DELIVER_TO_COMPANY_NAME: "4300",
+  /** AI 4301 — Ship-to / Deliver-to contact */
+  SHIP_TO_DELIVER_TO_CONTACT: "4301",
+  /** AI 4302 — Ship-to / Deliver-to address line 1 */
+  SHIP_TO_DELIVER_TO_ADDRESS_LINE_1: "4302",
+  /** AI 4303 — Ship-to / Deliver-to address line 2 */
+  SHIP_TO_DELIVER_TO_ADDRESS_LINE_2: "4303",
+  /** AI 4304 — Ship-to / Deliver-to suburb */
+  SHIP_TO_DELIVER_TO_SUBURB: "4304",
+  /** AI 4305 — Ship-to / Deliver-to locality */
+  SHIP_TO_DELIVER_TO_LOCALITY: "4305",
+  /** AI 4306 — Ship-to / Deliver-to region */
+  SHIP_TO_DELIVER_TO_REGION: "4306",
+  /** AI 4307 — Ship-to / Deliver-to country code */
+  SHIP_TO_DELIVER_TO_COUNTRY_CODE: "4307",
+  /** AI 4308 — Ship-to / Deliver-to telephone number */
+  SHIP_TO_DELIVER_TO_TELEPHONE_NUMBER: "4308",
+  /** AI 4309 — Ship-to / Deliver-to GEO location */
+  SHIP_TO_DELIVER_TO_GEO_LOCATION: "4309",
+  /** AI 4310 — Return-to company name */
+  RETURN_TO_COMPANY_NAME: "4310",
+  /** AI 4311 — Return-to contact */
+  RETURN_TO_CONTACT: "4311",
+  /** AI 4312 — Return-to address line 1 */
+  RETURN_TO_ADDRESS_LINE_1: "4312",
+  /** AI 4313 — Return-to address line 2 */
+  RETURN_TO_ADDRESS_LINE_2: "4313",
+  /** AI 4314 — Return-to suburb */
+  RETURN_TO_SUBURB: "4314",
+  /** AI 4315 — Return-to locality */
+  RETURN_TO_LOCALITY: "4315",
+  /** AI 4316 — Return-to region */
+  RETURN_TO_REGION: "4316",
+  /** AI 4317 — Return-to country code */
+  RETURN_TO_COUNTRY_CODE: "4317",
+  /** AI 4318 — Return-to postal code */
+  RETURN_TO_POSTAL_CODE: "4318",
+  /** AI 4319 — Return-to telephone number */
+  RETURN_TO_TELEPHONE_NUMBER: "4319",
+  /** AI 4320 — Service code description */
+  SERVICE_CODE_DESCRIPTION: "4320",
+  /** AI 4321 — Dangerous goods flag */
+  DANGEROUS_GOODS_FLAG: "4321",
+  /** AI 4322 — Authority to leave */
+  AUTHORITY_TO_LEAVE: "4322",
+  /** AI 4323 — Signature required flag */
+  SIGNATURE_REQUIRED_FLAG: "4323",
+  /** AI 4324 — Not before delivery date time (YYMMDDhhmm) */
+  NOT_BEFORE_DELIVERY_DATE_TIME: "4324",
+  /** AI 4325 — Not after delivery date time (YYMMDDhhmm) */
+  NOT_AFTER_DELIVERY_DATE_TIME: "4325",
+  /** AI 4326 — Release date (YYMMDD) */
+  RELEASE_DATE: "4326",
+  /** AI 4330 — Maximum temperature in Fahrenheit (expressed in hundredths of degrees) */
+  MAXIMUM_TEMPERATURE_IN_FAHRENHEIT: "4330",
+  /** AI 4331 — Maximum temperature in Celsius (expressed in hundredths of degrees) */
+  MAXIMUM_TEMPERATURE_IN_CELSIUS: "4331",
+  /** AI 4332 — Minimum temperature in Fahrenheit (expressed in hundredths of degrees) */
+  MINIMUM_TEMPERATURE_IN_FAHRENHEIT: "4332",
+  /** AI 4333 — Minimum temperature in Celsius (expressed in hundredths of degrees) */
+  MINIMUM_TEMPERATURE_IN_CELSIUS: "4333",
   /** AI 7001 — NATO Stock Number (NSN) */
   NATO_STOCK_NUMBER: "7001",
   /** AI 7002 — UN/ECE meat carcasses and cuts classification */
   UN_ECE_MEAT_CARCASSES_AND_CUTS_CLASSIFICATION: "7002",
-  /** AI 7003 — Expiration date and time */
+  /** AI 7003 — Expiration date and time (YYMMDDhhmm) */
   EXPIRATION_DATE_AND_TIME: "7003",
   /** AI 7004 — Active potency */
   ACTIVE_POTENCY: "7004",
   /** AI 7005 — Catch area */
   CATCH_AREA: "7005",
-  /** AI 7006 — First freeze date */
+  /** AI 7006 — First freeze date (YYMMDD) */
   FIRST_FREEZE_DATE: "7006",
-  /** AI 7007 — Harvest date */
+  /** AI 7007 — Harvest date (YYMMDD[YYMMDD]) */
   HARVEST_DATE: "7007",
   /** AI 7008 — Species for fishery purposes */
   SPECIES_FOR_FISHERY_PURPOSES: "7008",
@@ -906,6 +967,8 @@ export const Gs1DataAttributeAi = {
   FISHING_GEAR_TYPE: "7009",
   /** AI 7010 — Production method */
   PRODUCTION_METHOD: "7010",
+  /** AI 7011 — Test by date (YYMMDD[hhmm]) */
+  TEST_BY_DATE: "7011",
   /** AI 7020 — Refurbishment lot ID */
   REFURBISHMENT_LOT_ID: "7020",
   /** AI 7021 — Functional status */
@@ -914,46 +977,88 @@ export const Gs1DataAttributeAi = {
   REVISION_STATUS: "7022",
   /** AI 7023 — Global Individual Asset Identifier (GIAI) of an assembly */
   GLOBAL_INDIVIDUAL_ASSET_IDENTIFIER_OF_AN_ASSEMBLY: "7023",
-  /** AI 7030 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7030: "7030",
-  /** AI 7031 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7031: "7031",
-  /** AI 7032 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7032: "7032",
-  /** AI 7033 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7033: "7033",
-  /** AI 7034 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7034: "7034",
-  /** AI 7035 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7035: "7035",
-  /** AI 7036 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7036: "7036",
-  /** AI 7037 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7037: "7037",
-  /** AI 7038 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7038: "7038",
-  /** AI 7039 — Number of processor with ISO Country Code */
-  NUMBER_OF_PROCESSOR_WITH_ISO_COUNTRY_CODE_7039: "7039",
-  /** AI 7230 — Certification reference # 0 */
-  CERTIFICATION_REFERENCE_0: "7230",
-  /** AI 7231 — Certification reference # 1 */
-  CERTIFICATION_REFERENCE_1: "7231",
-  /** AI 7232 — Certification reference # 2 */
-  CERTIFICATION_REFERENCE_2: "7232",
-  /** AI 7233 — Certification reference # 3 */
-  CERTIFICATION_REFERENCE_3: "7233",
-  /** AI 7234 — Certification reference # 4 */
-  CERTIFICATION_REFERENCE_4: "7234",
-  /** AI 7235 — Certification reference # 5 */
-  CERTIFICATION_REFERENCE_5: "7235",
-  /** AI 7236 — Certification reference # 6 */
-  CERTIFICATION_REFERENCE_6: "7236",
-  /** AI 7237 — Certification reference # 7 */
-  CERTIFICATION_REFERENCE_7: "7237",
-  /** AI 7238 — Certification reference # 8 */
-  CERTIFICATION_REFERENCE_8: "7238",
-  /** AI 7239 — Certification reference # 9 */
-  CERTIFICATION_REFERENCE_9: "7239",
+  /** AI 7030 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7030: "7030",
+  /** AI 7031 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7031: "7031",
+  /** AI 7032 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7032: "7032",
+  /** AI 7033 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7033: "7033",
+  /** AI 7034 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7034: "7034",
+  /** AI 7035 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7035: "7035",
+  /** AI 7036 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7036: "7036",
+  /** AI 7037 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7037: "7037",
+  /** AI 7038 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7038: "7038",
+  /** AI 7039 — Number of processor with three-digit ISO country code */
+  NUMBER_OF_PROCESSOR_WITH_THREE_DIGIT_ISO_COUNTRY_CODE_7039: "7039",
+  /** AI 710 — National Healthcare Reimbursement Number (NHRN) - Germany PZN */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_GERMANY_PZN: "710",
+  /** AI 711 — National Healthcare Reimbursement Number (NHRN) - France CIP */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_FRANCE_CIP: "711",
+  /** AI 712 — National Healthcare Reimbursement Number (NHRN) - Spain CN */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_SPAIN_CN: "712",
+  /** AI 713 — National Healthcare Reimbursement Number (NHRN) - Brasil DRN */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_BRASIL_DRN: "713",
+  /** AI 714 — National Healthcare Reimbursement Number (NHRN) - Portugal AIM */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_PORTUGAL_AIM: "714",
+  /** AI 715 — National Healthcare Reimbursement Number (NHRN) - United States of America NDC */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_UNITED_STATES_OF_AMERICA_NDC: "715",
+  /** AI 716 — National Healthcare Reimbursement Number (NHRN) - Italy AIC */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_ITALY_AIC: "716",
+  /** AI 717 — National Healthcare Reimbursement Number (NHRN) - Costa Rica Sanitary Register Number */
+  NATIONAL_HEALTHCARE_REIMBURSEMENT_NUMBER_COSTA_RICA_SANITARY_REGISTER_NUMBER: "717",
+  /** AI 7230 — Certification Reference */
+  CERTIFICATION_REFERENCE_7230: "7230",
+  /** AI 7231 — Certification Reference */
+  CERTIFICATION_REFERENCE_7231: "7231",
+  /** AI 7232 — Certification Reference */
+  CERTIFICATION_REFERENCE_7232: "7232",
+  /** AI 7233 — Certification Reference */
+  CERTIFICATION_REFERENCE_7233: "7233",
+  /** AI 7234 — Certification Reference */
+  CERTIFICATION_REFERENCE_7234: "7234",
+  /** AI 7235 — Certification Reference */
+  CERTIFICATION_REFERENCE_7235: "7235",
+  /** AI 7236 — Certification Reference */
+  CERTIFICATION_REFERENCE_7236: "7236",
+  /** AI 7237 — Certification Reference */
+  CERTIFICATION_REFERENCE_7237: "7237",
+  /** AI 7238 — Certification Reference */
+  CERTIFICATION_REFERENCE_7238: "7238",
+  /** AI 7239 — Certification Reference */
+  CERTIFICATION_REFERENCE_7239: "7239",
+  /** AI 7240 — Protocol ID */
+  PROTOCOL_ID: "7240",
+  /** AI 7241 — AIDC media type */
+  AIDC_MEDIA_TYPE: "7241",
+  /** AI 7242 — Version Control Number (VCN) */
+  VERSION_CONTROL_NUMBER: "7242",
+  /** AI 7250 — Date of birth (YYYYMMDD) */
+  DATE_OF_BIRTH: "7250",
+  /** AI 7251 — Date and time of birth (YYYYMMDDhhmm) */
+  DATE_AND_TIME_OF_BIRTH: "7251",
+  /** AI 7252 — Biological sex */
+  BIOLOGICAL_SEX: "7252",
+  /** AI 7253 — Family name of person */
+  FAMILY_NAME_OF_PERSON: "7253",
+  /** AI 7254 — Given name of person */
+  GIVEN_NAME_OF_PERSON: "7254",
+  /** AI 7255 — Name suffix of person */
+  NAME_SUFFIX_OF_PERSON: "7255",
+  /** AI 7256 — Full name of person */
+  FULL_NAME_OF_PERSON: "7256",
+  /** AI 7257 — Address of person */
+  ADDRESS_OF_PERSON: "7257",
+  /** AI 7258 — Baby birth sequence */
+  BABY_BIRTH_SEQUENCE: "7258",
+  /** AI 7259 — Baby of family name */
+  BABY_OF_FAMILY_NAME: "7259",
   /** AI 8001 — Roll products (width, length, core diameter, direction, splices) */
   ROLL_PRODUCTS: "8001",
   /** AI 8002 — Cellular mobile telephone identifier */
@@ -962,28 +1067,50 @@ export const Gs1DataAttributeAi = {
   PRICE_PER_UNIT_OF_MEASURE: "8005",
   /** AI 8007 — International Bank Account Number (IBAN) */
   INTERNATIONAL_BANK_ACCOUNT_NUMBER: "8007",
-  /** AI 8008 — Date and time of production */
+  /** AI 8008 — Date and time of production (YYMMDDhh[mm[ss]]) */
   DATE_AND_TIME_OF_PRODUCTION: "8008",
   /** AI 8009 — Optically Readable Sensor Indicator */
   OPTICALLY_READABLE_SENSOR_INDICATOR: "8009",
   /** AI 8012 — Software version */
   SOFTWARE_VERSION: "8012",
-  /** AI 8013 — Global Model Number (GMN) */
-  GLOBAL_MODEL_NUMBER: "8013",
-  /** AI 8020 — Payment slip reference number */
-  PAYMENT_SLIP_REFERENCE_NUMBER: "8020",
-  /** AI 8026 — Identification of pieces of a trade item contained in a logistics unit */
-  IDENTIFICATION_OF_PIECES_OF_A_TRADE_ITEM_CONTAINED_IN_A_LOGISTICS_UNIT: "8026",
+  /** AI 8026 — Identification of pieces of a trade item (ITIP) contained in a logistic unit */
+  IDENTIFICATION_OF_PIECES_OF_A_TRADE_ITEM_CONTAINED_IN_A_LOGISTIC_UNIT: "8026",
+  /** AI 8030 — Digital Signature (DigSig) */
+  DIGITAL_SIGNATURE: "8030",
+  /** AI 8040 — Internatinal Mobile Equipment Identity (IMEI) */
+  INTERNATINAL_MOBILE_EQUIPMENT_IDENTITY: "8040",
+  /** AI 8041 — Internatinal Mobile Equipment Identity 2 (IMEI2) */
+  INTERNATINAL_MOBILE_EQUIPMENT_IDENTITY_2: "8041",
+  /** AI 8042 — Embedded SIM number */
+  EMBEDDED_SIM_NUMBER: "8042",
+  /** AI 8043 — Physical SIM number */
+  PHYSICAL_SIM_NUMBER: "8043",
   /** AI 8110 — Coupon code identification for use in North America */
   COUPON_CODE_IDENTIFICATION_FOR_USE_IN_NORTH_AMERICA: "8110",
   /** AI 8111 — Loyalty points of a coupon */
   LOYALTY_POINTS_OF_A_COUPON: "8111",
-  /** AI 8112 — Paperless coupon code identification for use in North America */
-  PAPERLESS_COUPON_CODE_IDENTIFICATION_FOR_USE_IN_NORTH_AMERICA: "8112",
-  /** AI 8200 — Extended Packaging URL */
-  EXTENDED_PACKAGING_URL: "8200",
-  /** AI 02 — GTIN of contained trade items */
-  GTIN_OF_CONTAINED_TRADE_ITEMS: "02",
+  /** AI 8112 — Positive offer file coupon code identification for use in North America */
+  POSITIVE_OFFER_FILE_COUPON_CODE_IDENTIFICATION_FOR_USE_IN_NORTH_AMERICA: "8112",
+  /** AI 90 — Information mutually agreed between trading partners */
+  INFORMATION_MUTUALLY_AGREED_BETWEEN_TRADING_PARTNERS: "90",
+  /** AI 91 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_91: "91",
+  /** AI 92 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_92: "92",
+  /** AI 93 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_93: "93",
+  /** AI 94 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_94: "94",
+  /** AI 95 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_95: "95",
+  /** AI 96 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_96: "96",
+  /** AI 97 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_97: "97",
+  /** AI 98 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_98: "98",
+  /** AI 99 — Company internal information */
+  COMPANY_INTERNAL_INFORMATION_99: "99",
 } as const;
 
 /** The union of Gs1DataAttributeAi AI string values. */

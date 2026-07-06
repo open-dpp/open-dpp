@@ -1,23 +1,23 @@
 import { z } from "zod";
 
 /**
- * Discriminates the kind of external identifier carried by a UniqueProductIdentifier.
+ * Discriminates the kind of identifier carried by a UniqueProductIdentifier.
  *
  * - `OPEN_DPP_UUID`  — system-generated UPI; no external identity data.
  * - `GS1`            — GS1 identity: GTIN-14 + optional batch/serial.
  * - `GTIN`           — GTIN/EAN read-only system row; not creatable via the API.
  * - `EAN`            — EAN read-only system row; not creatable via the API.
  */
-export const ExternalIdentifierType = {
+export const UniqueProductIdentifierType = {
   OPEN_DPP_UUID: "OPEN_DPP_UUID",
   GS1: "GS1",
   GTIN: "GTIN",
   EAN: "EAN",
 } as const;
 
-export const ExternalIdentifierTypeSchema = z.enum(ExternalIdentifierType);
+export const UniqueProductIdentifierTypeSchema = z.enum(UniqueProductIdentifierType);
 
-export type ExternalIdentifierTypeValue = z.infer<typeof ExternalIdentifierTypeSchema>;
+export type UniqueProductIdentifierTypeValue = z.infer<typeof UniqueProductIdentifierTypeSchema>;
 
 /**
  * The GS1 granularity level implied by which key qualifiers are present on a UPI.
