@@ -8,12 +8,12 @@
  * Upstream payload SHA-256: f49b2e288acdf7fca711f47ffb1cbecaa2b22c5445f4f9089ef2821912e0d336
  *
  * Data © GS1 AISBL, published under the GS1 terms of use (factual standards
- * data, attribution given; no open-source license). See ADR 0001.
+ * data, attribution given; no open-source license).
  *
  * GS1 AI description translations, keyed exactly as GS1 publishes them in the
  * translation block of the AI browser page: exact AI strings, decimal-place /
  * sequence family keys ("390n", "703s"), and the "91-99" range key. Use
- * getGs1AiDescription() from gs1-ai-description.ts to resolve an AI. ADR 0003.
+ * getGs1AiDescription() from gs1-ai-description.ts to resolve an AI.
  */
 
 /** A translated GS1 AI description. `en` is always present; other languages are optional. */

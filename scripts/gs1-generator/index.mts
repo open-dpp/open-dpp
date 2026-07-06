@@ -7,7 +7,7 @@
  *   - gs1-ai-i18n.ts       — de/en description translations + family keys
  *
  * Executed with tsx (root devDependency). Run via `pnpm gen:gs1`. Fails loudly
- * on any upstream shape change. Design: docs/decisions/0001..0003-gs1-*.md.
+ * on any upstream shape change.
  */
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -26,7 +26,7 @@ const OUT_DIR = join(
   "unique-product-identifiers",
   "gs1",
 );
-/** Languages vendored into gs1-ai-i18n.ts (ADR 0003). `en` is mandatory per row. */
+/** Languages vendored into gs1-ai-i18n.ts. `en` is mandatory per row. */
 const LANGS = ["en", "de"] as const;
 type Lang = (typeof LANGS)[number];
 const MIN_ENTRIES = 500;
@@ -92,7 +92,7 @@ const q = (value: unknown): string => JSON.stringify(value);
 const byAi = <T extends { ai: string }>(a: T, b: T): number => (a.ai < b.ai ? -1 : 1);
 
 // ---------------------------------------------------------------------------
-// Derivation (ADR 0002)
+// Derivation
 // ---------------------------------------------------------------------------
 
 /** type precedence I > Q > D > N; Q = referenced in any Digital Link qualifier set. */
@@ -141,10 +141,16 @@ function deriveEntries(raw: RefGs1AiEntry[]): Gs1AiTableEntry[] {
   });
 }
 
+/** Known upstream title misspellings, corrected in derived member names only. */
+const NAME_FIXES: Readonly<Record<string, string>> = {
+  INTERNATINAL: "INTERNATIONAL",
+};
+
 /**
  * Naming rule (mirrored by gs1-ai-constants.spec.ts): title -> trim -> strip
  * parentheticals -> uppercase -> collapse non-alphanumeric runs to "_" ->
- * strip edge "_"; same-name collision groups within a kind get a `_<AI>` suffix.
+ * strip edge "_" -> fix known misspelled words; same-name collision groups
+ * within a kind get a `_<AI>` suffix.
  */
 function deriveMemberNames(entries: Gs1AiTableEntry[]): KindMember[] {
   const byName = new Map<string, Gs1AiTableEntry[]>();
@@ -154,8 +160,15 @@ function deriveMemberNames(entries: Gs1AiTableEntry[]): KindMember[] {
       .replace(/\([^)]*\)/g, "")
       .toUpperCase()
       .replace(/[^A-Z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
+      .replace(/^_+|_+$/g, "")
+      .split("_")
+      .map((word) => NAME_FIXES[word] ?? word)
+      .join("_");
     assert(name.length > 0, `AI ${entry.ai}: title ${q(entry.title)} derives an empty name`);
+    assert(
+      /^[A-Z_]/.test(name),
+      `AI ${entry.ai}: derived name ${q(name)} is not a valid identifier`,
+    );
     byName.set(name, [...(byName.get(name) ?? []), entry]);
   }
   const members: KindMember[] = [];
@@ -172,7 +185,7 @@ function deriveMemberNames(entries: Gs1AiTableEntry[]): KindMember[] {
 }
 
 // ---------------------------------------------------------------------------
-// i18n TSV (ADR 0003)
+// i18n TSV
 // ---------------------------------------------------------------------------
 
 /** AI-like translation keys: exact AIs, "390n"/"703s" families, the "91-99" range. */
@@ -229,7 +242,7 @@ function provenance({ retrieved, detail, hash }: Provenance): string {
     ` * Upstream payload SHA-256: ${hash}`,
     " *",
     " * Data © GS1 AISBL, published under the GS1 terms of use (factual standards",
-    " * data, attribution given; no open-source license). See ADR 0001.",
+    " * data, attribution given; no open-source license).",
   ].join("\n");
 }
 
@@ -256,8 +269,8 @@ function renderTable(entries: Gs1AiTableEntry[], meta: Provenance): string {
   return `/**
 ${provenance(meta)}
  *
- * Shape and derivation rules (I > Q > D > N precedence, formats without the AI
- * prefix, first qualifier hierarchy flattened): see ADR 0002.
+ * Shape and derivation rules: I > Q > D > N precedence, formats without the AI
+ * prefix, first qualifier hierarchy flattened.
  *
  * Typed \`as const satisfies Readonly<Record<string, Gs1AiTableEntry>>\` so the
  * AI keys and entry fields keep their literal types (source of truth for the
@@ -298,13 +311,17 @@ ${body}
 `;
 }
 
+// Make upstream text safe inside a block comment: an embedded close-comment
+// sequence (star-slash) would otherwise end the JSDoc early and inject source.
+const jsdocSafe = (text: string): string => text.split("*/").join("*\\/");
+
 function renderConstants(kinds: KindSpec[], meta: Provenance): string {
   const sections = kinds
     .map(({ constName, doc, members }) => {
       const body = members
         .map(
           ({ name, entry }) =>
-            `  /** AI ${entry.ai} — ${entry.title} */\n  ${name}: ${q(entry.ai)},`,
+            `  /** AI ${entry.ai} — ${jsdocSafe(entry.title)} */\n  ${name}: ${q(entry.ai)},`,
         )
         .join("\n");
       return `/** ${doc} */
@@ -326,8 +343,9 @@ ${provenance(meta)}
  *
  * Naming rule:
  * title -> trim -> strip parentheticals -> uppercase -> collapse
- * non-alphanumeric runs to "_" -> strip leading/trailing "_"; members of a
- * same-name collision group within a kind carry a \`_<AI>\` suffix.
+ * non-alphanumeric runs to "_" -> strip leading/trailing "_" -> fix known
+ * misspelled words (INTERNATINAL -> INTERNATIONAL); members of a same-name
+ * collision group within a kind carry a \`_<AI>\` suffix.
  */
 
 ${sections}`;
@@ -347,7 +365,7 @@ ${provenance(meta)}
  * GS1 AI description translations, keyed exactly as GS1 publishes them in the
  * translation block of the AI browser page: exact AI strings, decimal-place /
  * sequence family keys ("390n", "703s"), and the "91-99" range key. Use
- * getGs1AiDescription() from gs1-ai-description.ts to resolve an AI. ADR 0003.
+ * getGs1AiDescription() from gs1-ai-description.ts to resolve an AI.
  */
 
 /** A translated GS1 AI description. \`en\` is always present; other languages are optional. */

@@ -30,9 +30,9 @@ function candidateKeys(ai: string): string[] {
 /**
  * Resolve the translated description for a GS1 Application Identifier.
  *
- * Lookup chain (ADR 0003): exact AI key -> family key ("n"/"s" collapse) ->
- * "91-99" range key; within the found row, the requested language falls back
- * to English (every vendored row carries English text).
+ * Lookup chain: exact AI key -> family key ("n"/"s" collapse) -> "91-99"
+ * range key; within the found row, the requested language falls back to
+ * English (every vendored row carries English text).
  *
  * Returns `undefined` for unknown AIs and non-AI input — callers fall back to
  * the English `title` from GS1_AI_TABLE as the last resort.

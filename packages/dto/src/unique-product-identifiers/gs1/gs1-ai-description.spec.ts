@@ -5,7 +5,7 @@ import { GS1_AI_I18N, type Gs1AiI18nEntry } from "./gs1-ai-i18n";
 /** Wide view so specs can iterate entries without literal-key unions. */
 const I18N: Readonly<Record<string, Gs1AiI18nEntry>> = GS1_AI_I18N;
 
-describe("getGs1AiDescription (ADR 0003)", () => {
+describe("getGs1AiDescription", () => {
   it("resolves an exact AI key", () => {
     expect(getGs1AiDescription("01", "en")).toBe("Global Trade Item Number (GTIN)");
     expect(getGs1AiDescription("01", "de")).toBe("Global Trade Item Number (GTIN)");

@@ -37,7 +37,10 @@ const Gs1DataAttributeAiSchema = z.enum(Gs1DataAttributeAi, {
  *
  * Error reporting is keys-first: when a map contains both an unknown AI and an
  * invalid value for a valid AI, only the unknown-key issue is reported (the
- * value check runs only once the base parse succeeds).
+ * value check runs only once the base parse succeeds). Among invalid values,
+ * only the first (in key order) is reported: a single value check can cost
+ * ~100ms on adversarial input (see GS1_DATA_ATTRIBUTE_MAX_LENGTH), so checking
+ * every entry would let one request multiply that by the number of entries.
  *
  * Pure module: no DOM or Node-only globals required at import time.
  */
@@ -54,6 +57,7 @@ export const Gs1DataAttributesSchema = z
           message: `value for AI "${ai}" is invalid`,
           path: [ai],
         });
+        return;
       }
     }
   })

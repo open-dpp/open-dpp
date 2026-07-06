@@ -10,11 +10,16 @@ const aisOfType = (type: Gs1AiTableEntry["type"]): string[] =>
     .map((e) => e.ai)
     .sort();
 
+/** Known upstream title misspellings, corrected in derived names only. */
+const NAME_FIXES: Readonly<Record<string, string>> = {
+  INTERNATINAL: "INTERNATIONAL",
+};
+
 /**
  * Independent reimplementation of the documented naming rule, used as an
  * oracle: title -> trim -> strip parentheticals -> uppercase -> collapse
- * non-alphanumeric runs to "_" -> strip edge "_"; same-name collisions within
- * a kind get a `_<AI>` suffix.
+ * non-alphanumeric runs to "_" -> strip edge "_" -> fix known misspelled
+ * words; same-name collisions within a kind get a `_<AI>` suffix.
  */
 const deriveNames = (entries: Gs1AiTableEntry[]): Map<string, string> => {
   const byName = new Map<string, string[]>();
@@ -24,7 +29,10 @@ const deriveNames = (entries: Gs1AiTableEntry[]): Map<string, string> => {
       .replace(/\([^)]*\)/g, "")
       .toUpperCase()
       .replace(/[^A-Z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
+      .replace(/^_+|_+$/g, "")
+      .split("_")
+      .map((word) => NAME_FIXES[word] ?? word)
+      .join("_");
     byName.set(name, [...(byName.get(name) ?? []), entry.ai]);
   }
   const byAi = new Map<string, string>();
@@ -36,7 +44,7 @@ const deriveNames = (entries: Gs1AiTableEntry[]): Map<string, string> => {
   return byAi;
 };
 
-describe("gs1-ai-constants (generated from the AI table — ADR 0002)", () => {
+describe("gs1-ai-constants (generated from the AI table)", () => {
   const kinds: [string, Record<string, string>, Gs1AiTableEntry["type"]][] = [
     ["Gs1KeyAi", Gs1KeyAi, "I"],
     ["Gs1QualifierAi", Gs1QualifierAi, "Q"],
@@ -78,6 +86,14 @@ describe("gs1-ai-constants (generated from the AI table — ADR 0002)", () => {
     it("classifies GMN (8013) as a key, not a data attribute", () => {
       expect(Gs1KeyAi.GLOBAL_MODEL_NUMBER).toBe("8013");
       expect(Object.values(Gs1DataAttributeAi)).not.toContain("8013");
+    });
+
+    it("corrects the upstream 'Internatinal' misspelling in IMEI member names", () => {
+      expect(Gs1DataAttributeAi.INTERNATIONAL_MOBILE_EQUIPMENT_IDENTITY).toBe("8040");
+      expect(Gs1DataAttributeAi.INTERNATIONAL_MOBILE_EQUIPMENT_IDENTITY_2).toBe("8041");
+      expect(Object.keys(Gs1DataAttributeAi).some((name) => name.includes("INTERNATINAL"))).toBe(
+        false,
+      );
     });
   });
 });

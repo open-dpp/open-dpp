@@ -8,15 +8,16 @@
  * Upstream payload SHA-256: 01e985153cb17c9492a07da87a3d934bfe737db8be0a436ba56a7849e4762224
  *
  * Data © GS1 AISBL, published under the GS1 terms of use (factual standards
- * data, attribution given; no open-source license). See ADR 0001.
+ * data, attribution given; no open-source license).
  *
  * Named-constant enum objects for the GS1 Application Identifiers, one per AI
  * kind, derived from gs1-ai-table.ts. Pure data + types, no I/O.
  *
  * Naming rule:
  * title -> trim -> strip parentheticals -> uppercase -> collapse
- * non-alphanumeric runs to "_" -> strip leading/trailing "_"; members of a
- * same-name collision group within a kind carry a `_<AI>` suffix.
+ * non-alphanumeric runs to "_" -> strip leading/trailing "_" -> fix known
+ * misspelled words (INTERNATINAL -> INTERNATIONAL); members of a same-name
+ * collision group within a kind carry a `_<AI>` suffix.
  */
 
 /** GS1 primary identifier (key) Application Identifiers (type 'I' in the vendored AI table), keyed by derived name. */
@@ -1078,9 +1079,9 @@ export const Gs1DataAttributeAi = {
   /** AI 8030 — Digital Signature (DigSig) */
   DIGITAL_SIGNATURE: "8030",
   /** AI 8040 — Internatinal Mobile Equipment Identity (IMEI) */
-  INTERNATINAL_MOBILE_EQUIPMENT_IDENTITY: "8040",
+  INTERNATIONAL_MOBILE_EQUIPMENT_IDENTITY: "8040",
   /** AI 8041 — Internatinal Mobile Equipment Identity 2 (IMEI2) */
-  INTERNATINAL_MOBILE_EQUIPMENT_IDENTITY_2: "8041",
+  INTERNATIONAL_MOBILE_EQUIPMENT_IDENTITY_2: "8041",
   /** AI 8042 — Embedded SIM number */
   EMBEDDED_SIM_NUMBER: "8042",
   /** AI 8043 — Physical SIM number */

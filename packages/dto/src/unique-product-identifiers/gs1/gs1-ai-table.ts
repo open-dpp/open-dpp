@@ -8,10 +8,10 @@
  * Upstream payload SHA-256: 01e985153cb17c9492a07da87a3d934bfe737db8be0a436ba56a7849e4762224
  *
  * Data © GS1 AISBL, published under the GS1 terms of use (factual standards
- * data, attribution given; no open-source license). See ADR 0001.
+ * data, attribution given; no open-source license).
  *
- * Shape and derivation rules (I > Q > D > N precedence, formats without the AI
- * prefix, first qualifier hierarchy flattened): see ADR 0002.
+ * Shape and derivation rules: I > Q > D > N precedence, formats without the AI
+ * prefix, first qualifier hierarchy flattened.
  *
  * Typed `as const satisfies Readonly<Record<string, Gs1AiTableEntry>>` so the
  * AI keys and entry fields keep their literal types (source of truth for the

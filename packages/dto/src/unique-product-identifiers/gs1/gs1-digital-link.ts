@@ -116,6 +116,21 @@ export type Gtin14 = z.infer<typeof Gtin14Schema>;
 export const GS1_CSET82_MAX_LENGTH = 20;
 
 /**
+ * Upper bound on the length of a GS1 data-attribute value, enforced *before* the
+ * per-AI regex runs.
+ *
+ * Some data-attribute regexes (the "X..90" AIs — full name 7256, company-internal
+ * 91-99, etc.) alternate a single-char class with a `%HH%HH` percent block, and
+ * `%` matches both branches. On a long ambiguous input that ultimately fails, that
+ * ambiguity makes the backtracking blow up super-linearly (a ~120-char value can
+ * pin a core for seconds). 90 is the largest quantifier bound across every type-'D'
+ * AI in the vendored table, so no valid raw value is longer — values are validated
+ * in raw form here; percent-encoding happens later in buildGs1DataAttributeQuery.
+ * gs1-digital-link.spec.ts asserts this bound stays >= the table's true maximum.
+ */
+export const GS1_DATA_ATTRIBUTE_MAX_LENGTH = 90;
+
+/**
  * GS1 CSET-82: the 82 characters permitted in alphanumeric AI values. Beyond the
  * 62 alphanumerics (0-9, A-Z, a-z) it adds these 20 special characters:
  * `! " % & ' ( ) * + , - . / : ; < = > ? _`. Anchored, so the whole string must
@@ -124,23 +139,39 @@ export const GS1_CSET82_MAX_LENGTH = 20;
 const CSET82 = /^[0-9A-Za-z!"%&'()*+,\-./:;<=>?_]+$/;
 
 /**
+ * "." and ".." are CSET-82, but as full URL path segments every RFC 3986
+ * normalizer (browsers, `new URL()`, most servers) collapses them before the
+ * resolver sees the path, so a dot-only batch/serial would silently rewrite
+ * the link and resolve to a different identity. Rejected outright —
+ * percent-encoding does not help ("%2E" forms are collapsed too).
+ */
+const DOT_SEGMENT = /^\.{1,2}$/;
+
+/**
  * Validate a single alphanumeric GS1 component (batch / serial) against CSET-82
  * and the ≤ 20 character limit. Empty is invalid (an absent component is modeled
- * by omitting it, not by an empty string).
+ * by omitting it, not by an empty string), as are the URL dot-segments "." / "..".
  */
 export function isValidCset82Component(value: string): boolean {
-  return value.length >= 1 && value.length <= GS1_CSET82_MAX_LENGTH && CSET82.test(value);
+  return (
+    value.length >= 1 &&
+    value.length <= GS1_CSET82_MAX_LENGTH &&
+    CSET82.test(value) &&
+    !DOT_SEGMENT.test(value)
+  );
 }
 
 /**
  * Zod schema for a batch / serial component: a non-empty CSET-82 string of at most
- * 20 characters. Use this at write boundaries (backoffice form, create/update).
+ * 20 characters, excluding the URL dot-segments "." / "..". Use this at write
+ * boundaries (backoffice form, create/update).
  */
 export const Cset82ComponentSchema = z
   .string()
   .min(1, "must not be empty")
   .max(GS1_CSET82_MAX_LENGTH, `must be at most ${GS1_CSET82_MAX_LENGTH} characters`)
-  .regex(CSET82, "must contain only GS1 CSET-82 characters");
+  .regex(CSET82, "must contain only GS1 CSET-82 characters")
+  .refine((value) => !DOT_SEGMENT.test(value), { message: 'must not be "." or ".."' });
 
 export type Cset82Component = z.infer<typeof Cset82ComponentSchema>;
 
@@ -171,7 +202,8 @@ export const GS1_AI_SERIAL = Gs1QualifierAi.SERIAL_NUMBER;
  * unknown AIs, and any non-string/empty input.
  */
 export function isGs1DataAttributeAi(ai: string): ai is Gs1DataAttributeAi {
-  return AI_TABLE[ai]?.type === "D";
+  // typeof guard: a plain-JS caller passing e.g. 17 would coerce to "17" on lookup.
+  return typeof ai === "string" && AI_TABLE[ai]?.type === "D";
 }
 
 /**
@@ -187,14 +219,33 @@ export function isGs1DataAttributeAi(ai: string): ai is Gs1DataAttributeAi {
  * Pure function, no I/O, no mutation.
  */
 export function isValidGs1DataAttributeValue(ai: string, value: string): boolean {
+  // typeof guards: plain-JS callers passing numbers would coerce on lookup/test.
+  if (typeof ai !== "string" || typeof value !== "string") {
+    return false;
+  }
   const entry = AI_TABLE[ai];
   if (!entry || entry.type !== "D") {
     return false;
   }
-  if (value.length < 1) {
+  // Reject empty and over-long values before compiling/running the regex: the
+  // per-AI regex can backtrack catastrophically on long ambiguous input, and no
+  // valid value exceeds the cap. See GS1_DATA_ATTRIBUTE_MAX_LENGTH.
+  if (value.length < 1 || value.length > GS1_DATA_ATTRIBUTE_MAX_LENGTH) {
     return false;
   }
   return new RegExp("^(?:" + entry.regex + ")$").test(value);
+}
+
+/**
+ * Percent-encode a GS1 component value for a URI. `encodeURIComponent` plus the
+ * four RFC 3986 sub-delims it leaves raw (`!'()*`) — all CSET-82 characters —
+ * so the emitted link is canonical and stable across URL libraries.
+ */
+function encodeRfc3986(value: string): string {
+  return encodeURIComponent(value).replace(
+    /[!'()*]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
 }
 
 /**
@@ -204,7 +255,7 @@ export function isValidGs1DataAttributeValue(ai: string, value: string): boolean
  * - Iterates keys in ascending ASCII (lexicographic) order for deterministic output.
  * - Validates each AI via `isGs1DataAttributeAi` and each value via `isValidGs1DataAttributeValue`;
  *   throws `Error` on the first invalid entry.
- * - Percent-encodes values via `encodeURIComponent`.
+ * - Percent-encodes values RFC 3986-canonically (including `!'()*`).
  * - Prefixes the result with `'?'` only when at least one pair is present.
  *
  * Pure function, no I/O, no mutation.
@@ -224,7 +275,7 @@ export function buildGs1DataAttributeQuery(
       if (!isValidGs1DataAttributeValue(ai, value)) {
         throw new Error(`value for AI "${ai}" is invalid: "${value}"`);
       }
-      return `${ai}=${encodeURIComponent(value)}`;
+      return `${ai}=${encodeRfc3986(value)}`;
     });
   return pairs.length === 0 ? "" : "?" + pairs.join("&");
 }
@@ -261,7 +312,7 @@ function normalizeOptionalComponent(
   }
   if (!isValidCset82Component(trimmed)) {
     throw new Error(
-      `${label} must contain only GS1 CSET-82 characters and be at most ${GS1_CSET82_MAX_LENGTH} characters`,
+      `${label} must be a GS1 CSET-82 string of at most ${GS1_CSET82_MAX_LENGTH} characters and not "." or ".."`,
     );
   }
   return trimmed;
@@ -276,7 +327,8 @@ function normalizeOptionalComponent(
  * trailing slash dropped) and any path it carries is preserved; batch/serial
  * values are percent-encoded for the path.
  *
- * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 / length.
+ * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 /
+ *   length / the dot-segment rule.
  */
 export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkParts): string {
   const gtin14 = normalizeToGtin14(parts.gtin);
@@ -286,10 +338,10 @@ export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkP
 
   let url = `${base}/${GS1_AI_GTIN}/${gtin14}`;
   if (batch !== undefined) {
-    url += `/${GS1_AI_BATCH}/${encodeURIComponent(batch)}`;
+    url += `/${GS1_AI_BATCH}/${encodeRfc3986(batch)}`;
   }
   if (serial !== undefined) {
-    url += `/${GS1_AI_SERIAL}/${encodeURIComponent(serial)}`;
+    url += `/${GS1_AI_SERIAL}/${encodeRfc3986(serial)}`;
   }
   url += buildGs1DataAttributeQuery(parts.dataAttributes);
   return url;
@@ -304,7 +356,8 @@ export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkP
  * the element string is for human display only, so batch/serial values are emitted
  * verbatim (no percent-encoding). A blank batch/serial is treated as absent.
  *
- * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 / length.
+ * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 /
+ *   length / the dot-segment rule.
  */
 export function formatGs1ElementString(parts: Gs1DigitalLinkParts): string {
   const gtin14 = normalizeToGtin14(parts.gtin);

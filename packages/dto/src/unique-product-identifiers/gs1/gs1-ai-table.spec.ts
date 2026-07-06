@@ -8,7 +8,7 @@ const ENTRIES = Object.entries(TABLE);
 /** Compile a table regex fragment the same way gs1-digital-link.ts does. */
 const anchored = (fragment: string): RegExp => new RegExp(`^(?:${fragment})$`);
 
-describe("GS1_AI_TABLE (generated from ref.gs1.org — ADR 0001/0002)", () => {
+describe("GS1_AI_TABLE (generated from ref.gs1.org)", () => {
   it("contains the full ref.gs1.org AI registry (541 entries)", () => {
     expect(ENTRIES.length).toBe(541);
   });

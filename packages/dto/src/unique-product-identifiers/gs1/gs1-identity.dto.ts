@@ -49,7 +49,7 @@ export const Gs1IdentityResponseSchema = z
     gtin: Gtin14Schema,
     batch: Cset82ComponentSchema.nullish(),
     serial: Cset82ComponentSchema.nullish(),
-    digitalLink: z.string().url(),
+    digitalLink: z.url(),
   })
   .meta({ id: "Gs1IdentityResponse" });
 
