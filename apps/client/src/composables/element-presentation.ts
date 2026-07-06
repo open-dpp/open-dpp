@@ -33,9 +33,5 @@ export function applicableComponentOptions(
 }
 
 export function isLeafElement(modelType: KeyTypesType): boolean {
-  return (
-    modelType === KeyTypes.Property ||
-    modelType === KeyTypes.File ||
-    modelType === KeyTypes.ReferenceElement
-  );
+  return modelType === KeyTypes.Property || modelType === KeyTypes.File;
 }

@@ -20,7 +20,6 @@ import {
   type PermissionType,
   PropertyJsonSchema,
   type PropertyRequestDto,
-  type ReferenceElementRequestDto,
   type SubmodelElementCollectionRequestDto,
   type SubmodelElementListRequestDto,
   type SubmodelElementModificationDto,
@@ -493,6 +492,7 @@ export function useAasEditor({
         "pi pi-calendar-clock",
         DataTypeDef.DateTime,
       ),
+      buildPropertyEntry(translate(`${translatePrefix}.link`), "pi pi-link", DataTypeDef.AnyUri),
       {
         label: translate(`${translatePrefix}.file`),
         icon: "pi pi-file-plus",
@@ -504,20 +504,6 @@ export function useAasEditor({
             title: translate(`${translatePrefix}.file`),
             path,
             callback: async (data: FileRequestDto) => createFile(path, data),
-          });
-        },
-      },
-      {
-        label: translate(`${translatePrefix}.link`),
-        icon: "pi pi-link",
-        command: (_event: MenuItemCommandEvent) => {
-          drawer.openDrawer({
-            type: AasSubmodelElements.ReferenceElement,
-            data: {},
-            mode: EditorMode.CREATE,
-            title: translate(`${translatePrefix}.link`),
-            path,
-            callback: async (data: any) => createLink(path, data),
           });
         },
       },
@@ -658,14 +644,6 @@ export function useAasEditor({
       path,
       { modelType: AasSubmodelElements.SubmodelElementCollection, ...data },
       "submodelElementCollection",
-    );
-  }
-
-  async function createLink(path: AasEditorPath, data: ReferenceElementRequestDto) {
-    await createSubmodelElement(
-      path,
-      { ...data, modelType: AasSubmodelElements.ReferenceElement },
-      "link",
     );
   }
 

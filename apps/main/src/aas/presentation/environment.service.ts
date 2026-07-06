@@ -3,33 +3,27 @@ import type { ClientSession, Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
-import {
+import type {
+  ApiVersionsDtoType,
   AssetAdministrationShellCreateDto,
-  AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
-  AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
+  SubmodelElementListResponseDto,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
+  ValueResponseDto,
+} from "@open-dpp/dto";
+
+import {
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKind,
   Permissions,
-  SubmodelElementListJsonSchema,
-  SubmodelElementListResponseDto,
-  SubmodelElementModificationDto,
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementPaginationResponseDtoSchema,
-  SubmodelElementRequestDto,
-  SubmodelElementResponseDto,
-  SubmodelElementSchema,
-  SubmodelJsonSchema,
-  SubmodelModificationDto,
-  SubmodelPaginationResponseDto,
-  SubmodelPaginationResponseDtoSchema,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-  ValueRequestDto,
-  ValueResponseDto,
-  ValueSchema,
 } from "@open-dpp/dto";
+
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";
@@ -39,7 +33,6 @@ import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
 import { Template } from "../../templates/domain/template";
-import { isEmptyObject } from "../../utils";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { IdShortPath } from "../domain/common/id-short-path";
@@ -50,7 +43,6 @@ import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
@@ -72,6 +64,17 @@ import { ColumnDeletedActivity } from "../../activity-history/domain/activities/
 import { RowDeletedActivity } from "../../activity-history/domain/activities/row-deleted.activity";
 import { SubmodelAddedActivity } from "../../activity-history/domain/activities/submodel-added.activity";
 import { SubmodelDeletedActivity } from "../../activity-history/domain/activities/submodel-deleted.activity";
+import { SubmodelElementRequest } from "./requests/submodel-element.request";
+import { SubmodelElementPaginationResponse } from "./responses/submodel-element-pagination.response";
+import { SubmodelElementResponse } from "./responses/submodel-element.response";
+import { SubmodelPaginationResponse } from "./responses/submodel-pagination.response";
+import { SubmodelResponse } from "./responses/submodel.response";
+import { ValueResponse } from "./responses/value.response";
+import { SubmodelRequest } from "./requests/submodel.request";
+import { SubmodelElementListResponse } from "./responses/submodel-element-list.response";
+import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
+import { ValueModificationRequest } from "./requests/value-modification.request";
+import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -234,13 +237,13 @@ export class EnvironmentService {
     environment: Environment,
     pagination: Pagination,
     subject: SubjectAttributes,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map((p) => this.submodelRepository.findOneOrFail(p)));
     const ability = await this.loadAbility(environment, subject);
-    return SubmodelPaginationResponseDtoSchema.parse(
-      PagingResult.create({ pagination, items: submodels }).toPlain({ ability }),
-    );
+    const pagingResult = PagingResult.create({ pagination, items: submodels });
+    return SubmodelPaginationResponse.create({ pagingResult, version, ability }).toJSON();
   }
 
   async modifySubmodel(
@@ -248,12 +251,12 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: SubmodelModificationDto,
+    modificationRequest: SubmodelModificationRequest,
     userContext: UserContext,
   ): Promise<SubmodelResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
-    submodel.modify(modification, { ability });
+    submodel.modify(modificationRequest.toDomain(), { ability });
 
     const activity = SubmodelModifiedActivity.create({
       digitalProductDocumentId,
@@ -270,7 +273,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelJsonSchema.parse(submodel.toPlain());
+      return SubmodelResponse.create({
+        submodel,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -280,13 +287,13 @@ export class EnvironmentService {
     correlationId: string,
     digitalProductDocumentId: string,
     environment: Environment,
-    submodelPlain: SubmodelRequestDto,
+    submodelRequest: SubmodelRequest,
     saveEnvironment: (options: DbSessionOptions) => Promise<void>,
     userContext: UserContext,
   ): Promise<SubmodelResponseDto> {
     const aas = await this.getFirstAssetAdministrationShell(environment);
 
-    const submodel = environment.withTracking().addSubmodel(Submodel.fromPlain(submodelPlain));
+    const submodel = environment.withTracking().addSubmodel(submodelRequest.toDomain());
     aas.withTracking().addSubmodel(submodel);
     const activity = SubmodelAddedActivity.create({
       digitalProductDocumentId,
@@ -308,7 +315,10 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], options);
         }
       });
-      return SubmodelJsonSchema.parse(submodel.toPlain());
+      return SubmodelResponse.create({
+        submodel,
+        version: submodelRequest.version,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -433,28 +443,23 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     subject: SubjectAttributes,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const ability = await this.loadAbility(environment, subject);
-    const result = (await this.findSubmodelByIdOrFail(environment, submodelId)).toPlain({
-      ability,
-    });
-    if (isEmptyObject(result)) {
-      throw new ForbiddenError();
-    }
-    return SubmodelJsonSchema.parse(result);
+    const result = await this.findSubmodelByIdOrFail(environment, submodelId);
+    return SubmodelResponse.create({ submodel: result, version, ability }).toJSON();
   }
 
   async getSubmodelValue(
     environment: Environment,
     submodelId: string,
     subject: SubjectAttributes,
+    version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
 
     const ability = await this.loadAbility(environment, subject);
-    const result = submodel.getValueRepresentation({ options: { ability } });
-
-    return ValueSchema.parse(result);
+    return ValueResponse.create({ submodel, version, ability }).toJSON();
   }
 
   async getSubmodelElements(
@@ -462,16 +467,14 @@ export class EnvironmentService {
     submodelId: string,
     pagination: Pagination,
     subject: SubjectAttributes,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const ability = await this.loadAbility(environment, subject);
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const pages = pagination.nextPages(submodel.submodelElements.map((e) => e.idShort));
     const submodelElements = submodel.submodelElements.filter((e) => pages.includes(e.idShort));
-    return SubmodelElementPaginationResponseDtoSchema.parse(
-      PagingResult.create({ pagination, items: submodelElements }).toPlain({
-        ability,
-      }),
-    );
+    const pagingResult = PagingResult.create({ pagination, items: submodelElements });
+    return SubmodelElementPaginationResponse.create({ pagingResult, version, ability }).toJSON();
   }
 
   async addSubmodelElement(
@@ -479,7 +482,7 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    submodelElementPlain: SubmodelElementRequestDto,
+    submodelElementBody: SubmodelElementRequest,
     userContext: UserContext,
     idShortPath?: IdShortPath,
   ): Promise<SubmodelElementResponseDto> {
@@ -487,7 +490,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const submodelElement = submodel
       .withTracking()
-      .addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath, ability });
+      .addSubmodelElement(submodelElementBody.toDomain(), { idShortPath, ability });
     const activity = SubmodelElementAddedActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,
@@ -502,7 +505,10 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(submodelElement.toPlain());
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: submodelElementBody.version,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -513,12 +519,12 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: ValueRequestDto,
+    modificationRequest: ValueModificationRequest,
     userContext: UserContext,
   ) {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, userContext.subject);
-    submodel.modifyValue(modification, { ability });
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    submodel.modifyValue(modificationRequest.toDomain(), { ability });
 
     const activity = SubmodelValueModifiedActivity.create({
       digitalProductDocumentId,
@@ -535,7 +541,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelJsonSchema.parse(submodel.toPlain({ ability }));
+      return SubmodelResponse.create({
+        submodel,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -546,15 +556,19 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: SubmodelElementModificationDto,
+    modificationRequest: SubmodelElementModificationRequest,
     idShortPath: IdShortPath,
     { subject, userId }: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject, userId);
-    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, {
-      ability,
-    });
+    const submodelElement = submodel.modifySubmodelElement(
+      modificationRequest.toDomain(),
+      idShortPath,
+      {
+        ability,
+      },
+    );
     const activity = SubmodelElementModifiedActivity.create({
       digitalProductDocumentId,
       userId,
@@ -569,7 +583,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -580,15 +598,19 @@ export class EnvironmentService {
     digitalProductDocumentId: string,
     environment: Environment,
     submodelId: string,
-    modification: ValueRequestDto,
+    modificationRequest: ValueModificationRequest,
     idShortPath: IdShortPath,
     { subject, userId }: UserContext,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject, userId);
-    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, {
-      ability,
-    });
+    const submodelElement = submodel.modifyValueOfSubmodelElement(
+      modificationRequest.toDomain(),
+      idShortPath,
+      {
+        ability,
+      },
+    );
     const activity = SubmodelElementValueModifiedActivity.create({
       digitalProductDocumentId,
       userId,
@@ -604,7 +626,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
+      return SubmodelElementResponse.create({
+        submodelElement,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -616,16 +642,18 @@ export class EnvironmentService {
     environment: Environment,
     submodelId: string,
     idShortPath: IdShortPath,
-    column: ISubmodelElement,
+    columnRequest: SubmodelElementRequest,
     userContext: UserContext,
     position?: number,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
-    const modifiedSubmodelElementList = submodel.withTracking().addColumn(idShortPath, column, {
-      position,
-      ability,
-    });
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .addColumn(idShortPath, columnRequest.toDomain(), {
+        position,
+        ability,
+      });
 
     const activity = ColumnAddedActivity.create({
       userId: userContext.userId,
@@ -642,7 +670,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version: columnRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -655,14 +687,14 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfColumn: string,
-    modifications: SubmodelElementModificationDto,
+    modificationRequest: SubmodelElementModificationRequest,
     userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const modifiedSubmodelElement = submodel
       .withTracking()
-      .modifyColumn(idShortPath, idShortOfColumn, modifications, { ability });
+      .modifyColumn(idShortPath, idShortOfColumn, modificationRequest.toDomain(), { ability });
 
     const activity = ColumnModifiedActivity.create({
       userId: userContext.userId,
@@ -679,7 +711,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElement,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -693,6 +729,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -721,7 +758,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -734,7 +775,8 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     userContext: UserContext,
-    position?: number,
+    position: number | undefined,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
@@ -756,7 +798,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElement,
+        version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -770,6 +816,7 @@ export class EnvironmentService {
     idShortPath: IdShortPath,
     idShortOfRow: string,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const aas = await this.getFirstAssetAdministrationShell(environment);
@@ -798,7 +845,11 @@ export class EnvironmentService {
           await this.activityRepository.createMany([activity], { session });
         }
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version,
+        ability,
+      }).toJSON();
     } finally {
       await session.endSession();
     }
@@ -809,15 +860,12 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
     const ability = await this.loadAbility(environment, subject);
-    const result = submodelElement.toPlain({ ability });
-    if (isEmptyObject(result)) {
-      throw new ForbiddenError();
-    }
-    return SubmodelElementSchema.parse(result);
+    return SubmodelElementResponse.create({ submodelElement, version, ability }).toJSON();
   }
 
   async getSubmodelElementValue(
@@ -825,15 +873,16 @@ export class EnvironmentService {
     submodelId: string,
     idShortPath: IdShortPath,
     subject: SubjectAttributes,
+    version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, subject);
-
-    const result = submodel.getValueRepresentation({ idShortPath, options: { ability } });
-    if (result === undefined || isEmptyObject(result)) {
-      throw new ForbiddenError();
-    }
-    return ValueSchema.parse(result);
+    return ValueResponse.create({
+      submodel,
+      idShortPath,
+      version,
+      ability,
+    }).toJSON();
   }
 
   async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {

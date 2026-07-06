@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type ReferenceValue } from "@open-dpp/dto";
 import DiffViewer from "./DiffViewer.vue";
-import Reference from "../presentation/Reference.vue";
+import ReferenceLink from "./ReferenceLink.vue";
 import IdShortPath from "./IdShortPath.vue";
 
 const props = defineProps<{
@@ -15,10 +15,10 @@ const props = defineProps<{
   <IdShortPath :path="props.path" />
   <DiffViewer>
     <template v-if="props.oldValue" #oldValue>
-      <Reference :model="props.oldValue" />
+      <ReferenceLink :model="props.oldValue" />
     </template>
     <template v-if="props.newValue" #newValue>
-      <Reference :model="props.newValue" />
+      <ReferenceLink :model="props.newValue" />
     </template>
   </DiffViewer>
 </template>
