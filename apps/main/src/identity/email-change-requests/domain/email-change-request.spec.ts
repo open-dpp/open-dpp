@@ -66,4 +66,43 @@ describe("EmailChangeRequest", () => {
       }),
     ).toThrow(ValueError);
   });
+
+  describe("generateNotificationEmail", () => {
+    const request = EmailChangeRequest.create({
+      userId: "user-1",
+      newEmail: "new@example.com",
+      previousEmail: "old@example.com",
+    });
+
+    it("addresses the previous email and maps request fields into template properties", () => {
+      const mail = request.generateNotificationEmail({
+        firstName: "Ada",
+        revokeUrl: "https://app/revoke?token=abc",
+        language: "de",
+      });
+
+      expect(mail.to).toBe("old@example.com");
+      expect(mail.language).toBe("de");
+      const props = mail.templateProperties as {
+        firstName: string;
+        currentEmail: string;
+        newEmail: string;
+        revokeUrl: string;
+      };
+      expect(props.firstName).toBe("Ada");
+      expect(props.currentEmail).toBe("old@example.com");
+      expect(props.newEmail).toBe("new@example.com");
+      expect(props.revokeUrl).toBe("https://app/revoke?token=abc");
+    });
+
+    it("defaults firstName to User and language to en", () => {
+      const mail = request.generateNotificationEmail({
+        firstName: null,
+        revokeUrl: "https://app/revoke?token=abc",
+      });
+
+      expect(mail.language).toBe("en");
+      expect((mail.templateProperties as { firstName: string }).firstName).toBe("User");
+    });
+  });
 });

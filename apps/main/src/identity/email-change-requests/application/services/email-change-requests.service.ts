@@ -3,7 +3,6 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import { LanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
-import { EmailChangeNotificationMail } from "../../../../email/domain/email-change-notification-mail";
 import { EmailService } from "../../../../email/email.service";
 import { AccountsService } from "../../../accounts/application/services/accounts.service";
 import { AUTH } from "../../../auth/auth.provider";
@@ -81,7 +80,7 @@ export class EmailChangeRequestsService {
       throw error;
     }
 
-    await this.sendNotification(user, next, newEmail);
+    await this.sendNotification(user, next);
 
     return next;
   }
@@ -89,7 +88,6 @@ export class EmailChangeRequestsService {
   private async sendNotification(
     user: EmailChangeRequester,
     request: EmailChangeRequest,
-    newEmail: string,
   ): Promise<void> {
     const revokeToken = signRevokeToken(
       { userId: user.id, requestId: request.id },
@@ -100,16 +98,10 @@ export class EmailChangeRequestsService {
 
     try {
       await this.emailService.send(
-        EmailChangeNotificationMail.create({
-          to: user.email,
-          subject: "Your email is being changed",
-          language: user.preferredLanguage ?? "en",
-          templateProperties: {
-            firstName: user.firstName ?? "User",
-            currentEmail: user.email,
-            newEmail,
-            revokeUrl,
-          },
+        request.generateNotificationEmail({
+          firstName: user.firstName,
+          revokeUrl,
+          language: user.preferredLanguage,
         }),
       );
     } catch (error) {

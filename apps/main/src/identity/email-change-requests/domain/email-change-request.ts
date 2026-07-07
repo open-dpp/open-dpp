@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { LanguageType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { EmailChangeNotificationMail } from "../../../email/domain/email-change-notification-mail";
 
 export interface EmailChangeRequestCreateProps {
   userId: string;
@@ -63,5 +65,23 @@ export class EmailChangeRequest {
       data.previousEmail,
       data.requestedAt,
     );
+  }
+
+  public generateNotificationEmail(props: {
+    firstName: string | null;
+    revokeUrl: string;
+    language?: LanguageType;
+  }): EmailChangeNotificationMail {
+    return EmailChangeNotificationMail.create({
+      to: this.previousEmail,
+      subject: "Your email is being changed",
+      language: props.language ?? "en",
+      templateProperties: {
+        firstName: props.firstName ?? "User",
+        currentEmail: this.previousEmail,
+        newEmail: this.newEmail,
+        revokeUrl: props.revokeUrl,
+      },
+    });
   }
 }
