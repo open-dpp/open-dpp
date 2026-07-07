@@ -46,9 +46,7 @@ describe("userSchema", () => {
 
   describe("indexes", () => {
     const findIndex = (key: string) =>
-      UserSchema.indexes().filter(([fields]) =>
-        Object.prototype.hasOwnProperty.call(fields, key),
-      );
+      UserSchema.indexes().filter(([fields]) => Object.prototype.hasOwnProperty.call(fields, key));
 
     it("declares a unique index on email (findOneByEmail lookups)", () => {
       const emailIndexes = findIndex("email");

@@ -133,10 +133,7 @@ export async function completeVerifiedEmailChange(
         }),
       );
     } catch (error) {
-      logger.error(
-        `Failed to send email-change-completed notification to ${user.email}`,
-        error,
-      );
+      logger.error(`Failed to send email-change-completed notification to ${user.email}`, error);
     }
 
     await deletePendingEmailChangeForUser(db, user.id);
