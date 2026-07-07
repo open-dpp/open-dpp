@@ -34,6 +34,9 @@ export class InvitationsRepository {
     return invitation;
   }
 
+  // The `$eq` wrapper is a security guard, not a performance tweak: it neutralizes
+  // operator-shaped injection (e.g. an attacker-supplied `{ $ne: null }`) by forcing
+  // `email` to be matched as a value rather than interpreted as a query object.
   async findByEmail(email: string): Promise<Invitation[]> {
     const documents = await this.invitationModel.find({ email: { $eq: email } });
     return documents.map(InvitationMapper.toDomain);
