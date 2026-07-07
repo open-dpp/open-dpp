@@ -47,3 +47,10 @@ export class Account {
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);
+
+// Indexes
+// userId is the lookup key for credential verification (findCredentialByUserId)
+// and Better Auth's own account resolution; without it those queries collection-scan.
+// ponytail: no accountId index — no query filters by accountId today (credential-only,
+// no social/OAuth providers). Add { providerId: 1, accountId: 1 } if social login lands.
+AccountSchema.index({ userId: 1 });
