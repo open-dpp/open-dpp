@@ -1,5 +1,6 @@
 import { LanguageType } from "@open-dpp/dto";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
+import { EmailTemplate } from "./email-template";
 
 export type BaseEmailType =
   | "VERIFY_EMAIL"
@@ -11,29 +12,26 @@ export type BaseEmailType =
 
 export interface BaseEmailCreateProps {
   type: BaseEmailType;
-  template: string;
+  template: EmailTemplate;
   to: string;
   subject: string;
-  templateProperties: BaseEmailTemplateProperties;
   language?: LanguageType;
 }
 
 export class BaseEmail {
   public readonly id: string;
   public readonly type: BaseEmailType;
-  public readonly template: string;
+  public readonly template: EmailTemplate;
   public readonly to: string;
   public readonly subject: string;
-  public readonly templateProperties: BaseEmailTemplateProperties;
   public readonly language: LanguageType;
 
   constructor(
     id: string,
     type: BaseEmailType,
-    template: string,
+    template: EmailTemplate,
     to: string,
     subject: string,
-    templateProperties: BaseEmailTemplateProperties,
     language: LanguageType = "en",
   ) {
     this.id = id;
@@ -41,7 +39,11 @@ export class BaseEmail {
     this.template = template;
     this.to = to;
     this.subject = subject;
-    this.templateProperties = templateProperties;
     this.language = language;
+  }
+
+  // Convenience accessor: template data now lives on EmailTemplate.
+  get templateProperties(): BaseEmailTemplateProperties {
+    return this.template.properties;
   }
 }

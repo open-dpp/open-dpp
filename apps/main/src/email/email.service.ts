@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
-import { LanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import Handlebars from "handlebars";
 import mjml2html from "mjml";
@@ -37,21 +36,17 @@ export class EmailService implements OnApplicationBootstrap {
     return html;
   }
 
-  private resolveTemplate(template: string, language: LanguageType): string {
-    if (language !== "de") {
-      return template;
-    }
-    const localized = template.replace(/\.mjml$/, "-de.mjml");
-    const localizedPath = resolve(__dirname, "templates", localized);
-    return existsSync(localizedPath) ? localized : template;
+  private templateExists(template: string): boolean {
+    return existsSync(resolve(__dirname, "templates", template));
   }
 
   async send(mail: BaseEmail) {
-    const template = this.resolveTemplate(mail.template, mail.language);
+    const localized = mail.template.localizedName(mail.language);
+    const template = this.templateExists(localized) ? localized : mail.template.name;
     const templatePath = resolve(__dirname, "templates", template);
     const templateContent = readFileSync(templatePath, "utf-8");
     const compiler = Handlebars.compile(templateContent);
-    const compilerData = mail.templateProperties ?? {};
+    const compilerData = mail.template.properties ?? {};
     const compiled = compiler(compilerData);
     const mjml = await this.compileMjml(compiled);
     await this.transporter.sendMail({

@@ -28,7 +28,7 @@ describe("EmailChangeVerificationMail", () => {
   it("should reference the email-change-verification.mjml template", () => {
     const mail = EmailChangeVerificationMail.create(createProps);
 
-    expect(mail.template).toBe("email-change-verification.mjml");
+    expect(mail.template.name).toBe("email-change-verification.mjml");
   });
 
   it("should set the recipient and subject", () => {

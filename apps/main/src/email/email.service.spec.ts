@@ -12,6 +12,7 @@ import {
 import { EnvService } from "@open-dpp/env";
 import { BaseEmail } from "./domain/base-email";
 import { EmailChangeNotificationMail } from "./domain/email-change-notification-mail";
+import { EmailTemplate } from "./domain/email-template";
 import { EmailService } from "./email.service";
 
 interface CapturedMail {
@@ -102,10 +103,12 @@ describe("EmailService template localization", () => {
     const mailWithoutGermanVariant = new BaseEmail(
       "test-id",
       "VERIFY_EMAIL",
-      "email-verify.mjml",
+      new EmailTemplate("email-verify.mjml", {
+        firstName: "Ada",
+        link: "https://app.open-dpp.test/verify",
+      } as never),
       "to@example.com",
       "Verify E-Mail address",
-      { firstName: "Ada", link: "https://app.open-dpp.test/verify" } as never,
       "de",
     );
 

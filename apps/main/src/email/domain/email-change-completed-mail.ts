@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { LanguageType } from "@open-dpp/dto";
 import { BaseEmail } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
+import { EmailTemplate } from "./email-template";
 
 export interface EmailChangeCompletedMailTemplateProps extends BaseEmailTemplateProperties {
   firstName: string;
@@ -26,10 +27,9 @@ export class EmailChangeCompletedMail extends BaseEmail {
     super(
       id,
       "EMAIL_CHANGE_COMPLETED",
-      "email-change-completed.mjml",
+      new EmailTemplate("email-change-completed.mjml", templateProperties),
       to,
       subject,
-      templateProperties,
       language,
     );
   }

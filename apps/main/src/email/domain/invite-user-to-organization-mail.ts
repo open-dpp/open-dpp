@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { BaseEmail } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
+import { EmailTemplate } from "./email-template";
 
 export interface InviteUserToOrganizationMailTemplateProps extends BaseEmailTemplateProperties {
   link: string;
@@ -23,10 +24,9 @@ export class InviteUserToOrganizationMail extends BaseEmail {
     super(
       id,
       "INVITE_USER_TO_ORGANIZATION",
-      "invite-user-to-organization.mjml",
+      new EmailTemplate("invite-user-to-organization.mjml", templateProperties),
       to,
       subject,
-      templateProperties,
     );
   }
 
