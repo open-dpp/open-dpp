@@ -12,22 +12,12 @@ describe("EmailChangeVerificationMail", () => {
     },
   };
 
-  it("should create a mail with a generated id", () => {
+  it("should create a mail with a generated id, type and template", () => {
     const mail = EmailChangeVerificationMail.create(createProps);
 
     expect(mail.id).toEqual(expect.any(String));
     expect(mail.id.length).toBeGreaterThan(0);
-  });
-
-  it("should set the EMAIL_CHANGE_VERIFICATION type", () => {
-    const mail = EmailChangeVerificationMail.create(createProps);
-
     expect(mail.type).toBe("EMAIL_CHANGE_VERIFICATION");
-  });
-
-  it("should reference the email-change-verification.mjml template", () => {
-    const mail = EmailChangeVerificationMail.create(createProps);
-
     expect(mail.template.name).toBe("email-change-verification.mjml");
   });
 
