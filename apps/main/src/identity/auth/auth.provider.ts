@@ -6,7 +6,7 @@ import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
-import { Connection, Types } from "mongoose";
+import { Connection } from "mongoose";
 import type { Db } from "mongodb";
 import { EmailChangeCompletedMail } from "../../email/domain/email-change-completed-mail";
 import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
@@ -19,6 +19,7 @@ import {
   findPendingEmailChangeForUser,
 } from "../email-change-requests/infrastructure/email-change-gate";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
+import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
@@ -275,26 +276,14 @@ export const AuthProvider: Provider = {
           create: {
             before: async (session) => {
               try {
-                // We need to access the database to get the active organization
-                // This logic was in AuthService.getActiveOrganization
-                // Since we don't have AuthService here, we need to replicate the query
-                // or find a way to reuse the logic.
-                // For now, replicating the simple query.
-                const userIdQuery = Types.ObjectId.isValid(session.userId)
-                  ? new Types.ObjectId(session.userId)
-                  : session.userId;
-                const member = await db
-                  .collection("member")
-                  .findOne({ userId: { $eq: userIdQuery } }, { sort: { createdAt: 1 } });
-
-                let organizationId;
-                if (member) {
-                  organizationId = member.organizationId;
-                }
+                const activeOrganizationId = await findActiveOrganizationIdForUser(
+                  db,
+                  session.userId,
+                );
                 return {
                   data: {
                     ...session,
-                    activeOrganizationId: organizationId ? organizationId.toString() : undefined, // Convert ObjectId to string since it otherwise is transferred to the frontend as Buffer which causes issues
+                    activeOrganizationId,
                   },
                 };
               } catch (error) {
