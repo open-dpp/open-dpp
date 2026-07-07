@@ -38,8 +38,19 @@ export class InvitationsRepository {
   // operator-shaped injection (e.g. an attacker-supplied `{ $ne: null }`) by forcing
   // `email` to be matched as a value rather than interpreted as a query object.
   async findByEmail(email: string): Promise<Invitation[]> {
-    const documents = await this.invitationModel.find({ email: { $eq: email } });
-    return documents.map(InvitationMapper.toDomain);
+    const rawDocs = await this.invitationModel.collection.find({ email: { $eq: email } }).toArray();
+    return rawDocs.map((rawDoc) =>
+      Invitation.loadFromDb({
+        id: rawDoc._id.toString(),
+        email: rawDoc.email as string,
+        organizationId: rawDoc.organizationId?.toString() ?? "",
+        inviterId: rawDoc.inviterId?.toString() ?? "",
+        role: MemberRoleEnum.parse(rawDoc.role),
+        status: rawDoc.status as InvitationStatus,
+        createdAt: rawDoc.createdAt as Date,
+        expiresAt: rawDoc.expiresAt as Date,
+      }),
+    );
   }
 
   async findOneUnexpiredByEmailAndOrganization(
