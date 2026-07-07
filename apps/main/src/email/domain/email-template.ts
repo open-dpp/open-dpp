@@ -12,11 +12,10 @@ export class EmailTemplate {
     public readonly properties: BaseEmailTemplateProperties,
   ) {}
 
-  // German mail uses a `-de.mjml` sibling of the base template; other languages use the base file.
+  // A localized mail is a `-${language}.mjml` sibling of the base template
+  // (e.g. `foo-de.mjml`). When that sibling is missing the base file is used —
+  // the existence check and fallback live in the infrastructure layer (EmailService).
   localizedName(language: LanguageType): string {
-    if (language !== "de") {
-      return this.name;
-    }
-    return this.name.replace(/\.mjml$/, "-de.mjml");
+    return this.name.replace(/\.mjml$/, `-${language}.mjml`);
   }
 }
