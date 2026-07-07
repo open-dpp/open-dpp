@@ -13,7 +13,11 @@ import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import { match, P } from "ts-pattern";
 import { toRaw } from "vue";
 import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
-import type { AasEditorPath, EditorType, OpenDrawerCallback } from "../../composables/aas-drawer.ts";
+import type {
+  AasEditorPath,
+  EditorType,
+  OpenDrawerCallback,
+} from "../../composables/aas-drawer.ts";
 import { ColumnEditorKey, EditorMode } from "../../composables/aas-drawer.ts";
 import { isGroupColumn, type Column } from "./columns.ts";
 
@@ -50,7 +54,10 @@ export interface TableMenuDeps {
     colData: SubmodelElementSharedRequestDto,
     options: TableModificationParamsDto,
   ) => Promise<void>;
-  onModifyTopLevelColumn: (formData: SubmodelElementModificationDto, column: Column) => Promise<void>;
+  onModifyTopLevelColumn: (
+    formData: SubmodelElementModificationDto,
+    column: Column,
+  ) => Promise<void>;
   onModifyColumnInGroup: (
     groupIdShort: string,
     subColumn: Column,
@@ -150,7 +157,8 @@ function buildColumnTypeMenuItem(
           ...sharedDrawerProps,
           type: ColumnEditorKey,
           data: { modelType: type, valueType },
-          callback: async (colData: PropertyRequestDto) => createFn({ modelType: type, ...colData }),
+          callback: async (colData: PropertyRequestDto) =>
+            createFn({ modelType: type, ...colData }),
         });
       },
     }))
@@ -262,7 +270,9 @@ function removeColumnMenuItem(column: Column, deps: TableMenuDeps) {
     disabled: disableColumnDeletion,
     command: async () => {
       openConfirm({
-        message: translate(`${translateTablePrefix}.removeColumn`),
+        message: isGroupColumn(column)
+          ? translate(`${translateTablePrefix}.removeGroupColumn`)
+          : translate(`${translateTablePrefix}.removeColumn`),
         header: removeLabel,
         icon: "pi pi-info-circle",
         rejectLabel: cancelLabel,
@@ -307,7 +317,11 @@ function createGroupFromColumnMenuItem(column: Column, deps: TableMenuDeps): Men
   };
 }
 
-function modifySubColumnMenuItem(groupIdShort: string, subColumn: Column, deps: TableMenuDeps): MenuItem {
+function modifySubColumnMenuItem(
+  groupIdShort: string,
+  subColumn: Column,
+  deps: TableMenuDeps,
+): MenuItem {
   const { translate, openDrawer, pathToList, disableColumnEditing } = deps;
   return {
     label: translate(`common.edit`),
@@ -327,7 +341,11 @@ function modifySubColumnMenuItem(groupIdShort: string, subColumn: Column, deps: 
   };
 }
 
-function removeFromGroupMenuItem(groupIdShort: string, subColumn: Column, deps: TableMenuDeps): MenuItem {
+function removeFromGroupMenuItem(
+  groupIdShort: string,
+  subColumn: Column,
+  deps: TableMenuDeps,
+): MenuItem {
   const { translate, openConfirm, disableColumnDeletion } = deps;
   const removeLabel = translate(`${translateTablePrefix}.removeFromGroup`);
   const cancelLabel = translate("common.cancel");
@@ -351,7 +369,11 @@ function removeFromGroupMenuItem(groupIdShort: string, subColumn: Column, deps: 
   };
 }
 
-function buildTopLevelColumnMenu(options: ColumnMenuOptions, columns: Column[], deps: TableMenuDeps): MenuItem[] {
+function buildTopLevelColumnMenu(
+  options: ColumnMenuOptions,
+  columns: Column[],
+  deps: TableMenuDeps,
+): MenuItem[] {
   const { translate, errorHandlingStore, disableColumnEditing } = deps;
   const icon = `pi pi-arrow-${options.addColumnActions ? "left" : "right"}`;
   const colMenuItems = buildAllColumnTypeMenuItems(icon, options, deps);
@@ -507,7 +529,11 @@ function removeRowMenuItem(rowIndex: number, deps: TableMenuDeps) {
   };
 }
 
-export function buildRowMenu(options: RowMenuOptions, rowsLength: number, deps: TableMenuDeps): MenuItem[] {
+export function buildRowMenu(
+  options: RowMenuOptions,
+  rowsLength: number,
+  deps: TableMenuDeps,
+): MenuItem[] {
   const { translate, disableRowCreation } = deps;
   return [
     {

@@ -3,19 +3,16 @@ import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
-import { SubmodelElementSchema } from "@open-dpp/dto";
 import {
   ISubmodelElement,
   parseSubmodelElement,
 } from "../../../aas/domain/submodel-base/submodel-base";
 import { Pointer } from "../../../aas/domain/submodel-base/pointer";
+import { ColumnGroupEventCreateProps, ColumnGroupSchema } from "./column-group-shared";
 
 const ColumnAddedToGroupSchema = z.object({
+  ...ColumnGroupSchema.shape,
   type: z.literal(ChangeEventTypes.ColumnAddedToGroup),
-  groupIdShort: z.string(),
-  path: z.string(),
-  position: z.number(),
-  value: SubmodelElementSchema,
 });
 
 export class ColumnAddedToGroup implements IChangeEventWithPath {
@@ -36,12 +33,7 @@ export class ColumnAddedToGroup implements IChangeEventWithPath {
     return false;
   }
 
-  static create(data: {
-    groupIdShort: string;
-    path: IdShortPath;
-    position: number;
-    value: ISubmodelElement;
-  }) {
+  static create(data: ColumnGroupEventCreateProps) {
     return new ColumnAddedToGroup(data.groupIdShort, data.path, data.position, data.value);
   }
 
