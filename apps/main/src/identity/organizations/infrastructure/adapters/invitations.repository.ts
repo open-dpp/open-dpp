@@ -2,12 +2,12 @@ import type { Auth } from "better-auth";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import type { Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
-import { MemberRoleEnum } from "../../domain/member-role.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";
 import { InvitationDoc } from "../schemas/invitation.schema";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
@@ -21,9 +21,11 @@ export class InvitationsRepository {
   ) {}
 
   async findOneById(id: string): Promise<Invitation | null> {
-    const document = await this.invitationModel.findOne({ _id: new ObjectId(id) });
-    if (!document) return null;
-    return InvitationMapper.toDomain(document);
+    const rawDoc = await this.invitationModel.collection.findOne({
+      _id: ObjectId.isValid(id) ? { $in: [id, new ObjectId(id)] } : { $eq: id }, // supports better-auth 32-char strings and older versions
+    } as unknown as Filter<Document>);
+    if (!rawDoc) return null;
+    return InvitationMapper.toDomain(rawDoc);
   }
 
   async findOneByIdOrFail(id: string): Promise<Invitation> {
@@ -34,23 +36,10 @@ export class InvitationsRepository {
     return invitation;
   }
 
-  // The `$eq` wrapper is a security guard, not a performance tweak: it neutralizes
-  // operator-shaped injection (e.g. an attacker-supplied `{ $ne: null }`) by forcing
-  // `email` to be matched as a value rather than interpreted as a query object.
+  // The `$eq` wrapper is a security guard against sql injection
   async findByEmail(email: string): Promise<Invitation[]> {
     const rawDocs = await this.invitationModel.collection.find({ email: { $eq: email } }).toArray();
-    return rawDocs.map((rawDoc) =>
-      Invitation.loadFromDb({
-        id: rawDoc._id.toString(),
-        email: rawDoc.email as string,
-        organizationId: rawDoc.organizationId?.toString() ?? "",
-        inviterId: rawDoc.inviterId?.toString() ?? "",
-        role: MemberRoleEnum.parse(rawDoc.role),
-        status: rawDoc.status as InvitationStatus,
-        createdAt: rawDoc.createdAt as Date,
-        expiresAt: rawDoc.expiresAt as Date,
-      }),
-    );
+    return rawDocs.map((rawDoc) => InvitationMapper.toDomain(rawDoc));
   }
 
   async findOneUnexpiredByEmailAndOrganization(
@@ -69,16 +58,7 @@ export class InvitationsRepository {
       status: InvitationStatus.PENDING,
     });
     if (!rawDoc) return null;
-    return Invitation.loadFromDb({
-      id: rawDoc._id.toString(),
-      email: rawDoc.email as string,
-      organizationId: rawDoc.organizationId?.toString() ?? "",
-      inviterId: rawDoc.inviterId?.toString() ?? "",
-      role: MemberRoleEnum.parse(rawDoc.role),
-      status: rawDoc.status as InvitationStatus,
-      createdAt: rawDoc.createdAt as Date,
-      expiresAt: rawDoc.expiresAt as Date,
-    });
+    return InvitationMapper.toDomain(rawDoc);
   }
 
   async save(invitation: Invitation, headers?: BetterAuthHeaders): Promise<string> {

@@ -88,6 +88,35 @@ describe("InvitationsRepository", () => {
     expect(result).toBeNull();
   });
 
+  it("should find one by better-auth string id", async () => {
+    // better-auth's organization plugin stores invitation _ids as 32-char
+    // alphanumeric strings, not ObjectIds — insert via the raw collection
+    // to bypass Mongoose's ObjectId cast, mirroring real storage
+    const id = "NEWQhghstUEmtMdzRDhP5TrOTLt4hvBK";
+    await invitationModel.collection.insertOne({
+      _id: id,
+      email: "string-id@example.com",
+      organizationId: new Types.ObjectId().toHexString(),
+      inviterId: new Types.ObjectId().toHexString(),
+      role: MemberRole.MEMBER,
+      status: InvitationStatus.PENDING,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    } as any);
+
+    const result = await repository.findOneById(id);
+
+    expect(result).toBeInstanceOf(Invitation);
+    expect(result?.id).toBe(id);
+    expect(result?.email).toBe("string-id@example.com");
+  });
+
+  it("should return null for a string id that matches nothing", async () => {
+    const result = await repository.findOneById("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+
+    expect(result).toBeNull();
+  });
+
   it("should find one unexpired by email and organization", async () => {
     const email = "unexpired@example.com";
     const organizationId = new Types.ObjectId().toHexString();
