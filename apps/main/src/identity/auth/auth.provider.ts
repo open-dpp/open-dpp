@@ -1,6 +1,5 @@
 import { Logger, Provider } from "@nestjs/common";
 import { getConnectionToken } from "@nestjs/mongoose";
-import { LanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
@@ -8,55 +7,22 @@ import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
 import { Connection } from "mongoose";
 import type { Db } from "mongodb";
-import { z } from "zod";
-import { EmailChangeCompletedMail } from "../../email/domain/email-change-completed-mail";
 import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
 import { EmailService } from "../../email/email.service";
 import {
-  deletePendingEmailChangeForUser,
-  findPendingEmailChangeForUser,
-} from "../email-change-requests/infrastructure/email-change-gate";
+  completeVerifiedEmailChange,
+  decodeVerificationToken,
+  guardEmailChangeUpdate,
+  resolveUserLanguage,
+} from "../email-change-requests/infrastructure/email-change-hooks";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
-
-interface VerificationTokenPayload {
-  email?: string;
-  updateTo?: string;
-}
-
-function resolveUserLanguage(user: unknown): LanguageType {
-  const preferred = (user as { preferredLanguage?: unknown } | null | undefined)?.preferredLanguage;
-  return preferred === "de" ? "de" : "en";
-}
-
-function decodeVerificationToken(context: unknown): VerificationTokenPayload | undefined {
-  const token = (context as { query?: { token?: unknown } } | null | undefined)?.query?.token;
-  if (typeof token !== "string") {
-    return undefined;
-  }
-  const segments = token.split(".");
-  if (segments.length < 2) {
-    return undefined;
-  }
-  try {
-    const payload = JSON.parse(Buffer.from(segments[1], "base64url").toString("utf8")) as {
-      email?: unknown;
-      updateTo?: unknown;
-    };
-    return {
-      email: typeof payload.email === "string" ? payload.email : undefined,
-      updateTo: typeof payload.updateTo === "string" ? payload.updateTo : undefined,
-    };
-  } catch {
-    return undefined;
-  }
-}
 
 /**
  * Seeds the env-configured admin (OPEN_DPP_AUTH_ADMIN_USERNAME/PASSWORD) ONLY when
@@ -298,68 +264,8 @@ export const AuthProvider: Provider = {
         },
         user: {
           update: {
-            before: async (data, context) => {
-              const parsed = z.object({ email: z.string() }).safeParse(data);
-              if (!parsed.success) {
-                return;
-              }
-              const newEmail = parsed.data.email;
-              const previousEmail = decodeVerificationToken(context)?.email;
-              if (!previousEmail) {
-                logger.warn(
-                  `Blocked user.email update to ${newEmail}: could not resolve the originating user from the verification token`,
-                );
-                return false;
-              }
-              const targetUser = await db
-                .collection("user")
-                .findOne({ email: { $eq: previousEmail.toLowerCase() } });
-              if (!targetUser) {
-                logger.warn(
-                  `Blocked user.email update to ${newEmail}: no user matches the verification token's subject`,
-                );
-                return false;
-              }
-              const pending = await findPendingEmailChangeForUser(db, targetUser._id.toString());
-              if (!pending || pending.newEmail !== newEmail) {
-                logger.warn(
-                  `Blocked user.email update to ${newEmail}: no matching EmailChangeRequest for the token's subject (revoked, unknown, or belongs to a different user)`,
-                );
-                return false;
-              }
-            },
-            after: async (user) => {
-              try {
-                const pending = await findPendingEmailChangeForUser(db, user.id);
-                if (!pending || pending.newEmail !== user.email) {
-                  return;
-                }
-
-                try {
-                  await emailService.send(
-                    EmailChangeCompletedMail.create({
-                      to: user.email,
-                      subject: "Your email address was changed",
-                      language: resolveUserLanguage(user),
-                      templateProperties: {
-                        firstName: (user as { firstName?: string }).firstName ?? "User",
-                        previousEmail: pending.previousEmail,
-                        currentEmail: user.email,
-                      },
-                    }),
-                  );
-                } catch (error) {
-                  logger.error(
-                    `Failed to send email-change-completed notification to ${user.email}`,
-                    error,
-                  );
-                }
-
-                await deletePendingEmailChangeForUser(db, user.id);
-              } catch (error) {
-                logger.error("Failed to clear EmailChangeRequest after user.email update", error);
-              }
-            },
+            before: async (data, context) => guardEmailChangeUpdate(db, logger, data, context),
+            after: async (user) => completeVerifiedEmailChange(db, emailService, logger, user),
           },
         },
       },
