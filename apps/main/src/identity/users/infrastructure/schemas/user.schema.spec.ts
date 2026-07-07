@@ -44,6 +44,19 @@ describe("userSchema", () => {
     await module.close();
   });
 
+  describe("indexes", () => {
+    const findIndex = (key: string) =>
+      UserSchema.indexes().filter(([fields]) =>
+        Object.prototype.hasOwnProperty.call(fields, key),
+      );
+
+    it("declares a unique index on email (findOneByEmail lookups)", () => {
+      const emailIndexes = findIndex("email");
+      expect(emailIndexes.length).toBeGreaterThanOrEqual(1);
+      expect(emailIndexes.some(([, options]) => options?.unique === true)).toBe(true);
+    });
+  });
+
   it("should create a user document", async () => {
     const userData = {
       _id: new ObjectId(),
