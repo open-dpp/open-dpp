@@ -1,6 +1,8 @@
+import type { LanguageType } from "@open-dpp/dto";
 import type { UserRoleType } from "../../domain/user-role.enum";
 import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Language } from "@open-dpp/dto";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { UserRole } from "../../domain/user-role.enum";
 
@@ -47,8 +49,8 @@ export class User {
   @Prop({ required: true, type: String, enum: Object.values(UserRole) })
   role: UserRoleType;
 
-  @Prop({ default: "en" })
-  preferredLanguage: string;
+  @Prop({ default: Language.en, type: String, enum: Object.values(Language) })
+  preferredLanguage: LanguageType;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
