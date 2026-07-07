@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { ExternalIdentifierTypeSchema, Gs1GranularitySchema } from "./gs1/external-identifier-type";
+import {
+  Gs1GranularitySchema,
+  UniqueProductIdentifierTypeSchema,
+} from "./unique-product-identifier-type";
 import { Cset82ComponentSchema, Gtin14Schema } from "./gs1/gs1-digital-link";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
@@ -35,7 +38,7 @@ export const UniqueProductIdentifierListItemDtoSchema = z
   .object({
     uuid: z.uuid(),
     referenceId: z.uuid(),
-    type: ExternalIdentifierTypeSchema,
+    type: UniqueProductIdentifierTypeSchema,
     gtin: Gtin14Schema.nullable(),
     batch: Cset82ComponentSchema.nullish().overwrite((v) => v ?? null),
     serial: Cset82ComponentSchema.nullable()

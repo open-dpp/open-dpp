@@ -16,9 +16,20 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
-import {
+import type {
+  ApiVersionsDtoType,
   AssetAdministrationShellPaginationResponseDto,
   PassportPermalinkBundleDto,
+  PermalinkCreateRequest,
+  PermalinkUpdateRequest,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
+  ValueResponseDto,
+} from "@open-dpp/dto";
+import {
+  AllApiVersions,
   PassportPermalinkBundleDtoSchema,
   PermalinkCreateRequestSchema,
   PermalinkKind,
@@ -26,13 +37,8 @@ import {
   PermalinkPaginationDtoSchema,
   PermalinkPublicDtoSchema,
   PermalinkUpdateRequestSchema,
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementResponseDto,
-  SubmodelPaginationResponseDto,
-  SubmodelResponseDto,
-  ValueResponseDto,
+  PresentationReferenceType,
 } from "@open-dpp/dto";
-import type { PermalinkCreateRequest, PermalinkUpdateRequest } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError, ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
@@ -69,21 +75,21 @@ import {
   PresentationReferenceHolder,
 } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
-import { PresentationReferenceType } from "@open-dpp/dto";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import {
+  isMemberOfPassportOrg,
   PermalinkApplicationService,
   type PermalinkUpdate,
-  isMemberOfPassportOrg,
   resolveFallbackBaseUrl,
 } from "../application/services/permalink.application.service";
 import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller()
+@Controller({ version: AllApiVersions })
 export class PermalinkController {
   private readonly logger = new Logger(PermalinkController.name);
 
@@ -511,6 +517,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -522,6 +529,7 @@ export class PermalinkController {
       passport.getEnvironment(),
       pagination,
       subject,
+      version,
     );
   }
 
@@ -533,6 +541,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -543,6 +552,7 @@ export class PermalinkController {
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -554,6 +564,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -564,6 +575,7 @@ export class PermalinkController {
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -577,6 +589,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -589,6 +602,7 @@ export class PermalinkController {
       submodelId,
       pagination,
       subject,
+      version,
     );
   }
 
@@ -601,6 +615,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -612,6 +627,7 @@ export class PermalinkController {
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 
@@ -624,6 +640,7 @@ export class PermalinkController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
       organizationId,
@@ -635,6 +652,7 @@ export class PermalinkController {
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 }

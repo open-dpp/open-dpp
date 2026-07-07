@@ -28,7 +28,6 @@ import ElementPresentationPanel from "./presentation/ElementPresentationPanel.vu
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 import PropertyEditor from "./PropertyEditor.vue";
 import FileEditor from "./FileEditor.vue";
-import ReferenceElementEditor from "./ReferenceElementEditor.vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
@@ -243,9 +242,7 @@ const activityHistoryPath = computed(() => {
   if (hasChildElements) {
     return `sw:${path}`;
   }
-  const isLeafEditor = [PropertyEditor, FileEditor, ReferenceElementEditor].includes(
-    editorVNode.value.component as any,
-  );
+  const isLeafEditor = [PropertyEditor, FileEditor].includes(editorVNode.value.component as any);
   if (isLeafEditor) {
     return path;
   }

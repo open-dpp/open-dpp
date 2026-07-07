@@ -8,6 +8,7 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
+    "gen:gs1": "tsx scripts/gs1-generator/index.mts && oxfmt --write packages/dto/src/unique-product-identifiers/gs1",
     "build": "turbo build --env-mode=loose",
     "build:main": "turbo build --filter=./apps/main --env-mode=loose",
     "build:docs": "turbo docs:build --filter=./docs",
@@ -31,8 +32,10 @@
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.31.0",
     "@dotenvx/dotenvx": "^1.71.3",
+    "@types/node": "^22.20.0",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.69.0",
+    "tsx": "^4.20.0",
     "turbo": "^2.9.18"
   },
   "packageManager": "pnpm@11.6.0+sha512.9a36518224080c6fe5165afdcfe79bfa118c29be703f3f462b1e32efe1e98e47e8750b148e08286250aad4113cc7993ca413c4e2cd447752708c2ee5751bc95f"

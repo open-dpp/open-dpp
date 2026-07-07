@@ -1,5 +1,6 @@
 import type {
   ActivityPaginationDto,
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
@@ -21,7 +22,9 @@ import type {
   ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+
 import {
+  AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
   PresentationReferenceType,
@@ -119,8 +122,9 @@ import { UserIdDecorator } from "../../identity/auth/presentation/decorators/use
 import type { Response } from "express";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller("/templates")
+@Controller({ path: "/templates", version: AllApiVersions })
 export class TemplateController
   implements
     IAasReadEndpointsWithOrganizationId,
@@ -191,6 +195,7 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -204,6 +209,7 @@ export class TemplateController
       template.getEnvironment(),
       pagination,
       subject,
+      version,
     );
   }
 
@@ -216,6 +222,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodel(
@@ -224,6 +231,7 @@ export class TemplateController
       id,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -285,6 +293,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodel(
@@ -294,6 +303,7 @@ export class TemplateController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -307,6 +317,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifyValueOfSubmodel(
@@ -316,6 +327,7 @@ export class TemplateController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -326,6 +338,7 @@ export class TemplateController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -338,6 +351,7 @@ export class TemplateController
       template.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -348,6 +362,7 @@ export class TemplateController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -360,6 +375,7 @@ export class TemplateController
       template.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -372,6 +388,7 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -386,6 +403,7 @@ export class TemplateController
       submodelId,
       pagination,
       subject,
+      version,
     );
   }
 
@@ -399,6 +417,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElement(
@@ -408,6 +427,7 @@ export class TemplateController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -453,6 +473,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.addColumnToSubmodelElementList(
@@ -464,6 +485,7 @@ export class TemplateController
       body,
       position,
       { subject, userId },
+      version,
     );
   }
 
@@ -479,6 +501,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
@@ -490,6 +513,7 @@ export class TemplateController
       idShortOfColumn,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -504,6 +528,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
@@ -514,6 +539,7 @@ export class TemplateController
       idShortPath,
       idShortOfColumn,
       { subject, userId },
+      version,
     );
   }
 
@@ -528,6 +554,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.addRowToSubmodelElementList(
@@ -538,6 +565,7 @@ export class TemplateController
       idShortPath,
       position,
       { subject, userId },
+      version,
     );
   }
 
@@ -552,6 +580,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
@@ -562,6 +591,7 @@ export class TemplateController
       idShortPath,
       idShortOfRow,
       { subject, userId },
+      version,
     );
   }
 
@@ -576,6 +606,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodelElement(
@@ -586,6 +617,7 @@ export class TemplateController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -600,6 +632,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodelElementValue(
@@ -610,6 +643,7 @@ export class TemplateController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -621,6 +655,7 @@ export class TemplateController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -634,6 +669,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 
@@ -648,6 +684,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
@@ -658,6 +695,7 @@ export class TemplateController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -669,6 +707,7 @@ export class TemplateController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -682,6 +721,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 

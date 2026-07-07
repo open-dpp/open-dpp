@@ -1,7 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import { ConsoleLogger, Logger, RequestMethod, ValidationPipe } from "@nestjs/common";
+import {
+  ConsoleLogger,
+  Logger,
+  RequestMethod,
+  ValidationPipe,
+  VersioningType,
+} from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -16,6 +22,7 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
+import { AllApiVersions, ApiVersionsDto } from "@open-dpp/dto";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
@@ -90,6 +97,17 @@ async function bootstrap() {
     });
   }
 
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (
+      req.url.startsWith("/api/") &&
+      !req.url.startsWith("/api/swagger") &&
+      !req.url.match(/^\/api\/v\d+(\/|$)/)
+    ) {
+      return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersionsDto.v1}`));
+    }
+    next();
+  });
+
   app.setGlobalPrefix("api", {
     // Public GS1 Digital Link resolver lives outside the /api prefix. All four
     // route shapes (bare GTIN, +batch, +serial, combined) are excluded.
@@ -99,6 +117,11 @@ async function bootstrap() {
       { path: "01/:gtin/21/:serial", method: RequestMethod.GET },
       { path: "01/:gtin/10/:batch/21/:serial", method: RequestMethod.GET },
     ],
+  });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    // header: "X-API-VERSION",
+    defaultVersion: AllApiVersions,
   });
   app.enableCors({
     credentials: true,

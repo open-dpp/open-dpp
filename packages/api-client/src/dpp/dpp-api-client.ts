@@ -10,6 +10,7 @@ import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
 import { TemplatesNamespace } from "./templates/templates.namespace";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { UsersNamespace } from "./users/users.namespace";
+import { DEFAULT_API_URL } from "../urls";
 
 export class DppApiClient implements IApiClient {
   public organizations!: OrganizationsNamespace;
@@ -41,7 +42,7 @@ export class DppApiClient implements IApiClient {
   }
 
   private createNewAxiosInstance() {
-    this.axiosInstance = createAxiosClient(this.options, "https://api.cloud.open-dpp.de");
+    this.axiosInstance = createAxiosClient(this.options, DEFAULT_API_URL);
     this.organizations = new OrganizationsNamespace(this.axiosInstance);
 
     this.templates = new TemplatesNamespace(this.axiosInstance);

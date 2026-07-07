@@ -1,9 +1,9 @@
 import { z } from "zod";
 import {
   CreateGs1UniqueProductIdentifierRequestSchema,
-  ExternalIdentifierType,
-  ExternalIdentifierTypeSchema,
-  type ExternalIdentifierTypeValue,
+  UniqueProductIdentifierType as ExternalIdentifierType,
+  UniqueProductIdentifierTypeSchema as ExternalIdentifierTypeSchema,
+  type UniqueProductIdentifierTypeValue as ExternalIdentifierTypeValue,
   UniqueProductIdentifierListItemDtoSchema,
   UpdateGs1UniqueProductIdentifierRequestSchema,
 } from "@open-dpp/dto";

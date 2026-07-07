@@ -42,10 +42,9 @@ describe("element-presentation", () => {
     expect(labels).toContain("BigNumber");
   });
 
-  it("isLeafElement returns true for Property/File/ReferenceElement and false for containers", () => {
+  it("isLeafElement returns true for Property/File and false for containers", () => {
     expect(isLeafElement("Property")).toBe(true);
     expect(isLeafElement("File")).toBe(true);
-    expect(isLeafElement("ReferenceElement")).toBe(true);
     expect(isLeafElement("Submodel")).toBe(false);
     expect(isLeafElement("SubmodelElementCollection")).toBe(false);
     expect(isLeafElement("SubmodelElementList")).toBe(false);

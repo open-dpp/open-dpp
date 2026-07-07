@@ -10,6 +10,7 @@ export * from "./shared/get-all-params.dto";
 export * from "./shared/filter.dto";
 export * from "./shared/time.dto";
 
+export * from "./api-version.dto";
 export * from "./organizations/invitation.dto";
 
 export * from "./instance-settings/instance-settings.dto";
@@ -56,8 +57,10 @@ export * from "./aas/submodel-base/submodel-element-modification-schema";
 export * from "./aas/submodel-base/submodel-element-schema";
 export * from "./aas/submodel-base/submodel-json-schema";
 export * from "./branding/branding.dto";
-export * from "./unique-product-identifiers/gs1/external-identifier-type";
+export * from "./unique-product-identifiers/unique-product-identifier-type";
 export * from "./unique-product-identifiers/gs1/gs1-ai-constants";
+export * from "./unique-product-identifiers/gs1/gs1-ai-description";
+export * from "./unique-product-identifiers/gs1/gs1-ai-i18n";
 export * from "./unique-product-identifiers/gs1/gs1-ai-table";
 export * from "./unique-product-identifiers/gs1/gs1-data-attributes.dto";
 export * from "./unique-product-identifiers/gs1/gs1-digital-link";
