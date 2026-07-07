@@ -8,6 +8,7 @@ import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
 import { Connection } from "mongoose";
 import type { Db } from "mongodb";
+import { z } from "zod";
 import { EmailChangeCompletedMail } from "../../email/domain/email-change-completed-mail";
 import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
@@ -298,10 +299,11 @@ export const AuthProvider: Provider = {
         user: {
           update: {
             before: async (data, context) => {
-              const newEmail = (data as { email?: unknown } | null | undefined)?.email;
-              if (typeof newEmail !== "string") {
+              const parsed = z.object({ email: z.string() }).safeParse(data);
+              if (!parsed.success) {
                 return;
               }
+              const newEmail = parsed.data.email;
               const previousEmail = decodeVerificationToken(context)?.email;
               if (!previousEmail) {
                 logger.warn(
