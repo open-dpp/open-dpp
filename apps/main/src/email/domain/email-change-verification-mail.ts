@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { LanguageType } from "@open-dpp/dto";
-import { BaseEmail } from "./base-email";
+import { BaseEmail, BaseEmailTypes } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 import { EmailTemplate } from "./email-template";
 
@@ -26,7 +26,7 @@ export class EmailChangeVerificationMail extends BaseEmail {
   ) {
     super(
       id,
-      "EMAIL_CHANGE_VERIFICATION",
+      BaseEmailTypes.EmailChangeVerification,
       new EmailTemplate("email-change-verification.mjml", templateProperties),
       to,
       subject,

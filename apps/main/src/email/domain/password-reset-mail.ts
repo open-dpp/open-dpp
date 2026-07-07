@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { BaseEmail } from "./base-email";
+import { BaseEmail, BaseEmailTypes } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 import { EmailTemplate } from "./email-template";
 
@@ -22,7 +22,7 @@ export class PasswordResetMail extends BaseEmail {
   ) {
     super(
       id,
-      "PASSWORD_RESET",
+      BaseEmailTypes.PasswordReset,
       new EmailTemplate("base-text-and-link.mjml", {
         ...templateProperties,
         actionText: "Reset your password",

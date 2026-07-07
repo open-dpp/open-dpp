@@ -2,13 +2,15 @@ import { LanguageType } from "@open-dpp/dto";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 import { EmailTemplate } from "./email-template";
 
-export type BaseEmailType =
-  | "VERIFY_EMAIL"
-  | "INVITE_USER_TO_ORGANIZATION"
-  | "PASSWORD_RESET"
-  | "EMAIL_CHANGE_NOTIFICATION"
-  | "EMAIL_CHANGE_VERIFICATION"
-  | "EMAIL_CHANGE_COMPLETED";
+export const BaseEmailTypes = {
+  VerifyEmail: "VERIFY_EMAIL",
+  InviteUserToOrganization: "INVITE_USER_TO_ORGANIZATION",
+  PasswordReset: "PASSWORD_RESET",
+  EmailChangeNotification: "EMAIL_CHANGE_NOTIFICATION",
+  EmailChangeVerification: "EMAIL_CHANGE_VERIFICATION",
+  EmailChangeCompleted: "EMAIL_CHANGE_COMPLETED",
+} as const;
+export type BaseEmailType = (typeof BaseEmailTypes)[keyof typeof BaseEmailTypes];
 
 export interface BaseEmailCreateProps {
   type: BaseEmailType;

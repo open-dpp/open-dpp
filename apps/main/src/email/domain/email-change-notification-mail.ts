@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { LanguageType } from "@open-dpp/dto";
-import { BaseEmail } from "./base-email";
+import { BaseEmail, BaseEmailTypes } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 import { EmailTemplate } from "./email-template";
 
@@ -27,7 +27,7 @@ export class EmailChangeNotificationMail extends BaseEmail {
   ) {
     super(
       id,
-      "EMAIL_CHANGE_NOTIFICATION",
+      BaseEmailTypes.EmailChangeNotification,
       new EmailTemplate("email-change-notification.mjml", templateProperties),
       to,
       subject,
