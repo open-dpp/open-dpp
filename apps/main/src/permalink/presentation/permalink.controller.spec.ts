@@ -460,7 +460,9 @@ describe("PermalinkController", () => {
     it("returns 404 to anonymous when the passport is in draft", async () => {
       const fixture = await createPassportWithPermalink({ published: false });
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(`/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`);
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
 
       expect(response.status).toEqual(404);
     });
