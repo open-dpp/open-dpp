@@ -83,6 +83,7 @@ describe("EmailChangeRequest", () => {
 
       expect(mail.to).toBe("old@example.com");
       expect(mail.language).toBe("de");
+      expect(mail.subject).toBe("Deine E-Mail-Adresse wird geändert");
       const props = mail.templateProperties as {
         firstName: string;
         currentEmail: string;
@@ -102,6 +103,7 @@ describe("EmailChangeRequest", () => {
       });
 
       expect(mail.language).toBe("en");
+      expect(mail.subject).toBe("Your email is being changed");
       expect((mail.templateProperties as { firstName: string }).firstName).toBe("User");
     });
   });

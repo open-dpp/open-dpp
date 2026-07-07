@@ -3,6 +3,12 @@ import { LanguageType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { EmailChangeNotificationMail } from "../../../email/domain/email-change-notification-mail";
 
+// Localized like the mjml template siblings (see EmailTemplate.localizedName).
+const NOTIFICATION_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+  en: "Your email is being changed",
+  de: "Deine E-Mail-Adresse wird geändert",
+};
+
 export interface EmailChangeRequestCreateProps {
   userId: string;
   newEmail: string;
@@ -72,10 +78,11 @@ export class EmailChangeRequest {
     revokeUrl: string;
     language?: LanguageType;
   }): EmailChangeNotificationMail {
+    const language = props.language ?? "en";
     return EmailChangeNotificationMail.create({
       to: this.previousEmail,
-      subject: "Your email is being changed",
-      language: props.language ?? "en",
+      subject: NOTIFICATION_SUBJECT_BY_LANGUAGE[language],
+      language,
       templateProperties: {
         firstName: props.firstName ?? "User",
         currentEmail: this.previousEmail,
