@@ -152,7 +152,7 @@
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",
     "errorRemoveSubmodelElement": "@:common.remove des Elements @:common.failed",
-    "submodelElementList": "Liste",
+    "submodelElementList": "Tabelle",
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
     "file": "Datei",

@@ -524,7 +524,7 @@ export function useAasEditor({
       },
       {
         label: translate(`${translatePrefix}.submodelElementList`),
-        icon: "pi pi-list",
+        icon: "pi pi-table",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementList,
