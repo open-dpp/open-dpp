@@ -36,15 +36,19 @@ export type RowContext = Record<string, any>;
 const ValueMatcher = P.optional(P.union(P.string, null));
 
 /**
- * Distinguishes a "group" column (flattened into N inline-editable sub-cells)
- * from a "scalar" one (a single inline-editable cell). Internal to the
- * conversion logic below — not part of the public Column shape, since
- * nothing outside this module needs to branch on it (yet).
+ * Distinguishes a "group" column (flattened into N inline-editable sub-cells),
+ * a "table" column (a nested SubmodelElementList, drilled into via the
+ * drawer rather than edited inline), from a "scalar" one (a single
+ * inline-editable cell). Internal to the conversion logic below — not part
+ * of the public Column shape, since nothing outside this module needs to
+ * branch on it (yet).
  */
-type ColumnKind = "scalar" | "group";
+type ColumnKind = "scalar" | "group" | "table";
 
 function columnKindOf(modelType: unknown): ColumnKind {
-  return modelType === AasSubmodelElements.SubmodelElementCollection ? "group" : "scalar";
+  if (modelType === AasSubmodelElements.SubmodelElementCollection) return "group";
+  if (modelType === AasSubmodelElements.SubmodelElementList) return "table";
+  return "scalar";
 }
 
 export function isGroupColumn(column: Column): boolean {
@@ -102,6 +106,11 @@ export function convertRowToRequestDto(row: Row, rowsContext: RowContext[]): Val
   const requestDto: Record<string, any> = {};
   for (const [field, value] of Object.entries(row)) {
     if (field === "idShort") continue; // skip Id of row
+    // Table columns are never edited via the bulk scalar-cell save — their
+    // data is mutated through their own column/row endpoints when drilled
+    // into. The $value PATCH is a field-level merge, so omitting them here
+    // leaves their stored value untouched rather than wiping it.
+    if (rowContext[field]?.modelType === AasSubmodelElements.SubmodelElementList) continue;
     const converted = convertCell(value, rowContext[field]);
     const dotIndex = field.indexOf(".");
     if (dotIndex === -1) {
@@ -215,6 +224,15 @@ export function convertDataToRows(
           rowContextToModify[flatKey] = context;
           newFieldKeys.add(flatKey);
         }
+      } else if (columnKindOf(col.modelType) === "table") {
+        // A nested table's element 0 doubles as both its column-defining
+        // header *and* a real, user-visible first row (mirroring how the
+        // outer table itself displays its own row 0) — so every element
+        // counts as a row, none are structural-only.
+        const rowCount = (col.value as any[])?.length ?? 0;
+        rowToModify[col.idShort] = String(rowCount);
+        rowContextToModify[col.idShort] = { modelType: col.modelType, plain: col };
+        newFieldKeys.add(col.idShort);
       } else {
         const { value, context } = convertLeafColumn(col);
         rowToModify[col.idShort] = value;

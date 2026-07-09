@@ -113,6 +113,18 @@ describe("convertRowToRequestDto", () => {
       Group1: { Sub1: "Wood", Sub2: "50" },
     });
   });
+
+  it("omits a Table (SubmodelElementList) column from the bulk save payload", () => {
+    const row: Row = { idShort: "row0", Column1: "Wood", Table1: "3" };
+    const rowsContext: RowContext[] = [
+      {
+        idShort: "row0",
+        Column1: { modelType: AasSubmodelElements.Property },
+        Table1: { modelType: AasSubmodelElements.SubmodelElementList },
+      },
+    ];
+    expect(convertRowToRequestDto(row, rowsContext)).toEqual({ Column1: "Wood" });
+  });
 });
 
 describe("convertDataToColumns", () => {
@@ -178,6 +190,27 @@ describe("convertDataToColumns", () => {
     convertDataToColumns(columns, { value: [headerRow] } as any, Language.en);
     expect(columns).toHaveLength(1);
     expect(columns[0]!.label).toBe("Material");
+  });
+
+  it("treats a Table (SubmodelElementList) column as flat, not a group", () => {
+    const tableHeaderRow = {
+      idShort: "row0",
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        {
+          idShort: "Table1",
+          modelType: AasSubmodelElements.SubmodelElementList,
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          displayName: [{ language: "en", text: "Cells" }],
+          value: [],
+        },
+      ],
+    };
+    const columns: Column[] = [];
+    convertDataToColumns(columns, { value: [tableHeaderRow] } as any, Language.en);
+    expect(columns).toHaveLength(1);
+    expect(columns[0]).toMatchObject({ idShort: "Table1", label: "Cells" });
+    expect(columns[0]!.children).toBeUndefined();
   });
 });
 
@@ -270,6 +303,53 @@ describe("convertDataToRows", () => {
     expect(rows[0]).not.toHaveProperty("Group1.StaleSub");
     expect(rowsContext[0]).not.toHaveProperty("Group1.StaleSub");
     expect(rows[0]!["Group1.Sub1"]).toBe("Wood");
+  });
+
+  it("computes a Table column's row count and stores it as context, without throwing", () => {
+    const tableRow = {
+      idShort: "row0",
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        {
+          idShort: "Table1",
+          modelType: AasSubmodelElements.SubmodelElementList,
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          value: [
+            // Element 0 doubles as the column-defining header row *and* a
+            // real, user-visible first row — it counts too.
+            { idShort: "row0", modelType: AasSubmodelElements.SubmodelElementCollection, value: [] },
+            { idShort: "row1", modelType: AasSubmodelElements.SubmodelElementCollection, value: [] },
+            { idShort: "row2", modelType: AasSubmodelElements.SubmodelElementCollection, value: [] },
+          ],
+        },
+      ],
+    };
+    const rows: Row[] = [];
+    const rowsContext: RowContext[] = [];
+    convertDataToRows(rows, rowsContext, { value: [tableRow] } as any);
+    expect(rows[0]!.Table1).toBe("3");
+    expect(rowsContext[0]!.Table1).toMatchObject({
+      modelType: AasSubmodelElements.SubmodelElementList,
+    });
+  });
+
+  it("computes a 0 row count for an empty Table column", () => {
+    const emptyTableRow = {
+      idShort: "row0",
+      modelType: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        {
+          idShort: "Table1",
+          modelType: AasSubmodelElements.SubmodelElementList,
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          value: [],
+        },
+      ],
+    };
+    const rows: Row[] = [];
+    const rowsContext: RowContext[] = [];
+    convertDataToRows(rows, rowsContext, { value: [emptyTableRow] } as any);
+    expect(rows[0]!.Table1).toBe("0");
   });
 
   it("throws for a leaf column whose model type isn't Property or File", () => {
