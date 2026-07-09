@@ -47,6 +47,8 @@ const groupColumn: Column = {
   ],
 };
 
+// Available when adding a column within a group's sub-columns — "Table"
+// columns are top-level only and never offered here.
 const fieldLabels = [
   "aasEditor.textField",
   "aasEditor.numberField",
@@ -56,13 +58,15 @@ const fieldLabels = [
   "aasEditor.link",
   "aasEditor.file",
 ];
+// Available when adding a top-level column — includes "Table".
+const topLevelFieldLabels = [...fieldLabels, "aasEditor.submodelElementList"];
 
 describe("buildColumnMenu", () => {
   it("builds the top-level 'add column' menu when there are no action options", () => {
     const deps = makeDeps();
     const menu = buildColumnMenu({}, [scalarColumn], deps);
     expect(menu).toBeDefined();
-    expect(menu!.map((item) => item.label)).toEqual(fieldLabels);
+    expect(menu!.map((item) => item.label)).toEqual(topLevelFieldLabels);
   });
 
   it("actions section holds only edit/remove; move-to-group section is always present", () => {
@@ -178,8 +182,8 @@ describe("add column left/right sections", () => {
 
     const leftSection = menu!.find((item) => item.label === "aasEditor.table.addColumnLeft");
     const rightSection = menu!.find((item) => item.label === "aasEditor.table.addColumnRight");
-    expect(leftSection!.items!.map((i) => i.label)).toEqual(fieldLabels);
-    expect(rightSection!.items!.map((i) => i.label)).toEqual(fieldLabels);
+    expect(leftSection!.items!.map((i) => i.label)).toEqual(topLevelFieldLabels);
+    expect(rightSection!.items!.map((i) => i.label)).toEqual(topLevelFieldLabels);
 
     (leftSection!.items![0]!.command as any)();
     await capturedCallback!({ idShort: "new" });
@@ -194,6 +198,68 @@ describe("add column left/right sections", () => {
       { modelType: AasSubmodelElements.Property, idShort: "new2" },
       { position: 1 },
     );
+  });
+
+  it("the top-level 'Table' item opens the drawer with typeValueListElement and wires to onCreateColumn", async () => {
+    let capturedCallback: ((data: any) => Promise<void>) | undefined;
+    const deps = makeDeps({
+      openDrawer: vi.fn((opts: any) => {
+        capturedCallback = opts.callback;
+        expect(opts.data).toEqual({
+          modelType: AasSubmodelElements.SubmodelElementList,
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+        });
+      }),
+    });
+    const menu = buildColumnMenu({ addColumnActions: true, position: 0 }, [scalarColumn], deps);
+    const leftSection = menu!.find((item) => item.label === "aasEditor.table.addColumnLeft");
+    const tableItem = leftSection!.items!.find(
+      (item) => item.label === "aasEditor.submodelElementList",
+    );
+    expect(tableItem).toBeDefined();
+
+    (tableItem!.command as any)();
+    expect(deps.openDrawer).toHaveBeenCalled();
+    // ColumnCreateEditor.vue merges `props.data` (passed as `data:` above,
+    // including typeValueListElement) into what it hands to this callback —
+    // simulate that merge here rather than the bare form values.
+    await capturedCallback!({
+      idShort: "newTable",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    expect(deps.onCreateColumn).toHaveBeenLastCalledWith(
+      {
+        modelType: AasSubmodelElements.SubmodelElementList,
+        typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+        idShort: "newTable",
+      },
+      { position: 0 },
+    );
+  });
+
+  it("the 'Table' item is never offered when adding a sub-column within a group", () => {
+    const deps = makeDeps();
+    const menu = buildColumnMenu(
+      { groupIdShort: "Group1", addColumnActions: true, position: 0 },
+      [scalarColumn, groupColumn],
+      deps,
+    );
+    const leftSection = menu!.find((item) => item.label === "aasEditor.table.addColumnLeft");
+    expect(
+      leftSection!.items!.some((item) => item.label === "aasEditor.submodelElementList"),
+    ).toBe(false);
+
+    const groupHeaderMenu = buildColumnMenu(
+      { isGroupHeader: true, groupIdShort: "Group1" },
+      [scalarColumn, groupColumn],
+      deps,
+    );
+    const addSubColumnSection = groupHeaderMenu!.find(
+      (item) => item.label === "aasEditor.table.addSubColumn",
+    );
+    expect(
+      addSubColumnSection!.items!.some((item) => item.label === "aasEditor.submodelElementList"),
+    ).toBe(false);
   });
 
   it("wires the sub-column 'add column left/right' items to onAddColumnToGroup with the correct position", async () => {

@@ -102,7 +102,8 @@ function buildColumnTypeMenuItem(
   type:
     | typeof AasSubmodelElements.File
     | typeof AasSubmodelElements.Property
-    | typeof AasSubmodelElements.SubmodelElementCollection,
+    | typeof AasSubmodelElements.SubmodelElementCollection
+    | typeof AasSubmodelElements.SubmodelElementList,
   deps: TableMenuDeps,
   valueType?: DataTypeDefType,
   groupIdShort?: string,
@@ -135,6 +136,17 @@ function buildColumnTypeMenuItem(
           ...sharedDrawerProps,
           type: ColumnEditorKey,
           data: { modelType: type },
+          callback: async (colData: any) => createFn({ modelType: type, ...colData }),
+        });
+      },
+    }))
+    .with({ type: AasSubmodelElements.SubmodelElementList }, ({ type }) => ({
+      ...labelIconAndDisableOption,
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          ...sharedDrawerProps,
+          type: ColumnEditorKey,
+          data: { modelType: type, typeValueListElement: AasSubmodelElements.SubmodelElementCollection },
           callback: async (colData: any) => createFn({ modelType: type, ...colData }),
         });
       },
@@ -236,6 +248,20 @@ function buildAllColumnTypeMenuItems(
       undefined,
       groupIdShort,
     ),
+    // "Table" columns (nested SubmodelElementList) are top-level only — they
+    // can't be flattened into a group like scalar columns, so they're never
+    // offered when this menu is built for a group's sub-columns.
+    ...(groupIdShort
+      ? []
+      : [
+          buildColumnTypeMenuItem(
+            translate(`${translatePrefix}.submodelElementList`),
+            "pi pi-table",
+            options,
+            AasSubmodelElements.SubmodelElementList,
+            deps,
+          ),
+        ]),
   ];
 }
 
