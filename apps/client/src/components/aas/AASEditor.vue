@@ -446,6 +446,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
               <component
                 :is="editorVNode.component"
                 v-if="editorVNode"
+                :key="editorVNode.props.path.idShortPathIncludingSubmodel ?? ''"
                 v-bind="editorVNode.props"
                 :id="model.id"
                 ref="componentRef"

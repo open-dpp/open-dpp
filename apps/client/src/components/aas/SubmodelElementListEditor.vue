@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { DataTypeDefEnum, type SubmodelElementListModificationDto } from "@open-dpp/dto";
+import {
+  DataTypeDefEnum,
+  type SubmodelElementListModificationDto,
+  ValueSchema,
+} from "@open-dpp/dto";
 import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -86,6 +90,7 @@ const {
   formatCellValue,
   resolveFieldValue,
   setFieldValue,
+  openNestedTable,
   save,
 } = useAasTableExtension({
   id: props.id,
@@ -124,6 +129,14 @@ async function submit() {
     }
     await props.callback({ ...data });
   })();
+}
+
+function rowCountOfTableCell(cellData: any, field: string): number {
+  const fieldValueParsed = ValueSchema.safeParse(resolveFieldValue(cellData, field));
+  if (fieldValueParsed.success) {
+    return Number(fieldValueParsed.data ?? 0);
+  }
+  return 0;
 }
 
 defineExpose<{
@@ -381,6 +394,19 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             >
               {{ formatCellValue(resolveFieldValue(cellData, field) as string, flatCol) }}
             </span>
+            <Button
+              v-else-if="flatCol.plain.modelType === AasSubmodelElements.SubmodelElementList"
+              :label="
+                t('aasEditor.table.rows', {
+                  count: rowCountOfTableCell(cellData, field),
+                })
+              "
+              icon="pi pi-table"
+              severity="secondary"
+              size="small"
+              outlined
+              @click="openNestedTable(rowIndex, flatCol)"
+            />
             <InputText v-else autofocus fluid readonly :disabled="!canEdit" />
           </div>
         </template>
@@ -388,6 +414,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           v-if="
             canEdit &&
             flatCol.plain.modelType !== AasSubmodelElements.File &&
+            flatCol.plain.modelType !== AasSubmodelElements.SubmodelElementList &&
             !(
               flatCol.plain.modelType === AasSubmodelElements.Property &&
               (flatCol.plain.valueType === DataTypeDef.Date ||

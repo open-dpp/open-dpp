@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => {
     deleteColumnFromGroupInSubmodelElementList: vi.fn(),
     moveColumnToGroupInSubmodelElementList: vi.fn(),
     createGroupFromColumnInSubmodelElementList: vi.fn(),
+    modifySubmodelElement: vi.fn(),
   };
 });
 
@@ -60,6 +61,7 @@ vi.mock("../lib/api-client", () => ({
           moveColumnToGroupInSubmodelElementList: mocks.moveColumnToGroupInSubmodelElementList,
           createGroupFromColumnInSubmodelElementList:
             mocks.createGroupFromColumnInSubmodelElementList,
+          modifySubmodelElement: mocks.modifySubmodelElement,
         },
       },
     },
@@ -435,6 +437,87 @@ describe("aasTableExtension composable", () => {
       modelType: KeyTypes.SubmodelElementList,
     });
     expect(editorVNode.value!.props.callback).toEqual(callbackOfSubmodelElementListEditor);
+  });
+
+  it("openNestedTable drills into a row's Table column via the drawer", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
+    });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+
+    const nestedTable = {
+      idShort: "Table1",
+      modelType: AasSubmodelElements.SubmodelElementList,
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        {
+          idShort: "nestedRow0",
+          modelType: AasSubmodelElements.SubmodelElementCollection,
+          value: [
+            {
+              idShort: "col1",
+              modelType: AasSubmodelElements.Property,
+              valueType: DataTypeDef.String,
+              value: "10",
+            },
+          ],
+        },
+      ],
+    };
+    const listWithTableColumn = SubmodelElementListJsonSchema.parse({
+      idShort: "List",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      value: [
+        {
+          idShort: "row0",
+          modelType: AasSubmodelElements.SubmodelElementCollection,
+          value: [nestedTable],
+        },
+      ],
+    });
+
+    const { openNestedTable, columns } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: listWithTableColumn,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    const tableColumn = columns.value.find((c) => c.idShort === "Table1")!;
+    openNestedTable(0, tableColumn);
+
+    expect(drawerVisible.value).toBeTruthy();
+    expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
+    expect(editorVNode.value!.props.path).toEqual({
+      submodelId: "s1",
+      idShortPath: "Path.To.List.row0.Table1",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List.row0.Table1",
+    });
+    expect(editorVNode.value!.props.data).toEqual({
+      ...SubmodelElementListJsonSchema.parse(nestedTable),
+      modelType: KeyTypes.SubmodelElementList,
+    });
+
+    mocks.modifySubmodelElement.mockResolvedValue({ data: {}, status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "Table1" });
+    expect(mocks.modifySubmodelElement).toHaveBeenCalledWith(aasId, "s1", "Path.To.List.row0.Table1", {
+      idShort: "Table1",
+    });
   });
 
   it("should modify cell", async () => {

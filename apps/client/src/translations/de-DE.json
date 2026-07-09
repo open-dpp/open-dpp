@@ -114,6 +114,7 @@
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
       "column": "Spalte",
       "row": "Zeile",
+      "rows": "{count} Zeile | {count} Zeilen",
       "entries": "Einträge",
       "emptyCell": "Bitte ausfüllen",
       "addRowAbove": "@:aasEditor.table.row oberhalb @.lower:common.add",

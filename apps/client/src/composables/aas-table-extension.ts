@@ -86,6 +86,7 @@ export interface IAasTableExtension {
   formatCellValue: (value: string, column: Column) => Value;
   resolveFieldValue: (data: Row, field: string) => Value;
   setFieldValue: (data: Row, field: string, value: Value) => void;
+  openNestedTable: (rowIndex: number, column: Column) => void;
   save: () => Promise<void>;
 }
 
@@ -148,6 +149,39 @@ export function useAasTableExtension({
       title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
       path,
       callback: callbackOfSubmodelElementListEditor,
+    });
+  }
+
+  /** Drills into a "Table" column's cell: opens the same editor, recursively,
+   * scoped to that row's nested SubmodelElementList. */
+  function openNestedTable(rowIndex: number, column: Column) {
+    const rowIdShort = getRowIdShortAtIndexOrFail(rowIndex);
+    const rawRow: any = data.value.value[rowIndex];
+    const nestedColumn = rawRow?.value?.find((el: any) => el.idShort === column.idShort);
+    if (!nestedColumn) {
+      throw new Error(`Column "${column.idShort}" not found in row "${rowIdShort}"`);
+    }
+    const nestedListData = SubmodelElementListJsonSchema.parse(nestedColumn);
+    const nestedPath: AasEditorPath = {
+      submodelId: pathToList.submodelId,
+      idShortPath: `${pathToList.idShortPath}.${rowIdShort}.${column.idShort}`,
+      idShortPathIncludingSubmodel: `${pathToList.idShortPathIncludingSubmodel}.${rowIdShort}.${column.idShort}`,
+    };
+    const formItemLabel = translate(`${translatePrefix}.submodelElementList`);
+    openDrawer({
+      type: KeyTypes.SubmodelElementList,
+      data: nestedListData,
+      mode: EditorMode.EDIT,
+      title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
+      path: nestedPath,
+      callback: async (modData: SubmodelElementModificationDto) => {
+        await aasNamespace.modifySubmodelElement(
+          id,
+          nestedPath.submodelId!,
+          nestedPath.idShortPath!,
+          modData,
+        );
+      },
     });
   }
 
@@ -385,6 +419,7 @@ export function useAasTableExtension({
     formatCellValue,
     resolveFieldValue,
     setFieldValue,
+    openNestedTable,
     save,
     buildColumnMenu,
     buildRowMenu,

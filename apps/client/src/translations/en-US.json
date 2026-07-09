@@ -114,6 +114,7 @@
       "saveAndAddEntries": "Save and add list entries",
       "column": "column",
       "row": "row",
+      "rows": "{count} row | {count} rows",
       "entries": "Entries",
       "emptyCell": "Please fill out",
       "removeColumn": "Should the @:aasEditor.table.column really be removed?",
