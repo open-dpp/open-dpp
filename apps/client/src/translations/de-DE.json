@@ -119,6 +119,7 @@
       "addRowAbove": "@:aasEditor.table.row oberhalb @.lower:common.add",
       "addRowBelow": "@:aasEditor.table.row unterhalb @.lower:common.add",
       "addColumnLeft": "@:aasEditor.table.column links @.lower:common.add",
+      "addColumnRight": "@:aasEditor.table.column rechts @.lower:common.add",
       "addColumnEnd": "@:aasEditor.table.column am Ende @.lower:common.add",
       "editColumn": "@:aasEditor.table.column @.lower:common.edit",
       "removeColumn": "Soll die @:aasEditor.table.column wirklich entfernt werden?",

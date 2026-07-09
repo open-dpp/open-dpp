@@ -120,6 +120,7 @@
       "removeGroupColumn": "Should the group together with all its columns really be removed?",
       "removeRow": "Should the @:aasEditor.table.row really be removed?",
       "addColumnLeft": "@:common.add @:aasEditor.table.column to the left",
+      "addColumnRight": "@:common.add @:aasEditor.table.column to the right",
       "addColumnEnd": "@:common.add @:aasEditor.table.column to the end",
       "addRowAbove": "@:common.add @:aasEditor.table.row above",
       "addRowBelow": "@:common.add @:aasEditor.table.row below",

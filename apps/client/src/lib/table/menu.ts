@@ -369,55 +369,72 @@ function removeFromGroupMenuItem(
   };
 }
 
+function buildAddColumnLeftRightSections(
+  position: number,
+  deps: TableMenuDeps,
+  groupIdShort?: string,
+): MenuItem[] {
+  const { translate } = deps;
+  return [
+    {
+      label: translate(`${translateTablePrefix}.addColumnLeft`),
+      items: buildAllColumnTypeMenuItems("pi pi-arrow-left", { position }, deps, groupIdShort),
+    },
+    {
+      label: translate(`${translateTablePrefix}.addColumnRight`),
+      items: buildAllColumnTypeMenuItems(
+        "pi pi-arrow-right",
+        { position: position + 1 },
+        deps,
+        groupIdShort,
+      ),
+    },
+  ];
+}
+
 function buildTopLevelColumnMenu(
   options: ColumnMenuOptions,
   columns: Column[],
   deps: TableMenuDeps,
 ): MenuItem[] {
   const { translate, errorHandlingStore, disableColumnEditing } = deps;
-  const icon = `pi pi-arrow-${options.addColumnActions ? "left" : "right"}`;
-  const colMenuItems = buildAllColumnTypeMenuItems(icon, options, deps);
 
-  const menu: MenuItem[] = options.addColumnActions
-    ? [
-        {
-          label: translate(`${translateTablePrefix}.addColumnLeft`),
-          items: colMenuItems,
-        },
-      ]
-    : colMenuItems;
+  if (!options.addColumnActions) {
+    return buildAllColumnTypeMenuItems("pi pi-arrow-right", options, deps);
+  }
 
-  if (options.addColumnActions) {
-    try {
-      const column = getColumnAtIndexOrFail(columns, options.position ?? 0);
-      const groups = getGroupColumns(columns);
+  const position = options.position ?? 0;
+  const menu: MenuItem[] = buildAddColumnLeftRightSections(position, deps);
 
-      menu.push({
-        label: translate("common.actions"),
-        items: [modifyColumnMenuItem(column, deps), removeColumnMenuItem(column, deps)],
-      });
+  try {
+    const column = getColumnAtIndexOrFail(columns, position);
+    const groups = getGroupColumns(columns);
 
-      // PrimeVue Menu only supports 2 levels, so group targets live in a
-      // separate top-level section rather than nested inside "common.actions".
-      // Always present: existing groups as move-targets, plus a trailing
-      // entry to wrap this column into a brand-new group.
-      menu.push({
-        label: translate(`${translateTablePrefix}.moveToGroup`),
-        items: [
-          ...groups.map((group) => ({
-            label: group.label,
-            icon: "pi pi-objects-column",
-            disabled: !!disableColumnEditing,
-            command: async () => {
-              await deps.onMoveColumnToGroup(column, group.idShort);
-            },
-          })),
-          createGroupFromColumnMenuItem(column, deps),
-        ],
-      });
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
-    }
+    menu.push({
+      label: translate("common.actions"),
+      items: [modifyColumnMenuItem(column, deps), removeColumnMenuItem(column, deps)],
+    });
+
+    // PrimeVue Menu only supports 2 levels, so group targets live in a
+    // separate top-level section rather than nested inside "common.actions".
+    // Always present: existing groups as move-targets, plus a trailing
+    // entry to wrap this column into a brand-new group.
+    menu.push({
+      label: translate(`${translateTablePrefix}.moveToGroup`),
+      items: [
+        ...groups.map((group) => ({
+          label: group.label,
+          icon: "pi pi-objects-column",
+          disabled: !!disableColumnEditing,
+          command: async () => {
+            await deps.onMoveColumnToGroup(column, group.idShort);
+          },
+        })),
+        createGroupFromColumnMenuItem(column, deps),
+      ],
+    });
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
   }
   return menu;
 }
@@ -462,9 +479,11 @@ function buildSubColumnMenu(
 ): MenuItem[] | undefined {
   const { translate, errorHandlingStore } = deps;
   const { groupIdShort, position } = options;
+
   try {
     const subColumn = getSubColumnAtIndexOrFail(columns, groupIdShort!, position ?? 0);
     return [
+      ...buildAddColumnLeftRightSections(position ?? 0, deps, groupIdShort),
       {
         label: translate("common.actions"),
         items: [

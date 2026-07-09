@@ -47,20 +47,22 @@ const groupColumn: Column = {
   ],
 };
 
+const fieldLabels = [
+  "aasEditor.textField",
+  "aasEditor.numberField",
+  "aasEditor.booleanField",
+  "aasEditor.dateField",
+  "aasEditor.dateTimeField",
+  "aasEditor.link",
+  "aasEditor.file",
+];
+
 describe("buildColumnMenu", () => {
   it("builds the top-level 'add column' menu when there are no action options", () => {
     const deps = makeDeps();
     const menu = buildColumnMenu({}, [scalarColumn], deps);
     expect(menu).toBeDefined();
-    expect(menu!.map((item) => item.label)).toEqual([
-      "aasEditor.textField",
-      "aasEditor.numberField",
-      "aasEditor.booleanField",
-      "aasEditor.dateField",
-      "aasEditor.dateTimeField",
-      "aasEditor.link",
-      "aasEditor.file",
-    ]);
+    expect(menu!.map((item) => item.label)).toEqual(fieldLabels);
   });
 
   it("actions section holds only edit/remove; move-to-group section is always present", () => {
@@ -126,15 +128,7 @@ describe("buildColumnMenu", () => {
       "common.actions",
     ]);
     // Sub-column type options exclude "columnGroup" — groups can't nest inside groups.
-    expect(menu![0]!.items!.map((item) => item.label)).toEqual([
-      "aasEditor.textField",
-      "aasEditor.numberField",
-      "aasEditor.booleanField",
-      "aasEditor.dateField",
-      "aasEditor.dateTimeField",
-      "aasEditor.link",
-      "aasEditor.file",
-    ]);
+    expect(menu![0]!.items!.map((item) => item.label)).toEqual(fieldLabels);
     expect(menu![1]!.items!.map((item) => item.label)).toEqual(["common.edit", "common.remove"]);
   });
 
@@ -156,11 +150,83 @@ describe("buildColumnMenu", () => {
       [scalarColumn, groupColumn],
       deps,
     );
-    expect(menu!.map((item) => item.label)).toEqual(["common.actions"]);
-    expect(menu![0]!.items!.map((item) => item.label)).toEqual([
+    expect(menu!.map((item) => item.label)).toEqual([
+      "aasEditor.table.addColumnLeft",
+      "aasEditor.table.addColumnRight",
+      "common.actions",
+    ]);
+
+    const [addColumnLeftMenu, addColumnRightMenu, actionsMenu] = menu!;
+    expect(addColumnLeftMenu!.items!.map((item) => item.label)).toEqual(fieldLabels);
+    expect(addColumnRightMenu!.items!.map((item) => item.label)).toEqual(fieldLabels);
+    expect(actionsMenu!.items!.map((item) => item.label)).toEqual([
       "common.edit",
       "aasEditor.table.removeFromGroup",
     ]);
+  });
+});
+
+describe("add column left/right sections", () => {
+  it("wires the top-level 'add column left/right' items to onCreateColumn with the correct position", async () => {
+    let capturedCallback: ((data: any) => Promise<void>) | undefined;
+    const deps = makeDeps({
+      openDrawer: vi.fn((opts: any) => {
+        capturedCallback = opts.callback;
+      }),
+    });
+    const menu = buildColumnMenu({ addColumnActions: true, position: 0 }, [scalarColumn], deps);
+
+    const leftSection = menu!.find((item) => item.label === "aasEditor.table.addColumnLeft");
+    const rightSection = menu!.find((item) => item.label === "aasEditor.table.addColumnRight");
+    expect(leftSection!.items!.map((i) => i.label)).toEqual(fieldLabels);
+    expect(rightSection!.items!.map((i) => i.label)).toEqual(fieldLabels);
+
+    (leftSection!.items![0]!.command as any)();
+    await capturedCallback!({ idShort: "new" });
+    expect(deps.onCreateColumn).toHaveBeenLastCalledWith(
+      { modelType: AasSubmodelElements.Property, idShort: "new" },
+      { position: 0 },
+    );
+
+    (rightSection!.items![0]!.command as any)();
+    await capturedCallback!({ idShort: "new2" });
+    expect(deps.onCreateColumn).toHaveBeenLastCalledWith(
+      { modelType: AasSubmodelElements.Property, idShort: "new2" },
+      { position: 1 },
+    );
+  });
+
+  it("wires the sub-column 'add column left/right' items to onAddColumnToGroup with the correct position", async () => {
+    let capturedCallback: ((data: any) => Promise<void>) | undefined;
+    const deps = makeDeps({
+      openDrawer: vi.fn((opts: any) => {
+        capturedCallback = opts.callback;
+      }),
+    });
+    const menu = buildColumnMenu(
+      { groupIdShort: "Group1", addColumnActions: true, position: 0 },
+      [scalarColumn, groupColumn],
+      deps,
+    );
+
+    const leftSection = menu!.find((item) => item.label === "aasEditor.table.addColumnLeft");
+    const rightSection = menu!.find((item) => item.label === "aasEditor.table.addColumnRight");
+
+    (leftSection!.items![0]!.command as any)();
+    await capturedCallback!({ idShort: "newLeft" });
+    expect(deps.onAddColumnToGroup).toHaveBeenLastCalledWith(
+      "Group1",
+      { modelType: AasSubmodelElements.Property, idShort: "newLeft" },
+      { position: 0 },
+    );
+
+    (rightSection!.items![0]!.command as any)();
+    await capturedCallback!({ idShort: "newRight" });
+    expect(deps.onAddColumnToGroup).toHaveBeenLastCalledWith(
+      "Group1",
+      { modelType: AasSubmodelElements.Property, idShort: "newRight" },
+      { position: 1 },
+    );
   });
 });
 
