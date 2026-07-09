@@ -408,7 +408,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         </template>
       </Column>
     </DataTable>
-    <Menu
+    <TieredMenu
       id="overlay_column_menu"
       ref="columnMenuPopover"
       :model="columnMenu"

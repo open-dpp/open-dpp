@@ -415,8 +415,8 @@ function buildTopLevelColumnMenu(
       items: [modifyColumnMenuItem(column, deps), removeColumnMenuItem(column, deps)],
     });
 
-    // PrimeVue Menu only supports 2 levels, so group targets live in a
-    // separate top-level section rather than nested inside "common.actions".
+    // Group targets live in their own top-level section rather than nested
+    // inside "common.actions" for clarity, not a library limitation.
     // Always present: existing groups as move-targets, plus a trailing
     // entry to wrap this column into a brand-new group.
     menu.push({
