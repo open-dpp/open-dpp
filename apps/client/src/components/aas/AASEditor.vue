@@ -459,6 +459,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 :modify-shell="modifyShell"
                 :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
                 :is-archived="isArchived"
+                :hide-drawer="hideDrawer"
               />
             </TabPanel>
             <TabPanel v-if="showPresentationTab" value="presentation">

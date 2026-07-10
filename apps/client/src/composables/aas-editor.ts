@@ -251,7 +251,6 @@ export function useAasEditor({
       response.status === HTTPCode.CREATED ||
       response.status === HTTPCode.NO_CONTENT
     ) {
-      await pagination.reloadCurrentPage();
       drawer.hideDrawer();
     }
   }

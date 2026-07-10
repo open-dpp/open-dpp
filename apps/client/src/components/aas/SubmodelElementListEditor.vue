@@ -1,23 +1,20 @@
 <script setup lang="ts">
 import {
-  DataTypeDefEnum,
+  AasSubmodelElements,
+  DataTypeDef,
+  Permissions,
   type SubmodelElementListModificationDto,
   ValueSchema,
 } from "@open-dpp/dto";
-import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import type {
-  ColumnMenuOptions,
-  FlatColumn,
-  RowMenuOptions,
-} from "../../composables/aas-table-extension.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
-import { computed, onErrorCaptured, ref, toRaw, watch } from "vue";
+import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
@@ -25,7 +22,6 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileField from "./form/FileField.vue";
 import FormContainer from "./form/FormContainer.vue";
-import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -130,6 +126,11 @@ async function submit() {
       props.errorHandlingStore.logErrorWithNotification(t("aasEditor.table.errorEditEntries"), e);
     }
     await props.callback({ ...data });
+    if (canGoBackToParentTable.value) {
+      await goBackToParentTable();
+    } else {
+      props.hideDrawer();
+    }
   })();
 }
 
