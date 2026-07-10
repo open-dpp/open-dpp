@@ -127,6 +127,29 @@ describe("UsersController", () => {
       const persisted = await usersRepository.findOneByEmail(newEmail);
       expect(persisted!.email).toBe(newEmail);
     });
+
+    it("creates a user from an email-only invite with empty names", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+      const newEmail = `${randomUUID()}@test.test`;
+
+      const response = await request(app.getHttpServer())
+        .post("/users")
+        .set("Cookie", adminCookie)
+        .send({ email: newEmail, firstName: "", lastName: "" });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          email: newEmail,
+          firstName: "",
+          lastName: "",
+        }),
+      );
+
+      const persisted = await usersRepository.findOneByEmail(newEmail);
+      expect(persisted!.email).toBe(newEmail);
+    });
   });
 
   describe("PATCH /users/:id/role", () => {

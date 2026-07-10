@@ -13,9 +13,9 @@ describe("CreateUserDtoSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects an empty firstName", () => {
+  it("accepts an empty firstName (names are optional for admin invites)", () => {
     const result = CreateUserDtoSchema.safeParse({ ...validInput, firstName: "" });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects a firstName longer than 100 characters", () => {
@@ -23,9 +23,9 @@ describe("CreateUserDtoSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects a whitespace-only firstName", () => {
-    const result = CreateUserDtoSchema.safeParse({ ...validInput, firstName: "   " });
-    expect(result.success).toBe(false);
+  it("accepts a whitespace-only firstName and trims it to an empty string", () => {
+    const parsed = CreateUserDtoSchema.parse({ ...validInput, firstName: "   " });
+    expect(parsed.firstName).toBe("");
   });
 
   it("accepts a firstName of exactly 100 characters", () => {
@@ -38,9 +38,9 @@ describe("CreateUserDtoSchema", () => {
     expect(parsed.firstName).toBe("Florian");
   });
 
-  it("rejects an empty lastName", () => {
+  it("accepts an empty lastName (names are optional for admin invites)", () => {
     const result = CreateUserDtoSchema.safeParse({ ...validInput, lastName: "" });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects a lastName longer than 100 characters", () => {
@@ -48,9 +48,9 @@ describe("CreateUserDtoSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects a whitespace-only lastName", () => {
-    const result = CreateUserDtoSchema.safeParse({ ...validInput, lastName: "   " });
-    expect(result.success).toBe(false);
+  it("accepts a whitespace-only lastName and trims it to an empty string", () => {
+    const parsed = CreateUserDtoSchema.parse({ ...validInput, lastName: "   " });
+    expect(parsed.lastName).toBe("");
   });
 
   it("accepts a lastName of exactly 100 characters", () => {
@@ -61,6 +61,11 @@ describe("CreateUserDtoSchema", () => {
   it("trims surrounding whitespace from lastName", () => {
     const parsed = CreateUserDtoSchema.parse({ ...validInput, lastName: "  Bieck  " });
     expect(parsed.lastName).toBe("Bieck");
+  });
+
+  it("accepts input with only an email (names omitted)", () => {
+    const result = CreateUserDtoSchema.safeParse({ email: "jane@example.com" });
+    expect(result.success).toBe(true);
   });
 
   it("rejects an invalid email", () => {
