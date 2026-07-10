@@ -51,6 +51,21 @@ describe("invitationMapper", () => {
     expect(domain.inviterId).toBe(inviterId.toHexString());
   });
 
+  it("should fall back to member for unknown roles (e.g. better-auth 'admin')", () => {
+    const domain = InvitationMapper.toDomain({
+      _id: new Types.ObjectId(),
+      email: "raw@example.com",
+      organizationId: "org-123",
+      inviterId: "user-123",
+      role: "admin",
+      status: "pending",
+      createdAt: now,
+      expiresAt: now,
+    } as any);
+
+    expect(domain.role).toBe(MemberRole.MEMBER);
+  });
+
   it("should map missing reference fields to empty strings", () => {
     const domain = InvitationMapper.toDomain({
       _id: new Types.ObjectId(),
