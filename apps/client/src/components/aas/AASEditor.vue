@@ -195,14 +195,15 @@ onUnmounted(() => {
 
 const popover = ref();
 
-function onHideDrawer() {
+async function onHideDrawer() {
   hideDrawer();
-  router.push({
+  await router.push({
     query: {
       ...route.query,
       edit: undefined,
     },
   });
+  await reloadCurrentPage();
 }
 
 function addClicked(event: any, node: TreeNode) {

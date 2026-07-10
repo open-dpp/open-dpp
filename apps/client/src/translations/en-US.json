@@ -115,6 +115,7 @@
       "column": "column",
       "row": "row",
       "rows": "{count} row | {count} rows",
+      "backToParentTable": "Back to parent table",
       "entries": "Entries",
       "emptyCell": "Please fill out",
       "removeColumn": "Should the @:aasEditor.table.column really be removed?",

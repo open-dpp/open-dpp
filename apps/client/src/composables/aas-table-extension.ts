@@ -87,6 +87,8 @@ export interface IAasTableExtension {
   resolveFieldValue: (data: Row, field: string) => Value;
   setFieldValue: (data: Row, field: string, value: Value) => void;
   openNestedTable: (rowIndex: number, column: Column) => void;
+  canGoBackToParentTable: Ref<boolean>;
+  goBackToParentTable: () => Promise<void>;
   save: () => Promise<void>;
 }
 
@@ -152,6 +154,23 @@ export function useAasTableExtension({
     });
   }
 
+  /** Opens `path`'s SubmodelElementList in the drawer, wiring its save
+   * callback to a plain `modifySubmodelElement` PATCH at that path. Shared by
+   * both drill-in (openNestedTable) and drill-out (goBackToParentTable). */
+  function openTableAtPath(path: AasEditorPath, listData: SubmodelElementListEditorProps) {
+    const formItemLabel = translate(`${translatePrefix}.submodelElementList`);
+    openDrawer({
+      type: KeyTypes.SubmodelElementList,
+      data: listData,
+      mode: EditorMode.EDIT,
+      title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
+      path,
+      callback: async (modData: SubmodelElementModificationDto) => {
+        await aasNamespace.modifySubmodelElement(id, path.submodelId!, path.idShortPath!, modData);
+      },
+    });
+  }
+
   /** Drills into a "Table" column's cell: opens the same editor, recursively,
    * scoped to that row's nested SubmodelElementList. */
   function openNestedTable(rowIndex: number, column: Column) {
@@ -166,23 +185,25 @@ export function useAasTableExtension({
       submodelId: pathToList.submodelId,
       idShortPath: `${pathToList.idShortPath}.${rowIdShort}.${column.idShort}`,
       idShortPathIncludingSubmodel: `${pathToList.idShortPathIncludingSubmodel}.${rowIdShort}.${column.idShort}`,
+      parentTablePath: pathToList,
     };
-    const formItemLabel = translate(`${translatePrefix}.submodelElementList`);
-    openDrawer({
-      type: KeyTypes.SubmodelElementList,
-      data: nestedListData,
-      mode: EditorMode.EDIT,
-      title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
-      path: nestedPath,
-      callback: async (modData: SubmodelElementModificationDto) => {
-        await aasNamespace.modifySubmodelElement(
-          id,
-          nestedPath.submodelId!,
-          nestedPath.idShortPath!,
-          modData,
-        );
-      },
-    });
+    openTableAtPath(nestedPath, nestedListData);
+  }
+
+  const canGoBackToParentTable = computed(() => !!pathToList.parentTablePath);
+
+  /** Navigates back up to the parent table this list was drilled into from,
+   * re-fetching its current data so the view reflects any changes made
+   * elsewhere in the meantime. */
+  async function goBackToParentTable() {
+    const parentPath = pathToList.parentTablePath;
+    if (!parentPath?.submodelId || !parentPath.idShortPath) return;
+    const response = await aasNamespace.getSubmodelElementById(
+      id,
+      parentPath.submodelId,
+      parentPath.idShortPath,
+    );
+    openTableAtPath(parentPath, SubmodelElementListJsonSchema.parse(response.data));
   }
 
   async function onCreateColumn(
@@ -420,6 +441,8 @@ export function useAasTableExtension({
     resolveFieldValue,
     setFieldValue,
     openNestedTable,
+    canGoBackToParentTable,
+    goBackToParentTable,
     save,
     buildColumnMenu,
     buildRowMenu,

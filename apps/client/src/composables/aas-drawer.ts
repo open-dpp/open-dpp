@@ -124,6 +124,9 @@ export interface AasEditorPath {
   submodelId?: string;
   idShortPath?: string;
   idShortPathIncludingSubmodel?: string;
+  /** Set when this path was reached by drilling into a Table column's cell
+   * — lets the nested SubmodelElementListEditor navigate back up. */
+  parentTablePath?: AasEditorPath;
 }
 
 type callbackType = (data: any) => Promise<void>;

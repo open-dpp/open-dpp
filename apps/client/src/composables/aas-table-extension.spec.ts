@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => {
     moveColumnToGroupInSubmodelElementList: vi.fn(),
     createGroupFromColumnInSubmodelElementList: vi.fn(),
     modifySubmodelElement: vi.fn(),
+    getSubmodelElementById: vi.fn(),
   };
 });
 
@@ -62,6 +63,7 @@ vi.mock("../lib/api-client", () => ({
           createGroupFromColumnInSubmodelElementList:
             mocks.createGroupFromColumnInSubmodelElementList,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          getSubmodelElementById: mocks.getSubmodelElementById,
         },
       },
     },
@@ -507,6 +509,7 @@ describe("aasTableExtension composable", () => {
       submodelId: "s1",
       idShortPath: "Path.To.List.row0.Table1",
       idShortPathIncludingSubmodel: "s1p.Path.To.List.row0.Table1",
+      parentTablePath: pathToList,
     });
     expect(editorVNode.value!.props.data).toEqual({
       ...SubmodelElementListJsonSchema.parse(nestedTable),
@@ -515,8 +518,77 @@ describe("aasTableExtension composable", () => {
 
     mocks.modifySubmodelElement.mockResolvedValue({ data: {}, status: HTTPCode.OK });
     await editorVNode.value!.props.callback!({ idShort: "Table1" });
-    expect(mocks.modifySubmodelElement).toHaveBeenCalledWith(aasId, "s1", "Path.To.List.row0.Table1", {
+    expect(mocks.modifySubmodelElement).toHaveBeenCalledWith(
+      aasId,
+      "s1",
+      "Path.To.List.row0.Table1",
+      {
+        idShort: "Table1",
+      },
+    );
+  });
+
+  it("goBackToParentTable re-fetches and re-opens the parent table", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
+
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
+    });
+    const parentPath = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
+    const nestedPath = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List.row0.Table1",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List.row0.Table1",
+      parentTablePath: parentPath,
+    };
+    const nestedTableInitialData = SubmodelElementListJsonSchema.parse({
       idShort: "Table1",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      value: [],
+    });
+
+    const { canGoBackToParentTable, goBackToParentTable } = useAasTableExtension({
+      id: aasId,
+      pathToList: nestedPath,
+      initialData: nestedTableInitialData,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+
+    expect(canGoBackToParentTable.value).toBe(true);
+
+    const refetchedParentList = {
+      idShort: "List",
+      modelType: AasSubmodelElements.SubmodelElementList,
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      value: [],
+    };
+    mocks.getSubmodelElementById.mockResolvedValue({
+      data: refetchedParentList,
+      status: HTTPCode.OK,
+    });
+
+    await goBackToParentTable();
+
+    expect(mocks.getSubmodelElementById).toHaveBeenCalledWith(aasId, "s1", "Path.To.List");
+    expect(drawerVisible.value).toBeTruthy();
+    expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
+    expect(editorVNode.value!.props.path).toEqual(parentPath);
+    expect(editorVNode.value!.props.data).toEqual({
+      ...SubmodelElementListJsonSchema.parse(refetchedParentList),
+      modelType: KeyTypes.SubmodelElementList,
     });
   });
 

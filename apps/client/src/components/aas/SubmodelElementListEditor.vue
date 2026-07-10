@@ -91,6 +91,8 @@ const {
   resolveFieldValue,
   setFieldValue,
   openNestedTable,
+  canGoBackToParentTable,
+  goBackToParentTable,
   save,
 } = useAasTableExtension({
   id: props.id,
@@ -178,6 +180,17 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
 
 <template>
   <div class="flex flex-col gap-1 p-2">
+    <Button
+      v-if="canGoBackToParentTable"
+      data-cy="back-to-parent-table"
+      :label="t('aasEditor.table.backToParentTable')"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      size="small"
+      outlined
+      class="self-start"
+      @click="goBackToParentTable"
+    />
     <FormContainer>
       <SubmodelBaseForm
         :show-errors="showErrors"

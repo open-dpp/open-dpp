@@ -115,6 +115,7 @@
       "column": "Spalte",
       "row": "Zeile",
       "rows": "{count} Zeile | {count} Zeilen",
+      "backToParentTable": "Zurück zur übergeordneten Tabelle",
       "entries": "Einträge",
       "emptyCell": "Bitte ausfüllen",
       "addRowAbove": "@:aasEditor.table.row oberhalb @.lower:common.add",
