@@ -29,10 +29,11 @@ export function computeProfileDiff(
   original: ProfileFormValues,
 ): UpdateProfileDto {
   const diff: UpdateProfileDto = {};
-  if (formValues.firstName && formValues.firstName !== original.firstName) {
+  // Diff on !== original (not truthiness) so clearing a name to "" is a real change.
+  if (formValues.firstName !== undefined && formValues.firstName !== original.firstName) {
     diff.firstName = formValues.firstName;
   }
-  if (formValues.lastName && formValues.lastName !== original.lastName) {
+  if (formValues.lastName !== undefined && formValues.lastName !== original.lastName) {
     diff.lastName = formValues.lastName;
   }
   if (formValues.preferredLanguage && formValues.preferredLanguage !== original.preferredLanguage) {

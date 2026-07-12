@@ -12,9 +12,9 @@ describe("updateProfileDto", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects an empty firstName", () => {
+  it("accepts an empty firstName (cleared name)", () => {
     const result = UpdateProfileDtoSchema.safeParse({ firstName: "" });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects a firstName longer than 100 characters", () => {
@@ -32,9 +32,9 @@ describe("updateProfileDto", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects an empty lastName", () => {
+  it("accepts an empty lastName (cleared name)", () => {
     const result = UpdateProfileDtoSchema.safeParse({ lastName: "" });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects a lastName longer than 100 characters", () => {
@@ -71,8 +71,9 @@ describe("updateProfileDto", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects whitespace-only firstName", () => {
-    expect(() => UpdateProfileDtoSchema.parse({ firstName: "   " })).toThrow();
+  it("collapses whitespace-only firstName to an empty (cleared) name", () => {
+    const parsed = UpdateProfileDtoSchema.parse({ firstName: "   " });
+    expect(parsed.firstName).toBe("");
   });
 
   it("trims surrounding whitespace from firstName", () => {
@@ -80,8 +81,9 @@ describe("updateProfileDto", () => {
     expect(parsed.firstName).toBe("Florian");
   });
 
-  it("rejects whitespace-only lastName", () => {
-    expect(() => UpdateProfileDtoSchema.parse({ lastName: "   " })).toThrow();
+  it("collapses whitespace-only lastName to an empty (cleared) name", () => {
+    const parsed = UpdateProfileDtoSchema.parse({ lastName: "   " });
+    expect(parsed.lastName).toBe("");
   });
 
   it("trims surrounding whitespace from lastName", () => {

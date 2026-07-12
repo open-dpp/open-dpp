@@ -88,14 +88,23 @@ describe("computeProfileDiff", () => {
     });
   });
 
-  it("excludes empty firstName even if different from original (treats empty as no-change)", () => {
+  it("includes empty firstName as a clear when original was non-empty", () => {
     const diff = computeProfileDiff({ ...baseFormValues, firstName: "" }, baseFormValues);
-    expect(diff).toEqual({});
+    expect(diff).toEqual({ firstName: "" });
   });
 
-  it("excludes empty lastName even if different from original", () => {
+  it("includes empty lastName as a clear when original was non-empty", () => {
     const diff = computeProfileDiff({ ...baseFormValues, lastName: "" }, baseFormValues);
-    expect(diff).toEqual({});
+    expect(diff).toEqual({ lastName: "" });
+  });
+
+  it("keeps an empty-name diff clean when only language changes (empty === empty)", () => {
+    const emptyOriginal: ProfileFormValues = { ...baseFormValues, firstName: "", lastName: "" };
+    const diff = computeProfileDiff(
+      { ...emptyOriginal, preferredLanguage: Language.de },
+      emptyOriginal,
+    );
+    expect(diff).toEqual({ preferredLanguage: Language.de });
   });
 
   it("ignores email field (handled by separate flow)", () => {
