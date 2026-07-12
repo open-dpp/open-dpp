@@ -231,6 +231,31 @@ describe("UsersController", () => {
     });
   });
 
+  describe("signup preferredLanguage validation", () => {
+    it("rejects signup with an unsupported preferredLanguage at the boundary", async () => {
+      await expect(
+        betterAuthHelper.createUser({ preferredLanguage: "fr" }),
+      ).rejects.toThrow();
+    });
+
+    it("persists a valid preferredLanguage supplied at signup", async () => {
+      const { user } = await betterAuthHelper.createUser({ preferredLanguage: "de" });
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .get("/users/me")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body.user).toEqual(
+        expect.objectContaining({ id: user.id, preferredLanguage: "de" }),
+      );
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.preferredLanguage).toBe("de");
+    });
+  });
+
   describe("PATCH /users/me", () => {
     it("returns 403 when no session is present", async () => {
       const response = await request(app.getHttpServer())
@@ -264,7 +289,7 @@ describe("UsersController", () => {
       expect(persisted!.preferredLanguage).toBe("de");
     });
 
-    it("rejects an empty firstName with 400", async () => {
+    it("accepts an empty firstName and clears it (admin-invited users can save)", async () => {
       const { user } = await betterAuthHelper.createUser();
       const userCookie = await betterAuthHelper.signAsUser(user.id);
 
@@ -273,7 +298,11 @@ describe("UsersController", () => {
         .set("Cookie", userCookie)
         .send({ firstName: "" });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
+      expect(response.body.user.firstName).toBe("");
+
+      const persisted = await usersRepository.findOneById(user.id);
+      expect(persisted!.firstName).toBe("");
     });
 
     it("rejects an unsupported language with 400", async () => {

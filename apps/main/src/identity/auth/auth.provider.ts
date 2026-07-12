@@ -20,7 +20,7 @@ import {
 } from "../email-change-requests/infrastructure/email-change-hooks";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { LanguageEnum, LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
 
@@ -175,6 +175,7 @@ export const AuthProvider: Provider = {
             required: false,
             input: true,
             defaultValue: "en",
+            validator: { input: LanguageEnum },
           },
         },
         changeEmail: {
