@@ -13,51 +13,12 @@ export const useMediaStore = defineStore("media", () => {
     return apiClient.media.media.uploadGeneralMedia(file, onUploadProgress);
   };
 
-  const uploadDppMedia = async (
-    uuid: string,
-    dataFieldId: string,
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> => {
-    return apiClient.media.media.uploadDppMedia(uuid, dataFieldId, file, onUploadProgress);
-  };
-
-  const getDppMediaInfo = async (
-    uuid: string | undefined,
-    dataFieldId: string,
-  ): Promise<MediaInfo> => {
-    if (!uuid) {
-      throw new Error("No UUID provided");
-    }
-    const response = await apiClient.media.media.getMediaInfoOfDataField(uuid, dataFieldId);
-    return response.data;
-  };
-
   const getMediaInfo = async (id: string | undefined): Promise<MediaInfo> => {
     if (!id) {
       throw new Error("No ID provided");
     }
     const response = await apiClient.media.media.getMediaInfo(id);
     return response.data;
-  };
-
-  const downloadDppMedia = async (uuid: string | undefined, dataFieldId: string): Promise<Blob> => {
-    if (!uuid) {
-      throw new Error("No UUID provided");
-    }
-    const response = await apiClient.media.media.downloadMediaOfDataField(uuid, dataFieldId);
-    return response.data;
-  };
-
-  const fetchDppMedia = async (
-    uuid: string | undefined,
-    dataFieldId: string,
-  ): Promise<{ blob: Blob; mediaInfo: MediaInfo }> => {
-    const [info, blob] = await Promise.all([
-      getDppMediaInfo(uuid, dataFieldId),
-      downloadDppMedia(uuid, dataFieldId),
-    ]);
-    return { blob, mediaInfo: info };
   };
 
   const downloadMedia = async (id: string): Promise<Blob | null> => {
@@ -77,6 +38,19 @@ export const useMediaStore = defineStore("media", () => {
     return { blob, mediaInfo: info };
   };
 
+  // ADR 0006 (Design C): public file media is gated through the permalink,
+  // so access dies with the permalink — mirrors fetchMedia but routes by-id.
+  const fetchPermalinkMedia = async (
+    permalinkIdOrSlug: string,
+    mediaId: string,
+  ): Promise<MediaResult> => {
+    const [infoResponse, blobResponse] = await Promise.all([
+      apiClient.media.media.getPermalinkMediaInfo(permalinkIdOrSlug, mediaId),
+      apiClient.media.media.downloadPermalinkMedia(permalinkIdOrSlug, mediaId),
+    ]);
+    return { blob: blobResponse.data, mediaInfo: infoResponse.data };
+  };
+
   const fetchMediaByOrganizationId = async (): Promise<Array<MediaInfo>> => {
     const response = await apiClient.media.media.getMediaInfoByOrganization();
     const media = response.data as Array<MediaInfo>;
@@ -89,16 +63,13 @@ export const useMediaStore = defineStore("media", () => {
   };
 
   return {
-    getDppMediaInfo,
-    downloadDppMedia,
-    fetchDppMedia,
     fetchMediaByOrganizationId,
     downloadMedia,
     getMediaInfo,
     fetchMedia,
+    fetchPermalinkMedia,
     uploadMedia,
     deleteMedia,
-    uploadDppMedia,
     organizationMedia,
   };
 });

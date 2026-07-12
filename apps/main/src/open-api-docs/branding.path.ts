@@ -1,10 +1,16 @@
 import { BrandingDtoSchema } from "@open-dpp/dto";
+import { z } from "zod";
 import { HTTPCode } from "./http.codes";
 import { ContentType } from "./content.types";
 
 const tag = "branding";
 
 const orgaIdHeader = { $ref: "#/components/parameters/OrganizationIdHeader" };
+
+const logoMediaIdParamSchema = z.string().meta({
+  description: "Id of the media designated as the organization's branding logo",
+  param: { in: "path", name: "mediaId" },
+});
 
 export const brandingPaths = {
   "/branding": {
@@ -71,6 +77,29 @@ export const brandingPaths = {
               schema: { type: "string", format: "binary" },
             },
             [ContentType.SVG]: {
+              schema: { type: "string", format: "binary" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/branding/logo/{mediaId}": {
+    get: {
+      tags: [tag],
+      summary:
+        "Public organization logo image. Anonymous, but serves the media only when it is its owning organization's branding logo.",
+      parameters: [logoMediaIdParamSchema],
+      responses: {
+        [HTTPCode.OK]: {
+          content: {
+            [ContentType.PNG]: {
+              schema: { type: "string", format: "binary" },
+            },
+            [ContentType.JPEG]: {
+              schema: { type: "string", format: "binary" },
+            },
+            [ContentType.WEBP]: {
               schema: { type: "string", format: "binary" },
             },
           },

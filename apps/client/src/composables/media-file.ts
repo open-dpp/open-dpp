@@ -9,12 +9,14 @@ export function useMediaFile() {
   const mediaStore = useMediaStore();
   const notFound = ref(false);
 
-  async function download(mediaId: string) {
+  async function download(mediaId: string, permalinkIdOrSlug?: string) {
     try {
       if (fileUrl.value) {
         URL.revokeObjectURL(fileUrl.value);
       }
-      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(mediaId);
+      const { blob, mediaInfo: fetchedMediaInfo } = permalinkIdOrSlug
+        ? await mediaStore.fetchPermalinkMedia(permalinkIdOrSlug, mediaId)
+        : await mediaStore.fetchMedia(mediaId);
 
       if (blob) {
         fileUrl.value = URL.createObjectURL(blob);

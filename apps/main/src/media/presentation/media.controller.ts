@@ -6,6 +6,7 @@ import {
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
+  NotFoundException,
   Param,
   ParseFilePipe,
   Post,
@@ -16,98 +17,21 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { Session } from "../../identity/auth/domain/session";
-import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { MembersService } from "../../identity/organizations/application/services/members.service";
 import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
+import { PublicMediaInfo, streamMedia, toPublicMediaInfo } from "./media-response.util";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
 @Controller("media")
 export class MediaController {
-  private readonly filesService: MediaService;
-
-  constructor(filesService: MediaService) {
-    this.filesService = filesService;
-  }
-
-  @Post("dpp/:upi/:dataFieldId")
-  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
-  @UseInterceptors(
-    FileInterceptor("file", {
-      storage: memoryStorage(),
-    }),
-  )
-  async uploadDppFile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({
-            maxSize: 15 * 1024 * 1024 /* max 15MB */,
-          }),
-          new FileTypeValidator({
-            fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
-          }),
-          new VirusScanFileValidator({ storageType: "memory" }),
-        ],
-      }),
-    )
-    file: Express.Multer.File,
-    @OrganizationId() orgId: string,
-    @Param("upi") upi: string,
-    @Param("dataFieldId") dataFieldId: string,
-    @AuthSession() session: Session,
-  ): Promise<{
-    mediaId: string;
-  }> {
-    const media = await this.filesService.uploadFileOfProductPassport(
-      file.originalname,
-      file.buffer,
-      dataFieldId,
-      upi,
-      session.userId,
-      orgId,
-    );
-    return {
-      mediaId: media.id,
-    };
-  }
-
-  @Get("dpp/:upi/:dataFieldId/info")
-  @AllowAnonymous()
-  async getDppFileInfo(
-    @Param("upi") upi: string,
-    @Param("dataFieldId") dataFieldId: string,
-  ): Promise<Media> {
-    return this.filesService.findOneDppFileOrFail(dataFieldId, upi);
-  }
-
-  @Get("dpp/:upi/:dataFieldId/download")
-  @AllowAnonymous()
-  async streamDppFile(
-    @Param("upi") upi: string,
-    @Param("dataFieldId") dataFieldId: string,
-    @Res() res: express.Response,
-  ): Promise<void> {
-    try {
-      const result = await this.filesService.getFilestreamOfProductPassport(dataFieldId, upi);
-      res.setHeader("Content-Type", result.media.mimeType);
-      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
-      if (result.media.updatedAt) {
-        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
-      }
-      res.setHeader("Cache-Control", "private, max-age=31536000");
-      result.stream.pipe(res);
-      result.stream.on("error", () => {
-        if (!res.headersSent) {
-          res.status(500).json({ error: "Failed to retrieve file" });
-        }
-      });
-    } catch {
-      res.status(404).json({ error: "File not found" });
-    }
-  }
+  constructor(
+    private readonly filesService: MediaService,
+    private readonly membersService: MembersService,
+  ) {}
 
   @Get("by-organization")
   async getFileInfoByOrganization(@OrganizationId() organizationId: string): Promise<Array<Media>> {
@@ -115,36 +39,52 @@ export class MediaController {
   }
 
   @Get(":id/download")
-  @AllowAnonymous()
-  async streamFile(@Param("id") id: string, @Res() res: express.Response): Promise<void> {
+  async streamFile(
+    @Param("id") id: string,
+    @AuthSession() session: Session,
+    @Res() res: express.Response,
+  ): Promise<void> {
     try {
-      const result = await this.filesService.getFilestreamById(id);
-      res.setHeader("Content-Type", result.media.mimeType);
-      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
-      if (result.media.updatedAt) {
-        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
-      }
-      res.setHeader("Cache-Control", "private, max-age=31536000");
-      result.stream.pipe(res);
-      result.stream.on("error", () => {
-        if (!res.headersSent) {
-          res.status(500).json({ error: "Failed to retrieve file" });
-        }
-      });
+      const media = await this.loadMediaForMember(id, session.userId);
+      const stream = await this.filesService.getFilestreamOfMedia(media);
+      streamMedia(res, media, stream);
     } catch {
       res.status(404).json({ error: "File not found" });
     }
   }
 
   @Get(":id/info")
-  @AllowAnonymous()
-  async getMediaInfo(@Param("id") id: string): Promise<Media> {
-    return await this.filesService.findOneOrFail(id);
+  async getMediaInfo(
+    @Param("id") id: string,
+    @AuthSession() session: Session,
+  ): Promise<PublicMediaInfo> {
+    return toPublicMediaInfo(await this.loadMediaForMember(id, session.userId));
   }
 
   @Delete(":id")
-  async deleteFile(@Param("id") id: string) {
-    return await this.filesService.deleteFileById(id);
+  async deleteFile(@Param("id") id: string, @AuthSession() session: Session) {
+    const media = await this.loadMediaForMember(id, session.userId);
+    return await this.filesService.deleteFileById(media.id);
+  }
+
+  /**
+   * Load a media by id, but only if the caller is a member of the media's OWNING organization
+   * (derived from `media.ownedByOrganizationId`, not the request's active-org header — avoids the
+   * cross-tenant IDOR where any authenticated user reads another org's media by id). 404 otherwise.
+   */
+  private async loadMediaForMember(id: string, userId: string): Promise<Media> {
+    let media: Media;
+    try {
+      media = await this.filesService.findOneOrFail(id);
+    } catch {
+      // Collapse "does not exist" into the same 404 as "not a member" so the response shape
+      // cannot be used to enumerate which mediaIds exist.
+      throw new NotFoundException("Media not found");
+    }
+    if (!(await this.membersService.isMemberOfOrganization(userId, media.ownedByOrganizationId))) {
+      throw new NotFoundException("Media not found");
+    }
+    return media;
   }
 
   @Post("upload")

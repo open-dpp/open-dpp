@@ -11,7 +11,6 @@ import { Server, Socket } from "socket.io";
 import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/websocket-auth.guard";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
-import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ChatService } from "../chat.service";
 
 @UseGuards(WebsocketAuthGuard)
@@ -26,7 +25,6 @@ export class ChatGateway {
   constructor(
     private readonly chatService: ChatService,
     private readonly permalinkApplicationService: PermalinkApplicationService,
-    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
   @OptionalAuth()
@@ -46,17 +44,11 @@ export class ChatGateway {
           memberRole: client.data.member?.role,
         },
       );
-      const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(passport.id);
-      if (!upi) {
-        this.logger.error(
-          `No UniqueProductIdentifier found for passport ${passport.id} (permalink=${message.permalink})`,
-        );
-        throw new Error("No product identifier found for the provided permalink");
-      }
 
+      // ADR 0006: pass the resolved passportId straight to the agent — no canonical UPI hop.
       const reply = await this.chatService.askAgent(
         message.msg,
-        upi.uuid,
+        passport.id,
         client.data.user,
         client.data.member,
       );

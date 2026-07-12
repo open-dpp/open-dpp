@@ -6,7 +6,9 @@ import type {
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import PresentationComponentRenderer from "./components/PresentationComponentRenderer.vue";
@@ -21,6 +23,9 @@ const { element, path, config } = defineProps<{
 }>();
 
 const { t } = useI18n();
+const route = useRoute();
+// Public media must be gated through the permalink (ADR 0006): access dies with the permalink.
+const permalinkIdOrSlug = computed(() => String(route.params.permalink ?? ""));
 </script>
 
 <template>
@@ -54,6 +59,7 @@ const { t } = useI18n();
     <MediaFieldView
       v-else-if="element.modelType === 'File' && typeof element.value === 'string'"
       :media-id="element.value"
+      :permalink-id-or-slug="permalinkIdOrSlug"
     />
     <List
       v-else-if="element.modelType === 'SubmodelElementList'"

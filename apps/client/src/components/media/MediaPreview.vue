@@ -6,7 +6,7 @@ import {
   PhotoIcon,
   VideoCameraIcon,
 } from "@heroicons/vue/24/solid";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import RingLoader from "../navigation/RingLoader.vue";
@@ -16,20 +16,33 @@ const props = withDefaults(
     media: MediaInfo;
     showType?: boolean;
     preview?: boolean;
+    objectUrl?: string | null;
   }>(),
   { preview: true },
 );
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 
-const url = ref<string | null>(null);
-const loading = ref<boolean>(true);
+// When a parent passes objectUrl (e.g. the permalink-gated MediaFieldView on the public page), use
+// it directly and never fetch by bare id — /media/:id is authenticated. The parent owns that URL's
+// lifecycle, so we must not revoke it here.
+const usesProvidedUrl = computed(() => props.objectUrl !== undefined);
+const internalUrl = ref<string | null>(null);
+const loading = ref<boolean>(!usesProvidedUrl.value);
+const url = computed(() => (usesProvidedUrl.value ? (props.objectUrl ?? null) : internalUrl.value));
 
 async function loadMedia(media: MediaInfo) {
+  if (usesProvidedUrl.value) {
+    return;
+  }
   loading.value = true;
+  if (internalUrl.value) {
+    URL.revokeObjectURL(internalUrl.value);
+    internalUrl.value = null;
+  }
   const blob = await mediaStore.downloadMedia(media.id);
   if (blob) {
-    url.value = URL.createObjectURL(blob);
+    internalUrl.value = URL.createObjectURL(blob);
   }
   loading.value = false;
 }
@@ -39,8 +52,8 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (url.value) {
-    URL.revokeObjectURL(url.value);
+  if (internalUrl.value) {
+    URL.revokeObjectURL(internalUrl.value);
   }
 });
 
