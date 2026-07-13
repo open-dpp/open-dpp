@@ -172,6 +172,8 @@ function handleEmailKeydown(event: KeyboardEvent) {
     return;
   }
   if (event.key === "Enter") {
+    // Enter on a button must trigger its own action (Cancel / Send), not submit.
+    if ((event.target as HTMLElement)?.closest("button")) return;
     event.preventDefault();
     void sendVerification();
   }
@@ -318,6 +320,7 @@ function handleEmailKeydown(event: KeyboardEvent) {
             severity="secondary"
             :label="t('user.cancel')"
             :disabled="emailSubmitting"
+            data-testid="cancel-email-change"
             @click="closeEmailPanel"
           />
           <Button
