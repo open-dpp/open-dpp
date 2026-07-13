@@ -3,7 +3,6 @@ import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
 import { ConsoleLogger, Logger, ValidationPipe, VersioningType } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import type { NestExpressApplication } from "@nestjs/platform-express";
 import { EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -40,15 +39,13 @@ async function bootstrap() {
   const logFormat = process.env.OPEN_DPP_LOG_FORMAT || "plain";
   const useJsonLogging = logFormat === "json";
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+  const app = await NestFactory.create(AppModule, {
     bodyParser: false,
     logger: new ConsoleLogger({
       json: useJsonLogging,
       logLevels: ["log", "error", "warn", "debug", "verbose"],
     }),
   });
-
-  app.set("trust proxy", 1);
 
   const envService = app.get(EnvService);
   const logger = new Logger("Bootstrap");
