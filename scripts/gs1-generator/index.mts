@@ -324,9 +324,7 @@ ${body}
 function buildConstantsSource(kinds: KindSpec[], meta: Provenance): string {
   const sections = kinds
     .map(({ constName, doc, members }) => {
-      const body = members
-        .map(({ name, entry }) => `  ${name}: ${q(entry.ai)},`)
-        .join("\n");
+      const body = members.map(({ name, entry }) => `  ${name}: ${q(entry.ai)},`).join("\n");
       return `/** ${doc} */
 export const ${constName} = {
 ${body}
