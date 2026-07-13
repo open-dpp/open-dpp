@@ -10,8 +10,11 @@ describe("ensureAdminSeeded", () => {
     OPEN_DPP_AUTH_ADMIN_PASSWORD: "super-secret-password",
   } as Record<string, string | undefined>;
 
-  let findOne: jest.Mock;
-  let createUser: jest.Mock;
+  type FindOneFn = (...args: unknown[]) => Promise<{ _id: string } | null>;
+  type CreateUserFn = (...args: unknown[]) => Promise<unknown>;
+
+  let findOne: jest.Mock<FindOneFn>;
+  let createUser: jest.Mock<CreateUserFn>;
   let collection: jest.Mock;
   let db: Db;
   let auth: { api: Record<string, any> };
@@ -22,8 +25,8 @@ describe("ensureAdminSeeded", () => {
   }
 
   beforeEach(() => {
-    findOne = jest.fn();
-    createUser = jest.fn();
+    findOne = jest.fn<FindOneFn>();
+    createUser = jest.fn<CreateUserFn>();
     collection = jest.fn(() => ({ findOne }));
     db = { collection } as unknown as Db;
     auth = { api: { createUser } };
