@@ -1,15 +1,21 @@
-import { expect, it } from "@jest/globals";
-import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { beforeAll, expect, it } from "@jest/globals";
+import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
+import { Property } from "../submodel-base/property";
+import { registerSubmodelElementClasses } from "../submodel-base/register-submodel-element-classes";
+import { Submodel } from "../submodel-base/submodel";
+import { SubmodelElementCollection } from "../submodel-base/submodel-element-collection";
+import { SubmodelElementList } from "../submodel-base/submodel-element-list";
 import { createAasObject } from "./aas-object";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { Security } from "./security";
 import { SubjectAttributes } from "./subject-attributes";
+import { SubmodelSecurityContext } from "./submodel-security-context";
 import { PolicyDeleted } from "../../../activity-history/domain/change-events/policy-deleted";
 import { ChangeTracker } from "../../../activity-history/domain/change-tracker";
 import { PolicyAdded } from "../../../activity-history/domain/change-events/policy-added";
@@ -17,6 +23,31 @@ import { PolicyModified } from "../../../activity-history/domain/change-events/p
 
 describe("security", () => {
   const policyManagementError = "Administrator has no permission to add/ modify/ delete policy.";
+
+  beforeAll(() => {
+    registerSubmodelElementClasses();
+  });
+
+  function createSubmodelWithTable() {
+    return Submodel.create({
+      idShort: "section1",
+      submodelElements: [
+        SubmodelElementList.create({
+          idShort: "table1",
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          value: [
+            SubmodelElementCollection.create({
+              idShort: "row1",
+              value: [
+                Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
   it("create security schema and checks permissions", () => {
     const security = Security.create({});
     security.addPolicy(
@@ -332,6 +363,87 @@ describe("security", () => {
               }),
               Permission.create({
                 permission: Permissions.Edit,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("should reject applying rules that target an element inside a table", () => {
+    const security = Security.create({});
+    const submodelSecurityContext = SubmodelSecurityContext.create({
+      submodels: [createSubmodelWithTable()],
+    });
+    const modifications = [
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1.table1.row1.col1" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+    expect(() => security.applyModifiedRules(modifications, submodelSecurityContext)).toThrow(
+      ValueError,
+    );
+    expect(
+      security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER })),
+    ).toEqual([]);
+  });
+
+  it("should skip unresolvable targets while still applying the rest of the batch", () => {
+    const security = Security.create({});
+    const submodelSecurityContext = SubmodelSecurityContext.create({
+      submodels: [createSubmodelWithTable()],
+    });
+    const modifications = [
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1.doesNotExist" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+    expect(() => security.applyModifiedRules(modifications, submodelSecurityContext)).not.toThrow();
+    expect(
+      security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER })),
+    ).toEqual([
+      {
+        tracker: expect.any(ChangeTracker),
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        _permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
                 kindOfPermission: PermissionKind.Allow,
               }),
             ],

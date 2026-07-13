@@ -242,10 +242,17 @@ describe("environmentService", () => {
       IdShortPath.create({ path: "section1" }),
       [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
     );
+    const submodel = Submodel.create({ idShort: "section1" });
+    await submodelRepository.save(submodel);
+
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    assetAdministrationShell.addSubmodelReference(submodelToReference(submodel));
+
     await aasRepository.save(assetAdministrationShell);
+
     const environment = Environment.create({
       assetAdministrationShells: [assetAdministrationShell.id],
+      submodels: [submodel.id],
     });
 
     const transientParams: SecurityPlainTransientParams = {
@@ -374,10 +381,15 @@ describe("environmentService", () => {
         }),
       ],
     );
+    const submodel = Submodel.create({ idShort: "section1" });
+    await submodelRepository.save(submodel);
+
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    assetAdministrationShell.addSubmodelReference(submodelToReference(submodel));
     await aasRepository.save(assetAdministrationShell);
     const environment = Environment.create({
       assetAdministrationShells: [assetAdministrationShell.id],
+      submodels: [submodel.id],
     });
 
     const transientParams: SecurityPlainTransientParams = {
@@ -1453,6 +1465,74 @@ describe("environmentService", () => {
         }),
       },
     ]);
+  });
+
+  it("should reject a policy targeting an element inside a table", async () => {
+    const { environment, admin, submodel1, submodelElementList, row1, col1 } =
+      await createEnvironmentWithList();
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
+          object: {
+            idShortPath: `${submodel1.idShort}.${submodelElementList.idShort}.${row1.idShort}.${col1.idShort}`,
+          },
+          permissions: [{ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }],
+        },
+      ],
+    };
+
+    await expect(
+      environmentService.modifyAasShell(
+        randomUUID(),
+        randomUUID(),
+        environment,
+        environment.assetAdministrationShells[0],
+        { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
+        admin,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("should allow a policy targeting a top-level table itself", async () => {
+    const { environment, admin, member, submodel1, submodelElementList } =
+      await createEnvironmentWithList();
+    const targetIdShortPath = `${submodel1.idShort}.${submodelElementList.idShort}`;
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
+          object: { idShortPath: targetIdShortPath },
+          permissions: [{ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }],
+        },
+      ],
+    };
+
+    await environmentService.modifyAasShell(
+      randomUUID(),
+      randomUUID(),
+      environment,
+      environment.assetAdministrationShells[0],
+      { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
+      admin,
+    );
+
+    const foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
+    const rule = foundAas.security.findPoliciesBySubject(member.subject)[0];
+    const targetPolicy = rule.permissionsPerObject.find(
+      (p) => p.object.idShort === targetIdShortPath,
+    );
+    expect(targetPolicy).toEqual(
+      PermissionPerObject.create({
+        object: createAasObject(IdShortPath.create({ path: targetIdShortPath })),
+        permissions: [
+          Permission.create({
+            permission: Permissions.Read,
+            kindOfPermission: PermissionKind.Allow,
+          }),
+        ],
+      }),
+    );
   });
 
   it("should modify value of submodel element", async () => {

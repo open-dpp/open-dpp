@@ -42,6 +42,7 @@ import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
+import { SubmodelSecurityContext } from "../domain/security/submodel-security-context";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
@@ -216,7 +217,20 @@ export class EnvironmentService {
   ): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
     const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
-    aas.withTracking().modify(modification, { subject: userContext.subject, ability });
+
+    let submodelSecurityContext: SubmodelSecurityContext | undefined;
+    if (modification.security) {
+      const submodelMap = await this.submodelRepository.findByIds(environment.submodels);
+      submodelSecurityContext = SubmodelSecurityContext.create({
+        submodels: [...submodelMap.values()],
+      });
+    }
+
+    aas.withTracking().modify(modification, {
+      subject: userContext.subject,
+      ability,
+      submodelSecurityContext,
+    });
     const activity = AssetAdministrationShellModifiedActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,

@@ -77,7 +77,7 @@ import { Permission } from "../domain/security/permission";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
-import { Submodel } from "../domain/submodel-base/submodel";
+import { Submodel, submodelToReference } from "../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { TableExtension } from "../domain/submodel-base/table/table-extension";
@@ -497,13 +497,18 @@ export function createAasTestContext<T>(
   }
 
   async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const entity = await createEntity(org.id);
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
     const newAas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
     });
+    const submodel = Submodel.create({ idShort: "section1" });
+    await submodelRepository.save(submodel);
+    newAas.addSubmodelReference(submodelToReference(submodel));
+
     await aasRepository.save(newAas);
     entity.getEnvironment().addAssetAdministrationShell(newAas);
+    entity.getEnvironment().addSubmodel(submodel);
     await saveEntity(entity);
 
     const transientParams: SecurityPlainTransientParams = {
@@ -541,7 +546,7 @@ export function createAasTestContext<T>(
     const response = await request(app.getHttpServer())
       .patch(`${basePathV2}/${entity.id}/shells/${btoa(newAas.id)}`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(body);
     expect(response.status).toEqual(200);
     expect(response.body.displayName).toEqual(newDisplayName);
