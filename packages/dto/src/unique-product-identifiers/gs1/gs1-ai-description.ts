@@ -1,10 +1,4 @@
-import { GS1_AI_I18N, type Gs1AiI18nEntry, type Gs1AiI18nLang } from "./gs1-ai-i18n";
-
-/**
- * Wide-typed view for lookups keyed by a runtime string (GS1_AI_I18N itself
- * has literal keys via `as const satisfies`).
- */
-const I18N: Readonly<Record<string, Gs1AiI18nEntry>> = GS1_AI_I18N;
+import { GS1_AI_I18N, type Gs1AiI18nLang } from "./gs1-ai-i18n";
 
 /** A syntactically valid GS1 Application Identifier: 2-4 digits. */
 const AI_SHAPE = /^\d{2,4}$/;
@@ -44,7 +38,7 @@ export function getGs1AiDescription(ai: string, lang: Gs1AiI18nLang): string | u
     return undefined;
   }
   for (const key of candidateKeys(ai)) {
-    const entry = I18N[key];
+    const entry = GS1_AI_I18N[key];
     if (entry !== undefined) {
       return entry[lang] ?? entry.en;
     }

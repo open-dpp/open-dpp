@@ -26,7 +26,7 @@ export interface Gs1AiI18nEntry {
 export type Gs1AiI18nLang = "en" | "de";
 
 /** GS1 AI description translations (206 rows), keyed as published by GS1. */
-export const GS1_AI_I18N = {
+export const GS1_AI_I18N: Readonly<Record<string, Gs1AiI18nEntry>> = {
   "00": {
     en: "Serial Shipping Container Code (SSCC)",
     de: "Serial Shipping Container Code (SSCC)",
@@ -527,4 +527,4 @@ export const GS1_AI_I18N = {
     de: "Information für bilateral abgestimmte Anwendung",
   },
   "91-99": { en: "Company internal information", de: "Unternehmensinterne Anwendung" },
-} as const satisfies Readonly<Record<string, Gs1AiI18nEntry>>;
+};

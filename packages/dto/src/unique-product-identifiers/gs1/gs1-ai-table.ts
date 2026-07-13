@@ -13,9 +13,8 @@
  * Shape and derivation rules: I > Q > D > N precedence, formats without the AI
  * prefix, first qualifier hierarchy flattened.
  *
- * Typed `as const satisfies Readonly<Record<string, Gs1AiTableEntry>>` so the
- * AI keys and entry fields keep their literal types (source of truth for the
- * generated named constants in gs1-ai-constants.ts).
+ * Typed `Readonly<Record<string, Gs1AiTableEntry>>`; consumers look up entries
+ * by runtime AI string. Named constants live in gs1-ai-constants.ts.
  */
 
 /**
@@ -46,7 +45,7 @@ export interface Gs1AiTableEntry {
 /**
  * The complete GS1 Application Identifier table (541 entries), keyed by AI string.
  */
-export const GS1_AI_TABLE = {
+export const GS1_AI_TABLE: Readonly<Record<string, Gs1AiTableEntry>> = {
   "00": {
     ai: "00",
     title: "Serial Shipping Container Code (SSCC)",
@@ -4387,4 +4386,4 @@ export const GS1_AI_TABLE = {
     fixedLength: false,
     regex: "([!%-?A-Z_a-z\\x22]{1,90})",
   },
-} as const satisfies Readonly<Record<string, Gs1AiTableEntry>>;
+};
