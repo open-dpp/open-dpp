@@ -13,6 +13,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import type { Gs1AiTableEntry } from "../../packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table";
 
 const AI_URL = "https://ref.gs1.org/ai/";
@@ -34,16 +35,17 @@ const MIN_I18N_ROWS = 150;
 const FETCH_TIMEOUT_MS = 30_000;
 
 /** Upstream ref.gs1.org JSON entry — only the fields this generator consumes. */
-interface RefGs1AiEntry {
-  applicationIdentifier?: string;
-  description?: string;
-  formatString?: string;
-  regex?: string;
-  separatorRequired?: boolean;
-  gs1DigitalLinkPrimaryKey?: boolean;
-  gs1DigitalLinkQualifiers?: string[][];
-  validAsDataAttribute?: boolean;
-}
+const RefGs1AiEntry = z.object({
+  applicationIdentifier: z.string().optional(),
+  description: z.string().optional(),
+  formatString: z.string().optional(),
+  regex: z.string().optional(),
+  separatorRequired: z.boolean().optional(),
+  gs1DigitalLinkPrimaryKey: z.boolean().optional(),
+  gs1DigitalLinkQualifiers: z.array(z.array(z.string())).optional(),
+  validAsDataAttribute: z.boolean().optional(),
+});
+type RefGs1AiEntry = z.infer<typeof RefGs1AiEntry>;
 
 /** Header metadata stamped into every generated file. */
 interface Provenance {
@@ -389,13 +391,8 @@ ${body}
 async function main(): Promise<void> {
   const [jsonText, htmlText] = [await fetchText("application/json"), await fetchText("text/html")];
 
-  const parsed: unknown = JSON.parse(jsonText);
-  const parsedCount = Array.isArray(parsed) ? parsed.length : 0;
-  assert(
-    Array.isArray(parsed) && parsedCount >= MIN_ENTRIES,
-    `only ${parsedCount} upstream entries`,
-  );
-  const raw = parsed as RefGs1AiEntry[];
+  const raw = z.array(RefGs1AiEntry).parse(JSON.parse(jsonText));
+  assert(raw.length >= MIN_ENTRIES, `only ${raw.length} upstream entries`);
   const entries = deriveEntries(raw).sort(byAi);
   assert(new Set(entries.map((e) => e.ai)).size === entries.length, "duplicate AIs upstream");
 
