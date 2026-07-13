@@ -321,18 +321,11 @@ ${body}
 `;
 }
 
-// Make upstream text safe inside a block comment: an embedded close-comment
-// sequence (star-slash) would otherwise end the JSDoc early and inject source.
-const jsdocSafe = (text: string): string => text.split("*/").join("*\\/");
-
 function buildConstantsSource(kinds: KindSpec[], meta: Provenance): string {
   const sections = kinds
     .map(({ constName, doc, members }) => {
       const body = members
-        .map(
-          ({ name, entry }) =>
-            `  /** AI ${entry.ai} — ${jsdocSafe(entry.title)} */\n  ${name}: ${q(entry.ai)},`,
-        )
+        .map(({ name, entry }) => `  ${name}: ${q(entry.ai)},`)
         .join("\n");
       return `/** ${doc} */
 export const ${constName} = {
