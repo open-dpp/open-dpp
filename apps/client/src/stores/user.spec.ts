@@ -1,5 +1,5 @@
 import type { UserDto } from "@open-dpp/dto";
-import { Language } from "@open-dpp/dto";
+import { Language, MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it } from "vitest";
 import { useUserStore } from "./user";
@@ -49,5 +49,16 @@ describe("userStore", () => {
     userStore.setMe(buildUser());
     userStore.setMe(null);
     expect(userStore.me).toBeNull();
+  });
+
+  it("reset clears user, me, and memberRole", () => {
+    const userStore = useUserStore();
+    userStore.user = { role: UserRoleDto.USER, id: "user-1" };
+    userStore.setMe(buildUser());
+    userStore.memberRole = MemberRoleDto.OWNER;
+    userStore.reset();
+    expect(userStore.me).toBeNull();
+    expect(userStore.user).toEqual({ role: UserRoleDto.ANONYMOUS, id: null });
+    expect(userStore.memberRole).toBeUndefined();
   });
 });

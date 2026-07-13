@@ -29,6 +29,7 @@ export interface IUserStore {
   memberRole: Ref<MemberRoleDtoType | undefined>;
   setMe: (next: UserDto | null) => void;
   updateUserBySession: (session: { user: BetterAuthSession } | null) => void;
+  reset: () => void;
   fetchMemberRole: (organizationId: string) => Promise<void>;
   asSubject: (ignoreMemberRoleForAdmin?: boolean) => Subject;
 }
@@ -57,6 +58,12 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     }
   }
 
+  function reset() {
+    user.value = { role: UserRoleDto.ANONYMOUS, id: null };
+    me.value = null;
+    memberRole.value = undefined;
+  }
+
   async function fetchMemberRole(organizationId: string) {
     try {
       const response = await apiClient.dpp.organizations.getMembers(organizationId);
@@ -81,5 +88,5 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     };
   }
 
-  return { user, me, memberRole, setMe, updateUserBySession, fetchMemberRole, asSubject };
+  return { user, me, memberRole, setMe, updateUserBySession, reset, fetchMemberRole, asSubject };
 });
