@@ -3,6 +3,7 @@ import {
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
+  CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   DigitalProductDocumentStatusModificationDtoSchema,
   PassportDtoSchema,
@@ -23,6 +24,7 @@ import {
 } from "@open-dpp/dto";
 import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/export-schemas/aas-export-v1.schema";
 import {
+  ApiCreateGroupFromColumnPath,
   ApiDeletePolicyPath,
   ApiDeleteRowPath,
   ApiGetColumnByIdShortPath,
@@ -320,6 +322,26 @@ export function createAasPaths(tag: string) {
         },
         responses: {
           [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}${convertPathToOpenApi(ApiCreateGroupFromColumnPath)}`]: {
+      post: {
+        tags: [tag],
+        summary: `Creates a new group column from an existing column within a Submodel Element List, moving the existing column inside the new group.`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: CreateGroupFromColumnSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
             },
