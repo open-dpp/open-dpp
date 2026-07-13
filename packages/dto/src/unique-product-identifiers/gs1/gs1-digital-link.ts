@@ -1,14 +1,7 @@
 import { z } from "zod";
 import { canonicaliseBaseUrl } from "../../shared/permalink-base-url.schema";
 import { Gs1DataAttributeAi, Gs1KeyAi, Gs1QualifierAi } from "./gs1-ai-constants";
-import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
-
-/**
- * Wide-typed view of the AI table for lookups keyed by a runtime string.
- * GS1_AI_TABLE itself has literal keys (`as const satisfies`), so indexing it
- * with an arbitrary string would be a type error.
- */
-const AI_TABLE: Readonly<Record<string, Gs1AiTableEntry>> = GS1_AI_TABLE;
+import { GS1_AI_TABLE } from "./gs1-ai-table";
 
 /**
  * Zero-dependency GS1 Digital Link helpers, shared by the client and the server.
@@ -203,7 +196,7 @@ export const GS1_AI_SERIAL = Gs1QualifierAi.SERIAL_NUMBER;
  */
 export function isGs1DataAttributeAi(ai: string): ai is Gs1DataAttributeAi {
   // typeof guard: a plain-JS caller passing e.g. 17 would coerce to "17" on lookup.
-  return typeof ai === "string" && AI_TABLE[ai]?.type === "D";
+  return typeof ai === "string" && GS1_AI_TABLE[ai]?.type === "D";
 }
 
 /**
@@ -223,7 +216,7 @@ export function isValidGs1DataAttributeValue(ai: string, value: string): boolean
   if (typeof ai !== "string" || typeof value !== "string") {
     return false;
   }
-  const entry = AI_TABLE[ai];
+  const entry = GS1_AI_TABLE[ai];
   if (!entry || entry.type !== "D") {
     return false;
   }

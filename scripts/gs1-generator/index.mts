@@ -13,7 +13,8 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Gs1AiTableEntry } from "../../packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table";
+import { z } from "zod";
+import type { Gs1AiTableEntry } from "../../packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table.js";
 
 const AI_URL = "https://ref.gs1.org/ai/";
 const OUT_DIR = join(
@@ -33,17 +34,35 @@ const MIN_ENTRIES = 500;
 const MIN_I18N_ROWS = 150;
 const FETCH_TIMEOUT_MS = 30_000;
 
-/** Upstream ref.gs1.org JSON entry — only the fields this generator consumes. */
-interface RefGs1AiEntry {
-  applicationIdentifier?: string;
-  description?: string;
-  formatString?: string;
-  regex?: string;
-  separatorRequired?: boolean;
-  gs1DigitalLinkPrimaryKey?: boolean;
-  gs1DigitalLinkQualifiers?: string[][];
-  validAsDataAttribute?: boolean;
-}
+/**
+ * True if `source` compiles as an anchored regex body — mirrors how the
+ * generated table's regex fragments are consumed (`^(?:<regex>)$`).
+ */
+const compilesAsRegex = (source: string): boolean => {
+  try {
+    new RegExp(`^(?:${source})$`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Upstream ref.gs1.org JSON entry — only the fields this generator consumes.
+ * The three fields every derived AI needs (`applicationIdentifier`,
+ * `description`, `regex`) are validated here so `deriveEntries` can assume them.
+ */
+const RefGs1AiEntry = z.object({
+  applicationIdentifier: z.string().regex(/^\d{2,4}$/),
+  description: z.string().refine((s) => s.trim().length > 0, "empty description"),
+  formatString: z.string().optional(),
+  regex: z.string().min(1).refine(compilesAsRegex, "regex does not compile"),
+  separatorRequired: z.boolean().optional(),
+  gs1DigitalLinkPrimaryKey: z.boolean().optional(),
+  gs1DigitalLinkQualifiers: z.array(z.array(z.string())).optional(),
+  validAsDataAttribute: z.boolean().optional(),
+});
+type RefGs1AiEntry = z.infer<typeof RefGs1AiEntry>;
 
 /** Header metadata stamped into every generated file. */
 interface Provenance {
@@ -101,16 +120,9 @@ function deriveEntries(raw: RefGs1AiEntry[]): Gs1AiTableEntry[] {
     raw.flatMap((entry) => (entry.gs1DigitalLinkQualifiers ?? []).flat()),
   );
   return raw.map((entry) => {
+    // applicationIdentifier, description, and regex are validated by RefGs1AiEntry.
     const ai = entry.applicationIdentifier;
-    assert(typeof ai === "string" && /^\d{2,4}$/.test(ai), `bad applicationIdentifier: ${q(ai)}`);
-    const title = (entry.description ?? "").trim();
-    assert(title.length > 0, `AI ${ai}: empty description`);
-    assert(typeof entry.regex === "string" && entry.regex.length > 0, `AI ${ai}: missing regex`);
-    try {
-      new RegExp(`^(?:${entry.regex})$`);
-    } catch (error) {
-      fail(`AI ${ai}: regex does not compile: ${error}`);
-    }
+    const title = entry.description.trim();
 
     const formatParts = String(entry.formatString ?? "").split("+");
     assert(
@@ -120,13 +132,11 @@ function deriveEntries(raw: RefGs1AiEntry[]): Gs1AiTableEntry[] {
     const format = formatParts.slice(1).join("+");
     assert(format.length > 0, `AI ${ai}: empty value format`);
 
-    const type = entry.gs1DigitalLinkPrimaryKey
-      ? "I"
-      : qualifierAis.has(ai)
-        ? "Q"
-        : entry.validAsDataAttribute
-          ? "D"
-          : "N";
+    let type: Gs1AiTableEntry["type"];
+    if (entry.gs1DigitalLinkPrimaryKey) type = "I";
+    else if (qualifierAis.has(ai)) type = "Q";
+    else if (entry.validAsDataAttribute) type = "D";
+    else type = "N";
     // First qualifier hierarchy, flattened — compat with the previous flat list.
     const qualifiers = entry.gs1DigitalLinkQualifiers?.[0];
     return {
@@ -246,7 +256,7 @@ function provenance({ retrieved, detail, hash }: Provenance): string {
   ].join("\n");
 }
 
-function renderTable(entries: Gs1AiTableEntry[], meta: Provenance): string {
+function buildTableSource(entries: Gs1AiTableEntry[], meta: Provenance): string {
   const body = entries
     .map((entry) => {
       const lines = [
@@ -272,9 +282,8 @@ ${provenance(meta)}
  * Shape and derivation rules: I > Q > D > N precedence, formats without the AI
  * prefix, first qualifier hierarchy flattened.
  *
- * Typed \`as const satisfies Readonly<Record<string, Gs1AiTableEntry>>\` so the
- * AI keys and entry fields keep their literal types (source of truth for the
- * generated named constants in gs1-ai-constants.ts).
+ * Typed \`Readonly<Record<string, Gs1AiTableEntry>>\`; consumers look up entries
+ * by runtime AI string. Named constants live in gs1-ai-constants.ts.
  */
 
 /**
@@ -305,25 +314,16 @@ export interface Gs1AiTableEntry {
 /**
  * The complete GS1 Application Identifier table (${entries.length} entries), keyed by AI string.
  */
-export const GS1_AI_TABLE = {
+export const GS1_AI_TABLE: Readonly<Record<string, Gs1AiTableEntry>> = {
 ${body}
-} as const satisfies Readonly<Record<string, Gs1AiTableEntry>>;
+};
 `;
 }
 
-// Make upstream text safe inside a block comment: an embedded close-comment
-// sequence (star-slash) would otherwise end the JSDoc early and inject source.
-const jsdocSafe = (text: string): string => text.split("*/").join("*\\/");
-
-function renderConstants(kinds: KindSpec[], meta: Provenance): string {
+function buildConstantsSource(kinds: KindSpec[], meta: Provenance): string {
   const sections = kinds
     .map(({ constName, doc, members }) => {
-      const body = members
-        .map(
-          ({ name, entry }) =>
-            `  /** AI ${entry.ai} — ${jsdocSafe(entry.title)} */\n  ${name}: ${q(entry.ai)},`,
-        )
-        .join("\n");
+      const body = members.map(({ name, entry }) => `  ${name}: ${q(entry.ai)},`).join("\n");
       return `/** ${doc} */
 export const ${constName} = {
 ${body}
@@ -351,7 +351,7 @@ ${provenance(meta)}
 ${sections}`;
 }
 
-function renderI18n(rows: I18nRow[], meta: Provenance): string {
+function buildI18nSource(rows: I18nRow[], meta: Provenance): string {
   const body = rows
     .map(([key, texts]) => {
       const cells = LANGS.filter((lang) => texts[lang]).map((lang) => `${lang}: ${q(texts[lang])}`);
@@ -378,9 +378,9 @@ export interface Gs1AiI18nEntry {
 export type Gs1AiI18nLang = ${LANGS.map(q).join(" | ")};
 
 /** GS1 AI description translations (${rows.length} rows), keyed as published by GS1. */
-export const GS1_AI_I18N = {
+export const GS1_AI_I18N: Readonly<Record<string, Gs1AiI18nEntry>> = {
 ${body}
-} as const satisfies Readonly<Record<string, Gs1AiI18nEntry>>;
+};
 `;
 }
 
@@ -389,13 +389,10 @@ ${body}
 async function main(): Promise<void> {
   const [jsonText, htmlText] = [await fetchText("application/json"), await fetchText("text/html")];
 
-  const parsed: unknown = JSON.parse(jsonText);
-  const parsedCount = Array.isArray(parsed) ? parsed.length : 0;
-  assert(
-    Array.isArray(parsed) && parsedCount >= MIN_ENTRIES,
-    `only ${parsedCount} upstream entries`,
-  );
-  const raw = parsed as RefGs1AiEntry[];
+  const raw = z
+    .array(RefGs1AiEntry)
+    .min(MIN_ENTRIES, `fewer than ${MIN_ENTRIES} upstream entries`)
+    .parse(JSON.parse(jsonText));
   const entries = deriveEntries(raw).sort(byAi);
   assert(new Set(entries.map((e) => e.ai)).size === entries.length, "duplicate AIs upstream");
 
@@ -432,9 +429,9 @@ async function main(): Promise<void> {
 
   mkdirSync(OUT_DIR, { recursive: true });
   const outputs: [string, string][] = [
-    ["gs1-ai-table.ts", renderTable(entries, tableMeta)],
-    ["gs1-ai-constants.ts", renderConstants(kinds, tableMeta)],
-    ["gs1-ai-i18n.ts", renderI18n(i18nRows, i18nMeta)],
+    ["gs1-ai-table.ts", buildTableSource(entries, tableMeta)],
+    ["gs1-ai-constants.ts", buildConstantsSource(kinds, tableMeta)],
+    ["gs1-ai-i18n.ts", buildI18nSource(i18nRows, i18nMeta)],
   ];
   for (const [file, content] of outputs) {
     writeFileSync(join(OUT_DIR, file), content);

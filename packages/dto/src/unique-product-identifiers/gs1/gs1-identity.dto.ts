@@ -42,15 +42,10 @@ export type Gs1IdentityRequest = z.input<typeof Gs1IdentityRequestSchema>;
  * Response describing a passport's GS1 identity plus the server-assembled,
  * uncompressed GS1 Digital Link that a Data Carrier (QR) should encode.
  */
-export const Gs1IdentityResponseSchema = z
-  .object({
-    uuid: z.uuid(),
-    referenceId: z.uuid(),
-    gtin: Gtin14Schema,
-    batch: Cset82ComponentSchema.nullish(),
-    serial: Cset82ComponentSchema.nullish(),
-    digitalLink: z.url(),
-  })
-  .meta({ id: "Gs1IdentityResponse" });
+export const Gs1IdentityResponseSchema = Gs1IdentityDtoSchema.extend({
+  uuid: z.uuid(),
+  referenceId: z.uuid(),
+  digitalLink: z.url(),
+}).meta({ id: "Gs1IdentityResponse" });
 
 export type Gs1IdentityResponse = z.infer<typeof Gs1IdentityResponseSchema>;
