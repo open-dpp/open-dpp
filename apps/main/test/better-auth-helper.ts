@@ -70,11 +70,7 @@ export class BetterAuthHelper {
     return cookie;
   }
 
-  async createUser(userData?: {
-    role?: UserRoleType;
-    email?: string;
-    preferredLanguage?: string;
-  }) {
+  async createUser(userData?: { role?: UserRoleType; email?: string; preferredLanguage?: string }) {
     const userEmail = userData?.email ?? `${randomUUID()}@test.test`;
     if (!this.auth) {
       throw new Error("No auth setup");

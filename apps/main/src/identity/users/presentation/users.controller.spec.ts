@@ -233,9 +233,7 @@ describe("UsersController", () => {
 
   describe("signup preferredLanguage validation", () => {
     it("rejects signup with an unsupported preferredLanguage at the boundary", async () => {
-      await expect(
-        betterAuthHelper.createUser({ preferredLanguage: "fr" }),
-      ).rejects.toThrow();
+      await expect(betterAuthHelper.createUser({ preferredLanguage: "fr" })).rejects.toThrow();
     });
 
     it("persists a valid preferredLanguage supplied at signup", async () => {
