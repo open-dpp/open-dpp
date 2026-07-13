@@ -34,12 +34,29 @@ const MIN_ENTRIES = 500;
 const MIN_I18N_ROWS = 150;
 const FETCH_TIMEOUT_MS = 30_000;
 
-/** Upstream ref.gs1.org JSON entry — only the fields this generator consumes. */
+/**
+ * True if `source` compiles as an anchored regex body — mirrors how the
+ * generated table's regex fragments are consumed (`^(?:<regex>)$`).
+ */
+const compilesAsRegex = (source: string): boolean => {
+  try {
+    new RegExp(`^(?:${source})$`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Upstream ref.gs1.org JSON entry — only the fields this generator consumes.
+ * The three fields every derived AI needs (`applicationIdentifier`,
+ * `description`, `regex`) are validated here so `deriveEntries` can assume them.
+ */
 const RefGs1AiEntry = z.object({
-  applicationIdentifier: z.string().optional(),
-  description: z.string().optional(),
+  applicationIdentifier: z.string().regex(/^\d{2,4}$/),
+  description: z.string().refine((s) => s.trim().length > 0, "empty description"),
   formatString: z.string().optional(),
-  regex: z.string().optional(),
+  regex: z.string().min(1).refine(compilesAsRegex, "regex does not compile"),
   separatorRequired: z.boolean().optional(),
   gs1DigitalLinkPrimaryKey: z.boolean().optional(),
   gs1DigitalLinkQualifiers: z.array(z.array(z.string())).optional(),
@@ -103,16 +120,9 @@ function deriveEntries(raw: RefGs1AiEntry[]): Gs1AiTableEntry[] {
     raw.flatMap((entry) => (entry.gs1DigitalLinkQualifiers ?? []).flat()),
   );
   return raw.map((entry) => {
+    // applicationIdentifier, description, and regex are validated by RefGs1AiEntry.
     const ai = entry.applicationIdentifier;
-    assert(typeof ai === "string" && /^\d{2,4}$/.test(ai), `bad applicationIdentifier: ${q(ai)}`);
-    const title = (entry.description ?? "").trim();
-    assert(title.length > 0, `AI ${ai}: empty description`);
-    assert(typeof entry.regex === "string" && entry.regex.length > 0, `AI ${ai}: missing regex`);
-    try {
-      new RegExp(`^(?:${entry.regex})$`);
-    } catch (error) {
-      fail(`AI ${ai}: regex does not compile: ${error}`);
-    }
+    const title = entry.description.trim();
 
     const formatParts = String(entry.formatString ?? "").split("+");
     assert(
@@ -391,8 +401,10 @@ ${body}
 async function main(): Promise<void> {
   const [jsonText, htmlText] = [await fetchText("application/json"), await fetchText("text/html")];
 
-  const raw = z.array(RefGs1AiEntry).parse(JSON.parse(jsonText));
-  assert(raw.length >= MIN_ENTRIES, `only ${raw.length} upstream entries`);
+  const raw = z
+    .array(RefGs1AiEntry)
+    .min(MIN_ENTRIES, `fewer than ${MIN_ENTRIES} upstream entries`)
+    .parse(JSON.parse(jsonText));
   const entries = deriveEntries(raw).sort(byAi);
   assert(new Set(entries.map((e) => e.ai)).size === entries.length, "duplicate AIs upstream");
 
