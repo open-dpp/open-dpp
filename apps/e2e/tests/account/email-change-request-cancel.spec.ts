@@ -107,3 +107,17 @@ test("client-side validation blocks the request without calling the API", async 
   await expect(page.getByText("Erforderlich, um diese Änderung zu bestätigen.")).toBeVisible();
   expect(apiCalls).toHaveLength(0);
 });
+
+test("wrong current password shows an inline password error", async ({ makeDisposableUser }) => {
+  const { page, user } = await makeDisposableUser();
+
+  await page.goto(PROFILE);
+  await expect(page.getByText(user.email)).toBeVisible({ timeout: 15000 });
+  await page.getByTestId("change-email").click();
+
+  await page.getByTestId("new-email").fill(uniqueEmail("e2e-badpw"));
+  await page.getByTestId("current-password").fill("definitely-not-the-password");
+  await page.getByTestId("send-verification").click();
+
+  await expect(page.getByText("Das eingegebene Passwort ist falsch.")).toBeVisible();
+});

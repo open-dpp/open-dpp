@@ -629,6 +629,7 @@
     "emailChangeConfirmNo": "Keep pending",
     "emailChangeCurrentPassword": "Current password",
     "emailChangeCurrentPasswordRequired": "Required to confirm this change.",
+    "emailChangeCurrentPasswordIncorrect": "The password you entered is incorrect.",
     "emailChangeRateLimited": "Too many email-change attempts. Please try again in an hour."
   },
   "notifications": {

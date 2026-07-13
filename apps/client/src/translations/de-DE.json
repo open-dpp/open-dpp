@@ -659,6 +659,7 @@
     "emailChangeConfirmNo": "Ausstehend lassen",
     "emailChangeCurrentPassword": "Aktuelles Passwort",
     "emailChangeCurrentPasswordRequired": "Erforderlich, um diese Änderung zu bestätigen.",
+    "emailChangeCurrentPasswordIncorrect": "Das eingegebene Passwort ist falsch.",
     "emailChangeRateLimited": "Zu viele Versuche zur E-Mail-Änderung. Bitte versuche es in einer Stunde erneut."
   },
   "notifications": {

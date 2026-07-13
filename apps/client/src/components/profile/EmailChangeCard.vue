@@ -64,15 +64,6 @@ const canSendVerification = computed(() => {
   return candidate.length > 0 && candidate !== currentEmail.value;
 });
 
-function extractServerMessage(error: unknown, fallbackKey: string): string {
-  const maybeMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data
-    ?.message;
-  if (typeof maybeMessage === "string" && maybeMessage.length > 0) {
-    return maybeMessage;
-  }
-  return t(fallbackKey);
-}
-
 function openEmailPanel() {
   newEmail.value = "";
   newEmailError.value = null;
@@ -125,13 +116,13 @@ async function sendVerification() {
     const status = (error as { response?: { status?: number } })?.response?.status;
     if (status === 429) {
       newEmailError.value = t("user.emailChangeRateLimited");
+    } else if (status === 400) {
+      // ponytail: the only 400 reachable here is a wrong current password —
+      // invalid email (zod) and unchanged email (canSendVerification) are guarded
+      // above, and an already-used email returns 202 (anti-enumeration).
+      currentPasswordError.value = t("user.emailChangeCurrentPasswordIncorrect");
     } else {
-      const serverMessage = extractServerMessage(error, "user.emailChangeFailed");
-      if (serverMessage.toLowerCase().includes("password")) {
-        currentPasswordError.value = serverMessage;
-      } else {
-        newEmailError.value = serverMessage;
-      }
+      newEmailError.value = t("user.emailChangeFailed");
     }
   } finally {
     emailSubmitting.value = false;
@@ -156,10 +147,8 @@ async function cancelPending() {
     const updated = await apiClient.dpp.users.cancelEmailChange();
     emit("updated", updated.data);
     notificationStore.addInfoNotification(t("user.emailChangeCancelled"));
-  } catch (error) {
-    notificationStore.addErrorNotification(
-      extractServerMessage(error, "user.emailChangeCancelFailed"),
-    );
+  } catch {
+    notificationStore.addErrorNotification(t("user.emailChangeCancelFailed"));
   } finally {
     cancelSubmitting.value = false;
   }

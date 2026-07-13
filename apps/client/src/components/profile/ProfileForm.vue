@@ -143,19 +143,10 @@ const submitProfile = handleSubmit(async (formValues) => {
     const updated = await apiClient.dpp.users.updateProfile(diff);
     applyMe(updated.data);
     notificationStore.addSuccessNotification(t("user.profileSaved"));
-  } catch (error) {
-    notificationStore.addErrorNotification(extractServerMessage(error, "user.profileSaveFailed"));
+  } catch {
+    notificationStore.addErrorNotification(t("user.profileSaveFailed"));
   }
 });
-
-function extractServerMessage(error: unknown, fallbackKey: string): string {
-  const maybeMessage = (error as { response?: { data?: { message?: unknown } } })?.response?.data
-    ?.message;
-  if (typeof maybeMessage === "string" && maybeMessage.length > 0) {
-    return maybeMessage;
-  }
-  return t(fallbackKey);
-}
 
 function discard() {
   if (!original.value) return;
