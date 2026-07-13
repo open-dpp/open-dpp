@@ -132,13 +132,11 @@ function deriveEntries(raw: RefGs1AiEntry[]): Gs1AiTableEntry[] {
     const format = formatParts.slice(1).join("+");
     assert(format.length > 0, `AI ${ai}: empty value format`);
 
-    const type = entry.gs1DigitalLinkPrimaryKey
-      ? "I"
-      : qualifierAis.has(ai)
-        ? "Q"
-        : entry.validAsDataAttribute
-          ? "D"
-          : "N";
+    let type: Gs1AiTableEntry["type"];
+    if (entry.gs1DigitalLinkPrimaryKey) type = "I";
+    else if (qualifierAis.has(ai)) type = "Q";
+    else if (entry.validAsDataAttribute) type = "D";
+    else type = "N";
     // First qualifier hierarchy, flattened — compat with the previous flat list.
     const qualifiers = entry.gs1DigitalLinkQualifiers?.[0];
     return {
@@ -258,7 +256,7 @@ function provenance({ retrieved, detail, hash }: Provenance): string {
   ].join("\n");
 }
 
-function renderTable(entries: Gs1AiTableEntry[], meta: Provenance): string {
+function buildTableSource(entries: Gs1AiTableEntry[], meta: Provenance): string {
   const body = entries
     .map((entry) => {
       const lines = [
@@ -327,7 +325,7 @@ ${body}
 // sequence (star-slash) would otherwise end the JSDoc early and inject source.
 const jsdocSafe = (text: string): string => text.split("*/").join("*\\/");
 
-function renderConstants(kinds: KindSpec[], meta: Provenance): string {
+function buildConstantsSource(kinds: KindSpec[], meta: Provenance): string {
   const sections = kinds
     .map(({ constName, doc, members }) => {
       const body = members
@@ -363,7 +361,7 @@ ${provenance(meta)}
 ${sections}`;
 }
 
-function renderI18n(rows: I18nRow[], meta: Provenance): string {
+function buildI18nSource(rows: I18nRow[], meta: Provenance): string {
   const body = rows
     .map(([key, texts]) => {
       const cells = LANGS.filter((lang) => texts[lang]).map((lang) => `${lang}: ${q(texts[lang])}`);
@@ -441,9 +439,9 @@ async function main(): Promise<void> {
 
   mkdirSync(OUT_DIR, { recursive: true });
   const outputs: [string, string][] = [
-    ["gs1-ai-table.ts", renderTable(entries, tableMeta)],
-    ["gs1-ai-constants.ts", renderConstants(kinds, tableMeta)],
-    ["gs1-ai-i18n.ts", renderI18n(i18nRows, i18nMeta)],
+    ["gs1-ai-table.ts", buildTableSource(entries, tableMeta)],
+    ["gs1-ai-constants.ts", buildConstantsSource(kinds, tableMeta)],
+    ["gs1-ai-i18n.ts", buildI18nSource(i18nRows, i18nMeta)],
   ];
   for (const [file, content] of outputs) {
     writeFileSync(join(OUT_DIR, file), content);
