@@ -2,17 +2,19 @@ import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Language } from "@open-dpp/dto";
 import { ObjectId } from "mongodb";
+import { Model } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { EmailService } from "../../../../email/email.service";
 import { AuthModule } from "../../../auth/auth.module";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
+import { User as UserSchema } from "../schemas/user.schema";
 import { UsersModule } from "../../users.module";
 import { UsersRepository } from "./users.repository";
 
@@ -252,6 +254,30 @@ describe("UsersRepository", () => {
 
       const roundTripped = await repository.findOneById(seeded.id);
       expect(roundTripped!.emailVerified).toBe(target);
+    });
+
+    it("does not overwrite email when persisting other changes (concurrent email-change guard)", async () => {
+      const seeded = await seedUser();
+      const concurrentEmail = `${randomUUID()}@changed.test`;
+
+      // Simulate a concurrent better-auth email change landing on the same document,
+      // out-of-band (bypassing the repo) after we already hold the stale `seeded` entity.
+      const userModel = module.get<Model<UserSchema>>(getModelToken(UserSchema.name));
+      await userModel.updateOne(
+        { _id: new ObjectId(seeded.id) },
+        { $set: { email: concurrentEmail } },
+      );
+
+      // Persist an unrelated change from the stale entity (which still carries the old email).
+      const result = await repository.update(seeded.withName("Jane", "Roe"));
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.firstName).toBe("Jane");
+      // The concurrent email must survive — it must NOT be reverted to the stale snapshot.
+      expect(result!.email).toBe(concurrentEmail);
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.email).toBe(concurrentEmail);
     });
 
     it("returns null for a user whose id is not a valid ObjectId", async () => {
