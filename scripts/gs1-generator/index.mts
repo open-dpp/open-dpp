@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import type { Gs1AiTableEntry } from "../../packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table";
+import type { Gs1AiTableEntry } from "../../packages/dto/src/unique-product-identifiers/gs1/gs1-ai-table.js";
 
 const AI_URL = "https://ref.gs1.org/ai/";
 const OUT_DIR = join(
