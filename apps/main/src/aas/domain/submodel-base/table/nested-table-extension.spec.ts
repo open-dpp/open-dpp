@@ -335,6 +335,25 @@ describe("NestedTableExtension", () => {
     expect(table3OfRow21.getSubmodelElements()).toHaveLength(1);
   });
 
+  it("should delete row from table3", () => {
+    const { submodel, ability } = createSubmodelWithNestedTable();
+    submodel.deleteRow(
+      IdShortPath.create({
+        path: "table1.row1.table2.row11.table3",
+      }),
+      "row111",
+      { ability, onDelete: () => {} },
+    );
+    const table3OfRow11 = submodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "table1.row1.table2.row11.table3" }),
+    );
+    expect(table3OfRow11.getSubmodelElements()).toHaveLength(0);
+    const table3OfRow21 = submodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "table1.row2.table2.row21.table3" }),
+    );
+    expect(table3OfRow21.getSubmodelElements()).toHaveLength(1);
+  });
+
   // Paths to every leaf row across all table3 instances in the nested structure
   const allTable3RowPaths = [
     "table1.row1.table2.row11.table3.row111",

@@ -199,6 +199,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         :disabled="!canEdit"
       />
       <PermissionsForm
+        v-if="!hasParentTable"
         ref="permissionsFormRef"
         :disabled="!canEdit"
         :path="props.path"

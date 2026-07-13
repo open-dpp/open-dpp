@@ -11,7 +11,11 @@ import {
   ChangeTracker,
   withTrackingHelper,
 } from "../../../../activity-history/domain/change-tracker";
-import { ITableExtendable, MoveOptions, parseAsSubmodelElementListOrFail } from "./table-extensable";
+import {
+  ITableExtendable,
+  MoveOptions,
+  parseAsSubmodelElementListOrFail,
+} from "./table-extensable";
 import { IdShortPath } from "../../common/id-short-path";
 import { TableExtension } from "./table-extension";
 import { KeyTypes } from "@open-dpp/dto";
@@ -82,7 +86,11 @@ export class NestedTableExtension implements ITableExtendable {
     });
   }
 
-  createGroupFromColumn(columnIdShort: string, group: ISubmodelElement, options: MoveOptions): void {
+  createGroupFromColumn(
+    columnIdShort: string,
+    group: ISubmodelElement,
+    options: MoveOptions,
+  ): void {
     this.performRecursive((tableExtension) => {
       tableExtension.createGroupFromColumn(columnIdShort, group, options);
     });
@@ -92,7 +100,9 @@ export class NestedTableExtension implements ITableExtendable {
     new TableExtension(this.data).withTracking(this.tracker).addRow(options);
   }
 
-  deleteRow(idShort: string, options: DeleteOptions) {}
+  deleteRow(idShort: string, options: DeleteOptions) {
+    new TableExtension(this.data).withTracking(this.tracker).deleteRow(idShort, options);
+  }
 
   getTableElement(): SubmodelElementList {
     return this.data;
