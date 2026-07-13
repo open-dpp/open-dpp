@@ -6,14 +6,14 @@ import { useI18n } from "vue-i18n";
 const props = defineProps<{
   value: SubmodelElementResponseDto;
 }>();
-const { parseDisplayName } = useAasUtils();
+const { parseLanguageTexts } = useAasUtils();
 const { t } = useI18n();
 </script>
 
 <template>
   <div v-if="props.value.displayName">
     <DescriptionTerm :dt="t('activityHistory.name')">
-      {{ parseDisplayName(props.value.displayName) }}
+      {{ parseLanguageTexts(props.value.displayName) }}
     </DescriptionTerm>
   </div>
 </template>

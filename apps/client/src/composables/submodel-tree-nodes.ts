@@ -20,10 +20,10 @@ function mapToTreeNodes(
 }
 
 export function useSubmodelTreeNodes(submodelTree: ComputedRef<SubmodelTreeElement[]>) {
-  const { parseDisplayName } = useAasUtils();
+  const { parseLanguageTexts } = useAasUtils();
 
   const treeNodes = computed<TreeNode[]>(() =>
-    mapToTreeNodes(submodelTree.value, parseDisplayName),
+    mapToTreeNodes(submodelTree.value, parseLanguageTexts),
   );
 
   return { treeNodes };

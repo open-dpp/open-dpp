@@ -2,8 +2,14 @@
 import { ref } from "vue";
 import NavigationDrawer from "../components/presentation/NavigationDrawer.vue";
 import Navbar from "../components/presentation/Navbar.vue";
+import { providePresentationLanguage } from "../composables/presentation-language";
+import { useLanguageSelect } from "../composables/language";
+import { Language } from "@open-dpp/dto";
 
 const drawerVisible = ref(false);
+
+const { nextLanguage } = useLanguageSelect();
+providePresentationLanguage(nextLanguage(Object.values(Language)) ?? Language.en);
 </script>
 
 <template>

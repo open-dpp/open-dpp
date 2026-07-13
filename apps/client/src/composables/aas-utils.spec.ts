@@ -52,13 +52,15 @@ describe("aas", () => {
     };
 
     let aasUtils = mountHarness();
-    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell1)).toEqual("my name");
+    expect(aasUtils.parseLanguageTextsFromAas(assetAdministrationShell1)).toEqual("my name");
 
     aasUtils = mountHarness();
     const assetAdministrationShell2 = {
       displayName: [{ language: Language["de"], text: "mein name" }],
     };
-    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell2)).toEqual("common.untitled");
+    expect(aasUtils.parseLanguageTextsFromAas(assetAdministrationShell2)).toEqual(
+      "common.untitled",
+    );
 
     const environment = {
       assetAdministrationShells: [{ ...assetAdministrationShell1, id: "id1" }],

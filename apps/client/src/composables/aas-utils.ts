@@ -7,10 +7,11 @@ import { match, P } from "ts-pattern";
 import { useI18n } from "vue-i18n";
 import { computed } from "vue";
 import { convertLocaleToLanguage } from "../translations/util";
+import { usePresentationLanguage } from "./presentation-language";
 
 export interface IAasUtils {
-  parseDisplayName: (displayNames: LanguageTextDto[]) => string;
-  parseDisplayNameFromAas: (
+  parseLanguageTexts: (displayNames: LanguageTextDto[]) => string;
+  parseLanguageTextsFromAas: (
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ) => string;
   parseDisplayNameFromEnvironment: (
@@ -20,17 +21,20 @@ export interface IAasUtils {
 
 export function useAasUtils(): IAasUtils {
   const { t, locale } = useI18n();
-  const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
+  const presentationLanguage = usePresentationLanguage();
+  const selectedLanguage = computed(
+    () => presentationLanguage?.value ?? convertLocaleToLanguage(locale.value),
+  );
 
-  function parseDisplayName(displayNames: LanguageTextDto[]) {
+  function parseLanguageTexts(displayNames: LanguageTextDto[]) {
     const displayName = displayNames.find((d) => d.language === selectedLanguage.value);
     return displayName?.text ?? t("common.untitled");
   }
 
-  function parseDisplayNameFromAas(
+  function parseLanguageTextsFromAas(
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ): string {
-    return parseDisplayName(assetAdministrationShell.displayName);
+    return parseLanguageTexts(assetAdministrationShell.displayName);
   }
 
   function parseDisplayNameFromEnvironment(
@@ -42,7 +46,7 @@ export function useAasUtils(): IAasUtils {
           assetAdministrationShells: [{ id: P.string, displayName: P.array() }],
         },
         ({ assetAdministrationShells }) => {
-          return parseDisplayNameFromAas(assetAdministrationShells[0]);
+          return parseLanguageTextsFromAas(assetAdministrationShells[0]);
         },
       )
       .otherwise(() => {
@@ -50,5 +54,9 @@ export function useAasUtils(): IAasUtils {
       });
   }
 
-  return { parseDisplayName, parseDisplayNameFromAas, parseDisplayNameFromEnvironment };
+  return {
+    parseLanguageTexts,
+    parseLanguageTextsFromAas,
+    parseDisplayNameFromEnvironment,
+  };
 }

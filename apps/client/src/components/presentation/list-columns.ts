@@ -22,10 +22,10 @@ export function buildColumns(content: SubmodelElementCollectionResponseDto[]): C
     return [];
   }
 
-  const { parseDisplayName } = useAasUtils();
+  const { parseLanguageTexts } = useAasUtils();
 
   return content[0].value.map((collectionElement) => {
-    const header = parseDisplayName(collectionElement.displayName);
+    const header = parseLanguageTexts(collectionElement.displayName);
     const field = collectionElement.idShort;
     const isFile = collectionElement.modelType === "File";
 

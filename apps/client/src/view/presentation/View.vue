@@ -3,10 +3,13 @@ import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
-import apiClient from "../../lib/api-client.ts";
 import { useAnalyticsStore } from "../../stores/analytics.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
-import { usePassportStore } from "../../stores/passport.ts";
+import {
+  PassportLoadError,
+  PassportNotFoundError,
+  usePassportStore,
+} from "../../stores/passport.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -16,47 +19,6 @@ const passportStore = usePassportStore();
 const analyticsStore = useAnalyticsStore();
 const errorHandlingStore = useErrorHandlingStore();
 const passportAvailable = ref(false);
-
-async function loadPassport(id: string): Promise<boolean> {
-  const response = await apiClient.dpp.permalinks.getById(id);
-  if (response.status === 404) {
-    return false;
-  }
-  if (response.status !== 200) {
-    errorHandlingStore.logErrorWithNotification(
-      t("presentation.loadPassportError"),
-      new Error(`Unexpected status ${response.status} while loading passport`),
-    );
-    return false;
-  }
-
-  passportStore.productPassport = response.data.passport;
-  passportStore.presentationConfig = response.data.presentationConfiguration;
-
-  const submodels = await apiClient.dpp.permalinks.aas.getSubmodels(id, {});
-  if (submodels.status !== 200) {
-    errorHandlingStore.logErrorWithNotification(
-      t("presentation.loadSubmodelsError"),
-      new Error(`Unexpected status ${submodels.status} while loading submodels`),
-    );
-    return false;
-  }
-  passportStore.submodels = submodels.data.result || [];
-
-  const aas = await apiClient.dpp.permalinks.aas.getShells(id, {});
-  if (aas.status !== 200) {
-    errorHandlingStore.logErrorWithNotification(
-      t("presentation.loadShellsError"),
-      new Error(`Unexpected status ${aas.status} while loading shells`),
-    );
-    return false;
-  }
-  passportStore.shells = aas.data.result || [];
-
-  await analyticsStore.addPageView();
-
-  return true;
-}
 
 async function pushNotFound(permalink: string) {
   await router.push({
@@ -70,20 +32,28 @@ async function pushNotFound(permalink: string) {
 watch(
   () => String(route.params.permalink ?? ""),
   async (permalink, _prev, onCleanup) => {
-    let cancelled = false;
+    let canceled = false;
     onCleanup(() => {
-      cancelled = true;
+      canceled = true;
     });
 
     passportAvailable.value = false;
     try {
-      passportAvailable.value = await loadPassport(permalink);
+      await passportStore.loadPassport(permalink);
+      passportAvailable.value = true;
+      await analyticsStore.addPageView();
     } catch (error) {
-      errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportError"), error);
-    }
-
-    if (!cancelled && !passportAvailable.value) {
-      await pushNotFound(permalink);
+      if (error instanceof PassportNotFoundError) {
+        if (!canceled) {
+          await pushNotFound(permalink);
+        }
+        return;
+      }
+      const messageKey =
+        error instanceof PassportLoadError
+          ? error.translationKey
+          : "presentation.loadPassportError";
+      errorHandlingStore.logErrorWithNotification(t(messageKey), error);
     }
   },
   { immediate: true },

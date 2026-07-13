@@ -39,5 +39,5 @@
     "turbo": "^2.9.18",
     "zod": "^4.3.6"
   },
-  "packageManager": "pnpm@11.8.0"
+  "packageManager": "pnpm@11.7.0"
 }
