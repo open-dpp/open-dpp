@@ -37,7 +37,7 @@ test("revoking via the notification link blocks a later, still-valid verificatio
 
   const verification = await mailpit.waitForMessage({
     to: newEmail,
-    subjectContains: "Confirm your new email address",
+    subjectContains: "Neue E-Mail-Adresse bestätigen",
     since,
   });
   const verifyLink = MailpitClient.getVerifyLink(verification);

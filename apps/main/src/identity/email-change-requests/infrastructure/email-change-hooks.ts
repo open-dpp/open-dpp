@@ -9,6 +9,12 @@ import {
   findPendingEmailChangeForUser,
 } from "./email-change-gate";
 
+// Localized like the mjml template siblings (see EmailTemplate.localizedName).
+const COMPLETED_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+  en: "Your email address was changed",
+  de: "E-Mail-Adresse erfolgreich geändert",
+};
+
 export interface VerificationTokenPayload {
   email?: string;
   updateTo?: string;
@@ -120,11 +126,12 @@ export async function completeVerifiedEmailChange(
     }
 
     try {
+      const language = resolveUserLanguage(user);
       await emailService.send(
         EmailChangeCompletedMail.create({
           to: user.email,
-          subject: "Your email address was changed",
-          language: resolveUserLanguage(user),
+          subject: COMPLETED_SUBJECT_BY_LANGUAGE[language],
+          language,
           templateProperties: {
             firstName: user.firstName ?? "User",
             previousEmail: pending.previousEmail,

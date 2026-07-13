@@ -25,7 +25,7 @@ test("request shows the pending state and sends both verification + revoke-notif
 
   const verification = await mailpit.waitForMessage({
     to: newEmail,
-    subjectContains: "Confirm your new email address",
+    subjectContains: "Neue E-Mail-Adresse bestätigen",
     since,
   });
   expect(MailpitClient.getVerifyLink(verification)).toContain("/verify-email?token");
@@ -55,7 +55,7 @@ test("hard-cancel clears the pending request and the captured verify link become
   // Capture the still-valid verify link BEFORE cancelling.
   const verification = await mailpit.waitForMessage({
     to: newEmail,
-    subjectContains: "Confirm your new email address",
+    subjectContains: "Neue E-Mail-Adresse bestätigen",
     since,
   });
   const verifyLink = MailpitClient.getVerifyLink(verification);
@@ -74,7 +74,7 @@ test("hard-cancel clears the pending request and the captured verify link become
   await expect(page.getByText(newEmail)).toHaveCount(0);
   await mailpit.expectNoMessage({
     to: newEmail,
-    subjectContains: "Your email address was changed",
+    subjectContains: "E-Mail-Adresse erfolgreich geändert",
   });
 });
 

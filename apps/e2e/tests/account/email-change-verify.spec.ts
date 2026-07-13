@@ -23,7 +23,7 @@ test("verifying the link sent to the new address completes the email change", as
 
   const verification = await mailpit.waitForMessage({
     to: newEmail,
-    subjectContains: "Confirm your new email address",
+    subjectContains: "Neue E-Mail-Adresse bestätigen",
     since,
   });
   await page.goto(MailpitClient.getVerifyLink(verification));
@@ -38,7 +38,7 @@ test("verifying the link sent to the new address completes the email change", as
   // Best-effort: the completion courtesy mail reaches the new address.
   await mailpit.waitForMessage({
     to: newEmail,
-    subjectContains: "Your email address was changed",
+    subjectContains: "E-Mail-Adresse erfolgreich geändert",
     since,
   });
 });

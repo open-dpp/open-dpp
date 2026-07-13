@@ -20,9 +20,15 @@ import {
 } from "../email-change-requests/infrastructure/email-change-hooks";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
-import { LanguageEnum, LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { LanguageEnum, LanguageType, LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
+
+// Localized like the mjml template siblings (see EmailTemplate.localizedName).
+const VERIFICATION_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+  en: "Confirm your new email address",
+  de: "Neue E-Mail-Adresse bestätigen",
+};
 
 /**
  * Seeds the env-configured admin (OPEN_DPP_AUTH_ADMIN_USERNAME/PASSWORD) ONLY when
@@ -213,11 +219,12 @@ export const AuthProvider: Provider = {
           const firstName = (user as any).firstName ?? "User";
           const decoded = decodeVerificationToken({ query: { token } });
           if (decoded?.updateTo) {
+            const language = resolveUserLanguage(user);
             await emailService.send(
               EmailChangeVerificationMail.create({
                 to: user.email,
-                subject: "Confirm your new email address",
-                language: resolveUserLanguage(user),
+                subject: VERIFICATION_SUBJECT_BY_LANGUAGE[language],
+                language,
                 templateProperties: {
                   firstName,
                   newEmail: user.email,

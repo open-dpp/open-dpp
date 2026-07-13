@@ -158,12 +158,29 @@ describe("email-change-hooks", () => {
       expect(send).toHaveBeenCalledTimes(1);
       const mail = send.mock.calls[0][0] as {
         to: string;
+        subject: string;
+        language: string;
         templateProperties: { previousEmail: string; currentEmail: string };
       };
       expect(mail.to).toBe("new@x.com");
+      expect(mail.subject).toBe("Your email address was changed");
+      expect(mail.language).toBe("en");
       expect(mail.templateProperties.previousEmail).toBe("old@x.com");
       expect(mail.templateProperties.currentEmail).toBe("new@x.com");
       expect(ecrDeleteOne).toHaveBeenCalledWith({ userId: { $eq: "user-1" } });
+    });
+
+    it("localizes the completion mail subject and body for a German user", async () => {
+      ecrFindOne.mockResolvedValue(pending("new@x.com") as never);
+
+      await completeVerifiedEmailChange(db, emailService, logger, {
+        ...user,
+        preferredLanguage: "de",
+      });
+
+      const mail = send.mock.calls[0][0] as { subject: string; language: string };
+      expect(mail.subject).toBe("E-Mail-Adresse erfolgreich geändert");
+      expect(mail.language).toBe("de");
     });
 
     it("no-ops when there is no pending request", async () => {
