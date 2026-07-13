@@ -1,7 +1,7 @@
 export default {
   testRegex: ".*\\.spec\\.ts$",
   transform: {
-    "^.+\\.(t|j)s$": [
+    "^.+\\.([tj]sx?|mjs)$": [
       "@swc/jest",
       {
         jsc: {
@@ -20,5 +20,6 @@ export default {
       },
     ],
   },
+  transformIgnorePatterns: ["node_modules/(?!.*uuid)"],
   testEnvironment: "node",
 };

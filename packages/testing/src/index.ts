@@ -1,3 +1,4 @@
+export * from "./fixtures/gs1/gs1-data-attributes.factory";
 export * from "./fixtures/aas/aas.factory";
 export * from "./fixtures/aas/security.factory";
 export * from "./fixtures/aas/submodel-element-modification.factory";
