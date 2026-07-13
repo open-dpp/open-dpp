@@ -87,7 +87,7 @@ export interface IAasTableExtension {
   resolveFieldValue: (data: Row, field: string) => Value;
   setFieldValue: (data: Row, field: string, value: Value) => void;
   openNestedTable: (rowIndex: number, column: Column) => void;
-  canGoBackToParentTable: Ref<boolean>;
+  hasParentTable: Ref<boolean>;
   goBackToParentTable: () => Promise<void>;
   save: () => Promise<void>;
 }
@@ -190,7 +190,7 @@ export function useAasTableExtension({
     openTableAtPath(nestedPath, nestedListData);
   }
 
-  const canGoBackToParentTable = computed(() => !!pathToList.parentTablePath);
+  const hasParentTable = computed(() => !!pathToList.parentTablePath);
 
   /** Navigates back up to the parent table this list was drilled into from,
    * re-fetching its current data so the view reflects any changes made
@@ -441,7 +441,7 @@ export function useAasTableExtension({
     resolveFieldValue,
     setFieldValue,
     openNestedTable,
-    canGoBackToParentTable,
+    hasParentTable,
     goBackToParentTable,
     save,
     buildColumnMenu,

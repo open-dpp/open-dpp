@@ -87,7 +87,7 @@ const {
   resolveFieldValue,
   setFieldValue,
   openNestedTable,
-  canGoBackToParentTable,
+  hasParentTable,
   goBackToParentTable,
   save,
 } = useAasTableExtension({
@@ -126,7 +126,7 @@ async function submit() {
       props.errorHandlingStore.logErrorWithNotification(t("aasEditor.table.errorEditEntries"), e);
     }
     await props.callback({ ...data });
-    if (canGoBackToParentTable.value) {
+    if (hasParentTable.value) {
       await goBackToParentTable();
     } else {
       props.hideDrawer();
@@ -182,7 +182,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
 <template>
   <div class="flex flex-col gap-1 p-2">
     <Button
-      v-if="canGoBackToParentTable"
+      v-if="hasParentTable"
       data-cy="back-to-parent-table"
       :label="t('aasEditor.table.backToParentTable')"
       icon="pi pi-arrow-left"

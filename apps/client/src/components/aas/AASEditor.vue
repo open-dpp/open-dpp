@@ -218,9 +218,9 @@ async function deleteClicked(node: TreeNode) {
     await deleteSubmodelElement(node.data.path);
   }
 }
-function onSubmit() {
+async function onSubmit() {
   if (componentRef.value) {
-    componentRef.value.submit();
+    await componentRef.value.submit();
   }
 }
 

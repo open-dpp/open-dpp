@@ -554,7 +554,7 @@ describe("aasTableExtension composable", () => {
       value: [],
     });
 
-    const { canGoBackToParentTable, goBackToParentTable } = useAasTableExtension({
+    const { hasParentTable, goBackToParentTable } = useAasTableExtension({
       id: aasId,
       pathToList: nestedPath,
       initialData: nestedTableInitialData,
@@ -567,7 +567,7 @@ describe("aasTableExtension composable", () => {
       callbackOfSubmodelElementListEditor,
     });
 
-    expect(canGoBackToParentTable.value).toBe(true);
+    expect(hasParentTable.value).toBe(true);
 
     const refetchedParentList = {
       idShort: "List",

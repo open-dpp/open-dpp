@@ -581,6 +581,7 @@ export function useAasEditor({
               path.idShortPath,
             );
             await finalizeApiRequest({ status: response.status });
+            await pagination.reloadCurrentPage();
           }
         } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
@@ -613,6 +614,7 @@ export function useAasEditor({
         try {
           const response = await aasNamespace.deleteSubmodelById(id, submodelId);
           await finalizeApiRequest({ status: response.status });
+          await pagination.reloadCurrentPage();
         } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
             translate(`${translatePrefix}.errorRemoveSubmodel`),
@@ -679,6 +681,7 @@ export function useAasEditor({
         await finalizeApiRequest(response);
 
         if (selectSubmodelElementAfterCreation) {
+          await pagination.reloadCurrentPage();
           const submodelIdShort =
             submodels.value.find((n) => n.key === path.submodelId)?.data.plain.idShort ?? "";
           const key = path.idShortPath
