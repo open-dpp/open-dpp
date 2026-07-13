@@ -35,11 +35,9 @@ onMounted(async () => {
       return;
     }
     newEmail.value = data.newEmail ?? null;
+    loading.value = false;
   } catch {
     goToResult("error");
-    return;
-  } finally {
-    loading.value = false;
   }
 });
 
