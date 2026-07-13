@@ -32,7 +32,7 @@ test("request shows the pending state and sends both verification + revoke-notif
 
   const notification = await mailpit.waitForMessage({
     to: user.email,
-    subjectContains: "Your email is being changed",
+    subjectContains: "Deine E-Mail-Adresse wird geändert",
     since,
   });
   expect(MailpitClient.getRevokeLink(notification)).toContain("/account/email-change-revoke?token");

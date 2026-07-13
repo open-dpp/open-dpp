@@ -30,7 +30,7 @@ test("revoking via the notification link blocks a later, still-valid verificatio
   // (The old address also holds the earlier signup mail, hence the subject filter.)
   const notification = await mailpit.waitForMessage({
     to: user.email,
-    subjectContains: "Your email is being changed",
+    subjectContains: "Deine E-Mail-Adresse wird geändert",
     since,
   });
   const revokeLink = MailpitClient.getRevokeLink(notification);
