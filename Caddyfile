@@ -1,7 +1,0 @@
-{$SERVICE_APP_URL} {
-	reverse_proxy open-dpp:3000
-}
-
-{$SERVICE_MAILPIT_URL} {
-	reverse_proxy mailpit:8025
-}
