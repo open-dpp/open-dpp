@@ -111,10 +111,11 @@
       "id": "Identifikator"
     },
     "table": {
+      "edit": "Tabelle bearbeiten",
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
       "column": "Spalte",
       "row": "Zeile",
-      "rows": "{count} Zeile | {count} Zeilen",
+      "rows": "Zeilen",
       "backToParentTable": "Zurück zur übergeordneten Tabelle",
       "entries": "Einträge",
       "emptyCell": "Bitte ausfüllen",

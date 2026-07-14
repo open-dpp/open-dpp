@@ -111,10 +111,11 @@
       "id": "Identifier"
     },
     "table": {
+      "edit": "Edit table",
       "saveAndAddEntries": "Save and add list entries",
       "column": "column",
       "row": "row",
-      "rows": "{count} row | {count} rows",
+      "rows": "Rows",
       "backToParentTable": "Back to parent table",
       "entries": "Entries",
       "emptyCell": "Please fill out",

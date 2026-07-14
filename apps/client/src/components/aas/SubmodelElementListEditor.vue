@@ -227,7 +227,19 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
+          <div class="flex items-center gap-2">
+            <Button
+              v-if="hasParentTable"
+              data-cy="back-to-parent-table"
+              v-tooltip.top="t('aasEditor.table.backToParentTable')"
+              :aria-label="t('aasEditor.table.backToParentTable')"
+              icon="pi pi-chevron-left"
+              severity="secondary"
+              variant="text"
+              @click="goBackToParentTable"
+            />
+            <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
+          </div>
           <Button
             v-tooltip.top="!canCreateColumnsAndRows ? missingPermissionsMsg : undefined"
             :label="t('aasEditor.table.addColumnEnd')"
@@ -253,7 +265,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                   v-if="col.children"
                   :data-cy="`column-menu-${col.idShort}`"
                   :aria-label="t('common.actions')"
-                  icon="pi pi-ellipsis-v"
+                  icon="pi pi-chevron-down"
+                  variant="text"
                   severity="secondary"
                   size="small"
                   @click="
@@ -268,7 +281,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                   v-else
                   :data-cy="`column-menu-${col.idShort}`"
                   :aria-label="t('common.actions')"
-                  icon="pi pi-ellipsis-v"
+                  icon="pi pi-chevron-down"
+                  variant="text"
                   severity="secondary"
                   size="small"
                   @click="
@@ -295,7 +309,8 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                   <Button
                     :data-cy="`column-menu-${col.idShort}-${subCol.idShort}`"
                     :aria-label="t('common.actions')"
-                    icon="pi pi-ellipsis-v"
+                    icon="pi pi-chevron-down"
+                    variant="text"
                     severity="secondary"
                     size="small"
                     @click="
@@ -323,6 +338,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
               :data-cy="`row-menu-${index}`"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
+              variant="text"
               severity="secondary"
               size="small"
               @click="toggleRowMenu($event, { position: index })"
@@ -411,11 +427,10 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             </span>
             <Button
               v-else-if="flatCol.plain.modelType === AasSubmodelElements.SubmodelElementList"
-              :label="
-                t('aasEditor.table.rows', {
-                  count: rowCountOfTableCell(cellData, field),
-                })
-              "
+              :label="t('aasEditor.table.rows')"
+              v-tooltip.top="t('aasEditor.table.edit')"
+              :aria-label="t('aasEditor.table.edit')"
+              :badge="rowCountOfTableCell(cellData, field).toFixed()"
               icon="pi pi-table"
               severity="secondary"
               size="small"

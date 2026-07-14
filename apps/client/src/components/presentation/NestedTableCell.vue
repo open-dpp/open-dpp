@@ -29,7 +29,7 @@ function navigateToTable() {
   <Button
     type="button"
     :label="t('presentation.table.rows')"
-    :v-tooltip.top="t('presentation.table.viewTable')"
+    v-tooltip.top="t('presentation.table.viewTable')"
     :aria-label="t('presentation.table.viewTable')"
     icon="pi pi-table"
     :badge="rowCount.toFixed()"
