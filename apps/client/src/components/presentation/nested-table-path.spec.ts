@@ -4,7 +4,12 @@ import type {
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
-import { resolveNestedTablePath } from "./nested-table-path";
+import {
+  buildTableQuery,
+  encodeTableQuery,
+  parseTableSteps,
+  resolveNestedTablePath,
+} from "./nested-table-path";
 
 function property(idShort: string, value: string): SubmodelElementResponseDto {
   return {
@@ -139,5 +144,64 @@ describe("resolveNestedTablePath", () => {
   it("falls back to the root when the requested content is empty", () => {
     const result = resolveNestedTablePath([], [{ field: "SubTable", rowIdShort: "row0" }]);
     expect(result).toEqual({ content: [], resolvedSteps: [] });
+  });
+});
+
+describe("encodeTableQuery", () => {
+  it("returns the bare path for zero steps", () => {
+    expect(encodeTableQuery("Submodel.MyTable", [])).toBe("Submodel.MyTable");
+  });
+
+  it("appends field[rowIdShort] per step", () => {
+    expect(
+      encodeTableQuery("Submodel.MyTable", [
+        { field: "SubTable", rowIdShort: "row_1" },
+        { field: "SubSubTable", rowIdShort: "row_2" },
+      ]),
+    ).toBe("Submodel.MyTable.SubTable[row_1].SubSubTable[row_2]");
+  });
+});
+
+describe("parseTableSteps", () => {
+  it("returns an empty array when the query value doesn't belong to this path", () => {
+    expect(parseTableSteps("Submodel.MyTable", "Submodel.OtherTable.Col[row_1]")).toEqual([]);
+  });
+
+  it("returns an empty array for a non-string query value", () => {
+    expect(parseTableSteps("Submodel.MyTable", undefined)).toEqual([]);
+    expect(parseTableSteps("Submodel.MyTable", ["a", "b"])).toEqual([]);
+  });
+
+  it("returns an empty array for an empty path", () => {
+    expect(parseTableSteps("", "Submodel.MyTable.Col[row_1]")).toEqual([]);
+  });
+
+  it("round-trips through encodeTableQuery", () => {
+    const steps = [
+      { field: "SubTable", rowIdShort: "row_1" },
+      { field: "SubSubTable", rowIdShort: "row_2" },
+    ];
+    const encoded = encodeTableQuery("Submodel.MyTable", steps);
+    expect(parseTableSteps("Submodel.MyTable", encoded)).toEqual(steps);
+  });
+
+  it("stops at the first malformed segment", () => {
+    expect(parseTableSteps("Submodel.MyTable", "Submodel.MyTable.SubTable[row_1].Broken")).toEqual([
+      { field: "SubTable", rowIdShort: "row_1" },
+    ]);
+  });
+});
+
+describe("buildTableQuery", () => {
+  it("removes the table param when steps is empty", () => {
+    expect(buildTableQuery({ table: "Submodel.MyTable.Col[row_1]", other: "kept" }, "Submodel.MyTable", [])).toEqual(
+      { other: "kept" },
+    );
+  });
+
+  it("sets the encoded table param and preserves other params", () => {
+    expect(
+      buildTableQuery({ other: "kept" }, "Submodel.MyTable", [{ field: "SubTable", rowIdShort: "row_1" }]),
+    ).toEqual({ other: "kept", table: "Submodel.MyTable.SubTable[row_1]" });
   });
 });

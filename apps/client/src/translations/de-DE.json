@@ -747,7 +747,12 @@
     },
     "missingValue": "Kein Wert gesetzt",
     "passportNotFound": "Produktpass nicht gefunden",
-    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Möglicherweise wurde er noch nicht veröffentlicht oder der Link ist ungültig. Bitte wenden Sie sich an den Produktverantwortlichen oder den Support."
+    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Möglicherweise wurde er noch nicht veröffentlicht oder der Link ist ungültig. Bitte wenden Sie sich an den Produktverantwortlichen oder den Support.",
+    "table": {
+      "viewTable": "Tabelle anzeigen ({count} Zeile) | Tabelle anzeigen ({count} Zeilen)",
+      "rowCount": "{count} Zeile | {count} Zeilen",
+      "backToParentTable": "Zurück zur übergeordneten Tabelle"
+    }
   },
   "qrCodeDialog": {
     "draftWarning": "Dieser Produktpass ist ein Entwurf und noch nicht öffentlich zugänglich.",

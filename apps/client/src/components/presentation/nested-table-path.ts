@@ -57,3 +57,52 @@ export function resolveNestedTablePath(
 
   return { content, resolvedSteps };
 }
+
+/** Encodes `steps` onto `path` as `path.field1[row1].field2[row2]...` for the `table` query param. */
+export function encodeTableQuery(path: string, steps: TablePathStep[]): string {
+  return steps.reduce((acc, step) => `${acc}.${step.field}[${step.rowIdShort}]`, path);
+}
+
+/**
+ * Parses the `table` query param back into steps, scoped to `path` — only
+ * a value that starts with `${path}.` belongs to this list instance (a page
+ * can render several tables, each matching only its own query segment). A
+ * malformed segment stops parsing at that point, same graceful-degradation
+ * behavior as `resolveNestedTablePath`.
+ */
+export function parseTableSteps(path: string, queryValue: unknown): TablePathStep[] {
+  if (typeof queryValue !== "string" || !path) return [];
+
+  const prefix = `${path}.`;
+  if (!queryValue.startsWith(prefix)) return [];
+
+  const remainder = queryValue.slice(prefix.length);
+  if (!remainder) return [];
+
+  const steps: TablePathStep[] = [];
+  for (const segment of remainder.split(".")) {
+    const match = /^(.+)\[(.+)]$/.exec(segment);
+    if (!match) break;
+    steps.push({ field: match[1]!, rowIdShort: match[2]! });
+  }
+  return steps;
+}
+
+/**
+ * Builds the next `route.query`, preserving unrelated params: sets `table`
+ * to the encoded `steps`, or removes it entirely when `steps` is empty
+ * (navigating back to the root has no nested-table state to represent).
+ */
+export function buildTableQuery<Q extends Record<string, unknown>>(
+  currentQuery: Q,
+  path: string,
+  steps: TablePathStep[],
+): Q & { table?: string } {
+  const query: Q & { table?: string } = { ...currentQuery };
+  if (steps.length === 0) {
+    delete query.table;
+  } else {
+    query.table = encodeTableQuery(path, steps);
+  }
+  return query;
+}

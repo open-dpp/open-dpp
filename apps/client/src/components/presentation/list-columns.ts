@@ -18,6 +18,8 @@ export interface ColumnDef {
   style?: { minWidth: string };
   /** Set when this column is a sub-column of a group, holding the group's idShort. */
   groupIdShort?: string;
+  /** True when every row's cell in this column is itself a nested table. */
+  isTableColumn: boolean;
 }
 
 export interface GroupHeaderDef {
@@ -85,6 +87,7 @@ export function buildColumns(
     header: col.label,
     field: col.field,
     groupIdShort: col.groupIdShort,
+    isTableColumn: columnKindOf(col.plain.modelType) === "table",
     ...(col.plain.modelType === "File" ? { style: { minWidth: FILE_MIN_WIDTH } } : {}),
   }));
 }
