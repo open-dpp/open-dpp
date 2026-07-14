@@ -5,6 +5,7 @@ import { isAxiosError } from "axios";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client";
+import { useGs1LinkPreview } from "../../composables/permalink-preview";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 import Gs1DataAttributesField from "./Gs1DataAttributesField.vue";
@@ -47,6 +48,14 @@ const typeLabel = computed(() =>
   isGs1Link.value ? t("permalink.edit.type.gs1Link") : t("permalink.edit.type.presentation"),
 );
 const locked = computed(() => Boolean(props.permalink.publishedUrl));
+
+// Live GS1 Digital Link preview — reflects base-URL and data-attribute edits as
+// they happen, matching the URL the backend will freeze on publish.
+const { previewUrl: gs1PreviewUrl } = useGs1LinkPreview(
+  computed(() => props.permalink),
+  baseUrl,
+  gs1DataAttributes,
+);
 
 // ---------------------------------------------------------------------------
 // Sync form state when permalink prop changes
@@ -184,6 +193,19 @@ function cancel() {
             v-model="gs1DataAttributes"
             data-testid="permalink-edit-gs1-data-attributes"
           />
+        </div>
+
+        <!-- Live GS1 Digital Link preview -->
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-medium tracking-wider text-gray-500 uppercase">
+            {{ t("permalink.edit.gs1Preview.label") }}
+          </span>
+          <span
+            data-testid="permalink-edit-gs1-preview"
+            class="font-mono text-sm break-all text-blue-600"
+          >
+            {{ gs1PreviewUrl }}
+          </span>
         </div>
       </template>
     </div>

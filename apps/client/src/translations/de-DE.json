@@ -800,7 +800,10 @@
       "baseUrl": {
         "label": "Produktpass Basis-URL"
       },
-      "gs1DataAttributes": "GS1 Datenattribute (optional)"
+      "gs1DataAttributes": "GS1 Datenattribute (optional)",
+      "gs1Preview": {
+        "label": "GS1 Digital Link Vorschau"
+      }
     },
     "list": {
       "setPrimary": "Als primär festlegen",

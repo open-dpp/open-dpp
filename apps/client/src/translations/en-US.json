@@ -800,7 +800,10 @@
       "baseUrl": {
         "label": "Custom base URL"
       },
-      "gs1DataAttributes": "GS1 Data Attributes (optional)"
+      "gs1DataAttributes": "GS1 Data Attributes (optional)",
+      "gs1Preview": {
+        "label": "GS1 Digital Link preview"
+      }
     },
     "list": {
       "setPrimary": "Set primary",
