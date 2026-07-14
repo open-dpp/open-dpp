@@ -38,12 +38,13 @@ import {
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 
 describe("Gs1IdentityController", () => {
-  const basePath = "/passports";
+  const basePath = "/v1/passports";
   const VALID_GTIN13 = "4006381333931";
   const VALID_GTIN13_AS_14 = "04006381333931";
 
   const ctx = createAasTestContext(
     basePath,
+    basePath, // basePathV2 — AAS v2 battery not exercised by this suite
     {
       imports: [
         UniqueProductIdentifierModule,

@@ -1,5 +1,14 @@
 import type { Response } from "express";
-import { Controller, Get, HttpStatus, Logger, NotFoundException, Param, Res } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Logger,
+  NotFoundException,
+  Param,
+  Res,
+  VERSION_NEUTRAL,
+} from "@nestjs/common";
 import { Cset82ComponentSchema, GtinInputSchema } from "@open-dpp/dto";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { Gs1IdentityService } from "../application/services/gs1-identity.service";
@@ -14,7 +23,12 @@ import { Gs1IdentityService } from "../application/services/gs1-identity.service
  * "unknown key → 404" are inherited from the resolution service. Resolution is on
  * the EXACT full key, so a serialized unit and a bare GTIN never shadow each other.
  */
-@Controller()
+// Version-neutral: the public GS1 Digital Link contract is the bare `/01/{gtin}`
+// with no version segment. In prod the global-prefix `exclude` also drops the
+// `/api` + version; declaring VERSION_NEUTRAL makes that explicit and keeps the
+// route reachable under any app config (e.g. the versioned test harness, which
+// has no global-prefix exclude).
+@Controller({ version: VERSION_NEUTRAL })
 export class Gs1ResolverController {
   private readonly logger = new Logger(Gs1ResolverController.name);
 

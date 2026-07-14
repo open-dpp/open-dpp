@@ -51,12 +51,13 @@ import { ExternalIdentifierType } from "./dto/unique-product-identifier-dto.sche
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 
 describe("UniqueProductIdentifierController", () => {
-  const basePath = "/unique-product-identifiers";
+  const basePath = "/v1/unique-product-identifiers";
 
   // The controller is registered through UniqueProductIdentifierModule — no explicit
   // `controllers` entry so NestJS resolves PassportService within the module scope.
   const ctx = createAasTestContext(
     basePath,
+    basePath, // basePathV2 — AAS v2 battery not exercised by this suite
     {
       imports: [
         UniqueProductIdentifierModule,
@@ -767,7 +768,7 @@ describe("UniqueProductIdentifierController", () => {
       const otherPassport = await createPassport(org!.id);
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
         .send();
@@ -807,7 +808,7 @@ describe("UniqueProductIdentifierController", () => {
       );
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
         .send();
@@ -841,7 +842,7 @@ describe("UniqueProductIdentifierController", () => {
       }
 
       const page1 = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .query({ limit: 2 })
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -851,7 +852,7 @@ describe("UniqueProductIdentifierController", () => {
       expect(page1.body.paging_metadata.cursor).toBeTruthy();
 
       const page2 = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .query({ limit: 2, cursor: page1.body.paging_metadata.cursor })
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -871,7 +872,7 @@ describe("UniqueProductIdentifierController", () => {
         await betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userBCookie)
         .set(ORGANIZATION_ID_HEADER, orgB.id)
         .send();
@@ -884,7 +885,7 @@ describe("UniqueProductIdentifierController", () => {
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${randomUUID()}/unique-product-identifiers`)
+        .get(`/v1/passports/${randomUUID()}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
         .send();
@@ -898,7 +899,7 @@ describe("UniqueProductIdentifierController", () => {
       const passport = await createPassport(org!.id);
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .send();
 

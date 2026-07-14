@@ -43,6 +43,7 @@ describe("Gs1ResolverController", () => {
   // The resolver controller route is the absolute `/01/:gtin`; basePath is unused.
   const ctx = createAasTestContext(
     "/01",
+    "/01", // basePathV2 — AAS v2 battery not exercised by this suite
     {
       imports: [
         UniqueProductIdentifierModule,
