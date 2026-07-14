@@ -1,7 +1,6 @@
-import {
-  type SubmodelElementCollectionResponseDto,
-  type SubmodelElementResponseDto,
-  SubmodelElementSchema,
+import type {
+  SubmodelElementCollectionResponseDto,
+  SubmodelElementResponseDto,
 } from "@open-dpp/dto";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { resolveLanguageTexts } from "../../composables/language-text.ts";
@@ -35,11 +34,22 @@ function buildLabel(element: SubmodelElementResponseDto, locale: string): string
   return resolveLanguageTexts(element.displayName, locale, element.idShort);
 }
 
+/**
+ * Returns `element.value` narrowed to a specific `modelType`, or `undefined`
+ * if `element` isn't that type.
+ */
+export function childElementsOf<T = SubmodelElementResponseDto>(
+  element: SubmodelElementResponseDto,
+  modelType: string,
+): T[] | undefined {
+  if (element.modelType !== modelType) return undefined;
+  return (element as unknown as { value: T[] }).value;
+}
+
 function groupChildren(
   element: SubmodelElementResponseDto,
 ): SubmodelElementResponseDto[] | undefined {
-  if (element.modelType !== AasSubmodelElements.SubmodelElementCollection) return undefined;
-  return SubmodelElementSchema.array().parse(element.value);
+  return childElementsOf(element, AasSubmodelElements.SubmodelElementCollection);
 }
 
 /**
