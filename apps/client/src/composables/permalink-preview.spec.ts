@@ -289,15 +289,17 @@ describe("useGs1LinkPreview", () => {
     expect(preview.previewUrl.value).toBe("https://id.example.com/01/04006381333931?17=251231");
   });
 
-  it("reflects a custom base-URL override while preserving the identity path", () => {
+  it("reduces a path-carrying base override to its origin (GS1 resolves at the root)", () => {
     const permalink = ref<PermalinkPublicDto | undefined>(makeGs1Permalink());
     const baseUrl = ref("https://brand.example.com/r");
     const attrs = ref<Record<string, string>>({});
 
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
+    // The `/r` path is dropped: the GS1 Digital Link resolver lives at the domain
+    // root, so the link renders on the origin, matching the backend.
     expect(preview.previewUrl.value).toBe(
-      "https://brand.example.com/r/01/04006381333931/10/LOT-42/21/SN-1",
+      "https://brand.example.com/01/04006381333931/10/LOT-42/21/SN-1",
     );
   });
 

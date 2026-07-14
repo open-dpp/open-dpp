@@ -33,10 +33,10 @@ A permalink that represents a GS1 Digital Link: it references a GS1 UPI (at most
 The single presentation permalink that provides a passport's canonical public URL; the public resolver falls back to it. Exactly one per passport; it cannot be deleted while it is the passport's last presentation permalink.
 
 **GS1 Digital Link**:
-The GS1-standard URL form carried by a QR code and resolved to a passport. Its **base** is the permalink's base URL; its **path** comes from the GS1 UPI's identity (`…/01/{gtin}/10/{batch}/21/{serial}`); its **query string** comes from the permalink's GS1 data attributes (`?17=…&3103=…`). Owned by the permalink, which holds the UPI reference, the base URL, and the data attributes.
+The GS1-standard URL form carried by a QR code and resolved to a passport. Its **base** is the **origin** of the permalink's base URL — the resolver is mounted at the domain root (`/01/{gtin}`), so any path the base carries (e.g. the presentation viewer's `/p`) is dropped; its **path** comes from the GS1 UPI's identity (`…/01/{gtin}/10/{batch}/21/{serial}`); its **query string** comes from the permalink's GS1 data attributes (`?17=…&3103=…`). Owned by the permalink, which holds the UPI reference, the base URL, and the data attributes.
 
 **Permalink Base URL**:
-The single host a permalink renders against, for both kinds: the page URL of a presentation permalink (`base/{slug}`) and the resolver base of a GS1 Digital Link (`base/01/{gtin}/…`). Resolved through one cascade — the permalink's own `baseUrl`, then the org's branding base URL, then the instance default. There is no separate GS1 resolver base.
+The single **host** a permalink renders against, for both kinds. Resolved through one cascade — the permalink's own `baseUrl`, then the org's branding base URL, then the instance default. A presentation permalink renders on the **full base** (`base/{slug}`, e.g. the instance default's `/p` viewer path); a GS1 Digital Link renders on the base's **origin** (`{origin}/01/{gtin}/…`), because its resolver is mounted at the domain root. The two share the host, not the path. There is no separate GS1 resolver base.
 
 **GS1 Data Attributes**:
 Optional GS1 Application Identifiers appended to a GS1 Digital Link's query string (e.g. expiry `17`, net weight `3103`). A link-level concern carried by the permalink, distinct from the identity's key qualifiers.

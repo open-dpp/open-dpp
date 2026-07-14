@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
+import { PermalinkKind } from "@open-dpp/dto";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -8,6 +9,7 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { Branding } from "../../branding/domain/branding";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { BrandingDoc, BrandingSchema } from "../../branding/infrastructure/branding.schema";
 import {
@@ -30,6 +32,10 @@ import { InstanceSettingsModule } from "../../instance-settings/instance-setting
 import { Permalink } from "../../permalink/domain/permalink";
 import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
+import {
+  PermalinkApplicationService,
+  resolveGs1LinkPublicUrl,
+} from "../../permalink/application/services/permalink.application.service";
 import { PermalinkModule } from "../../permalink/permalink.module";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
@@ -227,5 +233,156 @@ describe("Gs1ResolverController", () => {
     );
     expect(response.status).toBe(302);
     expect(response.headers.location).toContain(permalink.id);
+  });
+
+  // V1 (#629): the rendered GS1 Digital Link URL (what the user scans / the QR
+  // encodes) must actually resolve via this same `/01/{gtin}` resolver, on every
+  // base-URL host in the permalink cascade. Unlike the presentation-target tests
+  // above, a GS1_LINK permalink resolves to the Digital Link form itself, so the
+  // 302 target IS the scanned URL — we assert the exact round-trip.
+  describe("GS1 Digital Link round-trip across base-URL hosts", () => {
+    // Seed a published passport whose UPI carries a GS1_LINK permalink (its own UPI
+    // ref + presentation config), so `resolveGs1KeyToPublicUrl` selects that
+    // permalink and renders the GS1 Digital Link form.
+    async function seedGs1LinkPermalink(options: {
+      gtin: string;
+      batch?: string;
+      serial?: string;
+      baseUrl?: string | null;
+      brandingBaseUrl?: string | null;
+      gs1DataAttributes?: Record<string, string> | null;
+      // Saving a Branding row requires a real (better-auth-backed) org; pass the
+      // harness org for the branding-tier case. Other cases use a throwaway id.
+      organizationId?: string;
+    }) {
+      const { aas, submodels } = ctx.getAasObjects();
+      const environment = Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map((s) => s.id),
+        conceptDescriptions: [],
+      });
+      const organizationId = options.organizationId ?? randomUUID();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Published,
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId,
+        referenceId: passport.id,
+      });
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: passport.id,
+        gtin: options.gtin,
+        batch: options.batch,
+        serial: options.serial,
+      });
+      const permalink = Permalink.create({
+        kind: PermalinkKind.GS1_LINK,
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: config.id,
+        gs1DataAttributes: options.gs1DataAttributes ?? null,
+        baseUrl: options.baseUrl ?? null,
+        organizationId,
+      });
+      const branding =
+        options.brandingBaseUrl != null
+          ? Branding.create({ organizationId, permalinkBaseUrl: options.brandingBaseUrl })
+          : null;
+
+      const moduleRef = ctx.getModuleRef();
+      await moduleRef.get(PassportRepository).save(passport);
+      await moduleRef.get(PresentationConfigurationRepository).save(config);
+      await moduleRef.get(PermalinkRepository).save(permalink);
+      await moduleRef.get(UniqueProductIdentifierRepository).save(upi);
+      if (branding) {
+        await moduleRef.get(BrandingRepository).save(branding);
+      }
+      return { passport, permalink, upi, branding, organizationId };
+    }
+
+    // The exact URL the user scans: rendered via the shared BE1/BE2 builder on the
+    // permalink base-URL cascade.
+    async function renderScannedUrl(seed: {
+      permalink: Permalink;
+      upi: UniqueProductIdentifier;
+      branding: Branding | null;
+    }): Promise<string> {
+      const svc = ctx.getModuleRef().get(PermalinkApplicationService, { strict: false });
+      const envUrl = await svc.getPermalinkBaseUrl();
+      return resolveGs1LinkPublicUrl(seed.permalink, seed.upi.gs1!, seed.branding, envUrl);
+    }
+
+    // Round-trip: render the GS1 URL → hit its path (optionally with a foreign query
+    // or Host) → assert a 302 back to the identical URL. Fix-direction agnostic:
+    // whatever the builder renders, that path must resolve.
+    async function expectResolves(
+      seed: Awaited<ReturnType<typeof seedGs1LinkPermalink>>,
+      hit?: { query?: string; host?: string },
+    ) {
+      const url = await renderScannedUrl(seed);
+      const parsed = new URL(url);
+      const target = parsed.pathname + (hit?.query ?? parsed.search);
+      let req = request(ctx.globals().app.getHttpServer()).get(target);
+      if (hit?.host) {
+        req = req.set("Host", hit.host);
+      }
+      const res = await req;
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toBe(url);
+      return { url, res };
+    }
+
+    it("resolves a GS1 link rendered on a per-permalink base URL", async () => {
+      const seed = await seedGs1LinkPermalink({
+        gtin: "04006381333931",
+        serial: "SN-1",
+        baseUrl: "https://id.example.com",
+        gs1DataAttributes: { "17": "251231" },
+      });
+      await expectResolves(seed);
+    });
+
+    it("resolves a GS1 link rendered on the org branding base URL", async () => {
+      const seed = await seedGs1LinkPermalink({
+        gtin: "04006381333931",
+        serial: "SN-2",
+        brandingBaseUrl: "https://brand.example.com",
+        organizationId: ctx.globals().organizationId,
+      });
+      await expectResolves(seed);
+    });
+
+    it("resolves a GS1 link rendered on the instance-default base URL", async () => {
+      // No per-permalink baseUrl and no branding → the instance-default cascade.
+      const seed = await seedGs1LinkPermalink({ gtin: "04006381333931", serial: "SN-3" });
+      await expectResolves(seed);
+    });
+
+    it("ignores the ?attrs query when resolving (data attributes are display-only)", async () => {
+      const seed = await seedGs1LinkPermalink({
+        gtin: "04006381333931",
+        serial: "SN-4",
+        baseUrl: "https://id.example.com",
+        gs1DataAttributes: { "17": "251231" },
+      });
+      // Resolution must be identical with no query and with a foreign query — the
+      // resolver never reads it; the 302 target still carries the permalink's own attrs.
+      await expectResolves(seed, { query: "" });
+      await expectResolves(seed, { query: "?17=990101&99=IGNORED" });
+    });
+
+    it("resolves regardless of the inbound request Host (host-agnostic resolver)", async () => {
+      const seed = await seedGs1LinkPermalink({
+        gtin: "04006381333931",
+        serial: "SN-5",
+        baseUrl: "https://id.example.com",
+      });
+      await expectResolves(seed, { host: "scanner.anywhere.test" });
+    });
   });
 });

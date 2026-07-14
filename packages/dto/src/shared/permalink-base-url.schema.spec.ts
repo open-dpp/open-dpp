@@ -1,4 +1,4 @@
-import { PermalinkBaseUrlSchema } from "./permalink-base-url.schema";
+import { baseUrlOrigin, PermalinkBaseUrlSchema } from "./permalink-base-url.schema";
 import { LatestApiVersionWithPrefixDto } from "../api-version.dto";
 
 describe("PermalinkBaseUrlSchema", () => {
@@ -93,5 +93,21 @@ describe("PermalinkBaseUrlSchema", () => {
       const result = PermalinkBaseUrlSchema.safeParse(long);
       expect(result.success).toBe(false);
     });
+  });
+});
+
+describe("baseUrlOrigin", () => {
+  it.each([
+    ["strips the presentation /p path", "https://example.com/p", "https://example.com"],
+    ["leaves a bare origin unchanged", "https://example.com", "https://example.com"],
+    ["preserves a non-default port", "http://localhost:3000/p", "http://localhost:3000"],
+    ["strips a nested path", "https://example.com/dpp/v1", "https://example.com"],
+    ["lowercases the host", "https://Example.COM/p", "https://example.com"],
+  ])("%s", (_label: string, input: string, expected: string) => {
+    expect(baseUrlOrigin(input)).toBe(expected);
+  });
+
+  it("returns the input unchanged when it cannot be parsed as a URL", () => {
+    expect(baseUrlOrigin("not a url")).toBe("not a url");
   });
 });

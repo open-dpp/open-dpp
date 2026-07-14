@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  baseUrlOrigin,
   buildGs1DigitalLink,
   canonicaliseBaseUrl,
   Gs1DataAttributes,
@@ -697,7 +698,11 @@ export function resolveGs1LinkPublicUrl(
   fallbackEnvUrl: string,
 ): string {
   const base = permalink.baseUrl ?? resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
-  return buildGs1DigitalLink(base, {
+  // The GS1 Digital Link resolver is mounted at the domain root (`/01/{gtin}`), so
+  // the link renders on the base's ORIGIN. Any path the cascade base carries — most
+  // notably the presentation viewer's `/p` in the instance-default fallback — would
+  // make `{base}/01/…` unreachable by the root resolver.
+  return buildGs1DigitalLink(baseUrlOrigin(base), {
     gtin: gs1.gtin,
     batch: gs1.batch,
     serial: gs1.serial,

@@ -1,5 +1,6 @@
 import type { PermalinkFallbackBaseUrlSource, PermalinkPublicDto } from "@open-dpp/dto";
 import {
+  baseUrlOrigin,
   buildGs1DataAttributeQuery,
   canonicaliseBaseUrl,
   PERMALINK_RESERVED_SLUGS,
@@ -171,9 +172,16 @@ export function useGs1LinkPreview(
   const locked = computed(() => Boolean(permalink.value?.publishedUrl));
 
   const effectiveBase = computed(() => {
-    if (trimmedBase.value !== null) return canonicaliseBaseUrl(trimmedBase.value);
-    if (!permalink.value) return "";
-    return deriveFallbackBaseUrl(permalink.value);
+    const base =
+      trimmedBase.value !== null
+        ? canonicaliseBaseUrl(trimmedBase.value)
+        : permalink.value
+          ? deriveFallbackBaseUrl(permalink.value)
+          : "";
+    // GS1 Digital Links resolve at the domain root, so the preview renders on the
+    // base's origin (drops the presentation `/p` — or any other path the cascade
+    // base carries), matching the backend's `resolveGs1LinkPublicUrl`.
+    return base ? baseUrlOrigin(base) : "";
   });
 
   const previewUrl = computed(() => {
