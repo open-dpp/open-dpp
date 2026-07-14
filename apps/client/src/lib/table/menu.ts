@@ -146,7 +146,10 @@ function buildColumnTypeMenuItem(
         openDrawer({
           ...sharedDrawerProps,
           type: ColumnEditorKey,
-          data: { modelType: type, typeValueListElement: AasSubmodelElements.SubmodelElementCollection },
+          data: {
+            modelType: type,
+            typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          },
           callback: async (colData: any) => createFn({ modelType: type, ...colData }),
         });
       },

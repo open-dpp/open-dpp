@@ -166,7 +166,6 @@ export const GroupIdShortParamSchema = z.string().meta({
 export const GroupIdShortParam = () =>
   Param("groupIdShort", new ZodValidationPipe(GroupIdShortParamSchema));
 
-
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
 export function ApiPostRow(prefix?: string) {

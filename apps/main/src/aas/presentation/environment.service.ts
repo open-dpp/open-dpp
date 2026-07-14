@@ -846,7 +846,13 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     const modifiedSubmodelElement = submodel
       .withTracking()
-      .modifyColumnInGroup(idShortPath, groupIdShort, idShortOfColumn, modificationRequest.toDomain(), { ability });
+      .modifyColumnInGroup(
+        idShortPath,
+        groupIdShort,
+        idShortOfColumn,
+        modificationRequest.toDomain(),
+        { ability },
+      );
 
     const activity = ColumnModifiedInGroupActivity.create({
       userId: userContext.userId,

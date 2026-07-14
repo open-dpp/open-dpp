@@ -379,27 +379,27 @@ describe("apiClient", () => {
     });
 
     it("should modify column in group of submodel element list", async () => {
-      const response =
-        await sdk.dpp[appIdentifiable].aas.modifyColumnInGroupOfSubmodelElementList(
-          aasWrapperId,
-          btoa(submodelDesignOfProduct.id),
-          "Design_V01.Author.ListProp",
-          "group1",
-          "column1",
-          propertyModificationPlainFactory.build({ idShort: "column1" }),
-        );
+      const response = await sdk.dpp[appIdentifiable].aas.modifyColumnInGroupOfSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+        propertyModificationPlainFactory.build({ idShort: "column1" }),
+      );
       expect(response.data).toEqual(submodelDesignOfProductElement0);
     });
 
     it("should delete column from group in submodel element list", async () => {
-      const response =
-        await sdk.dpp[appIdentifiable].aas.deleteColumnFromGroupInSubmodelElementList(
-          aasWrapperId,
-          btoa(submodelDesignOfProduct.id),
-          "Design_V01.Author.ListProp",
-          "group1",
-          "column1",
-        );
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.deleteColumnFromGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+      );
       expect(response.status).toEqual(200);
       expect(response.data).toEqual(submodelDesignOfProductElement0);
     });

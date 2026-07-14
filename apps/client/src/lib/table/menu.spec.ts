@@ -245,9 +245,9 @@ describe("add column left/right sections", () => {
       deps,
     );
     const leftSection = menu!.find((item) => item.label === "aasEditor.table.addColumnLeft");
-    expect(
-      leftSection!.items!.some((item) => item.label === "aasEditor.submodelElementList"),
-    ).toBe(false);
+    expect(leftSection!.items!.some((item) => item.label === "aasEditor.submodelElementList")).toBe(
+      false,
+    );
 
     const groupHeaderMenu = buildColumnMenu(
       { isGroupHeader: true, groupIdShort: "Group1" },

@@ -317,9 +317,21 @@ describe("convertDataToRows", () => {
           value: [
             // Element 0 doubles as the column-defining header row *and* a
             // real, user-visible first row — it counts too.
-            { idShort: "row0", modelType: AasSubmodelElements.SubmodelElementCollection, value: [] },
-            { idShort: "row1", modelType: AasSubmodelElements.SubmodelElementCollection, value: [] },
-            { idShort: "row2", modelType: AasSubmodelElements.SubmodelElementCollection, value: [] },
+            {
+              idShort: "row0",
+              modelType: AasSubmodelElements.SubmodelElementCollection,
+              value: [],
+            },
+            {
+              idShort: "row1",
+              modelType: AasSubmodelElements.SubmodelElementCollection,
+              value: [],
+            },
+            {
+              idShort: "row2",
+              modelType: AasSubmodelElements.SubmodelElementCollection,
+              value: [],
+            },
           ],
         },
       ],

@@ -23,9 +23,7 @@ export class SubmodelSecurityContext {
 
     const element = submodel.findSubmodelElement(relativePath);
     if (!element) {
-      return PolicyTargetValidity.unresolvable(
-        `Submodel element "${object.toString()}" not found`,
-      );
+      return PolicyTargetValidity.unresolvable(`Submodel element "${object.toString()}" not found`);
     }
 
     const ancestorTablePaths = element

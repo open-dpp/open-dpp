@@ -46,7 +46,11 @@ import {
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
 import { Pointer } from "./pointer";
 import { NestedTableExtension } from "./table/nested-table-extension";
-import { ITableExtendable, MoveOptions, parseAsSubmodelElementListOrFail } from "./table/table-extensable";
+import {
+  ITableExtendable,
+  MoveOptions,
+  parseAsSubmodelElementListOrFail,
+} from "./table/table-extensable";
 import { AccessResult } from "../security/access-allowed";
 
 export class Submodel
