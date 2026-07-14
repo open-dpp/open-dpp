@@ -1,41 +1,21 @@
 <script lang="ts" setup>
-import type {
-  SubmodelElementCollectionResponseDto,
-  SubmodelElementRequestDto,
-} from "@open-dpp/dto";
+import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
-import { buildColumns } from "./list-columns";
+import { buildColumns, buildGroupHeaders, buildRows, hasGroupColumns } from "./list-columns";
 
 const { content, path } = defineProps<{
   content: SubmodelElementCollectionResponseDto[];
   path?: string;
 }>();
 
-const columns = computed(() => buildColumns(content));
+const { locale } = useI18n();
 
-const rows = computed(() => {
-  const result: Record<string, SubmodelElementRequestDto>[] = [];
-  if (content.length >= 1) {
-    for (let rowIndex = 0; rowIndex < content.length; rowIndex++) {
-      const row = content[rowIndex];
-      if (row && row.value) {
-        const rowRecord: Record<string, SubmodelElementRequestDto> = {};
-        for (let columnIndex = 0; columnIndex < row.value.length; columnIndex++) {
-          const key = columns.value[columnIndex]?.field;
-          const value = row.value[columnIndex];
-          if (key && value) {
-            rowRecord[key] = value;
-          }
-        }
-
-        result[rowIndex] = rowRecord;
-      }
-    }
-  }
-
-  return result;
-});
+const columns = computed(() => buildColumns(content, locale.value));
+const rows = computed(() => buildRows(content, locale.value));
+const hasGroups = computed(() => hasGroupColumns(content));
+const groupHeaders = computed(() => buildGroupHeaders(content, locale.value));
 
 function cellPath(field: string): string | undefined {
   return path ? `${path}.${field}` : undefined;
@@ -44,6 +24,27 @@ function cellPath(field: string): string | undefined {
 
 <template>
   <DataTable :value="rows" scrollable>
+    <!-- Always render ColumnGroup — v-if on ColumnGroup itself causes PrimeVue to duplicate body cells -->
+    <ColumnGroup type="header">
+      <Row>
+        <Column
+          v-for="groupCol of groupHeaders"
+          :key="groupCol.idShort"
+          :header="groupCol.header"
+          :colspan="groupCol.colspan"
+          :rowspan="groupCol.isGroup ? 1 : hasGroups ? 2 : 1"
+        />
+      </Row>
+      <Row v-if="hasGroups">
+        <template v-for="groupCol of groupHeaders" :key="groupCol.idShort">
+          <Column
+            v-for="subCol of columns.filter((c) => c.groupIdShort === groupCol.idShort)"
+            :key="subCol.field"
+            :header="subCol.header"
+          />
+        </template>
+      </Row>
+    </ColumnGroup>
     <Column
       v-for="col of columns"
       :key="col.field"

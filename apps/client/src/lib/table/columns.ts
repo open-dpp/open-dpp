@@ -39,13 +39,13 @@ const ValueMatcher = P.optional(P.union(P.string, null));
  * Distinguishes a "group" column (flattened into N inline-editable sub-cells),
  * a "table" column (a nested SubmodelElementList, drilled into via the
  * drawer rather than edited inline), from a "scalar" one (a single
- * inline-editable cell). Internal to the conversion logic below — not part
- * of the public Column shape, since nothing outside this module needs to
- * branch on it (yet).
+ * inline-editable cell). Also used by the read-only presentation view
+ * (see apps/client/src/components/presentation/list-columns.ts) to classify
+ * columns the same way the editor does.
  */
-type ColumnKind = "scalar" | "group" | "table";
+export type ColumnKind = "scalar" | "group" | "table";
 
-function columnKindOf(modelType: unknown): ColumnKind {
+export function columnKindOf(modelType: unknown): ColumnKind {
   if (modelType === AasSubmodelElements.SubmodelElementCollection) return "group";
   if (modelType === AasSubmodelElements.SubmodelElementList) return "table";
   return "scalar";
