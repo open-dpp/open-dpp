@@ -77,15 +77,19 @@ const parentQuery = computed(() =>
 </script>
 
 <template>
-  <router-link
-    v-if="isNested"
-    :to="{ query: parentQuery, hash }"
-    class="text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
-  >
-    <ChevronLeftIcon class="size-4 shrink-0" aria-hidden="true" />
-    <span>{{ t("presentation.table.backToParentTable") }}</span>
-  </router-link>
   <DataTable :value="rows" scrollable>
+    <template #header>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <router-link
+          v-if="isNested"
+          :to="{ query: parentQuery, hash }"
+          class="text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
+        >
+          <ChevronLeftIcon class="size-4 shrink-0" aria-hidden="true" />
+          <span>{{ t("presentation.table.backToParentTable") }}</span>
+        </router-link>
+      </div>
+    </template>
     <!-- Always render ColumnGroup — v-if on ColumnGroup itself causes PrimeVue to duplicate body cells -->
     <ColumnGroup type="header">
       <Row>
