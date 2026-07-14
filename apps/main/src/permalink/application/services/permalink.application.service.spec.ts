@@ -271,6 +271,56 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(persisted.publishedUrl).toBeNull();
   });
 
+  it("resolvePublicUrlWithFreeze computes the live GS1 Digital Link URL for an unfrozen gs1-link (unpublished passport)", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "00012345678905",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    const passport = await seedPassport();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const { permalink: unchanged, publicUrl } = await service.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      null,
+      "http://localhost:3000/p",
+    );
+
+    expect(publicUrl).toBe("https://id.example.com/01/00012345678905");
+    // pre-freeze: the permalink stays unfrozen (live-computed, not pinned)
+    expect(unchanged.publishedUrl).toBeNull();
+  });
+
+  it("resolvePublicUrlWithFreeze falls back to the presentation form when the gs1-link's UPI is missing (deleted)", async () => {
+    const organizationId = randomUUID();
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: randomUUID(),
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    const passport = await seedPassport();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const { publicUrl } = await service.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      null,
+      "http://localhost:3000/p",
+    );
+
+    expect(publicUrl).toBe(`https://id.example.com/${permalink.id}`);
+  });
+
   it("createPermalinksForConfigs recovers idempotently when a concurrent create wins the unique-index race", async () => {
     // This test provokes the unique-index duplicate-key path, so the index on
     // presentationConfigurationId must exist. Mongoose autoIndex is async and lags under the
@@ -1256,6 +1306,66 @@ describe("PermalinkApplicationService.listByOrganization", () => {
     expect(result.items).toEqual([]);
     expect(result.cursor).toBeNull();
   });
+
+  async function seedResolvableGs1Permalink(
+    organizationId: string,
+    gtin: string,
+  ) {
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin,
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      primary: false,
+      organizationId,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
+    return { upi, permalink };
+  }
+
+  it("renders the live GS1 Digital Link URL for an unfrozen gs1-link whose UPI resolves", async () => {
+    const organizationId = randomUUID();
+    const { permalink } = await seedResolvableGs1Permalink(organizationId, "00036000291452");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.listByOrganization(organizationId);
+
+    const entry = result.items.find((e) => e.permalink.id === permalink.id);
+    expect(entry?.publicUrl).toBe("https://id.example.com/01/00036000291452");
+  });
+
+  it("batch-loads UPI identities — one findByIds query per page, no N+1", async () => {
+    const organizationId = randomUUID();
+    await seedResolvableGs1Permalink(organizationId, "00075678164125");
+    await seedResolvableGs1Permalink(organizationId, "88000000000107");
+    const upiRepo = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
+    const findByIds = jest.spyOn(upiRepo, "findByIds");
+    const findOne = jest.spyOn(upiRepo, "findOne");
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await service.listByOrganization(organizationId);
+
+    expect(findByIds).toHaveBeenCalledTimes(1);
+    expect(findOne).not.toHaveBeenCalled();
+    findByIds.mockRestore();
+    findOne.mockRestore();
+  });
+
+  it("falls back to the presentation form when a gs1-link's UPI is missing", async () => {
+    const organizationId = randomUUID();
+    const orphan = await seedGs1Permalink(organizationId);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.listByOrganization(organizationId);
+
+    const entry = result.items.find((e) => e.permalink.id === orphan.id);
+    expect(entry?.publicUrl.endsWith(`/${orphan.id}`)).toBe(true);
+  });
 });
 
 describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
@@ -1344,6 +1454,28 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
 
     expect(result.size).toBe(1);
     expect(result.has(upiWithLink)).toBe(true);
+  });
+
+  it("renders the live GS1 Digital Link URL when the referenced UPI resolves", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "88000000000206",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const link = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(link);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.getGs1LinkSummariesByUpiIds([upi.uuid], organizationId);
+
+    expect(result.get(upi.uuid)?.publicUrl).toBe("https://id.example.com/01/88000000000206");
   });
 });
 
@@ -1445,5 +1577,28 @@ describe("PermalinkApplicationService.listByPassport", () => {
 
     expect(result.items).toEqual([]);
     expect(result.cursor).toBeNull();
+  });
+
+  it("renders the live GS1 Digital Link URL for a gs1-link surfaced via the UPI join", async () => {
+    const passport = await seedPassport();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: passport.id,
+      gtin: "88000000000305",
+      organizationId: passport.organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const link = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      organizationId: passport.organizationId,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(link);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.listByPassport(passport.id);
+
+    const entry = result.items.find((e) => e.permalink.id === link.id);
+    expect(entry?.publicUrl).toBe("https://id.example.com/01/88000000000305");
   });
 });

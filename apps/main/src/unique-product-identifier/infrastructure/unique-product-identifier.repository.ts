@@ -80,6 +80,17 @@ export class UniqueProductIdentifierRepository {
     return uniqueProductIdentifier;
   }
 
+  /**
+   * Batch-load UPIs by uuid. Used to resolve a page of GS1 identities in one
+   * query (no N+1) when rendering live GS1 Digital Link permalink URLs. Missing
+   * uuids are simply absent from the result — the caller decides the fallback.
+   */
+  async findByIds(uuids: string[]): Promise<UniqueProductIdentifier[]> {
+    if (uuids.length === 0) return [];
+    const docs = await this.uniqueProductIdentifierDoc.find({ _id: { $in: uuids } });
+    return docs.map((doc) => this.convertToDomain(doc));
+  }
+
   async findOneByReferencedId(referenceId: string) {
     const uniqueProductIdentifierDoc = await this.uniqueProductIdentifierDoc
       .findOne({

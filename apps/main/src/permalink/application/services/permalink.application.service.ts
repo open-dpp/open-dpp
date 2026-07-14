@@ -238,9 +238,10 @@ export class PermalinkApplicationService {
       return { permalink, publicUrl: permalink.publishedUrl };
     }
     if (!passport.isPublished() || branding === null) {
+      const gs1Identities = await this.loadGs1IdentitiesForPermalinks([permalink]);
       return {
         permalink,
-        publicUrl: resolvePublicUrl(permalink, branding, fallbackEnvUrl),
+        publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, fallbackEnvUrl),
       };
     }
     const frozen = await this.freezePermalink(permalink, branding, fallbackEnvUrl, options);
@@ -261,6 +262,64 @@ export class PermalinkApplicationService {
 
   async loadBranding(organizationId: string): Promise<Branding> {
     return await this.brandingRepository.findOneByOrganizationId(organizationId);
+  }
+
+  /**
+   * Batch-load the GS1 identities referenced by a page of permalinks, keyed by
+   * UPI uuid. Only unfrozen gs1-link permalinks are considered — frozen ones read
+   * their pinned `publishedUrl`, presentation permalinks have no UPI — so the
+   * whole page costs a single `findByIds` query (no N+1). A UPI that is missing
+   * or carries no GS1 identity is simply absent from the map; {@link resolveReadUrl}
+   * then falls back to the presentation form.
+   */
+  private async loadGs1IdentitiesForPermalinks(
+    permalinks: Permalink[],
+  ): Promise<Map<string, Gs1Identity>> {
+    const upiIds = [
+      ...new Set(
+        permalinks
+          .filter(
+            (p) =>
+              p.kind === PermalinkKind.GS1_LINK &&
+              p.publishedUrl === null &&
+              p.uniqueProductIdentifierId !== null,
+          )
+          .map((p) => p.uniqueProductIdentifierId as string),
+      ),
+    ];
+    const upis = await this.uniqueProductIdentifierRepository.findByIds(upiIds);
+    const identities = new Map<string, Gs1Identity>();
+    for (const upi of upis) {
+      if (upi.gs1) {
+        identities.set(upi.uuid, upi.gs1);
+      }
+    }
+    return identities;
+  }
+
+  /**
+   * The read-time public URL for a permalink. A frozen permalink returns its
+   * pinned `publishedUrl`; an unfrozen gs1-link whose GS1 identity resolved
+   * renders the live GS1 Digital Link form (BE2); everything else — presentation
+   * permalinks, and gs1-links whose UPI is missing/unresolvable — falls back to
+   * the presentation `base/slug` form.
+   */
+  private resolveReadUrl(
+    permalink: Permalink,
+    gs1Identities: Map<string, Gs1Identity>,
+    branding: Branding | null,
+    envUrl: string,
+  ): string {
+    if (permalink.publishedUrl !== null) {
+      return permalink.publishedUrl;
+    }
+    if (permalink.kind === PermalinkKind.GS1_LINK && permalink.uniqueProductIdentifierId !== null) {
+      const gs1 = gs1Identities.get(permalink.uniqueProductIdentifierId);
+      if (gs1) {
+        return resolveGs1LinkPublicUrl(permalink, gs1, branding, envUrl);
+      }
+    }
+    return resolvePublicUrl(permalink, branding, envUrl);
   }
 
   async updatePermalink(
@@ -439,9 +498,10 @@ export class PermalinkApplicationService {
    * `cursor` on the result (null on the last page / empty org).
    *
    * Resolves publicUrl for each item using the same branding-aware fallback used
-   * by the public `/p` endpoints.  For gs1-link permalinks the URL is computed
-   * from the fallback base (resolver base cascade) + permalink id/slug because
-   * the UPI's GS1 key (gtin/batch/serial) is not loaded at list-time.
+   * by the public `/p` endpoints. Unfrozen gs1-link permalinks render their live
+   * GS1 Digital Link URL — the page's UPI GS1 identities are batch-loaded in one
+   * query (no N+1) and threaded through {@link resolveReadUrl}; a gs1-link whose
+   * UPI is missing/unresolvable falls back to the presentation `base/slug` form.
    */
   async listByOrganization(
     organizationId: string,
@@ -464,15 +524,13 @@ export class PermalinkApplicationService {
     const branding = await this.loadBranding(organizationId).catch(() => null);
     const envUrl = await this.getPermalinkBaseUrl();
     const fallback = resolveFallbackBaseUrl(branding, envUrl);
-    const items = result.items.map((permalink) => {
-      const publicUrl = permalink.publishedUrl ?? resolvePublicUrl(permalink, branding, envUrl);
-      return {
-        permalink,
-        publicUrl,
-        fallbackBaseUrl: fallback.url,
-        fallbackBaseUrlSource: fallback.source,
-      };
-    });
+    const gs1Identities = await this.loadGs1IdentitiesForPermalinks(result.items);
+    const items = result.items.map((permalink) => ({
+      permalink,
+      publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, envUrl),
+      fallbackBaseUrl: fallback.url,
+      fallbackBaseUrlSource: fallback.source,
+    }));
     return { items, cursor: result.pagination.cursor };
   }
 
@@ -509,23 +567,23 @@ export class PermalinkApplicationService {
       : null;
     const envUrl = await this.getPermalinkBaseUrl();
     const fallback = resolveFallbackBaseUrl(branding, envUrl);
-    const items = result.items.map((permalink) => {
-      const publicUrl = permalink.publishedUrl ?? resolvePublicUrl(permalink, branding, envUrl);
-      return {
-        permalink,
-        publicUrl,
-        fallbackBaseUrl: fallback.url,
-        fallbackBaseUrlSource: fallback.source,
-      };
-    });
+    const gs1Identities = await this.loadGs1IdentitiesForPermalinks(result.items);
+    const items = result.items.map((permalink) => ({
+      permalink,
+      publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, envUrl),
+      fallbackBaseUrl: fallback.url,
+      fallbackBaseUrlSource: fallback.source,
+    }));
     return { items, cursor: result.pagination.cursor };
   }
 
   /**
    * Batch-resolve gs1-link permalink summaries for a page of UPI uuids,
    * keyed by UPI uuid (max one gs1-link permalink per UPI). Used to enrich
-   * UPI list rows; publicUrl follows the same rule as `listByPassport`:
-   * `publishedUrl ?? resolvePublicUrl(permalink, branding, envUrl)`.
+   * UPI list rows; publicUrl follows the same rule as the list paths via
+   * {@link resolveReadUrl}: frozen → pinned `publishedUrl`, unfrozen → live GS1
+   * Digital Link form (GS1 identities batch-loaded in one query), missing UPI →
+   * presentation `base/slug` fallback.
    */
   async getGs1LinkSummariesByUpiIds(
     upiUuids: string[],
@@ -536,12 +594,13 @@ export class PermalinkApplicationService {
     if (permalinks.size === 0) return new Map();
     const branding = await this.loadBranding(organizationId).catch(() => null);
     const envUrl = await this.getPermalinkBaseUrl();
+    const gs1Identities = await this.loadGs1IdentitiesForPermalinks([...permalinks.values()]);
     return new Map(
       [...permalinks].map(([upiUuid, permalink]) => [
         upiUuid,
         {
           id: permalink.id,
-          publicUrl: permalink.publishedUrl ?? resolvePublicUrl(permalink, branding, envUrl),
+          publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, envUrl),
         },
       ]),
     );
