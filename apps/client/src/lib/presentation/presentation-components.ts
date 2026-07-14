@@ -1,13 +1,13 @@
 import type { PresentationComponentNameType, SubmodelElementResponseDto } from "@open-dpp/dto";
 import type { Component } from "vue";
 import { isIntegerDataType, isNumericDataType, PresentationComponentName } from "@open-dpp/dto";
-import BigNumberValue from "./BigNumberValue.vue";
+import BigNumberValue from "../../components/presentation/BigNumberValue.vue";
 import {
   isProperty,
   type LeafElement,
   type SampleElementResult,
   sampleWhen,
-} from "./presentation-element-helpers";
+} from "./presentation-element-helpers.ts";
 
 export interface PresentationComponentProps {
   element: SubmodelElementResponseDto;

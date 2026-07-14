@@ -4,7 +4,7 @@ import type {
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
-import { buildColumns, buildGroupHeaders, buildRows, hasGroupColumns } from "./list-columns";
+import { buildColumns, buildGroupHeaders, buildRows, hasGroupColumns } from "./table.ts";
 
 function makeFileRow(): SubmodelElementCollectionResponseDto {
   const value: SubmodelElementResponseDto[] = [

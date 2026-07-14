@@ -6,8 +6,17 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import NestedTableCell from "./NestedTableCell.vue";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
-import { buildColumns, buildGroupHeaders, buildRows, hasGroupColumns } from "./list-columns";
-import { buildTableQuery, parseTableSteps, resolveNestedTablePath } from "./nested-table-path";
+import {
+  buildColumns,
+  buildGroupHeaders,
+  buildRows,
+  hasGroupColumns,
+} from "../../lib/presentation/table.ts";
+import {
+  buildTableQuery,
+  parseTableSteps,
+  resolveNestedTablePath,
+} from "../../lib/presentation/nested-table-path.ts";
 
 const { content, path } = defineProps<{
   content: SubmodelElementCollectionResponseDto[];
@@ -36,6 +45,16 @@ const columns = computed(() => buildColumns(displayedContent.value, locale.value
 const rows = computed(() => buildRows(displayedContent.value, locale.value));
 const hasGroups = computed(() => hasGroupColumns(displayedContent.value));
 const groupHeaders = computed(() => buildGroupHeaders(displayedContent.value, locale.value));
+const hash = computed<string | undefined>(() => {
+  if (route.hash) {
+    return route.hash;
+  } else if (path) {
+    const pathSegments = path.split(".");
+    if (pathSegments[0]) {
+      return `#${pathSegments[0]}`;
+    }
+  }
+});
 
 function cellPath(field: string): string | undefined {
   return flattenPath.value ? `${flattenPath.value}.${field}` : undefined;
@@ -60,7 +79,7 @@ const parentQuery = computed(() =>
 <template>
   <router-link
     v-if="isNested"
-    :to="{ query: parentQuery }"
+    :to="{ query: parentQuery, hash }"
     class="text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
   >
     <ChevronLeftIcon class="size-4 shrink-0" aria-hidden="true" />
@@ -100,6 +119,7 @@ const parentQuery = computed(() =>
           v-if="col.isTableColumn"
           :element="slotProps.data[col.field]"
           :query="drillInQuery(col.field, slotProps.index)"
+          :hash="hash"
         />
         <SubmodelElementValue
           v-else

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { PresentationConfigurationDto, SubmodelElementResponseDto } from "@open-dpp/dto";
-import { usePresentationDispatch } from "../presentation-dispatch";
+import { usePresentationDispatch } from "../../lib/presentation/presentation-dispatch.ts";
 
 const { element, path, config } = defineProps<{
   element: SubmodelElementResponseDto;

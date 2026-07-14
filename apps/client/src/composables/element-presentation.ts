@@ -1,9 +1,9 @@
 import { KeyTypes, type KeyTypesType, type PresentationComponentNameType } from "@open-dpp/dto";
-import { PRESENTATION_COMPONENTS } from "../components/presentation/components/presentation-components";
+import { PRESENTATION_COMPONENTS } from "../lib/presentation/presentation-components.ts";
 import {
   type LeafElement,
   resolveI18nKey,
-} from "../components/presentation/components/presentation-element-helpers";
+} from "../lib/presentation/presentation-element-helpers.ts";
 
 export const DEFAULT_VALUE = "default";
 

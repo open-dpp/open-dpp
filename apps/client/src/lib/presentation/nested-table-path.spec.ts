@@ -9,7 +9,7 @@ import {
   encodeTableQuery,
   parseTableSteps,
   resolveNestedTablePath,
-} from "./nested-table-path";
+} from "./nested-table-path.ts";
 
 function property(idShort: string, value: string): SubmodelElementResponseDto {
   return {
@@ -57,7 +57,9 @@ function tableCell(
 }
 
 /** A single-level table: two rows, each with a "name" cell and a "SubTable" nested-table cell. */
-function makeTableWithNestedColumn(nestedRowsByRow: Record<string, SubmodelElementCollectionResponseDto[]>) {
+function makeTableWithNestedColumn(
+  nestedRowsByRow: Record<string, SubmodelElementCollectionResponseDto[]>,
+) {
   return Object.entries(nestedRowsByRow).map(([rowIdShort, nestedRows]) =>
     collectionRow(rowIdShort, [property("name", rowIdShort), tableCell("SubTable", nestedRows)]),
   );
@@ -83,7 +85,10 @@ describe("resolveNestedTablePath", () => {
   it("resolves two levels of nesting", () => {
     const grandchild = [collectionRow("gc_row0", [property("color", "red")])];
     const child = [
-      collectionRow("child_row0", [property("name", "child_row0"), tableCell("SubSubTable", grandchild)]),
+      collectionRow("child_row0", [
+        property("name", "child_row0"),
+        tableCell("SubSubTable", grandchild),
+      ]),
     ];
     const root = makeTableWithNestedColumn({ row0: child });
 
@@ -120,7 +125,12 @@ describe("resolveNestedTablePath", () => {
   });
 
   it("falls back to the root when the cell is no longer a table", () => {
-    const root = [collectionRow("row0", [property("name", "row0"), property("SubTable", "not a table anymore")])];
+    const root = [
+      collectionRow("row0", [
+        property("name", "row0"),
+        property("SubTable", "not a table anymore"),
+      ]),
+    ];
 
     const result = resolveNestedTablePath(root, [{ field: "SubTable", rowIdShort: "row0" }]);
 
@@ -194,14 +204,20 @@ describe("parseTableSteps", () => {
 
 describe("buildTableQuery", () => {
   it("removes the table param when steps is empty", () => {
-    expect(buildTableQuery({ table: "Submodel.MyTable.Col[row_1]", other: "kept" }, "Submodel.MyTable", [])).toEqual(
-      { other: "kept" },
-    );
+    expect(
+      buildTableQuery(
+        { table: "Submodel.MyTable.Col[row_1]", other: "kept" },
+        "Submodel.MyTable",
+        [],
+      ),
+    ).toEqual({ other: "kept" });
   });
 
   it("sets the encoded table param and preserves other params", () => {
     expect(
-      buildTableQuery({ other: "kept" }, "Submodel.MyTable", [{ field: "SubTable", rowIdShort: "row_1" }]),
+      buildTableQuery({ other: "kept" }, "Submodel.MyTable", [
+        { field: "SubTable", rowIdShort: "row_1" },
+      ]),
     ).toEqual({ other: "kept", table: "Submodel.MyTable.SubTable[row_1]" });
   });
 });

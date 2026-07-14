@@ -5,11 +5,12 @@ import { AasSubmodelElements } from "@open-dpp/dto";
 import { ChevronRightIcon } from "@heroicons/vue/16/solid";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { childElementsOf } from "./list-columns";
+import { childElementsOf } from "../../lib/presentation/table.ts";
 
 const { element, query } = defineProps<{
   element: SubmodelElementResponseDto;
   query: LocationQueryRaw;
+  hash?: string;
 }>();
 
 const { t } = useI18n();
@@ -22,7 +23,7 @@ const rowCount = computed(
 <template>
   <router-link
     v-if="rowCount > 0"
-    :to="{ query }"
+    :to="{ query, hash }"
     class="text-primary-600 hover:text-primary-700 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
   >
     <span>{{ t("presentation.table.viewTable", { count: rowCount }) }}</span>

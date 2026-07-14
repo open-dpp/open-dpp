@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
 import type { PresentationConfigurationDto } from "@open-dpp/dto";
-import { resolveComponent } from "./presentation-config";
+import { resolveComponent } from "./presentation-config.ts";
 
 function config(partial: Partial<PresentationConfigurationDto> = {}): PresentationConfigurationDto {
   return {

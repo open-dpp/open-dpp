@@ -10,8 +10,8 @@ import {
 import {
   PRESENTATION_COMPONENTS,
   type PresentationComponentEntry,
-} from "./presentation-components";
-import { type LeafElement, resolveI18nKey } from "./presentation-element-helpers";
+} from "./presentation-components.ts";
+import { type LeafElement, resolveI18nKey } from "./presentation-element-helpers.ts";
 
 type TestElement = SubmodelElementResponseDto & LeafElement;
 

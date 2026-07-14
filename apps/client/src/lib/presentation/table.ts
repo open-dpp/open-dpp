@@ -4,12 +4,7 @@ import type {
 } from "@open-dpp/dto";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { resolveLanguageTexts } from "../../composables/language-text.ts";
-import {
-  columnKindOf,
-  flattenColumns,
-  isGroupColumn,
-  type Column,
-} from "../../lib/table/columns.ts";
+import { columnKindOf, flattenColumns, isGroupColumn, type Column } from "../table/columns.ts";
 
 export interface ColumnDef {
   header: string;

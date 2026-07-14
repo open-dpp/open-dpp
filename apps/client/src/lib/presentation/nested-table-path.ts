@@ -1,6 +1,6 @@
 import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
 import { AasSubmodelElements } from "@open-dpp/dto";
-import { childElementsOf } from "./list-columns.ts";
+import { childElementsOf } from "./table.ts";
 
 export interface TablePathStep {
   /** Column idShort identifying the nested-table cell within the current table. */

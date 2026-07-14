@@ -1,8 +1,8 @@
 import type { PresentationConfigurationDto, SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
-import { usePassportStore } from "../../stores/passport";
-import { PRESENTATION_COMPONENTS } from "./components/presentation-components";
-import { resolveComponent } from "./presentation-config";
+import { usePassportStore } from "../../stores/passport.ts";
+import { PRESENTATION_COMPONENTS } from "./presentation-components.ts";
+import { resolveComponent } from "./presentation-config.ts";
 
 export function usePresentationDispatch(
   getElement: () => SubmodelElementResponseDto,
