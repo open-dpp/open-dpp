@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  buildGs1DigitalLink,
   canonicaliseBaseUrl,
   Gs1DataAttributes,
   PermalinkFallbackBaseUrlSource,
@@ -8,6 +9,7 @@ import {
   PresentationReferenceType,
 } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
+import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { Branding } from "../../../branding/domain/branding";
 import { BrandingRepository } from "../../../branding/infrastructure/branding.repository";
@@ -24,6 +26,8 @@ import { PresentationConfigurationService } from "../../../presentation-configur
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
+import type { Gs1Identity } from "../../../unique-product-identifier/domain/unique.product.identifier";
+import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 
 export interface PermalinkAccessContext {
   organizationId?: string;
@@ -54,6 +58,7 @@ export class PermalinkApplicationService {
     private readonly brandingRepository: BrandingRepository,
     private readonly envService: EnvService,
     private readonly instanceSettingsService: InstanceSettingsService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
   async resolvePermalink(idOrSlug: string): Promise<Permalink> {
@@ -192,10 +197,34 @@ export class PermalinkApplicationService {
     if (permalink.publishedUrl !== null) {
       return permalink;
     }
-    const frozen = permalink.withPublishedUrl(
-      resolvePublicUrl(permalink, branding, fallbackEnvUrl),
-    );
+    const publicUrl = await this.computeFreezeUrl(permalink, branding, fallbackEnvUrl);
+    const frozen = permalink.withPublishedUrl(publicUrl);
     return await this.permalinkRepository.save(frozen, options);
+  }
+
+  /**
+   * The URL frozen into `publishedUrl`. A GS1-link permalink freezes as its
+   * GS1 Digital Link URL (path from the referenced UPI's GS1 identity, query
+   * from the permalink's gs1DataAttributes); every other kind freezes as the
+   * presentation `base/slug` form.
+   */
+  private async computeFreezeUrl(
+    permalink: Permalink,
+    branding: Branding | null,
+    fallbackEnvUrl: string,
+  ): Promise<string> {
+    if (permalink.kind !== PermalinkKind.GS1_LINK) {
+      return resolvePublicUrl(permalink, branding, fallbackEnvUrl);
+    }
+    const upi = await this.uniqueProductIdentifierRepository.findOneOrFail(
+      permalink.uniqueProductIdentifierId as string,
+    );
+    if (!upi.gs1) {
+      throw new ValueError(
+        `Cannot freeze gs1-link permalink ${permalink.id}: UPI ${upi.uuid} has no GS1 identity`,
+      );
+    }
+    return resolveGs1LinkPublicUrl(permalink, upi.gs1, branding, fallbackEnvUrl);
   }
 
   async resolvePublicUrlWithFreeze(
@@ -590,4 +619,29 @@ export function resolvePublicUrl(
   const base = permalink.baseUrl ?? resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
   const slugOrId = permalink.slug ?? permalink.id;
   return `${base}/${slugOrId}`;
+}
+
+/**
+ * Render a gs1-link permalink as its GS1 Digital Link URL:
+ * `{base}/01/{gtin}[/10/{batch}][/21/{serial}][?attrs]`.
+ *
+ * The base follows the same permalink cascade as {@link resolvePublicUrl}
+ * (`permalink.baseUrl` → branding → instance default — NOT the UPI-level
+ * resolver base); the path comes from the referenced UPI's GS1 identity and the
+ * query from the permalink's `gs1DataAttributes`. Shared by the freeze path
+ * (BE1) and the read-time live path (BE2).
+ */
+export function resolveGs1LinkPublicUrl(
+  permalink: Permalink,
+  gs1: Gs1Identity,
+  branding: Branding | null,
+  fallbackEnvUrl: string,
+): string {
+  const base = permalink.baseUrl ?? resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
+  return buildGs1DigitalLink(base, {
+    gtin: gs1.gtin,
+    batch: gs1.batch,
+    serial: gs1.serial,
+    dataAttributes: permalink.gs1DataAttributes,
+  });
 }

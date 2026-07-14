@@ -29,6 +29,8 @@ import { Pagination } from "../../../pagination/pagination";
 import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../infrastructure/permalink.schema";
+import { UniqueProductIdentifier } from "../../../unique-product-identifier/domain/unique.product.identifier";
+import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { InstanceSettingsModule } from "../../../instance-settings/instance-settings.module";
 import { PermalinkModule } from "../../permalink.module";
 import { PermalinkApplicationService } from "./permalink.application.service";
@@ -313,10 +315,63 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
 
     expect(created.publishedUrl).toBeNull();
   });
+
+  it("freezePermalink freezes a gs1-link permalink as its GS1 Digital Link URL, not the presentation form", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "04006381333931",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
+
+    expect(frozen.publishedUrl).toBe("https://id.example.com/01/04006381333931");
+    const persisted = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findOneOrFail(permalink.id);
+    expect(persisted.publishedUrl).toBe("https://id.example.com/01/04006381333931");
+  });
+
+  it("freezePermalink threads batch, serial and gs1DataAttributes into the frozen GS1 URL", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "04006381333931",
+      batch: "LOT-42",
+      serial: "SN-001",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      gs1DataAttributes: { "3103": "000750" },
+      organizationId,
+    });
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
+
+    expect(frozen.publishedUrl).toBe(
+      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-001?3103=000750",
+    );
+  });
 });
 
 describe("PermalinkApplicationService.resolveToPassport (polymorphic)", () => {
   const ctx = createAasTestContext(
+    "/p",
     "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
@@ -423,6 +478,7 @@ describe("PermalinkApplicationService.resolveToPassport (polymorphic)", () => {
 
 describe("PermalinkApplicationService primary management", () => {
   const ctx = createAasTestContext(
+    "/p",
     "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
@@ -605,6 +661,7 @@ describe("PermalinkApplicationService primary management", () => {
 describe("PermalinkApplicationService.createPresentationPermalink", () => {
   const ctx = createAasTestContext(
     "/p",
+    "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [
@@ -725,6 +782,7 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
 
 describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
   const ctx = createAasTestContext(
+    "/p",
     "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
@@ -911,6 +969,7 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
 describe("PermalinkApplicationService.deleteGs1LinkForUpi", () => {
   const ctx = createAasTestContext(
     "/p",
+    "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [
@@ -967,6 +1026,7 @@ describe("PermalinkApplicationService.deleteGs1LinkForUpi", () => {
 
 describe("PermalinkApplicationService.deletePermalink", () => {
   const ctx = createAasTestContext(
+    "/p",
     "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
@@ -1131,6 +1191,7 @@ describe("PermalinkApplicationService.deletePermalink", () => {
 describe("PermalinkApplicationService.listByOrganization", () => {
   const ctx = createAasTestContext(
     "/p",
+    "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
       providers: [
@@ -1199,6 +1260,7 @@ describe("PermalinkApplicationService.listByOrganization", () => {
 
 describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
   const ctx = createAasTestContext(
+    "/p",
     "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
@@ -1287,6 +1349,7 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
 
 describe("PermalinkApplicationService.listByPassport", () => {
   const ctx = createAasTestContext(
+    "/p",
     "/p",
     {
       imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
