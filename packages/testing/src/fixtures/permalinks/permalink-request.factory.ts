@@ -16,17 +16,10 @@ interface PresentationCreateRequestRaw {
 
 /** Raw PermalinkCreateRequest (presentation variant); default kind='presentation' with a uuid configId. */
 export const permalinkCreateRequestPlainFactory = Factory.define<PresentationCreateRequestRaw>(
-  ({ params }) => {
-    const presentationConfigurationId =
-      params.presentationConfigurationId !== undefined
-        ? params.presentationConfigurationId
-        : randomUUID();
-
-    return {
-      kind: "presentation" as const,
-      presentationConfigurationId,
-    };
-  },
+  () => ({
+    kind: "presentation" as const,
+    presentationConfigurationId: randomUUID(),
+  }),
 );
 
 // ---------------------------------------------------------------------------
@@ -46,11 +39,6 @@ interface Gs1LinkCreateRequestRaw {
 /** Raw PermalinkCreateRequest (gs1-link variant); default gs1DataAttributes comes from gs1DataAttributesPlainFactory. */
 export const permalinkGs1LinkCreateRequestPlainFactory = Factory.define<Gs1LinkCreateRequestRaw>(
   ({ params }) => {
-    const uniqueProductIdentifierId =
-      params.uniqueProductIdentifierId !== undefined
-        ? params.uniqueProductIdentifierId
-        : randomUUID();
-
     // gs1DataAttributes replaces (not merges) the default, so it must be resolved
     // from params here; fishery overlays the remaining optional fields automatically.
     const gs1DataAttributes: Gs1DataAttributes | null =
@@ -60,7 +48,7 @@ export const permalinkGs1LinkCreateRequestPlainFactory = Factory.define<Gs1LinkC
 
     return {
       kind: "gs1-link" as const,
-      uniqueProductIdentifierId,
+      uniqueProductIdentifierId: randomUUID(),
       gs1DataAttributes,
     };
   },

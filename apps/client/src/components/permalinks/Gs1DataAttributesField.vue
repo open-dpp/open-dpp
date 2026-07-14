@@ -1,7 +1,14 @@
 <script lang="ts" setup>
-import { isGs1DataAttributeAi, isValidGs1DataAttributeValue } from "@open-dpp/dto";
+import {
+  GS1_AI_TABLE,
+  getGs1AiDescription,
+  isGs1DataAttributeAi,
+  isValidGs1DataAttributeValue,
+  type Gs1AiTableEntry,
+} from "@open-dpp/dto";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { convertLocaleToLanguage } from "../../translations/i18n";
 
 /**
  * AI-keyed map editor for GS1 data attributes.
@@ -22,7 +29,19 @@ const emit = defineEmits<{
   "update:modelValue": [value: Record<string, string>];
 }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const lang = computed(() => convertLocaleToLanguage(locale.value));
+
+// ---------------------------------------------------------------------------
+// AI dropdown options — the 512 data-attribute AIs (type 'D'), computed once.
+// Label is a function so PrimeVue's `filter` matches on code AND description.
+// ---------------------------------------------------------------------------
+
+const aiOptions = Object.values(GS1_AI_TABLE).filter((e) => e.type === "D");
+
+function aiOptionLabel(entry: Gs1AiTableEntry): string {
+  return `${entry.ai} — ${getGs1AiDescription(entry.ai, lang.value) ?? entry.title}`;
+}
 
 // ---------------------------------------------------------------------------
 // Internal row representation
@@ -148,16 +167,29 @@ function removeRow(index: number) {
   <div class="flex flex-col gap-2">
     <div v-for="(row, index) in rows" :key="index" class="flex flex-row items-start gap-2">
       <!-- AI input -->
-      <div class="flex w-24 flex-col gap-1">
-        <InputText
+      <div class="flex w-72 flex-col gap-1">
+        <Select
           :id="`gs1-data-attr-ai-${index}`"
           :model-value="row.ai"
           :data-testid="`gs1-data-attr-ai-${index}`"
+          :options="aiOptions"
+          option-value="ai"
+          :option-label="aiOptionLabel"
           :invalid="!!aiErrors[index]"
           :placeholder="t('gs1DataAttributes.aiPlaceholder')"
-          autocomplete="off"
+          filter
+          class="w-full"
           @update:model-value="updateAi(index, $event as string)"
-        />
+        >
+          <template #option="{ option }">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-sm">{{ option.ai }}</span>
+              <span class="truncate">{{
+                getGs1AiDescription(option.ai, lang) ?? option.title
+              }}</span>
+            </div>
+          </template>
+        </Select>
         <small
           v-if="aiErrors[index]"
           :data-testid="`gs1-data-attr-ai-error-${index}`"

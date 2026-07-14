@@ -18,19 +18,8 @@ export const uniqueProductIdentifierPlainFactory = Factory.define<
   UniqueProductIdentifierTransient
 >(({ params, transientParams }) => {
   if (transientParams.gs1 === true) {
-    const batch =
-      transientParams.batch !== undefined
-        ? transientParams.batch
-        : params.batch !== undefined
-          ? params.batch
-          : null;
-
-    const serial =
-      transientParams.serial !== undefined
-        ? transientParams.serial
-        : params.serial !== undefined
-          ? params.serial
-          : null;
+    const batch = transientParams.batch ?? params.batch ?? null;
+    const serial = transientParams.serial ?? params.serial ?? null;
 
     const granularity = serial !== null ? "item" : batch !== null ? "batch" : "model";
 

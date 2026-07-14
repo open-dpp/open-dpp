@@ -24,19 +24,9 @@ interface CreateRequestRaw {
 export const uniqueProductIdentifierCreateRequestPlainFactory = Factory.define<
   CreateRequestRaw,
   CreateRequestTransient
->(({ transientParams }) => {
-  const result: CreateRequestRaw = {
-    referenceId: randomUUID(),
-    gtin: RAW_GTIN13,
-  };
-
-  if (transientParams.batch !== undefined) {
-    result.batch = transientParams.batch;
-  }
-
-  if (transientParams.serial !== undefined) {
-    result.serial = transientParams.serial;
-  }
-
-  return result;
-});
+>(({ transientParams }) => ({
+  referenceId: randomUUID(),
+  gtin: RAW_GTIN13,
+  ...(transientParams.batch !== undefined && { batch: transientParams.batch }),
+  ...(transientParams.serial !== undefined && { serial: transientParams.serial }),
+}));

@@ -908,7 +908,7 @@
   },
   "gs1DataAttributes": {
     "addRow": "Add row",
-    "aiPlaceholder": "AI (e.g. 17)",
+    "aiPlaceholder": "Select AI",
     "valuePlaceholder": "Value",
     "remove": "Remove",
     "keyAiBlocked": "AI \"{ai}\" is a primary identifier or key qualifier and cannot be used as a data attribute.",
