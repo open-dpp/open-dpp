@@ -199,7 +199,7 @@ describe("aasEditor composable", () => {
     ),
   };
 
-  const selectedLanguage = Language.en;
+  const selectedLanguage = Language["en"];
   const mockOpenConfirm = vi.fn();
   const status = DigitalProductDocumentStatusDto.Draft;
 

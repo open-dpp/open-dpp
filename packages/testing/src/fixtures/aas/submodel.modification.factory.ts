@@ -7,13 +7,13 @@ export const submodelModificationPlainFactory = Factory.define<SubmodelModificat
   idShort: randomUUID(),
   displayName: [
     {
-      language: Language.de,
+      language: Language["de"],
       text: "Neuer Submodel Name",
     },
   ],
   description: [
     {
-      language: Language.en,
+      language: Language["en"],
       text: "New Submodel Description",
     },
   ],

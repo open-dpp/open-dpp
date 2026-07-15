@@ -11,13 +11,13 @@ export const propertyModificationPlainFactory = Factory.define<
   value: `some-value`,
   displayName: [
     {
-      language: Language.de,
+      language: Language["de"],
       text: "Neuer Submodel Name",
     },
   ],
   description: [
     {
-      language: Language.en,
+      language: Language["en"],
       text: "New Submodel Description",
     },
   ],

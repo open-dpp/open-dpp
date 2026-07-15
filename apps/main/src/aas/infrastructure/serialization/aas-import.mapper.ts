@@ -4,6 +4,7 @@ import {
   KeyTypes,
   Language,
   ModellingKind,
+  PresentationReferenceType,
   QualifierKind,
   ReferenceTypes,
 } from "@open-dpp/dto";
@@ -24,17 +25,16 @@ import { Security } from "../../domain/security/security";
 import { SpecificAssetId } from "../../domain/specific-asset-id";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
-import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
-import { AasExport } from "./export-schemas/aas-export-types";
+import { AasExportLatestVersion } from "./export-schemas/aas-export-types";
 import { ReferenceSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
-import { AssetAdministrationShellV2_0 } from "./export-schemas/aas-export-v2.schema";
-import { migrateSubmodelElementLinks } from "../migrate-links";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 
 type ReferenceSchema = z.infer<typeof ReferenceSchemaV1_0>;
-type ShellSchema = AasExport["environment"]["assetAdministrationShells"][number];
+type ShellSchema = AasExportLatestVersion["environment"]["assetAdministrationShells"][number];
 
-type SubmodelSchema = AasExport["environment"]["submodels"][number];
-type ConceptDescriptionSchema = AasExport["environment"]["conceptDescriptions"][number];
+type SubmodelSchema = AasExportLatestVersion["environment"]["submodels"][number];
+type ConceptDescriptionSchema =
+  AasExportLatestVersion["environment"]["conceptDescriptions"][number];
 type ExtensionSchema = ShellSchema["extensions"][number];
 type QualifierSchema = SubmodelSchema["qualifiers"][number];
 
@@ -129,27 +129,33 @@ export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
   return qualifiers.filter((q) => q.valueType != null && q.kind != null).map(mapQualifier);
 }
 
-export function mapSecurity(
-  shell: ShellSchema,
-  submodels: Submodel[],
-  version: AasExportVersionType,
-): Security {
-  if (version === AasExportVersion.v1_0) {
-    const security = Security.create({});
-    submodels.forEach((submodel) => {
-      security.addDefaultPolicyForSubmodelIfNoExists(submodel);
+export function mapSecurity(shell: ShellSchema): Security {
+  return Security.fromPlain(shell.security);
+}
+
+export function mapPresentationConfiguration(params: {
+  schema: AasExportLatestVersion;
+  organizationId: string;
+  referenceId: string;
+  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
+}): PresentationConfiguration | null {
+  const { schema, organizationId, referenceId, referenceType } = params;
+  if (schema.presentationConfiguration) {
+    return PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType,
+      elementDesign: schema.presentationConfiguration.elementDesign,
+      defaultComponents: schema.presentationConfiguration.defaultComponents,
     });
-    return security;
-  } else {
-    return Security.fromPlain(AssetAdministrationShellV2_0.parse(shell).security);
   }
+
+  return null;
 }
 
 export function mapAssetAdministrationShells(
   shells: ShellSchema[],
   submodelIdMapping: Map<string, string>,
-  submodels: Submodel[],
-  version: AasExportVersionType,
 ): AssetAdministrationShell[] {
   return shells.map((shell) => {
     const assetInformation = AssetInformation.create({
@@ -195,7 +201,7 @@ export function mapAssetAdministrationShells(
       })
       .filter((ref): ref is ReferenceSchema => ref !== null);
 
-    const security = mapSecurity(shell, submodels, version);
+    const security = mapSecurity(shell);
 
     return AssetAdministrationShell.create({
       assetInformation,
@@ -218,10 +224,7 @@ export interface MappedSubmodels {
   idMapping: Map<string, string>;
 }
 
-export function mapSubmodels(
-  submodels: SubmodelSchema[],
-  version: AasExportVersionType,
-): MappedSubmodels {
+export function mapSubmodels(submodels: SubmodelSchema[]): MappedSubmodels {
   const idMapping = new Map<string, string>();
   const mapped = submodels.map((submodel) => {
     const newId = randomUUID();
@@ -246,20 +249,10 @@ export function mapSubmodels(
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(
         submodel.embeddedDataSpecifications,
       ),
-      submodelElements: mapSubmodelElements(submodel.submodelElements, version),
+      submodelElements: submodel.submodelElements.map(parseSubmodelElement),
     });
   });
   return { submodels: mapped, idMapping };
-}
-
-function mapSubmodelElements(submodelElements: any[], version: AasExportVersionType) {
-  const migratedSubmodelElements =
-    version === AasExportVersion.v1_0 ||
-    version === AasExportVersion.v2_0 ||
-    version === AasExportVersion.v3_0
-      ? submodelElements.map(migrateSubmodelElementLinks)
-      : submodelElements;
-  return migratedSubmodelElements.map((element) => parseSubmodelElement(element));
 }
 
 export function mapConceptDescriptions(cds: ConceptDescriptionSchema[]): ConceptDescription[] {

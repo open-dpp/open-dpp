@@ -1,5 +1,5 @@
 import type { SubmodelElementCollectionResponseDto } from "@open-dpp/dto";
-import { resolveDisplayName } from "../../composables/display-name";
+import { useAasUtils } from "../../composables/aas-utils";
 
 export interface ColumnDef {
   header: string;
@@ -22,12 +22,13 @@ export function buildColumns(content: SubmodelElementCollectionResponseDto[]): C
     return [];
   }
 
+  const { parseLanguageTexts } = useAasUtils();
+
   return content[0].value.map((collectionElement) => {
-    const header = resolveDisplayName(
-      collectionElement.displayName as { language: "en" | "de"; text: string }[],
-      "en",
-      collectionElement.idShort,
-    );
+    const header =
+      collectionElement.displayName.length > 0
+        ? parseLanguageTexts(collectionElement.displayName)
+        : collectionElement.idShort;
     const field = collectionElement.idShort;
     const isFile = collectionElement.modelType === "File";
 

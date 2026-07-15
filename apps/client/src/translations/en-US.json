@@ -155,12 +155,13 @@
     "type": "Type",
     "error": "{method} @:common.failed"
   },
-  "languages": {
-    "english": "English",
-    "german": "German"
-  },
   "pagination": {
     "footer": "Showing: {from} - {to}, Count: {count}"
+  },
+  "language": {
+    "all": "Available languages",
+    "preferred": "Preferred languages",
+    "selectPlaceholder": "Select language"
   },
   "builder": {
     "repeater": {

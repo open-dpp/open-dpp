@@ -27,16 +27,16 @@ describe("LanguageTextCollectionChanged", () => {
     });
     expect(displayNameChanged.values).toEqual([
       {
-        lng: "en",
-        op: "replace",
-        oldValue: "before",
-        newValue: "after",
-      },
-      {
         lng: "de",
         op: "remove",
         oldValue: "vorher",
         newValue: null,
+      },
+      {
+        lng: "en",
+        op: "replace",
+        oldValue: "before",
+        newValue: "after",
       },
     ]);
   });
@@ -90,16 +90,16 @@ describe("LanguageTextCollectionChanged", () => {
     });
     expect(displayNameChanged.values).toEqual([
       {
-        lng: "en",
-        op: "add",
-        oldValue: null,
-        newValue: "after",
-      },
-      {
         lng: "de",
         op: "remove",
         oldValue: "vorher",
         newValue: null,
+      },
+      {
+        lng: "en",
+        op: "add",
+        oldValue: null,
+        newValue: "after",
       },
     ]);
   });

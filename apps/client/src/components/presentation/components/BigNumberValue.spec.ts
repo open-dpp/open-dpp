@@ -5,7 +5,7 @@ import { DataTypeDef, KeyTypes } from "@open-dpp/dto";
 import type { PropertyResponseDto, SubmodelElementResponseDto } from "@open-dpp/dto";
 import BigNumberValue from "./BigNumberValue.vue";
 
-const localeRef = ref("en-US");
+const localeRef = ref("en");
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
@@ -33,7 +33,7 @@ function makeElement(
   return { ...element, modelType: KeyTypes.Property };
 }
 
-function renderValue(value: string | null | undefined, locale = "en-US"): string {
+function renderValue(value: string | null | undefined, locale = "en"): string {
   localeRef.value = locale;
   const wrapper = mount(BigNumberValue, {
     props: { element: makeElement(value) },
@@ -43,65 +43,65 @@ function renderValue(value: string | null | undefined, locale = "en-US"): string
 
 describe("BigNumberValue", () => {
   beforeEach(() => {
-    localeRef.value = "en-US";
+    localeRef.value = "en";
   });
 
   afterEach(() => {
-    localeRef.value = "en-US";
+    localeRef.value = "en";
   });
 
   describe("precision preservation", () => {
-    it("preserves every digit of a big integer in en-US", () => {
-      expect(renderValue("12345678901234567890", "en-US")).toBe("12,345,678,901,234,567,890");
+    it("preserves every digit of a big integer in en", () => {
+      expect(renderValue("12345678901234567890", "en")).toBe("12,345,678,901,234,567,890");
     });
 
-    it("preserves every digit of a big integer in de-DE", () => {
-      expect(renderValue("12345678901234567890", "de-DE")).toBe("12.345.678.901.234.567.890");
+    it("preserves every digit of a big integer in de", () => {
+      expect(renderValue("12345678901234567890", "de")).toBe("12.345.678.901.234.567.890");
     });
 
     it("preserves every fractional digit beyond Number's precision limit", () => {
-      expect(renderValue("1.23456789012345678", "en-US")).toBe("1.23456789012345678");
+      expect(renderValue("1.23456789012345678", "en")).toBe("1.23456789012345678");
     });
 
-    it("uses locale-aware grouping and decimal separator (de-DE)", () => {
-      expect(renderValue("1234567.89", "de-DE")).toBe("1.234.567,89");
+    it("uses locale-aware grouping and decimal separator (de)", () => {
+      expect(renderValue("1234567.89", "de")).toBe("1.234.567,89");
     });
 
     it("preserves trailing zeros in the fractional part", () => {
-      expect(renderValue("1.10", "en-US")).toBe("1.10");
+      expect(renderValue("1.10", "en")).toBe("1.10");
     });
   });
 
   describe("signs and edge cases", () => {
     it("formats a negative integer", () => {
-      expect(renderValue("-42", "en-US")).toBe("-42");
+      expect(renderValue("-42", "en")).toBe("-42");
     });
 
     it("strips a leading + sign", () => {
-      expect(renderValue("+42", "en-US")).toBe("42");
+      expect(renderValue("+42", "en")).toBe("42");
     });
 
     it("formats a negative decimal with locale separator", () => {
-      expect(renderValue("-1234.5", "de-DE")).toBe("-1.234,5");
+      expect(renderValue("-1234.5", "de")).toBe("-1.234,5");
     });
 
     it("formats zero", () => {
-      expect(renderValue("0", "en-US")).toBe("0");
+      expect(renderValue("0", "en")).toBe("0");
     });
 
     it("formats a single-digit integer", () => {
-      expect(renderValue("7", "en-US")).toBe("7");
+      expect(renderValue("7", "en")).toBe("7");
     });
   });
 
   describe("non-plain input fall-through", () => {
     it("falls back to Intl.NumberFormat for scientific notation", () => {
-      const expected = new Intl.NumberFormat("en-US").format(Number("1.5e10"));
-      expect(renderValue("1.5e10", "en-US")).toBe(expected);
+      const expected = new Intl.NumberFormat("en").format(Number("1.5e10"));
+      expect(renderValue("1.5e10", "en")).toBe(expected);
     });
 
     it("returns non-numeric strings unchanged", () => {
-      expect(renderValue("abc", "en-US")).toBe("abc");
+      expect(renderValue("abc", "en")).toBe("abc");
     });
   });
 
@@ -120,18 +120,18 @@ describe("BigNumberValue", () => {
   });
 
   describe("label rendering", () => {
-    it("falls back to idShort when no displayName is provided", () => {
+    it("falls back to untitled when no displayName is provided", () => {
       const wrapper = mount(BigNumberValue, {
         props: {
           element: makeElement("42", { idShort: "myProp" }),
         },
       });
       const labelText = wrapper.get('[data-cy="bignumber"] span.uppercase').text();
-      expect(labelText).toBe("myProp");
+      expect(labelText).toBe("common.untitled");
     });
 
-    it("prefers the localized displayName over idShort", () => {
-      localeRef.value = "en-US";
+    it("prefers the localized displayName over untitled", () => {
+      localeRef.value = "en";
       const wrapper = mount(BigNumberValue, {
         props: {
           element: makeElement("42", {

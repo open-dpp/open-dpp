@@ -12,7 +12,9 @@ const { content, path } = defineProps<{
   path?: string;
 }>();
 
-const columns = computed(() => buildColumns(content));
+const columns = computed(() => {
+  return buildColumns(content);
+});
 
 const rows = computed(() => {
   const result: Record<string, SubmodelElementRequestDto>[] = [];
