@@ -24,7 +24,7 @@ export class TableExtension implements ITableExtendable {
 
   constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
-      throw new Error(
+      throw new ValueError(
         `List type ${this.data.typeValueListElement} is not supported by table extension`,
       );
     }

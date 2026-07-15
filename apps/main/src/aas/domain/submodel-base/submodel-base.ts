@@ -98,8 +98,9 @@ export interface ISubmodelBase
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
   deleteSubmodelElement: (idShort: string, options: DeleteOptions) => ISubmodelElement;
-  setParentPointer: (parentPointer: Pointer) => void;
   copy: (options?: ICopyOptions) => AccessResult<ISubmodelElement>;
+  setParentPointer: (parentPointer: Pointer) => void;
+  getParentPointer: () => Pointer | null;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
@@ -179,7 +180,10 @@ export function copySubmodelElement(submodelElement: ISubmodelElement, options?:
     if (options?.transformer) {
       copy.accept(options.transformer);
     }
-    copy.setParentPointer(submodelElement.getPointer());
+    const parentPointer = submodelElement.getParentPointer();
+    if (parentPointer) {
+      copy.setParentPointer(parentPointer);
+    }
     return AccessResult.allowed(copy);
   } else {
     return AccessResult.denied();

@@ -51,6 +51,10 @@ export class File implements ISubmodelElement {
     this._parentPointer = parentPointer;
   }
 
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
   getPointer(): Pointer {
     return this._parentPointer.getPointerToElement(this);
   }

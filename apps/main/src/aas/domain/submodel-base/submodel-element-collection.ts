@@ -48,11 +48,16 @@ export class SubmodelElementCollection implements ISubmodelElement {
   ) {
     this.displayName = displayName;
     this.description = description;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
   setParentPointer(parentPointer: Pointer): void {
     this._parentPointer = parentPointer;
     this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
   }
 
   getPointer(): Pointer {
@@ -144,9 +149,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
 
   setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
     this.value = submodelElements;
-    this.getSubmodelElements().forEach((se) => {
-      se.setParentPointer(this.getPointer());
-    });
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
   getSubmodelElements(): ISubmodelElement[] {

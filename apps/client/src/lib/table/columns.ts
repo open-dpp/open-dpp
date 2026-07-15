@@ -205,6 +205,20 @@ export function convertDataToRows(
   rowsContext: RowContext[],
   newData: SubmodelElementListResponseDto,
 ): void {
+  const newRowIds = new Set(newData.value.map((row: any) => row.idShort));
+  // Remove rows no longer present in the response
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (!newRowIds.has(rows[i]!.idShort)) {
+      rows.splice(i, 1);
+    }
+  }
+  // Remove rowsContext entries no longer present in the response
+  for (let i = rowsContext.length - 1; i >= 0; i--) {
+    if (!newRowIds.has(rowsContext[i]!.idShort)) {
+      rowsContext.splice(i, 1);
+    }
+  }
+
   for (const [index, row] of newData.value.entries()) {
     const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);
     const foundRow = rows.find((r) => r.idShort === row.idShort);

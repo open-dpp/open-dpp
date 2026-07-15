@@ -618,4 +618,63 @@ describe("TableRowCopyVisitor", () => {
     file.accept(new TableRowCopyVisitor());
     expect(file.value).toEqual(null);
   });
+
+  it("should copy table without", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "list",
+      value: [
+        SubmodelElementCollection.create({
+          idShort: "row1",
+          value: [
+            Property.create({
+              idShort: "col1",
+              value: "myValue",
+              valueType: DataTypeDef.String,
+            }),
+            Property.create({
+              idShort: "col2",
+              value: "myValue",
+              valueType: DataTypeDef.String,
+            }),
+          ],
+        }),
+        SubmodelElementCollection.create({
+          idShort: "row2NotCopied",
+          value: [
+            Property.create({
+              idShort: "col1",
+              value: "myValue2",
+              valueType: DataTypeDef.String,
+            }),
+            Property.create({
+              idShort: "col2",
+              value: "myValue2",
+              valueType: DataTypeDef.String,
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const expected = SubmodelElementCollection.create({
+      idShort: "row1",
+      value: [
+        Property.create({
+          idShort: "col1",
+          value: null,
+          valueType: DataTypeDef.String,
+        }),
+        Property.create({
+          idShort: "col2",
+          value: null,
+          valueType: DataTypeDef.String,
+        }),
+      ],
+    });
+    const pointer = submodelElementList.getPointer();
+    expected.setParentPointer(pointer);
+    submodelElementList.accept(new TableRowCopyVisitor());
+    expect(submodelElementList.getSubmodelElements()).toEqual([expected]);
+  });
 });

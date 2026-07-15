@@ -8,7 +8,7 @@ import {
 } from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../lib/table/menu.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";

@@ -89,7 +89,7 @@ export interface IAasTableExtension {
   openNestedTable: (rowIndex: number, column: Column) => void;
   hasParentTable: Ref<boolean>;
   goBackToParentTable: () => Promise<void>;
-  save: () => Promise<void>;
+  save: () => Promise<boolean>;
 }
 
 export function useAasTableExtension({
@@ -387,7 +387,7 @@ export function useAasTableExtension({
   }
 
   async function save() {
-    await tableMutations.saveRows(
+    return await tableMutations.saveRows(
       rows.value.map((row) => convertRowToRequestDto(row, rowsContext.value)),
       mutationDeps,
       translate(`${translateTablePrefix}.errorEditEntries`),

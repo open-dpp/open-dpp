@@ -58,6 +58,10 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
   getPointer(): Pointer {
     return this._parentPointer.getPointerToElement(this);
   }

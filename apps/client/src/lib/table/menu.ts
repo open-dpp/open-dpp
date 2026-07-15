@@ -129,17 +129,6 @@ function buildColumnTypeMenuItem(
     : (colData: SubmodelElementSharedRequestDto) => deps.onCreateColumn(colData, options);
 
   return match({ type, valueType })
-    .with({ type: AasSubmodelElements.SubmodelElementCollection }, ({ type }) => ({
-      ...labelIconAndDisableOption,
-      command: (_event: MenuItemCommandEvent) => {
-        openDrawer({
-          ...sharedDrawerProps,
-          type: ColumnEditorKey,
-          data: { modelType: type },
-          callback: async (colData: any) => createFn({ modelType: type, ...colData }),
-        });
-      },
-    }))
     .with({ type: AasSubmodelElements.SubmodelElementList }, ({ type }) => ({
       ...labelIconAndDisableOption,
       command: (_event: MenuItemCommandEvent) => {

@@ -53,6 +53,7 @@ export class SubmodelElementList implements ISubmodelElement {
   ) {
     this.displayName = displayName;
     this.description = description;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -126,6 +127,10 @@ export class SubmodelElementList implements ISubmodelElement {
     this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
   getPointer(): Pointer {
     return this._parentPointer.getPointerToElement(this);
   }
@@ -167,9 +172,7 @@ export class SubmodelElementList implements ISubmodelElement {
 
   setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
     this.value = submodelElements;
-    this.getSubmodelElements().forEach((se) => {
-      se.setParentPointer(this.getPointer());
-    });
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
