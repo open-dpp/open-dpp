@@ -33,3 +33,15 @@ export const Language = {
 } as const;
 export const LanguageEnum = z.enum(Language);
 export type LanguageType = z.infer<typeof LanguageEnum>;
+
+export const BcpLanguageTagSchema = z.string().refine(
+  (tag) => {
+    try {
+      return Intl.getCanonicalLocales(tag).length > 0;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid BCP 47 language tag" },
+);
+export type BcpLanguageTagType = z.infer<typeof BcpLanguageTagSchema>;

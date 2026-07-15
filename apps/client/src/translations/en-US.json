@@ -160,7 +160,8 @@
   },
   "language": {
     "all": "Available languages",
-    "preferred": "Preferred languages"
+    "preferred": "Preferred languages",
+    "selectPlaceholder": "Select language"
   },
   "builder": {
     "repeater": {

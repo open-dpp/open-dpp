@@ -40,6 +40,7 @@ watch(
     passportAvailable.value = false;
     try {
       await passportStore.loadPassport(permalink);
+      if (canceled) return;
       passportAvailable.value = true;
       await analyticsStore.addPageView();
     } catch (error) {
@@ -49,6 +50,7 @@ watch(
         }
         return;
       }
+      if (canceled) return;
       const messageKey =
         error instanceof PassportLoadError
           ? error.translationKey

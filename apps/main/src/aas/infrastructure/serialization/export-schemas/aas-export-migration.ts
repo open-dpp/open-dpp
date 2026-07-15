@@ -22,12 +22,12 @@ export function ParseWithMigration(data: unknown): AasExportLatestVersion {
       version: AasExportVersion.v2_0,
       environment: {
         ...exportedAas.environment,
-        assetAdministrationShells: [
-          {
-            ...exportedAas.environment.assetAdministrationShells[0],
+        assetAdministrationShells: exportedAas.environment.assetAdministrationShells.map(
+          (shell) => ({
+            ...shell,
             security: security.toPlain(),
-          },
-        ],
+          }),
+        ),
       },
     });
   }

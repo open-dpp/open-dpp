@@ -10,7 +10,7 @@ const { element } = defineProps<{
 
 const { locale } = useI18n();
 
-const { name: label } = useLanguageTextList(element.displayName);
+const { name: label } = useLanguageTextList(() => element.displayName);
 
 const formattedValue = computed(() => {
   const raw = element.value;

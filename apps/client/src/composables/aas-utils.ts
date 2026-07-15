@@ -27,8 +27,21 @@ export function useAasUtils(): IAasUtils {
   );
 
   function parseLanguageTexts(displayNames: LanguageTextDto[]) {
-    const displayName = displayNames.find((d) => d.language === selectedLanguage.value);
-    return displayName?.text ?? t("common.untitled");
+    const baseLanguage = (tag: string) => tag.split("-")[0];
+
+    const exactMatch = displayNames.find((d) => d.language === selectedLanguage.value);
+    if (exactMatch) return exactMatch.text;
+
+    const selectedBaseLanguage = baseLanguage(selectedLanguage.value);
+    const compatibleMatch = displayNames.find(
+      (d) => baseLanguage(d.language) === selectedBaseLanguage,
+    );
+    if (compatibleMatch) return compatibleMatch.text;
+
+    const englishMatch = displayNames.find((d) => baseLanguage(d.language) === "en");
+    if (englishMatch) return englishMatch.text;
+
+    return t("common.untitled");
   }
 
   function parseLanguageTextsFromAas(

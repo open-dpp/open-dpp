@@ -11,7 +11,7 @@ const { title, idShort, parentPathOverride } = defineProps<{
   submodelElements: SubmodelElementResponseDto[];
 }>();
 
-const { name } = useLanguageTextList(title);
+const { name } = useLanguageTextList(() => title);
 </script>
 
 <template>

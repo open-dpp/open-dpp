@@ -25,7 +25,10 @@ export function buildColumns(content: SubmodelElementCollectionResponseDto[]): C
   const { parseLanguageTexts } = useAasUtils();
 
   return content[0].value.map((collectionElement) => {
-    const header = parseLanguageTexts(collectionElement.displayName);
+    const header =
+      collectionElement.displayName.length > 0
+        ? parseLanguageTexts(collectionElement.displayName)
+        : collectionElement.idShort;
     const field = collectionElement.idShort;
     const isFile = collectionElement.modelType === "File";
 

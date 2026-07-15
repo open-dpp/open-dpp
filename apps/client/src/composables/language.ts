@@ -7,13 +7,10 @@ import { convertLocaleToLanguage } from "../translations/util";
 
 export type LanguageOption = { key: string; description: string };
 
-export function useLanguageTextList(options: LanguageTextDto[]) {
-  const parseDisplayName = computed(() => {
-    const { parseLanguageTexts } = useAasUtils();
-    return parseLanguageTexts;
-  });
+export function useLanguageTextList(languageOptions: MaybeRefOrGetter<LanguageTextDto[]>) {
+  const { parseLanguageTexts } = useAasUtils();
 
-  const name = computed(() => parseDisplayName.value(options));
+  const name = computed(() => parseLanguageTexts(toValue(languageOptions)));
 
   return {
     name,
@@ -22,13 +19,13 @@ export function useLanguageTextList(options: LanguageTextDto[]) {
 
 export function useLanguageSelect() {
   const { locale, t } = useI18n();
+  const browserLanguages = usePreferredLanguages();
+
   const preferredLanguages = computed(() => {
     const languages = new Set<LanguageType>();
 
-    const preferredLanguages = usePreferredLanguages();
-
     Object.values(Language).forEach((lang) => {
-      let language = preferredLanguages.value.find((l) => l === lang || l.substring(0, 2) === lang);
+      let language = browserLanguages.value.find((l) => l === lang || l.substring(0, 2) === lang);
       if (language) {
         languages.add(lang);
       }
@@ -58,8 +55,14 @@ export function useLanguageSelect() {
       const filterVal = toValue(filter);
       const preferredArray = Array.from(preferredLanguages.value.values());
 
-      const matchesFilter = (item: LanguageOption) =>
-        filterVal === "" || item.description.includes(filterVal) || item.key.includes(filterVal);
+      const matchesFilter = (item: LanguageOption) => {
+        if (filterVal === "") return true;
+        const lowerFilter = filterVal.toLowerCase();
+        return (
+          item.description.toLowerCase().includes(lowerFilter) ||
+          item.key.toLowerCase().includes(lowerFilter)
+        );
+      };
 
       const preferredItems = preferredArray
         .map(toLanguageOption)
@@ -80,7 +83,9 @@ export function useLanguageSelect() {
     let bestMatch = remainingLanguages.find((l) => l === convertLocaleToLanguage(locale.value));
 
     if (!bestMatch) {
-      bestMatch = preferredLanguages.value.values().find((pl) => remainingLanguages.includes(pl));
+      bestMatch = Array.from(preferredLanguages.value).find((pl) =>
+        remainingLanguages.includes(pl),
+      );
     }
 
     return LanguageEnum.parse(bestMatch ?? remainingLanguages[0]);

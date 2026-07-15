@@ -47,7 +47,7 @@ const options = computed(() => {
     option-label="description"
     option-group-children="items"
     option-group-label="label"
-    placeholder="Select a Language"
+    :placeholder="t('language.selectPlaceholder')"
   />
 </template>
 

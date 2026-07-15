@@ -2,7 +2,6 @@ import type { TreeNode } from "primevue/treenode";
 import type { ComputedRef } from "vue";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { computed } from "vue";
-import { useLanguageTextList } from "./language";
 import { useAasUtils } from "./aas-utils";
 import type { LanguageTextDto } from "@open-dpp/dto";
 
@@ -13,7 +12,7 @@ function mapToTreeNodes(
 ): TreeNode[] {
   return elements.map((element) => ({
     key: element.idShort,
-    label: useLanguageTextList(element.name).name.value,
+    label: parseDisplayName(element.name),
     data: { parentId },
     children: mapToTreeNodes(element.children, parseDisplayName, element.idShort),
   }));
