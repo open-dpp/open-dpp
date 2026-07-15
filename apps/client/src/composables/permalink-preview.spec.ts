@@ -322,7 +322,9 @@ describe("useGs1LinkPreview", () => {
 
   it("shows the frozen publishedUrl verbatim once locked, ignoring live edits", () => {
     const frozen = "https://frozen.example.com/01/04006381333931?3103=000750";
-    const permalink = ref<PermalinkPublicDto | undefined>(makeGs1Permalink({ publishedUrl: frozen }));
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makeGs1Permalink({ publishedUrl: frozen }),
+    );
     const baseUrl = ref("https://ignored.example.com");
     const attrs = ref<Record<string, string>>({ "17": "251231" });
 

@@ -385,10 +385,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
 
     expect(frozen.publishedUrl).toBe("https://id.example.com/01/04006381333931");
-    const persisted = await ctx
-      .getModuleRef()
-      .get(PermalinkRepository)
-      .findOneOrFail(permalink.id);
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
     expect(persisted.publishedUrl).toBe("https://id.example.com/01/04006381333931");
   });
 
@@ -1307,10 +1304,7 @@ describe("PermalinkApplicationService.listByOrganization", () => {
     expect(result.cursor).toBeNull();
   });
 
-  async function seedResolvableGs1Permalink(
-    organizationId: string,
-    gtin: string,
-  ) {
+  async function seedResolvableGs1Permalink(organizationId: string, gtin: string) {
     const upi = UniqueProductIdentifier.createGs1({
       referenceId: randomUUID(),
       gtin,
