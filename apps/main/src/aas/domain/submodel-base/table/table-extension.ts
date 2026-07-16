@@ -220,8 +220,6 @@ export class TableExtension implements ITableExtendable {
           }
         }
       }
-      // this.applyAddColumn(columnToMove, { ability: options.ability, position: groupPosition + 1 });
-
       this.tracker.track(
         ColumnDeletedFromGroup.create({
           groupIdShort,
@@ -322,12 +320,7 @@ export class TableExtension implements ITableExtendable {
     // group is filled with the migrated column below before this method
     // returns, so no empty-group state is ever observable.
     this.applyAddColumn(group, { ability: options.ability, position });
-    // Track the event against the original (still-empty) `group` input, not
-    // the live header-row instance: moveColumnToGroup below mutates that live
-    // instance by adding the migrated column into it, and change-event values
-    // are held by reference, so tracking the live instance would make this
-    // "group appeared" snapshot silently show the migrated column too once
-    // the event is serialized after this method returns.
+
     const groupPath = this.columns[position].getIdShortPath();
     this.tracker.track(ColumnAdded.create({ path: groupPath, position, value: group }));
 
