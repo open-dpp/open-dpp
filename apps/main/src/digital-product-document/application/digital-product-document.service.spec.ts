@@ -1,4 +1,4 @@
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../aas/aas.module";
@@ -43,7 +43,6 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import type { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { Security } from "../../aas/domain/security/security";
@@ -52,6 +51,8 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -59,7 +60,6 @@ describe("DigitalProductDocumentService", () => {
   let passportRepository: PassportRepository;
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
-  let connection: Connection;
   const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
@@ -84,26 +84,30 @@ describe("DigitalProductDocumentService", () => {
         AasModule,
         UsersModule,
         OrganizationsModule,
+        PresentationConfigurationsModule,
       ],
       providers: [
         EnvironmentService,
         PassportRepository,
         UniqueProductIdentifierRepository,
         ConceptDescriptionRepository,
+        PresentationConfigurationService,
       ],
     }).compile();
     await module.init();
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
+    const presentationConfigurationService = module.get<PresentationConfigurationService>(
+      PresentationConfigurationService,
+    );
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
     assetAdministrationShellRepository = module.get<AasRepository>(AasRepository);
-    connection = module.get<Connection>(getConnectionToken());
 
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
       activityRepository,
-      connection,
+      presentationConfigurationService,
     );
   });
 

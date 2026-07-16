@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
+import { KeyTypes, PresentationComponentName, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import type { PresentationConfigurationDto } from "@open-dpp/dto";
 import { resolveComponent } from "./presentation-config.ts";
 
@@ -8,7 +8,7 @@ function config(partial: Partial<PresentationConfigurationDto> = {}): Presentati
     id: "00000000-0000-4000-8000-000000000000",
     organizationId: "org-1",
     referenceId: "00000000-0000-4000-8000-000000000001",
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
     label: null,
     elementDesign: {},
     defaultComponents: {},

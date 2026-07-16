@@ -5,7 +5,7 @@ import { expect, jest } from "@jest/globals";
 import {
   AssetKind,
   DigitalProductDocumentStatusModificationMethodDto,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import request from "supertest";
 import {
@@ -105,7 +105,7 @@ describe("templateController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: template.id,
       }),
     ).toBeUndefined();
@@ -119,7 +119,7 @@ describe("templateController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: template.id,
       }),
     ).toBeUndefined();
@@ -133,7 +133,7 @@ describe("templateController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: template.id,
       }),
     ).toBeUndefined();

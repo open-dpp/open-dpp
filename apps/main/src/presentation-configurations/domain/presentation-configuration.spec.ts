@@ -5,7 +5,7 @@ import {
   PermissionKind,
   Permissions,
   PresentationComponentName,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { ZodError } from "zod";
@@ -21,7 +21,7 @@ describe("PresentationConfiguration", () => {
   const baseInput = () => ({
     organizationId: "org-1",
     referenceId: randomUUID(),
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
   });
 
   it("rejects empty organizationId in create() with ValueError", () => {
@@ -73,7 +73,7 @@ describe("PresentationConfiguration", () => {
 
     expect(config.id).toBeTruthy();
     expect(config.organizationId).toBe("org-1");
-    expect(config.referenceType).toBe(PresentationReferenceType.Template);
+    expect(config.referenceType).toBe(DigitalProductDocumentTypes.Template);
     expect(config.elementDesign.size).toBe(0);
     expect(config.defaultComponents.size).toBe(0);
     expect(config.createdAt).toBeInstanceOf(Date);
@@ -107,7 +107,7 @@ describe("PresentationConfiguration", () => {
       id: randomUUID(),
       organizationId: "org-1",
       referenceId: randomUUID(),
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
       elementDesign: {
         "submodel-1.prop-1": "NotARealComponent",
         "submodel-1.prop-2": PresentationComponentName.BigNumber,
@@ -260,7 +260,7 @@ describe("PresentationConfiguration.withPatch", () => {
   const baseInput = () => ({
     organizationId: "org-1",
     referenceId: randomUUID(),
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
   });
 
   it("applies elementDesign additions", () => {
@@ -331,7 +331,7 @@ describe("PresentationConfiguration.withPatch permission checks", () => {
   const baseInput = () => ({
     organizationId: "org-1",
     referenceId: randomUUID(),
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
   });
 
   const memberSubject = SubjectAttributes.create({

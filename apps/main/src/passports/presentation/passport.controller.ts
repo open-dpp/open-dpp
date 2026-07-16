@@ -30,7 +30,6 @@ import {
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
   Populates,
-  PresentationReferenceType,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import { type Response } from "express";
@@ -468,14 +467,6 @@ export class PassportController
       id,
       submodelId,
       { subject, userId },
-      async (submodelIdShort, options) => {
-        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Passport,
-          id,
-          submodelIdShort,
-          options,
-        );
-      },
     );
   }
 
@@ -895,14 +886,6 @@ export class PassportController
       submodelId,
       idShortPath,
       { subject, userId },
-      async (idShortPathString, options) => {
-        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Passport,
-          id,
-          idShortPathString,
-          options,
-        );
-      },
     );
   }
 

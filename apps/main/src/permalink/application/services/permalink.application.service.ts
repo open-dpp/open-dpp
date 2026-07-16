@@ -3,7 +3,7 @@ import {
   canonicaliseBaseUrl,
   PermalinkFallbackBaseUrlSource,
   PermalinkMetadataDtoSchema,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { z } from "zod/v4";
@@ -63,7 +63,7 @@ export class PermalinkApplicationService {
     const presentationConfiguration = await this.presentationConfigurationRepository.findOneOrFail(
       permalink.presentationConfigurationId,
     );
-    if (presentationConfiguration.referenceType !== PresentationReferenceType.Passport) {
+    if (presentationConfiguration.referenceType !== DigitalProductDocumentTypes.Passport) {
       throw new NotFoundException(`Permalink ${permalink.id} does not target a passport`);
     }
     const passport = await this.passportRepository.findOneOrFail(
@@ -122,7 +122,7 @@ export class PermalinkApplicationService {
     permalink: Permalink,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    if (config.referenceType !== PresentationReferenceType.Passport) {
+    if (config.referenceType !== DigitalProductDocumentTypes.Passport) {
       return permalink;
     }
     const passport = await this.passportRepository.findOne(config.referenceId);

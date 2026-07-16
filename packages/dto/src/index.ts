@@ -9,6 +9,7 @@ export * from "./aas/common/language-text-json-schema";
 export * from "./shared/get-all-params.dto";
 export * from "./shared/filter.dto";
 export * from "./shared/time.dto";
+export * from "./digital-product-document/digital-product-document.dto";
 
 export * from "./api-version.dto";
 export * from "./organizations/invitation.dto";
@@ -70,7 +71,7 @@ export * from "./organizations/member.dto";
 export * from "./passports/passport.dto";
 export * from "./permalinks/permalink.dto";
 export * from "./presentation-configurations/presentation-configuration.dto";
-export * from "./shared/digital-product-document.schemas";
+export * from "./digital-product-document/digital-product-document.schemas";
 export * from "./shared/pagination.dto";
 export * from "./shared/permalink-base-url.schema";
 export * from "./shared/populate.dto";

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
@@ -106,7 +106,7 @@ export class AasSerializationService {
           createdAt: new Date(),
           updatedAt: new Date(),
         }),
-      PresentationReferenceType.Passport,
+      DigitalProductDocumentTypes.Passport,
       savePassport,
       afterPersist,
     );
@@ -128,7 +128,7 @@ export class AasSerializationService {
           createdAt: new Date(),
           updatedAt: new Date(),
         }),
-      PresentationReferenceType.Template,
+      DigitalProductDocumentTypes.Template,
       saveTemplate,
       afterPersist,
     );
@@ -138,7 +138,7 @@ export class AasSerializationService {
     data: unknown,
     organizationId: string,
     entityFactory: (environment: Environment) => T,
-    referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+    referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
     saveEntity: (entity: T, options: DbSessionOptions) => Promise<void>,
     afterPersist?: (entity: T, options: DbSessionOptions) => Promise<void>,
   ): Promise<T> {
@@ -286,7 +286,7 @@ function buildImportedPresentationConfiguration(params: {
   schema: AasExport;
   organizationId: string;
   referenceId: string;
-  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
+  referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes];
 }): PresentationConfiguration | null {
   const { schema, organizationId, referenceId, referenceType } = params;
   if (
@@ -308,7 +308,7 @@ function passportToHolder(passport: Passport): PresentationReferenceHolder {
   return {
     id: passport.id,
     organizationId: passport.organizationId,
-    referenceType: PresentationReferenceType.Passport,
+    referenceType: DigitalProductDocumentTypes.Passport,
   };
 }
 
@@ -316,6 +316,6 @@ function templateToHolder(template: Template): PresentationReferenceHolder {
   return {
     id: template.id,
     organizationId: template.organizationId,
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
   };
 }

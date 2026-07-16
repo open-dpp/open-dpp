@@ -7,7 +7,7 @@ import {
   PermissionKind,
   Permissions,
   PresentationComponentName,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { ForbiddenError } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
@@ -108,7 +108,7 @@ describe("PresentationConfigurationController", () => {
   function makeConfig(
     organizationId: string,
     referenceId: string,
-    referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+    referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
     overrides: Partial<{
       label: string | null;
       elementDesign: Record<
@@ -130,7 +130,7 @@ describe("PresentationConfigurationController", () => {
     return {
       id: passport.id,
       organizationId: passport.organizationId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
     };
   }
 
@@ -138,7 +138,7 @@ describe("PresentationConfigurationController", () => {
     return {
       id: template.id,
       organizationId: template.organizationId,
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
     };
   }
 
@@ -146,7 +146,7 @@ describe("PresentationConfigurationController", () => {
     it("listForPassport returns an array of DTOs", async () => {
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
-      const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
+      const config = makeConfig(organizationId, passport.id, DigitalProductDocumentTypes.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       service.list.mockResolvedValue([config]);
 
@@ -193,9 +193,14 @@ describe("PresentationConfigurationController", () => {
     it("createForPassport creates a variant and returns the DTO", async () => {
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
-      const created = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport, {
-        label: "Variant A",
-      });
+      const created = makeConfig(
+        organizationId,
+        passport.id,
+        DigitalProductDocumentTypes.Passport,
+        {
+          label: "Variant A",
+        },
+      );
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       service.create.mockResolvedValue(created);
 
@@ -216,7 +221,7 @@ describe("PresentationConfigurationController", () => {
     it("getByIdForPassport returns the specific config DTO", async () => {
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
-      const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
+      const config = makeConfig(organizationId, passport.id, DigitalProductDocumentTypes.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       service.getById.mockResolvedValue(config);
 
@@ -243,9 +248,14 @@ describe("PresentationConfigurationController", () => {
     it("patchByIdForPassport applies patch and returns updated DTO", async () => {
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
-      const patched = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport, {
-        elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
-      });
+      const patched = makeConfig(
+        organizationId,
+        passport.id,
+        DigitalProductDocumentTypes.Passport,
+        {
+          elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
+        },
+      );
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       service.applyPatch.mockResolvedValue(patched);
 
@@ -295,7 +305,11 @@ describe("PresentationConfigurationController", () => {
     it("getForPassport (singular) returns effective config DTO", async () => {
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
-      const effective = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
+      const effective = makeConfig(
+        organizationId,
+        passport.id,
+        DigitalProductDocumentTypes.Passport,
+      );
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       service.getEffective.mockResolvedValue(effective);
 
@@ -332,7 +346,7 @@ describe("PresentationConfigurationController", () => {
     it("listForTemplate returns an array of DTOs", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const config = makeConfig(organizationId, template.id, PresentationReferenceType.Template);
+      const config = makeConfig(organizationId, template.id, DigitalProductDocumentTypes.Template);
       templateRepository.findOneOrFail.mockResolvedValue(template);
       service.list.mockResolvedValue([config]);
 
@@ -379,9 +393,14 @@ describe("PresentationConfigurationController", () => {
     it("createForTemplate creates a variant and returns the DTO", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const created = makeConfig(organizationId, template.id, PresentationReferenceType.Template, {
-        label: "Variant A",
-      });
+      const created = makeConfig(
+        organizationId,
+        template.id,
+        DigitalProductDocumentTypes.Template,
+        {
+          label: "Variant A",
+        },
+      );
       templateRepository.findOneOrFail.mockResolvedValue(template);
       service.create.mockResolvedValue(created);
 
@@ -402,7 +421,7 @@ describe("PresentationConfigurationController", () => {
     it("getByIdForTemplate returns the specific config DTO", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const config = makeConfig(organizationId, template.id, PresentationReferenceType.Template);
+      const config = makeConfig(organizationId, template.id, DigitalProductDocumentTypes.Template);
       templateRepository.findOneOrFail.mockResolvedValue(template);
       service.getById.mockResolvedValue(config);
 
@@ -429,9 +448,14 @@ describe("PresentationConfigurationController", () => {
     it("patchByIdForTemplate applies patch and returns updated DTO", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const patched = makeConfig(organizationId, template.id, PresentationReferenceType.Template, {
-        elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
-      });
+      const patched = makeConfig(
+        organizationId,
+        template.id,
+        DigitalProductDocumentTypes.Template,
+        {
+          elementDesign: { "submodel.numericField": PresentationComponentName.BigNumber },
+        },
+      );
       templateRepository.findOneOrFail.mockResolvedValue(template);
       service.applyPatch.mockResolvedValue(patched);
 
@@ -498,7 +522,7 @@ describe("PresentationConfigurationController", () => {
     it("getForTemplate (singular) returns effective config DTO", async () => {
       const organizationId = randomUUID();
       const template = Template.create({ organizationId });
-      const config = makeConfig(organizationId, template.id, PresentationReferenceType.Template, {
+      const config = makeConfig(organizationId, template.id, DigitalProductDocumentTypes.Template, {
         elementDesign: { "sm.p": PresentationComponentName.BigNumber },
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
@@ -601,7 +625,7 @@ describe("PresentationConfigurationController", () => {
       const patched = PresentationConfiguration.create({
         organizationId,
         referenceId: passport.id,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       environmentService.loadAbility.mockResolvedValue(memberAbility);
@@ -651,7 +675,7 @@ describe("PresentationConfigurationController", () => {
       const memberAbility = buildMemberAbility();
       const organizationId = randomUUID();
       const passport = makePassport(organizationId);
-      const config = makeConfig(organizationId, passport.id, PresentationReferenceType.Passport);
+      const config = makeConfig(organizationId, passport.id, DigitalProductDocumentTypes.Passport);
       passportRepository.findOneOrFail.mockResolvedValue(passport);
       environmentService.loadAbility.mockResolvedValue(memberAbility);
       service.getEffective.mockResolvedValue(config);
@@ -679,7 +703,7 @@ describe("PresentationConfigurationController", () => {
       const patched = PresentationConfiguration.create({
         organizationId,
         referenceId: template.id,
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
       });
       templateRepository.findOneOrFail.mockResolvedValue(template);
       environmentService.loadAbility.mockResolvedValue(memberAbility);
@@ -711,7 +735,7 @@ describe("PresentationConfigurationController", () => {
       const patched = PresentationConfiguration.create({
         organizationId,
         referenceId: passport.id,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
       });
       passportRepository.findOneOrFail.mockResolvedValue(passport);

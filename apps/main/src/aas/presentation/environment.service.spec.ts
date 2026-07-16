@@ -92,6 +92,16 @@ import { SubmodelRequest } from "./requests/submodel.request";
 import { SubmodelModificationRequest } from "./requests/submodel-modification.request";
 import { ValueModificationRequest } from "./requests/value-modification.request";
 import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
+import { MoveSubmodelBaseObserver } from "./event-bus/move-submodel-base-observer";
+import { DeleteSubmodelBaseObserver } from "./event-bus/delete-submodel-base-observer";
+
+const moveObserver: jest.Mocked<MoveSubmodelBaseObserver> = {
+  onMove: jest.fn<MoveSubmodelBaseObserver["onMove"]>(),
+};
+
+const deleteObserver: jest.Mocked<DeleteSubmodelBaseObserver> = {
+  onDelete: jest.fn<DeleteSubmodelBaseObserver["onDelete"]>(),
+};
 
 describe("environmentService", () => {
   let environmentService: EnvironmentService;
@@ -133,6 +143,10 @@ describe("environmentService", () => {
       ConceptDescriptionRepository,
     );
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it("should create environment", async () => {
@@ -725,6 +739,7 @@ describe("environmentService", () => {
       col1.idShort,
       request,
       admin,
+      [moveObserver],
     );
     const [row0, _] = changedList.value;
     expect(row0.value.map((e: any) => e.idShort)).toEqual(["group1"]);
@@ -1356,6 +1371,7 @@ describe("environmentService", () => {
         col1.idShort,
         member,
         latestVersion,
+        [deleteObserver],
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -1372,6 +1388,7 @@ describe("environmentService", () => {
       col1.idShort,
       admin,
       latestVersion,
+      [deleteObserver],
     );
 
     expect(list.value[0].value.map((e: any) => e.idShort)).not.toContain(col1.idShort);
@@ -1424,6 +1441,7 @@ describe("environmentService", () => {
         row1.idShort,
         member,
         latestVersion,
+        [deleteObserver],
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`),
@@ -1438,6 +1456,7 @@ describe("environmentService", () => {
       row1.idShort,
       admin,
       latestVersion,
+      [deleteObserver],
     );
 
     expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);
@@ -1679,6 +1698,7 @@ describe("environmentService", () => {
         submodel1.id,
         saveEnvironmentMock,
         member,
+        [deleteObserver],
       ),
     ).rejects.toThrow(
       new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.`),
@@ -1691,6 +1711,7 @@ describe("environmentService", () => {
       submodel1.id,
       saveEnvironmentMock,
       admin,
+      [deleteObserver],
     );
     expect(environment.submodels).not.toContain(submodel1.id);
 
@@ -1774,6 +1795,7 @@ describe("environmentService", () => {
         submodel1.id,
         idShortPath,
         member,
+        [deleteObserver],
       ),
     ).rejects.toThrow(
       new ForbiddenError(
@@ -1788,6 +1810,7 @@ describe("environmentService", () => {
       submodel1.id,
       idShortPath,
       admin,
+      [deleteObserver],
     );
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
     expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeUndefined();
@@ -1840,11 +1863,9 @@ describe("environmentService", () => {
         });
 
         let capturedSession: ClientSession | undefined;
-        const extraCleanup = jest
-          .fn<(idShortPathString: string, options: { session?: ClientSession }) => Promise<void>>()
-          .mockImplementation(async (_idShortPathString, options) => {
-            capturedSession = options.session;
-          });
+        deleteObserver.onDelete.mockImplementationOnce(async (_event, options) => {
+          capturedSession = options!.session;
+        });
 
         await environmentService.deleteSubmodelElement(
           correlationId,
@@ -1853,13 +1874,17 @@ describe("environmentService", () => {
           submodel1.id,
           idShortPath,
           admin,
-          extraCleanup,
+          [deleteObserver],
         );
 
-        expect(extraCleanup).toHaveBeenCalledTimes(1);
-        const [pathArg, optionsArg] = extraCleanup.mock.calls[0];
-        expect(pathArg).toBe(`${submodel1.idShort}.${idShortPath.toString()}`);
-        expect(optionsArg.session).toBeTruthy();
+        expect(deleteObserver.onDelete).toHaveBeenCalledTimes(1);
+        const [pathArg, optionsArg] = deleteObserver.onDelete.mock.calls[0];
+        expect(pathArg).toEqual({
+          pathToDelete: IdShortPath.create({
+            path: `${submodel1.idShort}.${idShortPath.toString()}`,
+          }),
+        });
+        expect(optionsArg!.session).toBeTruthy();
         // The session handed to the cleanup must be a live Mongo ClientSession that
         // participated in the surrounding transaction.
         expect(capturedSession).toBeDefined();
@@ -1880,9 +1905,7 @@ describe("environmentService", () => {
           path: `${submodelElementCollection1.idShort}.${property1.idShort}`,
         });
 
-        const extraCleanup = jest
-          .fn<(idShortPathString: string, options: { session?: ClientSession }) => Promise<void>>()
-          .mockRejectedValue(new Error("cleanup boom"));
+        deleteObserver.onDelete.mockRejectedValueOnce(new Error("Extra cleanup failed"));
 
         await expect(
           environmentService.deleteSubmodelElement(
@@ -1892,9 +1915,9 @@ describe("environmentService", () => {
             submodel1.id,
             idShortPath,
             admin,
-            extraCleanup,
+            [deleteObserver],
           ),
-        ).rejects.toThrow("cleanup boom");
+        ).rejects.toThrow("Extra cleanup failed");
 
         // The element delete and the cleanup share one transaction; aborting the
         // cleanup must abort the delete, so the element is still present in the DB.
@@ -1917,16 +1940,14 @@ describe("environmentService", () => {
         });
         const conceptDescriptionId = randomUUID();
 
-        const extraCleanup = jest
-          .fn<(idShortPathString: string, options: { session?: ClientSession }) => Promise<void>>()
-          .mockImplementation(async (_idShortPathString, options) => {
-            // Perform a real write on the shared session, then fail the transaction.
-            await conceptDescriptionRepository.save(
-              ConceptDescription.create({ id: conceptDescriptionId }),
-              options,
-            );
-            throw new Error("cleanup boom after write");
-          });
+        deleteObserver.onDelete.mockImplementationOnce(async (_event, options) => {
+          // Perform a real write on the shared session, then fail the transaction.
+          await conceptDescriptionRepository.save(
+            ConceptDescription.create({ id: conceptDescriptionId }),
+            options,
+          );
+          throw new Error("cleanup boom after write");
+        });
 
         await expect(
           environmentService.deleteSubmodelElement(
@@ -1936,7 +1957,7 @@ describe("environmentService", () => {
             submodel1.id,
             idShortPath,
             admin,
-            extraCleanup,
+            [deleteObserver],
           ),
         ).rejects.toThrow("cleanup boom after write");
 
@@ -1952,11 +1973,9 @@ describe("environmentService", () => {
         const saveEnvironmentMock = jest.fn<() => Promise<void>>();
 
         let capturedSession: ClientSession | undefined;
-        const extraCleanup = jest
-          .fn<(submodelIdShort: string, options: { session?: ClientSession }) => Promise<void>>()
-          .mockImplementation(async (_submodelIdShort, options) => {
-            capturedSession = options.session;
-          });
+        deleteObserver.onDelete.mockImplementationOnce(async (_event, options) => {
+          capturedSession = options!.session;
+        });
 
         await environmentService.deleteSubmodelFromEnvironment(
           correlationId,
@@ -1965,13 +1984,15 @@ describe("environmentService", () => {
           submodel1.id,
           saveEnvironmentMock,
           admin,
-          extraCleanup,
+          [deleteObserver],
         );
 
-        expect(extraCleanup).toHaveBeenCalledTimes(1);
-        const [idShortArg, optionsArg] = extraCleanup.mock.calls[0];
-        expect(idShortArg).toBe(submodel1.idShort);
-        expect(optionsArg.session).toBeTruthy();
+        expect(deleteObserver.onDelete).toHaveBeenCalledTimes(1);
+        const [idShortArg, optionsArg] = deleteObserver.onDelete.mock.calls[0];
+        expect(idShortArg).toEqual({
+          pathToDelete: IdShortPath.create({ path: submodel1.idShort }),
+        });
+        expect(optionsArg!.session).toBeTruthy();
         expect(capturedSession).toBeDefined();
         expect(typeof capturedSession!.endSession).toBe("function");
       });
@@ -1981,9 +2002,7 @@ describe("environmentService", () => {
           await createDefaultEnvironment();
         const saveEnvironmentMock = jest.fn<() => Promise<void>>();
 
-        const extraCleanup = jest
-          .fn<(submodelIdShort: string, options: { session?: ClientSession }) => Promise<void>>()
-          .mockRejectedValue(new Error("submodel cleanup boom"));
+        deleteObserver.onDelete.mockRejectedValueOnce(new Error("submodel cleanup boom"));
 
         await expect(
           environmentService.deleteSubmodelFromEnvironment(
@@ -1993,7 +2012,7 @@ describe("environmentService", () => {
             submodel1.id,
             saveEnvironmentMock,
             admin,
-            extraCleanup,
+            [deleteObserver],
           ),
         ).rejects.toThrow("submodel cleanup boom");
 

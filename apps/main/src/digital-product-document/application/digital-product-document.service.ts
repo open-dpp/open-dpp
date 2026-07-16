@@ -32,20 +32,22 @@ import { Pagination } from "../../pagination/pagination";
 import archiver, { Archiver } from "archiver";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { Period } from "../../time/period";
-import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
 import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
 import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel-modification.request";
 import { ValueModificationRequest } from "../../aas/presentation/requests/value-modification.request";
 import { SubmodelElementModificationRequest } from "../../aas/presentation/requests/submodel-element-modification.request";
+import { PresentationDeletionObserver } from "../../aas/presentation/event-bus/delete-submodel-base-observer";
+import { PresentationMoveObserver } from "../../aas/presentation/event-bus/move-submodel-base-observer";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly digitalProductDocRepository: IDigitalProductDocumentRepository<T>,
     private readonly activityRepository: ActivityRepository,
-    private connection: Connection,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   async createSubmodel(
@@ -318,7 +320,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     submodelId: string,
     userContext: UserContext,
-    extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -333,7 +334,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       this.saveEnvironmentCallback(item),
       userContext,
-      extraCleanup,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -344,7 +351,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     idShortPath: IdShortPath,
     userContext: UserContext,
-    extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -359,7 +365,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       idShortPath,
       userContext,
-      extraCleanup,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -388,6 +400,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortOfColumn,
       userContext,
       version,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -480,6 +499,20 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortOfColumn,
       userContext,
       version,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -510,6 +543,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       columnIdShort,
       userContext,
       version,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -539,6 +579,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       columnIdShort,
       SubmodelElementRequest.create({ body, version }),
       userContext,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -592,6 +639,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortOfRow,
       userContext,
       version,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 

@@ -31,7 +31,7 @@ import {
   KeyTypes,
   LatestApiVersionWithPrefixDto,
   PresentationComponentName,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
   ReferenceTypes,
 } from "@open-dpp/dto";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
@@ -407,7 +407,7 @@ describe("passportController", () => {
     ).toHaveLength(0);
     expect(
       await ctx.getModuleRef().get(PresentationConfigurationRepository).findManyByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passportId,
       }),
     ).toHaveLength(0);
@@ -428,7 +428,7 @@ describe("passportController", () => {
       .get(PresentationConfigurationRepository);
 
     await presentationConfigurationRepository.deleteByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId: passport.id,
     });
 
@@ -441,7 +441,7 @@ describe("passportController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeUndefined();
@@ -455,7 +455,7 @@ describe("passportController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeUndefined();
@@ -1041,7 +1041,7 @@ describe("passportController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository);
       const configs = await presentationConfigurationRepository.findManyByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passportId,
       });
       const merged: Record<string, string> = {};

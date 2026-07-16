@@ -7,7 +7,8 @@ import {
   PermissionKind,
   Permissions,
   PresentationComponentName,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
+  PresentationComponentNameType,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError, NotFoundError } from "@open-dpp/exception";
@@ -87,7 +88,7 @@ describe("PresentationConfigurationService", () => {
     return {
       id: passport.id,
       organizationId: passport.organizationId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
     };
   }
 
@@ -95,7 +96,7 @@ describe("PresentationConfigurationService", () => {
     return {
       id: template.id,
       organizationId: template.organizationId,
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
     };
   }
 
@@ -278,7 +279,7 @@ describe("PresentationConfigurationService", () => {
       const fakeTemplateHolder: PresentationReferenceHolder = {
         id: passport.id, // same UUID, different type
         organizationId: template.organizationId,
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
       };
 
       await expect(service.getById(fakeTemplateHolder, created.id)).rejects.toThrow(NotFoundError);
@@ -298,7 +299,7 @@ describe("PresentationConfigurationService", () => {
 
       expect(snapshots).toHaveLength(1);
       expect(snapshots[0].referenceId).toBe(passport.id);
-      expect(snapshots[0].referenceType).toBe(PresentationReferenceType.Passport);
+      expect(snapshots[0].referenceType).toBe(DigitalProductDocumentTypes.Passport);
       expect(Object.fromEntries(snapshots[0].elementDesign)).toEqual({
         "sm.p": PresentationComponentName.BigNumber,
       });
@@ -338,7 +339,7 @@ describe("PresentationConfigurationService", () => {
 
     async function seedConfigWithEntries(
       passport: Passport,
-      entries: Record<string, PresentationComponentName>,
+      entries: Record<string, PresentationComponentNameType>,
     ) {
       const [defaultConfig] = await service.list(passportHolder(passport));
       await service.applyPatch(passportHolder(passport), defaultConfig.id, {
@@ -349,7 +350,7 @@ describe("PresentationConfigurationService", () => {
 
     async function seedTemplateConfigWithEntries(
       template: Template,
-      entries: Record<string, PresentationComponentName>,
+      entries: Record<string, PresentationComponentNameType>,
     ) {
       const [defaultConfig] = await service.list(templateHolder(template));
       await service.applyPatch(templateHolder(template), defaultConfig.id, {
@@ -542,8 +543,8 @@ describe("PresentationConfigurationService", () => {
         },
       });
 
-      await service.removeElementDesignEntriesForPath(
-        PresentationReferenceType.Passport,
+      await service.deleteElementDesignEntriesForPath(
+        DigitalProductDocumentTypes.Passport,
         passport.id,
         "Submodel1.Prop",
       );
@@ -567,8 +568,8 @@ describe("PresentationConfigurationService", () => {
         },
       });
 
-      await service.removeElementDesignEntriesForPath(
-        PresentationReferenceType.Passport,
+      await service.deleteElementDesignEntriesForPath(
+        DigitalProductDocumentTypes.Passport,
         passport.id,
         "Submodel1.Collection",
       );
@@ -594,8 +595,8 @@ describe("PresentationConfigurationService", () => {
         },
       });
 
-      await service.removeElementDesignEntriesForPath(
-        PresentationReferenceType.Passport,
+      await service.deleteElementDesignEntriesForPath(
+        DigitalProductDocumentTypes.Passport,
         passport.id,
         "Submodel1.Prop",
       );
@@ -618,8 +619,8 @@ describe("PresentationConfigurationService", () => {
         },
       });
 
-      await service.removeElementDesignEntriesForPath(
-        PresentationReferenceType.Template,
+      await service.deleteElementDesignEntriesForPath(
+        DigitalProductDocumentTypes.Template,
         template.id,
         "Sm.Prop",
       );
@@ -636,8 +637,8 @@ describe("PresentationConfigurationService", () => {
       });
 
       await expect(
-        service.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Passport,
+        service.deleteElementDesignEntriesForPath(
+          DigitalProductDocumentTypes.Passport,
           passport.id,
           "Submodel2.NonExistent",
         ),

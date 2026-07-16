@@ -28,7 +28,6 @@ import {
   AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
-  PresentationReferenceType,
   TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
@@ -111,7 +110,6 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -145,7 +143,6 @@ export class TemplateController
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @ApiGetShells()
@@ -280,14 +277,6 @@ export class TemplateController
       id,
       submodelId,
       { subject, userId },
-      async (submodelIdShort, options) => {
-        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Template,
-          id,
-          submodelIdShort,
-          options,
-        );
-      },
     );
   }
 
@@ -458,14 +447,6 @@ export class TemplateController
       submodelId,
       idShortPath,
       { subject, userId },
-      async (idShortPathString, options) => {
-        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Template,
-          id,
-          idShortPathString,
-          options,
-        );
-      },
     );
   }
 

@@ -3,8 +3,8 @@ import {
   Permissions,
   PresentationComponentNameType,
   PresentationConfigurationPatchDto,
-  PresentationReferenceType,
-  PresentationReferenceTypeType,
+  DigitalProductDocumentTypes,
+  DigitalProductDocumentTypesType,
 } from "@open-dpp/dto";
 import { NotFoundError } from "@open-dpp/exception";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
@@ -25,7 +25,7 @@ import {
 export interface PresentationReferenceHolder {
   readonly id: string;
   readonly organizationId: string;
-  readonly referenceType: PresentationReferenceTypeType;
+  readonly referenceType: DigitalProductDocumentTypesType;
 }
 
 @Injectable()
@@ -98,7 +98,7 @@ export class PresentationConfigurationService {
   }
 
   private async listOrSeed(input: {
-    referenceType: PresentationReferenceTypeType;
+    referenceType: DigitalProductDocumentTypesType;
     referenceId: string;
     organizationId: string;
   }): Promise<PresentationConfiguration[]> {
@@ -119,7 +119,7 @@ export class PresentationConfigurationService {
 
   private async requireOwned(
     configId: string,
-    ref: { referenceType: PresentationReferenceTypeType; referenceId: string },
+    ref: { referenceType: DigitalProductDocumentTypesType; referenceId: string },
   ): Promise<PresentationConfiguration> {
     const config = await this.presentationConfigurationRepository.findOneOrFail(configId);
     if (config.referenceType !== ref.referenceType || config.referenceId !== ref.referenceId) {
@@ -135,7 +135,7 @@ export class PresentationConfigurationService {
     if (!passport.templateId) return [];
     const templateConfigs = await this.presentationConfigurationRepository.findManyByReference(
       {
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: passport.templateId,
       },
       options,
@@ -146,7 +146,7 @@ export class PresentationConfigurationService {
       const snapshot = PresentationConfiguration.create({
         organizationId: passport.organizationId,
         referenceId: passport.id,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         label: tc.label,
         elementDesign: tc.elementDesign,
         defaultComponents: tc.defaultComponents,
@@ -162,7 +162,7 @@ export class PresentationConfigurationService {
   ): Promise<PresentationConfiguration> {
     const existing = await this.presentationConfigurationRepository.findByReference(
       {
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       },
       options,
@@ -183,7 +183,7 @@ export class PresentationConfigurationService {
   ): Promise<PresentationConfiguration[]> {
     return await this.presentationConfigurationRepository.findManyByReference(
       {
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       },
       options,
@@ -195,8 +195,8 @@ export class PresentationConfigurationService {
    * whose key is exactly `idShortPath` or starts with `idShortPath.` (child paths).
    * Only configs that actually changed are saved. Runs inside the provided session when given.
    */
-  async removeElementDesignEntriesForPath(
-    referenceType: PresentationReferenceTypeType,
+  async deleteElementDesignEntriesForPath(
+    referenceType: DigitalProductDocumentTypesType,
     referenceId: string,
     idShortPath: string,
     options?: DbSessionOptions,
@@ -206,14 +206,33 @@ export class PresentationConfigurationService {
       ref,
       options,
     );
-    const childPrefix = `${idShortPath}.`;
     for (const config of configs) {
-      let updated: PresentationConfiguration = config;
-      for (const key of config.elementDesign.keys()) {
-        if (key === idShortPath || key.startsWith(childPrefix)) {
-          updated = updated.withoutElementDesign(key);
-        }
+      const updated = config.deleteElementDesign(idShortPath);
+      if (updated !== config) {
+        await this.presentationConfigurationRepository.save(updated, options);
       }
+    }
+  }
+
+  /**
+   * Moves all `elementDesign` entries from every config belonging to the given reference
+   * from `oldPath` to `newPath`, including all child paths.
+   * Only configs that actually changed are saved. Runs inside the provided session when given.
+   */
+  async moveElementDesignEntries(
+    referenceType: DigitalProductDocumentTypesType,
+    referenceId: string,
+    oldPath: string,
+    newPath: string,
+    options?: DbSessionOptions,
+  ): Promise<void> {
+    const ref: PresentationConfigurationReference = { referenceType, referenceId };
+    const configs = await this.presentationConfigurationRepository.findManyByReference(
+      ref,
+      options,
+    );
+    for (const config of configs) {
+      const updated = config.moveElementDesign(oldPath, newPath);
       if (updated !== config) {
         await this.presentationConfigurationRepository.save(updated, options);
       }
