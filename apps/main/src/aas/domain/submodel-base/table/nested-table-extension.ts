@@ -74,7 +74,11 @@ export class NestedTableExtension implements ITableExtendable {
     });
   }
 
-  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: MoveOptions): void {
+  deleteColumnFromGroup(
+    groupIdShort: string,
+    idShort: string,
+    options: MoveOptions & DeleteOptions,
+  ): void {
     this.performRecursive((tableExtension) => {
       tableExtension.deleteColumnFromGroup(groupIdShort, idShort, options);
     });

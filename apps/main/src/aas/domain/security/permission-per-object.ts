@@ -30,6 +30,13 @@ export class PermissionPerObject {
     );
   }
 
+  move(object: ReferenceElement): PermissionPerObject {
+    return new PermissionPerObject(
+      object,
+      this.permissions.map((p) => p.copy()),
+    );
+  }
+
   toPlain(): Record<string, any> {
     return {
       object: this.object.toPlain(),

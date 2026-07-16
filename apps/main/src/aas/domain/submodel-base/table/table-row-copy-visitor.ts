@@ -134,9 +134,5 @@ export class TableRowCopyVisitor implements IVisitor<TableRowCopyVisitorContextT
 
     element.setSubmodelElements([template]);
     template.accept(this);
-
-    // if (element.getSubmodelElements().length > 1) {
-    //   element.setSubmodelElements([element.getSubmodelElements()[0]]);
-    // }
   }
 }

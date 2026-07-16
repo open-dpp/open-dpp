@@ -4,9 +4,11 @@ import { ModifierVisitorOptions } from "../../modifier-visitor";
 import { SubmodelElementList } from "../submodel-element-list";
 import { ValueError } from "@open-dpp/exception";
 import { AasAbility } from "../../security/aas-ability";
+import { IdShortPath } from "../../common/id-short-path";
 
 export interface MoveOptions {
   ability: AasAbility;
+  onMove: (oldPath: IdShortPath, newPath: IdShortPath) => void;
 }
 
 export interface ITableExtendable extends ITrackable {
@@ -20,7 +22,11 @@ export interface ITableExtendable extends ITrackable {
     data: any,
     options: ModifierVisitorOptions,
   ): void;
-  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: MoveOptions): void;
+  deleteColumnFromGroup(
+    groupIdShort: string,
+    idShort: string,
+    options: MoveOptions & DeleteOptions,
+  ): void;
   moveColumnToGroup(columnIdShort: string, groupIdShort: string, options: MoveOptions): void;
   createGroupFromColumn(columnIdShort: string, group: ISubmodelElement, options: MoveOptions): void;
   addRow(options: AddOptions): void;

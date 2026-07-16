@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect } from "@jest/globals";
+import { beforeAll, describe, expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { IdShortPath } from "../../common/id-short-path";
 import { LanguageText } from "../../common/language-text";
@@ -408,14 +408,27 @@ describe("NestedTableExtension", () => {
       Property.create({ idShort: "subCol1", valueType: DataTypeDef.String }),
       { ability },
     );
-    submodel.deleteColumnFromGroup(table3Path, "group1", "subCol1", { ability });
-    for (const row of getAllTable3Rows(submodel)) {
+    const onMoveMock = jest.fn();
+    const deleteColumnMock = jest.fn();
+    submodel.deleteColumnFromGroup(table3Path, "group1", "subCol1", {
+      ability,
+      onMove: onMoveMock,
+      onDelete: deleteColumnMock,
+    });
+    for (const [index, row] of getAllTable3Rows(submodel).entries()) {
       const topLevel = row.getSubmodelElements().map((el) => el.idShort);
       const groupIndex = topLevel.indexOf("group1");
       expect(topLevel[groupIndex + 1]).toBe("subCol1");
       const group = row.getSubmodelElements().find((el) => el.idShort === "group1")!;
       expect(group.getSubmodelElements().map((el) => el.idShort)).not.toContain("subCol1");
+      expect(onMoveMock).toHaveBeenNthCalledWith(
+        index + 1,
+        IdShortPath.fromSegments([...group.getIdShortPath().segments, "subCol1"]),
+        IdShortPath.fromSegments([...group.getIdShortPath().getParentPath().segments, "subCol1"]),
+      );
     }
+    expect(onMoveMock).toHaveBeenCalledTimes(allTable3RowPaths.length);
+    expect(deleteColumnMock).toHaveBeenCalledTimes(0);
   });
 
   it("should modify column in group in table3 and propagate to all instances", () => {
@@ -443,11 +456,18 @@ describe("NestedTableExtension", () => {
 
   it("should move top-level column into group in table3 and propagate to all instances", () => {
     const { submodel, ability } = createSubmodelWithGroupInTable3();
-    submodel.moveColumnToGroup(table3Path, "col1", "group1", { ability });
-    for (const row of getAllTable3Rows(submodel)) {
+    const onMoveMock = jest.fn();
+
+    submodel.moveColumnToGroup(table3Path, "col1", "group1", { ability, onMove: onMoveMock });
+    for (const [index, row] of getAllTable3Rows(submodel).entries()) {
       expect(row.getSubmodelElements().map((el) => el.idShort)).not.toContain("col1");
       const group = row.getSubmodelElements().find((el) => el.idShort === "group1")!;
       expect(group.getSubmodelElements().map((el) => el.idShort)).toContain("col1");
+      expect(onMoveMock).toHaveBeenNthCalledWith(
+        index + 1,
+        IdShortPath.fromSegments([...group.getIdShortPath().getParentPath().segments, "col1"]),
+        IdShortPath.fromSegments([...group.getIdShortPath().segments, "col1"]),
+      );
     }
   });
 });

@@ -215,10 +215,16 @@ describe("tableExtension", () => {
     });
     table.addColumn(group, { ability });
     table.addRow({ ability });
+    const onMoveMock = jest.fn();
+    const onDeleteMock = jest.fn();
 
-    table.deleteColumnFromGroup("group1", "subCol1", { ability });
+    table.deleteColumnFromGroup("group1", "subCol1", {
+      ability,
+      onMove: onMoveMock,
+      onDelete: onDeleteMock,
+    });
 
-    for (const row of table.rows) {
+    for (const [index, row] of table.rows.entries()) {
       const topLevel = row.getSubmodelElements().map((el) => el.idShort);
       // the group survives since a sibling sub-column remains
       expect(topLevel).toContain("group1");
@@ -228,7 +234,13 @@ describe("tableExtension", () => {
       const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).not.toContain("subCol1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("subCol2");
+      expect(onMoveMock).toHaveBeenNthCalledWith(
+        index + 1,
+        IdShortPath.fromSegments([...row.getIdShortPath().segments, "group1", "subCol1"]),
+        IdShortPath.fromSegments([...row.getIdShortPath().segments, "subCol1"]),
+      );
     }
+    expect(onDeleteMock).toHaveBeenCalledTimes(0);
 
     const valueRepr = submodelElementList.accept(new ValueVisitor({ ability }));
     expect(valueRepr).toEqual([
@@ -249,8 +261,16 @@ describe("tableExtension", () => {
     });
     table.addColumn(group, { ability });
     table.addRow({ ability });
+    const foundGroup = table.columns.find((c) => c.idShort === "group1");
 
-    table.deleteColumnFromGroup("group1", "onlySubCol", { ability });
+    const expected = foundGroup!.copy().value;
+    const onDeleteMock = jest.fn();
+    const onMoveMock = jest.fn();
+    table.deleteColumnFromGroup("group1", "onlySubCol", {
+      ability,
+      onDelete: onDeleteMock,
+      onMove: onMoveMock,
+    });
 
     for (const row of table.rows) {
       const topLevel = row.getSubmodelElements().map((el) => el.idShort);
@@ -259,6 +279,10 @@ describe("tableExtension", () => {
       // the now-empty group is gone entirely, not just empty
       expect(topLevel).not.toContain("group1");
     }
+
+    expected.setSubmodelElements([]);
+    expect(onDeleteMock).toHaveBeenCalledTimes(table.rows.length);
+    expect(onDeleteMock).toHaveBeenCalledWith(expected);
     expect(table.columns.map((c) => c.idShort)).not.toContain("group1");
   });
 
@@ -320,14 +344,20 @@ describe("tableExtension", () => {
     table.addColumn(col1, { ability });
     table.addColumn(group, { ability });
     table.addRow({ ability });
+    const onMoveMock = jest.fn();
 
-    table.moveColumnToGroup("col1", "group1", { ability });
+    table.moveColumnToGroup("col1", "group1", { ability, onMove: onMoveMock });
 
-    for (const row of table.rows) {
+    for (const [index, row] of table.rows.entries()) {
       const topLevelIds = row.getSubmodelElements().map((el) => el.idShort);
       expect(topLevelIds).not.toContain("col1");
       const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toContain("col1");
+      expect(onMoveMock).toHaveBeenNthCalledWith(
+        index + 1,
+        IdShortPath.fromSegments([...row.getIdShortPath().segments, "col1"]),
+        IdShortPath.fromSegments([...row.getIdShortPath().segments, "group1", "col1"]),
+      );
     }
     const valueVisitor = new ValueVisitor({ ability });
     const valueRepr = submodelElementList.accept(valueVisitor);
@@ -361,17 +391,23 @@ describe("tableExtension", () => {
     row1Col1.value = "row1-value";
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
-    table.createGroupFromColumn("col1", newGroup, { ability });
+    const onMoveMock = jest.fn();
+    table.createGroupFromColumn("col1", newGroup, { ability, onMove: onMoveMock });
 
     const topLevelIds = table.columns.map((c) => c.idShort);
     expect(topLevelIds).toEqual(["before", "group1", "after"]);
 
-    for (const row of table.rows) {
+    for (const [index, row] of table.rows.entries()) {
       const topLevel = row.getSubmodelElements().map((el) => el.idShort);
       expect(topLevel).not.toContain("col1");
       const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1");
       expect(rowGroup).toBeDefined();
       expect(rowGroup!.getSubmodelElements().map((el) => el.idShort)).toEqual(["col1"]);
+      expect(onMoveMock).toHaveBeenNthCalledWith(
+        index + 1,
+        IdShortPath.fromSegments([...row.getIdShortPath().segments, "col1"]),
+        IdShortPath.fromSegments([...row.getIdShortPath().segments, "group1", "col1"]),
+      );
     }
 
     const valueRepr = submodelElementList.accept(new ValueVisitor({ ability }));
@@ -388,9 +424,10 @@ describe("tableExtension", () => {
     });
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
-    expect(() => table.createGroupFromColumn("doesNotExist", newGroup, { ability })).toThrow(
-      NotFoundError,
-    );
+    const onMoveMock = jest.fn();
+    expect(() =>
+      table.createGroupFromColumn("doesNotExist", newGroup, { ability, onMove: onMoveMock }),
+    ).toThrow(NotFoundError);
   });
 
   it("should throw ValueError when the new group's idShort collides with an existing column", () => {
@@ -401,11 +438,12 @@ describe("tableExtension", () => {
     table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" })), {
       ability,
     });
+    const onMoveMock = jest.fn();
 
     const collidingGroup = SubmodelElementCollection.create({ idShort: "col2" });
-    expect(() => table.createGroupFromColumn("col1", collidingGroup, { ability })).toThrow(
-      ValueError,
-    );
+    expect(() =>
+      table.createGroupFromColumn("col1", collidingGroup, { ability, onMove: onMoveMock }),
+    ).toThrow(ValueError);
   });
 
   it("should throw ValueError when the provided group is not a SubmodelElementCollection", () => {
@@ -413,9 +451,12 @@ describe("tableExtension", () => {
     table.addColumn(Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" })), {
       ability,
     });
+    const onMoveMock = jest.fn();
 
     const notAGroup = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "group1" }));
-    expect(() => table.createGroupFromColumn("col1", notAGroup, { ability })).toThrow(ValueError);
+    expect(() =>
+      table.createGroupFromColumn("col1", notAGroup, { ability, onMove: onMoveMock }),
+    ).toThrow(ValueError);
   });
 
   it("should clear nested values in group column when adding a new row", () => {

@@ -188,7 +188,11 @@ export class TableExtension implements ITableExtendable {
    * @param idShort - The idShort of the column to move out of the group
    * @param options - Move options including ability for permission checks
    */
-  deleteColumnFromGroup(groupIdShort: string, idShort: string, options: MoveOptions): void {
+  deleteColumnFromGroup(
+    groupIdShort: string,
+    idShort: string,
+    options: MoveOptions & DeleteOptions,
+  ): void {
     const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
     const columnIndex = headerGroup.getSubmodelElements().findIndex((el) => el.idShort === idShort);
     const columnToMove = headerGroup.getSubmodelElements()[columnIndex];
@@ -203,18 +207,21 @@ export class TableExtension implements ITableExtendable {
             .find((el) => el.idShort === idShort);
           const copy = columnToCopy ? columnToCopy.copy() : undefined;
           if (copy && copy.isAllowed) {
-            row.addSubmodelElement(copy.value, {
+            const addedElement = row.addSubmodelElement(copy.value, {
               ability: options.ability,
               position: groupPosition + 1,
             });
-            groupColumn.deleteSubmodelElement(idShort, {
+
+            const deletedElement = groupColumn.deleteSubmodelElement(idShort, {
               ability: options.ability,
               onDelete: () => {},
             });
+            options.onMove(deletedElement.getIdShortPath(), addedElement.getIdShortPath());
           }
         }
       }
       // this.applyAddColumn(columnToMove, { ability: options.ability, position: groupPosition + 1 });
+
       this.tracker.track(
         ColumnDeletedFromGroup.create({
           groupIdShort,
@@ -237,7 +244,10 @@ export class TableExtension implements ITableExtendable {
       // group with no children, delete the now-empty group shell too.
       const headerGroupAfterEject = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
       if (headerGroupAfterEject.getSubmodelElements().length === 0) {
-        this.deleteColumn(groupIdShort, { ability: options.ability, onDelete: () => {} });
+        this.deleteColumn(groupIdShort, {
+          ability: options.ability,
+          onDelete: options.onDelete,
+        });
       }
     }
   }
@@ -251,11 +261,15 @@ export class TableExtension implements ITableExtendable {
       if (columnToCopy) {
         const copy = columnToCopy.copy();
         if (copy.isAllowed) {
-          container.addSubmodelElement(copy.value, options);
+          const addedElement = container.addSubmodelElement(copy.value, options);
+          const deletedElement = row.deleteSubmodelElement(columnIdShort, {
+            ability: options.ability,
+            onDelete: () => {},
+          });
+          options.onMove(deletedElement.getIdShortPath(), addedElement.getIdShortPath());
         }
       }
     }
-    this.applyDeleteColumn(columnIdShort, { ability: options.ability, onDelete: () => {} });
     this.tracker.track(
       ColumnDeleted.create({
         position: deletedPosition,
@@ -389,6 +403,7 @@ export class TableExtension implements ITableExtendable {
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();
     }
+    options.onDelete?.(row);
     this.tracker.track(
       RowDeleted.create({
         path: row.getIdShortPath(),

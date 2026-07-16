@@ -48,6 +48,45 @@ describe("security", () => {
     });
   }
 
+  it("should move policy", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const owner = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.OWNER,
+    });
+    const permissions = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({
+        permission: Permissions.Delete,
+        kindOfPermission: PermissionKind.Allow,
+      }),
+    ];
+    security.addPolicy(member, IdShortPath.create({ path: "section1.prop1" }), permissions);
+    security.addPolicy(owner, IdShortPath.create({ path: "section1.prop1" }), permissions);
+    security.movePolicy(
+      IdShortPath.create({ path: "section1.prop1" }),
+      IdShortPath.create({ path: "section1.prop2" }),
+    );
+    [member, owner].forEach((subject) => {
+      expect(security.findPoliciesBySubject(subject)).toEqual([
+        {
+          tracker: expect.any(ChangeTracker),
+          targetSubjectAttributes: subject,
+          _permissionsPerObject: [
+            PermissionPerObject.create({
+              object: createAasObject(IdShortPath.create({ path: "section1.prop2" })),
+              permissions,
+            }),
+          ],
+        },
+      ]);
+    });
+  });
+
   it("create security schema and checks permissions", () => {
     const security = Security.create({});
     security.addPolicy(

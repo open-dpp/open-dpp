@@ -267,7 +267,7 @@ export class Submodel
     idShortPath: IdShortPath,
     groupIdShort: string,
     idShortOfColumn: string,
-    options: MoveOptions,
+    options: MoveOptions & DeleteOptions,
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.deleteColumnFromGroup(groupIdShort, idShortOfColumn, options);

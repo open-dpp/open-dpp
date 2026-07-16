@@ -51,6 +51,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   ) {
     this.displayName = displayName;
     this.description = description;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
   setParentPointer(parentPointer: Pointer): void {

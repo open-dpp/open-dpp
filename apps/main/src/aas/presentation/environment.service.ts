@@ -16,7 +16,6 @@ import type {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-
 import {
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
@@ -241,7 +240,7 @@ export class EnvironmentService {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
-        await this.aasRepository.save(aas);
+        await this.aasRepository.save(aas, { session });
         if (!activity.isNoop()) {
           await this.activityRepository.createMany([activity], { session });
         }
@@ -895,7 +894,11 @@ export class EnvironmentService {
     const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     const modifiedSubmodelElementList = submodel
       .withTracking()
-      .deleteColumnFromGroup(idShortPath, groupIdShort, idShortOfColumn, { ability });
+      .deleteColumnFromGroup(idShortPath, groupIdShort, idShortOfColumn, {
+        ability,
+        onMove: (oldPath, newPath) => aas.withTracking().security.movePolicy(oldPath, newPath),
+        onDelete: (s) => aas.withTracking().security.deletePoliciesByObjectPath(s.getIdShortPath()),
+      });
 
     const activity = ColumnDeletedFromGroupActivity.create({
       userId: userContext.userId,
@@ -936,10 +939,14 @@ export class EnvironmentService {
     version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     const modifiedSubmodelElementList = submodel
       .withTracking()
-      .moveColumnToGroup(idShortPath, columnIdShort, groupIdShort, { ability });
+      .moveColumnToGroup(idShortPath, columnIdShort, groupIdShort, {
+        ability,
+        onMove: (oldPath, newPath) => aas.withTracking().security.movePolicy(oldPath, newPath),
+      });
 
     const activity = ColumnMovedToGroupActivity.create({
       userId: userContext.userId,
@@ -977,10 +984,14 @@ export class EnvironmentService {
     userContext: UserContext,
   ): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(userContext.subject, userContext.userId);
     const modifiedSubmodelElementList = submodel
       .withTracking()
-      .createGroupFromColumn(idShortPath, columnIdShort, groupRequest.toDomain(), { ability });
+      .createGroupFromColumn(idShortPath, columnIdShort, groupRequest.toDomain(), {
+        ability,
+        onMove: (oldPath, newPath) => aas.withTracking().security.movePolicy(oldPath, newPath),
+      });
 
     const activity = ColumnGroupCreatedActivity.create({
       userId: userContext.userId,
