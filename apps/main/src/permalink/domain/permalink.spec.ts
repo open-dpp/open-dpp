@@ -500,4 +500,54 @@ describe("Permalink", () => {
       expect(next.uniqueProductIdentifierId).toBe(original.uniqueProductIdentifierId);
     });
   });
+
+  // copy() is private; exercise it through withPrimary (which overrides only `primary`),
+  // proving the clone helper preserves every other field, advances updatedAt, and does
+  // not mutate the receiver.
+  describe("copy() semantics", () => {
+    const fullyPopulated = () =>
+      Permalink.create({
+        kind: "gs1-link",
+        uniqueProductIdentifierId: randomUUID(),
+        presentationConfigurationId: randomUUID(),
+        slug: "packed-product",
+        baseUrl: "https://passports.example.com",
+        gs1DataAttributes: gs1DataAttributesPlainFactory.build(),
+        organizationId: randomUUID(),
+      });
+
+    it("preserves every field except the one overridden", () => {
+      const original = fullyPopulated();
+      const next = original.withPrimary(true);
+
+      expect(next).not.toBe(original);
+      expect(next.primary).toBe(true);
+      // every other field is carried over unchanged
+      expect(next.id).toBe(original.id);
+      expect(next.slug).toBe(original.slug);
+      expect(next.baseUrl).toBe(original.baseUrl);
+      expect(next.publishedUrl).toBe(original.publishedUrl);
+      expect(next.presentationConfigurationId).toBe(original.presentationConfigurationId);
+      expect(next.kind).toBe(original.kind);
+      expect(next.uniqueProductIdentifierId).toBe(original.uniqueProductIdentifierId);
+      expect(next.gs1DataAttributes).toEqual(original.gs1DataAttributes);
+      expect(next.organizationId).toBe(original.organizationId);
+      expect(next.createdAt.getTime()).toBe(original.createdAt.getTime());
+    });
+
+    it("advances updatedAt", () => {
+      const original = fullyPopulated();
+      const next = original.withPrimary(true);
+      expect(next.updatedAt).toBeInstanceOf(Date);
+      expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(original.updatedAt.getTime());
+    });
+
+    it("does not mutate the receiver", () => {
+      const original = fullyPopulated();
+      const originalUpdatedAt = original.updatedAt.getTime();
+      original.withPrimary(true);
+      expect(original.primary).toBe(false);
+      expect(original.updatedAt.getTime()).toBe(originalUpdatedAt);
+    });
+  });
 });
