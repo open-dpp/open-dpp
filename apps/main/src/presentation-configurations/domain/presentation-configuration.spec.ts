@@ -446,3 +446,158 @@ describe("PresentationConfiguration.withPatch permission checks", () => {
     expect(next.defaultComponents.get(KeyTypes.Property)).toBe(PresentationComponentName.BigNumber);
   });
 });
+
+describe("PresentationConfiguration.moveElementDesign", () => {
+  const baseInput = () => ({
+    organizationId: "org-1",
+    referenceId: randomUUID(),
+    referenceType: DigitalProductDocumentTypes.Template,
+  });
+
+  it("returns the same instance when oldPath equals newPath", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "A.B": PresentationComponentName.BigNumber },
+    });
+
+    const next = config.moveElementDesign("A.B", "A.B");
+
+    expect(next).toBe(config);
+  });
+
+  it("returns the same instance when oldPath does not exist", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "A.B": PresentationComponentName.BigNumber },
+    });
+
+    const next = config.moveElementDesign("X.Y", "A.D");
+
+    expect(next).toBe(config);
+  });
+
+  it("moves a single element design entry", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "A.B": PresentationComponentName.BigNumber },
+    });
+
+    const next = config.moveElementDesign("A.B", "A.D");
+
+    expect(next).not.toBe(config);
+    expect(next.elementDesign.get("A.B")).toBeUndefined();
+    expect(next.elementDesign.get("A.D")).toBe(PresentationComponentName.BigNumber);
+    expect(config.elementDesign.get("A.B")).toBe(PresentationComponentName.BigNumber);
+  });
+
+  it("moves an element design entry and all its children", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: {
+        "A.B": PresentationComponentName.BigNumber,
+        "A.B.C": PresentationComponentName.BigNumber,
+        "A.B.D": PresentationComponentName.BigNumber,
+      },
+    });
+
+    const next = config.moveElementDesign("A.B", "X.Y");
+
+    expect(next).not.toBe(config);
+    expect(next.elementDesign.get("A.B")).toBeUndefined();
+    expect(next.elementDesign.get("A.B.C")).toBeUndefined();
+    expect(next.elementDesign.get("A.B.D")).toBeUndefined();
+    expect(next.elementDesign.get("X.Y")).toBe(PresentationComponentName.BigNumber);
+    expect(next.elementDesign.get("X.Y.C")).toBe(PresentationComponentName.BigNumber);
+    expect(next.elementDesign.get("X.Y.D")).toBe(PresentationComponentName.BigNumber);
+  });
+
+  it("preserves unrelated element design entries", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: {
+        "A.B": PresentationComponentName.BigNumber,
+        "A.BC": PresentationComponentName.BigNumber,
+        "X.Y": PresentationComponentName.BigNumber,
+      },
+    });
+
+    const next = config.moveElementDesign("A.B", "Z.W");
+
+    expect(next.elementDesign.get("A.BC")).toBe(PresentationComponentName.BigNumber);
+    expect(next.elementDesign.get("X.Y")).toBe(PresentationComponentName.BigNumber);
+    expect(next.elementDesign.get("Z.W")).toBe(PresentationComponentName.BigNumber);
+  });
+});
+
+describe("PresentationConfiguration.deleteElementDesign", () => {
+  const baseInput = () => ({
+    organizationId: "org-1",
+    referenceId: randomUUID(),
+    referenceType: DigitalProductDocumentTypes.Template,
+  });
+
+  it("returns the same instance when path does not exist", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: { "A.B": PresentationComponentName.BigNumber },
+    });
+
+    const next = config.deleteElementDesign("X.Y");
+
+    expect(next).toBe(config);
+  });
+
+  it("deletes a single element design entry", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: {
+        "A.B": PresentationComponentName.BigNumber,
+        "X.Y": PresentationComponentName.BigNumber,
+      },
+    });
+
+    const next = config.deleteElementDesign("A.B");
+
+    expect(next).not.toBe(config);
+    expect(next.elementDesign.get("A.B")).toBeUndefined();
+    expect(next.elementDesign.get("X.Y")).toBe(PresentationComponentName.BigNumber);
+    expect(config.elementDesign.get("A.B")).toBe(PresentationComponentName.BigNumber);
+  });
+
+  it("deletes an element design entry and all its children", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: {
+        "A.B": PresentationComponentName.BigNumber,
+        "A.B.C": PresentationComponentName.BigNumber,
+        "A.B.D": PresentationComponentName.BigNumber,
+        "X.Y": PresentationComponentName.BigNumber,
+      },
+    });
+
+    const next = config.deleteElementDesign("A.B");
+
+    expect(next).not.toBe(config);
+    expect(next.elementDesign.get("A.B")).toBeUndefined();
+    expect(next.elementDesign.get("A.B.C")).toBeUndefined();
+    expect(next.elementDesign.get("A.B.D")).toBeUndefined();
+    expect(next.elementDesign.get("X.Y")).toBe(PresentationComponentName.BigNumber);
+  });
+
+  it("does not delete entries that are not children (prefix match must include separator)", () => {
+    const config = PresentationConfiguration.create({
+      ...baseInput(),
+      elementDesign: {
+        "A.B": PresentationComponentName.BigNumber,
+        "A.BC": PresentationComponentName.BigNumber,
+        AB: PresentationComponentName.BigNumber,
+      },
+    });
+
+    const next = config.deleteElementDesign("A.B");
+
+    expect(next.elementDesign.get("A.B")).toBeUndefined();
+    expect(next.elementDesign.get("A.BC")).toBe(PresentationComponentName.BigNumber);
+    expect(next.elementDesign.get("AB")).toBe(PresentationComponentName.BigNumber);
+  });
+});
