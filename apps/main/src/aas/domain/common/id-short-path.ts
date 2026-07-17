@@ -14,10 +14,23 @@ export class IdShortPath {
   }
 
   isChildOf(idShortPath: IdShortPath): boolean {
+    // this is a child of idShortPath if:
+    // 1. idShortPath is shorter than or equal to this (parent <= child in length)
+    // 2. this starts with all segments of idShortPath
     if (idShortPath.length() > this.length()) {
       return false;
     }
-    return idShortPath.first === this.first;
+    for (let i = 0; i < idShortPath.length(); i++) {
+      if (this._segments[i] !== idShortPath._segments[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  isAncestorOf(idShortPath: IdShortPath): boolean {
+    // this is an ancestor of idShortPath (inverse of idShortPath.isChildOf(this))
+    return idShortPath.isChildOf(this);
   }
 
   isEqual(idShortPath: IdShortPath): boolean {
