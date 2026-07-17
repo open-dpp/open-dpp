@@ -118,9 +118,7 @@ describe("buildColumnMenu", () => {
     const actionsSection = menu!.find((item) => item.label === "common.actions");
     expect(actionsSection!.items?.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
 
-    const moveToGroupSection = menu!.find(
-      (item) => item.label === "aasEditor.table.moveToGroup",
-    );
+    const moveToGroupSection = menu!.find((item) => item.label === "aasEditor.table.moveToGroup");
     expect(moveToGroupSection).toBeUndefined();
   });
 
