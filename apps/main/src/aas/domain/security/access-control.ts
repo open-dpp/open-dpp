@@ -104,6 +104,38 @@ export class AccessControl implements ITrackable {
     this._accessPermissionRules = keepRules;
   }
 
+  movePolicy(oldObject: IdShortPath, newObject: IdShortPath): void {
+    const oldPath = oldObject.toString();
+    const newPath = newObject.toString();
+
+    // Reject if newObject is a child of oldObject
+    if (newObject.isChildOf(oldObject)) {
+      throw new ValueError(
+        `Cannot move ${oldPath} to ${newPath}: destination is a child of source`,
+      );
+    }
+
+    // Validate permissions and perform moves for each rule
+    for (const rule of this.accessPermissionRules) {
+      // Check if this rule has any entries that match oldObject or its descendants
+      let hasEntriesToMove = false;
+      for (const entry of rule.permissionsPerObject) {
+        const entryPath = entry.object.idShort;
+        if (entryPath === oldPath || entryPath.startsWith(oldPath + ".")) {
+          hasEntriesToMove = true;
+          break;
+        }
+      }
+
+      if (hasEntriesToMove) {
+        // Validate permission for this subject
+        this.administratePolicyGuard(rule.targetSubjectAttributes);
+        // Delegate to the rule to perform the move
+        rule.movePolicy(oldObject, newObject, this.tracker);
+      }
+    }
+  }
+
   findRuleOfSubject(subject: SubjectAttributes): AccessPermissionRule | undefined {
     return this.accessPermissionRules.find((rule) => rule.targetSubjectAttributes.isEqual(subject));
   }

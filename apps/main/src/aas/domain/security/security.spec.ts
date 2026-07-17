@@ -48,43 +48,118 @@ describe("security", () => {
     });
   }
 
-  it("should move policy", () => {
+  it("should move policy recursively for all descendants", () => {
+    const security = Security.create({}).withTracking();
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    const permissionsA = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ];
+    const permissionsB = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ];
+    const permissionsC = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ];
+
+    security.addPolicy(subject, IdShortPath.create({ path: "A" }), permissionsA);
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B" }), permissionsB);
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B.C" }), permissionsC);
+
+    security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const result = security.findPoliciesBySubject(subject);
+    expect(result).toHaveLength(1);
+    expect(result[0].permissionsPerObject).toHaveLength(3);
+    expect(result[0].permissionsPerObject.some((p) => p.object.idShort === "X")).toBeTruthy();
+    expect(result[0].permissionsPerObject.some((p) => p.object.idShort === "X.B")).toBeTruthy();
+    expect(result[0].permissionsPerObject.some((p) => p.object.idShort === "X.B.C")).toBeTruthy();
+  });
+
+  it("should overwrite existing destination policy when moving", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.MEMBER,
-    });
-    const owner = SubjectAttributes.create({
-      userRole: UserRole.USER,
-      memberRole: MemberRole.OWNER,
-    });
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    const permissions1 = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ];
+    const permissions2 = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ];
+
+    security.addPolicy(subject, IdShortPath.create({ path: "A" }), permissions1);
+    security.addPolicy(subject, IdShortPath.create({ path: "X" }), permissions2);
+
+    security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const result = security.findPoliciesBySubject(subject);
+    expect(result).toHaveLength(1);
+    expect(result[0].permissionsPerObject).toHaveLength(1);
+    expect(result[0].permissionsPerObject[0].object.idShort).toBe("X");
+    expect(result[0].permissionsPerObject[0].permissions).toEqual(permissions1);
+  });
+
+  it("should reject move when destination is child of source", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    expect(() => {
+      security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "A.B" }));
+    }).toThrow(ValueError);
+
+    expect(() => {
+      security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "A.B.C" }));
+    }).toThrow(ValueError);
+  });
+
+  it("should move children even when parent has no policy", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B.C" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const result = security.findPoliciesBySubject(subject);
+    expect(result).toHaveLength(1);
+    expect(result[0].permissionsPerObject).toHaveLength(1);
+    expect(result[0].permissionsPerObject[0].object.idShort).toBe("X.B.C");
+  });
+
+  it("should track PolicyDeleted and PolicyAdded events when moving policy", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
     const permissions = [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-      Permission.create({
-        permission: Permissions.Delete,
-        kindOfPermission: PermissionKind.Allow,
-      }),
     ];
-    security.addPolicy(member, IdShortPath.create({ path: "section1.prop1" }), permissions);
-    security.addPolicy(owner, IdShortPath.create({ path: "section1.prop1" }), permissions);
-    security.movePolicy(
-      IdShortPath.create({ path: "section1.prop1" }),
-      IdShortPath.create({ path: "section1.prop2" }),
+
+    security.addPolicy(subject, IdShortPath.create({ path: "A" }), permissions);
+    security
+      .withTracking()
+      .movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const changes = security.tracker.stop();
+    expect(changes).toHaveLength(2);
+    expect(changes[0]).toEqual(
+      PolicyDeleted.create({
+        userRole: subject.userRole,
+        memberRole: subject.memberRole,
+        object: createAasObject(IdShortPath.create({ path: "A" })),
+      }),
     );
-    [member, owner].forEach((subject) => {
-      expect(security.findPoliciesBySubject(subject)).toEqual([
-        {
-          tracker: expect.any(ChangeTracker),
-          targetSubjectAttributes: subject,
-          _permissionsPerObject: [
-            PermissionPerObject.create({
-              object: createAasObject(IdShortPath.create({ path: "section1.prop2" })),
-              permissions,
-            }),
-          ],
-        },
-      ]);
-    });
+    expect(changes[1]).toEqual(
+      PolicyAdded.create({
+        userRole: subject.userRole,
+        memberRole: subject.memberRole,
+        object: createAasObject(IdShortPath.create({ path: "X" })),
+        value: permissions,
+      }),
+    );
   });
 
   it("create security schema and checks permissions", () => {

@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { IdShortPath } from "../common/id-short-path";
 import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { ReferenceElement } from "../submodel-base/reference-element";
+import { createAasObject } from "./aas-object";
 import { Permission } from "./permission";
 import { PermissionPerObject, PermissionPerObjectSchema } from "./permission-per-object";
 import { SubjectAttributes, SubjectAttributesSchema } from "./subject-attributes";
@@ -11,6 +12,7 @@ import {
   ITrackable,
   withTrackingHelper,
 } from "../../../activity-history/domain/change-tracker";
+import { PolicyAdded } from "../../../activity-history/domain/change-events/policy-added";
 import { PolicyDeleted } from "../../../activity-history/domain/change-events/policy-deleted";
 import { PolicyModified } from "../../../activity-history/domain/change-events/policy-modified";
 
@@ -105,6 +107,83 @@ export class AccessPermissionRule implements ITrackable {
         newValue: permissions,
       }),
     );
+  }
+
+  movePolicy(oldObject: IdShortPath, newObject: IdShortPath, changeTracker: ChangeTracker): void {
+    const oldPath = oldObject.toString();
+    const newPath = newObject.toString();
+
+    // Find all entries in this rule that are oldObject or its descendants
+    const entriesToMove: PermissionPerObject[] = [];
+    for (const entry of this.permissionsPerObject) {
+      const entryPath = entry.object.idShort;
+      if (entryPath === oldPath || entryPath.startsWith(oldPath + ".")) {
+        entriesToMove.push(entry);
+      }
+    }
+
+    // If nothing to move in this rule, return early
+    if (entriesToMove.length === 0) {
+      return;
+    }
+
+    // Sort by path length descending (depth-first: longest first)
+    entriesToMove.sort((a, b) => b.object.idShort.length - a.object.idShort.length);
+
+    // Build set of new paths we'll be creating
+    const newPaths = new Set<string>();
+    const movedEntries: PermissionPerObject[] = [];
+
+    for (const entry of entriesToMove) {
+      const oldFullPath = entry.object.idShort;
+      // Calculate relative path from oldObject
+      const relative = oldFullPath === oldPath ? "" : oldFullPath.slice(oldPath.length + 1);
+      const newFullPath = newPath + (relative ? "." + relative : "");
+      newPaths.add(newFullPath);
+
+      // Track deletion of old entry
+      changeTracker.track(
+        PolicyDeleted.create({
+          userRole: this.targetSubjectAttributes.userRole,
+          memberRole: this.targetSubjectAttributes.memberRole,
+          object: entry.object,
+        }),
+      );
+
+      // Create moved entry with copied permissions
+      movedEntries.push(entry.move(createAasObject(IdShortPath.create({ path: newFullPath }))));
+
+      // Track addition of new entry
+      changeTracker.track(
+        PolicyAdded.create({
+          userRole: this.targetSubjectAttributes.userRole,
+          memberRole: this.targetSubjectAttributes.memberRole,
+          object: createAasObject(IdShortPath.create({ path: newFullPath })),
+          value: entry.permissions,
+        }),
+      );
+    }
+
+    // Build new permissionsPerObject array
+    // Keep entries that are NOT being moved AND NOT being overwritten
+    const newPermissionsPerObject = this.permissionsPerObject.filter((e) => {
+      const path = e.object.idShort;
+      // Remove if this is one of the entries being moved
+      if (entriesToMove.some((m) => m.object.idShort === path)) {
+        return false;
+      }
+      // Remove if this path is being overwritten
+      if (newPaths.has(path)) {
+        return false;
+      }
+      return true;
+    });
+
+    // Add the moved entries
+    newPermissionsPerObject.push(...movedEntries);
+
+    // Update the internal array (using private access within the class)
+    this._permissionsPerObject = newPermissionsPerObject;
   }
 
   static fromPlain(json: unknown): AccessPermissionRule {

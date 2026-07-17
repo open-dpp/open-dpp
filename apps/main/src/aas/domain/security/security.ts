@@ -66,15 +66,7 @@ export class Security implements ITrackable {
   }
 
   movePolicy(oldObject: IdShortPath, newObject: IdShortPath): void {
-    if (this.hasPoliciesForObject(oldObject)) {
-      for (const rule of this.localAccessControl.accessPermissionRules) {
-        for (const [index, permissionPerObject] of rule.permissionsPerObject.entries()) {
-          if (permissionPerObject.object.idShort === oldObject.toString()) {
-            rule.permissionsPerObject[index] = permissionPerObject.move(createAasObject(newObject));
-          }
-        }
-      }
-    }
+    this.localAccessControl.movePolicy(oldObject, newObject);
   }
 
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
