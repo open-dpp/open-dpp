@@ -110,14 +110,10 @@ export class AccessPermissionRule implements ITrackable {
   }
 
   movePolicy(oldObject: IdShortPath, newObject: IdShortPath, changeTracker: ChangeTracker): void {
-    const oldPath = oldObject.toString();
-    const newPath = newObject.toString();
-
     // Find all entries in this rule that are oldObject or its descendants
     const entriesToMove: PermissionPerObject[] = [];
     for (const entry of this.permissionsPerObject) {
-      const entryPath = entry.object.idShort;
-      if (entryPath === oldPath || entryPath.startsWith(oldPath + ".")) {
+      if (entry.objectIsEqualOrChildOf(oldObject)) {
         entriesToMove.push(entry);
       }
     }
@@ -128,18 +124,20 @@ export class AccessPermissionRule implements ITrackable {
     }
 
     // Sort by path length descending (depth-first: longest first)
-    entriesToMove.sort((a, b) => b.object.idShort.length - a.object.idShort.length);
+    entriesToMove.sort(
+      (a, b) => b.object.getIdShortPath().length() - a.object.getIdShortPath().length(),
+    );
 
     // Build set of new paths we'll be creating
     const newPaths = new Set<string>();
     const movedEntries: PermissionPerObject[] = [];
 
     for (const entry of entriesToMove) {
-      const oldFullPath = entry.object.idShort;
+      const oldFullPath = entry.object.getIdShortPath();
       // Calculate relative path from oldObject
-      const relative = oldFullPath === oldPath ? "" : oldFullPath.slice(oldPath.length + 1);
-      const newFullPath = newPath + (relative ? "." + relative : "");
-      newPaths.add(newFullPath);
+      const relative = oldFullPath.relativePath(oldObject);
+      const newFullPath = newObject.concat(relative);
+      newPaths.add(newFullPath.toString());
 
       // Track deletion of old entry
       changeTracker.track(
@@ -151,14 +149,14 @@ export class AccessPermissionRule implements ITrackable {
       );
 
       // Create moved entry with copied permissions
-      movedEntries.push(entry.move(createAasObject(IdShortPath.create({ path: newFullPath }))));
+      movedEntries.push(entry.move(createAasObject(newFullPath)));
 
       // Track addition of new entry
       changeTracker.track(
         PolicyAdded.create({
           userRole: this.targetSubjectAttributes.userRole,
           memberRole: this.targetSubjectAttributes.memberRole,
-          object: createAasObject(IdShortPath.create({ path: newFullPath })),
+          object: createAasObject(newFullPath),
           value: entry.permissions,
         }),
       );
@@ -167,13 +165,12 @@ export class AccessPermissionRule implements ITrackable {
     // Build new permissionsPerObject array
     // Keep entries that are NOT being moved AND NOT being overwritten
     const newPermissionsPerObject = this.permissionsPerObject.filter((e) => {
-      const path = e.object.idShort;
       // Remove if this is one of the entries being moved
-      if (entriesToMove.some((m) => m.object.idShort === path)) {
+      if (entriesToMove.some((m) => m.object.getIdShortPath().isEqual(e.object.getIdShortPath()))) {
         return false;
       }
       // Remove if this path is being overwritten
-      if (newPaths.has(path)) {
+      if (newPaths.has(e.object.getIdShortPath().toString())) {
         return false;
       }
       return true;

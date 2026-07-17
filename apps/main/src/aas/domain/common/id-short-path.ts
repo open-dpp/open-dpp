@@ -1,3 +1,5 @@
+import { ValueError } from "@open-dpp/exception";
+
 export class IdShortPath {
   constructor(private readonly _segments: Array<string>) {}
 
@@ -11,6 +13,19 @@ export class IdShortPath {
 
   addPathSegment(segment: string) {
     return new IdShortPath([...this._segments, segment]);
+  }
+
+  relativePath(other: IdShortPath): IdShortPath {
+    if (this.isEqual(other)) {
+      return new IdShortPath([]);
+    }
+    if (!this.isChildOf(other)) {
+      throw new ValueError(
+        `To evaluate relative path ${this.toString()} has to equal or a child of ${other.toString()}`,
+      );
+    }
+
+    return this.slice(other.length());
   }
 
   isChildOf(idShortPath: IdShortPath): boolean {

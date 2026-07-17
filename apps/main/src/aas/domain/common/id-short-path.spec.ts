@@ -1,5 +1,6 @@
 import { expect } from "@jest/globals";
 import { IdShortPath } from "./id-short-path";
+import { ValueError } from "@open-dpp/exception";
 
 describe("id-short-path", () => {
   it("should be evaluate startsWith correctly", () => {
@@ -27,6 +28,27 @@ describe("id-short-path", () => {
     ).toBeTruthy();
   });
 
+  it("should evaluate relativePath correctly", () => {
+    expect(
+      IdShortPath.create({ path: "path1" }).relativePath(IdShortPath.create({ path: "path1" })),
+    ).toEqual(IdShortPath.fromSegments([]));
+    expect(
+      IdShortPath.create({ path: "path1.path2.path3" }).relativePath(
+        IdShortPath.create({ path: "path1.path2" }),
+      ),
+    ).toEqual(IdShortPath.create({ path: "path3" }));
+
+    expect(() =>
+      IdShortPath.create({ path: "path1.path2" }).relativePath(
+        IdShortPath.create({ path: "path1.path2.path3" }),
+      ),
+    ).toThrow(
+      new ValueError(
+        "To evaluate relative path path1.path2 has to equal or a child of path1.path2.path3",
+      ),
+    );
+  });
+
   it("should reject diverging paths as children", () => {
     // A.X is NOT a child of A.B (they diverge at second segment)
     expect(
@@ -49,10 +71,14 @@ describe("id-short-path", () => {
       IdShortPath.create({ path: "path1" }).isAncestorOf(IdShortPath.create({ path: "path2" })),
     ).toBeFalsy();
     expect(
-      IdShortPath.create({ path: "path1" }).isAncestorOf(IdShortPath.create({ path: "path1.path2" })),
+      IdShortPath.create({ path: "path1" }).isAncestorOf(
+        IdShortPath.create({ path: "path1.path2" }),
+      ),
     ).toBeTruthy();
     expect(
-      IdShortPath.create({ path: "path1.path2" }).isAncestorOf(IdShortPath.create({ path: "path1" })),
+      IdShortPath.create({ path: "path1.path2" }).isAncestorOf(
+        IdShortPath.create({ path: "path1" }),
+      ),
     ).toBeFalsy();
     expect(
       IdShortPath.create({ path: "A.B" }).isAncestorOf(IdShortPath.create({ path: "A.B.C" })),
