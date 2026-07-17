@@ -1,12 +1,11 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { type Gs1IdentityResponse } from "@open-dpp/dto";
+import { BaseUrlResolver } from "../../../permalink/application/services/base-url-resolver.service";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../infrastructure/unique-product-identifier.repository";
 import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
-import { Gs1ResolverBaseService } from "./gs1-resolver-base.service";
-import { Branding } from "../../../branding/domain/branding";
 
 /** The full assembled GS1 key a public resolver request carries. */
 export interface Gs1KeyInput {
@@ -24,17 +23,15 @@ export interface Gs1KeyInput {
  * permalink URL, publish-gated via the permalink).
  *
  * The write path (set/remove identity) has been retired to `UpiCollectionService`
- * (Slice 38). The resolver-base cascade is now owned by `Gs1ResolverBaseService`.
+ * (Slice 38). The resolver-base cascade is now owned by `BaseUrlResolver`.
  */
 @Injectable()
 export class Gs1IdentityService {
-  private readonly logger = new Logger(Gs1IdentityService.name);
-
   constructor(
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly permalinkRepository: PermalinkRepository,
-    private readonly gs1ResolverBaseService: Gs1ResolverBaseService,
+    private readonly baseUrlResolver: BaseUrlResolver,
   ) {}
 
   /** Return a passport's GS1 identity, or null when it has none. */
@@ -102,7 +99,7 @@ export class Gs1IdentityService {
       targetPermalink.id,
       undefined,
     );
-    const branding = await this.loadBrandingForPin(passport.organizationId);
+    const branding = await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId);
     const fallbackEnvUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();
     const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
       targetPermalink,
@@ -113,28 +110,11 @@ export class Gs1IdentityService {
     return publicUrl;
   }
 
-  /**
-   * Load branding for URL pinning, tolerating a missing branding row: on failure
-   * return null so the public URL is computed without freezing (mirrors the
-   * permalink controller's resilient branding load).
-   */
-  private async loadBrandingForPin(organizationId: string): Promise<Branding | null> {
-    try {
-      return await this.permalinkApplicationService.loadBranding(organizationId);
-    } catch (error) {
-      this.logger.warn(
-        `Branding load failed for organizationId=${organizationId}; resolving GS1 link without permalink pinning`,
-        error instanceof Error ? error.stack : String(error),
-      );
-      return null;
-    }
-  }
-
   private async toResponse(
     upi: UniqueProductIdentifier,
     organizationId?: string,
   ): Promise<Gs1IdentityResponse> {
-    const resolverBase = await this.gs1ResolverBaseService.getResolverBase(organizationId);
+    const resolverBase = await this.baseUrlResolver.getResolverBase(organizationId);
     return {
       uuid: upi.uuid,
       referenceId: upi.referenceId,

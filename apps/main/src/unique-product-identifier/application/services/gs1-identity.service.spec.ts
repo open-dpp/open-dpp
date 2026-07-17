@@ -26,8 +26,9 @@ function makeService(overrides?: {
     findPrimaryByPassportId: jest.Mock;
     findGs1LinkByUpiId: jest.Mock;
   }>;
-  gs1ResolverBaseService?: Partial<{
+  baseUrlResolver?: Partial<{
     getResolverBase: jest.Mock;
+    loadBrandingOrNull: jest.Mock;
   }>;
 }) {
   const upiRepo = {
@@ -48,17 +49,18 @@ function makeService(overrides?: {
     findGs1LinkByUpiId: jest.fn(async () => undefined),
     ...overrides?.permalinkRepo,
   };
-  const gs1ResolverBaseService = {
+  const baseUrlResolver = {
     getResolverBase: jest.fn(async () => RESOLVER_BASE),
-    ...overrides?.gs1ResolverBaseService,
+    loadBrandingOrNull: jest.fn(async () => null),
+    ...overrides?.baseUrlResolver,
   };
   const service = new Gs1IdentityService(
     upiRepo as never,
     permalinkService as never,
     permalinkRepo as never,
-    gs1ResolverBaseService as never,
+    baseUrlResolver as never,
   );
-  return { service, upiRepo, permalinkService, permalinkRepo, gs1ResolverBaseService };
+  return { service, upiRepo, permalinkService, permalinkRepo, baseUrlResolver };
 }
 
 // ---------------------------------------------------------------------------
@@ -98,9 +100,10 @@ describe("Slice 38 — Gs1IdentityService source must not contain write paths", 
     expect(serviceSrc).not.toMatch(/\brepo\.save\b|\buniqueProductIdentifierRepository\.save\b/);
   });
 
-  it("delegates getResolverBase to Gs1ResolverBaseService (no duplicate implementation)", () => {
-    // The service must inject Gs1ResolverBaseService; it must NOT define its own
-    // getResolverBase cascade (that lives in Gs1ResolverBaseService now).
+  it("delegates getResolverBase to BaseUrlResolver (no duplicate cascade)", () => {
+    // The base-URL cascade lives in BaseUrlResolver; this service must delegate
+    // to it, not re-implement it.
+    expect(serviceSrc).toContain("baseUrlResolver.getResolverBase");
     expect(serviceSrc).not.toContain("loadOrgResolverOverride");
     expect(serviceSrc).not.toContain("loadInstanceResolverSetting");
   });
@@ -140,13 +143,13 @@ describe("Gs1IdentityService.getIdentity", () => {
     expect(await service.getIdentity(randomUUID())).toBeNull();
   });
 
-  it("builds the Digital Link against the configured instance resolver base (delegates to Gs1ResolverBaseService)", async () => {
+  it("builds the Digital Link against the configured instance resolver base (delegates to BaseUrlResolver)", async () => {
     const referenceId = randomUUID();
     const organizationId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const { service, gs1ResolverBaseService } = makeService({
+    const { service, baseUrlResolver } = makeService({
       upiRepo: { findByReferenceIdAndType: jest.fn(async () => upi) },
-      gs1ResolverBaseService: {
+      baseUrlResolver: {
         getResolverBase: jest.fn(async () => "https://id.instance.example.com"),
       },
     });
@@ -154,7 +157,7 @@ describe("Gs1IdentityService.getIdentity", () => {
     const result = await service.getIdentity(referenceId, organizationId);
 
     expect(result?.digitalLink).toBe(`https://id.instance.example.com/01/${VALID_GTIN13_AS_14}`);
-    expect(gs1ResolverBaseService.getResolverBase).toHaveBeenCalledWith(organizationId);
+    expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
 

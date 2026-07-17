@@ -83,8 +83,11 @@ import {
   isMemberOfPassportOrg,
   PermalinkApplicationService,
   type PermalinkUpdate,
-  resolveFallbackBaseUrl,
 } from "../application/services/permalink.application.service";
+import {
+  BaseUrlResolver,
+  resolveFallbackBaseUrl,
+} from "../application/services/base-url-resolver.service";
 import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
@@ -95,6 +98,7 @@ export class PermalinkController {
 
   constructor(
     private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly baseUrlResolver: BaseUrlResolver,
     private readonly permalinkRepository: PermalinkRepository,
     private readonly environmentService: EnvironmentService,
     private readonly presentationConfigurationService: PresentationConfigurationService,
@@ -213,19 +217,17 @@ export class PermalinkController {
     }
   }
 
+  /**
+   * Resolve branding for a passport response: `forPin` is the tolerant branding
+   * load (null when the org/branding is absent — logged once by the repository —
+   * so the URL is computed without pinning); `display` falls back to the default
+   * branding so the response always carries a renderable branding object.
+   */
   private async resolveBranding(
     organizationId: string,
   ): Promise<{ display: Branding; forPin: Branding | null }> {
-    try {
-      const branding = await this.permalinkApplicationService.loadBranding(organizationId);
-      return { display: branding, forPin: branding };
-    } catch (error) {
-      this.logger.warn(
-        `Branding load failed for organizationId=${organizationId}; serving default branding and skipping permalink URL pinning`,
-        error instanceof Error ? error.stack : String(error),
-      );
-      return { display: Branding.getDefault(), forPin: null };
-    }
+    const forPin = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
+    return { display: forPin ?? Branding.getDefault(), forPin };
   }
 
   private async toPublicDto(

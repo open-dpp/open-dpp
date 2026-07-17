@@ -48,7 +48,7 @@ function makeService(overrides?: {
     findOne: jest.Mock;
     findByIds: jest.Mock;
   }>;
-  gs1ResolverBaseService?: Partial<{
+  baseUrlResolver?: Partial<{
     getResolverBase: jest.Mock;
   }>;
   permalinkApplicationService?: Partial<{
@@ -75,9 +75,9 @@ function makeService(overrides?: {
     findByIds: jest.fn(async () => new Map()),
     ...overrides?.passportRepo,
   };
-  const gs1ResolverBaseService = {
+  const baseUrlResolver = {
     getResolverBase: jest.fn(async () => RESOLVER_BASE),
-    ...overrides?.gs1ResolverBaseService,
+    ...overrides?.baseUrlResolver,
   };
   const permalinkApplicationService = {
     getGs1LinkSummariesByUpiIds: jest.fn(async () => new Map()),
@@ -87,10 +87,10 @@ function makeService(overrides?: {
   const service = new UpiCollectionService(
     upiRepo as never,
     passportRepo as never,
-    gs1ResolverBaseService as never,
+    baseUrlResolver as never,
     permalinkApplicationService as never,
   );
-  return { service, upiRepo, passportRepo, gs1ResolverBaseService, permalinkApplicationService };
+  return { service, upiRepo, passportRepo, baseUrlResolver, permalinkApplicationService };
 }
 
 describe("UpiCollectionService.create", () => {
@@ -232,7 +232,7 @@ describe("UpiCollectionService.create", () => {
     const organizationId = randomUUID();
     const draftPassport = makeDraftPassport(referenceId);
 
-    const { service, gs1ResolverBaseService } = makeService({
+    const { service, baseUrlResolver } = makeService({
       passportRepo: {
         findOne: jest.fn(async () => draftPassport),
       },
@@ -240,7 +240,7 @@ describe("UpiCollectionService.create", () => {
 
     await service.create({ referenceId, gtin: VALID_GTIN13, organizationId });
 
-    expect(gs1ResolverBaseService.getResolverBase).toHaveBeenCalledWith(organizationId);
+    expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
 
@@ -951,7 +951,7 @@ describe("UpiCollectionService.listByPassport", () => {
   });
 
   it("(c) empty when the passport has no UPIs — no passport/resolver lookups", async () => {
-    const { service, passportRepo, gs1ResolverBaseService } = makeService({
+    const { service, passportRepo, baseUrlResolver } = makeService({
       upiRepo: {
         findAllByReferencedIdPaginated: jest.fn(async () =>
           PagingResult.create({ pagination: Pagination.create({ limit: 100 }), items: [] }),
@@ -964,7 +964,7 @@ describe("UpiCollectionService.listByPassport", () => {
     expect(result.items).toHaveLength(0);
     expect(result.cursor).toBeNull();
     expect(passportRepo.findOne).not.toHaveBeenCalled();
-    expect(gs1ResolverBaseService.getResolverBase).not.toHaveBeenCalled();
+    expect(baseUrlResolver.getResolverBase).not.toHaveBeenCalled();
   });
 
   it("(d) threads limit/cursor to the repo, surfaces next cursor, resolves via the passport org", async () => {
@@ -975,7 +975,7 @@ describe("UpiCollectionService.listByPassport", () => {
         items: [gs1Upi],
       }),
     );
-    const { service, gs1ResolverBaseService } = makeService({
+    const { service, baseUrlResolver } = makeService({
       upiRepo: { findAllByReferencedIdPaginated },
       passportRepo: { findOne: jest.fn(async () => makeDraftPassportStub(referenceId)) },
     });
@@ -989,7 +989,7 @@ describe("UpiCollectionService.listByPassport", () => {
       pagination: { limit: 1, cursor: "the-cursor" },
     });
     expect(result.cursor).toBe("next-cursor");
-    expect(gs1ResolverBaseService.getResolverBase).toHaveBeenCalledWith(organizationId);
+    expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
 

@@ -5,7 +5,6 @@ import { InstanceSettingsModule } from "../instance-settings/instance-settings.m
 import { PassportsModule } from "../passports/passports.module";
 import { PermalinkModule } from "../permalink/permalink.module";
 import { Gs1IdentityService } from "./application/services/gs1-identity.service";
-import { Gs1ResolverBaseService } from "./application/services/gs1-resolver-base.service";
 import { UpiCollectionService } from "./application/services/upi-collection.service";
 import { UniqueProductIdentifierRepository } from "./infrastructure/unique-product-identifier.repository";
 import {
@@ -41,14 +40,12 @@ import { UniqueProductIdentifierController } from "./presentation/unique-product
     UniqueProductIdentifierApplicationService,
     UniqueProductIdentifierRepository,
     Gs1IdentityService,
-    Gs1ResolverBaseService,
     UpiCollectionService,
   ],
   exports: [
     UniqueProductIdentifierRepository,
     UniqueProductIdentifierApplicationService,
     Gs1IdentityService,
-    Gs1ResolverBaseService,
     UpiCollectionService,
   ],
 })

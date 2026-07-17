@@ -2,22 +2,17 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import {
   baseUrlOrigin,
   buildGs1DigitalLink,
-  canonicaliseBaseUrl,
   Gs1DataAttributes,
-  PermalinkFallbackBaseUrlSource,
   PermalinkKind,
   PermalinkMetadataDtoSchema,
   PresentationReferenceType,
 } from "@open-dpp/dto";
-import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { Branding } from "../../../branding/domain/branding";
 import { BrandingRepository } from "../../../branding/infrastructure/branding.repository";
 import { DbSessionOptions } from "../../../database/query-options";
 import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
-import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
-import { computePermalinkBaseUrlFallback } from "../../../lib/permalink-fallback";
 import { isDuplicateKeyError, isDuplicateKeyErrorOnField } from "../../../lib/mongo-errors";
 import { Pagination } from "../../../pagination/pagination";
 import { Passport } from "../../../passports/domain/passport";
@@ -29,6 +24,7 @@ import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 import type { Gs1Identity } from "../../../unique-product-identifier/domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import { BaseUrlResolver, resolveFallbackBaseUrl } from "./base-url-resolver.service";
 
 export interface PermalinkAccessContext {
   organizationId?: string;
@@ -57,8 +53,7 @@ export class PermalinkApplicationService {
     private readonly presentationConfigurationService: PresentationConfigurationService,
     private readonly passportRepository: PassportRepository,
     private readonly brandingRepository: BrandingRepository,
-    private readonly envService: EnvService,
-    private readonly instanceSettingsService: InstanceSettingsService,
+    private readonly baseUrlResolver: BaseUrlResolver,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
@@ -181,12 +176,13 @@ export class PermalinkApplicationService {
     return this.freezePermalink(permalink, branding, await this.getPermalinkBaseUrl(), options);
   }
 
+  /**
+   * The instance base URL. Delegates to {@link BaseUrlResolver}, which owns the
+   * base cascade (ADR 0004); kept here as the app-service entry point external
+   * callers already depend on.
+   */
   async getPermalinkBaseUrl(): Promise<string> {
-    const settings = await this.instanceSettingsService.getSettings();
-    if (settings.permalinkBaseUrl.value !== null) {
-      return settings.permalinkBaseUrl.value;
-    }
-    return computePermalinkBaseUrlFallback(this.envService.get("OPEN_DPP_URL"));
+    return this.baseUrlResolver.getInstanceBaseUrl();
   }
 
   async freezePermalink(
@@ -522,7 +518,7 @@ export class PermalinkApplicationService {
         cursor: pagination?.cursor ?? undefined,
       },
     });
-    const branding = await this.loadBranding(organizationId).catch(() => null);
+    const branding = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
     const envUrl = await this.getPermalinkBaseUrl();
     const fallback = resolveFallbackBaseUrl(branding, envUrl);
     const gs1Identities = await this.loadGs1IdentitiesForPermalinks(result.items);
@@ -564,7 +560,7 @@ export class PermalinkApplicationService {
     });
     const passport = await this.passportRepository.findOne(passportId);
     const branding = passport
-      ? await this.loadBranding(passport.organizationId).catch(() => null)
+      ? await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId)
       : null;
     const envUrl = await this.getPermalinkBaseUrl();
     const fallback = resolveFallbackBaseUrl(branding, envUrl);
@@ -593,7 +589,7 @@ export class PermalinkApplicationService {
     if (upiUuids.length === 0) return new Map();
     const permalinks = await this.permalinkRepository.findGs1LinksByUpiIds(upiUuids);
     if (permalinks.size === 0) return new Map();
-    const branding = await this.loadBranding(organizationId).catch(() => null);
+    const branding = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
     const envUrl = await this.getPermalinkBaseUrl();
     const gs1Identities = await this.loadGs1IdentitiesForPermalinks([...permalinks.values()]);
     return new Map(
@@ -659,16 +655,6 @@ export function isMemberOfPassportOrg(
   if (!access) return false;
   if (access.memberRole === undefined) return false;
   return access.organizationId === passport.organizationId;
-}
-
-export function resolveFallbackBaseUrl(
-  branding: Branding | null,
-  fallbackEnvUrl: string,
-): { url: string; source: PermalinkFallbackBaseUrlSource } {
-  if (branding?.permalinkBaseUrl) {
-    return { url: branding.permalinkBaseUrl, source: "branding" };
-  }
-  return { url: canonicaliseBaseUrl(fallbackEnvUrl), source: "instance" };
 }
 
 export function resolvePublicUrl(

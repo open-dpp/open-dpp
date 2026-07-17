@@ -6,13 +6,13 @@ import {
 } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
+import { BaseUrlResolver } from "../../../permalink/application/services/base-url-resolver.service";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { isDuplicateKeyError } from "../../../lib/mongo-errors";
 import { Pagination } from "../../../pagination/pagination";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../infrastructure/unique-product-identifier.repository";
 import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
-import { Gs1ResolverBaseService } from "./gs1-resolver-base.service";
 
 export interface CreateGs1UpiInput {
   referenceId: string;
@@ -38,7 +38,7 @@ export class UpiCollectionService {
   constructor(
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportRepository: PassportRepository,
-    private readonly gs1ResolverBaseService: Gs1ResolverBaseService,
+    private readonly baseUrlResolver: BaseUrlResolver,
     private readonly permalinkApplicationService: PermalinkApplicationService,
   ) {}
 
@@ -78,7 +78,7 @@ export class UpiCollectionService {
     const passport = await this.passportRepository.findOne(upi.referenceId);
     const passportPublished = passport?.isPublished() ?? false;
     const resolverBase = upi.gs1
-      ? await this.gs1ResolverBaseService.getResolverBase(upi.organizationId ?? "")
+      ? await this.baseUrlResolver.getResolverBase(upi.organizationId ?? "")
       : undefined;
 
     return upi.toListItem({ resolverBase, passportPublished });
@@ -124,7 +124,7 @@ export class UpiCollectionService {
       throw error;
     }
 
-    const resolverBase = await this.gs1ResolverBaseService.getResolverBase(input.organizationId);
+    const resolverBase = await this.baseUrlResolver.getResolverBase(input.organizationId);
     return {
       uuid: saved.uuid,
       referenceId: saved.referenceId,
@@ -228,7 +228,7 @@ export class UpiCollectionService {
       throw error;
     }
 
-    const resolverBase = await this.gs1ResolverBaseService.getResolverBase(
+    const resolverBase = await this.baseUrlResolver.getResolverBase(
       saved.organizationId ?? "",
     );
     return {
@@ -334,7 +334,7 @@ export class UpiCollectionService {
     const distinctReferenceIds = [...new Set(upis.map((upi) => upi.referenceId))];
     const passportMap = await this.passportRepository.findByIds(distinctReferenceIds);
 
-    const resolverBase = await this.gs1ResolverBaseService.getResolverBase(organizationId);
+    const resolverBase = await this.baseUrlResolver.getResolverBase(organizationId);
     const permalinkSummaries = await this.loadPermalinkSummaries(upis, organizationId);
 
     const items = upis.map((upi) => {
@@ -380,7 +380,7 @@ export class UpiCollectionService {
     const passport = await this.passportRepository.findOne(passportId);
     const passportPublished = passport?.isPublished() ?? false;
     const organizationId = passport?.organizationId ?? upis[0].organizationId ?? "";
-    const resolverBase = await this.gs1ResolverBaseService.getResolverBase(organizationId);
+    const resolverBase = await this.baseUrlResolver.getResolverBase(organizationId);
     const permalinkSummaries = await this.loadPermalinkSummaries(upis, organizationId);
 
     const items = upis.map((upi) =>
