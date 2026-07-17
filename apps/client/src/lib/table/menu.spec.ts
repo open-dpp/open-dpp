@@ -46,6 +46,15 @@ const groupColumn: Column = {
     },
   ],
 };
+const tableColumn: Column = {
+  idShort: "Table1",
+  label: "Table1",
+  plain: {
+    idShort: "Table1",
+    modelType: AasSubmodelElements.SubmodelElementList,
+    typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+  },
+};
 
 // Available when adding a column within a group's sub-columns — "Table"
 // columns are top-level only and never offered here.
@@ -97,6 +106,22 @@ describe("buildColumnMenu", () => {
       "Group1",
       "aasEditor.table.newGroup",
     ]);
+  });
+
+  it("omits the move-to-group section entirely for a table column", () => {
+    const deps = makeDeps();
+    const menu = buildColumnMenu(
+      { addColumnActions: true, position: 1 },
+      [scalarColumn, tableColumn, groupColumn],
+      deps,
+    );
+    const actionsSection = menu!.find((item) => item.label === "common.actions");
+    expect(actionsSection!.items?.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
+
+    const moveToGroupSection = menu!.find(
+      (item) => item.label === "aasEditor.table.moveToGroup",
+    );
+    expect(moveToGroupSection).toBeUndefined();
   });
 
   it("returns undefined (leave menu unchanged) when the column at position can't be resolved", () => {

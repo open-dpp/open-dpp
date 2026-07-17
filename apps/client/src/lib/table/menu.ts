@@ -19,7 +19,7 @@ import type {
   OpenDrawerCallback,
 } from "../../composables/aas-drawer.ts";
 import { ColumnEditorKey, EditorMode } from "../../composables/aas-drawer.ts";
-import { isGroupColumn, type Column } from "./columns.ts";
+import { columnKindOf, isGroupColumn, type Column } from "./columns.ts";
 
 const translatePrefix = "aasEditor";
 const translateTablePrefix = `${translatePrefix}.table`;
@@ -437,20 +437,25 @@ function buildTopLevelColumnMenu(
     // inside "common.actions" for clarity, not a library limitation.
     // Always present: existing groups as move-targets, plus a trailing
     // entry to wrap this column into a brand-new group.
-    menu.push({
-      label: translate(`${translateTablePrefix}.moveToGroup`),
-      items: [
-        ...groups.map((group) => ({
-          label: group.label,
-          icon: "pi pi-objects-column",
-          disabled: !!disableColumnEditing,
-          command: async () => {
-            await deps.onMoveColumnToGroup(column, group.idShort);
-          },
-        })),
-        createGroupFromColumnMenuItem(column, deps),
-      ],
-    });
+    // Table columns (nested SubmodelElementList) can never be nested inside
+    // a group, so this section is omitted entirely for them — mirroring how
+    // buildAllColumnTypeMenuItems omits "Table" from a group's own menu.
+    if (columnKindOf(column.plain.modelType) !== "table") {
+      menu.push({
+        label: translate(`${translateTablePrefix}.moveToGroup`),
+        items: [
+          ...groups.map((group) => ({
+            label: group.label,
+            icon: "pi pi-objects-column",
+            disabled: !!disableColumnEditing,
+            command: async () => {
+              await deps.onMoveColumnToGroup(column, group.idShort);
+            },
+          })),
+          createGroupFromColumnMenuItem(column, deps),
+        ],
+      });
+    }
   } catch (e) {
     errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
   }
