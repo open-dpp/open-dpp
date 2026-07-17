@@ -76,6 +76,14 @@ export class TableExtension implements ITableExtendable {
     return groupIdShort ? this.getGroupInRowOrFail(row, groupIdShort) : row;
   }
 
+  private assertNotTableColumn(column: ISubmodelElement): void {
+    if (column.getSubmodelElementType() === AasSubmodelElements.SubmodelElementList) {
+      throw new ValueError(
+        `Cannot move table column "${column.idShort}" into a group. Table columns cannot be nested inside groups.`,
+      );
+    }
+  }
+
   private applyAddColumn(
     column: ISubmodelElement,
     options: AddOptions,
@@ -152,6 +160,7 @@ export class TableExtension implements ITableExtendable {
   }
 
   addColumnToGroup(groupIdShort: string, column: ISubmodelElement, options: AddOptions): void {
+    this.assertNotTableColumn(column);
     this.applyAddColumn(column, options, groupIdShort);
     const headerGroup = this.getGroupInRowOrFail(this.headerRow!, groupIdShort);
     const position = headerGroup
@@ -252,6 +261,7 @@ export class TableExtension implements ITableExtendable {
 
   moveColumnToGroup(columnIdShort: string, groupIdShort: string, options: MoveOptions): void {
     const column = this.getColumnOrFail(columnIdShort);
+    this.assertNotTableColumn(column);
     const deletedPosition = this.getColumnPosition(columnIdShort);
     for (const row of this.rows) {
       const columnToCopy = row.getSubmodelElements().find((el) => el.idShort === columnIdShort);

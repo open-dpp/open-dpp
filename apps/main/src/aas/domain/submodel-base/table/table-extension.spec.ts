@@ -459,6 +459,58 @@ describe("tableExtension", () => {
     ).toThrow(ValueError);
   });
 
+  it("should reject moving a table column into a group", () => {
+    const { table, ability } = createTable();
+
+    const tableColumn = SubmodelElementList.create({
+      idShort: "tableCol1",
+      typeValueListElement: AasSubmodelElements.Property,
+    });
+    const initialSubCol = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "initialSubCol" }),
+    );
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [initialSubCol] });
+    table.addColumn(tableColumn, { ability });
+    table.addColumn(group, { ability });
+    const onMoveMock = jest.fn();
+
+    expect(() =>
+      table.moveColumnToGroup("tableCol1", "group1", { ability, onMove: onMoveMock }),
+    ).toThrow(ValueError);
+  });
+
+  it("should reject adding a table column directly to a group", () => {
+    const { table, ability } = createTable();
+
+    const initialSubCol = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "initialSubCol" }),
+    );
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [initialSubCol] });
+    table.addColumn(group, { ability });
+
+    const tableColumn = SubmodelElementList.create({
+      idShort: "tableCol1",
+      typeValueListElement: AasSubmodelElements.Property,
+    });
+    expect(() => table.addColumnToGroup("group1", tableColumn, { ability })).toThrow(ValueError);
+  });
+
+  it("should reject wrapping a table column into a brand-new group via createGroupFromColumn", () => {
+    const { table, ability } = createTable();
+
+    const tableColumn = SubmodelElementList.create({
+      idShort: "tableCol1",
+      typeValueListElement: AasSubmodelElements.Property,
+    });
+    table.addColumn(tableColumn, { ability });
+    const onMoveMock = jest.fn();
+
+    const newGroup = SubmodelElementCollection.create({ idShort: "group1" });
+    expect(() =>
+      table.createGroupFromColumn("tableCol1", newGroup, { ability, onMove: onMoveMock }),
+    ).toThrow(ValueError);
+  });
+
   it("should clear nested values in group column when adding a new row", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
