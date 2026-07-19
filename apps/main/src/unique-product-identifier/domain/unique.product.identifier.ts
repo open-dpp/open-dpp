@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   buildGs1DigitalLink,
+  type Gs1IdentityResponse,
   Gs1IdentityDtoSchema,
   isValidCset82Component,
   normalizeToGtin14,
@@ -64,16 +65,30 @@ function normalizeOptionalComponentOrThrow(
   return trimmed;
 }
 
+/**
+ * Assemble a GS1 identity, including the batch (AI `10`) and serial (AI `21`) keys
+ * only when present. The single home for the conditional `{ gtin, ...batch?, ...serial? }`
+ * shape, shared by raw-input normalization and DB hydration — hence the tolerant
+ * `null | undefined` accepted for each optional component.
+ */
+function assembleGs1Identity(
+  gtin: string,
+  batch: string | null | undefined,
+  serial: string | null | undefined,
+): Gs1Identity {
+  return {
+    gtin,
+    ...(batch !== null && batch !== undefined ? { batch } : {}),
+    ...(serial !== null && serial !== undefined ? { serial } : {}),
+  };
+}
+
 /** Build a normalized, validated GS1 identity value object from raw input. */
 function normalizeGs1Identity(input: Gs1IdentityInput): Gs1Identity {
   const gtin = normalizeGtinOrThrow(input.gtin);
   const batch = normalizeOptionalComponentOrThrow(input.batch, "Batch");
   const serial = normalizeOptionalComponentOrThrow(input.serial, "Serial");
-  return {
-    gtin,
-    ...(batch !== undefined ? { batch } : {}),
-    ...(serial !== undefined ? { serial } : {}),
-  };
+  return assembleGs1Identity(gtin, batch, serial);
 }
 
 export class UniqueProductIdentifier {
@@ -165,11 +180,7 @@ export class UniqueProductIdentifier {
     const type = data.type ?? ExternalIdentifierType.OPEN_DPP_UUID;
     const gs1 =
       data.gtin !== null && data.gtin !== undefined
-        ? {
-            gtin: data.gtin,
-            ...(data.batch !== null && data.batch !== undefined ? { batch: data.batch } : {}),
-            ...(data.serial !== null && data.serial !== undefined ? { serial: data.serial } : {}),
-          }
+        ? assembleGs1Identity(data.gtin, data.batch, data.serial)
         : undefined;
     return new UniqueProductIdentifier(
       data.uuid,
@@ -248,6 +259,29 @@ export class UniqueProductIdentifier {
       batch: this.gs1.batch,
       serial: this.gs1.serial,
     });
+  }
+
+  /**
+   * Assemble the GS1 identity response (uuid, referenceId, gtin, batch, serial, and
+   * the server-built Digital Link) for this UPI. The domain owns the "a GS1 UPI
+   * carries a GS1 identity" invariant, so callers no longer non-null-assert `gs1`.
+   *
+   * @throws ValueError when this UPI has no GS1 identity.
+   */
+  toGs1Response(resolverBase: string): Gs1IdentityResponse {
+    if (!this.gs1) {
+      throw new ValueError(
+        "Cannot build a GS1 identity response for a unique product identifier without a GS1 identity",
+      );
+    }
+    return {
+      uuid: this.uuid,
+      referenceId: this.referenceId,
+      gtin: this.gs1.gtin,
+      batch: this.gs1.batch ?? null,
+      serial: this.gs1.serial ?? null,
+      digitalLink: this.buildDigitalLink(resolverBase),
+    };
   }
 
   /**

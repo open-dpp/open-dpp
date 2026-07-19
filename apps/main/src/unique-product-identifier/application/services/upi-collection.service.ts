@@ -125,14 +125,7 @@ export class UpiCollectionService {
     }
 
     const resolverBase = await this.baseUrlResolver.getResolverBase(input.organizationId);
-    return {
-      uuid: saved.uuid,
-      referenceId: saved.referenceId,
-      gtin: saved.gs1!.gtin,
-      batch: saved.gs1!.batch ?? null,
-      serial: saved.gs1!.serial ?? null,
-      digitalLink: saved.buildDigitalLink(resolverBase),
-    };
+    return saved.toGs1Response(resolverBase);
   }
 
   /**
@@ -231,14 +224,7 @@ export class UpiCollectionService {
     const resolverBase = await this.baseUrlResolver.getResolverBase(
       saved.organizationId ?? "",
     );
-    return {
-      uuid: saved.uuid,
-      referenceId: saved.referenceId,
-      gtin: saved.gs1!.gtin,
-      batch: saved.gs1!.batch ?? null,
-      serial: saved.gs1!.serial ?? null,
-      digitalLink: saved.buildDigitalLink(resolverBase),
-    };
+    return saved.toGs1Response(resolverBase);
   }
 
   /**

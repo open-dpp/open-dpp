@@ -111,6 +111,63 @@ describe("UniqueProductIdentifier (GS1)", () => {
     expect(() => upi.buildDigitalLink("https://id.example.com")).toThrow(ValueError);
   });
 
+  describe("toGs1Response", () => {
+    const RESOLVER_BASE = "https://id.example.com";
+
+    it("assembles the response for a model-granularity GS1 UPI (gtin only)", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
+      expect(upi.toGs1Response(RESOLVER_BASE)).toEqual({
+        uuid: upi.uuid,
+        referenceId,
+        gtin: VALID_GTIN13_AS_14,
+        batch: null,
+        serial: null,
+        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`,
+      });
+    });
+
+    it("assembles the response for a batch-granularity GS1 UPI", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId,
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+      });
+      expect(upi.toGs1Response(RESOLVER_BASE)).toEqual({
+        uuid: upi.uuid,
+        referenceId,
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: null,
+        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42`,
+      });
+    });
+
+    it("assembles the response for an item-granularity GS1 UPI (batch + serial)", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId,
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      expect(upi.toGs1Response(RESOLVER_BASE)).toEqual({
+        uuid: upi.uuid,
+        referenceId,
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      });
+    });
+
+    it("throws for a UPI without a GS1 identity", () => {
+      const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+      expect(() => upi.toGs1Response(RESOLVER_BASE)).toThrow(ValueError);
+    });
+  });
+
   describe("batch & serial (Phase 2)", () => {
     it("creates a GS1 UPI with an optional batch and serial, trimming them", () => {
       const referenceId = randomUUID();

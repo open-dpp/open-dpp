@@ -115,13 +115,6 @@ export class Gs1IdentityService {
     organizationId?: string,
   ): Promise<Gs1IdentityResponse> {
     const resolverBase = await this.baseUrlResolver.getResolverBase(organizationId);
-    return {
-      uuid: upi.uuid,
-      referenceId: upi.referenceId,
-      gtin: upi.gs1!.gtin,
-      batch: upi.gs1!.batch ?? null,
-      serial: upi.gs1!.serial ?? null,
-      digitalLink: upi.buildDigitalLink(resolverBase),
-    };
+    return upi.toGs1Response(resolverBase);
   }
 }
