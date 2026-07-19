@@ -55,6 +55,24 @@ export class UpiCollectionService {
   }
 
   /**
+   * Load a single UPI by its uuid, translating the repository's
+   * `NotFoundInDatabaseException` into a 404 `NotFoundException`. Shared by
+   * `get` / `update` / `delete`.
+   *
+   * @throws NotFoundException when the UPI does not exist.
+   */
+  private async findOrThrow(uuid: string): Promise<UniqueProductIdentifier> {
+    try {
+      return await this.uniqueProductIdentifierRepository.findOneOrFail(uuid);
+    } catch (error) {
+      if (error instanceof NotFoundInDatabaseException) {
+        throw new NotFoundException(`UniqueProductIdentifier ${uuid} not found`);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Fetch a single UPI by its uuid and assemble its list-item response shape.
    *
    * Looks up the owning passport's published state so the caller can present the
@@ -65,15 +83,7 @@ export class UpiCollectionService {
    * @throws NotFoundException when the UPI does not exist.
    */
   async get(uuid: string): Promise<UniqueProductIdentifierListItemDto> {
-    let upi: UniqueProductIdentifier;
-    try {
-      upi = await this.uniqueProductIdentifierRepository.findOneOrFail(uuid);
-    } catch (error) {
-      if (error instanceof NotFoundInDatabaseException) {
-        throw new NotFoundException(`UniqueProductIdentifier ${uuid} not found`);
-      }
-      throw error;
-    }
+    const upi = await this.findOrThrow(uuid);
 
     const passport = await this.passportRepository.findOne(upi.referenceId);
     const passportPublished = passport?.isPublished() ?? false;
@@ -179,15 +189,7 @@ export class UpiCollectionService {
     uuid: string,
     input: UpdateGs1UniqueProductIdentifierRequest,
   ): Promise<Gs1IdentityResponse> {
-    let upi: UniqueProductIdentifier;
-    try {
-      upi = await this.uniqueProductIdentifierRepository.findOneOrFail(uuid);
-    } catch (error) {
-      if (error instanceof NotFoundInDatabaseException) {
-        throw new NotFoundException(`UniqueProductIdentifier ${uuid} not found`);
-      }
-      throw error;
-    }
+    const upi = await this.findOrThrow(uuid);
 
     // Only GS1 UPIs carry editable data; internal/system rows have none.
     if (upi.type !== ExternalIdentifierType.GS1) {
@@ -239,15 +241,7 @@ export class UpiCollectionService {
    * @throws ConflictException when the passport is published (lifecycle freeze).
    */
   async delete(uuid: string): Promise<void> {
-    let upi: UniqueProductIdentifier;
-    try {
-      upi = await this.uniqueProductIdentifierRepository.findOneOrFail(uuid);
-    } catch (error) {
-      if (error instanceof NotFoundInDatabaseException) {
-        throw new NotFoundException(`UniqueProductIdentifier ${uuid} not found`);
-      }
-      throw error;
-    }
+    const upi = await this.findOrThrow(uuid);
 
     // GTIN / EAN system rows are read-only (never user-managed). GS1 and internal
     // (OPEN_DPP_UUID) UPIs are deletable while the passport is a draft (ADR 0006).

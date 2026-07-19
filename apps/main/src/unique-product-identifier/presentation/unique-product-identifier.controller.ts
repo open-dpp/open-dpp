@@ -7,7 +7,6 @@ import type { MemberRoleType } from "../../identity/organizations/domain/member-
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
   Body,
-  ConflictException,
   Controller,
   Delete,
   ForbiddenException,
@@ -122,20 +121,13 @@ export class UniqueProductIdentifierController {
     body: CreateGs1UniqueProductIdentifierRequest,
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    // Verifies passport ownership and org membership (throws 403 if not a member
-    // or if the passport belongs to a different org).
-    const passport =
-      await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
-        body.referenceId,
-        subject,
-        orgId,
-      );
-
-    if (!passport.isDraft()) {
-      throw new ConflictException(
-        "A GS1 UPI can only be created while the passport is a draft; it is locked once the passport is published",
-      );
-    }
+    // Verifies passport ownership and org membership (403 if not a member or if the
+    // passport belongs to a different org). The draft gate lives in the service.
+    await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+      body.referenceId,
+      subject,
+      orgId,
+    );
 
     return this.upiCollectionService.create({
       referenceId: body.referenceId,
