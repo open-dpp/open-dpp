@@ -4,7 +4,7 @@ import { PresentationReferenceType } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
-import { findOne, findOneOrFail, save } from "../../lib/repositories";
+import { findOne, findOneOrFail, findPageByCursor, save } from "../../lib/repositories";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { PresentationConfigurationDoc } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
@@ -264,38 +264,22 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     options?: { pagination?: { limit?: number; cursor?: string } },
     dbOptions?: DbSessionOptions,
   ): Promise<PagingResult<Permalink>> {
-    const pagination = Pagination.create({
-      limit: options?.pagination?.limit ?? 100,
-      cursor: options?.pagination?.cursor,
-    });
-    const cursorFilter = pagination.cursor
-      ? {
-          $or: [
-            { createdAt: { $lt: decodeCursor(pagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(pagination.cursor).createdAt,
-              _id: { $lt: decodeCursor(pagination.cursor).id },
-            },
-          ],
-        }
-      : {};
-    const docs = await this.permalinkDoc
-      .find({ organizationId: { $eq: organizationId }, ...cursorFilter })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(pagination.limit ?? 100)
-      .session(dbOptions?.session ?? null)
-      .exec();
-    const items = await Promise.all(
-      docs.map((doc) => {
+    return findPageByCursor(
+      this.permalinkDoc,
+      { organizationId: { $eq: organizationId } },
+      (doc) => {
         const plain = doc.toObject();
         return this.fromPlainWithMigration({ ...plain, id: plain._id });
-      }),
+      },
+      {
+        pagination: Pagination.create({
+          limit: options?.pagination?.limit ?? 100,
+          cursor: options?.pagination?.cursor,
+        }),
+        tiebreakKey: "_id",
+        session: dbOptions?.session ?? null,
+      },
     );
-    if (items.length > 0) {
-      const last = items[items.length - 1];
-      pagination.setCursor(encodeCursor(last.createdAt.toISOString(), last.id));
-    }
-    return PagingResult.create<Permalink>({ pagination, items });
   }
 
   /**

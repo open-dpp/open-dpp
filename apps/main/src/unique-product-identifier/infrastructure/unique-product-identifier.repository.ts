@@ -3,7 +3,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
-import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
+import { findPageByCursor } from "../../lib/repositories";
+import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import {
@@ -178,33 +179,7 @@ export class UniqueProductIdentifierRepository {
     referenceId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
   ): Promise<PagingResult<UniqueProductIdentifier>> {
-    const pagination = Pagination.create({
-      limit: options?.pagination?.limit ?? 100,
-      cursor: options?.pagination?.cursor,
-    });
-    const cursorFilter = pagination.cursor
-      ? {
-          $or: [
-            { createdAt: { $lt: decodeCursor(pagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(pagination.cursor).createdAt,
-              _id: { $lt: decodeCursor(pagination.cursor).id },
-            },
-          ],
-        }
-      : {};
-    const docs = await this.uniqueProductIdentifierDoc
-      .find({ referenceId: { $eq: referenceId }, ...cursorFilter })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(pagination.limit ?? 100);
-    const items = docs.map((doc) => this.convertToDomain(doc));
-    if (items.length > 0) {
-      const lastDoc = docs[docs.length - 1];
-      pagination.setCursor(
-        encodeCursor((lastDoc.createdAt as Date).toISOString(), lastDoc._id.toString()),
-      );
-    }
-    return PagingResult.create<UniqueProductIdentifier>({ pagination, items });
+    return this.findPageByFilter({ referenceId: { $eq: referenceId } }, options);
   }
 
   /**
@@ -218,33 +193,30 @@ export class UniqueProductIdentifierRepository {
     organizationId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
   ): Promise<PagingResult<UniqueProductIdentifier>> {
-    const pagination = Pagination.create({
-      limit: options?.pagination?.limit ?? 100,
-      cursor: options?.pagination?.cursor,
-    });
-    const cursorFilter = pagination.cursor
-      ? {
-          $or: [
-            { createdAt: { $lt: decodeCursor(pagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(pagination.cursor).createdAt,
-              _id: { $lt: decodeCursor(pagination.cursor).id },
-            },
-          ],
-        }
-      : {};
-    const docs = await this.uniqueProductIdentifierDoc
-      .find({ organizationId: { $eq: organizationId }, ...cursorFilter })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(pagination.limit ?? 100);
-    const items = docs.map((doc) => this.convertToDomain(doc));
-    if (items.length > 0) {
-      const lastDoc = docs[docs.length - 1];
-      pagination.setCursor(
-        encodeCursor((lastDoc.createdAt as Date).toISOString(), lastDoc._id.toString()),
-      );
-    }
-    return PagingResult.create<UniqueProductIdentifier>({ pagination, items });
+    return this.findPageByFilter({ organizationId: { $eq: organizationId } }, options);
+  }
+
+  /**
+   * Shared newest-first cursor pagination for the org-scoped and passport-scoped
+   * UPI lists — they differ only in the scope filter field. `_id`-keyed tiebreak
+   * because a UPI stores its uuid as `_id`.
+   */
+  private findPageByFilter(
+    filter: Record<string, unknown>,
+    options?: { pagination?: { limit?: number; cursor?: string } },
+  ): Promise<PagingResult<UniqueProductIdentifier>> {
+    return findPageByCursor(
+      this.uniqueProductIdentifierDoc,
+      filter,
+      (doc) => this.convertToDomain(doc),
+      {
+        pagination: Pagination.create({
+          limit: options?.pagination?.limit ?? 100,
+          cursor: options?.pagination?.cursor,
+        }),
+        tiebreakKey: "_id",
+      },
+    );
   }
 
   /**

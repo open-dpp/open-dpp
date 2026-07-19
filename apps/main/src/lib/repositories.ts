@@ -1,5 +1,5 @@
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { Document, Model as MongooseModel } from "mongoose";
+import { ClientSession, Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { IPersistable } from "../aas/domain/persistable";
@@ -108,6 +108,56 @@ function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusT
   };
 }
 
+export type CursorPageOptions = {
+  pagination?: Pagination;
+  /**
+   * Field the sort/cursor tiebreak is keyed on. Collections that expose a
+   * separate `id` field default to `"id"` (unchanged behavior); collections
+   * that store the uuid as `_id` (permalink, UPI) pass `"_id"`.
+   */
+  tiebreakKey?: "id" | "_id";
+  session?: ClientSession | null;
+};
+
+/**
+ * Newest-first, cursor-paginated `.find()` shared by every org/passport-scoped
+ * list. The cursor is `createdAt + <tiebreakKey>` (both descending) so the sort
+ * stays stable across a `createdAt` tie. `filter` is the non-cursor scope
+ * (`{ organizationId }`, `{ referenceId }`, …); the cursor clause is appended.
+ */
+export async function findPageByCursor<V extends IConvertableToPlain>(
+  docModel: MongooseModel<any>,
+  filter: Record<string, unknown>,
+  convert: (doc: any) => V | Promise<V>,
+  options?: CursorPageOptions,
+): Promise<PagingResult<V>> {
+  const pagination = options?.pagination ?? Pagination.create({ limit: 100 });
+  const key = options?.tiebreakKey ?? "id";
+  const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
+  const cursorFilter = cursor
+    ? {
+        $or: [
+          { createdAt: { $lt: cursor.createdAt } },
+          { createdAt: cursor.createdAt, [key]: { $lt: cursor.id } },
+        ],
+      }
+    : {};
+  const docs = await docModel
+    .find({ ...filter, ...cursorFilter } as Record<string, unknown>)
+    .sort({ createdAt: -1, [key]: -1 } as Record<string, -1>)
+    .limit(pagination.limit ?? 100)
+    .session(options?.session ?? null)
+    .exec();
+  const items = await Promise.all(docs.map((doc) => convert(doc)));
+  if (docs.length > 0) {
+    const last = docs[docs.length - 1];
+    pagination.setCursor(
+      encodeCursor((last.get("createdAt") as Date).toISOString(), String(last._id)),
+    );
+  }
+  return PagingResult.create<V>({ pagination, items });
+}
+
 export async function findAllByOrganizationId<
   T extends Document<string>,
   V extends IPersistable & HasCreatedAt & IConvertableToPlain,
@@ -117,29 +167,12 @@ export async function findAllByOrganizationId<
   organizationId: string,
   options?: FindOptions,
 ) {
-  const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
   const statuses = options?.filter?.status;
-  const docs = await docModel
-    .find({
-      organizationId,
-      ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
-      ...(tmpPagination.cursor && {
-        $or: [
-          { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
-          {
-            createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-            id: { $lt: decodeCursor(tmpPagination.cursor).id },
-          },
-        ],
-      }),
-    })
-    .sort({ createdAt: -1, id: -1 })
-    .limit(tmpPagination.limit ?? 100)
-    .exec();
-  const domainObjects = await Promise.all(docs.map((d) => convertToDomain(d, fromPlain)));
-  if (domainObjects.length > 0) {
-    const lastObject = domainObjects[domainObjects.length - 1];
-    tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));
-  }
-  return PagingResult.create<V>({ pagination: tmpPagination, items: domainObjects });
+  const filter = {
+    organizationId,
+    ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
+  };
+  return findPageByCursor<V>(docModel, filter, (d) => convertToDomain(d, fromPlain), {
+    pagination: options?.pagination,
+  });
 }
