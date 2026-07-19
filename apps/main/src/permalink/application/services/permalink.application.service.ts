@@ -319,7 +319,11 @@ export class PermalinkApplicationService {
   private async resolvePageContext(
     permalinks: Permalink[],
     organizationId: string | null,
-  ): Promise<{ branding: Branding | null; envUrl: string; gs1Identities: Map<string, Gs1Identity> }> {
+  ): Promise<{
+    branding: Branding | null;
+    envUrl: string;
+    gs1Identities: Map<string, Gs1Identity>;
+  }> {
     const branding = organizationId
       ? await this.baseUrlResolver.loadBrandingOrNull(organizationId)
       : null;

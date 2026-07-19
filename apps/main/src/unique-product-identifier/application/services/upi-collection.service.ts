@@ -223,9 +223,7 @@ export class UpiCollectionService {
       throw error;
     }
 
-    const resolverBase = await this.baseUrlResolver.getResolverBase(
-      saved.organizationId ?? "",
-    );
+    const resolverBase = await this.baseUrlResolver.getResolverBase(saved.organizationId ?? "");
     return saved.toGs1Response(resolverBase);
   }
 

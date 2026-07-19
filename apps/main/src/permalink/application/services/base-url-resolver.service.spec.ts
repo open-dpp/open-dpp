@@ -94,10 +94,12 @@ describe("BaseUrlResolver", () => {
 
   describe("resolveFallbackBaseUrl (pure)", () => {
     it("prefers branding.permalinkBaseUrl verbatim", () => {
-      expect(resolveFallbackBaseUrl(brandingWithBase(BRANDING_BASE), `${INSTANCE_ROOT}/p`)).toEqual({
-        url: BRANDING_BASE,
-        source: "branding",
-      });
+      expect(resolveFallbackBaseUrl(brandingWithBase(BRANDING_BASE), `${INSTANCE_ROOT}/p`)).toEqual(
+        {
+          url: BRANDING_BASE,
+          source: "branding",
+        },
+      );
     });
 
     it("canonicalises the fallback env url when branding is null or has no base", () => {
