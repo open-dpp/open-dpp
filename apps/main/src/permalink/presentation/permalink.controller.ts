@@ -323,8 +323,9 @@ export class PermalinkController {
       throw new ForbiddenException();
     }
 
-    // Resolve the owning passport and check ownership
+    // Resolve the owning passport, check ownership, and create — one dispatch per kind.
     let passport: Passport;
+    let created: Permalink;
     if (body.kind === PermalinkKind.GS1_LINK) {
       // gs1-link: look up UPI → use its referenceId to find the passport
       const upi = await this.uniqueProductIdentifierRepository.findOne(
@@ -340,6 +341,16 @@ export class PermalinkController {
         throw new NotFoundException(`Passport ${upi.referenceId} not found`);
       }
       passport = found;
+      if (passport.organizationId !== organizationId) {
+        throw new ForbiddenException();
+      }
+      created = await this.permalinkApplicationService.createGs1LinkPermalink({
+        uniqueProductIdentifierId: body.uniqueProductIdentifierId,
+        organizationId: passport.organizationId,
+        presentationConfigurationId: body.presentationConfigurationId ?? null,
+        gs1DataAttributes: body.gs1DataAttributes ?? null,
+        baseUrl: body.baseUrl ?? null,
+      });
     } else {
       // presentation: look up the config → use its referenceId to find the passport
       const config = await this.presentationConfigurationRepository.findOneOrFail(
@@ -350,30 +361,10 @@ export class PermalinkController {
         throw new NotFoundException(`Passport ${config.referenceId} not found`);
       }
       passport = found;
-    }
-
-    // Ownership check: the requester must belong to the passport's org
-    if (passport.organizationId !== organizationId) {
-      throw new ForbiddenException();
-    }
-
-    let created: Permalink;
-    if (body.kind === PermalinkKind.GS1_LINK) {
-      created = await this.permalinkApplicationService.createGs1LinkPermalink({
-        uniqueProductIdentifierId: body.uniqueProductIdentifierId,
-        organizationId: passport.organizationId,
-        presentationConfigurationId: body.presentationConfigurationId ?? null,
-        gs1DataAttributes: body.gs1DataAttributes ?? null,
-        baseUrl: body.baseUrl ?? null,
-      });
-    } else {
-      const config = await this.presentationConfigurationRepository.findOneOrFail(
-        body.presentationConfigurationId,
-      );
-      created = await this.permalinkApplicationService.createPresentationPermalink(
-        passport,
-        config,
-      );
+      if (passport.organizationId !== organizationId) {
+        throw new ForbiddenException();
+      }
+      created = await this.permalinkApplicationService.createPresentationPermalink(config);
     }
 
     const branding = await this.resolveBranding(passport.organizationId);

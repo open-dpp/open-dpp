@@ -357,7 +357,6 @@ export class PermalinkApplicationService {
    * (reusing the existing freezeNewPermalinkIfPublished logic via createPermalinksForConfigs).
    */
   async createPresentationPermalink(
-    passport: Passport,
     config: PresentationConfiguration,
     options?: DbSessionOptions,
   ): Promise<Permalink> {

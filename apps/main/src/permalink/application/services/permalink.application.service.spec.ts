@@ -774,7 +774,7 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     expect(primary.primary).toBe(true);
 
     // createPresentationPermalink for a second config must NOT steal the primary
-    const second = await service.createPresentationPermalink(passport, config2);
+    const second = await service.createPresentationPermalink(config2);
 
     expect(second.primary).toBe(false);
     // The original primary must still be primary in the DB
@@ -801,7 +801,7 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     // Seed the primary
     await service.createPermalinksForConfigs([config1]);
 
-    const second = await service.createPresentationPermalink(passport, config2);
+    const second = await service.createPresentationPermalink(config2);
 
     expect(second.presentationConfigurationId).toBe(config2.id);
     expect(second.uniqueProductIdentifierId).toBeNull();
@@ -819,7 +819,7 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     // Seed the primary
     await service.createPermalinksForConfigs([config1]);
 
-    const second = await service.createPresentationPermalink(passport, config2);
+    const second = await service.createPresentationPermalink(config2);
 
     expect(second.publishedUrl).not.toBeNull();
     // The published URL should follow the pattern base/id-or-slug
