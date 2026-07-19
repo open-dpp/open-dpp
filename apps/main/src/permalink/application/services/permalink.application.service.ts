@@ -3,6 +3,7 @@ import {
   baseUrlOrigin,
   buildGs1DigitalLink,
   Gs1DataAttributes,
+  PermalinkFallbackBaseUrlSource,
   PermalinkKind,
   PermalinkMetadataDtoSchema,
   PresentationReferenceType,
@@ -35,6 +36,19 @@ export interface PermalinkUpdate {
   slug?: string | null;
   baseUrl?: string | null;
   gs1DataAttributes?: Gs1DataAttributes | null;
+}
+
+/**
+ * A resolved permalink list row: the domain permalink, its read-time public URL,
+ * and the `{ url, source }` fallback base that would apply if the permalink
+ * carries no own `baseUrl`. Shared by the org-scoped and passport-scoped list
+ * paths so the shape (and its `fallbackBaseUrlSource` enum) is spelled once.
+ */
+export interface PermalinkListItem {
+  permalink: Permalink;
+  publicUrl: string;
+  fallbackBaseUrl: string;
+  fallbackBaseUrlSource: PermalinkFallbackBaseUrlSource;
 }
 
 export interface CreateGs1LinkPermalinkInput {
@@ -295,6 +309,50 @@ export class PermalinkApplicationService {
   }
 
   /**
+   * Resolve the shared render context for a page of permalinks: the org's
+   * tolerant branding, the instance base, and the page's batch-loaded GS1
+   * identities (one `findByIds` — no N+1). The single home for the preamble
+   * shared by {@link listByOrganization}, {@link listByPassport}, and
+   * {@link getGs1LinkSummariesByUpiIds}. A null `organizationId` (e.g. an absent
+   * passport) skips the per-org branding load and falls through to the instance base.
+   */
+  private async resolvePageContext(
+    permalinks: Permalink[],
+    organizationId: string | null,
+  ): Promise<{ branding: Branding | null; envUrl: string; gs1Identities: Map<string, Gs1Identity> }> {
+    const branding = organizationId
+      ? await this.baseUrlResolver.loadBrandingOrNull(organizationId)
+      : null;
+    const envUrl = await this.getPermalinkBaseUrl();
+    const gs1Identities = await this.loadGs1IdentitiesForPermalinks(permalinks);
+    return { branding, envUrl, gs1Identities };
+  }
+
+  /**
+   * Render a page of permalinks as {@link PermalinkListItem} rows: resolve the
+   * shared page context, then map each permalink through {@link resolveReadUrl}
+   * with the one `{ url, source }` fallback computed once for the page. Backs
+   * both the org-scoped and passport-scoped list paths, which differ only in the
+   * repository call and the branding source.
+   */
+  private async renderListItems(
+    permalinks: Permalink[],
+    organizationId: string | null,
+  ): Promise<PermalinkListItem[]> {
+    const { branding, envUrl, gs1Identities } = await this.resolvePageContext(
+      permalinks,
+      organizationId,
+    );
+    const fallback = resolveFallbackBaseUrl(branding, envUrl);
+    return permalinks.map((permalink) => ({
+      permalink,
+      publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, envUrl),
+      fallbackBaseUrl: fallback.url,
+      fallbackBaseUrlSource: fallback.source,
+    }));
+  }
+
+  /**
    * The read-time public URL for a permalink. A frozen permalink returns its
    * pinned `publishedUrl`; an unfrozen gs1-link whose GS1 identity resolved
    * renders the live GS1 Digital Link form (BE2); everything else — presentation
@@ -502,31 +560,14 @@ export class PermalinkApplicationService {
   async listByOrganization(
     organizationId: string,
     pagination?: Pagination,
-  ): Promise<{
-    items: Array<{
-      permalink: Permalink;
-      publicUrl: string;
-      fallbackBaseUrl: string;
-      fallbackBaseUrlSource: "branding" | "instance";
-    }>;
-    cursor: string | null;
-  }> {
+  ): Promise<{ items: PermalinkListItem[]; cursor: string | null }> {
     const result = await this.permalinkRepository.findAllByOrganizationId(organizationId, {
       pagination: {
         limit: pagination?.limit ?? undefined,
         cursor: pagination?.cursor ?? undefined,
       },
     });
-    const branding = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
-    const envUrl = await this.getPermalinkBaseUrl();
-    const fallback = resolveFallbackBaseUrl(branding, envUrl);
-    const gs1Identities = await this.loadGs1IdentitiesForPermalinks(result.items);
-    const items = result.items.map((permalink) => ({
-      permalink,
-      publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, envUrl),
-      fallbackBaseUrl: fallback.url,
-      fallbackBaseUrlSource: fallback.source,
-    }));
+    const items = await this.renderListItems(result.items, organizationId);
     return { items, cursor: result.pagination.cursor };
   }
 
@@ -542,15 +583,7 @@ export class PermalinkApplicationService {
   async listByPassport(
     passportId: string,
     pagination?: Pagination,
-  ): Promise<{
-    items: Array<{
-      permalink: Permalink;
-      publicUrl: string;
-      fallbackBaseUrl: string;
-      fallbackBaseUrlSource: "branding" | "instance";
-    }>;
-    cursor: string | null;
-  }> {
+  ): Promise<{ items: PermalinkListItem[]; cursor: string | null }> {
     const result = await this.permalinkRepository.findPageByPassportId(passportId, {
       pagination: {
         limit: pagination?.limit ?? undefined,
@@ -558,18 +591,7 @@ export class PermalinkApplicationService {
       },
     });
     const passport = await this.passportRepository.findOne(passportId);
-    const branding = passport
-      ? await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId)
-      : null;
-    const envUrl = await this.getPermalinkBaseUrl();
-    const fallback = resolveFallbackBaseUrl(branding, envUrl);
-    const gs1Identities = await this.loadGs1IdentitiesForPermalinks(result.items);
-    const items = result.items.map((permalink) => ({
-      permalink,
-      publicUrl: this.resolveReadUrl(permalink, gs1Identities, branding, envUrl),
-      fallbackBaseUrl: fallback.url,
-      fallbackBaseUrlSource: fallback.source,
-    }));
+    const items = await this.renderListItems(result.items, passport?.organizationId ?? null);
     return { items, cursor: result.pagination.cursor };
   }
 
@@ -588,9 +610,10 @@ export class PermalinkApplicationService {
     if (upiUuids.length === 0) return new Map();
     const permalinks = await this.permalinkRepository.findGs1LinksByUpiIds(upiUuids);
     if (permalinks.size === 0) return new Map();
-    const branding = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
-    const envUrl = await this.getPermalinkBaseUrl();
-    const gs1Identities = await this.loadGs1IdentitiesForPermalinks([...permalinks.values()]);
+    const { branding, envUrl, gs1Identities } = await this.resolvePageContext(
+      [...permalinks.values()],
+      organizationId,
+    );
     return new Map(
       [...permalinks].map(([upiUuid, permalink]) => [
         upiUuid,
