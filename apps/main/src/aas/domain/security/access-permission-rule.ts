@@ -171,6 +171,13 @@ export class AccessPermissionRule implements ITrackable {
       }
       // Remove if this path is being overwritten
       if (newPaths.has(e.object.getIdShortPath().toString())) {
+        changeTracker.track(
+          PolicyDeleted.create({
+            userRole: this.targetSubjectAttributes.userRole,
+            memberRole: this.targetSubjectAttributes.memberRole,
+            object: e.object,
+          }),
+        );
         return false;
       }
       return true;
