@@ -36,7 +36,7 @@ import {
 } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
-import { PermalinkKind } from "@open-dpp/dto";
+import { PermalinkKind, UniqueProductIdentifierType } from "@open-dpp/dto";
 import { Permalink } from "../../permalink/domain/permalink";
 import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
@@ -47,7 +47,6 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
-import { ExternalIdentifierType } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 
 describe("UniqueProductIdentifierController", () => {
@@ -258,7 +257,7 @@ describe("UniqueProductIdentifierController", () => {
 
       expect(response.status).toEqual(201);
       expect(response.body.referenceId).toEqual(passport.id);
-      expect(response.body.type).toEqual(ExternalIdentifierType.OPEN_DPP_UUID);
+      expect(response.body.type).toEqual(UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(response.body.gtin).toBeNull();
       expect(response.body.digitalLink).toBeNull();
       expect(response.body.uuid).toBeDefined();
@@ -296,11 +295,11 @@ describe("UniqueProductIdentifierController", () => {
       expect(Array.isArray(response.body.result)).toBe(true);
       const openDppRow = response.body.result.find(
         (row: { type: string; referenceId: string }) =>
-          row.type === ExternalIdentifierType.OPEN_DPP_UUID && row.referenceId === passport.id,
+          row.type === UniqueProductIdentifierType.OPEN_DPP_UUID && row.referenceId === passport.id,
       );
       expect(openDppRow).toBeDefined();
       expect(openDppRow.referenceId).toEqual(passport.id);
-      expect(openDppRow.type).toEqual(ExternalIdentifierType.OPEN_DPP_UUID);
+      expect(openDppRow.type).toEqual(UniqueProductIdentifierType.OPEN_DPP_UUID);
     });
 
     it("returns 200 including GS1 UPIs for the org and exposes type/referenceId/gtin/batch/serial", async () => {
@@ -326,10 +325,10 @@ describe("UniqueProductIdentifierController", () => {
 
       expect(response.status).toEqual(200);
       const gs1Row = response.body.result.find(
-        (row: { type: string }) => row.type === ExternalIdentifierType.GS1,
+        (row: { type: string }) => row.type === UniqueProductIdentifierType.GS1,
       );
       expect(gs1Row).toBeDefined();
-      expect(gs1Row.type).toEqual(ExternalIdentifierType.GS1);
+      expect(gs1Row.type).toEqual(UniqueProductIdentifierType.GS1);
       expect(gs1Row.referenceId).toEqual(passport.id);
       expect(gs1Row.gtin).toEqual("04006381333931");
       expect(gs1Row.batch).toEqual("LOT-1");
@@ -652,7 +651,7 @@ describe("UniqueProductIdentifierController", () => {
       // The canonical OPEN_DPP_UUID row was created by createPassport
       const repo = moduleRef.get(UniqueProductIdentifierRepository);
       const allUpis = await repo.findAllByReferencedId(passport.id);
-      const systemUpi = allUpis.find((u) => u.type === ExternalIdentifierType.OPEN_DPP_UUID);
+      const systemUpi = allUpis.find((u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(systemUpi).toBeDefined();
 
       const response = await request(app.getHttpServer())
@@ -697,7 +696,7 @@ describe("UniqueProductIdentifierController", () => {
       const remaining = await moduleRef
         .get(UniqueProductIdentifierRepository)
         .findAllByReferencedId(passport.id);
-      const canonicalRow = remaining.find((u) => u.type === ExternalIdentifierType.OPEN_DPP_UUID);
+      const canonicalRow = remaining.find((u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(canonicalRow).toBeDefined();
     });
 
@@ -732,7 +731,7 @@ describe("UniqueProductIdentifierController", () => {
       const moduleRef = ctx.getModuleRef();
       const repo = moduleRef.get(UniqueProductIdentifierRepository);
       const allUpis = await repo.findAllByReferencedId(passport.id);
-      const internalUpi = allUpis.find((u) => u.type === ExternalIdentifierType.OPEN_DPP_UUID);
+      const internalUpi = allUpis.find((u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(internalUpi).toBeDefined();
 
       const response = await request(app.getHttpServer())
@@ -781,8 +780,8 @@ describe("UniqueProductIdentifierController", () => {
       expect(refs.every((ref: string) => ref === passport.id)).toBe(true);
       expect(refs).not.toContain(otherPassport.id);
       const types = response.body.result.map((r: { type: string }) => r.type);
-      expect(types).toContain(ExternalIdentifierType.OPEN_DPP_UUID);
-      expect(types).toContain(ExternalIdentifierType.GS1);
+      expect(types).toContain(UniqueProductIdentifierType.OPEN_DPP_UUID);
+      expect(types).toContain(UniqueProductIdentifierType.GS1);
     });
 
     it("enriches a GS1 row with its gs1-link permalink summary in the passport-scoped list", async () => {
@@ -820,7 +819,7 @@ describe("UniqueProductIdentifierController", () => {
       expect(linkedRow.permalink.id).toEqual(permalink.id);
       expect(linkedRow.permalink.publicUrl).toMatch(/^https?:\/\//);
       const systemRow = response.body.result.find(
-        (row: { type: string }) => row.type === ExternalIdentifierType.OPEN_DPP_UUID,
+        (row: { type: string }) => row.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
       );
       expect(systemRow.permalink).toBeNull();
     });

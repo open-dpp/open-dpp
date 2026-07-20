@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { type Gs1IdentityResponse } from "@open-dpp/dto";
+import { type Gs1IdentityResponse, UniqueProductIdentifierType } from "@open-dpp/dto";
 import { BaseUrlResolver } from "../../../permalink/application/services/base-url-resolver.service";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../infrastructure/unique-product-identifier.repository";
-import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
 
 /** The full assembled GS1 key a public resolver request carries. */
 export interface Gs1KeyInput {
@@ -41,7 +40,7 @@ export class Gs1IdentityService {
   ): Promise<Gs1IdentityResponse | null> {
     const upi = await this.uniqueProductIdentifierRepository.findByReferenceIdAndType(
       passportId,
-      ExternalIdentifierType.GS1,
+      UniqueProductIdentifierType.GS1,
     );
     if (!upi) {
       return null;

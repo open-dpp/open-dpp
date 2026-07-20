@@ -821,7 +821,7 @@
       "publicUrl": "Öffentliche URL",
       "primary": "Primär",
       "published": "Veröffentlicht",
-      "kindPresentation": "Präsentation",
+      "kindPresentation": "open-dpp",
       "kindGs1Link": "GS1 Digital Link",
       "createGs1Link": "GS1-Link erstellen",
       "empty": "Keine Permalinks gefunden.",

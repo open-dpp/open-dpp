@@ -14,7 +14,6 @@ import {
 import { Gs1IdentityController } from "./presentation/gs1-identity.controller";
 import { Gs1ResolverController } from "./presentation/gs1-resolver.controller";
 import { PassportUniqueProductIdentifierController } from "./presentation/passport-unique-product-identifier.controller";
-import { UniqueProductIdentifierApplicationService } from "./presentation/unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./presentation/unique-product-identifier.controller";
 
 @Module({
@@ -37,14 +36,12 @@ import { UniqueProductIdentifierController } from "./presentation/unique-product
     PassportUniqueProductIdentifierController,
   ],
   providers: [
-    UniqueProductIdentifierApplicationService,
     UniqueProductIdentifierRepository,
     Gs1IdentityService,
     UpiCollectionService,
   ],
   exports: [
     UniqueProductIdentifierRepository,
-    UniqueProductIdentifierApplicationService,
     Gs1IdentityService,
     UpiCollectionService,
   ],

@@ -5,12 +5,10 @@ import {
   Gs1IdentityDtoSchema,
   isValidCset82Component,
   normalizeToGtin14,
+  UniqueProductIdentifierType,
+  type UniqueProductIdentifierTypeValue,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import {
-  ExternalIdentifierType,
-  type ExternalIdentifierTypeValue,
-} from "../presentation/dto/unique-product-identifier-dto.schema";
 
 /**
  * The GS1 identity value object carried by a `GS1` UPI.
@@ -94,14 +92,14 @@ function normalizeGs1Identity(input: Gs1IdentityInput): Gs1Identity {
 export class UniqueProductIdentifier {
   public readonly uuid: string;
   public readonly referenceId: string;
-  public readonly type: ExternalIdentifierTypeValue;
+  public readonly type: UniqueProductIdentifierTypeValue;
   public readonly gs1?: Gs1Identity;
   public readonly organizationId: string | null;
 
   private constructor(
     uuid: string,
     referenceId: string,
-    type: ExternalIdentifierTypeValue,
+    type: UniqueProductIdentifierTypeValue,
     gs1?: Gs1Identity,
     organizationId: string | null = null,
   ) {
@@ -114,7 +112,7 @@ export class UniqueProductIdentifier {
   }
 
   private assertInvariants(): void {
-    if (this.type === ExternalIdentifierType.GS1) {
+    if (this.type === UniqueProductIdentifierType.GS1) {
       if (!this.gs1) {
         throw new ValueError("A GS1 unique product identifier must carry a GS1 identity (gtin)");
       }
@@ -131,13 +129,13 @@ export class UniqueProductIdentifier {
   static create(data: {
     externalUUID?: string;
     referenceId: string;
-    type?: ExternalIdentifierTypeValue;
+    type?: UniqueProductIdentifierTypeValue;
     organizationId?: string | null;
   }): UniqueProductIdentifier {
     return new UniqueProductIdentifier(
       data.externalUUID ?? randomUUID(),
       data.referenceId,
-      data.type ?? ExternalIdentifierType.OPEN_DPP_UUID,
+      data.type ?? UniqueProductIdentifierType.OPEN_DPP_UUID,
       undefined,
       data.organizationId ?? null,
     );
@@ -162,7 +160,7 @@ export class UniqueProductIdentifier {
     return new UniqueProductIdentifier(
       data.externalUUID ?? randomUUID(),
       data.referenceId,
-      ExternalIdentifierType.GS1,
+      UniqueProductIdentifierType.GS1,
       normalizeGs1Identity(data),
       data.organizationId ?? null,
     );
@@ -171,13 +169,13 @@ export class UniqueProductIdentifier {
   static loadFromDb(data: {
     uuid: string;
     referenceId: string;
-    type?: ExternalIdentifierTypeValue | null;
+    type?: UniqueProductIdentifierTypeValue | null;
     gtin?: string | null;
     batch?: string | null;
     serial?: string | null;
     organizationId?: string | null;
   }) {
-    const type = data.type ?? ExternalIdentifierType.OPEN_DPP_UUID;
+    const type = data.type ?? UniqueProductIdentifierType.OPEN_DPP_UUID;
     const gs1 =
       data.gtin !== null && data.gtin !== undefined
         ? assembleGs1Identity(data.gtin, data.batch, data.serial)
@@ -216,7 +214,7 @@ export class UniqueProductIdentifier {
     return new UniqueProductIdentifier(
       this.uuid,
       this.referenceId,
-      ExternalIdentifierType.GS1,
+      UniqueProductIdentifierType.GS1,
       normalizeGs1Identity(input),
       this.organizationId,
     );

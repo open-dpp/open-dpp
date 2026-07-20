@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import {
-  ExternalIdentifierType,
-  type ExternalIdentifierTypeValue,
-} from "../presentation/dto/unique-product-identifier-dto.schema";
+  UniqueProductIdentifierType,
+  type UniqueProductIdentifierTypeValue,
+} from "@open-dpp/dto";
 
 export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
@@ -38,11 +38,11 @@ export class UniqueProductIdentifierDoc extends Document {
   organizationId?: string | null;
 
   @Prop({
-    default: ExternalIdentifierType.OPEN_DPP_UUID,
-    enum: Object.values(ExternalIdentifierType),
+    default: UniqueProductIdentifierType.OPEN_DPP_UUID,
+    enum: Object.values(UniqueProductIdentifierType),
     type: String,
   })
-  type?: ExternalIdentifierTypeValue;
+  type?: UniqueProductIdentifierTypeValue;
 
   /**
    * GS1 identity: GTIN normalized to GTIN-14. Only populated on `type = GS1` rows;

@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { ValueError } from "@open-dpp/exception";
-import { UniqueProductIdentifierListItemDtoSchema } from "@open-dpp/dto";
+import {
+  UniqueProductIdentifierListItemDtoSchema,
+  UniqueProductIdentifierType,
+} from "@open-dpp/dto";
 import { UniqueProductIdentifier } from "./unique.product.identifier";
-import { ExternalIdentifierType } from "../presentation/dto/unique-product-identifier-dto.schema";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
@@ -11,14 +13,14 @@ const VALID_GTIN13_AS_14 = "04006381333931";
 describe("UniqueProductIdentifier (GS1)", () => {
   it("creates an OPEN_DPP_UUID UPI with no GS1 identity by default", () => {
     const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
-    expect(upi.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(upi.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
     expect(upi.gs1).toBeUndefined();
   });
 
   it("creates a GS1 UPI from a raw GTIN, normalizing it to GTIN-14", () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    expect(upi.type).toBe(ExternalIdentifierType.GS1);
+    expect(upi.type).toBe(UniqueProductIdentifierType.GS1);
     expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
     expect(upi.referenceId).toBe(referenceId);
   });
@@ -40,7 +42,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: null,
       }),
     ).toThrow(ValueError);
@@ -51,7 +53,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.OPEN_DPP_UUID,
+        type: UniqueProductIdentifierType.OPEN_DPP_UUID,
         gtin: VALID_GTIN13_AS_14,
       }),
     ).toThrow(ValueError);
@@ -61,7 +63,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
     const upi = UniqueProductIdentifier.loadFromDb({
       uuid: randomUUID(),
       referenceId: randomUUID(),
-      type: ExternalIdentifierType.GS1,
+      type: UniqueProductIdentifierType.GS1,
       gtin: VALID_GTIN13_AS_14,
     });
     expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
@@ -75,7 +77,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
     expect(upi.toPlain()).toEqual({
       uuid: upi.uuid,
       referenceId: upi.referenceId,
-      type: ExternalIdentifierType.GS1,
+      type: UniqueProductIdentifierType.GS1,
       gtin: VALID_GTIN13_AS_14,
       batch: null,
       serial: null,
@@ -88,7 +90,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
     expect(upi.toPlain()).toEqual({
       uuid: upi.uuid,
       referenceId: upi.referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       gtin: null,
       batch: null,
       serial: null,
@@ -258,7 +260,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
@@ -274,7 +276,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: null,
         serial: null,
@@ -292,7 +294,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(withKeys.toPlain()).toEqual({
         uuid: withKeys.uuid,
         referenceId: withKeys.referenceId,
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
@@ -306,7 +308,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(bare.toPlain()).toEqual({
         uuid: bare.uuid,
         referenceId: bare.referenceId,
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: null,
         serial: null,
@@ -376,7 +378,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(item).toEqual({
         uuid: upi.uuid,
         referenceId,
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",

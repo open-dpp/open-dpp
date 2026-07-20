@@ -10,7 +10,7 @@ import { v4 as uuid4 } from "uuid";
 import { generateMongoConfig } from "../../database/config";
 import { TraceabilityEventsModule } from "../../traceability-events/traceability-events.module";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
-import { ExternalIdentifierType } from "../presentation/dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierType } from "@open-dpp/dto";
 import { UniqueProductIdentifierRepository } from "./unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
@@ -118,9 +118,9 @@ describe("uniqueProductIdentifierRepository", () => {
 
   it("defaults type to OPEN_DPP_UUID when create() omits it", async () => {
     const upi = UniqueProductIdentifier.create({ referenceId: uuid4() });
-    expect(upi.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(upi.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
     const saved = await uniqueProductIdentifierRepository.save(upi);
-    expect(saved.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(saved.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
   });
 
   it("persists and returns the explicit type discriminator", async () => {
@@ -129,9 +129,9 @@ describe("uniqueProductIdentifierRepository", () => {
       gtin: "00075678164125",
     });
     const saved = await uniqueProductIdentifierRepository.save(upi);
-    expect(saved.type).toBe(ExternalIdentifierType.GS1);
+    expect(saved.type).toBe(UniqueProductIdentifierType.GS1);
     const refetched = await uniqueProductIdentifierRepository.findOneOrFail(saved.uuid);
-    expect(refetched.type).toBe(ExternalIdentifierType.GS1);
+    expect(refetched.type).toBe(UniqueProductIdentifierType.GS1);
   });
 
   it("loads legacy rows missing the type field with the OPEN_DPP_UUID default", async () => {
@@ -140,7 +140,7 @@ describe("uniqueProductIdentifierRepository", () => {
     await uniqueProductIdentifierDoc.updateOne({ _id: upi.uuid }, { $unset: { type: 1 } });
 
     const refetched = await uniqueProductIdentifierRepository.findOneOrFail(upi.uuid);
-    expect(refetched.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(refetched.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
   });
 
   it("persists and round-trips a GS1 UPI's normalized GTIN-14", async () => {
@@ -149,7 +149,7 @@ describe("uniqueProductIdentifierRepository", () => {
       gtin: "4006381333931",
     });
     const saved = await uniqueProductIdentifierRepository.save(upi);
-    expect(saved.type).toBe(ExternalIdentifierType.GS1);
+    expect(saved.type).toBe(UniqueProductIdentifierType.GS1);
     expect(saved.gs1).toEqual({ gtin: "04006381333931" });
     const refetched = await uniqueProductIdentifierRepository.findOneOrFail(saved.uuid);
     expect(refetched.gs1).toEqual({ gtin: "04006381333931" });
@@ -186,15 +186,15 @@ describe("uniqueProductIdentifierRepository", () => {
 
     const resolved = await uniqueProductIdentifierRepository.findByReferenceIdAndType(
       referenceId,
-      ExternalIdentifierType.OPEN_DPP_UUID,
+      UniqueProductIdentifierType.OPEN_DPP_UUID,
     );
     expect(resolved).toBeDefined();
     expect(resolved!.uuid).toBe(canonical.uuid);
-    expect(resolved!.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(resolved!.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
 
     const resolvedGs1 = await uniqueProductIdentifierRepository.findByReferenceIdAndType(
       referenceId,
-      ExternalIdentifierType.GS1,
+      UniqueProductIdentifierType.GS1,
     );
     expect(resolvedGs1!.uuid).toBe(gs1.uuid);
   });
@@ -209,7 +209,7 @@ describe("uniqueProductIdentifierRepository", () => {
     // canonical, never a GS1 match.
     const resolvedGs1 = await uniqueProductIdentifierRepository.findByReferenceIdAndType(
       referenceId,
-      ExternalIdentifierType.GS1,
+      UniqueProductIdentifierType.GS1,
     );
     expect(resolvedGs1).toBeUndefined();
   });
@@ -415,7 +415,7 @@ describe("uniqueProductIdentifierRepository", () => {
 
       const found = await uniqueProductIdentifierRepository.findOne(legacyUuid);
       expect(found).toBeDefined();
-      expect(found!.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+      expect(found!.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(found!.gs1).toBeUndefined();
       // toPlain() should carry null for GS1 fields
       const plain = found!.toPlain();

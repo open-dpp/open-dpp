@@ -8,9 +8,9 @@ import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import {
-  ExternalIdentifierType,
-  type ExternalIdentifierTypeValue,
-} from "../presentation/dto/unique-product-identifier-dto.schema";
+  UniqueProductIdentifierType,
+  type UniqueProductIdentifierTypeValue,
+} from "@open-dpp/dto";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchemaVersion,
@@ -117,7 +117,7 @@ export class UniqueProductIdentifierRepository {
    */
   async findByReferenceIdAndType(
     referenceId: string,
-    type: ExternalIdentifierTypeValue,
+    type: UniqueProductIdentifierTypeValue,
   ): Promise<UniqueProductIdentifier | undefined> {
     const doc = await this.uniqueProductIdentifierDoc
       .findOne({
@@ -150,7 +150,7 @@ export class UniqueProductIdentifierRepository {
       gtin: { $eq: key.gtin },
       batch: { $eq: key.batch ?? null },
       serial: { $eq: key.serial ?? null },
-      type: { $eq: ExternalIdentifierType.GS1 },
+      type: { $eq: UniqueProductIdentifierType.GS1 },
     });
     if (!doc) {
       return undefined;

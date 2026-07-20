@@ -9,7 +9,7 @@
  * - `permalinks.list` returns a presentation permalink (primary) + a gs1-link permalink
  * - Assert:
  *   (a) both rows render
- *   (b) a kind indicator ('Presentation' vs 'GS1 Digital Link') + a Primary badge on the primary row
+ *   (b) a kind indicator ('open-dpp' vs 'GS1 Digital Link') + a Primary badge on the primary row
  *   (c) the public URL is shown/linkable
  *   (d) a 'Create GS1 link' header action toggles the create dialog
  *   (e) the list re-fetches after `created`
@@ -219,7 +219,7 @@ const i18n = createI18n({
           publicUrl: "Public URL",
           primary: "Primary",
           published: "Published",
-          kindPresentation: "Presentation",
+          kindPresentation: "open-dpp",
           kindGs1Link: "GS1 Digital Link",
           createGs1Link: "Create GS1 link",
           empty: "No permalinks found.",
@@ -340,9 +340,9 @@ describe("PermalinkListView", () => {
     await nextTick();
     await nextTick();
 
-    // Presentation row has a kind label showing "Presentation"
+    // Presentation row has a kind label showing "open-dpp"
     const presentationRow = wrapper.find("[data-testid='permalink-row-presentation']");
-    expect(presentationRow.text()).toContain("Presentation");
+    expect(presentationRow.text()).toContain("open-dpp");
 
     // GS1 row has "GS1 Digital Link" kind label
     const gs1Row = wrapper.find("[data-testid='permalink-row-gs1-link']");

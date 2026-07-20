@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import {
   type Gs1IdentityResponse,
   type UniqueProductIdentifierListItemDto,
+  UniqueProductIdentifierType,
   UpdateGs1UniqueProductIdentifierRequest,
 } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
@@ -12,7 +13,6 @@ import { isDuplicateKeyError } from "../../../lib/mongo-errors";
 import { Pagination } from "../../../pagination/pagination";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../infrastructure/unique-product-identifier.repository";
-import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
 
 export interface CreateGs1UpiInput {
   referenceId: string;
@@ -164,7 +164,7 @@ export class UpiCollectionService {
 
     const upi = UniqueProductIdentifier.create({
       referenceId: input.referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       organizationId: input.organizationId,
     });
     const saved = await this.uniqueProductIdentifierRepository.save(upi);
@@ -192,7 +192,7 @@ export class UpiCollectionService {
     const upi = await this.findOrThrow(uuid);
 
     // Only GS1 UPIs carry editable data; internal/system rows have none.
-    if (upi.type !== ExternalIdentifierType.GS1) {
+    if (upi.type !== UniqueProductIdentifierType.GS1) {
       throw new ConflictException(
         "Only GS1 unique product identifiers can be edited; internal identifiers carry no editable data",
       );
@@ -243,8 +243,8 @@ export class UpiCollectionService {
 
     // GTIN / EAN system rows are read-only (never user-managed). GS1 and internal
     // (OPEN_DPP_UUID) UPIs are deletable while the passport is a draft (ADR 0006).
-    const isGs1 = upi.type === ExternalIdentifierType.GS1;
-    const isInternal = upi.type === ExternalIdentifierType.OPEN_DPP_UUID;
+    const isGs1 = upi.type === UniqueProductIdentifierType.GS1;
+    const isInternal = upi.type === UniqueProductIdentifierType.OPEN_DPP_UUID;
     if (!isGs1 && !isInternal) {
       throw new ConflictException(
         "This unique product identifier is read-only and cannot be deleted",

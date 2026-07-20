@@ -11,7 +11,7 @@ import { uniqueProductIdentifierUpdateRequestPlainFactory } from "@open-dpp/test
 import { PagingResult } from "../../../pagination/paging-result";
 import { Pagination } from "../../../pagination/pagination";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
-import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierType } from "@open-dpp/dto";
 import { UpiCollectionService } from "./upi-collection.service";
 
 const VALID_GTIN13 = "4006381333931";
@@ -262,9 +262,9 @@ describe("UpiCollectionService.createInternal", () => {
 
     expect(upiRepo.save).toHaveBeenCalledTimes(1);
     const savedArg = upiRepo.save.mock.calls[0][0] as UniqueProductIdentifier;
-    expect(savedArg.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(savedArg.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
     expect(savedArg.gs1).toBeUndefined();
-    expect(result.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(result.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
     expect(result.gtin).toBeNull();
     expect(result.digitalLink).toBeNull();
   });
@@ -316,7 +316,7 @@ describe("UpiCollectionService.update", () => {
     return UniqueProductIdentifier.create({
       externalUUID: upiUuid,
       referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       organizationId: randomUUID(),
     });
   }
@@ -446,7 +446,7 @@ describe("UpiCollectionService.delete", () => {
     return UniqueProductIdentifier.create({
       externalUUID: upiUuid,
       referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       organizationId: randomUUID(),
     });
   }
@@ -495,7 +495,7 @@ describe("UpiCollectionService.delete", () => {
     const systemRow = UniqueProductIdentifier.create({
       externalUUID: upiUuid,
       referenceId,
-      type: ExternalIdentifierType.GTIN,
+      type: UniqueProductIdentifierType.GTIN,
       organizationId: randomUUID(),
     });
 

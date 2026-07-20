@@ -240,7 +240,7 @@ const i18n = createI18n({
           publicUrl: "Public URL",
           primary: "Primary",
           published: "Published",
-          kindPresentation: "Presentation",
+          kindPresentation: "open-dpp",
           kindGs1Link: "GS1 Digital Link",
           createGs1Link: "Create GS1 link",
           empty: "No permalinks found.",

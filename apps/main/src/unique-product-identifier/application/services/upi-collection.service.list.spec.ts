@@ -8,7 +8,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { PagingResult } from "../../../pagination/paging-result";
 import { Pagination } from "../../../pagination/pagination";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
-import { ExternalIdentifierType } from "../../presentation/dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierType } from "@open-dpp/dto";
 import { UpiCollectionService } from "./upi-collection.service";
 
 const VALID_GTIN13 = "4006381333931";
@@ -97,7 +97,7 @@ describe("UpiCollectionService.list", () => {
     return UniqueProductIdentifier.create({
       externalUUID: randomUUID(),
       referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       organizationId,
     });
   }
@@ -144,9 +144,9 @@ describe("UpiCollectionService.list", () => {
     expect(result.cursor).toBeNull();
     expect(passportRepo.findByIds).toHaveBeenCalledTimes(1);
 
-    const gs1Item = result.items.find((item) => item.type === ExternalIdentifierType.GS1);
+    const gs1Item = result.items.find((item) => item.type === UniqueProductIdentifierType.GS1);
     const systemItem = result.items.find(
-      (item) => item.type === ExternalIdentifierType.OPEN_DPP_UUID,
+      (item) => item.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
     );
 
     expect(gs1Item).toBeDefined();
@@ -182,9 +182,9 @@ describe("UpiCollectionService.list", () => {
 
     const result = await service.list(organizationId);
 
-    const gs1Item = result.items.find((item) => item.type === ExternalIdentifierType.GS1);
+    const gs1Item = result.items.find((item) => item.type === UniqueProductIdentifierType.GS1);
     const systemItem = result.items.find(
-      (item) => item.type === ExternalIdentifierType.OPEN_DPP_UUID,
+      (item) => item.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
     );
 
     // passportPublished=false for draft → editable
@@ -357,7 +357,7 @@ describe("UpiCollectionService.listByPassport", () => {
     return UniqueProductIdentifier.create({
       externalUUID: randomUUID(),
       referenceId: ref,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       organizationId,
     });
   }
@@ -387,8 +387,8 @@ describe("UpiCollectionService.listByPassport", () => {
 
     expect(result.items).toHaveLength(2);
     expect(result.cursor).toBeNull();
-    const gs1Item = result.items.find((i) => i.type === ExternalIdentifierType.GS1);
-    const systemItem = result.items.find((i) => i.type === ExternalIdentifierType.OPEN_DPP_UUID);
+    const gs1Item = result.items.find((i) => i.type === UniqueProductIdentifierType.GS1);
+    const systemItem = result.items.find((i) => i.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
     expect(gs1Item!.uuid).toBe(gs1Upi.uuid);
     expect(gs1Item!.referenceId).toBe(referenceId);
     expect(gs1Item!.gtin).toBe(VALID_GTIN13_AS_14);
@@ -476,7 +476,7 @@ describe("UpiCollectionService permalink enrichment", () => {
     return UniqueProductIdentifier.create({
       externalUUID: randomUUID(),
       referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       organizationId,
     });
   }
