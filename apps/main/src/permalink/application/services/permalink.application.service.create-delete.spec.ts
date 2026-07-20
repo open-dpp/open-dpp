@@ -96,11 +96,11 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
     // Create the first (primary) permalink
-    const [primary] = await service.createPermalinksForConfigs([config1]);
+    const [primary] = await service.createPermalinksForConfigs([config1], passport.organizationId);
     expect(primary.primary).toBe(true);
 
     // createPresentationPermalink for a second config must NOT steal the primary
-    const second = await service.createPresentationPermalink(config2);
+    const second = await service.createPresentationPermalink(config2, passport.organizationId);
 
     expect(second.primary).toBe(false);
     // The original primary must still be primary in the DB
@@ -125,9 +125,9 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
     // Seed the primary
-    await service.createPermalinksForConfigs([config1]);
+    await service.createPermalinksForConfigs([config1], passport.organizationId);
 
-    const second = await service.createPresentationPermalink(config2);
+    const second = await service.createPresentationPermalink(config2, passport.organizationId);
 
     expect(second.presentationConfigurationId).toBe(config2.id);
     expect(second.uniqueProductIdentifierId).toBeNull();
@@ -143,13 +143,33 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
     // Seed the primary
-    await service.createPermalinksForConfigs([config1]);
+    await service.createPermalinksForConfigs([config1], passport.organizationId);
 
-    const second = await service.createPresentationPermalink(config2);
+    const second = await service.createPresentationPermalink(config2, passport.organizationId);
 
     expect(second.publishedUrl).not.toBeNull();
     // The published URL should follow the pattern base/id-or-slug
     expect(second.publishedUrl).toMatch(/^https?:\/\//);
+  });
+
+  // (d) organizationId is stamped so org-scoped list/patch/delete work — mirrors
+  //     the GS1 sibling spec (e); without it the /permalinks mutating routes 403 the owner
+  it("(d) persists the passport's organizationId", async () => {
+    const passport = await seedPassport();
+    const config1 = await seedConfig(passport);
+    const config2 = await seedConfig(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const repository = ctx.getModuleRef().get(PermalinkRepository);
+
+    const [first] = await service.createPermalinksForConfigs([config1], passport.organizationId);
+    const second = await service.createPresentationPermalink(config2, passport.organizationId);
+
+    expect((await repository.findOneOrFail(first.id)).organizationId).toBe(
+      passport.organizationId,
+    );
+    expect((await repository.findOneOrFail(second.id)).organizationId).toBe(
+      passport.organizationId,
+    );
   });
 });
 

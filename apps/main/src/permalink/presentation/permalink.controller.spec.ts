@@ -980,4 +980,109 @@ describe("PermalinkController", () => {
     const countAfter = await presentationConfigurationRepository.countByReference(referenceFilter);
     expect(countAfter).toEqual(1);
   });
+
+  describe("mutating /permalinks/:id routes work for the owning org", () => {
+    // Permalinks minted through the real service flow (createPermalinksForConfigs)
+    // must carry the passport's organizationId — otherwise these routes 403 the owner.
+    async function seedViaServiceFlow(orgId: string) {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+
+      const configRepository = ctx.getModuleRef().get(PresentationConfigurationRepository);
+      const config1 = PresentationConfiguration.createForPassport({
+        organizationId: orgId,
+        referenceId: passport.id,
+      });
+      const config2 = PresentationConfiguration.createForPassport({
+        organizationId: orgId,
+        referenceId: passport.id,
+      });
+      await configRepository.save(config1);
+      await configRepository.save(config2);
+
+      const service = ctx.getModuleRef().get(PermalinkApplicationService);
+      const [primary] = await service.createPermalinksForConfigs([config1], orgId);
+      const secondary = await service.createPresentationPermalink(config2, orgId);
+      return { passport, primary, secondary };
+    }
+
+    it("PATCH /permalinks/:id updates the slug for an org member", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { primary } = await seedViaServiceFlow(org.id);
+      const slug = `slug-${randomUUID().slice(0, 8)}`;
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${primary.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ slug });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.slug).toEqual(slug);
+      const refetched = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(primary.id);
+      expect(refetched.slug).toEqual(slug);
+    });
+
+    it("POST /permalinks/:id/primary promotes a non-primary permalink for an org member", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { secondary } = await seedViaServiceFlow(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .post(`/${LatestApiVersionWithPrefixDto}/permalinks/${secondary.id}/primary`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      const refetched = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(secondary.id);
+      expect(refetched.primary).toBe(true);
+    });
+
+    it("DELETE /permalinks/:id deletes a non-primary permalink for an org member", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { secondary } = await seedViaServiceFlow(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .delete(`/${LatestApiVersionWithPrefixDto}/permalinks/${secondary.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(204);
+      const gone = await ctx.getModuleRef().get(PermalinkRepository).findOne(secondary.id);
+      expect(gone).toBeUndefined();
+    });
+
+    it("returns 403 for a member of a different org", async () => {
+      const { org } = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { primary } = await seedViaServiceFlow(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${primary.id}`)
+        .set("Cookie", outsider.userCookie)
+        .set(ORGANIZATION_ID_HEADER, outsider.org.id)
+        .send({ slug: "trespass" });
+
+      expect(response.status).toEqual(403);
+    });
+  });
 });

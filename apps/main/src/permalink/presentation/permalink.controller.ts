@@ -364,7 +364,10 @@ export class PermalinkController {
       if (passport.organizationId !== organizationId) {
         throw new ForbiddenException();
       }
-      created = await this.permalinkApplicationService.createPresentationPermalink(config);
+      created = await this.permalinkApplicationService.createPresentationPermalink(
+        config,
+        passport.organizationId,
+      );
     }
 
     const branding = await this.resolveBranding(passport.organizationId);

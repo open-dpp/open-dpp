@@ -9,6 +9,7 @@ import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";
 import type { Connection, Model } from "mongoose";
 
 import { generateMongoConfig } from "../../database/config";
+import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import { PresentationConfiguration } from "../../presentation-configurations/domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import {
@@ -39,6 +40,7 @@ describe("PermalinkRepository", () => {
         MongooseModule.forFeature([
           { name: PermalinkDoc.name, schema: PermalinkSchema },
           { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
+          { name: PassportDoc.name, schema: PassportSchema },
         ]),
       ],
       providers: [PermalinkRepository, PresentationConfigurationRepository],
@@ -719,6 +721,69 @@ describe("PermalinkRepository", () => {
       // Assert all 3 IDs were returned exactly once (no overlap, no loss)
       const allIds = [page1.items[0].id, page2.items[0].id, page3.items[0].id].sort();
       expect(allIds).toEqual([pFirst.id, pSecond.id, pThird.id].sort());
+    });
+  });
+
+  describe("onApplicationBootstrap organizationId backfill", () => {
+    // Rows written before organizationId existed (schema < this branch) carry null.
+    // Bootstrap must resolve config → passport → organizationId and stamp them,
+    // or the org-scoped list and the /permalinks mutating routes never see them.
+    async function seedLegacyRow() {
+      const organizationId = randomUUID();
+      const passportId = randomUUID();
+      const passportModel = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
+      // Raw driver insert: the backfill $lookup only needs _id + organizationId.
+      await passportModel.collection.insertOne({ _id: passportId as any, organizationId });
+
+      const config = PresentationConfiguration.createForPassport({
+        organizationId,
+        referenceId: passportId,
+      });
+      await presentationConfigurationRepository.save(config);
+
+      // Permalink.create without organizationId reproduces the legacy null state.
+      const legacy = Permalink.create({ presentationConfigurationId: config.id });
+      await repository.save(legacy);
+      return { organizationId, legacy };
+    }
+
+    it("stamps the passport's organizationId on rows missing it", async () => {
+      const { organizationId, legacy } = await seedLegacyRow();
+      expect((await repository.findOneOrFail(legacy.id)).organizationId).toBeNull();
+
+      await repository.onApplicationBootstrap();
+
+      expect((await repository.findOneOrFail(legacy.id)).organizationId).toBe(organizationId);
+      const listed = await repository.findAllByOrganizationId(organizationId);
+      expect(listed.items.map((p) => p.id)).toContain(legacy.id);
+    });
+
+    it("leaves rows with a dangling config untouched and does not throw", async () => {
+      const orphan = Permalink.create({ presentationConfigurationId: randomUUID() });
+      await repository.save(orphan);
+
+      await expect(repository.onApplicationBootstrap()).resolves.not.toThrow();
+
+      expect((await repository.findOneOrFail(orphan.id)).organizationId).toBeNull();
+    });
+
+    it("does not overwrite an existing organizationId", async () => {
+      const stamped = randomUUID();
+      const { organizationId } = await seedLegacyRow();
+      const already = Permalink.create({
+        presentationConfigurationId: randomUUID(),
+        organizationId: stamped,
+      });
+      await repository.save(already);
+
+      await repository.onApplicationBootstrap();
+
+      expect((await repository.findOneOrFail(already.id)).organizationId).toBe(stamped);
+      expect(organizationId).not.toBe(stamped);
+    });
+
+    it("is a no-op on an empty collection", async () => {
+      await expect(repository.onApplicationBootstrap()).resolves.not.toThrow();
     });
   });
 

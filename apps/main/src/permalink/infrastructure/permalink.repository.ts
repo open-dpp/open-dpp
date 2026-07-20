@@ -1,12 +1,13 @@
-import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
+import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import { PermalinkKind, PresentationReferenceType } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail, findPageByCursor, save } from "../../lib/repositories";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { PASSPORT_COLLECTION } from "../../passports/infrastructure/passport.schema";
 import { PresentationConfigurationDoc } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { UNIQUE_PRODUCT_IDENTIFIER_COLLECTION } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { Permalink } from "../domain/permalink";
@@ -14,6 +15,7 @@ import { PermalinkDoc, PermalinkDocVersion } from "./permalink.schema";
 
 @Injectable()
 export class PermalinkRepository implements OnApplicationBootstrap {
+  private readonly logger = new Logger(PermalinkRepository.name);
   private readonly permalinkDoc: MongooseModel<PermalinkDoc>;
   private readonly presentationConfigurationDoc: MongooseModel<PresentationConfigurationDoc>;
 
@@ -37,6 +39,56 @@ export class PermalinkRepository implements OnApplicationBootstrap {
    */
   async onApplicationBootstrap(): Promise<void> {
     await this.permalinkDoc.syncIndexes();
+    await this.backfillOrganizationIds();
+  }
+
+  /**
+   * One-shot backfill: rows written before `organizationId` existed carry null,
+   * which 403s the owning org on every /permalinks mutating route and hides the
+   * row from the org-scoped list. Resolve config → passport → organizationId
+   * once at bootstrap; idempotent (the match set is empty after the first run).
+   * `kind: {$ne: gs1-link}` (legacy docs have no `kind` field) keeps a gs1-link
+   * row bound to a foreign presentation config from inheriting that config's org.
+   */
+  private async backfillOrganizationIds(): Promise<void> {
+    const rows: { _id: string; organizationId: string }[] = await this.permalinkDoc.aggregate([
+      {
+        $match: {
+          organizationId: null,
+          kind: { $ne: PermalinkKind.GS1_LINK },
+          presentationConfigurationId: { $ne: null },
+        },
+      },
+      {
+        $lookup: {
+          from: this.presentationConfigurationDoc.collection.name,
+          localField: "presentationConfigurationId",
+          foreignField: "_id",
+          as: "config",
+        },
+      },
+      { $unwind: "$config" },
+      {
+        $lookup: {
+          from: PASSPORT_COLLECTION,
+          localField: "config.referenceId",
+          foreignField: "_id",
+          as: "passport",
+        },
+      },
+      { $unwind: "$passport" },
+      { $project: { organizationId: "$passport.organizationId" } },
+    ]);
+    if (rows.length === 0) return;
+    await this.permalinkDoc.bulkWrite(
+      rows.map((row) => ({
+        updateOne: {
+          filter: { _id: row._id },
+          update: { $set: { organizationId: row.organizationId } },
+        },
+      })),
+    );
+    this.logger.log(`Backfilled organizationId on ${rows.length} permalink(s)`);
   }
 
   /**

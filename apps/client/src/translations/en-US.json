@@ -829,7 +829,7 @@
     }
   },
   "uniqueProductIdentifiers": {
-    "label": "Unique Product Identifier | Unique Product Identifiers",
+    "label": "Product Identifier | Product Identifiers",
     "list": {
       "type": "Type",
       "gtin": "GTIN",

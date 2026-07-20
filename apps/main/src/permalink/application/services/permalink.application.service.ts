@@ -118,6 +118,7 @@ export class PermalinkApplicationService {
 
   async createPermalinksForConfigs(
     configs: PresentationConfiguration[],
+    organizationId: string,
     options?: DbSessionOptions,
   ): Promise<Permalink[]> {
     const results: Permalink[] = [];
@@ -152,9 +153,14 @@ export class PermalinkApplicationService {
           primaryAssignedInThisCall = true;
         }
       }
+      // organizationId comes from the caller, NOT a passport lookup here: both
+      // passport-controller call sites run inside a transaction where the passport
+      // was just saved with the session, and passportRepository.findOne is
+      // session-less — it would not see the uncommitted passport.
       const created = Permalink.create({
         presentationConfigurationId: config.id,
         primary: shouldBePrimary,
+        organizationId,
       });
       let saved: Permalink;
       try {
@@ -407,7 +413,11 @@ export class PermalinkApplicationService {
       passport,
       options,
     );
-    const [permalink] = await this.createPermalinksForConfigs([config], options);
+    const [permalink] = await this.createPermalinksForConfigs(
+      [config],
+      passport.organizationId,
+      options,
+    );
     return permalink;
   }
 
@@ -420,9 +430,10 @@ export class PermalinkApplicationService {
    */
   async createPresentationPermalink(
     config: PresentationConfiguration,
+    organizationId: string,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    const [permalink] = await this.createPermalinksForConfigs([config], options);
+    const [permalink] = await this.createPermalinksForConfigs([config], organizationId, options);
     return permalink;
   }
 

@@ -231,7 +231,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [created] = await service.createPermalinksForConfigs([config]);
+    const [created] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(created.publishedUrl).toBe(`http://localhost:3000/p/${created.id}`);
   });
@@ -342,7 +342,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
       .mockResolvedValueOnce(undefined);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [result] = await service.createPermalinksForConfigs([config]);
+    const [result] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(result.id).toEqual(winner.id);
     const all = await ctx.getModuleRef().get(PermalinkRepository).findAllByPassportId(passport.id);
@@ -359,7 +359,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [created] = await service.createPermalinksForConfigs([config]);
+    const [created] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(created.publishedUrl).toBeNull();
   });
@@ -575,7 +575,7 @@ describe("PermalinkApplicationService primary management", () => {
     const config = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [created] = await service.createPermalinksForConfigs([config]);
+    const [created] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(created.primary).toBe(true);
     // Persisted value should also be primary:true
@@ -602,7 +602,7 @@ describe("PermalinkApplicationService primary management", () => {
     const config2 = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [first, second] = await service.createPermalinksForConfigs([config1, config2]);
+    const [first, second] = await service.createPermalinksForConfigs([config1, config2], passport.organizationId);
 
     expect(first.primary).toBe(true);
     expect(second.primary).toBe(false);
@@ -629,7 +629,7 @@ describe("PermalinkApplicationService primary management", () => {
 
     const config = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
-    const [presentation] = await service.createPermalinksForConfigs([config]);
+    const [presentation] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     // The presentation permalink should be primary; the gs1-link should NOT be primary
     expect(presentation.primary).toBe(true);
@@ -647,7 +647,7 @@ describe("PermalinkApplicationService primary management", () => {
     const config2 = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [first, second] = await service.createPermalinksForConfigs([config1, config2]);
+    const [first, second] = await service.createPermalinksForConfigs([config1, config2], passport.organizationId);
     expect(first.primary).toBe(true);
     expect(second.primary).toBe(false);
 
@@ -674,7 +674,7 @@ describe("PermalinkApplicationService primary management", () => {
     // Seed a presentation config so findAllByPassportId has context
     const config = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
-    await service.createPermalinksForConfigs([config]);
+    await service.createPermalinksForConfigs([config], passport.organizationId);
 
     await expect(service.setPrimary(passport.id, gs1Link.id)).rejects.toThrow(ConflictException);
   });
@@ -687,8 +687,8 @@ describe("PermalinkApplicationService primary management", () => {
     const config2 = await seedConfig(passport2);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [permalink1] = await service.createPermalinksForConfigs([config1]);
-    const [permalink2] = await service.createPermalinksForConfigs([config2]);
+    const [permalink1] = await service.createPermalinksForConfigs([config1], passport1.organizationId);
+    const [permalink2] = await service.createPermalinksForConfigs([config2], passport2.organizationId);
 
     // Try to set passport1's primary to permalink2 (which belongs to passport2)
     await expect(service.setPrimary(passport1.id, permalink2.id)).rejects.toThrow(

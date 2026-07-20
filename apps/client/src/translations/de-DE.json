@@ -829,7 +829,7 @@
     }
   },
   "uniqueProductIdentifiers": {
-    "label": "Eindeutiger Produktidentifikator | Eindeutige Produktidentifikatoren",
+    "label": "Produktidentifikator | Produktidentifikatoren",
     "list": {
       "type": "Typ",
       "gtin": "GTIN",
