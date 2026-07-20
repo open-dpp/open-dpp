@@ -35,15 +35,7 @@ import { UniqueProductIdentifierController } from "./presentation/unique-product
     UniqueProductIdentifierController,
     PassportUniqueProductIdentifierController,
   ],
-  providers: [
-    UniqueProductIdentifierRepository,
-    Gs1IdentityService,
-    UpiCollectionService,
-  ],
-  exports: [
-    UniqueProductIdentifierRepository,
-    Gs1IdentityService,
-    UpiCollectionService,
-  ],
+  providers: [UniqueProductIdentifierRepository, Gs1IdentityService, UpiCollectionService],
+  exports: [UniqueProductIdentifierRepository, Gs1IdentityService, UpiCollectionService],
 })
 export class UniqueProductIdentifierModule {}

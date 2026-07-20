@@ -696,7 +696,9 @@ describe("UniqueProductIdentifierController", () => {
       const remaining = await moduleRef
         .get(UniqueProductIdentifierRepository)
         .findAllByReferencedId(passport.id);
-      const canonicalRow = remaining.find((u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
+      const canonicalRow = remaining.find(
+        (u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
+      );
       expect(canonicalRow).toBeDefined();
     });
 

@@ -388,7 +388,9 @@ describe("UpiCollectionService.listByPassport", () => {
     expect(result.items).toHaveLength(2);
     expect(result.cursor).toBeNull();
     const gs1Item = result.items.find((i) => i.type === UniqueProductIdentifierType.GS1);
-    const systemItem = result.items.find((i) => i.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
+    const systemItem = result.items.find(
+      (i) => i.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
+    );
     expect(gs1Item!.uuid).toBe(gs1Upi.uuid);
     expect(gs1Item!.referenceId).toBe(referenceId);
     expect(gs1Item!.gtin).toBe(VALID_GTIN13_AS_14);

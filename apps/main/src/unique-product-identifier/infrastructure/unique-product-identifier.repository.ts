@@ -7,10 +7,7 @@ import { findPageByCursor } from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
-import {
-  UniqueProductIdentifierType,
-  type UniqueProductIdentifierTypeValue,
-} from "@open-dpp/dto";
+import { UniqueProductIdentifierType, type UniqueProductIdentifierTypeValue } from "@open-dpp/dto";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchemaVersion,

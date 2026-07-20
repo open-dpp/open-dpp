@@ -1,9 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import {
-  UniqueProductIdentifierType,
-  type UniqueProductIdentifierTypeValue,
-} from "@open-dpp/dto";
+import { UniqueProductIdentifierType, type UniqueProductIdentifierTypeValue } from "@open-dpp/dto";
 
 export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
