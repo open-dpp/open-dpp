@@ -14,9 +14,13 @@ import { convertLocaleToLanguage } from "../../translations/i18n";
  * AI-keyed map editor for GS1 data attributes.
  *
  * Each row holds a (AI, value) pair. Validation is reactive — errors are shown
- * inline as the user types. `update:modelValue` is emitted only when every row
- * has both a valid data-attribute AI and a value that satisfies that AI's
- * format/length rules.
+ * inline as the user types. `update:modelValue` is emitted only when every
+ * non-empty row has both a valid data-attribute AI and a value that satisfies
+ * that AI's format/length rules; fully empty rows are ignored.
+ *
+ * `update:valid` mirrors that validity so parents can gate their Save action —
+ * without it, an invalid edit would leave the parent holding the previous map
+ * and saving stale data.
  *
  * Builds all maps immutably; never mutates the modelValue prop.
  */
@@ -27,6 +31,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   "update:modelValue": [value: Record<string, string>];
+  "update:valid": [valid: boolean];
 }>();
 
 const { t, locale } = useI18n();
@@ -69,17 +74,32 @@ watch(
 // Per-row validation helpers
 // ---------------------------------------------------------------------------
 
+/** A row the user added but never touched — ignored for validity and the map. */
+function isRowEmpty(row: Row): boolean {
+  return !row.ai && !row.value;
+}
+
+function isRowValid(row: Row): boolean {
+  return (
+    !!row.ai &&
+    isGs1DataAttributeAi(row.ai) &&
+    !!row.value &&
+    isValidGs1DataAttributeValue(row.ai, row.value)
+  );
+}
+
 /**
  * Returns a localized error message for an AI string, or null when valid.
  *
  * - A known data-attribute AI (type 'D') is valid.
  * - A key AI (type 'I' primary identifier or type 'Q' key qualifier) is blocked.
  * - An unknown AI is also rejected.
+ * - An empty AI on a row that has a value is required (partial row).
  * Both invalid cases use the keyAiBlocked message (which embeds the AI string)
  * so the user always sees which AI was rejected.
  */
-function computeAiError(ai: string): string | null {
-  if (!ai) return null;
+function computeAiError(ai: string, value: string): string | null {
+  if (!ai) return value ? t("gs1DataAttributes.aiRequired") : null;
   if (isGs1DataAttributeAi(ai)) return null;
   return t("gs1DataAttributes.keyAiBlocked", { ai });
 }
@@ -87,10 +107,11 @@ function computeAiError(ai: string): string | null {
 /**
  * Returns a localized error message for a value given a validated AI, or null when valid.
  * Returns null when the AI itself is invalid (that error is shown on the AI field).
+ * An empty value on a row with a valid AI is required (partial row).
  */
 function computeValueError(ai: string, value: string): string | null {
   if (!ai || !isGs1DataAttributeAi(ai)) return null;
-  if (!value) return null;
+  if (!value) return t("gs1DataAttributes.valueRequired");
   if (isValidGs1DataAttributeValue(ai, value)) return null;
   return t("gs1DataAttributes.invalidValue", { ai });
 }
@@ -100,7 +121,7 @@ function computeValueError(ai: string, value: string): string | null {
 // ---------------------------------------------------------------------------
 
 const aiErrors = computed<Array<string | null>>(() =>
-  rows.value.map((row) => computeAiError(row.ai)),
+  rows.value.map((row) => computeAiError(row.ai, row.value)),
 );
 
 const valueErrors = computed<Array<string | null>>(() =>
@@ -108,18 +129,23 @@ const valueErrors = computed<Array<string | null>>(() =>
 );
 
 // ---------------------------------------------------------------------------
-// Emit — builds and emits a new map only when every row is fully valid
+// Validity — empty rows are ignored; partial or erroneous rows block Save
+// ---------------------------------------------------------------------------
+
+const isValid = computed(() => rows.value.every((row) => isRowEmpty(row) || isRowValid(row)));
+
+watch(isValid, (valid) => emit("update:valid", valid), { immediate: true });
+
+// ---------------------------------------------------------------------------
+// Emit — builds and emits a new map only when every non-empty row is valid
 // ---------------------------------------------------------------------------
 
 function tryEmit() {
-  for (let i = 0; i < rows.value.length; i++) {
-    const row = rows.value[i]!;
-    if (!row.ai || aiErrors.value[i] !== null) return;
-    if (!row.value || valueErrors.value[i] !== null) return;
-  }
+  if (!isValid.value) return;
 
   const newMap: Record<string, string> = {};
   for (const row of rows.value) {
+    if (isRowEmpty(row)) continue;
     newMap[row.ai] = row.value;
   }
   emit("update:modelValue", newMap);
@@ -144,22 +170,8 @@ function updateValue(index: number, value: string) {
 }
 
 function removeRow(index: number) {
-  const surviving = rows.value.filter((_, i) => i !== index);
-  rows.value = surviving;
-
-  // Emit the new map built from valid surviving rows.
-  const newMap: Record<string, string> = {};
-  for (const row of surviving) {
-    if (
-      row.ai &&
-      isGs1DataAttributeAi(row.ai) &&
-      row.value &&
-      isValidGs1DataAttributeValue(row.ai, row.value)
-    ) {
-      newMap[row.ai] = row.value;
-    }
-  }
-  emit("update:modelValue", newMap);
+  rows.value = rows.value.filter((_, i) => i !== index);
+  tryEmit();
 }
 </script>
 

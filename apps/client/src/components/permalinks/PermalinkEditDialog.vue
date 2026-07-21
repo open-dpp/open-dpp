@@ -35,6 +35,10 @@ const notificationStore = useNotificationStore();
 const slug = ref<string>("");
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
+// Save is blocked while the attributes field holds an invalid or partial row —
+// gs1DataAttributes then still carries the last valid map, and saving it would
+// silently persist stale data (audit M5).
+const gs1AttributesValid = ref(true);
 
 const saving = ref(false);
 const slugError = ref<string | null>(null);
@@ -192,6 +196,7 @@ function cancel() {
           <Gs1DataAttributesField
             v-model="gs1DataAttributes"
             data-testid="permalink-edit-gs1-data-attributes"
+            @update:valid="gs1AttributesValid = $event"
           />
         </div>
 
@@ -221,7 +226,7 @@ function cancel() {
       <Button
         :label="t('common.save')"
         data-testid="permalink-edit-save"
-        :disabled="locked || saving"
+        :disabled="locked || saving || (isGs1Link && !gs1AttributesValid)"
         @click="save"
       />
     </template>

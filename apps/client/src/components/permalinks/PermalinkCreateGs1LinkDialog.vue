@@ -37,6 +37,9 @@ const loadingUpis = ref(false);
 const selectedUpiId = ref<string | undefined>(props.preselectedUpiId);
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
+// Submit is blocked while the attributes field holds an invalid or partial row —
+// gs1DataAttributes then still carries the last valid map (audit M5).
+const gs1AttributesValid = ref(true);
 
 const conflictError = ref<string | null>(null);
 const busy = ref(false);
@@ -58,7 +61,11 @@ const selectedUpiAlreadyLinked = computed(() => {
 });
 
 const canSubmit = computed(
-  () => !!selectedUpiId.value && !selectedUpiAlreadyLinked.value && !busy.value,
+  () =>
+    !!selectedUpiId.value &&
+    !selectedUpiAlreadyLinked.value &&
+    !busy.value &&
+    gs1AttributesValid.value,
 );
 
 // ---------------------------------------------------------------------------
@@ -216,6 +223,7 @@ function cancel() {
         <Gs1DataAttributesField
           v-model="gs1DataAttributes"
           data-testid="gs1-data-attributes-field"
+          @update:valid="gs1AttributesValid = $event"
         />
       </div>
     </div>

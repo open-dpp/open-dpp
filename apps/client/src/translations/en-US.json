@@ -916,7 +916,9 @@
     "remove": "Remove",
     "keyAiBlocked": "AI \"{ai}\" is a primary identifier or key qualifier and cannot be used as a data attribute.",
     "unknownAi": "Unknown AI.",
-    "invalidValue": "Value does not match the format for AI \"{ai}\"."
+    "invalidValue": "Value does not match the format for AI \"{ai}\".",
+    "aiRequired": "Select an AI.",
+    "valueRequired": "Value is required."
   },
   "gs1LinkQrCode": {
     "empty": "No GS1 Digital Link permalink.",
