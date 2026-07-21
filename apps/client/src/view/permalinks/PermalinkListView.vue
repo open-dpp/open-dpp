@@ -9,6 +9,7 @@ import { useRoute, useRouter } from "vue-router";
 import PermalinkCreateGs1LinkDialog from "../../components/permalinks/PermalinkCreateGs1LinkDialog.vue";
 import PermalinkEditDialog from "../../components/permalinks/PermalinkEditDialog.vue";
 import Gs1LinkQrCode from "../../components/permalinks/Gs1LinkQrCode.vue";
+import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import apiClient from "../../lib/api-client";
 import { useErrorHandlingStore } from "../../stores/error.handling";
@@ -66,7 +67,15 @@ async function fetchCallback(pagingParams: PagingParamsDto) {
   }
 }
 
-const { nextPage, reloadCurrentPage } = usePagination({
+const {
+  hasPrevious,
+  hasNext,
+  currentPage,
+  previousPage,
+  resetCursor,
+  nextPage,
+  reloadCurrentPage,
+} = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
   fetchCallback,
@@ -235,7 +244,14 @@ onMounted(async () => {
   <div>
     <ConfirmDialog />
 
-    <DataTable :value="permalinks" :loading="loading" data-testid="permalink-data-table">
+    <DataTable
+      :value="permalinks"
+      :loading="loading"
+      data-testid="permalink-data-table"
+      paginator
+      :rows="10"
+      :rows-per-page-options="[10]"
+    >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("permalink.list.label", 2) }}</span>
@@ -340,6 +356,17 @@ onMounted(async () => {
           </div>
         </template>
       </Column>
+
+      <template #paginatorcontainer>
+        <TablePagination
+          :current-page="currentPage"
+          :has-previous="hasPrevious"
+          :has-next="hasNext"
+          @reset-cursor="resetCursor"
+          @previous-page="previousPage"
+          @next-page="nextPage"
+        />
+      </template>
     </DataTable>
 
     <!-- Create GS1 Link dialog -->

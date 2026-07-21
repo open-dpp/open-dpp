@@ -7,6 +7,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import UniqueProductIdentifierCreateDialog from "../../components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue";
 import Gs1DigitalLinkPromptDialog from "../../components/unique-product-identifier/Gs1DigitalLinkPromptDialog.vue";
+import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
 import apiClient from "../../lib/api-client";
@@ -126,7 +127,14 @@ onMounted(async () => {
 
 <template>
   <div>
-    <DataTable :value="upis ?? []" :loading="loading" data-testid="upi-data-table">
+    <DataTable
+      :value="upis ?? []"
+      :loading="loading"
+      data-testid="upi-data-table"
+      paginator
+      :rows="10"
+      :rows-per-page-options="[10]"
+    >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("uniqueProductIdentifiers.label", 2) }}</span>
@@ -199,6 +207,17 @@ onMounted(async () => {
           </div>
         </template>
       </Column>
+
+      <template #paginatorcontainer>
+        <TablePagination
+          :current-page="currentPage"
+          :has-previous="hasPrevious"
+          :has-next="hasNext"
+          @reset-cursor="resetCursor"
+          @previous-page="previousPage"
+          @next-page="nextPage"
+        />
+      </template>
     </DataTable>
 
     <UniqueProductIdentifierCreateDialog
