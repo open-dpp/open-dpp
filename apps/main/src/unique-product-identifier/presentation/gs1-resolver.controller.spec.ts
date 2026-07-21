@@ -245,12 +245,14 @@ describe("Gs1ResolverController", () => {
     expect(response.headers.location).toContain(permalink.id);
   });
 
-  // V1 (#629): the rendered GS1 Digital Link URL (what the user scans / the QR
-  // encodes) must actually resolve via this same `/01/{gtin}` resolver, on every
-  // base-URL host in the permalink cascade. Unlike the presentation-target tests
-  // above, a GS1_LINK permalink resolves to the Digital Link form itself, so the
-  // 302 target IS the scanned URL — we assert the exact round-trip.
-  describe("GS1 Digital Link round-trip across base-URL hosts", () => {
+  // V1 (#629) + audit M1: the rendered GS1 Digital Link URL (what the user scans
+  // / the QR encodes) must resolve via this same `/01/{gtin}` resolver on every
+  // base-URL host in the permalink cascade — and the 302 must LEAVE the resolver.
+  // A config-bound GS1_LINK permalink redirects to its presentation view on the
+  // branding → instance cascade base (never its own `baseUrl`, which is the
+  // Digital Link/QR host); redirecting to the Digital Link form itself was the
+  // M1 self-redirect loop.
+  describe("scanned GS1 Digital Links resolve to the presentation view", () => {
     // Seed a published passport whose UPI carries a GS1_LINK permalink (its own UPI
     // ref + presentation config), so `resolveGs1KeyToPublicUrl` selects that
     // permalink and renders the GS1 Digital Link form.
@@ -327,14 +329,21 @@ describe("Gs1ResolverController", () => {
       return resolveGs1LinkPublicUrl(seed.permalink, seed.upi.gs1!, seed.branding, envUrl);
     }
 
-    // Round-trip: render the GS1 URL → hit its path (optionally with a foreign query
-    // or Host) → assert a 302 back to the identical URL. Fix-direction agnostic:
-    // whatever the builder renders, that path must resolve. Scanning the rendered
-    // URL (own attrs in the query) must NOT duplicate them on the Location;
-    // `expectLocation` overrides the expected Location for foreign-query hits.
-    async function expectResolves(
+    // The instance-default cascade base (env `OPEN_DPP_URL` + `/p`) — where the
+    // viewer lives when neither branding nor an instance override is set.
+    async function instanceBase(): Promise<string> {
+      const svc = ctx.getModuleRef().get(PermalinkApplicationService, { strict: false });
+      return svc.getPermalinkBaseUrl();
+    }
+
+    // Scan the rendered GS1 URL's path (optionally overriding query/Host) and
+    // assert the 302 leaves the resolver: Location must be exactly
+    // `expectedLocation`, and its path must never re-enter `/01/…` — a Location
+    // back onto the resolver route is the M1 infinite loop.
+    async function expectScanRedirects(
       seed: Awaited<ReturnType<typeof seedGs1LinkPermalink>>,
-      hit?: { query?: string; host?: string; expectLocation?: (renderedUrl: string) => string },
+      expectedLocation: string,
+      hit?: { query?: string; host?: string },
     ) {
       const url = await renderScannedUrl(seed);
       const parsed = new URL(url);
@@ -345,51 +354,70 @@ describe("Gs1ResolverController", () => {
       }
       const res = await req;
       expect(res.status).toBe(302);
-      expect(res.headers.location).toBe(hit?.expectLocation ? hit.expectLocation(url) : url);
+      expect(new URL(res.headers.location).pathname).not.toMatch(/^\/01\//);
+      expect(res.headers.location).toBe(expectedLocation);
       return { url, res };
     }
 
-    it("resolves a GS1 link rendered on a per-permalink base URL", async () => {
+    it("never 302s a scanned Digital Link back to itself (M1 regression)", async () => {
+      const seed = await seedGs1LinkPermalink({ gtin: "04006381333931", serial: "SN-6" });
+      const url = await renderScannedUrl(seed);
+      const parsed = new URL(url);
+      const res = await request(ctx.globals().app.getHttpServer()).get(
+        parsed.pathname + parsed.search,
+      );
+      expect(res.status).toBe(302);
+      const location = new URL(res.headers.location);
+      expect(location.pathname).not.toMatch(/^\/01\//);
+      expect(location.pathname + location.search).not.toBe(parsed.pathname + parsed.search);
+    });
+
+    it("redirects a QR rendered on a per-permalink base URL to the instance viewer", async () => {
       const seed = await seedGs1LinkPermalink({
         gtin: "04006381333931",
         serial: "SN-1",
         baseUrl: "https://id.example.com",
         gs1DataAttributes: { "17": "251231" },
       });
-      await expectResolves(seed);
+      // The QR renders on id.example.com, but that is a Digital Link host, not a
+      // viewer host — the redirect uses the branding→instance cascade. The
+      // scanned query (the permalink's own attrs) is forwarded per §2.12.
+      await expectScanRedirects(
+        seed,
+        `${await instanceBase()}/${seed.permalink.id}?17=251231`,
+      );
     });
 
-    it("resolves a GS1 link rendered on the org branding base URL", async () => {
+    it("redirects to the org branding base when branding is set", async () => {
       const seed = await seedGs1LinkPermalink({
         gtin: "04006381333931",
         serial: "SN-2",
         brandingBaseUrl: "https://brand.example.com",
         organizationId: ctx.globals().organizationId,
       });
-      await expectResolves(seed);
+      // No `/p` on the branding base — identical to what presentation permalinks
+      // render there; only the instance-default fallback appends `/p`.
+      await expectScanRedirects(seed, `https://brand.example.com/${seed.permalink.id}`);
     });
 
-    it("resolves a GS1 link rendered on the instance-default base URL", async () => {
-      // No per-permalink baseUrl and no branding → the instance-default cascade.
+    it("redirects to the instance-default base when no branding is set", async () => {
       const seed = await seedGs1LinkPermalink({ gtin: "04006381333931", serial: "SN-3" });
-      await expectResolves(seed);
+      await expectScanRedirects(seed, `${await instanceBase()}/${seed.permalink.id}`);
     });
 
-    it("never reads the query for resolution, but forwards foreign pairs to the target", async () => {
+    it("never reads the query for resolution, but forwards all pairs to the target", async () => {
       const seed = await seedGs1LinkPermalink({
         gtin: "04006381333931",
         serial: "SN-4",
         baseUrl: "https://id.example.com",
         gs1DataAttributes: { "17": "251231" },
       });
-      // No query → target unchanged (still carries the permalink's own attrs).
-      await expectResolves(seed, { query: "" });
-      // Foreign query → same passport resolved; pairs appended verbatim after the
-      // permalink's own attrs (`17=990101` differs from the stored `17=251231`,
-      // so both are on the Location — the standard forwards the entire query).
-      await expectResolves(seed, {
+      const viewerUrl = `${await instanceBase()}/${seed.permalink.id}`;
+      // No query → bare viewer URL.
+      await expectScanRedirects(seed, viewerUrl, { query: "" });
+      // Foreign query → forwarded verbatim onto the viewer URL (§2.12).
+      await expectScanRedirects(seed, `${viewerUrl}?17=990101&99=IGNORED`, {
         query: "?17=990101&99=IGNORED",
-        expectLocation: (url) => `${url}&17=990101&99=IGNORED`,
       });
     });
 
@@ -399,7 +427,29 @@ describe("Gs1ResolverController", () => {
         serial: "SN-5",
         baseUrl: "https://id.example.com",
       });
-      await expectResolves(seed, { host: "scanner.anywhere.test" });
+      await expectScanRedirects(seed, `${await instanceBase()}/${seed.permalink.id}`, {
+        host: "scanner.anywhere.test",
+      });
+    });
+
+    it("first anonymous scan pins the QR URL (publishedUrl) while redirecting to the viewer", async () => {
+      const seed = await seedGs1LinkPermalink({
+        gtin: "04006381333931",
+        serial: "SN-7",
+        brandingBaseUrl: "https://brand.example.com",
+        organizationId: ctx.globals().organizationId,
+      });
+      const rendered = await renderScannedUrl(seed);
+      const viewerUrl = `https://brand.example.com/${seed.permalink.id}`;
+      await expectScanRedirects(seed, viewerUrl);
+      // The scan lazily froze the QR contract: publishedUrl = the Digital Link
+      // form (what the QR encodes), NOT the redirect target.
+      const reloaded = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(
+        seed.permalink.id,
+      );
+      expect(reloaded.publishedUrl).toBe(rendered);
+      // A frozen gs1-link still redirects to the viewer — no loop after freeze.
+      await expectScanRedirects(seed, viewerUrl);
     });
   });
 });

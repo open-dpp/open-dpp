@@ -732,3 +732,22 @@ export function resolveGs1LinkPublicUrl(
     dataAttributes: permalink.gs1DataAttributes,
   });
 }
+
+/**
+ * Render the presentation-view form of a permalink — `{base}/{slug ?? id}` on
+ * the branding → instance cascade — regardless of kind. Deliberately ignores
+ * `permalink.baseUrl`: for a gs1-link permalink that field is the Digital
+ * Link/QR host (possibly a third-party GS1 resolver), not a host that serves
+ * the passport viewer. (Rejected alternative `{baseUrlOrigin(baseUrl)}/p/{id}`:
+ * duplicates the instance-fallback `/p` semantics and breaks on QR hosts that
+ * are not this app.) Backs the GS1 resolver's redirect target for config-bound
+ * gs1-link permalinks.
+ */
+export function resolvePresentationViewUrl(
+  permalink: Permalink,
+  branding: Branding | null,
+  fallbackEnvUrl: string,
+): string {
+  const base = resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
+  return `${base}/${permalink.slug ?? permalink.id}`;
+}
