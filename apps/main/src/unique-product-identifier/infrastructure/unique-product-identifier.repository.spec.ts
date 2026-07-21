@@ -268,6 +268,32 @@ describe("uniqueProductIdentifierRepository", () => {
     ).rejects.toThrow();
   });
 
+  it("onApplicationBootstrap reconciles a stale gs1-key index with the schema's partial-unique index", async () => {
+    // Simulate an existing deployment: same key pattern, old (non-unique) options.
+    // Mongoose autoIndex never updates an existing index whose options changed,
+    // so without the bootstrap sync the uniqueness constraint stays unenforced.
+    const coll = uniqueProductIdentifierDoc.collection;
+    await coll.dropIndex("gtin_1_batch_1_serial_1");
+    await coll.createIndex({ gtin: 1, batch: 1, serial: 1 });
+
+    await uniqueProductIdentifierRepository.onApplicationBootstrap();
+
+    const index = (await coll.indexes()).find((i) => i.name === "gtin_1_batch_1_serial_1");
+    expect(index?.unique).toBe(true);
+    expect(index?.partialFilterExpression).toEqual({ gtin: { $type: "string" } });
+
+    // The constraint is live again: a duplicate full key is rejected.
+    const shared = { gtin: "88000000000701", batch: "LOT-SYNC", serial: "SN-SYNC" };
+    await uniqueProductIdentifierRepository.save(
+      UniqueProductIdentifier.createGs1({ referenceId: uuid4(), ...shared }),
+    );
+    await expect(
+      uniqueProductIdentifierRepository.save(
+        UniqueProductIdentifier.createGs1({ referenceId: uuid4(), ...shared }),
+      ),
+    ).rejects.toThrow();
+  });
+
   it("allows a bare GTIN and a serialized unit of the same GTIN to coexist", async () => {
     const gtin = "88000000000404";
     const bare = UniqueProductIdentifier.createGs1({ referenceId: uuid4(), gtin });

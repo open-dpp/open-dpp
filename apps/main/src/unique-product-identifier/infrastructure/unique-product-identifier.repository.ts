@@ -1,5 +1,5 @@
 import type { Model as MongooseModel } from "mongoose";
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
@@ -14,7 +14,7 @@ import {
 } from "./unique-product-identifier.schema";
 
 @Injectable()
-export class UniqueProductIdentifierRepository {
+export class UniqueProductIdentifierRepository implements OnApplicationBootstrap {
   private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
 
   constructor(
@@ -22,6 +22,18 @@ export class UniqueProductIdentifierRepository {
     uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>,
   ) {
     this.uniqueProductIdentifierDoc = uniqueProductIdentifierDoc;
+  }
+
+  /**
+   * Reconcile the collection's indexes with the schema definitions. Mongoose
+   * never updates an EXISTING index whose options changed, so on a deployment
+   * that predates the partial-unique gs1-key index the uniqueness constraint
+   * would otherwise stay unenforced forever (duplicate GTIN creates succeed
+   * instead of the second returning 409). Mirrors PermalinkRepository.
+   * ponytail: syncIndexes also drops manually-added indexes on this collection.
+   */
+  async onApplicationBootstrap(): Promise<void> {
+    await this.uniqueProductIdentifierDoc.syncIndexes();
   }
 
   convertToDomain(uniqueProductIdentifierDoc: UniqueProductIdentifierDoc) {
