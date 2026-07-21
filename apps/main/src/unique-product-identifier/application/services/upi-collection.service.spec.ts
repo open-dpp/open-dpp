@@ -121,6 +121,11 @@ describe("UpiCollectionService.create", () => {
     expect(result.referenceId).toBe(referenceId);
     expect(result.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
+    // The create response is the documented list-item shape — `type` drives the
+    // client's GS1 Digital Link prompt (AUDIT_GENERAL M3).
+    expect(result.type).toBe(UniqueProductIdentifierType.GS1);
+    expect(result.passportPublished).toBe(false);
+    expect(result.permalink).toBeNull();
   });
 
   it("(a) with batch and serial — returns the full Digital Link", async () => {
@@ -352,6 +357,9 @@ describe("UpiCollectionService.update", () => {
     expect(savedArg.gs1?.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.batch).toBe("NEW-BATCH");
+    // The update response is the documented list-item shape (same as create).
+    expect(result.type).toBe(UniqueProductIdentifierType.GS1);
+    expect(result.passportPublished).toBe(false);
   });
 
   it("(b) PUBLISHED passport → ConflictException, no save", async () => {

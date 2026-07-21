@@ -1,6 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
-  type Gs1IdentityResponse,
   type UniqueProductIdentifierListItemDto,
   UniqueProductIdentifierType,
   UpdateGs1UniqueProductIdentifierRequest,
@@ -102,7 +101,7 @@ export class UpiCollectionService {
    * @throws ConflictException when `repo.save` encounters a duplicate GS1 key (DB index).
    * @throws ValueError when the GTIN, batch, or serial is invalid (domain validation).
    */
-  async create(input: CreateGs1UpiInput): Promise<Gs1IdentityResponse> {
+  async create(input: CreateGs1UpiInput): Promise<UniqueProductIdentifierListItemDto> {
     const passport = await this.passportRepository.findOne(input.referenceId);
     if (!passport) {
       throw new NotFoundException(`Passport ${input.referenceId} not found`);
@@ -135,7 +134,10 @@ export class UpiCollectionService {
     }
 
     const resolverBase = await this.baseUrlResolver.getResolverBase(input.organizationId);
-    return saved.toGs1Response(resolverBase);
+    // The documented contract (open-api-docs) is the list-item shape — same as
+    // createInternal. The passport is draft-gated above, so passportPublished
+    // is false by invariant.
+    return saved.toListItem({ resolverBase, passportPublished: false });
   }
 
   /**
@@ -188,7 +190,7 @@ export class UpiCollectionService {
   async update(
     uuid: string,
     input: UpdateGs1UniqueProductIdentifierRequest,
-  ): Promise<Gs1IdentityResponse> {
+  ): Promise<UniqueProductIdentifierListItemDto> {
     const upi = await this.findOrThrow(uuid);
 
     // Only GS1 UPIs carry editable data; internal/system rows have none.
@@ -224,7 +226,9 @@ export class UpiCollectionService {
     }
 
     const resolverBase = await this.baseUrlResolver.getResolverBase(saved.organizationId ?? "");
-    return saved.toGs1Response(resolverBase);
+    // Documented contract (open-api-docs) is the list-item shape; update is
+    // draft-gated above, so passportPublished is false by invariant.
+    return saved.toListItem({ resolverBase, passportPublished: false });
   }
 
   /**

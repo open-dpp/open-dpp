@@ -128,6 +128,11 @@ describe("UniqueProductIdentifierController", () => {
       expect(response.body.batch).toEqual("LOT-C42");
       expect(response.body.serial).toEqual(uniqueSerial);
       expect(response.body.uuid).toBeDefined();
+      // Documented contract (open-api-docs): 201 body is the list-item shape,
+      // including `type` — the client's GS1 Digital Link prompt keys off it.
+      expect(response.body.type).toEqual("GS1");
+      expect(response.body.passportPublished).toEqual(false);
+      expect(response.body.permalink).toBeNull();
     });
 
     it("returns 201 for a second POST for the SAME passport with a distinct serial (many-per-passport)", async () => {
@@ -617,6 +622,8 @@ describe("UniqueProductIdentifierController", () => {
       expect(response.body.uuid).toEqual(savedUpi.uuid);
       expect(response.body.batch).toEqual("NEW-BATCH");
       expect(response.body.digitalLink).toBeDefined();
+      // Documented contract (open-api-docs): 200 body is the list-item shape.
+      expect(response.body.type).toEqual("GS1");
     });
 
     it("returns 409 when the passport is published (lifecycle freeze)", async () => {

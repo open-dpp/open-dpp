@@ -40,7 +40,7 @@ export function useUniqueProductIdentifiers() {
     loading.value = true;
     try {
       const response = await apiClient.dpp.uniqueProductIdentifiers.create(data);
-      return response.data as UniqueProductIdentifierListItemDto;
+      return response.data;
     } finally {
       loading.value = false;
     }
@@ -54,7 +54,7 @@ export function useUniqueProductIdentifiers() {
       const response = await apiClient.dpp.uniqueProductIdentifiers.createInternal({
         referenceId: passportId,
       });
-      return response.data as UniqueProductIdentifierListItemDto;
+      return response.data;
     } finally {
       loading.value = false;
     }

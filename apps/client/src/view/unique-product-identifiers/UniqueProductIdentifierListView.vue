@@ -2,7 +2,7 @@
 import type { UniqueProductIdentifierListItemDto } from "@open-dpp/dto";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import UniqueProductIdentifierCreateDialog from "../../components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue";
@@ -87,20 +87,24 @@ async function onUpiCreated(upi: UniqueProductIdentifierListItemDto) {
   }
 }
 
-async function onAddLink(_upi: UniqueProductIdentifierListItemDto) {
-  promptDialogVisible.value = false;
-  // Jump to this passport's permalink list, where a GS1 Digital Link permalink
-  // can be created for the UPI.
+async function onAddLink(upi: UniqueProductIdentifierListItemDto) {
+  // Jump to this passport's permalink list with the UPI preselected for permalink
+  // creation. The prompt stays open — a successful navigation unmounts this view,
+  // and closing it here would trigger the close-watch reload mid-navigation.
   await router.push({
     name: "passportPermalinks",
     params: { organizationId: route.params.organizationId, passportId: passportId.value },
+    query: { createForUpi: upi.uuid },
   });
 }
 
-async function onSkipPrompt() {
-  promptDialogVisible.value = false;
-  await reloadCurrentPage();
-}
+// Any close of the prompt (Skip button, ESC, mask click) means the user stays on
+// this list — refresh it so the newly created UPI row appears.
+watch(promptDialogVisible, async (visible) => {
+  if (!visible) {
+    await reloadCurrentPage();
+  }
+});
 
 // -------------------------------------------------------------------------
 // Delete
@@ -211,7 +215,6 @@ onMounted(async () => {
       v-model:visible="promptDialogVisible"
       :upi="promptUpi"
       @add-link="onAddLink"
-      @skip="onSkipPrompt"
     />
   </div>
 </template>

@@ -27,8 +27,9 @@ export class UniqueProductIdentifiersNamespace {
     );
   }
 
+  // Returns the created list-item snapshot (same documented shape as createInternal).
   public async create(data: CreateGs1UniqueProductIdentifierRequest) {
-    return this.axiosInstance.post(this.endpoint, data);
+    return this.axiosInstance.post<UniqueProductIdentifierListItemDto>(this.endpoint, data);
   }
 
   // Create an internal (OPEN_DPP_UUID) UPI — the server mints its uuid; no identity
@@ -41,7 +42,10 @@ export class UniqueProductIdentifiersNamespace {
   }
 
   public async update(uuid: string, data: UpdateGs1UniqueProductIdentifierRequest) {
-    return this.axiosInstance.patch(`${this.endpoint}/${encodeURIComponent(uuid)}`, data);
+    return this.axiosInstance.patch<UniqueProductIdentifierListItemDto>(
+      `${this.endpoint}/${encodeURIComponent(uuid)}`,
+      data,
+    );
   }
 
   public async delete(uuid: string) {
