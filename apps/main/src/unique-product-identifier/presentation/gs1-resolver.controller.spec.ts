@@ -133,6 +133,16 @@ describe("Gs1ResolverController", () => {
     expect(response.headers.location).toContain(permalink.id);
   });
 
+  it("forwards the request query string to the redirect target (GS1-conformant resolver §2.12)", async () => {
+    const { gtin } = await seedGs1Passport({ gtin: "614141123452" });
+    const server = ctx.globals().app.getHttpServer();
+    const bare = await request(server).get(`/01/${gtin}`);
+    expect(bare.status).toBe(302);
+    const withQuery = await request(server).get(`/01/${gtin}?11=241220&17=270101`);
+    expect(withQuery.status).toBe(302);
+    expect(withQuery.headers.location).toBe(`${bare.headers.location}?11=241220&17=270101`);
+  });
+
   it("normalizes a GTIN-13 in the path before resolving", async () => {
     await seedGs1Passport({ gtin: "00012345678905" });
     // request with the bare GTIN-14 form
@@ -319,10 +329,12 @@ describe("Gs1ResolverController", () => {
 
     // Round-trip: render the GS1 URL → hit its path (optionally with a foreign query
     // or Host) → assert a 302 back to the identical URL. Fix-direction agnostic:
-    // whatever the builder renders, that path must resolve.
+    // whatever the builder renders, that path must resolve. Scanning the rendered
+    // URL (own attrs in the query) must NOT duplicate them on the Location;
+    // `expectLocation` overrides the expected Location for foreign-query hits.
     async function expectResolves(
       seed: Awaited<ReturnType<typeof seedGs1LinkPermalink>>,
-      hit?: { query?: string; host?: string },
+      hit?: { query?: string; host?: string; expectLocation?: (renderedUrl: string) => string },
     ) {
       const url = await renderScannedUrl(seed);
       const parsed = new URL(url);
@@ -333,7 +345,7 @@ describe("Gs1ResolverController", () => {
       }
       const res = await req;
       expect(res.status).toBe(302);
-      expect(res.headers.location).toBe(url);
+      expect(res.headers.location).toBe(hit?.expectLocation ? hit.expectLocation(url) : url);
       return { url, res };
     }
 
@@ -363,17 +375,22 @@ describe("Gs1ResolverController", () => {
       await expectResolves(seed);
     });
 
-    it("ignores the ?attrs query when resolving (data attributes are display-only)", async () => {
+    it("never reads the query for resolution, but forwards foreign pairs to the target", async () => {
       const seed = await seedGs1LinkPermalink({
         gtin: "04006381333931",
         serial: "SN-4",
         baseUrl: "https://id.example.com",
         gs1DataAttributes: { "17": "251231" },
       });
-      // Resolution must be identical with no query and with a foreign query — the
-      // resolver never reads it; the 302 target still carries the permalink's own attrs.
+      // No query → target unchanged (still carries the permalink's own attrs).
       await expectResolves(seed, { query: "" });
-      await expectResolves(seed, { query: "?17=990101&99=IGNORED" });
+      // Foreign query → same passport resolved; pairs appended verbatim after the
+      // permalink's own attrs (`17=990101` differs from the stored `17=251231`,
+      // so both are on the Location — the standard forwards the entire query).
+      await expectResolves(seed, {
+        query: "?17=990101&99=IGNORED",
+        expectLocation: (url) => `${url}&17=990101&99=IGNORED`,
+      });
     });
 
     it("resolves regardless of the inbound request Host (host-agnostic resolver)", async () => {

@@ -37,6 +37,7 @@ import { PermalinkDoc, PermalinkSchema } from "../infrastructure/permalink.schem
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
 import { PermalinkModule } from "../permalink.module";
 import { PermalinkApplicationService } from "../application/services/permalink.application.service";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
@@ -522,6 +523,124 @@ describe("PermalinkController", () => {
         .set(ORGANIZATION_ID_HEADER, outsider.org.id);
 
       expect(response.status).toEqual(404);
+    });
+  });
+
+  describe("POST /permalinks — gs1-link", () => {
+    const emptyEnvironment = () =>
+      Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      });
+
+    async function createPassportInOrg(orgId: string): Promise<Passport> {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: emptyEnvironment(),
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      return passport;
+    }
+
+    async function createUpiInOrg(orgId: string): Promise<UniqueProductIdentifier> {
+      const passport = await createPassportInOrg(orgId);
+      const upi = UniqueProductIdentifier.create({
+        referenceId: passport.id,
+        organizationId: orgId,
+      });
+      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+      return upi;
+    }
+
+    async function createConfigInOrg(orgId: string): Promise<PresentationConfiguration> {
+      const passport = await createPassportInOrg(orgId);
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: orgId,
+        referenceId: passport.id,
+      });
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      return config;
+    }
+
+    function postPermalink(cookie: string, orgId: string, body: Record<string, unknown>) {
+      return request(ctx.globals().app.getHttpServer())
+        .post(`/${LatestApiVersionWithPrefixDto}/permalinks`)
+        .set("Cookie", cookie)
+        .set(ORGANIZATION_ID_HEADER, orgId)
+        .send(body);
+    }
+
+    it("rejects binding to another org's presentation config with 403", async () => {
+      const attacker = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const victim = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createUpiInOrg(attacker.org.id);
+      const victimConfig = await createConfigInOrg(victim.org.id);
+
+      const response = await postPermalink(attacker.userCookie, attacker.org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: victimConfig.id,
+      });
+
+      expect(response.status).toEqual(403);
+      const persisted = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findByPresentationConfigurationId(victimConfig.id);
+      expect(persisted).toBeUndefined();
+    });
+
+    it("creates a gs1-link permalink bound to a config in the caller's own org", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createUpiInOrg(org.id);
+      const config = await createConfigInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: config.id,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.presentationConfigurationId).toEqual(config.id);
+      expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
+    });
+
+    it("returns 404 when the presentation config does not exist", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createUpiInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: randomUUID(),
+      });
+
+      expect(response.status).toEqual(404);
+    });
+
+    it("creates a gs1-link permalink when presentationConfigurationId is omitted", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createUpiInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upi.uuid,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.presentationConfigurationId).toBeNull();
+      expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
     });
   });
 

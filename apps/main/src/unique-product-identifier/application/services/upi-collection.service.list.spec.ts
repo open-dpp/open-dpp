@@ -13,7 +13,10 @@ import { UpiCollectionService } from "./upi-collection.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-const RESOLVER_BASE = "https://id.example.com";
+// The cascade base carries `/p` on a default install; emitted Digital Links must
+// render on the origin (resolver is root-mounted at /01).
+const RESOLVER_BASE = "https://id.example.com/p";
+const RESOLVER_ORIGIN = "https://id.example.com";
 
 function makeService(overrides?: {
   upiRepo?: Partial<{
@@ -153,7 +156,7 @@ describe("UpiCollectionService.list", () => {
     expect(gs1Item!.uuid).toBe(gs1Upi.uuid);
     expect(gs1Item!.referenceId).toBe(passportDraftId);
     expect(gs1Item!.gtin).toBe(VALID_GTIN13_AS_14);
-    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`);
+    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
 
     expect(systemItem).toBeDefined();
     expect(systemItem!.uuid).toBe(systemUpi.uuid);
@@ -394,7 +397,7 @@ describe("UpiCollectionService.listByPassport", () => {
     expect(gs1Item!.uuid).toBe(gs1Upi.uuid);
     expect(gs1Item!.referenceId).toBe(referenceId);
     expect(gs1Item!.gtin).toBe(VALID_GTIN13_AS_14);
-    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`);
+    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
     expect(systemItem!.digitalLink).toBeNull();
   });
 

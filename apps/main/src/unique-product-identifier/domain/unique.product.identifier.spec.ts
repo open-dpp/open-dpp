@@ -103,7 +103,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       referenceId: randomUUID(),
       gtin: VALID_GTIN13,
     });
-    expect(upi.buildDigitalLink("https://id.example.com")).toBe(
+    expect(upi.buildDigitalLink("https://id.example.com/p")).toBe(
       `https://id.example.com/01/${VALID_GTIN13_AS_14}`,
     );
   });
@@ -114,7 +114,10 @@ describe("UniqueProductIdentifier (GS1)", () => {
   });
 
   describe("toGs1Response", () => {
-    const RESOLVER_BASE = "https://id.example.com";
+    // The cascade base carries the presentation path (`/p`) on a default install;
+    // the emitted Digital Link must render on the origin (resolver is root-mounted).
+    const RESOLVER_BASE = "https://id.example.com/p";
+    const RESOLVER_ORIGIN = "https://id.example.com";
 
     it("assembles the response for a model-granularity GS1 UPI (gtin only)", () => {
       const referenceId = randomUUID();
@@ -125,7 +128,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13_AS_14,
         batch: null,
         serial: null,
-        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`,
+        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`,
       });
     });
 
@@ -142,7 +145,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: null,
-        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42`,
+        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42`,
       });
     });
 
@@ -160,7 +163,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
-        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
       });
     });
 
@@ -364,7 +367,9 @@ describe("UniqueProductIdentifier (GS1)", () => {
   });
 
   describe("toListItem", () => {
-    const RESOLVER_BASE = "https://id.example.com";
+    // Path-carrying base in, origin-based Digital Link out (see toGs1Response).
+    const RESOLVER_BASE = "https://id.example.com/p";
+    const RESOLVER_ORIGIN = "https://id.example.com";
 
     it("returns a full list item for a GS1 UPI with gtin+batch+serial", () => {
       const referenceId = randomUUID();
@@ -383,7 +388,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         batch: "LOT-42",
         serial: "SN-001",
         granularity: "item",
-        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
         passportPublished: false,
         permalink: null,
       });
@@ -406,7 +411,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
       const item = upi.toListItem({ resolverBase: RESOLVER_BASE, passportPublished: true });
       expect(item.granularity).toBe("model");
-      expect(item.digitalLink).toBe(`${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`);
+      expect(item.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
       expect(item.passportPublished).toBe(true);
     });
 

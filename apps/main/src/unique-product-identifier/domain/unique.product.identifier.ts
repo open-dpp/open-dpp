@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  baseUrlOrigin,
   buildGs1DigitalLink,
   type Gs1IdentityResponse,
   Gs1IdentityDtoSchema,
@@ -252,7 +253,9 @@ export class UniqueProductIdentifier {
         "Cannot build a GS1 Digital Link for a unique product identifier without a GS1 identity",
       );
     }
-    return buildGs1DigitalLink(resolverBase, {
+    // The resolver is root-mounted at /01, so the link renders on the origin even
+    // when the shared permalink base carries a path (e.g. the default `/p`).
+    return buildGs1DigitalLink(baseUrlOrigin(resolverBase), {
       gtin: this.gs1.gtin,
       batch: this.gs1.batch,
       serial: this.gs1.serial,

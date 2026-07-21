@@ -8,7 +8,10 @@ import { Gs1IdentityService } from "./gs1-identity.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-const RESOLVER_BASE = "https://id.example.com";
+// The cascade base carries `/p` on a default install; emitted Digital Links must
+// render on the origin (resolver is root-mounted at /01).
+const RESOLVER_BASE = "https://id.example.com/p";
+const RESOLVER_ORIGIN = "https://id.example.com";
 
 function makeService(overrides?: {
   upiRepo?: Partial<{
@@ -132,7 +135,7 @@ describe("Gs1IdentityService.getIdentity", () => {
       gtin: VALID_GTIN13_AS_14,
       batch: "LOT-42",
       serial: "SN-001",
-      digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
     });
   });
 
@@ -150,7 +153,7 @@ describe("Gs1IdentityService.getIdentity", () => {
     const { service, baseUrlResolver } = makeService({
       upiRepo: { findByReferenceIdAndType: jest.fn(async () => upi) },
       baseUrlResolver: {
-        getResolverBase: jest.fn(async () => "https://id.instance.example.com"),
+        getResolverBase: jest.fn(async () => "https://id.instance.example.com/p"),
       },
     });
 

@@ -16,7 +16,10 @@ import { UpiCollectionService } from "./upi-collection.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-const RESOLVER_BASE = "https://id.example.com";
+// The cascade base carries `/p` on a default install; emitted Digital Links must
+// render on the origin (resolver is root-mounted at /01).
+const RESOLVER_BASE = "https://id.example.com/p";
+const RESOLVER_ORIGIN = "https://id.example.com";
 
 function makeDraftPassport(id: string) {
   return {
@@ -117,7 +120,7 @@ describe("UpiCollectionService.create", () => {
     expect(savedArg.gs1?.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.referenceId).toBe(referenceId);
     expect(result.gtin).toBe(VALID_GTIN13_AS_14);
-    expect(result.digitalLink).toBe(`${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`);
+    expect(result.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
   });
 
   it("(a) with batch and serial — returns the full Digital Link", async () => {
@@ -143,7 +146,7 @@ describe("UpiCollectionService.create", () => {
     expect(result.batch).toBe("LOT-42");
     expect(result.serial).toBe("SN-001");
     expect(result.digitalLink).toBe(
-      `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
     );
   });
 

@@ -344,10 +344,28 @@ export class PermalinkController {
       if (passport.organizationId !== organizationId) {
         throw new ForbiddenException();
       }
+      // A caller-supplied presentation config must belong to the caller's org;
+      // otherwise a caller could bind their permalink to another org's config
+      // (and occupy its unique-index slot). Missing config -> 404, wrong org -> 403.
+      let presentationConfigurationId: string | null = null;
+      if (body.presentationConfigurationId != null) {
+        const config = await this.presentationConfigurationRepository.findOne(
+          body.presentationConfigurationId,
+        );
+        if (!config) {
+          throw new NotFoundException(
+            `PresentationConfiguration ${body.presentationConfigurationId} not found`,
+          );
+        }
+        if (config.organizationId !== organizationId) {
+          throw new ForbiddenException();
+        }
+        presentationConfigurationId = config.id;
+      }
       created = await this.permalinkApplicationService.createGs1LinkPermalink({
         uniqueProductIdentifierId: body.uniqueProductIdentifierId,
         organizationId: passport.organizationId,
-        presentationConfigurationId: body.presentationConfigurationId ?? null,
+        presentationConfigurationId,
         gs1DataAttributes: body.gs1DataAttributes ?? null,
         baseUrl: body.baseUrl ?? null,
       });
