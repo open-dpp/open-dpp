@@ -18,6 +18,7 @@ export const BulkImportRunDtoSchema = z.object({
   bulkImportConfigId: z.uuid(),
   organizationId: z.string(),
   status: BulkImportRunStatusDtoEnum,
+  userId: z.string(),
   totalCount: z.number(),
   succeededCount: z.number(),
   failedCount: z.number(),
