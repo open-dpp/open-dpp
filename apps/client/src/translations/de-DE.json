@@ -772,7 +772,8 @@
     "createGs1Link": {
       "title": "GS1 Digital Link erstellen",
       "selectUpi": "UPI auswählen",
-      "upiAlreadyLinked": "Dieser UPI hat bereits einen GS1 Digital Link Permalink.",
+      "noUpisAvailable": "Alle GS1-Produktidentifikatoren dieses Passes haben bereits einen GS1 Digital Link.",
+      "loadFailed": "Die Produktidentifikatoren konnten nicht geladen werden. Bitte erneut versuchen.",
       "baseUrl": {
         "label": "Produktpass Basis-URL (optional)",
         "placeholder": "z. B. https://id.example.com"
@@ -820,7 +821,7 @@
       "kind": "Typ",
       "publicUrl": "Öffentliche URL",
       "primary": "Primär",
-      "published": "Veröffentlicht",
+      "frozenInfo": "Dieser Produktpass wurde veröffentlicht. Die veröffentlichten URLs sind eingefroren und können nicht mehr geändert werden.",
       "kindPresentation": "open-dpp",
       "kindGs1Link": "GS1 Digital Link",
       "createGs1Link": "GS1-Link erstellen",
@@ -835,9 +836,9 @@
       "gtin": "GTIN",
       "batch": "Charge / Los",
       "serial": "Seriennummer",
-      "reference": "Produktpass",
-      "permalink": "Permalink",
       "createPermalink": "Permalink erstellen",
+      "deleteConfirmHeader": "Entfernen",
+      "deleteConfirmMessage": "Möchten Sie diesen Produktidentifikator löschen?",
       "systemReadOnly": "System (schreibgeschützt)",
       "empty": "Keine eindeutigen Produktidentifikatoren gefunden."
     },
@@ -920,8 +921,7 @@
     "aiRequired": "AI auswählen.",
     "valueRequired": "Wert ist erforderlich."
   },
-  "gs1LinkQrCode": {
-    "empty": "Kein GS1 Digital Link Permalink.",
+  "permalinkQrCode": {
     "digitalLink": {
       "label": "GS1 Digital Link"
     },

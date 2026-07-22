@@ -1,12 +1,14 @@
 <script lang="ts" setup>
 import type { UniqueProductIdentifierListItemDto } from "@open-dpp/dto";
-import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
+import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import UniqueProductIdentifierCreateDialog from "../../components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue";
 import Gs1DigitalLinkPromptDialog from "../../components/unique-product-identifier/Gs1DigitalLinkPromptDialog.vue";
+import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
@@ -15,6 +17,7 @@ import apiClient from "../../lib/api-client";
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const confirm = useConfirm();
 
 // The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
@@ -108,12 +111,48 @@ watch(promptDialogVisible, async (visible) => {
 });
 
 // -------------------------------------------------------------------------
-// Delete
+// QR dialog
 // -------------------------------------------------------------------------
 
-async function onDeleteUpi(uuid: string) {
-  await deleteUpi(uuid);
-  await reloadCurrentPage();
+const qrDialogVisible = ref(false);
+const qrUpi = ref<UniqueProductIdentifierListItemDto | null>(null);
+
+function openQrDialog(upi: UniqueProductIdentifierListItemDto) {
+  qrUpi.value = upi;
+  qrDialogVisible.value = true;
+}
+
+// The row's permalink summary carries no kind — by definition it is the UPI's
+// gs1-link permalink (max one per UPI), so the kind is constant here.
+const qrPermalink = computed(() =>
+  qrUpi.value?.permalink
+    ? { kind: PermalinkKind.GS1_LINK, publicUrl: qrUpi.value.permalink.publicUrl }
+    : null,
+);
+
+const qrIdentity = computed(() =>
+  qrUpi.value?.gtin
+    ? { gtin: qrUpi.value.gtin, batch: qrUpi.value.batch, serial: qrUpi.value.serial }
+    : null,
+);
+
+// -------------------------------------------------------------------------
+// Delete (confirmed)
+// -------------------------------------------------------------------------
+
+function onDeleteUpi(uuid: string) {
+  confirm.require({
+    message: t("uniqueProductIdentifiers.list.deleteConfirmMessage"),
+    header: t("uniqueProductIdentifiers.list.deleteConfirmHeader"),
+    icon: "pi pi-info-circle",
+    rejectLabel: t("common.cancel"),
+    rejectProps: { label: t("common.cancel"), severity: "secondary", outlined: true },
+    acceptProps: { label: t("common.delete"), severity: "danger" },
+    accept: async () => {
+      await deleteUpi(uuid);
+      await reloadCurrentPage();
+    },
+  });
 }
 
 // -------------------------------------------------------------------------
@@ -127,6 +166,8 @@ onMounted(async () => {
 
 <template>
   <div>
+    <ConfirmDialog />
+
     <DataTable
       :value="upis ?? []"
       :loading="loading"
@@ -158,47 +199,32 @@ onMounted(async () => {
           <span>{{ data.serial ?? "" }}</span>
         </template>
       </Column>
-      <Column field="referenceId" :header="t('uniqueProductIdentifiers.list.reference')" />
-
-      <!-- Permalink column: GS1 rows link to their gs1-link permalink (managed in the
-           passport's permalink list) or offer to create one; internal rows stay empty. -->
-      <Column :header="t('uniqueProductIdentifiers.list.permalink')">
-        <template #body="{ data }">
-          <RouterLink
-            v-if="data.permalink"
-            :to="{
-              name: 'passportPermalinks',
-              params: { organizationId: route.params.organizationId, passportId },
-            }"
-            class="text-primary block max-w-xs truncate hover:underline"
-            :title="data.permalink.publicUrl"
-            data-testid="upi-permalink-link"
-          >
-            {{ data.permalink.publicUrl }}
-          </RouterLink>
-          <RouterLink
-            v-else-if="data.type === 'GS1'"
-            :to="{
-              name: 'passportPermalinks',
-              params: { organizationId: route.params.organizationId, passportId },
-              query: { createForUpi: data.uuid },
-            }"
-            class="text-primary hover:underline"
-            data-testid="upi-permalink-create"
-          >
-            {{ t("uniqueProductIdentifiers.list.createPermalink") }}
-          </RouterLink>
-        </template>
-      </Column>
-
-      <!-- Actions column: all listed UPIs (GS1 + internal) are deletable while draft (ADR 0006) -->
-      <Column style="width: 5rem">
+      <!-- Actions column: QR for rows with a gs1-link permalink, create-CTA for GS1
+           rows without one; all listed UPIs (GS1 + internal) are deletable (ADR 0006) -->
+      <Column style="width: 9rem">
         <template #body="{ data }">
           <div data-testid="upi-row-actions" class="flex gap-1">
             <Button
+              v-if="data.permalink"
+              icon="pi pi-qrcode"
+              severity="info"
+              :aria-label="t('common.qrCode')"
+              :title="t('common.qrCode')"
+              data-testid="upi-qr-btn"
+              @click="openQrDialog(data)"
+            />
+            <Button
+              v-else-if="data.type === 'GS1'"
+              icon="pi pi-link"
+              severity="primary"
+              :aria-label="t('uniqueProductIdentifiers.list.createPermalink')"
+              :title="t('uniqueProductIdentifiers.list.createPermalink')"
+              data-testid="upi-permalink-create"
+              @click="onAddLink(data)"
+            />
+            <Button
               icon="pi pi-trash"
               severity="danger"
-              variant="text"
               :aria-label="t('common.delete')"
               :title="t('common.delete')"
               data-testid="upi-delete-btn"
@@ -235,5 +261,10 @@ onMounted(async () => {
       :upi="promptUpi"
       @add-link="onAddLink"
     />
+
+    <!-- QR dialog: rendered entirely from row data, no extra fetch -->
+    <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
+      <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" :identity="qrIdentity" />
+    </Dialog>
   </div>
 </template>

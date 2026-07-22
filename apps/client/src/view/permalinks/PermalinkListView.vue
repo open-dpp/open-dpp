@@ -8,7 +8,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useRoute, useRouter } from "vue-router";
 import PermalinkCreateGs1LinkDialog from "../../components/permalinks/PermalinkCreateGs1LinkDialog.vue";
 import PermalinkEditDialog from "../../components/permalinks/PermalinkEditDialog.vue";
-import Gs1LinkQrCode from "../../components/permalinks/Gs1LinkQrCode.vue";
+import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import apiClient from "../../lib/api-client";
@@ -97,21 +97,22 @@ const qrDialogVisible = ref(false);
 const qrPermalink = ref<PermalinkPublicDto | null>(null);
 
 // -------------------------------------------------------------------------
-// Derived: existing gs1-link UPI ids (for the create dialog)
-// -------------------------------------------------------------------------
-
-function existingGs1LinkUpiIds(): string[] {
-  return permalinks.value
-    .filter((pl) => pl.kind === PermalinkKind.GS1_LINK && pl.uniqueProductIdentifierId != null)
-    .map((pl) => pl.uniqueProductIdentifierId as string);
-}
-
-// -------------------------------------------------------------------------
 // Derived: presentation permalink count (for guarded delete)
 // -------------------------------------------------------------------------
 
 const presentationPermalinkCount = computed(
   () => permalinks.value.filter((pl) => pl.kind === PermalinkKind.PRESENTATION).length,
+);
+
+// -------------------------------------------------------------------------
+// Derived: frozen-URLs info alert
+// -------------------------------------------------------------------------
+
+// All permalinks of a passport freeze together when the passport is published
+// (new ones freeze at creation), so any frozen row on the page means the
+// passport has been published — no extra status fetch needed.
+const hasFrozenPermalinks = computed(() =>
+  permalinks.value.some((pl) => pl.publishedUrl != null),
 );
 
 // -------------------------------------------------------------------------
@@ -244,6 +245,15 @@ onMounted(async () => {
   <div>
     <ConfirmDialog />
 
+    <Message
+      v-if="hasFrozenPermalinks"
+      severity="info"
+      class="mb-4"
+      data-testid="permalink-frozen-info"
+    >
+      {{ t("permalink.list.frozenInfo") }}
+    </Message>
+
     <DataTable
       :value="permalinks"
       :loading="loading"
@@ -286,69 +296,49 @@ onMounted(async () => {
         </template>
       </Column>
 
-      <!-- Primary column -->
-      <Column :header="t('permalink.list.primary')">
-        <template #body="{ data }">
-          <Tag
-            v-if="data.primary"
-            :value="t('permalink.list.primary')"
-            severity="success"
-            :data-testid="`permalink-primary-badge-${data.id}`"
-          />
-        </template>
-      </Column>
-
-      <!-- Published column -->
-      <Column :header="t('permalink.list.published')">
-        <template #body="{ data }">
-          <Tag
-            v-if="data.publishedUrl"
-            :value="t('permalink.list.published')"
-            severity="info"
-            :data-testid="`permalink-published-badge-${data.id}`"
-          />
-        </template>
-      </Column>
-
       <!-- Actions column -->
       <Column :header="t('common.actions')">
         <template #body="{ data }">
-          <div class="flex gap-2">
+          <div class="flex gap-1">
+            <!-- Show QR button (all rows) -->
+            <Button
+              icon="pi pi-qrcode"
+              severity="info"
+              :aria-label="t('common.qrCode')"
+              :title="t('common.qrCode')"
+              :data-testid="`permalink-show-qr-btn-${data.id}`"
+              @click="openQrDialog(data)"
+            />
+
             <!-- Edit button (all rows) -->
             <Button
-              :label="t('common.edit')"
+              icon="pi pi-pencil"
+              severity="primary"
+              :aria-label="t('common.edit')"
+              :title="t('common.edit')"
               :data-testid="`permalink-edit-btn-${data.id}`"
-              severity="secondary"
-              variant="text"
               @click="openEditDialog(data)"
             />
 
-            <!-- Set primary button (non-primary presentation rows only) -->
+            <!-- Primary star (presentation rows only): filled amber + disabled when
+                 primary, gray outline + clickable to set primary otherwise -->
             <Button
-              v-if="data.kind === PermalinkKind.PRESENTATION && !data.primary"
-              :label="t('permalink.list.setPrimary')"
-              :data-testid="`permalink-set-primary-btn-${data.id}`"
-              severity="secondary"
-              variant="text"
+              v-if="data.kind === PermalinkKind.PRESENTATION"
+              :icon="data.primary ? 'pi pi-star-fill' : 'pi pi-star'"
+              :severity="data.primary ? 'warn' : 'secondary'"
+              :disabled="data.primary"
+              :aria-label="data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')"
+              :title="data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')"
+              :data-testid="`permalink-primary-btn-${data.id}`"
               @click="onSetPrimary(data)"
-            />
-
-            <!-- Show QR button (gs1-link rows only) -->
-            <Button
-              v-if="data.kind === PermalinkKind.GS1_LINK"
-              :label="t('common.qrCode')"
-              :data-testid="`permalink-show-qr-btn-${data.id}`"
-              severity="secondary"
-              variant="text"
-              @click="openQrDialog(data)"
             />
 
             <!-- Delete button -->
             <Button
-              :label="t('permalink.list.delete')"
-              :data-testid="`permalink-delete-btn-${data.id}`"
+              icon="pi pi-trash"
               severity="danger"
-              variant="text"
+              :aria-label="t('permalink.list.delete')"
+              :data-testid="`permalink-delete-btn-${data.id}`"
               :disabled="!canDelete(data)"
               :title="deleteTooltip(data)"
               @click="onDelete(data)"
@@ -372,7 +362,7 @@ onMounted(async () => {
     <!-- Create GS1 Link dialog -->
     <PermalinkCreateGs1LinkDialog
       v-model:visible="createGs1DialogVisible"
-      :existing-gs1-link-upi-ids="existingGs1LinkUpiIds()"
+      :passport-id="passportId"
       :preselected-upi-id="preselectedUpiId"
       @created="onPermalinkCreated"
     />
@@ -387,7 +377,7 @@ onMounted(async () => {
 
     <!-- QR dialog -->
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
-      <Gs1LinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
+      <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
     </Dialog>
   </div>
 </template>
