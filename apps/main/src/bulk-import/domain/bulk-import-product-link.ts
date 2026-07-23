@@ -13,7 +13,7 @@ export const BulkImportProductLinkSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
   templateId: z.string(),
-  externalIdValue: z.string(),
+  externalId: z.string(),
   passportId: z.string(),
   createdAt: z.union([z.iso.datetime(), z.date()]),
 });
@@ -23,7 +23,7 @@ export class BulkImportProductLink implements IPersistable {
     public readonly id: string,
     public readonly organizationId: string,
     public readonly templateId: string,
-    public readonly externalIdValue: string,
+    public readonly externalId: string,
     public readonly passportId: string,
     public readonly createdAt: Date,
   ) {}
@@ -32,7 +32,7 @@ export class BulkImportProductLink implements IPersistable {
     id?: string;
     organizationId: string;
     templateId: string;
-    externalIdValue: string;
+    externalId: string;
     passportId: string;
     createdAt?: Date;
   }): BulkImportProductLink {
@@ -40,7 +40,7 @@ export class BulkImportProductLink implements IPersistable {
       data.id ?? randomUUID(),
       data.organizationId,
       data.templateId,
-      data.externalIdValue,
+      data.externalId,
       data.passportId,
       data.createdAt ?? DateTime.now(),
     );
@@ -52,7 +52,7 @@ export class BulkImportProductLink implements IPersistable {
       parsed.id,
       parsed.organizationId,
       parsed.templateId,
-      parsed.externalIdValue,
+      parsed.externalId,
       parsed.passportId,
       new Date(parsed.createdAt),
     );
@@ -63,7 +63,7 @@ export class BulkImportProductLink implements IPersistable {
       id: this.id,
       organizationId: this.organizationId,
       templateId: this.templateId,
-      externalIdValue: this.externalIdValue,
+      externalId: this.externalId,
       passportId: this.passportId,
       createdAt: this.createdAt.toISOString(),
     };

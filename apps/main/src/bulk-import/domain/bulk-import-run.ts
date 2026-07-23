@@ -1,10 +1,17 @@
 import { randomUUID } from "node:crypto";
-import { BulkImportRunStatusDto, BulkImportRunStatusDtoEnum, BulkImportRunStatusDtoType } from "@open-dpp/dto";
+import {
+  BulkImportRunStatusDto,
+  BulkImportRunStatusDtoEnum,
+  type BulkImportRunStatusDtoType,
+} from "@open-dpp/dto";
 import { z } from "zod";
 import { IPersistable } from "../../aas/domain/persistable";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { MemberRoleEnum, MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
-import { UserRoleEnum, UserRoleType } from "../../identity/users/domain/user-role.enum";
+import {
+  MemberRoleEnum,
+  type MemberRoleType,
+} from "../../identity/organizations/domain/member-role.enum";
+import { UserRoleEnum, type UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 
 const DateTimeSchema = z.union([z.iso.datetime(), z.date()]);

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   BulkImportRunItemStatusDto,
   BulkImportRunItemStatusDtoEnum,
-  BulkImportRunItemStatusDtoType,
+  type BulkImportRunItemStatusDtoType,
 } from "@open-dpp/dto";
 import { z } from "zod";
 import { IPersistable } from "../../aas/domain/persistable";

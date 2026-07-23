@@ -7,7 +7,7 @@ describe("BulkImportProductLink", () => {
     const link = BulkImportProductLink.create({
       organizationId: randomUUID(),
       templateId: randomUUID(),
-      externalIdValue: "4711",
+      externalId: "4711",
       passportId: randomUUID(),
     });
     const restored = BulkImportProductLink.fromPlain(link.toPlain());
