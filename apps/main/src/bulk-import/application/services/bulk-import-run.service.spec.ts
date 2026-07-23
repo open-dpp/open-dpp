@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
+import { ForbiddenException } from "@nestjs/common";
 import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { DbSessionOptions } from "../../../database/query-options";
+import { Pagination } from "../../../pagination/pagination";
+import { PagingResult } from "../../../pagination/paging-result";
 import { Passport } from "../../../passports/domain/passport";
 import { BulkImportConfig } from "../../domain/bulk-import-config";
 import { FieldMapping } from "../../domain/field-mapping";
@@ -41,6 +44,10 @@ describe("BulkImportRunService", () => {
       save: jest.fn<(run: BulkImportRun) => Promise<BulkImportRun>>(),
       findOneOrFail: jest.fn<(id: string) => Promise<BulkImportRun>>(),
       findAllRunning: jest.fn<() => Promise<BulkImportRun[]>>(),
+      findAllByBulkImportConfigId:
+        jest.fn<
+          (bulkImportConfigId: string, pagination?: Pagination) => Promise<PagingResult<BulkImportRun>>
+        >(),
     };
     const runItemRepository = {
       createMany:
@@ -411,5 +418,66 @@ describe("BulkImportRunService", () => {
     expect(processRunSpy).toHaveBeenCalledWith(run.id);
     expect(run.status).toEqual(BulkImportRunStatusDto.Running);
     expect(runRepository.save).not.toHaveBeenCalled();
+  });
+
+  it("findAllByBulkImportConfigId delegates to the repository", async () => {
+    const { service, runRepository } = buildFakes();
+    const page = PagingResult.create({ pagination: Pagination.create({}), items: [] });
+    runRepository.findAllByBulkImportConfigId.mockResolvedValue(page);
+
+    const result = await service.findAllByBulkImportConfigId("config-1");
+
+    expect(result).toBe(page);
+    expect(runRepository.findAllByBulkImportConfigId).toHaveBeenCalledWith("config-1", undefined);
+  });
+
+  it("findByIdAndCheckOwnership rejects a run from another organization", async () => {
+    const { service, runRepository } = buildFakes();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: randomUUID(),
+      organizationId: "other-org",
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 1,
+    });
+    runRepository.findOneOrFail.mockResolvedValue(run);
+
+    await expect(service.findByIdAndCheckOwnership(run.id, "my-org")).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it("findItemsForRun checks ownership before returning the run's items", async () => {
+    const { service, runRepository, runItemRepository } = buildFakes();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: randomUUID(),
+      organizationId: "my-org",
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 1,
+    });
+    const item = BulkImportRunItem.create({ runId: run.id, rowIndex: 0, inputData: { sku: "1" } });
+    runRepository.findOneOrFail.mockResolvedValue(run);
+    runItemRepository.findAllByRunId.mockResolvedValue([item]);
+
+    const items = await service.findItemsForRun(run.id, "my-org");
+
+    expect(items).toEqual([item]);
+    expect(runItemRepository.findAllByRunId).toHaveBeenCalledWith(run.id);
+  });
+
+  it("findItemsForRun rejects a run from another organization", async () => {
+    const { service, runRepository, runItemRepository } = buildFakes();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: randomUUID(),
+      organizationId: "other-org",
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 1,
+    });
+    runRepository.findOneOrFail.mockResolvedValue(run);
+
+    await expect(service.findItemsForRun(run.id, "my-org")).rejects.toThrow(ForbiddenException);
+    expect(runItemRepository.findAllByRunId).not.toHaveBeenCalled();
   });
 });

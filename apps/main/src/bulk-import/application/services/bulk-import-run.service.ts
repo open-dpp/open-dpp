@@ -1,7 +1,9 @@
-import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { ApiVersionsDto, BulkImportRunItemStatusDto, ValueRequestDto } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { TransactionService } from "../../../database/transaction.service";
+import { Pagination } from "../../../pagination/pagination";
+import { PagingResult } from "../../../pagination/paging-result";
 import { PassportService } from "../../../passports/application/services/passport.service";
 import { BulkImportConfig } from "../../domain/bulk-import-config";
 import { BulkImportProductLink } from "../../domain/bulk-import-product-link";
@@ -68,6 +70,30 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     });
 
     return run;
+  }
+
+  /** Caller is expected to have already checked ownership of the owning config. */
+  async findAllByBulkImportConfigId(
+    bulkImportConfigId: string,
+    pagination?: Pagination,
+  ): Promise<PagingResult<BulkImportRun>> {
+    return await this.bulkImportRunRepository.findAllByBulkImportConfigId(
+      bulkImportConfigId,
+      pagination,
+    );
+  }
+
+  async findByIdAndCheckOwnership(id: string, organizationId: string): Promise<BulkImportRun> {
+    const run = await this.bulkImportRunRepository.findOneOrFail(id);
+    if (run.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    return run;
+  }
+
+  async findItemsForRun(id: string, organizationId: string): Promise<BulkImportRunItem[]> {
+    await this.findByIdAndCheckOwnership(id, organizationId);
+    return await this.bulkImportRunItemRepository.findAllByRunId(id);
   }
 
   private async processRun(runId: string): Promise<void> {
