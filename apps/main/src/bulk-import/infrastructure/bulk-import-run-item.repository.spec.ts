@@ -63,6 +63,28 @@ describe("bulkImportRunItemRepository", () => {
     expect(found).toEqual(item);
   });
 
+  it("deletes all items of the given runs", async () => {
+    const runId1 = randomUUID();
+    const runId2 = randomUUID();
+    const otherRunId = randomUUID();
+    // deliberately empty inputData: Mongoose drops empty-object Mixed fields to undefined on read,
+    // exercising the default({}) fallback in BulkImportRunItemSchema.
+    const item1 = BulkImportRunItem.create({ runId: runId1, rowIndex: 0, inputData: {} });
+    const item2 = BulkImportRunItem.create({ runId: runId2, rowIndex: 0, inputData: {} });
+    const otherItem = BulkImportRunItem.create({ runId: otherRunId, rowIndex: 0, inputData: {} });
+    await repository.createMany([item1, item2, otherItem]);
+
+    await repository.deleteAllByRunIds([runId1, runId2]);
+
+    expect(await repository.findAllByRunId(runId1)).toEqual([]);
+    expect(await repository.findAllByRunId(runId2)).toEqual([]);
+    expect(await repository.findAllByRunId(otherRunId)).toHaveLength(1);
+  });
+
+  it("does nothing when deleting an empty list of runs", async () => {
+    await expect(repository.deleteAllByRunIds([])).resolves.toBeUndefined();
+  });
+
   afterAll(async () => {
     await module.close();
   });

@@ -7,6 +7,8 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
+import { DbSessionOptions } from "../../../database/query-options";
+import { TransactionService } from "../../../database/transaction.service";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
@@ -50,6 +52,7 @@ export class PassportService {
     private readonly permalinkRepository: PermalinkRepository,
     private readonly permalinkApplicationService: PermalinkApplicationService,
     private readonly templateRepository: TemplateRepository,
+    private readonly transactionService: TransactionService,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
@@ -117,7 +120,7 @@ export class PassportService {
       item: passport,
     });
 
-    const saved = await this.environmentService.withTransaction(async (options) => {
+    const saved = await this.transactionService.withTransaction(async (options) => {
       const persisted = await this.passportRepository.save(passport, options);
       if (body.method === DigitalProductDocumentStatusModificationMethodDto.Publish) {
         await this.permalinkApplicationService.freezeAllForPassport(persisted, options);
@@ -134,6 +137,7 @@ export class PassportService {
     organizationId: string,
     templateId: string,
     subject: SubjectAttributes,
+    options?: DbSessionOptions,
   ): Promise<Passport> {
     const template = await this.loadTemplateAndCheckOwnership(templateId, subject, organizationId);
     if (template.isArchived()) {
@@ -142,13 +146,18 @@ export class PassportService {
       );
     }
     const environment = await this.environmentService.copyEnvironment(template.environment);
-    return await this.createAndPersistPassport(organizationId, environment, templateId);
+    return await this.createAndPersistPassport(organizationId, environment, templateId, options);
   }
 
+  /**
+   * Pass `options` to join an existing transaction (e.g. so a caller can persist related
+   * data alongside the passport atomically); omit it to run in its own transaction.
+   */
   async createAndPersistPassport(
     organizationId: string,
     environment: Environment,
     templateId?: string,
+    options?: DbSessionOptions,
   ): Promise<Passport> {
     const passport = Passport.create({
       organizationId,
@@ -157,13 +166,13 @@ export class PassportService {
     });
     const upid = passport.createUniqueProductIdentifier();
 
-    return await this.environmentService.withTransaction(async (options) => {
-      await this.uniqueProductIdentifierRepository.save(upid, options);
-      const persisted = await this.passportRepository.save(passport, options);
+    const persist = async (txOptions: DbSessionOptions) => {
+      await this.uniqueProductIdentifierRepository.save(upid, txOptions);
+      const persisted = await this.passportRepository.save(passport, txOptions);
       const snapshotConfigs =
         await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
           persisted,
-          options,
+          txOptions,
         );
       const configs =
         snapshotConfigs.length > 0
@@ -171,12 +180,14 @@ export class PassportService {
           : [
               await this.presentationConfigurationService.ensureDefaultForPassport(
                 persisted,
-                options,
+                txOptions,
               ),
             ];
-      await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
+      await this.permalinkApplicationService.createPermalinksForConfigs(configs, txOptions);
       return persisted;
-    });
+    };
+
+    return options ? await persist(options) : await this.transactionService.withTransaction(persist);
   }
 
   private async loadTemplateAndCheckOwnership(

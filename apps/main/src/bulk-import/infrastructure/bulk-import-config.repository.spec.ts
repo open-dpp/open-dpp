@@ -89,6 +89,24 @@ describe("bulkImportConfigRepository", () => {
     expect(await repository.findOne(config.id)).toBeUndefined();
   });
 
+  it("finds all configs of a template regardless of organization filter", async () => {
+    const templateId = randomUUID();
+    const config = buildConfig({ templateId });
+    const other = buildConfig();
+    await repository.save(config);
+    await repository.save(other);
+
+    const found = await repository.findAllByTemplateId(templateId);
+    expect(found.map((c) => c.id)).toEqual([config.id]);
+  });
+
+  it("deletes a single config by id", async () => {
+    const config = buildConfig();
+    await repository.save(config);
+    await repository.deleteById(config.id);
+    expect(await repository.findOne(config.id)).toBeUndefined();
+  });
+
   afterAll(async () => {
     await module.close();
   });

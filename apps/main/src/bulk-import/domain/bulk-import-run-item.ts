@@ -11,7 +11,8 @@ export const BulkImportRunItemSchema = z.object({
   id: z.string(),
   runId: z.string(),
   rowIndex: z.number(),
-  inputData: z.record(z.string(), z.unknown()),
+  // Mongoose drops an empty-object Mixed field to `undefined` on read, so default it back.
+  inputData: z.record(z.string(), z.unknown()).default({}),
   status: BulkImportRunItemStatusDtoEnum,
   passportId: z.string().nullish(),
   error: z.string().nullish(),

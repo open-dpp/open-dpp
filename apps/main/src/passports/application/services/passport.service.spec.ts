@@ -21,6 +21,7 @@ import {
 } from "../../../aas/infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas/submodel.schema";
 import { generateMongoConfig } from "../../../database/config";
+import { DatabaseModule } from "../../../database/database.module";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../../identity/users/users.module";
@@ -72,6 +73,7 @@ describe("passportService", () => {
         ]),
         ActivityHistoryModule,
         AasModule,
+        DatabaseModule,
         UsersModule,
         OrganizationsModule,
         PresentationConfigurationsModule,

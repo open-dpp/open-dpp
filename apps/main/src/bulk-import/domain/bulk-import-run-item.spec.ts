@@ -47,4 +47,16 @@ describe("BulkImportRunItem", () => {
     const restored = BulkImportRunItem.fromPlain(item.toPlain());
     expect(restored.toPlain()).toEqual(item.toPlain());
   });
+
+  it("fromPlain defaults inputData to {} when missing (Mongoose drops empty Mixed fields)", () => {
+    const item = BulkImportRunItem.fromPlain({
+      id: randomUUID(),
+      runId: randomUUID(),
+      rowIndex: 0,
+      status: BulkImportRunItemStatusDto.Pending,
+      passportId: null,
+      error: null,
+    });
+    expect(item.inputData).toEqual({});
+  });
 });

@@ -103,6 +103,24 @@ describe("bulkImportRunRepository", () => {
     expect(stillRunningIds).not.toContain(completed.id);
   });
 
+  it("deletes all runs of a config and returns the deleted ids", async () => {
+    const bulkImportConfigId = randomUUID();
+    const r1 = buildRun({ bulkImportConfigId });
+    const r2 = buildRun({ bulkImportConfigId });
+    const otherConfigRun = buildRun();
+
+    await repository.save(r1);
+    await repository.save(r2);
+    await repository.save(otherConfigRun);
+
+    const deletedIds = await repository.deleteAllByBulkImportConfigId(bulkImportConfigId);
+    expect(deletedIds.sort()).toEqual([r1.id, r2.id].sort());
+
+    expect(await repository.findOne(r1.id)).toBeUndefined();
+    expect(await repository.findOne(r2.id)).toBeUndefined();
+    expect(await repository.findOne(otherConfigRun.id)).toBeDefined();
+  });
+
   afterAll(async () => {
     await module.close();
   });

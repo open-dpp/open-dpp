@@ -60,4 +60,14 @@ export class BulkImportRunItemRepository {
     const docs = await this.bulkImportRunItemDoc.find({ runId }).sort({ rowIndex: 1 }).exec();
     return await Promise.all(docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))));
   }
+
+  async deleteAllByRunIds(runIds: string[], options?: DbSessionOptions): Promise<void> {
+    if (runIds.length === 0) {
+      return;
+    }
+    await this.bulkImportRunItemDoc.deleteMany(
+      { runId: { $in: runIds } },
+      { session: options?.session },
+    );
+  }
 }

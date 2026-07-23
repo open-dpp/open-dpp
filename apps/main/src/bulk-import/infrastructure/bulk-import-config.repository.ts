@@ -51,6 +51,15 @@ export class BulkImportConfigRepository {
     return await Promise.all(docs.map((doc) => this.fromPlain({ ...doc.toObject(), id: doc._id })));
   }
 
+  async findAllByTemplateId(templateId: string): Promise<BulkImportConfig[]> {
+    const docs = await this.bulkImportConfigDoc.find({ templateId }).exec();
+    return await Promise.all(docs.map((doc) => this.fromPlain({ ...doc.toObject(), id: doc._id })));
+  }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.bulkImportConfigDoc.findByIdAndDelete(id, { session: options?.session });
+  }
+
   async deleteAllByTemplateId(templateId: string, options?: DbSessionOptions): Promise<void> {
     await this.bulkImportConfigDoc.deleteMany({ templateId }, { session: options?.session });
   }

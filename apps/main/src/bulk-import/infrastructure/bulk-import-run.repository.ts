@@ -78,4 +78,18 @@ export class BulkImportRunRepository {
       .exec();
     return await Promise.all(docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))));
   }
+
+  /** Returns the ids of the deleted runs, so the caller can cascade-delete their items. */
+  async deleteAllByBulkImportConfigId(
+    bulkImportConfigId: string,
+    options?: DbSessionOptions,
+  ): Promise<string[]> {
+    const docs = await this.bulkImportRunDoc
+      .find({ bulkImportConfigId }, { _id: 1 })
+      .session(options?.session ?? null)
+      .exec();
+    const runIds = docs.map((doc) => doc._id as string);
+    await this.bulkImportRunDoc.deleteMany({ bulkImportConfigId }, { session: options?.session });
+    return runIds;
+  }
 }

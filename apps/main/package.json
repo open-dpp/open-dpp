@@ -60,6 +60,7 @@
     "handlebars": "^4.7.9",
     "handlebars-helpers": "^0.10.0",
     "http-proxy-3": "^1.23.3",
+    "jsonata": "^2.2.2",
     "langchain": "^1.4.4",
     "load-esm": "^1.0.3",
     "lodash": "^4.18.1",
