@@ -27,6 +27,12 @@ import {
   submodelValueResponse,
 } from "./handlers/aas";
 import { aasPropertiesWithParent, connection, connectionList } from "./handlers/aas-integration";
+import {
+  bulkImportConfig1,
+  bulkImportConfig2,
+  bulkImportRun1,
+  bulkImportRunItem1,
+} from "./handlers/bulk-import";
 import { passport1, passport2 } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
@@ -475,6 +481,70 @@ describe("apiClient", () => {
         AssetAdministrationShellType.Truck,
       );
       expect(response.data).toEqual(aasPropertiesWithParent);
+    });
+  });
+
+  describe("bulk-import", () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    });
+    sdk.setActiveOrganizationId(activeOrganization.id);
+
+    it("should create a config", async () => {
+      const response = await sdk.dpp.bulkImport.createConfig({
+        templateId: bulkImportConfig1.templateId,
+        name: bulkImportConfig1.name,
+        idField: bulkImportConfig1.idField,
+        submodelMappings: bulkImportConfig1.submodelMappings,
+        inputSample: bulkImportConfig1.inputSample,
+      });
+      expect(response.data).toEqual(bulkImportConfig1);
+    });
+
+    it("should return all configs", async () => {
+      const response = await sdk.dpp.bulkImport.getConfigs();
+      expect(response.data.result).toEqual([bulkImportConfig1, bulkImportConfig2]);
+    });
+
+    it("should return a config by id", async () => {
+      const response = await sdk.dpp.bulkImport.getConfigById(bulkImportConfig1.id);
+      expect(response.data).toEqual(bulkImportConfig1);
+    });
+
+    it("should update a config", async () => {
+      const response = await sdk.dpp.bulkImport.updateConfig(bulkImportConfig1.id, {
+        name: "Renamed export",
+        idField: bulkImportConfig1.idField,
+        submodelMappings: bulkImportConfig1.submodelMappings,
+      });
+      expect(response.data).toEqual({ ...bulkImportConfig1, name: "Renamed export" });
+    });
+
+    it("should delete a config", async () => {
+      const response = await sdk.dpp.bulkImport.deleteConfig(bulkImportConfig1.id);
+      expect(response.status).toEqual(204);
+    });
+
+    it("should create a run for a config", async () => {
+      const response = await sdk.dpp.bulkImport.createRun(bulkImportConfig1.id, {
+        rows: [{ sku: "4711" }, { sku: "4712" }],
+      });
+      expect(response.data).toEqual(bulkImportRun1);
+    });
+
+    it("should return all runs of a config", async () => {
+      const response = await sdk.dpp.bulkImport.getRunsForConfig(bulkImportConfig1.id);
+      expect(response.data.result).toEqual([bulkImportRun1]);
+    });
+
+    it("should return a run by id", async () => {
+      const response = await sdk.dpp.bulkImport.getRunById(bulkImportRun1.id);
+      expect(response.data).toEqual(bulkImportRun1);
+    });
+
+    it("should return the items of a run", async () => {
+      const response = await sdk.dpp.bulkImport.getRunItems(bulkImportRun1.id);
+      expect(response.data.result).toEqual([bulkImportRunItem1]);
     });
   });
 });
