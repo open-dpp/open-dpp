@@ -32,7 +32,7 @@ export class BulkImportRunController {
     private readonly bulkImportRunService: BulkImportRunService,
   ) {}
 
-  @Post("bulk-import-configs/:configId/runs")
+  @Post("bulk-import/configs/:configId/runs")
   async createRun(
     @OrganizationId() organizationId: string,
     @Param("configId") configId: string,
@@ -47,7 +47,7 @@ export class BulkImportRunController {
     return BulkImportRunDtoSchema.parse(run.toPlain());
   }
 
-  @Get("bulk-import-configs/:configId/runs")
+  @Get("bulk-import/configs/:configId/runs")
   async getRunsForConfig(
     @OrganizationId() organizationId: string,
     @Param("configId") configId: string,
@@ -60,7 +60,7 @@ export class BulkImportRunController {
     return BulkImportRunPaginationDtoSchema.parse(page.toPlain());
   }
 
-  @Get("bulk-import-runs/:id")
+  @Get("bulk-import/runs/:id")
   async getRun(
     @OrganizationId() organizationId: string,
     @Param("id") id: string,
@@ -69,7 +69,7 @@ export class BulkImportRunController {
     return BulkImportRunDtoSchema.parse(run.toPlain());
   }
 
-  @Get("bulk-import-runs/:id/items")
+  @Get("bulk-import/runs/:id/items")
   async getRunItems(
     @OrganizationId() organizationId: string,
     @Param("id") id: string,

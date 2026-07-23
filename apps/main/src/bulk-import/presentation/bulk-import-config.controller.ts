@@ -26,7 +26,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { BulkImportConfigService } from "../application/services/bulk-import-config.service";
 
-@Controller("bulk-import-configs")
+@Controller("bulk-import/configs")
 export class BulkImportConfigController {
   constructor(private readonly bulkImportConfigService: BulkImportConfigService) {}
 

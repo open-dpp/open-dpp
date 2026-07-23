@@ -94,7 +94,7 @@ describe("BulkImport controllers", () => {
     const template = await createTemplate(org.id);
 
     const createResponse = await request(app.getHttpServer())
-      .post("/bulk-import-configs")
+      .post("/bulk-import/configs")
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({
@@ -114,21 +114,21 @@ describe("BulkImport controllers", () => {
     const configId = createResponse.body.id;
 
     const getResponse = await request(app.getHttpServer())
-      .get(`/bulk-import-configs/${configId}`)
+      .get(`/bulk-import/configs/${configId}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(getResponse.status).toEqual(200);
     expect(getResponse.body.id).toEqual(configId);
 
     const listResponse = await request(app.getHttpServer())
-      .get(`/bulk-import-configs?templateId=${template.id}`)
+      .get(`/bulk-import/configs?templateId=${template.id}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(listResponse.status).toEqual(200);
     expect(listResponse.body.result.map((c: { id: string }) => c.id)).toEqual([configId]);
 
     const updateResponse = await request(app.getHttpServer())
-      .put(`/bulk-import-configs/${configId}`)
+      .put(`/bulk-import/configs/${configId}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({ name: "Renamed export", idField: "sku", submodelMappings: [submodelFieldMapping()] });
@@ -136,13 +136,13 @@ describe("BulkImport controllers", () => {
     expect(updateResponse.body.name).toEqual("Renamed export");
 
     const deleteResponse = await request(app.getHttpServer())
-      .delete(`/bulk-import-configs/${configId}`)
+      .delete(`/bulk-import/configs/${configId}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(deleteResponse.status).toEqual(204);
 
     const getAfterDeleteResponse = await request(app.getHttpServer())
-      .get(`/bulk-import-configs/${configId}`)
+      .get(`/bulk-import/configs/${configId}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(getAfterDeleteResponse.status).toEqual(404);
@@ -154,7 +154,7 @@ describe("BulkImport controllers", () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
-      .post("/bulk-import-configs")
+      .post("/bulk-import/configs")
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({
@@ -172,7 +172,7 @@ describe("BulkImport controllers", () => {
       await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = await createTemplate(ownerOrg.id);
     const createResponse = await request(app.getHttpServer())
-      .post("/bulk-import-configs")
+      .post("/bulk-import/configs")
       .set("Cookie", ownerCookie)
       .set(ORGANIZATION_ID_HEADER, ownerOrg.id)
       .send({
@@ -187,7 +187,7 @@ describe("BulkImport controllers", () => {
       await betterAuthHelper.createOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
-      .get(`/bulk-import-configs/${configId}`)
+      .get(`/bulk-import/configs/${configId}`)
       .set("Cookie", otherCookie)
       .set(ORGANIZATION_ID_HEADER, otherOrg.id);
 
@@ -199,7 +199,7 @@ describe("BulkImport controllers", () => {
     const template = await createTemplate(org.id);
 
     const configResponse = await request(app.getHttpServer())
-      .post("/bulk-import-configs")
+      .post("/bulk-import/configs")
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({
@@ -211,7 +211,7 @@ describe("BulkImport controllers", () => {
     const configId = configResponse.body.id;
 
     const runResponse = await request(app.getHttpServer())
-      .post(`/bulk-import-configs/${configId}/runs`)
+      .post(`/bulk-import/configs/${configId}/runs`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send({ rows: [{ sku: "4711" }, { sku: "4712" }] });
@@ -226,21 +226,21 @@ describe("BulkImport controllers", () => {
     const runId = runResponse.body.id;
 
     const runsForConfigResponse = await request(app.getHttpServer())
-      .get(`/bulk-import-configs/${configId}/runs`)
+      .get(`/bulk-import/configs/${configId}/runs`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(runsForConfigResponse.status).toEqual(200);
     expect(runsForConfigResponse.body.result.map((r: { id: string }) => r.id)).toEqual([runId]);
 
     const runResponse2 = await request(app.getHttpServer())
-      .get(`/bulk-import-runs/${runId}`)
+      .get(`/bulk-import/runs/${runId}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(runResponse2.status).toEqual(200);
     expect(runResponse2.body.id).toEqual(runId);
 
     const itemsResponse = await request(app.getHttpServer())
-      .get(`/bulk-import-runs/${runId}/items`)
+      .get(`/bulk-import/runs/${runId}/items`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(itemsResponse.status).toEqual(200);
@@ -255,7 +255,7 @@ describe("BulkImport controllers", () => {
       await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = await createTemplate(ownerOrg.id);
     const configResponse = await request(app.getHttpServer())
-      .post("/bulk-import-configs")
+      .post("/bulk-import/configs")
       .set("Cookie", ownerCookie)
       .set(ORGANIZATION_ID_HEADER, ownerOrg.id)
       .send({
@@ -265,7 +265,7 @@ describe("BulkImport controllers", () => {
         submodelMappings: [submodelFieldMapping()],
       });
     const runResponse = await request(app.getHttpServer())
-      .post(`/bulk-import-configs/${configResponse.body.id}/runs`)
+      .post(`/bulk-import/configs/${configResponse.body.id}/runs`)
       .set("Cookie", ownerCookie)
       .set(ORGANIZATION_ID_HEADER, ownerOrg.id)
       .send({ rows: [{ sku: "4711" }] });
@@ -275,7 +275,7 @@ describe("BulkImport controllers", () => {
       await betterAuthHelper.createOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
-      .get(`/bulk-import-runs/${runId}`)
+      .get(`/bulk-import/runs/${runId}`)
       .set("Cookie", otherCookie)
       .set(ORGANIZATION_ID_HEADER, otherOrg.id);
 
