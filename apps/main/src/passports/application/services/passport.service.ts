@@ -1,5 +1,11 @@
 import type { Connection } from "mongoose";
-import { ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
@@ -13,6 +19,8 @@ import {
   PresentationReferenceHolder,
 } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { Template } from "../../../templates/domain/template";
+import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
@@ -41,6 +49,7 @@ export class PassportService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly permalinkRepository: PermalinkRepository,
     private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly templateRepository: TemplateRepository,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
@@ -119,6 +128,67 @@ export class PassportService {
       return persisted;
     });
     return PassportDtoSchema.parse(saved.toPlain());
+  }
+
+  async createPassportFromTemplate(
+    organizationId: string,
+    templateId: string,
+    subject: SubjectAttributes,
+  ): Promise<Passport> {
+    const template = await this.loadTemplateAndCheckOwnership(templateId, subject, organizationId);
+    if (template.isArchived()) {
+      throw new BadRequestException(
+        `Template ${templateId} is archived and cannot be used to create a passport`,
+      );
+    }
+    const environment = await this.environmentService.copyEnvironment(template.environment);
+    return await this.createAndPersistPassport(organizationId, environment, templateId);
+  }
+
+  async createAndPersistPassport(
+    organizationId: string,
+    environment: Environment,
+    templateId?: string,
+  ): Promise<Passport> {
+    const passport = Passport.create({
+      organizationId,
+      templateId,
+      environment,
+    });
+    const upid = passport.createUniqueProductIdentifier();
+
+    return await this.environmentService.withTransaction(async (options) => {
+      await this.uniqueProductIdentifierRepository.save(upid, options);
+      const persisted = await this.passportRepository.save(passport, options);
+      const snapshotConfigs =
+        await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
+          persisted,
+          options,
+        );
+      const configs =
+        snapshotConfigs.length > 0
+          ? snapshotConfigs
+          : [
+              await this.presentationConfigurationService.ensureDefaultForPassport(
+                persisted,
+                options,
+              ),
+            ];
+      await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
+      return persisted;
+    });
+  }
+
+  private async loadTemplateAndCheckOwnership(
+    id: string,
+    subject: SubjectAttributes,
+    organizationId: string,
+  ): Promise<Template> {
+    const template = await this.templateRepository.findOneOrFail(id);
+    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    return template;
   }
 
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {
