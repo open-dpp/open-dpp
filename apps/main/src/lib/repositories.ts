@@ -110,19 +110,14 @@ function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusT
 
 export type CursorPageOptions = {
   pagination?: Pagination;
-  /**
-   * Field the sort/cursor tiebreak is keyed on. Collections that expose a
-   * separate `id` field default to `"id"` (unchanged behavior); collections
-   * that store the uuid as `_id` (permalink, UPI) pass `"_id"`.
-   */
-  tiebreakKey?: "id" | "_id";
   session?: ClientSession | null;
 };
 
 /**
  * Newest-first, cursor-paginated `.find()` shared by every org/passport-scoped
- * list. The cursor is `createdAt + <tiebreakKey>` (both descending) so the sort
- * stays stable across a `createdAt` tie. `filter` is the non-cursor scope
+ * list. The cursor is `createdAt + _id` (both descending) so the sort stays
+ * stable across a `createdAt` tie — every collection stores its uuid as `_id`;
+ * none has a stored `id` path. `filter` is the non-cursor scope
  * (`{ organizationId }`, `{ referenceId }`, …); the cursor clause is appended.
  */
 export async function findPageByCursor<V extends IConvertableToPlain>(
@@ -132,19 +127,18 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
   options?: CursorPageOptions,
 ): Promise<PagingResult<V>> {
   const pagination = options?.pagination ?? Pagination.create({ limit: 100 });
-  const key = options?.tiebreakKey ?? "id";
   const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
   const cursorFilter = cursor
     ? {
         $or: [
           { createdAt: { $lt: cursor.createdAt } },
-          { createdAt: cursor.createdAt, [key]: { $lt: cursor.id } },
+          { createdAt: cursor.createdAt, _id: { $lt: cursor.id } },
         ],
       }
     : {};
   const docs = await docModel
     .find({ ...filter, ...cursorFilter } as Record<string, unknown>)
-    .sort({ createdAt: -1, [key]: -1 } as Record<string, -1>)
+    .sort({ createdAt: -1, _id: -1 })
     .limit(pagination.limit ?? 100)
     .session(options?.session ?? null)
     .exec();

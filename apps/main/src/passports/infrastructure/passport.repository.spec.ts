@@ -279,6 +279,47 @@ describe("passportRepository", () => {
     );
   });
 
+  it("handles identical createdAt timestamps via _id tiebreaker (no overlap, no loss)", async () => {
+    const organizationId = randomUUID();
+    const sharedDate = new Date("2024-01-15T12:00:00.000Z");
+    const makePassport = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({
+          assetAdministrationShells: [randomUUID()],
+        }),
+        createdAt,
+      });
+
+    const pFirst = makePassport(sharedDate);
+    const pSecond = makePassport(sharedDate);
+    const pThird = makePassport(new Date("2024-01-14T12:00:00.000Z"));
+    await passportRepository.save(pFirst);
+    await passportRepository.save(pSecond);
+    await passportRepository.save(pThird);
+
+    const page1 = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1 }),
+    });
+    expect(page1.items).toHaveLength(1);
+    expect(page1.pagination.cursor).not.toBeNull();
+
+    const page2 = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1, cursor: page1.pagination.cursor! }),
+    });
+    expect(page2.items).toHaveLength(1);
+    expect(page2.pagination.cursor).not.toBeNull();
+
+    const page3 = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1, cursor: page2.pagination.cursor! }),
+    });
+    expect(page3.items).toHaveLength(1);
+
+    const allIds = [page1.items[0].id, page2.items[0].id, page3.items[0].id].sort();
+    expect(allIds).toEqual([pFirst.id, pSecond.id, pThird.id].sort());
+  });
+
   it("findByIds — returns a Map keyed by passport id for all matching ids", async () => {
     const orgId = randomUUID();
     const p1 = Passport.create({

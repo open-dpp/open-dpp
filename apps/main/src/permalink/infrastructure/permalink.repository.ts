@@ -328,7 +328,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
           limit: options?.pagination?.limit ?? 100,
           cursor: options?.pagination?.cursor,
         }),
-        tiebreakKey: "_id",
         session: dbOptions?.session ?? null,
       },
     );

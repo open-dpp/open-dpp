@@ -207,8 +207,7 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
 
   /**
    * Shared newest-first cursor pagination for the org-scoped and passport-scoped
-   * UPI lists — they differ only in the scope filter field. `_id`-keyed tiebreak
-   * because a UPI stores its uuid as `_id`.
+   * UPI lists — they differ only in the scope filter field.
    */
   private findPageByFilter(
     filter: Record<string, unknown>,
@@ -223,7 +222,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
           limit: options?.pagination?.limit ?? 100,
           cursor: options?.pagination?.cursor,
         }),
-        tiebreakKey: "_id",
       },
     );
   }
