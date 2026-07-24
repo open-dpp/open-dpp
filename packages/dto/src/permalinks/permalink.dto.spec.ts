@@ -318,6 +318,19 @@ describe("PermalinkDtoSchema polymorphism", () => {
     expect(result.success).toBe(false);
   });
 
+  // (5b) rejects a presentation permalink with presentationConfigurationId: null
+  it("rejects a presentation permalink with presentationConfigurationId: null", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...base,
+      kind: "presentation",
+      presentationConfigurationId: null,
+      uniqueProductIdentifierId: null,
+      primary: false,
+      gs1DataAttributes: null,
+    });
+    expect(result.success).toBe(false);
+  });
+
   // (6a) rejects a presentation permalink with non-null uniqueProductIdentifierId
   it("rejects a presentation permalink with non-null uniqueProductIdentifierId", () => {
     const result = PermalinkDtoSchema.safeParse({

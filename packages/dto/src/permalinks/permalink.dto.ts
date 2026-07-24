@@ -68,6 +68,7 @@ export const PermalinkInvariantsSchema = z.discriminatedUnion("kind", [
  *
  * Cross-field invariants are enforced via .check():
  *   - "gs1-link" kind requires a non-null uniqueProductIdentifierId
+ *   - "presentation" kind requires a non-null presentationConfigurationId
  *   - "presentation" kind forbids non-null uniqueProductIdentifierId, gs1DataAttributes
  *   - unknown kind is rejected
  */
@@ -98,6 +99,14 @@ export const PermalinkDtoSchema = z
         });
       }
     } else if (kind === PermalinkKind.PRESENTATION) {
+      if (ctx.value.presentationConfigurationId == null) {
+        ctx.issues.push({
+          code: "custom",
+          input: ctx.value,
+          message: 'A presentation permalink requires a non-null "presentationConfigurationId"',
+          path: ["presentationConfigurationId"],
+        });
+      }
       if (uniqueProductIdentifierId != null) {
         ctx.issues.push({
           code: "custom",
