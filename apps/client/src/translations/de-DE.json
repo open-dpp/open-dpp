@@ -317,7 +317,6 @@
         "completed_with_errors": "Abgeschlossen mit Fehlern",
         "interrupted": "Unterbrochen"
       },
-      "errorLoadTemplates": "Laden der Vorlagen fehlgeschlagen:",
       "errorLoadSubmodels": "Laden der Vorlagenfelder fehlgeschlagen:",
       "invalidFile": "Die ausgewählte Datei ist kein gültiges JSON-Array von Datensätzen.",
       "uploadFile": "Datei hochladen",
@@ -647,8 +646,7 @@
     "loading": "Produktpass wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status des Produktpasses",
     "blank": "Leer",
-    "fromTemplate": "Aus Produktpassvorlage",
-    "selectTemplate": "Passvorlage auswählen"
+    "fromTemplate": "Aus Produktpassvorlage"
   },
   "status": {
     "withStatus": "mit Status",
@@ -672,7 +670,9 @@
     "loading": "Passvorlage wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status der Passvorlage",
     "createdAt": "Erstellt am",
-    "updatedAt": "Aktualisiert am"
+    "updatedAt": "Aktualisiert am",
+    "select": "Vorlage auswählen",
+    "errorFetchList": "Laden der Vorlagen fehlgeschlagen"
   },
   "actions": {
     "member": {

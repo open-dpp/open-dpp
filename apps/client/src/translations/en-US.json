@@ -317,7 +317,6 @@
         "completed_with_errors": "Completed with errors",
         "interrupted": "Interrupted"
       },
-      "errorLoadTemplates": "Failed to load templates:",
       "errorLoadSubmodels": "Failed to load template fields:",
       "invalidFile": "The selected file is not a valid JSON array of records.",
       "uploadFile": "Upload file",
@@ -617,8 +616,7 @@
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport status",
     "blank": "Blank",
-    "fromTemplate": "From template",
-    "selectTemplate": "Select template"
+    "fromTemplate": "From template"
   },
   "status": {
     "withStatus": "with status",
@@ -642,7 +640,9 @@
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport template status",
     "createdAt": "Created at",
-    "updatedAt": "Updated at"
+    "updatedAt": "Updated at",
+    "select": "Select template",
+    "errorFetchList": "Failed to load templates"
   },
   "actions": {
     "member": {

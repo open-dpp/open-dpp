@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import type { FileUploadSelectEvent } from "primevue";
-import type { BulkImportConfigDto, SubmodelResponseDto, TemplateDto } from "@open-dpp/dto";
-import { AasSubmodelElements, DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import type { BulkImportConfigDto, SubmodelResponseDto } from "@open-dpp/dto";
+import { AasSubmodelElements } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useAasUtils } from "../../composables/aas-utils.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useBulkImportStore } from "../../stores/bulk-import.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import IdShortPathSelect from "../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../json/JsonPathSelect.vue";
+import TemplateSelect from "../template/TemplateSelect.vue";
 import type { IdShortPathOption } from "../../lib/id-short-path-select.ts";
 
 interface MappingRow {
@@ -30,7 +30,6 @@ const emit = defineEmits<{ (e: "run-triggered", runId: string): void }>();
 const { t } = useI18n();
 const store = useBulkImportStore();
 const errorHandlingStore = useErrorHandlingStore();
-const { parseDisplayNameFromEnvironment } = useAasUtils();
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -42,8 +41,6 @@ const isNewConfig = computed(() => existingConfig.value === null);
 const parsedRows = ref<Record<string, unknown>[]>([]);
 const fileError = ref<string | null>(null);
 
-const templateOptions = ref<{ id: string; label: string }[]>([]);
-const templatesLoading = ref(false);
 const selectedTemplateId = ref<string | null>(null);
 const submodels = ref<SubmodelResponseDto[]>([]);
 const submodelsLoading = ref(false);
@@ -78,13 +75,10 @@ function resetState() {
   configName.value = "";
 }
 
-async function open(config?: BulkImportConfigDto) {
+function open(config?: BulkImportConfigDto) {
   resetState();
   existingConfig.value = config ?? null;
   visible.value = true;
-  if (isNewConfig.value) {
-    await loadTemplateOptions();
-  }
 }
 
 function close() {
@@ -92,34 +86,6 @@ function close() {
 }
 
 defineExpose({ open });
-
-async function loadTemplateOptions() {
-  templatesLoading.value = true;
-  try {
-    const response = await apiClient.dpp.templates.getAll({
-      pagination: { limit: 100 },
-      filter: {
-        status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
-      },
-    });
-    templateOptions.value = response.data.result
-      .filter(
-        (template: TemplateDto) =>
-          template.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived,
-      )
-      .map((template: TemplateDto) => {
-        const label = parseDisplayNameFromEnvironment(template.environment);
-        return { id: template.id, label: label !== t("common.untitled") ? label : template.id };
-      });
-  } catch (error) {
-    errorHandlingStore.logErrorWithNotification(
-      t("integrations.bulkImport.errorLoadTemplates"),
-      error,
-    );
-  } finally {
-    templatesLoading.value = false;
-  }
-}
 
 async function onTemplateSelected() {
   submodels.value = [];
@@ -284,15 +250,7 @@ async function submit() {
 
         <label class="flex flex-col gap-2">
           <span>{{ t("integrations.bulkImport.selectTemplate") }}</span>
-          <Select
-            v-model="selectedTemplateId"
-            :options="templateOptions"
-            option-value="id"
-            option-label="label"
-            :loading="templatesLoading"
-            :placeholder="t('integrations.bulkImport.selectTemplate')"
-            @update:model-value="onTemplateSelected"
-          />
+          <TemplateSelect v-model="selectedTemplateId" @update:model-value="onTemplateSelected" />
         </label>
       </div>
 
