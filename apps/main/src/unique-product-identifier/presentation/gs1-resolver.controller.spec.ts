@@ -382,10 +382,7 @@ describe("Gs1ResolverController", () => {
       // The QR renders on id.example.com, but that is a Digital Link host, not a
       // viewer host — the redirect uses the branding→instance cascade. The
       // scanned query (the permalink's own attrs) is forwarded per §2.12.
-      await expectScanRedirects(
-        seed,
-        `${await instanceBase()}/${seed.permalink.id}?17=251231`,
-      );
+      await expectScanRedirects(seed, `${await instanceBase()}/${seed.permalink.id}?17=251231`);
     });
 
     it("redirects to the org branding base when branding is set", async () => {
@@ -444,9 +441,10 @@ describe("Gs1ResolverController", () => {
       await expectScanRedirects(seed, viewerUrl);
       // The scan lazily froze the QR contract: publishedUrl = the Digital Link
       // form (what the QR encodes), NOT the redirect target.
-      const reloaded = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(
-        seed.permalink.id,
-      );
+      const reloaded = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findOneOrFail(seed.permalink.id);
       expect(reloaded.publishedUrl).toBe(rendered);
       // A frozen gs1-link still redirects to the viewer — no loop after freeze.
       await expectScanRedirects(seed, viewerUrl);

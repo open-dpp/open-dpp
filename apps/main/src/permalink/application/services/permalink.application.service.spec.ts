@@ -602,7 +602,10 @@ describe("PermalinkApplicationService primary management", () => {
     const config2 = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [first, second] = await service.createPermalinksForConfigs([config1, config2], passport.organizationId);
+    const [first, second] = await service.createPermalinksForConfigs(
+      [config1, config2],
+      passport.organizationId,
+    );
 
     expect(first.primary).toBe(true);
     expect(second.primary).toBe(false);
@@ -629,7 +632,10 @@ describe("PermalinkApplicationService primary management", () => {
 
     const config = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
-    const [presentation] = await service.createPermalinksForConfigs([config], passport.organizationId);
+    const [presentation] = await service.createPermalinksForConfigs(
+      [config],
+      passport.organizationId,
+    );
 
     // The presentation permalink should be primary; the gs1-link should NOT be primary
     expect(presentation.primary).toBe(true);
@@ -647,7 +653,10 @@ describe("PermalinkApplicationService primary management", () => {
     const config2 = await seedConfig(passport);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [first, second] = await service.createPermalinksForConfigs([config1, config2], passport.organizationId);
+    const [first, second] = await service.createPermalinksForConfigs(
+      [config1, config2],
+      passport.organizationId,
+    );
     expect(first.primary).toBe(true);
     expect(second.primary).toBe(false);
 
@@ -687,8 +696,14 @@ describe("PermalinkApplicationService primary management", () => {
     const config2 = await seedConfig(passport2);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [permalink1] = await service.createPermalinksForConfigs([config1], passport1.organizationId);
-    const [permalink2] = await service.createPermalinksForConfigs([config2], passport2.organizationId);
+    const [permalink1] = await service.createPermalinksForConfigs(
+      [config1],
+      passport1.organizationId,
+    );
+    const [permalink2] = await service.createPermalinksForConfigs(
+      [config2],
+      passport2.organizationId,
+    );
 
     // Try to set passport1's primary to permalink2 (which belongs to passport2)
     await expect(service.setPrimary(passport1.id, permalink2.id)).rejects.toThrow(

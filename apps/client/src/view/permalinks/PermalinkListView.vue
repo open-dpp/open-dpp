@@ -111,9 +111,7 @@ const presentationPermalinkCount = computed(
 // All permalinks of a passport freeze together when the passport is published
 // (new ones freeze at creation), so any frozen row on the page means the
 // passport has been published — no extra status fetch needed.
-const hasFrozenPermalinks = computed(() =>
-  permalinks.value.some((pl) => pl.publishedUrl != null),
-);
+const hasFrozenPermalinks = computed(() => permalinks.value.some((pl) => pl.publishedUrl != null));
 
 // -------------------------------------------------------------------------
 // Create dialog
@@ -327,7 +325,9 @@ onMounted(async () => {
               :icon="data.primary ? 'pi pi-star-fill' : 'pi pi-star'"
               :severity="data.primary ? 'warn' : 'secondary'"
               :disabled="data.primary"
-              :aria-label="data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')"
+              :aria-label="
+                data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')
+              "
               :title="data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')"
               :data-testid="`permalink-primary-btn-${data.id}`"
               @click="onSetPrimary(data)"

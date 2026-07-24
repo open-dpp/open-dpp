@@ -53,13 +53,9 @@ const busy = ref(false);
  * OPEN_DPP_UUID rows are system-only and cannot be used as a gs1-link target,
  * and each UPI carries at most one gs1-link permalink (row's own summary).
  */
-const gs1Upis = computed(() =>
-  upis.value.filter((u) => u.type === "GS1" && u.permalink == null),
-);
+const gs1Upis = computed(() => upis.value.filter((u) => u.type === "GS1" && u.permalink == null));
 
-const canSubmit = computed(
-  () => !!selectedUpiId.value && !busy.value && gs1AttributesValid.value,
-);
+const canSubmit = computed(() => !!selectedUpiId.value && !busy.value && gs1AttributesValid.value);
 
 // ---------------------------------------------------------------------------
 // UPI label helper
@@ -84,10 +80,9 @@ const UPI_PICKER_LIMIT = 1000;
 async function loadUpis() {
   loadingUpis.value = true;
   try {
-    const response = await apiClient.dpp.passports.getUniqueProductIdentifiers(
-      props.passportId,
-      { limit: UPI_PICKER_LIMIT },
-    );
+    const response = await apiClient.dpp.passports.getUniqueProductIdentifiers(props.passportId, {
+      limit: UPI_PICKER_LIMIT,
+    });
     upis.value = (response.data?.result ?? []) as UniqueProductIdentifierListItemDto[];
   } catch (e) {
     errorHandlingStore.logErrorWithNotification(t("permalink.createGs1Link.loadFailed"), e);

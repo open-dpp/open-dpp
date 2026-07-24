@@ -573,9 +573,7 @@ describe("PermalinkController", () => {
     }
 
     it("rejects binding to another org's presentation config with 403", async () => {
-      const attacker = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const attacker = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
       const victim = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
       const upi = await createUpiInOrg(attacker.org.id);
       const victimConfig = await createConfigInOrg(victim.org.id);
@@ -1148,10 +1146,7 @@ describe("PermalinkController", () => {
 
       expect(response.status).toEqual(200);
       expect(response.body.slug).toEqual(slug);
-      const refetched = await ctx
-        .getModuleRef()
-        .get(PermalinkRepository)
-        .findOneOrFail(primary.id);
+      const refetched = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(primary.id);
       expect(refetched.slug).toEqual(slug);
     });
 

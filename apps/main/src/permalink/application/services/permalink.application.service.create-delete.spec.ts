@@ -164,9 +164,7 @@ describe("PermalinkApplicationService.createPresentationPermalink", () => {
     const [first] = await service.createPermalinksForConfigs([config1], passport.organizationId);
     const second = await service.createPresentationPermalink(config2, passport.organizationId);
 
-    expect((await repository.findOneOrFail(first.id)).organizationId).toBe(
-      passport.organizationId,
-    );
+    expect((await repository.findOneOrFail(first.id)).organizationId).toBe(passport.organizationId);
     expect((await repository.findOneOrFail(second.id)).organizationId).toBe(
       passport.organizationId,
     );
