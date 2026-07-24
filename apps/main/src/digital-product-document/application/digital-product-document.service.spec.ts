@@ -1,4 +1,4 @@
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../aas/aas.module";
@@ -43,7 +43,6 @@ import { ActivityRepository } from "../../activity-history/infrastructure/activi
 import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import type { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { Security } from "../../aas/domain/security/security";
@@ -52,6 +51,7 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { TransactionService } from "../../database/transaction.service";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -59,7 +59,6 @@ describe("DigitalProductDocumentService", () => {
   let passportRepository: PassportRepository;
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
-  let connection: Connection;
   const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
@@ -86,6 +85,7 @@ describe("DigitalProductDocumentService", () => {
         OrganizationsModule,
       ],
       providers: [
+        TransactionService,
         EnvironmentService,
         PassportRepository,
         UniqueProductIdentifierRepository,
@@ -97,13 +97,10 @@ describe("DigitalProductDocumentService", () => {
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
     assetAdministrationShellRepository = module.get<AasRepository>(AasRepository);
-    connection = module.get<Connection>(getConnectionToken());
-
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
       activityRepository,
-      connection,
     );
   });
 

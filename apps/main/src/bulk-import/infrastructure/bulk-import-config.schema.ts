@@ -20,7 +20,7 @@ const FieldMappingDocSchema = SchemaFactory.createForClass(FieldMappingDoc);
 @Schema({ _id: false })
 export class SubmodelMappingDoc {
   @Prop({ type: String, required: true })
-  submodelId: string;
+  submodelIdShort: string;
 
   @Prop({ type: [FieldMappingDocSchema], required: true, default: [] })
   fieldMappings: FieldMappingDoc[];

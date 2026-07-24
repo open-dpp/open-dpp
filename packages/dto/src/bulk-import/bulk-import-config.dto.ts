@@ -10,7 +10,7 @@ export const FieldMappingDtoSchema = z.object({
 export type FieldMappingDto = z.infer<typeof FieldMappingDtoSchema>;
 
 export const SubmodelFieldMappingDtoSchema = z.object({
-  submodelId: z.uuid(),
+  submodelIdShort: z.string(),
   fieldMappings: FieldMappingDtoSchema.array(),
 });
 

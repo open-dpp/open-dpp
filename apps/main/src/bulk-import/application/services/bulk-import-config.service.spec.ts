@@ -54,7 +54,10 @@ describe("BulkImportConfigService", () => {
     };
   }
 
-  const fieldMappingInput = { submodelId: randomUUID(), fieldMappings: [{ input: "sku", output: "sku" }] };
+  const fieldMappingInput = {
+    submodelIdShort: "Nameplate",
+    fieldMappings: [{ input: "sku", output: "sku" }],
+  };
 
   it("createConfig rejects a template from another organization", async () => {
     const { service, templateRepository } = buildFakes();

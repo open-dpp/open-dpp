@@ -4,11 +4,12 @@ import { IPersistable } from "../../aas/domain/persistable";
 import { DateTime } from "../../lib/date-time";
 import { FieldMappingSchema } from "./field-mapping";
 import { JsonTransformer } from "./json-transformer";
+import { ValueResponseDto, ValueSchema } from "@open-dpp/dto";
 
 const DateTimeSchema = z.union([z.iso.datetime(), z.date()]);
 
 const SubmodelMappingSchema = z.object({
-  submodelId: z.uuid(),
+  submodelIdShort: z.string(),
   fieldMappings: FieldMappingSchema.array(),
 });
 
@@ -31,6 +32,9 @@ export class BulkImportConfig implements IPersistable {
     public readonly templateId: string,
     private _name: string,
     private _idField: string,
+    /** Keyed by submodel idShort, not id - a submodel's id is regenerated whenever its
+     * environment is copied (e.g. creating a passport from this config's template), so id can't
+     * be resolved at mapping-time and must be looked up by idShort against the target passport. */
     private _submodelMappings: Map<string, JsonTransformer>,
     private _inputSample: Record<string, unknown> | null,
     public readonly createdAt: Date,
@@ -72,7 +76,7 @@ export class BulkImportConfig implements IPersistable {
       parsed.idField,
       new Map(
         parsed.submodelMappings.map((mapping) => [
-          mapping.submodelId,
+          mapping.submodelIdShort,
           JsonTransformer.fromPlain({ fieldMappings: mapping.fieldMappings }),
         ]),
       ),
@@ -90,8 +94,8 @@ export class BulkImportConfig implements IPersistable {
       name: this._name,
       idField: this._idField,
       submodelMappings: Array.from(this._submodelMappings.entries()).map(
-        ([submodelId, transformer]) => ({
-          submodelId,
+        ([submodelIdShort, transformer]) => ({
+          submodelIdShort,
           fieldMappings: transformer.toPlain().fieldMappings,
         }),
       ),
@@ -142,11 +146,11 @@ export class BulkImportConfig implements IPersistable {
     this._updatedAt = DateTime.now();
   }
 
-  /** Transforms a row into a value representation per targeted submodel. */
-  async applyToRow(row: Record<string, unknown>): Promise<Map<string, unknown>> {
-    const result = new Map<string, unknown>();
-    for (const [submodelId, transformer] of this._submodelMappings) {
-      result.set(submodelId, await transformer.apply(row));
+  /** Transforms a row into a value representation per targeted submodel, keyed by submodel idShort. */
+  async applyToRow(row: Record<string, unknown>): Promise<Record<string, ValueResponseDto>> {
+    const result: Record<string, ValueResponseDto> = {};
+    for (const [submodelIdShort, transformer] of this._submodelMappings) {
+      result[submodelIdShort] = ValueSchema.parse(await transformer.apply(row));
     }
     return result;
   }

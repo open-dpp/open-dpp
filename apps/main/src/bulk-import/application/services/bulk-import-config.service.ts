@@ -10,7 +10,7 @@ import { BulkImportRunItemRepository } from "../../infrastructure/bulk-import-ru
 import { BulkImportRunRepository } from "../../infrastructure/bulk-import-run.repository";
 
 export interface SubmodelFieldMappingInput {
-  submodelId: string;
+  submodelIdShort: string;
   fieldMappings: { input: string; output: string }[];
 }
 
@@ -125,7 +125,7 @@ export class BulkImportConfigService {
 function toTransformerMap(mappings: SubmodelFieldMappingInput[]): Map<string, JsonTransformer> {
   return new Map(
     mappings.map((mapping) => [
-      mapping.submodelId,
+      mapping.submodelIdShort,
       JsonTransformer.create({
         fieldMappings: mapping.fieldMappings.map((fieldMapping) =>
           FieldMapping.create(fieldMapping),

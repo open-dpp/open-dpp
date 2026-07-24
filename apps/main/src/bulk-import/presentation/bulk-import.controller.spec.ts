@@ -5,6 +5,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ApiVersionsDto } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   ForbiddenExceptionFilter,
@@ -13,13 +14,16 @@ import {
 } from "@open-dpp/exception";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
 import { Template } from "../../templates/domain/template";
@@ -84,10 +88,51 @@ describe("BulkImport controllers", () => {
     return await templateRepository.save(template);
   }
 
+  /**
+   * Adds a real "Nameplate" submodel (with a "sku" Property) to the template, so a bulk import
+   * run against it exercises the real idShort -> id resolution against the passport's own (copied)
+   * environment - not just a submodelId round-tripped through the config CRUD endpoints.
+   */
+  async function addNameplateSubmodel(template: Template): Promise<void> {
+    await environmentService.addSubmodelToEnvironment(
+      randomUUID(),
+      template.id,
+      template.environment,
+      SubmodelRequest.create({
+        body: {
+          id: randomUUID(),
+          idShort: "Nameplate",
+          submodelElements: [{ idShort: "sku", modelType: "Property", valueType: "String" }],
+        },
+        version: ApiVersionsDto.v2,
+      }),
+      (options) => templateRepository.save(template, options).then(() => undefined),
+      { subject: SubjectAttributes.create({ userRole: UserRole.ADMIN }), userId: randomUUID() },
+    );
+  }
+
   const submodelFieldMapping = () => ({
-    submodelId: randomUUID(),
+    submodelIdShort: "Nameplate",
     fieldMappings: [{ input: "sku", output: "sku" }],
   });
+
+  async function waitForRunCompletion(
+    runId: string,
+    userCookie: string,
+    organizationId: string,
+  ): Promise<{ status: string }> {
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const response = await request(app.getHttpServer())
+        .get(`/bulk-import/runs/${runId}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, organizationId);
+      if (response.body.status !== "pending" && response.body.status !== "running") {
+        return response.body;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    throw new Error(`Run ${runId} did not complete in time`);
+  }
 
   it("creates, reads, updates and deletes a bulk import config", async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
@@ -197,6 +242,7 @@ describe("BulkImport controllers", () => {
   it("triggers a run and exposes its status, run history and per-row items", async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = await createTemplate(org.id);
+    await addNameplateSubmodel(template);
 
     const configResponse = await request(app.getHttpServer())
       .post("/bulk-import/configs")
@@ -232,12 +278,12 @@ describe("BulkImport controllers", () => {
     expect(runsForConfigResponse.status).toEqual(200);
     expect(runsForConfigResponse.body.result.map((r: { id: string }) => r.id)).toEqual([runId]);
 
-    const runResponse2 = await request(app.getHttpServer())
-      .get(`/bulk-import/runs/${runId}`)
-      .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id);
-    expect(runResponse2.status).toEqual(200);
-    expect(runResponse2.body.id).toEqual(runId);
+    const completedRun = await waitForRunCompletion(runId, userCookie, org.id);
+    // Proves the row was actually applied to the created passport, not just that the run
+    // finished - the passport's submodel ids differ from the template's (copied, not shared), so
+    // this only passes if the config's idShort-based mapping resolved correctly against the
+    // passport's own environment.
+    expect(completedRun.status).toEqual("completed");
 
     const itemsResponse = await request(app.getHttpServer())
       .get(`/bulk-import/runs/${runId}/items`)
@@ -248,6 +294,26 @@ describe("BulkImport controllers", () => {
     expect(itemsResponse.body.result.map((i: { rowIndex: number }) => i.rowIndex).sort()).toEqual([
       0, 1,
     ]);
+    for (const item of itemsResponse.body.result as { status: string; error?: string }[]) {
+      expect(item.error).toBeFalsy();
+      expect(item.status).toEqual("created");
+    }
+
+    const firstItem = itemsResponse.body.result.find(
+      (i: { rowIndex: number }) => i.rowIndex === 0,
+    ) as { passportId: string };
+    const passportSubmodelsResponse = await request(app.getHttpServer())
+      .get(`/passports/${firstItem.passportId}/submodels`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id);
+    expect(passportSubmodelsResponse.status).toEqual(200);
+    const nameplate = passportSubmodelsResponse.body.result.find(
+      (s: { idShort: string }) => s.idShort === "Nameplate",
+    );
+    const skuProperty = nameplate.submodelElements.find(
+      (e: { idShort: string }) => e.idShort === "sku",
+    );
+    expect(skuProperty.value).toEqual("4711");
   });
 
   it("rejects reading a run that belongs to another organization", async () => {

@@ -33,7 +33,7 @@ describe("BulkImportConfig", () => {
   it("applies each submodel's mapping to a row", async () => {
     const config = buildConfig();
     const result = await config.applyToRow({ sku: "4711", weightKg: 12 });
-    expect(result.get(technicalDataSubmodelId)).toEqual({ weight: 12 });
+    expect(result[technicalDataSubmodelId]).toEqual({ weight: 12 });
   });
 
   it("extracts and trims the id field value", async () => {

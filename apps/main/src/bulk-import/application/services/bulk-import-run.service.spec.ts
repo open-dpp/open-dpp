@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { ForbiddenException } from "@nestjs/common";
-import { BulkImportRunStatusDto } from "@open-dpp/dto";
+import {
+  ApiVersionsDto,
+  type ApiVersionsDtoType,
+  BulkImportRunStatusDto,
+  type ValueRequestDto,
+} from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { DbSessionOptions } from "../../../database/query-options";
@@ -15,9 +20,11 @@ import { BulkImportProductLink } from "../../domain/bulk-import-product-link";
 import { BulkImportRun } from "../../domain/bulk-import-run";
 import { BulkImportRunItem } from "../../domain/bulk-import-run-item";
 import { BulkImportRunService } from "./bulk-import-run.service";
+import { NotFoundError } from "@open-dpp/exception";
+import { UserContext } from "../../../aas/presentation/environment.service";
 
 describe("BulkImportRunService", () => {
-  const submodelId = randomUUID();
+  const submodelIdShort = "Nameplate";
 
   function buildConfig() {
     return BulkImportConfig.create({
@@ -27,7 +34,7 @@ describe("BulkImportRunService", () => {
       idField: "sku",
       submodelMappings: new Map([
         [
-          submodelId,
+          submodelIdShort,
           JsonTransformer.create({
             fieldMappings: [FieldMapping.create({ input: "weightKg", output: "weight" })],
           }),
@@ -46,7 +53,10 @@ describe("BulkImportRunService", () => {
       findAllRunning: jest.fn<() => Promise<BulkImportRun[]>>(),
       findAllByBulkImportConfigId:
         jest.fn<
-          (bulkImportConfigId: string, pagination?: Pagination) => Promise<PagingResult<BulkImportRun>>
+          (
+            bulkImportConfigId: string,
+            pagination?: Pagination,
+          ) => Promise<PagingResult<BulkImportRun>>
         >(),
     };
     const runItemRepository = {
@@ -64,10 +74,9 @@ describe("BulkImportRunService", () => {
             externalId: string,
           ) => Promise<BulkImportProductLink | undefined>
         >(),
-      save:
-        jest.fn<
-          (link: BulkImportProductLink, options?: DbSessionOptions) => Promise<BulkImportProductLink>
-        >(),
+      save: jest.fn<
+        (link: BulkImportProductLink, options?: DbSessionOptions) => Promise<BulkImportProductLink>
+      >(),
     };
     const passportService = {
       createPassportFromTemplate:
@@ -79,7 +88,19 @@ describe("BulkImportRunService", () => {
             options?: DbSessionOptions,
           ) => Promise<Passport>
         >(),
-      digitalProductDocumentService: { modifyValueOfSubmodel: jest.fn() },
+      digitalProductDocumentService: {
+        modifyValueOfMultipleSubmodels:
+          jest.fn<
+            (
+              correlationId: string,
+              organizationId: string,
+              id: string,
+              body: Record<string, ValueRequestDto>,
+              userContext: UserContext,
+              version: ApiVersionsDtoType,
+            ) => Promise<void>
+          >(),
+      },
     };
     // No real Mongo session in these unit tests; just run the work directly.
     const transactionService = {
@@ -191,16 +212,19 @@ describe("BulkImportRunService", () => {
       }),
       {},
     );
+    const expectedValueRequest: Record<string, ValueRequestDto> = {
+      [submodelIdShort]: { weight: 12 },
+    };
+    // @ts-ignore
     expect(
-      passportService.digitalProductDocumentService.modifyValueOfSubmodel,
+      passportService.digitalProductDocumentService.modifyValueOfMultipleSubmodels,
     ).toHaveBeenCalledWith(
       run.id,
       run.organizationId,
       "passport-1",
-      submodelId,
-      { weight: 12 },
+      expectedValueRequest,
       { subject: run.subject, userId: run.userId },
-      "2",
+      ApiVersionsDto.v2,
     );
     expect(item.status).toEqual("created");
     expect(item.passportId).toEqual("passport-1");
@@ -295,6 +319,44 @@ describe("BulkImportRunService", () => {
     expect(run.status).toEqual(BulkImportRunStatusDto.CompletedWithErrors);
   });
 
+  it("marks a row failed when the passport has no submodel matching the mapping's idShort", async () => {
+    const {
+      service,
+      configRepository,
+      runRepository,
+      runItemRepository,
+      productLinkRepository,
+      passportService,
+    } = buildFakes();
+    const config = buildConfig();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: config.id,
+      organizationId: config.organizationId,
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 1,
+    });
+    const item = BulkImportRunItem.create({
+      runId: run.id,
+      rowIndex: 0,
+      inputData: { sku: "4711", weightKg: 12 },
+    });
+
+    configRepository.findOneOrFail.mockResolvedValue(config);
+    runRepository.findOneOrFail.mockResolvedValue(run);
+    runItemRepository.findAllByRunId.mockResolvedValue([item]);
+    productLinkRepository.findOne.mockResolvedValue(undefined);
+    passportService.createPassportFromTemplate.mockResolvedValue({ id: "passport-1" } as Passport);
+    passportService.digitalProductDocumentService.modifyValueOfMultipleSubmodels.mockRejectedValue(
+      new NotFoundError(`Environment has no submodel with identifier "${submodelIdShort}".`),
+    );
+    await (service as any).processRun(run.id);
+
+    expect(item.status).toEqual("failed");
+    expect(item.error).toContain(submodelIdShort);
+    expect(run.failedCount).toEqual(1);
+  });
+
   it("isolates a per-row failure from another passport-write error", async () => {
     const {
       service,
@@ -378,7 +440,9 @@ describe("BulkImportRunService", () => {
     runRepository.findOneOrFail.mockResolvedValue(run);
     runItemRepository.findAllByRunId.mockResolvedValue([alreadyCreatedItem, pendingItem]);
     productLinkRepository.findOne.mockResolvedValue(undefined);
-    passportService.createPassportFromTemplate.mockResolvedValue({ id: "passport-new" } as Passport);
+    passportService.createPassportFromTemplate.mockResolvedValue({
+      id: "passport-new",
+    } as Passport);
 
     await (service as any).processRun(run.id);
 

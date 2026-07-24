@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
-import { ApiVersionsDto, BulkImportRunItemStatusDto, ValueRequestDto } from "@open-dpp/dto";
+import { ApiVersionsDto, BulkImportRunItemStatusDto } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { TransactionService } from "../../../database/transaction.service";
 import { Pagination } from "../../../pagination/pagination";
@@ -40,7 +40,9 @@ export class BulkImportRunService implements OnApplicationBootstrap {
       });
     }
     if (staleRuns.length > 0) {
-      this.logger.warn(`Resuming ${staleRuns.length} bulk import run(s) interrupted by the last restart.`);
+      this.logger.warn(
+        `Resuming ${staleRuns.length} bulk import run(s) interrupted by the last restart.`,
+      );
     }
   }
 
@@ -142,17 +144,14 @@ export class BulkImportRunService implements OnApplicationBootstrap {
       : await this.createPassportAndLink(run, config, idValue);
 
     const valueRepresentations = await config.applyToRow(item.inputData);
-    for (const [submodelId, valueRepresentation] of valueRepresentations) {
-      await this.passportService.digitalProductDocumentService.modifyValueOfSubmodel(
-        run.id,
-        run.organizationId,
-        passportId,
-        submodelId,
-        valueRepresentation as ValueRequestDto,
-        { subject: run.subject, userId: run.userId },
-        ApiVersionsDto.v2,
-      );
-    }
+    await this.passportService.digitalProductDocumentService.modifyValueOfMultipleSubmodels(
+      run.id,
+      run.organizationId,
+      passportId,
+      valueRepresentations,
+      { subject: run.subject, userId: run.userId },
+      ApiVersionsDto.v2,
+    );
 
     if (existingLink) {
       item.markUpdated(passportId);
