@@ -1,14 +1,16 @@
 <script lang="ts" setup>
 import type { FileUploadSelectEvent } from "primevue";
 import type { BulkImportConfigDto, SubmodelResponseDto, TemplateDto } from "@open-dpp/dto";
-import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { AasSubmodelElements, DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAasUtils } from "../../composables/aas-utils.ts";
-import { useBulkImportMappingTree } from "../../composables/bulk-import-mapping-tree.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useBulkImportStore } from "../../stores/bulk-import.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import IdShortPathSelect from "../aas/IdShortPathSelect.vue";
+import JsonPathSelect from "../json/JsonPathSelect.vue";
+import type { IdShortPathOption } from "../../lib/id-short-path-select.ts";
 
 interface MappingRow {
   input: string;
@@ -16,15 +18,12 @@ interface MappingRow {
   output: string;
 }
 
-interface TargetOption {
-  submodelId: string;
-  output: string;
-}
-
-interface TargetOptionGroup {
-  label: string;
-  items: TargetOption[];
-}
+// File properties can't be populated from a bulk-import row, and SubmodelElementList entries
+// aren't addressable by a stable idShort, so both are excluded as mapping targets.
+const excludedTargetModelTypes = [
+  AasSubmodelElements.File,
+  AasSubmodelElements.SubmodelElementList,
+];
 
 const emit = defineEmits<{ (e: "run-triggered", runId: string): void }>();
 
@@ -57,44 +56,11 @@ const submodelLabelById = computed(() => {
   return map;
 });
 
-const { targets } = useBulkImportMappingTree(submodels);
-
-const groupedTargetOptions = computed<TargetOptionGroup[]>(() => {
-  const bySubmodel = new Map<string, TargetOptionGroup>();
-  for (const target of targets.value) {
-    const label = submodelLabelById.value.get(target.submodelId) ?? target.submodelId;
-    if (!bySubmodel.has(target.submodelId)) {
-      bySubmodel.set(target.submodelId, { label, items: [] });
-    }
-    bySubmodel.get(target.submodelId)?.items.push({
-      submodelId: target.submodelId,
-      output: target.idShortPath,
-    });
-  }
-  return Array.from(bySubmodel.values());
-});
-
-function flattenInputPaths(row: Record<string, unknown>, prefix = ""): string[] {
-  const paths: string[] = [];
-  for (const [key, value] of Object.entries(row)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-      paths.push(...flattenInputPaths(value as Record<string, unknown>, path));
-    } else {
-      paths.push(path);
-    }
-  }
-  return paths;
-}
-
-const inputPathOptions = computed<string[]>(() => {
-  const firstRow = parsedRows.value[0];
-  return firstRow ? flattenInputPaths(firstRow) : [];
-});
+const firstRow = computed<Record<string, unknown> | null>(() => parsedRows.value[0] ?? null);
 
 const mappings = ref<MappingRow[]>([]);
 const draftInput = ref<string | null>(null);
-const draftTarget = ref<TargetOption | null>(null);
+const draftTarget = ref<IdShortPathOption | null>(null);
 
 const idField = ref<string | null>(null);
 const configName = ref("");
@@ -132,7 +98,9 @@ async function loadTemplateOptions() {
   try {
     const response = await apiClient.dpp.templates.getAll({
       pagination: { limit: 100 },
-      filter: { status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published] },
+      filter: {
+        status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
+      },
     });
     templateOptions.value = response.data.result
       .filter(
@@ -144,7 +112,10 @@ async function loadTemplateOptions() {
         return { id: template.id, label: label !== t("common.untitled") ? label : template.id };
       });
   } catch (error) {
-    errorHandlingStore.logErrorWithNotification(t("integrations.bulkImport.errorLoadTemplates"), error);
+    errorHandlingStore.logErrorWithNotification(
+      t("integrations.bulkImport.errorLoadTemplates"),
+      error,
+    );
   } finally {
     templatesLoading.value = false;
   }
@@ -161,7 +132,10 @@ async function onTemplateSelected() {
     });
     submodels.value = response.data.result;
   } catch (error) {
-    errorHandlingStore.logErrorWithNotification(t("integrations.bulkImport.errorLoadSubmodels"), error);
+    errorHandlingStore.logErrorWithNotification(
+      t("integrations.bulkImport.errorLoadSubmodels"),
+      error,
+    );
   } finally {
     submodelsLoading.value = false;
   }
@@ -192,7 +166,8 @@ async function onFileSelect(event: FileUploadSelectEvent) {
 function addMapping() {
   if (!draftInput.value || !draftTarget.value) return;
   const submodelIdShort =
-    submodelLabelById.value.get(draftTarget.value.submodelId) ?? draftTarget.value.submodelId;
+    submodelLabelById.value.get(draftTarget.value.submodelIdShort) ??
+    draftTarget.value.submodelIdShort;
   mappings.value.push({
     input: draftInput.value,
     submodelIdShort,
@@ -207,7 +182,9 @@ function removeMapping(index: number) {
 }
 
 const canGoToMapping = computed(() => parsedRows.value.length > 0 && !fileError.value);
-const canGoToDetails = computed(() => selectedTemplateId.value !== null && mappings.value.length > 0);
+const canGoToDetails = computed(
+  () => selectedTemplateId.value !== null && mappings.value.length > 0,
+);
 const canSubmitNewConfig = computed(
   () => configName.value.trim().length > 0 && idField.value !== null && canGoToDetails.value,
 );
@@ -234,7 +211,9 @@ async function submit() {
         if (!bySubmodel.has(mapping.submodelIdShort)) {
           bySubmodel.set(mapping.submodelIdShort, []);
         }
-        bySubmodel.get(mapping.submodelIdShort)?.push({ input: mapping.input, output: mapping.output });
+        bySubmodel
+          .get(mapping.submodelIdShort)
+          ?.push({ input: mapping.input, output: mapping.output });
       }
       const created = await store.createConfig({
         templateId: selectedTemplateId.value,
@@ -267,7 +246,9 @@ async function submit() {
   <Dialog
     v-model:visible="visible"
     modal
-    :header="isNewConfig ? t('integrations.bulkImport.newConfig') : t('integrations.bulkImport.uploadFile')"
+    :header="
+      isNewConfig ? t('integrations.bulkImport.newConfig') : t('integrations.bulkImport.uploadFile')
+    "
     :style="{ width: '48rem' }"
     @hide="close"
   >
@@ -319,29 +300,22 @@ async function submit() {
         <div class="flex items-end gap-2">
           <label class="flex flex-1 flex-col gap-2">
             <span>{{ t("integrations.bulkImport.inputField") }}</span>
-            <Select
+            <JsonPathSelect
+              :row="firstRow"
               v-model="draftInput"
-              :options="inputPathOptions"
               :placeholder="t('integrations.bulkImport.inputField')"
             />
           </label>
           <label class="flex flex-1 flex-col gap-2">
             <span>{{ t("integrations.bulkImport.targetField") }}</span>
-            <Select
+            <IdShortPathSelect
+              :submodels="submodels"
+              :exclude-model-types="excludedTargetModelTypes"
               v-model="draftTarget"
-              :options="groupedTargetOptions"
-              option-group-label="label"
-              option-group-children="items"
-              option-label="output"
-              :loading="submodelsLoading"
               :placeholder="t('integrations.bulkImport.targetField')"
             />
           </label>
-          <Button
-            icon="pi pi-plus"
-            :disabled="!draftInput || !draftTarget"
-            @click="addMapping"
-          />
+          <Button icon="pi pi-plus" :disabled="!draftInput || !draftTarget" @click="addMapping" />
         </div>
 
         <DataTable :value="mappings">
@@ -369,9 +343,9 @@ async function submit() {
         </label>
         <label class="flex flex-col gap-2">
           <span>{{ t("integrations.bulkImport.idFieldLabel") }}</span>
-          <Select
+          <JsonPathSelect
+            :row="firstRow"
             v-model="idField"
-            :options="inputPathOptions"
             :placeholder="t('integrations.bulkImport.idFieldLabel')"
           />
           <span class="text-surface-500 dark:text-surface-400 text-sm">{{
@@ -395,11 +369,7 @@ async function submit() {
         <Button v-if="step === 2" :disabled="!canGoToDetails" @click="nextStep">
           {{ t("integrations.bulkImport.next") }}
         </Button>
-        <Button
-          v-if="step === 3"
-          :disabled="!canSubmitNewConfig || submitting"
-          @click="submit"
-        >
+        <Button v-if="step === 3" :disabled="!canSubmitNewConfig || submitting" @click="submit">
           {{ t("integrations.bulkImport.createAndRun") }}
         </Button>
       </template>
