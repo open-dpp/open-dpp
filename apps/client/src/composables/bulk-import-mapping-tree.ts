@@ -4,7 +4,7 @@ import type {
   SubmodelResponseDto,
 } from "@open-dpp/dto";
 import { AasSubmodelElements, SubmodelElementSharedSchema } from "@open-dpp/dto";
-import { computed } from "vue";
+import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import { z } from "zod";
 
 /** v1 scope: only scalar leaf fields can be mapped, not lists/tables. */
@@ -33,7 +33,7 @@ export interface BulkImportMappingTarget {
   modelType: string;
 }
 
-export function useBulkImportMappingTree(submodels: SubmodelResponseDto[]) {
+export function useBulkImportMappingTree(submodels: MaybeRefOrGetter<SubmodelResponseDto[]>) {
   const targets = computed<BulkImportMappingTarget[]>(() => {
     const result: BulkImportMappingTarget[] = [];
 
@@ -62,7 +62,7 @@ export function useBulkImportMappingTree(submodels: SubmodelResponseDto[]) {
       }
     };
 
-    for (const submodel of submodels) {
+    for (const submodel of toValue(submodels)) {
       visit(submodel.id, undefined, submodel.submodelElements);
     }
 

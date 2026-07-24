@@ -35,7 +35,6 @@ export class TemplateService {
       this.environmentService,
       this.templateRepository,
       this.activityRepository,
-      this.connection,
     );
   }
 

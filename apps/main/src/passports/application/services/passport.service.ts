@@ -58,7 +58,6 @@ export class PassportService {
       this.environmentService,
       this.passportRepository,
       this.activityRepository,
-      this.connection,
     );
   }
 
@@ -187,7 +186,9 @@ export class PassportService {
       return persisted;
     };
 
-    return options ? await persist(options) : await this.transactionService.withTransaction(persist);
+    return options
+      ? await persist(options)
+      : await this.transactionService.withTransaction(persist);
   }
 
   private async loadTemplateAndCheckOwnership(
