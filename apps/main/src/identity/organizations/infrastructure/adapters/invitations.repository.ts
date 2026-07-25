@@ -36,7 +36,9 @@ export class InvitationsRepository {
     return invitation;
   }
 
-  // The `$eq` wrapper is a security guard against sql injection
+  // The `$eq` wrapper is a security guard against NoSQL operator injection:
+  // it forces an operator-shaped `email` (e.g. `{ $ne: null }`) to be compared
+  // as a literal value instead of being interpreted as a query operator.
   async findByEmail(email: string): Promise<Invitation[]> {
     const rawDocs = await this.invitationModel.collection.find({ email: { $eq: email } }).toArray();
     return rawDocs.map((rawDoc) => InvitationMapper.toDomain(rawDoc));
