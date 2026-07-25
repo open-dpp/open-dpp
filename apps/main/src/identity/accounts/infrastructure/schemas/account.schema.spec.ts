@@ -3,6 +3,7 @@ import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Types } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { Account, AccountSchema } from "./account.schema";
 
@@ -32,8 +33,7 @@ describe("accountSchema", () => {
   afterEach(async () => {
     const collections = mongoConnection.collections;
     for (const key in collections) {
-      const collection = collections[key];
-      await collection.deleteMany({});
+      await collections[key].deleteMany({});
     }
   });
 
@@ -42,26 +42,30 @@ describe("accountSchema", () => {
     await module.close();
   });
 
-  it("should create an account document", async () => {
-    const accountData = {
-      _id: "acc-123",
-      userId: "user-123",
-      accountId: "acc-123",
-      providerId: "google",
+  it("stores _id and userId as ObjectId, matching Better Auth's persistence", async () => {
+    const id = new Types.ObjectId();
+    const userId = new Types.ObjectId();
+
+    const account = new AccountModel({
+      _id: id,
+      userId,
+      accountId: userId.toString(),
+      providerId: "credential",
+      password: "hashed-password",
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    });
+    const saved = await account.save();
 
-    const account = new AccountModel(accountData);
-    const savedAccount = await account.save();
-
-    expect(savedAccount._id).toBe(accountData._id);
-    expect(savedAccount.userId).toBe(accountData.userId);
-    expect(savedAccount.providerId).toBe(accountData.providerId);
+    expect(saved._id).toBeInstanceOf(Types.ObjectId);
+    expect(saved._id.equals(id)).toBe(true);
+    expect(saved.userId).toBeInstanceOf(Types.ObjectId);
+    expect((saved.userId as Types.ObjectId).equals(userId)).toBe(true);
+    expect(saved.providerId).toBe("credential");
   });
 
-  it("should validate required fields", async () => {
-    const account = new AccountModel({});
+  it("requires userId, accountId, and providerId", async () => {
+    const account = new AccountModel({ _id: new Types.ObjectId() });
 
     let err: any;
     try {

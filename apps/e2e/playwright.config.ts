@@ -38,6 +38,7 @@ export default defineConfig({
     { name: "setup", testMatch: /.*\.setup\.ts/ },
     {
       name: "chromium",
+      testIgnore: /account\//,
       use: {
         ...devices["Desktop Chrome"],
         storageState: "playwright/.auth/user.json",
@@ -47,6 +48,7 @@ export default defineConfig({
 
     {
       name: "firefox",
+      testIgnore: /account\//,
       use: {
         ...devices["Desktop Firefox"],
         // Use prepared auth state.
@@ -57,7 +59,17 @@ export default defineConfig({
 
     {
       name: "webkit",
+      testIgnore: /account\//,
       use: { ...devices["Desktop Safari"] },
+    },
+
+    // Account / email-change + profile specs. Self-contained: each test mints a
+    // disposable, freshly-verified user in its own context (see tests/fixtures.ts),
+    // so it needs neither the shared E2E_USERNAME nor the `setup` project.
+    {
+      name: "account",
+      testMatch: /account\/.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
     },
 
     /* Test against mobile viewports. */

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   DigitalProductDocumentStatusDto,
   InvitationStatusDto,
+  MeDtoSchema,
   SubmodelElementSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -31,7 +32,7 @@ import { passport1, passport2 } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
-import { userInvitation } from "./handlers/users";
+import { meResponse, userInvitation } from "./handlers/users";
 import {
   activity1,
   activity2,
@@ -80,6 +81,54 @@ describe("apiClient", () => {
       });
       const response = await sdk.dpp.users.getInvitations({ status: InvitationStatusDto.PENDING });
       expect(response.data).toEqual([userInvitation]);
+    });
+
+    it("should get the current user via GET /users/me", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.getMe();
+      expect(response.status).toEqual(200);
+      expect(response.data.user.email).toEqual(meResponse.user.email);
+      expect(response.data.pendingEmailChange).toBeNull();
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should update the profile via PATCH /users/me", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.updateProfile({
+        firstName: "Renamed",
+        preferredLanguage: "de",
+      });
+      expect(response.status).toEqual(200);
+      expect(response.data.user.firstName).toEqual("Renamed");
+      expect(response.data.user.preferredLanguage).toEqual("de");
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should request an email change via POST /users/me/email-change", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.requestEmailChange({
+        newEmail: "fresh@example.com",
+        currentPassword: "current-password",
+      });
+      expect(response.status).toEqual(202);
+      expect(response.data.pendingEmailChange?.newEmail).toEqual("fresh@example.com");
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should cancel the pending email change via DELETE /users/me/email-change", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.cancelEmailChange();
+      expect(response.status).toEqual(200);
+      expect(response.data.pendingEmailChange).toBeNull();
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
     });
   });
 

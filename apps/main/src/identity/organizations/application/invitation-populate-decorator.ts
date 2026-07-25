@@ -1,6 +1,7 @@
+import { type InvitationResponseDto, InvitationResponseSchema } from "@open-dpp/dto";
+import { UsersRepository } from "../../users/infrastructure/adapters/users.repository";
 import { Invitation } from "../domain/invitation";
 import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
-import { UsersService } from "../../users/application/services/users.service";
 
 export class InvitationPopulateDecorator {
   private organizationName: string | undefined = undefined;
@@ -8,7 +9,7 @@ export class InvitationPopulateDecorator {
   constructor(
     private invitation: Invitation,
     private organizationRepository: OrganizationsRepository,
-    private usersService: UsersService,
+    private usersRepository: UsersRepository,
   ) {}
 
   async populate() {
@@ -18,14 +19,18 @@ export class InvitationPopulateDecorator {
     if (organization) {
       this.organizationName = organization.name;
     }
-    const user = await this.usersService.findOne(this.invitation.inviterId);
+    const user = await this.usersRepository.findOneById(this.invitation.inviterId);
     if (user) {
       this.userName = user.name ?? undefined;
     }
     return this;
   }
 
-  toPlain(): Record<string, any> {
+  toDto(): InvitationResponseDto {
+    return InvitationResponseSchema.parse(this.toPlain());
+  }
+
+  private toPlain(): Record<string, unknown> {
     return {
       id: this.invitation.id,
       ...(this.organizationName

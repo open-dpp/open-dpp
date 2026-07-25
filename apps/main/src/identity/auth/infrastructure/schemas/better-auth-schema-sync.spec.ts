@@ -4,12 +4,13 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { ObjectId } from "mongodb";
 import { Connection, Schema as MongooseSchema } from "mongoose";
 import { BetterAuthHelper } from "../../../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../../../database/config";
 import { EmailService } from "../../../../email/email.service";
 import { UsersService } from "../../../users/application/services/users.service";
-import { AccountSchema } from "../../../users/infrastructure/schemas/account.schema";
+import { AccountSchema } from "../../../accounts/infrastructure/schemas/account.schema";
 import { UserSchema } from "../../../users/infrastructure/schemas/user.schema";
 import { UsersModule } from "../../../users/users.module";
 import { AuthModule } from "../../auth.module";
@@ -114,5 +115,6 @@ describe("Better Auth Schema Sync", () => {
     const unknownFields = rawFields.filter((f) => !schemaFields.has(f));
 
     expect(unknownFields).toEqual([]);
+    expect(rawAccount.userId).toBeInstanceOf(ObjectId);
   });
 });

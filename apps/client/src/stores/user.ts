@@ -1,4 +1,4 @@
-import type { MemberRoleDtoType, UserRoleDtoType } from "@open-dpp/dto";
+import type { MemberRoleDtoType, UserDto, UserRoleDtoType } from "@open-dpp/dto";
 import type { Ref } from "vue";
 import type { Subject } from "../lib/aas-security.ts";
 import { MemberRoleDtoEnum, UserRoleDto, UserRoleDtoEnum } from "@open-dpp/dto";
@@ -25,8 +25,11 @@ interface BetterAuthSession {
 
 export interface IUserStore {
   user: Ref<{ role: UserRoleDtoType; id: string | null }>;
+  me: Ref<UserDto | null>;
   memberRole: Ref<MemberRoleDtoType | undefined>;
+  setMe: (next: UserDto | null) => void;
   updateUserBySession: (session: { user: BetterAuthSession } | null) => void;
+  reset: () => void;
   fetchMemberRole: (organizationId: string) => Promise<void>;
   asSubject: (ignoreMemberRoleForAdmin?: boolean) => Subject;
 }
@@ -36,7 +39,12 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     role: UserRoleDto.ANONYMOUS,
     id: null,
   });
+  const me = ref<UserDto | null>(null);
   const memberRole = ref<MemberRoleDtoType | undefined>(undefined);
+
+  function setMe(next: UserDto | null) {
+    me.value = next;
+  }
 
   function updateUserBySession(session: { user: BetterAuthSession } | null) {
     if (session) {
@@ -48,6 +56,12 @@ export const useUserStore = defineStore("user", (): IUserStore => {
       user.value.role = UserRoleDto.ANONYMOUS;
       user.value.id = null;
     }
+  }
+
+  function reset() {
+    user.value = { role: UserRoleDto.ANONYMOUS, id: null };
+    me.value = null;
+    memberRole.value = undefined;
   }
 
   async function fetchMemberRole(organizationId: string) {
@@ -74,5 +88,5 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     };
   }
 
-  return { user, memberRole, updateUserBySession, fetchMemberRole, asSubject };
+  return { user, me, memberRole, setMe, updateUserBySession, reset, fetchMemberRole, asSubject };
 });

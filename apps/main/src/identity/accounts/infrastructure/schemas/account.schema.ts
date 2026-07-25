@@ -1,16 +1,16 @@
 import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Schema as MongooseSchema, SchemaTypes, Types } from "mongoose";
 
 export type AccountDocument = HydratedDocument<Account>;
 
 @Schema({ collection: "account", autoCreate: process.env.NODE_ENV === "test" })
 export class Account {
-  @Prop({ type: String, required: true })
-  _id: string;
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
+  _id: Types.ObjectId;
 
-  @Prop({ required: true })
-  userId: string;
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  userId: Types.ObjectId | string;
 
   @Prop({ required: true })
   accountId: string;
@@ -47,3 +47,10 @@ export class Account {
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);
+
+// Indexes
+// userId is the lookup key for credential verification (findCredentialByUserId)
+// and Better Auth's own account resolution; without it those queries collection-scan.
+// ponytail: no accountId index — no query filters by accountId today (credential-only,
+// no social/OAuth providers). Add { providerId: 1, accountId: 1 } if social login lands.
+AccountSchema.index({ userId: 1 });
