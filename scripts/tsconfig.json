@@ -1,0 +1,16 @@
+{
+  // Editor/type-check config for the root maintenance scripts (run via tsx,
+  // which does not type-check). No build; check manually with:
+  //   pnpm --filter @open-dpp/dto exec tsc -p ../../scripts/tsconfig.json
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2023",
+    "lib": ["es2023"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.mts"]
+}
