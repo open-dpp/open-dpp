@@ -5,16 +5,6 @@ import { z } from "zod";
 
 export const EnvConfig = envSchema.parse(process.env);
 
-// Shared, pre-provisioned user used by auth.setup.ts (CI). OPTIONAL: in local dev
-// these are usually unset, and the `account` project specs use disposable users
-// instead (see tests/helpers/disposable-user.ts), so importing this file must not throw.
-export const User = z
-  .object({
-    E2E_USERNAME: z.string().optional(),
-    E2E_PASSWORD: z.string().optional(),
-  })
-  .parse(process.env);
-
 export const ExampleOrganisation = `ExampleOrg-${uuid4()}`;
 
 // API version prefix. Mirrors LatestApiVersionWithPrefixDto in @open-dpp/dto;
