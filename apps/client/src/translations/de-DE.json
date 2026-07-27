@@ -327,6 +327,7 @@
       "inputField": "Eingabefeld",
       "targetField": "Zielfeld",
       "addMapping": "Zuordnung hinzufügen",
+      "configDetails": "Konfigurationsdetails",
       "configName": "Konfigurationsname",
       "idFieldLabel": "Id-Feld",
       "idFieldHelp": "Das Eingabefeld, das jedes Produkt eindeutig identifiziert, um den passenden Produktpass zu erstellen oder zu aktualisieren.",

@@ -327,6 +327,7 @@
       "inputField": "Input field",
       "targetField": "Target field",
       "addMapping": "Add mapping",
+      "configDetails": "Configuration details",
       "configName": "Configuration name",
       "idFieldLabel": "Id field",
       "idFieldHelp": "The input field that uniquely identifies each product, used to create or update the matching passport.",
