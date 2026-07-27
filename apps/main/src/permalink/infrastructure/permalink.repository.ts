@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
@@ -89,7 +89,7 @@ export class PermalinkRepository {
         },
         {
           $match: {
-            "config.referenceType": PresentationReferenceType.Passport,
+            "config.referenceType": DigitalProductDocumentTypes.Passport,
             "config.referenceId": { $eq: passportId },
           },
         },
@@ -113,7 +113,7 @@ export class PermalinkRepository {
   async deleteAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<number> {
     const configDocs = await this.presentationConfigurationDoc
       .find({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passportId,
       })
       .session(options?.session ?? null);

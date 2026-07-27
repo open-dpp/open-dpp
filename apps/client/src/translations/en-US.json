@@ -111,14 +111,19 @@
       "id": "Identifier"
     },
     "table": {
+      "edit": "Edit table",
       "saveAndAddEntries": "Save and add list entries",
       "column": "column",
       "row": "row",
+      "rows": "Rows",
+      "backToParentTable": "Back to parent table",
       "entries": "Entries",
       "emptyCell": "Please fill out",
       "removeColumn": "Should the @:aasEditor.table.column really be removed?",
+      "removeGroupColumn": "Should the group together with all its columns really be removed?",
       "removeRow": "Should the @:aasEditor.table.row really be removed?",
       "addColumnLeft": "@:common.add @:aasEditor.table.column to the left",
+      "addColumnRight": "@:common.add @:aasEditor.table.column to the right",
       "addColumnEnd": "@:common.add @:aasEditor.table.column to the end",
       "addRowAbove": "@:common.add @:aasEditor.table.row above",
       "addRowBelow": "@:common.add @:aasEditor.table.row below",
@@ -129,7 +134,14 @@
       "errorAddRow": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.row",
       "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.column",
       "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.row",
-      "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
+      "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries",
+      "addSubColumn": "@:common.add sub-column",
+      "moveToGroup": "Move to group",
+      "newGroup": "New group",
+      "removeFromGroup": "Remove from group",
+      "removeFromGroupConfirm": "Should the @:aasEditor.table.column really be removed from the group?",
+      "errorMoveColumn": "@.capitalize:common.failed to move @:aasEditor.table.column to group",
+      "errorCreateGroup": "@.capitalize:common.failed to create group"
     },
     "data": "Data",
     "link": "Link",
@@ -144,7 +156,7 @@
     "errorRemoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.remove the element.",
     "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
     "errorRemoveSubmodel": "@.capitalize:common.failed to @.lower:common.remove @.lower:aasEditor.submodel.",
-    "submodelElementList": "List",
+    "submodelElementList": "Table",
     "textField": "Text field",
     "file": "File",
     "dateField": "Date field",
@@ -501,6 +513,7 @@
     "createdAt": "Date",
     "position": "Position",
     "name": "Name",
+    "group": "Group",
     "type": "Type",
     "affectedRole": "Affected role",
     "oldValue": "Old value",
@@ -523,6 +536,10 @@
       "RowDeleted": "Row deleted",
       "ColumnAdded": "Column added",
       "ColumnDeleted": "Column deleted",
+      "ColumnAddedToGroup": "Column added to group",
+      "ColumnDeletedFromGroup": "Column removed from group",
+      "ColumnModifiedInGroup": "Column modified in group",
+      "ColumnMovedToGroup": "Column moved to group",
       "SubmodelAdded": "Section added",
       "AddedSubmodelToEnv": "Section added to environment",
       "SubmodelElementAdded": "Element added",
@@ -777,7 +794,12 @@
     },
     "missingValue": "Value is missing",
     "passportNotFound": "Productpass passport not found",
-    "passportNotFoundLong": "Your digital product passport could not be found. It may not have been published yet, or the link may be invalid. Please contact the product owner or support for assistance."
+    "passportNotFoundLong": "Your digital product passport could not be found. It may not have been published yet, or the link may be invalid. Please contact the product owner or support for assistance.",
+    "table": {
+      "viewTable": "View table",
+      "rows": "Rows",
+      "backToParentTable": "Back to parent table"
+    }
   },
   "qrCodeDialog": {
     "draftWarning": "This passport is a draft and not yet publicly accessible.",

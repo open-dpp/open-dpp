@@ -12,11 +12,9 @@ import { SubjectAttributes } from "../security/subject-attributes";
 import { AnnotatedRelationshipElement } from "./annotated-relationship-element";
 
 import { Property } from "./property";
-import { randomUUID } from "node:crypto";
 
 describe("annotatedRelationshipElement", () => {
   it("should add submodel element", () => {
-    const digitalProductDocumentId = randomUUID();
     const security = Security.create({});
     const member = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -35,13 +33,11 @@ describe("annotatedRelationshipElement", () => {
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement, {
       ability,
-      digitalProductDocumentId,
     });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement]);
     expect(() =>
       annotatedRelationshipElement.addSubmodelElement(submodelElement, {
         ability,
-        digitalProductDocumentId,
       }),
     ).toThrow(new ValueError("Submodel element with idShort prop1 already exists"));
   });
@@ -86,8 +82,6 @@ describe("annotatedRelationshipElement", () => {
   });
 
   it("should delete submodel element", () => {
-    const digitalProductDocumentId = randomUUID();
-
     const annotatedRelationshipElement = AnnotatedRelationshipElement.create({
       idShort: "idShort",
       first: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
@@ -107,12 +101,10 @@ describe("annotatedRelationshipElement", () => {
     const submodelElement0 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement0, {
       ability,
-      digitalProductDocumentId,
     });
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement1, {
       ability,
-      digitalProductDocumentId,
     });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([
       submodelElement0,
@@ -122,7 +114,6 @@ describe("annotatedRelationshipElement", () => {
     annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, {
       ability,
       onDelete,
-      digitalProductDocumentId,
     });
     expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);
@@ -130,7 +121,6 @@ describe("annotatedRelationshipElement", () => {
       annotatedRelationshipElement.deleteSubmodelElement("unknown", {
         ability,
         onDelete,
-        digitalProductDocumentId,
       }),
     ).toThrow(ValueError);
     expect(onDelete).toHaveBeenCalledTimes(1);

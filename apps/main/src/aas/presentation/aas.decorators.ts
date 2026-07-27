@@ -13,6 +13,7 @@ import {
 
 import {
   AssetAdministrationShellModificationSchema,
+  CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
@@ -127,6 +128,43 @@ export function ApiDeleteColumn(prefix?: string) {
 export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)));
 }
+
+export const ApiCreateGroupFromColumnPath = `${ApiGetSubmodelElementByIdPath}/groups`;
+
+export function ApiCreateGroupFromColumn(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiCreateGroupFromColumnPath, prefix)));
+}
+
+export const ApiPostColumnToGroupPath = `${ApiGetSubmodelElementByIdPath}/groups/:groupIdShort/columns`;
+
+export function ApiPostColumnToGroup(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiPostColumnToGroupPath, prefix)));
+}
+
+export const ApiGetColumnInGroupByIdShortPath = `${ApiPostColumnToGroupPath}/:idShortOfColumn`;
+
+export function ApiDeleteColumnFromGroup(prefix?: string) {
+  return applyDecorators(Delete(withPrefix(ApiGetColumnInGroupByIdShortPath, prefix)));
+}
+
+export function ApiPatchColumnInGroup(prefix?: string) {
+  return applyDecorators(Patch(withPrefix(ApiGetColumnInGroupByIdShortPath, prefix)));
+}
+
+export const ApiMoveColumnToGroupPath = `${ApiPostColumnToGroupPath}/:idShortOfColumn/move`;
+
+export function ApiMoveColumnToGroup(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiMoveColumnToGroupPath, prefix)));
+}
+
+export const GroupIdShortParamSchema = z.string().meta({
+  description: "IdShort of the group column.",
+  example: "Group1",
+  param: { in: "path", name: "groupIdShort" },
+});
+
+export const GroupIdShortParam = () =>
+  Param("groupIdShort", new ZodValidationPipe(GroupIdShortParamSchema));
 
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
@@ -283,6 +321,8 @@ export const SubmodelModificationRequestBody = () =>
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
+export const CreateGroupFromColumnRequestBody = () =>
+  Body(new ZodValidationPipe(CreateGroupFromColumnSchema));
 export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

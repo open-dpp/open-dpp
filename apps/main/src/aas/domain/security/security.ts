@@ -1,4 +1,5 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
@@ -12,6 +13,7 @@ import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
+import { SubmodelSecurityContext } from "./submodel-security-context";
 import {
   ChangeTracker,
   ITrackable,
@@ -63,6 +65,10 @@ export class Security implements ITrackable {
     );
   }
 
+  movePolicy(oldObject: IdShortPath, newObject: IdShortPath): void {
+    this.localAccessControl.movePolicy(oldObject, newObject);
+  }
+
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
     const rule = this.localAccessControl.findRuleOfSubject(subject);
     return (
@@ -89,7 +95,10 @@ export class Security implements ITrackable {
     this.localAccessControl.modifyPolicy(subject, object, permissions);
   }
 
-  applyModifiedRules(modifications: AccessPermissionRule[]): void {
+  applyModifiedRules(
+    modifications: AccessPermissionRule[],
+    submodelSecurityContext?: SubmodelSecurityContext,
+  ): void {
     for (const modification of modifications) {
       for (const permissionsPerObject of modification.permissionsPerObject) {
         const policy = {
@@ -97,6 +106,15 @@ export class Security implements ITrackable {
           object: IdShortPath.create({ path: permissionsPerObject.object.idShort }),
           permissions: permissionsPerObject.permissions,
         };
+
+        const validity = submodelSecurityContext?.checkPolicyTarget(policy.object);
+        if (validity?.isInvalid) {
+          throw new ValueError(validity.reason);
+        }
+        if (validity?.isUnresolvable) {
+          continue;
+        }
+
         if (this.hasPolicy(policy.subject, policy.object, policy.permissions)) {
           this.modifyPolicy(policy.subject, policy.object, policy.permissions);
         } else {

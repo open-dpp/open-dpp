@@ -19,6 +19,7 @@ import {
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
+import { DigitalProductDocumentTypes, DigitalProductDocumentTypesType } from "@open-dpp/dto";
 
 const TemplateSchema = DigitalProductDocumentSchema;
 
@@ -94,6 +95,10 @@ export class Template
 
   getEnvironment(): Environment {
     return this.environment;
+  }
+
+  getType(): DigitalProductDocumentTypesType {
+    return DigitalProductDocumentTypes.Template;
   }
 
   getOrganizationId(): string {

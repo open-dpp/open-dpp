@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ForbiddenException } from "@nestjs/common";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Model } from "mongoose";
 import { AasModule } from "../../../aas/aas.module";
@@ -168,7 +168,7 @@ describe("passportService", () => {
       PresentationConfiguration.create({
         organizationId,
         referenceId: passport.id,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         elementDesign: { "submodel-1.prop-1": "BigNumber" },
         defaultComponents: { [KeyTypes.Property]: "BigNumber" },
       }),
@@ -197,7 +197,7 @@ describe("passportService", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeUndefined();
@@ -209,7 +209,7 @@ describe("passportService", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeDefined();
@@ -295,7 +295,7 @@ describe("passportService", () => {
       PresentationConfiguration.create({
         organizationId,
         referenceId: draft.id,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         label: null,
       }),
     );
@@ -303,13 +303,13 @@ describe("passportService", () => {
       PresentationConfiguration.create({
         organizationId,
         referenceId: draft.id,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         label: "Variant A",
       }),
     );
 
     const before = await presentationConfigurationRepository.findManyByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId: draft.id,
     });
     expect(before).toHaveLength(2);
@@ -317,7 +317,7 @@ describe("passportService", () => {
     await service.deletePassport(draft.id, organizationId, subject);
 
     const after = await presentationConfigurationRepository.findManyByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId: draft.id,
     });
     expect(after).toEqual([]);
@@ -336,7 +336,7 @@ describe("passportService", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeDefined();

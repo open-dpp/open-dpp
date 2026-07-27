@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
-import { useDisplayName } from "../../composables/display-name";
-import { usePresentationDispatch } from "./presentation-dispatch";
+import { useLanguageTexts } from "../../composables/language-text.ts";
+import { usePresentationDispatch } from "../../lib/presentation/presentation-dispatch.ts";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
 const { element, parentPath } = defineProps<{
@@ -10,7 +10,7 @@ const { element, parentPath } = defineProps<{
   parentPath?: string;
 }>();
 
-const { description: elementName } = useDisplayName(element.displayName);
+const { text: elementName } = useLanguageTexts(element.displayName);
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),
