@@ -837,8 +837,12 @@
       "batch": "Charge / Los",
       "serial": "Seriennummer",
       "createPermalink": "Permalink erstellen",
+      "delete": "Löschen",
+      "deleteLockedTooltip": "Produktidentifikatoren sind gesperrt, sobald der Pass veröffentlicht ist.",
       "deleteConfirmHeader": "Entfernen",
       "deleteConfirmMessage": "Möchten Sie diesen Produktidentifikator löschen?",
+      "deleteSuccess": "Produktidentifikator gelöscht.",
+      "deleteError": "Produktidentifikator konnte nicht gelöscht werden.",
       "systemReadOnly": "System (schreibgeschützt)",
       "empty": "Keine eindeutigen Produktidentifikatoren gefunden."
     },

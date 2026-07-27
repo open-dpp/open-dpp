@@ -1,6 +1,13 @@
 <script lang="ts" setup>
-import type { UniqueProductIdentifierListItemDto } from "@open-dpp/dto";
-import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
+import type {
+  UniqueProductIdentifierListItemDto,
+  UniqueProductIdentifierTypeValue,
+} from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  PermalinkKind,
+  UniqueProductIdentifierType,
+} from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref, watch } from "vue";
@@ -13,11 +20,15 @@ import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
 import apiClient from "../../lib/api-client";
+import { useErrorHandlingStore } from "../../stores/error.handling";
+import { useNotificationStore } from "../../stores/notification";
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const confirm = useConfirm();
+const errorHandlingStore = useErrorHandlingStore();
+const notificationStore = useNotificationStore();
 
 // The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
@@ -62,13 +73,20 @@ const {
 // -------------------------------------------------------------------------
 
 const createDialogVisible = ref(false);
-// A GS1 UPI can only be created while this passport is a draft; resolved on open.
+// Gates both creating a GS1 UPI and deleting any UPI — both are draft-only on the
+// backend. Loaded on mount (the delete buttons need it at first render) and
+// refreshed when the create dialog opens. Stays false if the fetch fails, so both
+// actions stay locked rather than failing later with a 409.
 const passportIsDraft = ref(false);
 
-async function openCreateDialog() {
+async function loadPassportStatus() {
   const { data } = await apiClient.dpp.passports.getById(passportId.value);
   passportIsDraft.value =
     data.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Draft;
+}
+
+async function openCreateDialog() {
+  await loadPassportStatus();
   createDialogVisible.value = true;
 }
 
@@ -137,8 +155,33 @@ const qrIdentity = computed(() =>
 );
 
 // -------------------------------------------------------------------------
-// Delete (confirmed)
+// Delete (guarded)
 // -------------------------------------------------------------------------
+
+// GTIN / EAN rows are read-only system rows; only these two types are user-managed.
+const USER_MANAGED_TYPES: UniqueProductIdentifierTypeValue[] = [
+  UniqueProductIdentifierType.GS1,
+  UniqueProductIdentifierType.OPEN_DPP_UUID,
+];
+
+/**
+ * Mirrors the backend guard in `UpiCollectionService.delete`: a UPI can be deleted
+ * when it is user-managed (GS1 / OPEN_DPP_UUID) AND its passport is still a draft
+ * (ADR 0006). Anything else answers 409, so the button is disabled instead.
+ */
+function canDelete(upi: UniqueProductIdentifierListItemDto): boolean {
+  return passportIsDraft.value && USER_MANAGED_TYPES.includes(upi.type);
+}
+
+function deleteTooltip(upi: UniqueProductIdentifierListItemDto): string {
+  if (!USER_MANAGED_TYPES.includes(upi.type)) {
+    return t("uniqueProductIdentifiers.list.systemReadOnly");
+  }
+  if (!passportIsDraft.value) {
+    return t("uniqueProductIdentifiers.list.deleteLockedTooltip");
+  }
+  return t("uniqueProductIdentifiers.list.delete");
+}
 
 function onDeleteUpi(uuid: string) {
   confirm.require({
@@ -147,10 +190,18 @@ function onDeleteUpi(uuid: string) {
     icon: "pi pi-info-circle",
     rejectLabel: t("common.cancel"),
     rejectProps: { label: t("common.cancel"), severity: "secondary", outlined: true },
-    acceptProps: { label: t("common.delete"), severity: "danger" },
+    acceptProps: { label: t("uniqueProductIdentifiers.list.delete"), severity: "danger" },
     accept: async () => {
-      await deleteUpi(uuid);
-      await reloadCurrentPage();
+      try {
+        await deleteUpi(uuid);
+        notificationStore.addSuccessNotification(t("uniqueProductIdentifiers.list.deleteSuccess"));
+        await reloadCurrentPage();
+      } catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          t("uniqueProductIdentifiers.list.deleteError"),
+          e,
+        );
+      }
     },
   });
 }
@@ -160,7 +211,14 @@ function onDeleteUpi(uuid: string) {
 // -------------------------------------------------------------------------
 
 onMounted(async () => {
-  await nextPage();
+  // A failing status fetch must not block the list: passportIsDraft stays false,
+  // which locks create + delete rather than letting them 409 later.
+  await Promise.all([
+    loadPassportStatus().catch((e) =>
+      errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), e),
+    ),
+    nextPage(),
+  ]);
 });
 </script>
 
@@ -200,7 +258,8 @@ onMounted(async () => {
         </template>
       </Column>
       <!-- Actions column: QR for rows with a gs1-link permalink, create-CTA for GS1
-           rows without one; all listed UPIs (GS1 + internal) are deletable (ADR 0006) -->
+           rows without one; delete only for user-managed rows on a draft passport
+           (ADR 0006) — otherwise disabled with a tooltip explaining the lock -->
       <Column style="width: 9rem">
         <template #body="{ data }">
           <div data-testid="upi-row-actions" class="flex gap-1">
@@ -225,8 +284,9 @@ onMounted(async () => {
             <Button
               icon="pi pi-trash"
               severity="danger"
-              :aria-label="t('common.delete')"
-              :title="t('common.delete')"
+              :aria-label="t('uniqueProductIdentifiers.list.delete')"
+              :title="deleteTooltip(data)"
+              :disabled="!canDelete(data)"
               data-testid="upi-delete-btn"
               @click="onDeleteUpi(data.uuid)"
             />
