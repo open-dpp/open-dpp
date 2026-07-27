@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { PagingParamsDto, PermalinkPublicDto } from "@open-dpp/dto";
-import { PermalinkKind } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -10,8 +10,10 @@ import PermalinkCreateGs1LinkDialog from "../../components/permalinks/PermalinkC
 import PermalinkEditDialog from "../../components/permalinks/PermalinkEditDialog.vue";
 import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
+import { useDigitalProductDocument } from "../../composables/digital-product-document";
 import { usePagination } from "../../composables/pagination";
 import apiClient from "../../lib/api-client";
+import { DigitalProductDocumentType } from "../../lib/digital-product-document";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 
@@ -21,6 +23,9 @@ const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
 const route = useRoute();
 const router = useRouter();
+const { fetchById: fetchPassportById } = useDigitalProductDocument(
+  DigitalProductDocumentType.Passport,
+);
 
 // The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
@@ -105,13 +110,20 @@ const presentationPermalinkCount = computed(
 );
 
 // -------------------------------------------------------------------------
-// Derived: frozen-URLs info alert
+// Passport status (drives the frozen-URLs info alert)
 // -------------------------------------------------------------------------
 
-// All permalinks of a passport freeze together when the passport is published
-// (new ones freeze at creation), so any frozen row on the page means the
-// passport has been published — no extra status fetch needed.
-const hasFrozenPermalinks = computed(() => permalinks.value.some((pl) => pl.publishedUrl != null));
+// Read from the passport itself, never inferred from the rows: a permalink's
+// publishedUrl is immutable once frozen, so an archived-then-restored (or
+// legacy) passport keeps frozen rows while being a draft again. Creating a
+// permalink must never make this view claim the passport was published.
+const passportIsPublished = ref(false);
+
+async function loadPassportStatus() {
+  const passport = await fetchPassportById(passportId.value);
+  passportIsPublished.value =
+    passport?.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Published;
+}
 
 // -------------------------------------------------------------------------
 // Create dialog
@@ -231,7 +243,9 @@ function kindLabel(kind: string): string {
 // -------------------------------------------------------------------------
 
 onMounted(async () => {
-  await nextPage();
+  // A failing status fetch must not block the list — fetchById already notified
+  // the user, and the banner stays hidden rather than claiming a publication.
+  await Promise.all([loadPassportStatus().catch(() => undefined), nextPage()]);
   if (preselectedUpiId.value) {
     createGs1DialogVisible.value = true;
     changeQueryParams({ createForUpi: undefined });
@@ -244,7 +258,7 @@ onMounted(async () => {
     <ConfirmDialog />
 
     <Message
-      v-if="hasFrozenPermalinks"
+      v-if="passportIsPublished"
       severity="info"
       class="mb-4"
       data-testid="permalink-frozen-info"
