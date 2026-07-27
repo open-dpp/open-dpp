@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
@@ -21,7 +21,8 @@ import { registerSubmodelElementClasses } from "./register-submodel-element-clas
 import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableExtension } from "./table-extension";
+import { TableExtension } from "./table/table-extension";
+import { AccessResult } from "../security/access-allowed";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -149,7 +150,7 @@ describe("submodel", () => {
       ability,
     });
     const row0 = submodelElementList.getSubmodelElements()[0];
-    col1.setParentIdShortPath(row0.getIdShortPath());
+    col1.setParentPointer(row0.getPointer());
     expect(row0.getSubmodelElements()).toEqual([col1]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -206,14 +207,12 @@ describe("submodel", () => {
       { displayName: newDisplayNames },
       { ability },
     );
-    expect(list.value[0].getSubmodelElements()[0].displayName).toEqual(
-      newDisplayNames.map(LanguageText.fromPlain),
-    );
+    expect(
+      (list as SubmodelElementList).getSubmodelElements()[0].getSubmodelElements()[0].displayName,
+    ).toEqual(newDisplayNames.map(LanguageText.fromPlain));
   });
 
   it("should delete column", () => {
-    const digitalProductDocumentId = randomUUID();
-
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -238,7 +237,7 @@ describe("submodel", () => {
       ability,
     });
     let tableExtension = new TableExtension(submodelElementList);
-    col1.setParentIdShortPath(tableExtension.rows[0].getIdShortPath());
+    col1.setParentPointer(tableExtension.rows[0].getPointer());
     expect(tableExtension.columns).toEqual([col1]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -249,7 +248,7 @@ describe("submodel", () => {
       submodel.deleteColumn(
         IdShortPath.create({ path: submodelElementList.idShort }),
         col1.idShort,
-        { ability: anonymousAbility, onDelete, digitalProductDocumentId },
+        { ability: anonymousAbility, onDelete },
       ),
     ).toThrow(
       new ForbiddenError(
@@ -260,7 +259,6 @@ describe("submodel", () => {
     submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, {
       ability,
       onDelete,
-      digitalProductDocumentId,
     });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.columns).toEqual([]);
@@ -297,8 +295,6 @@ describe("submodel", () => {
   });
 
   it("should delete row", () => {
-    const digitalProductDocumentId = randomUUID();
-
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -334,7 +330,6 @@ describe("submodel", () => {
       submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
         ability: anonymousAbility,
         onDelete,
-        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(
@@ -344,7 +339,6 @@ describe("submodel", () => {
     submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, {
       ability,
       onDelete,
-      digitalProductDocumentId,
     });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.rows).toEqual([row1]);
@@ -405,7 +399,6 @@ describe("submodel", () => {
   });
 
   it("should delete submodel element by idShortPath", () => {
-    const digitalProductDocumentId = randomUUID();
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(
@@ -444,7 +437,6 @@ describe("submodel", () => {
       submodel.deleteSubmodelElement(path, {
         ability: anonymousAbility,
         onDelete,
-        digitalProductDocumentId,
       }),
     ).toThrow(
       new ForbiddenError(
@@ -453,7 +445,7 @@ describe("submodel", () => {
     );
     expect(onDelete).not.toHaveBeenCalled();
 
-    submodel.deleteSubmodelElement(path, { ability, onDelete, digitalProductDocumentId });
+    submodel.deleteSubmodelElement(path, { ability, onDelete });
     expect(
       submodel.findSubmodelElement(
         IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }),
@@ -596,14 +588,14 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop1, { ability });
     submodel.addSubmodelElement(prop2, { ability });
 
-    expect(submodel.copy({ ability })!.submodelElements).toEqual([prop1]);
+    expect(submodel.copy({ ability }).value.getSubmodelElements()).toEqual([prop1]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability })).toEqual(undefined);
+    expect(submodel.copy({ ability })).toEqual(AccessResult.denied());
     security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
     ]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability })!.submodelElements).toEqual([prop2]);
+    expect(submodel.copy({ ability }).value.getSubmodelElements()).toEqual([prop2]);
   });
 
   it("should get value representation for bill of material", () => {
@@ -714,10 +706,10 @@ describe("submodel", () => {
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
 
-    const copy = submodel.copy();
-    expect(copy?.tracker).toEqual(
+    const copy = submodel.copy().value;
+    expect(copy.tracker).toEqual(
       Submodel.fromPlain(
-        submodelDesignOfProductPlainFactory.build({ id: copy!.id }, { transient: { iriDomain } }),
+        submodelDesignOfProductPlainFactory.build({ id: copy.id }, { transient: { iriDomain } }),
       ).tracker,
     );
   });

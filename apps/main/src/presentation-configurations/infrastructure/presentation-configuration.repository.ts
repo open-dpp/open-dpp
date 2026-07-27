@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { PresentationReferenceTypeType } from "@open-dpp/dto";
+import { DigitalProductDocumentTypesType } from "@open-dpp/dto";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail, save } from "../../lib/repositories";
@@ -11,7 +11,7 @@ import {
 } from "./presentation-configuration.schema";
 
 export interface PresentationConfigurationReference {
-  referenceType: PresentationReferenceTypeType;
+  referenceType: DigitalProductDocumentTypesType;
   referenceId: string;
 }
 

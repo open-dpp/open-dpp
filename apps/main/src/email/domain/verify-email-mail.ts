@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { BaseEmail } from "./base-email";
+import { BaseEmail, BaseEmailTypes } from "./base-email";
 import { BaseEmailTemplateProperties } from "./base-email-template-properties";
+import { EmailTemplate } from "./email-template";
 
 export interface VerifyEmailTemplateProps extends BaseEmailTemplateProperties {
   link: string;
@@ -19,7 +20,13 @@ export class VerifyEmailMail extends BaseEmail {
     subject: string,
     templateProperties: VerifyEmailTemplateProps,
   ) {
-    super(id, "VERIFY_EMAIL", "email-verify.mjml", to, subject, templateProperties);
+    super(
+      id,
+      BaseEmailTypes.VerifyEmail,
+      new EmailTemplate("email-verify.mjml", templateProperties),
+      to,
+      subject,
+    );
   }
 
   public static create(data: VerifyEmailMailCreateProps) {

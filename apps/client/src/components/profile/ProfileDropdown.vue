@@ -1,12 +1,14 @@
 <script lang="ts" setup>
+import { storeToRefs } from "pinia";
 import { computed, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
-import { authClient } from "../../auth-client";
 import type { MenuItem } from "primevue/menuitem";
 import { useRouter } from "vue-router";
+import { useUserStore } from "../../stores/user";
 
 const { t } = useI18n();
 const router = useRouter();
+const { me } = storeToRefs(useUserStore());
 
 const userNavigation = computed<MenuItem[]>(() => [
   {
@@ -20,11 +22,9 @@ const userNavigation = computed<MenuItem[]>(() => [
 ]);
 
 const initials = computed(() => {
-  const session = authClient.useSession();
-  if (!session.value.data) return "AN";
-  const userSession = session.value.data;
-  const first = userSession.user.firstName?.substring(0, 1) || "A";
-  const last = userSession.user.lastName?.substring(0, 1) || "N";
+  if (!me.value) return "AN";
+  const first = me.value.firstName?.substring(0, 1) || "A";
+  const last = me.value.lastName?.substring(0, 1) || "N";
   return (first + last).toUpperCase();
 });
 

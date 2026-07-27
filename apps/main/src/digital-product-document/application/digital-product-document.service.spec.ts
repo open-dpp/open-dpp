@@ -51,6 +51,8 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { TransactionService } from "../../database/transaction.service";
 
 describe("DigitalProductDocumentService", () => {
@@ -83,6 +85,7 @@ describe("DigitalProductDocumentService", () => {
         AasModule,
         UsersModule,
         OrganizationsModule,
+        PresentationConfigurationsModule,
       ],
       providers: [
         TransactionService,
@@ -90,17 +93,23 @@ describe("DigitalProductDocumentService", () => {
         PassportRepository,
         UniqueProductIdentifierRepository,
         ConceptDescriptionRepository,
+        PresentationConfigurationService,
       ],
     }).compile();
     await module.init();
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
+    const presentationConfigurationService = module.get<PresentationConfigurationService>(
+      PresentationConfigurationService,
+    );
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
     assetAdministrationShellRepository = module.get<AasRepository>(AasRepository);
+
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
       activityRepository,
+      presentationConfigurationService,
     );
   });
 
@@ -275,6 +284,28 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         undefined,
+        userContext,
+        latestVersion,
+      ),
+    ).rejects.toThrow(exception);
+
+    await expect(
+      service.createGroupFromColumnInSubmodelElementList(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        IdShortPath.create({ path: "sub" }),
+        "col1",
+        {
+          idShort: "group1",
+          modelType: KeyTypes.SubmodelElementCollection,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
         userContext,
         latestVersion,
       ),

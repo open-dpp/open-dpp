@@ -1,5 +1,7 @@
 # @open-dpp/env
 
+## 2.8.0
+
 ## 2.7.0
 
 ### Minor Changes

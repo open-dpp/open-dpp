@@ -29,7 +29,7 @@ import {
   PermalinkListDtoSchema,
   PermalinkPublicDtoSchema,
   PermalinkUpdateRequestSchema,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
@@ -412,6 +412,6 @@ function passportToHolder(passport: Passport): PresentationReferenceHolder {
   return {
     id: passport.id,
     organizationId: passport.organizationId,
-    referenceType: PresentationReferenceType.Passport,
+    referenceType: DigitalProductDocumentTypes.Passport,
   };
 }

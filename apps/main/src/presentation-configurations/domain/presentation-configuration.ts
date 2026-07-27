@@ -6,8 +6,8 @@ import {
   PresentationConfigurationDtoSchema,
   PresentationConfigurationInvariantsSchema,
   PresentationConfigurationPatchDto,
-  PresentationReferenceType,
-  PresentationReferenceTypeType,
+  DigitalProductDocumentTypes,
+  DigitalProductDocumentTypesType,
 } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
@@ -48,7 +48,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     public readonly id: string,
     public readonly organizationId: string,
     public readonly referenceId: string,
-    public readonly referenceType: PresentationReferenceTypeType,
+    public readonly referenceType: DigitalProductDocumentTypesType,
     public readonly label: string | null,
     public readonly elementDesign: ReadonlyMap<string, PresentationComponentName>,
     public readonly defaultComponents: ReadonlyMap<KeyTypesType, PresentationComponentName>,
@@ -60,7 +60,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     id?: string;
     organizationId: string;
     referenceId: string;
-    referenceType: PresentationReferenceTypeType;
+    referenceType: DigitalProductDocumentTypesType;
     label?: string | null;
     elementDesign?:
       | ReadonlyMap<string, PresentationComponentName>
@@ -109,7 +109,7 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     return PresentationConfiguration.create({
       organizationId: data.organizationId,
       referenceId: data.referenceId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
     });
   }
 
@@ -181,6 +181,68 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     const next = new Map(this.defaultComponents);
     next.delete(type);
     return this.copyWith({ defaultComponents: next });
+  }
+
+  /**
+   * Returns a new PresentationConfiguration with the element design entry at `oldPath`
+   * and all its descendants moved to `newPath`.
+   *
+   * For example, if elementDesign has keys "A.B" and "A.B.C", moving "A.B" to "A.D"
+   * will result in keys "A.D" and "A.D.C".
+   *
+   * If oldPath equals newPath, returns this instance unchanged.
+   */
+  moveElementDesign(oldPath: string, newPath: string): PresentationConfiguration {
+    if (oldPath === newPath) {
+      return this;
+    }
+    const next = new Map<string, PresentationComponentName>();
+    let hasChanges = false;
+    const oldPrefix = `${oldPath}.`;
+
+    for (const [key, value] of this.elementDesign) {
+      if (key === oldPath) {
+        next.set(newPath, value);
+        hasChanges = true;
+      } else if (key.startsWith(oldPrefix)) {
+        const suffix = key.slice(oldPrefix.length);
+        next.set(`${newPath}.${suffix}`, value);
+        hasChanges = true;
+      } else {
+        next.set(key, value);
+      }
+    }
+
+    if (!hasChanges) {
+      return this;
+    }
+    return this.copyWith({ elementDesign: next });
+  }
+
+  /**
+   * Returns a new PresentationConfiguration with the element design entry at `path`
+   * and all its descendants removed.
+   *
+   * For example, if elementDesign has keys "A.B", "A.B.C", and "A.BC",
+   * deleting "A.B" will remove "A.B" and "A.B.C" but keep "A.BC".
+   */
+  deleteElementDesign(path: string): PresentationConfiguration {
+    const next = new Map<string, PresentationComponentName>();
+    let hasChanges = false;
+    const prefix = `${path}.`;
+
+    for (const [key, value] of this.elementDesign) {
+      if (key === path || key.startsWith(prefix)) {
+        hasChanges = true;
+      } else {
+        next.set(key, value);
+      }
+    }
+
+    if (!hasChanges) {
+      return this;
+    }
+    return this.copyWith({ elementDesign: next });
   }
 
   withLabel(label: string | null): PresentationConfiguration {

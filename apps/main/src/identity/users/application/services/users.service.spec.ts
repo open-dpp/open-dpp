@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { Language } from "@open-dpp/dto";
 import { NotFoundError, NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
@@ -49,6 +51,25 @@ describe("UsersService", () => {
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
     expect(result).toBe(savedUser);
+  });
+
+  it("returns the saved user and logs an error when the password-reset email fails to send", async () => {
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const smtpError = new Error("smtp down");
+    mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+    const result = await service.createUser("test@example.com", "John", "Doe");
+
+    expect(result).toBe(savedUser);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+
+    errorSpy.mockRestore();
   });
 
   it("should throw if save returns null", async () => {
@@ -143,5 +164,129 @@ describe("UsersService", () => {
     await expect(service.setUserEmailVerified("test@example.com", true)).rejects.toThrow(
       NotFoundError,
     );
+  });
+
+  describe("getMe", () => {
+    it("delegates to the repository's findOneOrFail", async () => {
+      const user = User.create({ email: "me@example.com", firstName: "Me", lastName: "Self" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.getMe(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(result).toBe(user);
+    });
+
+    it("propagates NotFoundInDatabaseException when the user is missing", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.getMe("unknown")).rejects.toThrow(NotFoundInDatabaseException);
+    });
+  });
+
+  describe("updateProfile", () => {
+    const loadUser = () =>
+      User.create({
+        email: "user@example.com",
+        firstName: "Old",
+        lastName: "Name",
+        preferredLanguage: Language.en,
+      });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.updateProfile("nonexistent", { firstName: "Anything" })).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
+
+    it("updates firstName while preserving lastName", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { firstName: "New" });
+
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      expect(mockRepo.update.mock.calls[0][0].firstName).toBe("New");
+      expect(mockRepo.update.mock.calls[0][0].lastName).toBe("Name");
+      expect(result.firstName).toBe("New");
+    });
+
+    it("updates lastName while preserving firstName", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { lastName: "Changed" });
+
+      expect(mockRepo.update.mock.calls[0][0].firstName).toBe("Old");
+      expect(mockRepo.update.mock.calls[0][0].lastName).toBe("Changed");
+      expect(result.lastName).toBe("Changed");
+    });
+
+    it("updates preferredLanguage", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { preferredLanguage: Language.de });
+
+      expect(mockRepo.update.mock.calls[0][0].preferredLanguage).toBe(Language.de);
+      expect(result.preferredLanguage).toBe(Language.de);
+    });
+
+    it("composes multiple changes into a single update call", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      await service.updateProfile(user.id, {
+        firstName: "Jane",
+        lastName: "Roe",
+        preferredLanguage: Language.de,
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      const persisted = mockRepo.update.mock.calls[0][0] as User;
+      expect(persisted.firstName).toBe("Jane");
+      expect(persisted.lastName).toBe("Roe");
+      expect(persisted.preferredLanguage).toBe(Language.de);
+    });
+
+    it("short-circuits when the patch is empty", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.updateProfile(user.id, {});
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it("short-circuits when the patch values match the current user (no DB write)", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.updateProfile(user.id, {
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
+        preferredLanguage: user.preferredLanguage,
+      });
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it("throws NotFoundError when the repository update returns null", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockResolvedValue(null);
+
+      await expect(service.updateProfile(user.id, { firstName: "Jane" })).rejects.toThrow(
+        NotFoundError,
+      );
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes } from "@open-dpp/dto";
 import type { Model } from "mongoose";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
@@ -57,6 +57,13 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     SubjectAttributes.create({ userRole: UserRole.USER }),
   );
 
+  beforeAll(async () => {
+    await ctx
+      .getModuleRef()
+      .get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name))
+      .syncIndexes();
+  });
+
   async function seedPassport() {
     const passport = Passport.create({
       id: randomUUID(),
@@ -84,7 +91,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
       .getModuleRef()
       .get(PresentationConfigurationRepository)
       .findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       });
     expect(config).toBeDefined();
@@ -115,7 +122,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
       .getModuleRef()
       .get(PresentationConfigurationRepository)
       .findManyByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       });
     expect(configs).toHaveLength(1);

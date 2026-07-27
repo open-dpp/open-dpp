@@ -30,7 +30,7 @@ import {
   DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentStatusModificationMethodDto,
   PassportDtoSchema,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
@@ -58,6 +58,7 @@ export class PassportService {
       this.environmentService,
       this.passportRepository,
       this.activityRepository,
+      this.presentationConfigurationService,
     );
   }
 
@@ -223,7 +224,7 @@ export class PassportService {
         await this.activityRepository.deleteByAggregateId(passport.id, { session });
         await this.permalinkRepository.deleteAllByPassportId(passport.id, { session });
         await this.presentationConfigurationRepository.deleteByReference(
-          { referenceType: PresentationReferenceType.Passport, referenceId: passport.id },
+          { referenceType: DigitalProductDocumentTypes.Passport, referenceId: passport.id },
           { session },
         );
       });
@@ -237,6 +238,6 @@ function passportToHolder(passport: Passport): PresentationReferenceHolder {
   return {
     id: passport.id,
     organizationId: passport.organizationId,
-    referenceType: PresentationReferenceType.Passport,
+    referenceType: DigitalProductDocumentTypes.Passport,
   };
 }

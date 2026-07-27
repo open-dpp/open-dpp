@@ -5,7 +5,7 @@ import { expect, jest } from "@jest/globals";
 import {
   AssetKind,
   DigitalProductDocumentStatusModificationMethodDto,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import request from "supertest";
 import {
@@ -105,7 +105,7 @@ describe("templateController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: template.id,
       }),
     ).toBeUndefined();
@@ -119,7 +119,7 @@ describe("templateController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: template.id,
       }),
     ).toBeUndefined();
@@ -133,7 +133,7 @@ describe("templateController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Template,
+        referenceType: DigitalProductDocumentTypes.Template,
         referenceId: template.id,
       }),
     ).toBeUndefined();
@@ -211,6 +211,26 @@ describe("templateController", () => {
 
   it("/DELETE column", async () => {
     await ctx.asserts.deleteColumn(createTemplate, saveTemplate);
+  });
+
+  it("/POST add column to group", async () => {
+    await ctx.asserts.addColumnToGroup(createTemplate, saveTemplate);
+  });
+
+  it("/PATCH modify column in group", async () => {
+    await ctx.asserts.modifyColumnInGroup(createTemplate, saveTemplate);
+  });
+
+  it("/DELETE column from group", async () => {
+    await ctx.asserts.deleteColumnFromGroup(createTemplate, saveTemplate);
+  });
+
+  it("/POST move column to group", async () => {
+    await ctx.asserts.moveColumnToGroup(createTemplate, saveTemplate);
+  });
+
+  it("/POST create group from column", async () => {
+    await ctx.asserts.createGroupFromColumn(createTemplate, saveTemplate);
   });
 
   it("/POST add row", async () => {

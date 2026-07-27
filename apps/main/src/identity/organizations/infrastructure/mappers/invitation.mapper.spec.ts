@@ -30,4 +30,53 @@ describe("invitationMapper", () => {
     expect(domain.role).toBe(validInvitationDocument.role);
     expect(domain.status).toBe(validInvitationDocument.status);
   });
+
+  it("should map raw better-auth documents with string _id and ObjectId references", () => {
+    const organizationId = new Types.ObjectId();
+    const inviterId = new Types.ObjectId();
+
+    const domain = InvitationMapper.toDomain({
+      _id: "NEWQhghstUEmtMdzRDhP5TrOTLt4hvBK",
+      email: "raw@example.com",
+      organizationId,
+      inviterId,
+      role: MemberRole.MEMBER,
+      status: "pending",
+      createdAt: now,
+      expiresAt: now,
+    } as any);
+
+    expect(domain.id).toBe("NEWQhghstUEmtMdzRDhP5TrOTLt4hvBK");
+    expect(domain.organizationId).toBe(organizationId.toHexString());
+    expect(domain.inviterId).toBe(inviterId.toHexString());
+  });
+
+  it("should fall back to member for unknown roles (e.g. better-auth 'admin')", () => {
+    const domain = InvitationMapper.toDomain({
+      _id: new Types.ObjectId(),
+      email: "raw@example.com",
+      organizationId: "org-123",
+      inviterId: "user-123",
+      role: "admin",
+      status: "pending",
+      createdAt: now,
+      expiresAt: now,
+    } as any);
+
+    expect(domain.role).toBe(MemberRole.MEMBER);
+  });
+
+  it("should map missing reference fields to empty strings", () => {
+    const domain = InvitationMapper.toDomain({
+      _id: new Types.ObjectId(),
+      email: "raw@example.com",
+      role: MemberRole.MEMBER,
+      status: "pending",
+      createdAt: now,
+      expiresAt: now,
+    } as any);
+
+    expect(domain.organizationId).toBe("");
+    expect(domain.inviterId).toBe("");
+  });
 });

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
-import { LatestApiVersionWithPrefixDto, PresentationReferenceType } from "@open-dpp/dto";
+import { LatestApiVersionWithPrefixDto, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import type { Model } from "mongoose";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
@@ -253,7 +253,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(config).toBeDefined();
@@ -310,7 +310,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(config).toBeUndefined();
@@ -333,7 +333,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(config).toBeUndefined();
@@ -384,7 +384,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findManyByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(configs).toHaveLength(1);
@@ -397,7 +397,7 @@ describe("PermalinkController", () => {
     const templateConfig = PresentationConfiguration.create({
       organizationId,
       referenceId: randomUUID(),
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
     });
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(templateConfig);
     const permalink = Permalink.create({ presentationConfigurationId: templateConfig.id });

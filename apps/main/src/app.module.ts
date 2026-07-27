@@ -17,6 +17,7 @@ import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
+import { EmailChangeRequestsModule } from "./identity/email-change-requests/email-change-requests.module";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
@@ -52,6 +53,7 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     PassportsModule,
     OrganizationsModule,
     UsersModule,
+    EmailChangeRequestsModule,
     HttpModule,
     TraceabilityEventsModule,
     ServeStaticModule.forRoot({
