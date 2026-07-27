@@ -402,6 +402,149 @@ describe("PermalinkRepository", () => {
       const allIds = [page1.items[0].id, page2.items[0].id].sort();
       expect(allIds).toEqual([presentation.id, gs1Link.id].sort());
     });
+
+    // The list view reads through this method while the public resolver reads
+    // through findPrimaryByPassportId. Legacy docs (≤1.2.0) carry no `primary`
+    // field, so without the D10 promotion the list shows zero primaries for a
+    // passport the resolver happily resolves — the two disagree (PR #615 review).
+    it("promotes the canonical primary for a legacy passport (single presentation permalink)", async () => {
+      const passportId = randomUUID();
+      const organizationId = `org-${randomUUID().slice(0, 8)}`;
+
+      const config = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passportId,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      await presentationConfigurationRepository.save(config);
+
+      const legacyId = randomUUID();
+      const now = new Date();
+      await connection.collection("permalinks").insertOne({
+        _id: legacyId as any,
+        _schemaVersion: "1.2.0",
+        slug: null,
+        baseUrl: null,
+        publishedUrl: null,
+        presentationConfigurationId: config.id,
+        organizationId,
+        kind: "presentation",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const page = await repository.findPageByPassportId(passportId);
+
+      expect(page.items).toHaveLength(1);
+      expect(page.items[0].primary).toBe(true);
+      // ...and it is the same permalink the public resolver picks
+      const resolved = await repository.findPrimaryByPassportId(passportId);
+      expect(resolved?.id).toBe(legacyId);
+    });
+
+    // The canonical primary is the EARLIEST createdAt, but this method sorts
+    // newest-first — so on a multi-page passport that row sits on the last page.
+    // Normalizing per page would mint a different primary on every page.
+    it("keeps exactly one primary across pages for a legacy passport, on the earliest row", async () => {
+      const passportId = randomUUID();
+      const organizationId = `org-${randomUUID().slice(0, 8)}`;
+
+      const configA = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passportId,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      const configB = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passportId,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      await presentationConfigurationRepository.save(configA);
+      await presentationConfigurationRepository.save(configB);
+
+      const earlierDate = new Date("2024-01-10T12:00:00.000Z");
+      const laterDate = new Date("2024-01-11T12:00:00.000Z");
+      const idA = randomUUID();
+      const idB = randomUUID();
+
+      await connection.collection("permalinks").insertMany([
+        {
+          _id: idA as any,
+          _schemaVersion: "1.2.0",
+          slug: null,
+          baseUrl: null,
+          publishedUrl: null,
+          presentationConfigurationId: configA.id,
+          organizationId,
+          kind: "presentation",
+          createdAt: earlierDate,
+          updatedAt: earlierDate,
+        },
+        {
+          _id: idB as any,
+          _schemaVersion: "1.2.0",
+          slug: null,
+          baseUrl: null,
+          publishedUrl: null,
+          presentationConfigurationId: configB.id,
+          organizationId,
+          kind: "presentation",
+          createdAt: laterDate,
+          updatedAt: laterDate,
+        },
+      ] as any);
+
+      const page1 = await repository.findPageByPassportId(passportId, {
+        pagination: { limit: 1 },
+      });
+      const page2 = await repository.findPageByPassportId(passportId, {
+        pagination: { limit: 1, cursor: page1.pagination.cursor! },
+      });
+
+      const rows = [...page1.items, ...page2.items];
+      expect(rows.map((p) => p.id)).toEqual([idB, idA]); // newest first
+      expect(rows.filter((p) => p.primary).map((p) => p.id)).toEqual([idA]);
+    });
+
+    it("leaves stored primary flags untouched for a fully-current (1.3.0) page", async () => {
+      const passportId = randomUUID();
+      const organizationId = `org-${randomUUID().slice(0, 8)}`;
+
+      const configA = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passportId,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      const configB = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passportId,
+        referenceType: PresentationReferenceType.Passport,
+      });
+      await presentationConfigurationRepository.save(configA);
+      await presentationConfigurationRepository.save(configB);
+
+      // The NEWER permalink is the stored primary — the opposite of what the
+      // legacy earliest-wins promotion would pick, so a stray normalization shows up.
+      const older = Permalink.create({
+        presentationConfigurationId: configA.id,
+        organizationId,
+        createdAt: new Date("2024-05-01T10:00:00.000Z"),
+        updatedAt: new Date("2024-05-01T10:00:00.000Z"),
+      });
+      const newer = Permalink.create({
+        presentationConfigurationId: configB.id,
+        organizationId,
+        primary: true,
+        createdAt: new Date("2024-05-02T10:00:00.000Z"),
+        updatedAt: new Date("2024-05-02T10:00:00.000Z"),
+      });
+      await repository.save(older);
+      await repository.save(newer);
+
+      const page = await repository.findPageByPassportId(passportId);
+
+      expect(page.items.filter((p) => p.primary).map((p) => p.id)).toEqual([newer.id]);
+    });
   });
 
   afterAll(async () => {

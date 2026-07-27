@@ -288,9 +288,21 @@ onMounted(async () => {
       <!-- Kind column -->
       <Column field="kind" :header="t('permalink.list.kind')">
         <template #body="{ data }">
-          <span :data-testid="`permalink-kind-${data.id}`">
-            {{ kindLabel(data.kind) }}
-          </span>
+          <div class="flex items-center gap-2">
+            <span :data-testid="`permalink-kind-${data.id}`">
+              {{ kindLabel(data.kind) }}
+            </span>
+            <!-- The star in the actions column is the affordance for *setting*
+                 primary; this tag is what identifies the primary row. -->
+            <Tag
+              v-if="data.primary"
+              severity="warn"
+              icon="pi pi-star-fill"
+              :data-testid="`permalink-primary-tag-${data.id}`"
+            >
+              {{ t("permalink.list.primary") }}
+            </Tag>
+          </div>
         </template>
       </Column>
 

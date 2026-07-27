@@ -411,14 +411,49 @@ export class PermalinkRepository implements OnApplicationBootstrap {
       ])
       .session(dbOptions?.session ?? null);
 
-    const items = await Promise.all(
+    const migrated = await Promise.all(
       results.map((plain) => this.fromPlainWithMigration({ ...plain, id: plain._id })),
     );
+    const hadLegacyDocs = results.some((plain) => this.isLegacySchemaVersion(plain._schemaVersion));
+    const items = await this.applyCanonicalPrimary(migrated, passportId, hadLegacyDocs, dbOptions);
     if (items.length > 0) {
       const last = items[items.length - 1];
       pagination.setCursor(encodeCursor(last.createdAt.toISOString(), last.id));
     }
     return PagingResult.create<Permalink>({ pagination, items });
+  }
+
+  /**
+   * Page-safe counterpart of {@link normalizePrimaryInSet} (D10).
+   *
+   * A page is not the set: this query sorts `createdAt` DESC while the canonical
+   * primary is the EARLIEST one, so on a multi-page passport that row sits on the
+   * last page — normalizing per page would mint a different primary on every page.
+   * Instead the canonical primary is resolved over the full set via
+   * {@link findPrimaryByPassportId} (which runs the D10 normalization) and the page
+   * rows are re-flagged against it.
+   *
+   * Only runs when the page contains legacy docs (schema ≤ 1.2.0), matching the D10
+   * contract: for fully-current sets the stored flags are authoritative and this is a
+   * no-op costing zero extra queries. Read-time only — nothing is rewritten.
+   */
+  private async applyCanonicalPrimary(
+    permalinks: Permalink[],
+    passportId: string,
+    hadLegacyDocs: boolean,
+    options?: DbSessionOptions,
+  ): Promise<Permalink[]> {
+    if (!hadLegacyDocs || permalinks.length === 0) return permalinks;
+
+    const canonical = await this.findPrimaryByPassportId(passportId, options);
+    // No presentation permalink to promote (e.g. a gs1-link-only passport)
+    if (!canonical) return permalinks;
+
+    return permalinks.map((p) => {
+      const shouldBePrimary = p.id === canonical.id;
+      if (p.primary === shouldBePrimary) return p;
+      return p.withPrimary(shouldBePrimary);
+    });
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {

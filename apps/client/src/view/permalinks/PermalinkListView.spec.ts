@@ -9,7 +9,7 @@
  */
 
 import type { PermalinkPublicDto } from "@open-dpp/dto";
-import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
 import { permalinkPublicPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
@@ -101,6 +101,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 import Button from "primevue/button";
+import Tag from "primevue/tag";
 import PermalinkListView from "./PermalinkListView.vue";
 
 const i18n = createI18n({ locale: "en-US", legacy: false, messages: { "en-US": enUS } });
@@ -140,7 +141,7 @@ async function mountView(options: {
   const wrapper = mount(PermalinkListView, {
     global: {
       plugins: [i18n, PrimeVue],
-      components: { Button },
+      components: { Button, Tag },
       stubs: { Dialog: true, ConfirmDialog: true },
     },
   });
@@ -179,5 +180,44 @@ describe("PermalinkListView – published banner", () => {
     expect(wrapper.find(`[data-testid="permalink-public-url-${permalink.id}"]`).exists()).toBe(
       true,
     );
+  });
+});
+
+/**
+ * The primary permalink used to be identifiable only by the star *button* in the
+ * actions column — an affordance for setting primary, not a marker of it
+ * (PR #615 review). A labelled tag next to the kind states it in words.
+ */
+describe("PermalinkListView – primary marker", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setActivePinia(createPinia());
+  });
+
+  it("tags the primary presentation permalink with the translated label", async () => {
+    const primary = permalinkPublicPlainFactory.build({}, { transient: { primary: true } });
+    const wrapper = await mountView({ permalinks: [primary] });
+
+    const tag = wrapper.find(`[data-testid="permalink-primary-tag-${primary.id}"]`);
+    expect(tag.exists()).toBe(true);
+    expect(tag.text()).toBe(enUS.permalink.list.primary);
+  });
+
+  it("leaves a non-primary presentation permalink untagged", async () => {
+    const other = permalinkPublicPlainFactory.build();
+    const wrapper = await mountView({ permalinks: [other] });
+
+    expect(other.primary).toBe(false);
+    expect(wrapper.find(`[data-testid="permalink-primary-tag-${other.id}"]`).exists()).toBe(false);
+    // ...but the row still renders, and its star stays available as the set-primary action
+    expect(wrapper.find(`[data-testid="permalink-primary-btn-${other.id}"]`).exists()).toBe(true);
+  });
+
+  it("never tags a gs1-link permalink (primary is presentation-only)", async () => {
+    const gs1 = permalinkPublicPlainFactory.build({}, { transient: { gs1: true } });
+    const wrapper = await mountView({ permalinks: [gs1] });
+
+    expect(gs1.kind).toBe(PermalinkKind.GS1_LINK);
+    expect(wrapper.find(`[data-testid="permalink-primary-tag-${gs1.id}"]`).exists()).toBe(false);
   });
 });
