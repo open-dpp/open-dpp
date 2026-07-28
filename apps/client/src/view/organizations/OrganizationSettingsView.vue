@@ -29,8 +29,8 @@ const nameInvalid = ref(false);
 const { applyBranding } = useBranding();
 
 const colorInvalid = computed(() => {
-  const value = branding.value?.primaryColor;
-  return value != null && !isValidHexColor(value);
+  const value = branding.value?.primaryColor?.trim();
+  return value != null && value.length > 0 && !isValidHexColor(value);
 });
 
 const colorPalette = computed(() => {
@@ -67,7 +67,7 @@ async function save() {
     if (branding.value) {
       const brandingResult = await apiClient.dpp.branding.set({
         logo: branding.value.logo,
-        primaryColor: branding.value.primaryColor,
+        primaryColor: trimToNull(branding.value.primaryColor),
         permalinkBaseUrl: trimToNull(branding.value.permalinkBaseUrl),
       });
 
