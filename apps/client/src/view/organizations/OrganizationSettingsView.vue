@@ -30,7 +30,7 @@ const { applyBranding } = useBranding();
 
 const colorInvalid = computed(() => {
   const value = branding.value?.primaryColor;
-  return value != null && value.length > 0 && !isValidHexColor(value);
+  return value != null && !isValidHexColor(value);
 });
 
 const colorPalette = computed(() => {
