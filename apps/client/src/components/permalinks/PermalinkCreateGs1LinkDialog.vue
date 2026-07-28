@@ -14,8 +14,12 @@ import Gs1DataAttributesField from "./Gs1DataAttributesField.vue";
 const model = defineModel<boolean>("visible");
 
 const props = defineProps<{
-  /** The passport whose UPIs are offered in the picker. */
-  passportId: string;
+  /**
+   * The UPIs offered in the picker — already filtered to GS1 rows that can still
+   * receive a gs1-link permalink. The caller owns the load: it also gates its own
+   * "create GS1 link" button on the same list.
+   */
+  upis: UniqueProductIdentifierListItemDto[];
   /** Preselect this UPI in the Select (e.g. handed over via ?createForUpi=). */
   preselectedUpiId?: string;
 }>();
@@ -31,9 +35,6 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 
-const upis = ref<UniqueProductIdentifierListItemDto[]>([]);
-const loadingUpis = ref(false);
-
 const selectedUpiId = ref<string | undefined>(props.preselectedUpiId);
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
@@ -48,13 +49,6 @@ const busy = ref(false);
 // Derived state
 // ---------------------------------------------------------------------------
 
-/**
- * Only GS1 UPIs without an existing gs1-link permalink appear in the select —
- * OPEN_DPP_UUID rows are system-only and cannot be used as a gs1-link target,
- * and each UPI carries at most one gs1-link permalink (row's own summary).
- */
-const gs1Upis = computed(() => upis.value.filter((u) => u.type === "GS1" && u.permalink == null));
-
 const canSubmit = computed(() => !!selectedUpiId.value && !busy.value && gs1AttributesValid.value);
 
 // ---------------------------------------------------------------------------
@@ -68,38 +62,6 @@ function upiLabel(upi: UniqueProductIdentifierListItemDto): string {
   if (upi.serial) parts.push(upi.serial);
   return parts.length > 0 ? parts.join(" / ") : upi.uuid;
 }
-
-// ---------------------------------------------------------------------------
-// Load UPIs whenever the dialog opens
-// ---------------------------------------------------------------------------
-
-// ponytail: one big page instead of a cursor loop — server limit is uncapped
-// and a passport's UPI count stays far below this in practice.
-const UPI_PICKER_LIMIT = 1000;
-
-async function loadUpis() {
-  loadingUpis.value = true;
-  try {
-    const response = await apiClient.dpp.passports.getUniqueProductIdentifiers(props.passportId, {
-      limit: UPI_PICKER_LIMIT,
-    });
-    upis.value = (response.data?.result ?? []) as UniqueProductIdentifierListItemDto[];
-  } catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("permalink.createGs1Link.loadFailed"), e);
-  } finally {
-    loadingUpis.value = false;
-  }
-}
-
-// Refetch on every open — a UPI linked since the last open must drop out of
-// the options (rows carry their own permalink summary).
-watch(
-  model,
-  (visible) => {
-    if (visible) void loadUpis();
-  },
-  { immediate: true },
-);
 
 watch(
   () => props.preselectedUpiId,
@@ -167,25 +129,15 @@ function cancel() {
         <label for="gs1-link-upi" class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.createGs1Link.selectUpi") }}
         </label>
-        <Message
-          v-if="!loadingUpis && gs1Upis.length === 0"
-          severity="info"
-          :closable="false"
-          data-testid="gs1-link-no-upis-msg"
-        >
-          {{ t("permalink.createGs1Link.noUpisAvailable") }}
-        </Message>
         <Select
-          v-else
           id="gs1-link-upi"
           v-model="selectedUpiId"
           data-testid="gs1-link-upi-select"
-          :options="gs1Upis"
+          :options="props.upis"
           option-value="uuid"
           :option-label="upiLabel"
           :placeholder="t('permalink.createGs1Link.selectUpi')"
-          :loading="loadingUpis"
-          :disabled="busy || loadingUpis"
+          :disabled="busy"
           filter
         />
       </div>

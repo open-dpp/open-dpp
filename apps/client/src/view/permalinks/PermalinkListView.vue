@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import type { PagingParamsDto, PermalinkPublicDto } from "@open-dpp/dto";
-import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  PermalinkKind,
+  UniqueProductIdentifierType,
+} from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -12,6 +16,7 @@ import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
 import { useDigitalProductDocument } from "../../composables/digital-product-document";
 import { usePagination } from "../../composables/pagination";
+import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
 import apiClient from "../../lib/api-client";
 import { DigitalProductDocumentType } from "../../lib/digital-product-document";
 import { useErrorHandlingStore } from "../../stores/error.handling";
@@ -126,16 +131,57 @@ async function loadPassportStatus() {
 }
 
 // -------------------------------------------------------------------------
+// Linkable GS1 UPIs (drive both the create button and the dialog's picker)
+// -------------------------------------------------------------------------
+
+const { upis, fetchUniqueProductIdentifiers } = useUniqueProductIdentifiers();
+
+// ponytail: one big page instead of a cursor loop — server limit is uncapped
+// and a passport's UPI count stays far below this in practice.
+const UPI_PICKER_LIMIT = 1000;
+
+// Fail-open: a failed load must never lock the create button, so the disabled
+// state is only claimed once we actually know the passport's UPIs.
+const upisLoaded = ref(false);
+
+async function loadGs1Upis() {
+  try {
+    await fetchUniqueProductIdentifiers(passportId.value, { limit: UPI_PICKER_LIMIT });
+    upisLoaded.value = true;
+  } catch (e) {
+    upisLoaded.value = false;
+    errorHandlingStore.logErrorWithNotification(t("permalink.createGs1Link.loadFailed"), e);
+  }
+}
+
+/**
+ * Only GS1 UPIs without an existing gs1-link permalink can receive one —
+ * OPEN_DPP_UUID rows are system-only and cannot be used as a gs1-link target,
+ * and each UPI carries at most one gs1-link permalink (row's own summary).
+ */
+const linkableGs1Upis = computed(() =>
+  upis.value.filter(
+    (upi) => upi.type === UniqueProductIdentifierType.GS1 && upi.permalink == null,
+  ),
+);
+
+const createGs1Disabled = computed(() => upisLoaded.value && linkableGs1Upis.value.length === 0);
+
+// -------------------------------------------------------------------------
 // Create dialog
 // -------------------------------------------------------------------------
 
-function openCreateGs1Dialog() {
+// Refetch before opening — a UPI linked elsewhere since the last load must drop
+// out of the picker (rows carry their own permalink summary).
+async function openCreateGs1Dialog() {
+  await loadGs1Upis();
   createGs1DialogVisible.value = true;
 }
 
 async function onPermalinkCreated(_permalink: PermalinkPublicDto) {
   createGs1DialogVisible.value = false;
-  await reloadCurrentPage();
+  // Reload the UPIs too: linking the last free one has to disable the button.
+  await Promise.all([reloadCurrentPage(), loadGs1Upis()]);
 }
 
 // -------------------------------------------------------------------------
@@ -245,7 +291,8 @@ function kindLabel(kind: string): string {
 onMounted(async () => {
   // A failing status fetch must not block the list — fetchById already notified
   // the user, and the banner stays hidden rather than claiming a publication.
-  await Promise.all([loadPassportStatus().catch(() => undefined), nextPage()]);
+  // loadGs1Upis handles its own failure — the button then stays enabled.
+  await Promise.all([loadPassportStatus().catch(() => undefined), nextPage(), loadGs1Upis()]);
   if (preselectedUpiId.value) {
     createGs1DialogVisible.value = true;
     changeQueryParams({ createForUpi: undefined });
@@ -277,11 +324,19 @@ onMounted(async () => {
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("permalink.list.label", 2) }}</span>
-          <Button
-            :label="t('permalink.list.createGs1Link')"
-            data-testid="permalink-create-gs1-link-btn"
-            @click="openCreateGs1Dialog"
-          />
+          <!-- The title sits on the wrapper: a disabled <button> receives no
+               pointer events, so a tooltip on the button itself never shows. -->
+          <span
+            :title="createGs1Disabled ? t('permalink.createGs1Link.noUpisAvailable') : undefined"
+            data-testid="permalink-create-gs1-link-wrapper"
+          >
+            <Button
+              :label="t('permalink.list.createGs1Link')"
+              data-testid="permalink-create-gs1-link-btn"
+              :disabled="createGs1Disabled"
+              @click="openCreateGs1Dialog"
+            />
+          </span>
         </div>
       </template>
 
@@ -388,7 +443,7 @@ onMounted(async () => {
     <!-- Create GS1 Link dialog -->
     <PermalinkCreateGs1LinkDialog
       v-model:visible="createGs1DialogVisible"
-      :passport-id="passportId"
+      :upis="linkableGs1Upis"
       :preselected-upi-id="preselectedUpiId"
       @created="onPermalinkCreated"
     />

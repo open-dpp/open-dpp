@@ -8,9 +8,9 @@
  * independent action, so the banner must follow the passport's real status.
  */
 
-import type { PermalinkPublicDto } from "@open-dpp/dto";
+import type { PermalinkPublicDto, UniqueProductIdentifierListItemDto } from "@open-dpp/dto";
 import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
-import { permalinkPublicPlainFactory } from "@open-dpp/testing";
+import { permalinkPublicPlainFactory, uniqueProductIdentifierPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
@@ -23,9 +23,16 @@ import enUS from "../../translations/en-US.json";
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const { getById, getPermalinks, logErrorWithNotification, addSuccess } = vi.hoisted(() => ({
+const {
+  getById,
+  getPermalinks,
+  getUniqueProductIdentifiers,
+  logErrorWithNotification,
+  addSuccess,
+} = vi.hoisted(() => ({
   getById: vi.fn(),
   getPermalinks: vi.fn(),
+  getUniqueProductIdentifiers: vi.fn(),
   logErrorWithNotification: vi.fn(),
   addSuccess: vi.fn(),
 }));
@@ -33,7 +40,7 @@ const { getById, getPermalinks, logErrorWithNotification, addSuccess } = vi.hois
 vi.mock("../../lib/api-client", () => ({
   default: {
     dpp: {
-      passports: { getById, getPermalinks },
+      passports: { getById, getPermalinks, getUniqueProductIdentifiers },
       permalinks: { setPrimary: vi.fn(), delete: vi.fn() },
     },
   },
@@ -118,6 +125,8 @@ async function mountView(options: {
   status?: (typeof DigitalProductDocumentStatusDto)[keyof typeof DigitalProductDocumentStatusDto];
   statusFails?: boolean;
   permalinks?: PermalinkPublicDto[];
+  upis?: UniqueProductIdentifierListItemDto[];
+  upisFail?: boolean;
 }) {
   if (options.statusFails) {
     getById.mockRejectedValue(new Error("status fetch failed"));
@@ -137,6 +146,13 @@ async function mountView(options: {
       result: options.permalinks ?? [makeFrozenPermalink()],
     },
   });
+  if (options.upisFail) {
+    getUniqueProductIdentifiers.mockRejectedValue(new Error("upi fetch failed"));
+  } else {
+    getUniqueProductIdentifiers.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: options.upis ?? [] },
+    });
+  }
 
   const wrapper = mount(PermalinkListView, {
     global: {
@@ -219,5 +235,60 @@ describe("PermalinkListView – primary marker", () => {
 
     expect(gs1.kind).toBe(PermalinkKind.GS1_LINK);
     expect(wrapper.find(`[data-testid="permalink-primary-tag-${gs1.id}"]`).exists()).toBe(false);
+  });
+});
+
+/**
+ * The dialog used to explain "all GS1 identifiers already have a Digital Link"
+ * only *after* it was opened (PR #615 review) — a dead-end click. The button
+ * itself now carries the gate, with the same message as its tooltip.
+ */
+describe("PermalinkListView – create GS1 link gate", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setActivePinia(createPinia());
+  });
+
+  function linkedGs1Upi(): UniqueProductIdentifierListItemDto {
+    return uniqueProductIdentifierPlainFactory.build(
+      { permalink: { id: crypto.randomUUID(), publicUrl: "https://example.com/01/04006381333931" } },
+      { transient: { gs1: true } },
+    );
+  }
+
+  const BUTTON = '[data-testid="permalink-create-gs1-link-btn"]';
+  const TOOLTIP_HOST = '[data-testid="permalink-create-gs1-link-wrapper"]';
+
+  it("disables the button and explains why when every GS1 identifier is linked", async () => {
+    const wrapper = await mountView({ upis: [linkedGs1Upi(), linkedGs1Upi()] });
+
+    expect(wrapper.find(BUTTON).attributes("disabled")).toBeDefined();
+    expect(wrapper.find(TOOLTIP_HOST).attributes("title")).toBe(
+      enUS.permalink.createGs1Link.noUpisAvailable,
+    );
+  });
+
+  it("disables the button when the passport has no GS1 identifiers at all", async () => {
+    const wrapper = await mountView({ upis: [uniqueProductIdentifierPlainFactory.build()] });
+
+    expect(wrapper.find(BUTTON).attributes("disabled")).toBeDefined();
+  });
+
+  it("keeps the button active while one GS1 identifier is still unlinked", async () => {
+    const unlinked = uniqueProductIdentifierPlainFactory.build({}, { transient: { gs1: true } });
+    const wrapper = await mountView({ upis: [linkedGs1Upi(), unlinked] });
+
+    expect(wrapper.find(BUTTON).attributes("disabled")).toBeUndefined();
+    expect(wrapper.find(TOOLTIP_HOST).attributes("title")).toBeUndefined();
+  });
+
+  it("stays enabled when the identifier fetch fails, and reports the failure", async () => {
+    const wrapper = await mountView({ upisFail: true });
+
+    expect(wrapper.find(BUTTON).attributes("disabled")).toBeUndefined();
+    expect(logErrorWithNotification).toHaveBeenCalledWith(
+      enUS.permalink.createGs1Link.loadFailed,
+      expect.any(Error),
+    );
   });
 });
