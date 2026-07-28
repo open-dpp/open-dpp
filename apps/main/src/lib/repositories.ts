@@ -119,10 +119,15 @@ export async function findAllByOrganizationId<
 ) {
   const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
   const statuses = options?.filter?.status;
+  // Base filter without the cursor window: matches the full result set the cursor pages through.
+  // Reused for the total count so the count reflects every matching document, not just the page.
+  const baseFilter = {
+    organizationId,
+    ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
+  };
   const docs = await docModel
     .find({
-      organizationId,
-      ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
+      ...baseFilter,
       ...(tmpPagination.cursor && {
         $or: [
           { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
@@ -136,10 +141,13 @@ export async function findAllByOrganizationId<
     .sort({ createdAt: -1, id: -1 })
     .limit(tmpPagination.limit ?? 100)
     .exec();
+  // Counted against the same base filter. Backed by the { organizationId, createdAt } index,
+  // so this stays performant even with hundreds of thousands of documents per organization.
+  const totalCount = await docModel.countDocuments(baseFilter);
   const domainObjects = await Promise.all(docs.map((d) => convertToDomain(d, fromPlain)));
   if (domainObjects.length > 0) {
     const lastObject = domainObjects[domainObjects.length - 1];
     tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));
   }
-  return PagingResult.create<V>({ pagination: tmpPagination, items: domainObjects });
+  return PagingResult.create<V>({ pagination: tmpPagination, items: domainObjects, totalCount });
 }

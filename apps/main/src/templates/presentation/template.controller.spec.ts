@@ -325,6 +325,7 @@ describe("templateController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 1,
       },
       result: [t2].map((p) => ({
         ...p.toPlain(),

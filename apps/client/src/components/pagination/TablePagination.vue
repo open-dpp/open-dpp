@@ -6,6 +6,7 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
+  totalCount?: number | null;
 }>();
 
 const emits = defineEmits<{
@@ -32,7 +33,14 @@ const { t } = useI18n();
       />
     </div>
     <div class="text-color font-medium">
-      <span class="hidden sm:block">{{
+      <span v-if="props.totalCount != null" class="hidden sm:block">{{
+        t("pagination.footerWithTotal", {
+          from: currentPage.from + 1,
+          to: currentPage.from + currentPage.itemCount,
+          total: props.totalCount,
+        })
+      }}</span>
+      <span v-else class="hidden sm:block">{{
         t("pagination.footer", {
           from: currentPage.from + 1,
           to: currentPage.to + 1,

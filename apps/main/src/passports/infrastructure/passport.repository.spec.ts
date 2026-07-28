@@ -230,6 +230,7 @@ describe("passportRepository", () => {
           limit: 100,
         }),
         items: [p5, p4, p3, p1],
+        totalCount: 4,
       }),
     );
 
@@ -246,6 +247,7 @@ describe("passportRepository", () => {
           limit: 100,
         }),
         items: [p5],
+        totalCount: 1,
       }),
     );
 
@@ -259,6 +261,7 @@ describe("passportRepository", () => {
       PagingResult.create({
         pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
         items: [p3, p1],
+        totalCount: 4,
       }),
     );
     pagination = Pagination.create({
@@ -275,6 +278,7 @@ describe("passportRepository", () => {
           limit: 1,
         }),
         items: [p3],
+        totalCount: 4,
       }),
     );
   });

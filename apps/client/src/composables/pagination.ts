@@ -13,7 +13,7 @@ export interface Page {
 }
 
 export interface PagingResult {
-  paging_metadata: { cursor: Cursor };
+  paging_metadata: { cursor: Cursor; total_count?: number };
   result: any[];
 }
 
@@ -32,6 +32,8 @@ export interface IPagination {
   previousPage: () => Promise<Page>;
   currentPage: Ref<Page>;
   reloadCurrentPage: () => Promise<void>;
+  // Total number of items across all pages, or null when the endpoint does not report it.
+  totalCount: Ref<number | null>;
 }
 
 export function usePagination({
@@ -43,6 +45,11 @@ export function usePagination({
   const startCursor = ref<string | null>(initialCursor ?? null);
   const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
   const currentPageIndex = ref<number>(0);
+  const totalCount = ref<number | null>(null);
+
+  const applyTotalCount = (response: PagingResult) => {
+    totalCount.value = response.paging_metadata.total_count ?? null;
+  };
   const currentPage = ref<Page>({
     cursor: startCursor.value,
     from: 0,
@@ -99,6 +106,7 @@ export function usePagination({
       cursor: nextPage.cursor ?? undefined,
       limit,
     });
+    applyTotalCount(response);
     nextPage.itemCount = response.result.length;
     if (!findPageByCursor(response.paging_metadata.cursor)) {
       addPage(response.paging_metadata.cursor);
@@ -115,7 +123,8 @@ export function usePagination({
     } else {
       previousPage = currentPage.value;
     }
-    await fetchCallback({ cursor: previousPage.cursor ?? undefined, limit });
+    const response = await fetchCallback({ cursor: previousPage.cursor ?? undefined, limit });
+    applyTotalCount(response);
     await updateCurrentPage();
     return previousPage;
   };
@@ -125,6 +134,7 @@ export function usePagination({
       cursor: page.cursor ?? undefined,
       limit,
     });
+    applyTotalCount(response);
     page.itemCount = response.result.length;
     const nextPage = findNextPage(page);
     if (nextPage) {
@@ -153,5 +163,6 @@ export function usePagination({
     previousPage,
     currentPage,
     reloadCurrentPage,
+    totalCount,
   };
 }

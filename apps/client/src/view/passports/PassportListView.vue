@@ -57,6 +57,7 @@ const {
   resetCursor,
   nextPage,
   reloadCurrentPage,
+  totalCount,
 } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
@@ -173,6 +174,7 @@ onMounted(async () => {
     :has-previous="hasPrevious"
     :has-next="hasNext"
     :current-page="currentPage"
+    :total-count="totalCount"
     :items="passports ? passports.result : []"
     :loading="loading"
     :title="t('passports.label', 2)"

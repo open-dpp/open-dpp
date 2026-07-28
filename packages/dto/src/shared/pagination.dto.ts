@@ -3,6 +3,9 @@ import { z } from "zod";
 export const PagingMetadataDtoSchema = z.object({
   paging_metadata: z.object({
     cursor: z.string().nullable(),
+    // Total number of items across all pages. Only present for endpoints that compute it
+    // (organization-scoped lists); optional so other paginated endpoints stay compatible.
+    total_count: z.number().optional(),
   }),
 });
 
