@@ -160,9 +160,7 @@ async function loadGs1Upis() {
  * and each UPI carries at most one gs1-link permalink (row's own summary).
  */
 const linkableGs1Upis = computed(() =>
-  upis.value.filter(
-    (upi) => upi.type === UniqueProductIdentifierType.GS1 && upi.permalink == null,
-  ),
+  upis.value.filter((upi) => upi.type === UniqueProductIdentifierType.GS1 && upi.permalink == null),
 );
 
 const createGs1Disabled = computed(() => upisLoaded.value && linkableGs1Upis.value.length === 0);

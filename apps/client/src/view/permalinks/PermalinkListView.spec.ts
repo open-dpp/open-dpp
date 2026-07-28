@@ -10,7 +10,10 @@
 
 import type { PermalinkPublicDto, UniqueProductIdentifierListItemDto } from "@open-dpp/dto";
 import { DigitalProductDocumentStatusDto, PermalinkKind } from "@open-dpp/dto";
-import { permalinkPublicPlainFactory, uniqueProductIdentifierPlainFactory } from "@open-dpp/testing";
+import {
+  permalinkPublicPlainFactory,
+  uniqueProductIdentifierPlainFactory,
+} from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
@@ -251,7 +254,9 @@ describe("PermalinkListView – create GS1 link gate", () => {
 
   function linkedGs1Upi(): UniqueProductIdentifierListItemDto {
     return uniqueProductIdentifierPlainFactory.build(
-      { permalink: { id: crypto.randomUUID(), publicUrl: "https://example.com/01/04006381333931" } },
+      {
+        permalink: { id: crypto.randomUUID(), publicUrl: "https://example.com/01/04006381333931" },
+      },
       { transient: { gs1: true } },
     );
   }
