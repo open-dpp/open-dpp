@@ -99,10 +99,10 @@ pnpm run build
 
 ### Tests
 
-Start test services first:
+Start the services first:
 
 ```bash
-make test
+make dev
 ```
 
 Then run tests:

@@ -13,6 +13,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./tests",
+  /* The template/passport flows drive a long sequence of dialogs and reloads, well
+   * past the 30s default. */
+  timeout: 120_000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -22,7 +25,8 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  /* `open: "never"` matters on CI: the bare "html" reporter tries to open a browser. */
+  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
@@ -41,6 +45,9 @@ export default defineConfig({
       testIgnore: /account\//,
       use: {
         ...devices["Desktop Chrome"],
+        // de-DE so renders before the profile locale is bootstrapped still match
+        // the German assertions in these specs.
+        locale: "de-DE",
         storageState: "playwright/.auth/user.json",
       },
       dependencies: ["setup"],
@@ -65,7 +72,7 @@ export default defineConfig({
 
     // Account / email-change + profile specs. Self-contained: each test mints a
     // disposable, freshly-verified user in its own context (see tests/fixtures.ts),
-    // so it needs neither the shared E2E_USERNAME nor the `setup` project.
+    // so it does not need the `setup` project's shared storage state.
     {
       name: "account",
       testMatch: /account\/.*\.spec\.ts/,
