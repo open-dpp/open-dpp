@@ -1,7 +1,7 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { BulkImportRunStatusDto } from "@open-dpp/dto";
+import { BulkImportRunStatusDto, type BulkImportRunStatusDtoType } from "@open-dpp/dto";
 import { DbSessionOptions } from "../../database/query-options";
 import { convertToDomain, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
@@ -45,25 +45,27 @@ export class BulkImportRunRepository {
 
   async findAllByBulkImportConfigId(
     bulkImportConfigId: string,
-    pagination?: Pagination,
+    options?: { pagination?: Pagination; filter?: { status?: BulkImportRunStatusDtoType[] } },
   ): Promise<PagingResult<BulkImportRun>> {
-    const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
-    const docs = await this.bulkImportRunDoc
-      .find({
-        bulkImportConfigId,
-        ...(tmpPagination.cursor && {
-          $or: [
-            { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-              _id: { $lt: decodeCursor(tmpPagination.cursor).id },
-            },
-          ],
-        }),
-      })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(tmpPagination.limit ?? 100)
-      .exec();
+    const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
+    const query: Record<string, unknown> = { bulkImportConfigId };
+    if (options?.filter?.status?.length) {
+      query.status = { $in: options.filter.status };
+    }
+    if (tmpPagination.cursor) {
+      query.$or = [
+        { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
+        {
+          createdAt: decodeCursor(tmpPagination.cursor).createdAt,
+          _id: { $lt: decodeCursor(tmpPagination.cursor).id },
+        },
+      ];
+    }
+    const mongooseQuery = this.bulkImportRunDoc.find(query).sort({ createdAt: -1, _id: -1 });
+    if (tmpPagination.limit !== null) {
+      mongooseQuery.limit(tmpPagination.limit ?? 100);
+    }
+    const docs = await mongooseQuery.exec();
     const runs = await Promise.all(docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))));
     if (runs.length > 0) {
       const lastRun = runs[runs.length - 1];

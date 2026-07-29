@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { generateMongoConfig } from "../../database/config";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
@@ -76,12 +77,12 @@ describe("bulkImportRunRepository", () => {
 
     const page = await repository.findAllByBulkImportConfigId(
       bulkImportConfigId,
-      Pagination.create({ limit: 2 }),
+      { pagination: Pagination.create({ limit: 2 }) },
     );
     expect(page.items.map((r) => r.id)).toEqual([r3.id, r2.id]);
     expect(page.pagination.cursor).toEqual(encodeCursor(r2.createdAt.toISOString(), r2.id));
 
-    const nextPage = await repository.findAllByBulkImportConfigId(bulkImportConfigId, page.pagination);
+    const nextPage = await repository.findAllByBulkImportConfigId(bulkImportConfigId, { pagination: page.pagination });
     expect(nextPage.items.map((r) => r.id)).toEqual([r1.id]);
   });
 
@@ -119,6 +120,38 @@ describe("bulkImportRunRepository", () => {
     expect(await repository.findOne(r1.id)).toBeUndefined();
     expect(await repository.findOne(r2.id)).toBeUndefined();
     expect(await repository.findOne(otherConfigRun.id)).toBeDefined();
+  });
+
+  it("filters runs by status", async () => {
+    const bulkImportConfigId = randomUUID();
+    const pending = buildRun({ bulkImportConfigId });
+    const running = buildRun({ bulkImportConfigId });
+    running.start();
+    const completed = buildRun({ bulkImportConfigId });
+    completed.start();
+    completed.complete();
+
+    await repository.save(pending);
+    await repository.save(running);
+    await repository.save(completed);
+
+    const activeRuns = await repository.findAllByBulkImportConfigId(
+      bulkImportConfigId,
+      { filter: { status: [BulkImportRunStatusDto.Pending, BulkImportRunStatusDto.Running] } },
+    );
+    expect(activeRuns.items.length).toBe(2);
+    expect(activeRuns.items.map((r) => r.id)).toEqual(expect.arrayContaining([pending.id, running.id]));
+    expect(activeRuns.items.map((r) => r.id)).not.toContain(completed.id);
+
+    const completedRuns = await repository.findAllByBulkImportConfigId(
+      bulkImportConfigId,
+      { filter: { status: [BulkImportRunStatusDto.Completed] } },
+    );
+    expect(completedRuns.items.length).toBe(1);
+    expect(completedRuns.items[0].id).toBe(completed.id);
+
+    const allRuns = await repository.findAllByBulkImportConfigId(bulkImportConfigId, {});
+    expect(allRuns.items.length).toBe(3);
   });
 
   afterAll(async () => {

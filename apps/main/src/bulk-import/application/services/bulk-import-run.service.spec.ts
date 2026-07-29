@@ -5,6 +5,7 @@ import {
   ApiVersionsDto,
   type ApiVersionsDtoType,
   BulkImportRunStatusDto,
+  type BulkImportRunStatusDtoType,
   type ValueRequestDto,
 } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
@@ -55,7 +56,7 @@ describe("BulkImportRunService", () => {
         jest.fn<
           (
             bulkImportConfigId: string,
-            pagination?: Pagination,
+            options?: { pagination?: Pagination; filter?: { status?: BulkImportRunStatusDtoType[] } },
           ) => Promise<PagingResult<BulkImportRun>>
         >(),
     };
@@ -492,7 +493,9 @@ describe("BulkImportRunService", () => {
     const result = await service.findAllByBulkImportConfigId("config-1");
 
     expect(result).toBe(page);
-    expect(runRepository.findAllByBulkImportConfigId).toHaveBeenCalledWith("config-1", undefined);
+    expect(runRepository.findAllByBulkImportConfigId).toHaveBeenCalledWith("config-1", {
+      pagination: undefined,
+    });
   });
 
   it("findByIdAndCheckOwnership rejects a run from another organization", async () => {

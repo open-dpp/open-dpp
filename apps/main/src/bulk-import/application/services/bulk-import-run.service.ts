@@ -81,7 +81,7 @@ export class BulkImportRunService implements OnApplicationBootstrap {
   ): Promise<PagingResult<BulkImportRun>> {
     return await this.bulkImportRunRepository.findAllByBulkImportConfigId(
       bulkImportConfigId,
-      pagination,
+      { pagination: pagination },
     );
   }
 
