@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DateTimeSchema } from "../shared/digital-product-document.schemas";
+import { DateTimeSchema } from "../digital-product-document/digital-product-document.schemas";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 export const BulkImportRunStatusDto = {

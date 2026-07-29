@@ -4,7 +4,7 @@ import type { TreeNode } from "primevue/treenode";
 import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
-import { resolveDisplayName } from "./display-name.ts";
+import { resolveLanguageTexts } from "./language-text.ts";
 
 const SCALAR_LEAF_MODEL_TYPES: string[] = [
   AasSubmodelElements.Property,
@@ -67,7 +67,7 @@ export function useIdShortPathSelectTree(
         ? `${parentIdShortPath}.${element.idShort}`
         : element.idShort;
       const key = elementNodeKey(submodelIdShort, idShortPath);
-      const label = resolveDisplayName(element.displayName, locale.value, element.idShort);
+      const label = resolveLanguageTexts(element.displayName, locale.value, element.idShort);
 
       if (SCALAR_LEAF_MODEL_TYPES.includes(element.modelType)) {
         const node: IdShortPathNode = { submodelIdShort: submodelIdShort, output: idShortPath };
@@ -96,7 +96,7 @@ export function useIdShortPathSelectTree(
 
       treeNodes.push({
         key: submodelNodeKey(submodel.id),
-        label: resolveDisplayName(submodel.displayName, locale.value, submodel.idShort),
+        label: resolveLanguageTexts(submodel.displayName, locale.value, submodel.idShort),
         selectable: false,
         children,
       });
