@@ -313,6 +313,7 @@
       "errorLoadRunItems": "Laden der Bulk-Import-Zeilen fehlgeschlagen:",
       "label": "Bulk-Import",
       "newConfig": "Neue Konfiguration",
+      "editConfig": "Konfiguration bearbeiten",
       "template": "Vorlage",
       "idField": "Id-Feld",
       "runHistory": "Durchlaufverlauf",

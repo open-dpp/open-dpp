@@ -313,6 +313,7 @@
       "errorLoadRunItems": "Failed to load bulk import run items:",
       "label": "Bulk Import",
       "newConfig": "New configuration",
+      "editConfig": "Edit configuration",
       "template": "Template",
       "idField": "Id field",
       "runHistory": "Run history",
