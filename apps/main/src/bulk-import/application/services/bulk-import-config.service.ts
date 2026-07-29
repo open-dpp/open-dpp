@@ -1,4 +1,7 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
+import { BulkImportRunStatusDto } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
+import { Pagination } from "../../../pagination/pagination";
 import { DbSessionOptions } from "../../../database/query-options";
 import { TransactionService } from "../../../database/transaction.service";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
@@ -8,6 +11,7 @@ import { JsonTransformer } from "../../domain/json-transformer";
 import { BulkImportConfigRepository } from "../../infrastructure/bulk-import-config.repository";
 import { BulkImportRunItemRepository } from "../../infrastructure/bulk-import-run-item.repository";
 import { BulkImportRunRepository } from "../../infrastructure/bulk-import-run.repository";
+import { BulkImportRun } from "../../domain/bulk-import-run";
 
 export interface SubmodelFieldMappingInput {
   submodelIdShort: string;
@@ -56,6 +60,7 @@ export class BulkImportConfigService {
     },
   ): Promise<BulkImportConfig> {
     const config = await this.loadAndCheckOwnership(id, organizationId);
+    await this.assertConfigIsEditable(id);
     config.updateMapping({
       name: data.name,
       idField: data.idField,
@@ -80,6 +85,7 @@ export class BulkImportConfigService {
 
   async deleteConfig(id: string, organizationId: string): Promise<void> {
     await this.loadAndCheckOwnership(id, organizationId);
+    await this.assertConfigIsEditable(id);
     await this.transactionService.withTransaction(async (options) => {
       const deletedRunIds = await this.bulkImportRunRepository.deleteAllByBulkImportConfigId(
         id,
@@ -119,6 +125,21 @@ export class BulkImportConfigService {
     if (template.getOrganizationId() !== organizationId) {
       throw new ForbiddenException();
     }
+  }
+
+  private async assertConfigIsEditable(configId: string): Promise<void> {
+    const activeRuns = await this.getActiveRunsForConfig(configId);
+    if (activeRuns.length > 0) {
+      throw new ValueError("Cannot edit config while imports are pending or running");
+    }
+  }
+
+  private async getActiveRunsForConfig(configId: string): Promise<BulkImportRun[]> {
+    const result = await this.bulkImportRunRepository.findAllByBulkImportConfigId(configId, {
+      pagination: Pagination.create({ limit: undefined }),
+      filter: { status: [BulkImportRunStatusDto.Pending, BulkImportRunStatusDto.Running] },
+    });
+    return result.items;
   }
 }
 
