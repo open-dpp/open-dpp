@@ -283,6 +283,57 @@ describe("passportRepository", () => {
     );
   });
 
+  it("keeps the status filter when paginating with a cursor", async () => {
+    const organizationId = randomUUID();
+    const archived = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Archived,
+        }),
+      });
+    const published = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Published,
+        }),
+      });
+
+    const a1 = archived(new Date("2022-01-01T00:00:00.000Z"));
+    const p1 = published(new Date("2022-01-02T00:00:00.000Z"));
+    const a2 = archived(new Date("2022-01-03T00:00:00.000Z"));
+    const p2 = published(new Date("2022-01-04T00:00:00.000Z"));
+    for (const passport of [a1, p1, a2, p2]) {
+      await passportRepository.save(passport);
+    }
+
+    // First page: newest archived passport only, total counts every archived doc (not the page).
+    const firstPage = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1 }),
+      filter: { status: [DigitalProductDocumentStatus.Archived] },
+    });
+    expect(firstPage.items.map((p) => p.id)).toEqual([a2.id]);
+    expect(firstPage.totalCount).toBe(2);
+
+    // Second page must stay within the Archived filter — before the fix the cursor $or
+    // overwrote the status $or and this returned the published p1.
+    const secondPage = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ cursor: firstPage.pagination.cursor, limit: 1 }),
+      filter: { status: [DigitalProductDocumentStatus.Archived] },
+    });
+    expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);
+    expect(secondPage.totalCount).toBe(2);
+  });
+
   afterAll(async () => {
     await module.close();
   });

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Page } from "../../composables/pagination.ts";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
@@ -16,6 +17,12 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+// On an empty page (itemCount === 0) the 1-based range would invert to "1 - 0"; show "0 - 0" instead.
+const rangeFrom = computed(() =>
+  props.currentPage.itemCount === 0 ? 0 : props.currentPage.from + 1,
+);
+const rangeTo = computed(() => props.currentPage.from + props.currentPage.itemCount);
 </script>
 
 <template>
@@ -35,8 +42,8 @@ const { t } = useI18n();
     <div class="text-color font-medium">
       <span v-if="props.totalCount != null" class="hidden sm:block">{{
         t("pagination.footerWithTotal", {
-          from: currentPage.from + 1,
-          to: currentPage.from + currentPage.itemCount,
+          from: rangeFrom,
+          to: rangeTo,
           total: props.totalCount,
         })
       }}</span>

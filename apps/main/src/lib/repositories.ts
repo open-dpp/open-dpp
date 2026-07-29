@@ -125,19 +125,20 @@ export async function findAllByOrganizationId<
     organizationId,
     ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
   };
-  const docs = await docModel
-    .find({
-      ...baseFilter,
-      ...(tmpPagination.cursor && {
+  // The cursor window is its own $or. buildStatusFilter also produces a $or, so the two must be
+  // combined with $and — spreading both into one object would let the cursor $or overwrite the
+  // status $or, silently returning documents of other statuses on paginated requests.
+  const decodedCursor = tmpPagination.cursor ? decodeCursor(tmpPagination.cursor) : null;
+  const cursorFilter = decodedCursor
+    ? {
         $or: [
-          { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
-          {
-            createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-            id: { $lt: decodeCursor(tmpPagination.cursor).id },
-          },
+          { createdAt: { $lt: decodedCursor.createdAt } },
+          { createdAt: decodedCursor.createdAt, id: { $lt: decodedCursor.id } },
         ],
-      }),
-    })
+      }
+    : null;
+  const docs = await docModel
+    .find(cursorFilter ? { $and: [baseFilter, cursorFilter] } : baseFilter)
     .sort({ createdAt: -1, id: -1 })
     .limit(tmpPagination.limit ?? 100)
     .exec();
