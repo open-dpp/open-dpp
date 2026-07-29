@@ -4,6 +4,7 @@ import { onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import BulkImportWizard from "../../components/bulk-import/BulkImportWizard.vue";
+import EditConfigDialog from "../../components/bulk-import/EditConfigDialog.vue";
 import { useBulkImportConfigRepo } from "../../composables/bulk-import-config-repo.ts";
 import { useBulkImportRunRepo } from "../../composables/bulk-import-run-repo.ts";
 
@@ -12,6 +13,7 @@ const router = useRouter();
 const configRepo = useBulkImportConfigRepo();
 const runRepo = useBulkImportRunRepo();
 const wizard = useTemplateRef<InstanceType<typeof BulkImportWizard> | null>("wizard");
+const editDialog = useTemplateRef<InstanceType<typeof EditConfigDialog> | null>("editDialog");
 
 const loading = ref(false);
 const checkingEditability = ref<Record<string, boolean>>({});
@@ -60,6 +62,21 @@ async function onDelete(config: BulkImportConfigDto) {
   configs.value = configs.value.filter((c) => c.id !== config.id);
   if (expandedConfigId.value === config.id) {
     onRowCollapse();
+  }
+}
+
+function onEditConfig(config: BulkImportConfigDto) {
+  editDialog.value?.open(config);
+}
+
+function onConfigSaved(updatedConfig: BulkImportConfigDto) {
+  const index = configs.value.findIndex((c) => c.id === updatedConfig.id);
+  if (index !== -1) {
+    configs.value[index] = updatedConfig;
+  }
+  // If the expanded row is the edited config, refresh the runs
+  if (expandedConfigId.value === updatedConfig.id) {
+    onRowExpand({ data: updatedConfig });
   }
 }
 
@@ -119,7 +136,7 @@ onMounted(async () => {
           :aria-label="t('common.edit')"
           :title="t('common.edit')"
           :disabled="checkingEditability[data.id] || editableConfigs[data.id] === false"
-          @click="openWizard(data)"
+          @click="onEditConfig(data)"
         />
         <Button
           icon="pi pi-trash"
@@ -173,4 +190,5 @@ onMounted(async () => {
     </template>
   </DataTable>
   <BulkImportWizard ref="wizard" @run-triggered="onWizardRunTriggered" />
+  <EditConfigDialog ref="editDialog" @saved="onConfigSaved" />
 </template>
