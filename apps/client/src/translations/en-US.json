@@ -857,7 +857,7 @@
       "batch": "Batch / Lot (optional)",
       "serial": "Serial (optional)",
       "submit": "Create",
-      "passportNotDraft": "This passport is published. A unique product identifier can only be created while the passport is a draft.",
+      "passportPublishedNote": "This passport is published. New identifiers are added immediately, but can no longer be edited or deleted afterwards.",
       "gtinInvalid": "Enter a valid GTIN (8, 12, 13, or 14 digits with a correct check digit).",
       "componentInvalid": "Use up to 20 GS1 characters (letters, digits and !\"%&'()*+,-./:;<=>?_).",
       "duplicate": "This GS1 identity (GTIN, batch and serial) is already assigned to another passport.",

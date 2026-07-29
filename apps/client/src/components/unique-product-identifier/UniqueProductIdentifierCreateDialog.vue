@@ -10,8 +10,9 @@ const model = defineModel<boolean>("visible");
 const props = defineProps<{
   // The passport this dialog creates a UPI for — taken from the route, not chosen here.
   passportId: string;
-  // UPIs can only be created while the passport is a draft (backend returns 409 otherwise).
-  isDraft: boolean;
+  // Creating is allowed on a published passport, but the new identifier is frozen
+  // immediately (update/delete stay draft-only) — this only drives the info note.
+  passportPublished: boolean;
   createGs1Upi: (data: {
     referenceId: string;
     gtin: string;
@@ -65,7 +66,7 @@ const serialError = computed(() => validateComponent(serial.value));
 const hasComponentError = computed(() => batchError.value !== null || serialError.value !== null);
 
 const canSubmit = computed(() => {
-  if (!props.isDraft || busy.value) return false;
+  if (busy.value) return false;
   // An internal UPI needs no input — the server mints its uuid.
   if (!isGs1.value) return true;
   return gtin.value.trim().length > 0 && !hasComponentError.value;
@@ -151,12 +152,12 @@ function cancel() {
       </p>
 
       <Message
-        v-if="!isDraft"
-        severity="warn"
+        v-if="passportPublished"
+        severity="info"
         :closable="false"
-        data-testid="upi-passport-not-draft"
+        data-testid="upi-passport-published-note"
       >
-        {{ t("uniqueProductIdentifiers.create.passportNotDraft") }}
+        {{ t("uniqueProductIdentifiers.create.passportPublishedNote") }}
       </Message>
 
       <template v-if="isGs1">
@@ -169,7 +170,7 @@ function cancel() {
             v-model="gtin"
             data-testid="upi-create-gtin"
             :invalid="!!gtinError"
-            :disabled="busy || !isDraft"
+            :disabled="busy"
             inputmode="numeric"
             autocomplete="off"
             spellcheck="false"
@@ -189,7 +190,7 @@ function cancel() {
               v-model="batch"
               data-testid="upi-create-batch"
               :invalid="!!batchError"
-              :disabled="busy || !isDraft"
+              :disabled="busy"
               autocomplete="off"
               spellcheck="false"
               maxlength="20"
@@ -207,7 +208,7 @@ function cancel() {
               v-model="serial"
               data-testid="upi-create-serial"
               :invalid="!!serialError"
-              :disabled="busy || !isDraft"
+              :disabled="busy"
               autocomplete="off"
               spellcheck="false"
               maxlength="20"

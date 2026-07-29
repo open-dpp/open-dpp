@@ -857,7 +857,7 @@
       "batch": "Charge / Los (optional)",
       "serial": "Seriennummer (optional)",
       "submit": "Erstellen",
-      "passportNotDraft": "Dieser Produktpass ist veröffentlicht. Ein eindeutiger Produktidentifikator kann nur erstellt werden, solange der Pass ein Entwurf ist.",
+      "passportPublishedNote": "Dieser Produktpass ist veröffentlicht. Neue Identifikatoren werden sofort hinzugefügt, können danach aber nicht mehr geändert oder gelöscht werden.",
       "gtinInvalid": "Geben Sie eine gültige GTIN ein (8, 12, 13 oder 14 Ziffern mit korrekter Prüfziffer).",
       "componentInvalid": "Verwenden Sie bis zu 20 GS1-Zeichen (Buchstaben, Ziffern und !\"%&'()*+,-./:;<=>?_).",
       "duplicate": "Diese GS1-Identität (GTIN, Charge und Seriennummer) ist bereits einem anderen Pass zugewiesen.",

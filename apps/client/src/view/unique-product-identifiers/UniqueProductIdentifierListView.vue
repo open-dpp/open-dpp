@@ -73,16 +73,22 @@ const {
 // -------------------------------------------------------------------------
 
 const createDialogVisible = ref(false);
-// Gates both creating a GS1 UPI and deleting any UPI — both are draft-only on the
-// backend. Loaded on mount (the delete buttons need it at first render) and
-// refreshed when the create dialog opens. Stays false if the fetch fails, so both
-// actions stay locked rather than failing later with a 409.
-const passportIsDraft = ref(false);
+// The passport's lifecycle status. `passportIsDraft` gates deletion (draft-only on
+// the backend); `passportIsPublished` only drives the create dialog's note — creating
+// is allowed on a published passport. Loaded on mount (the delete buttons need it at
+// first render) and refreshed when the create dialog opens. Stays null if the fetch
+// fails, so deletion stays locked rather than failing later with a 409.
+const passportStatus = ref<string | null>(null);
+const passportIsDraft = computed(
+  () => passportStatus.value === DigitalProductDocumentStatusDto.Draft,
+);
+const passportIsPublished = computed(
+  () => passportStatus.value === DigitalProductDocumentStatusDto.Published,
+);
 
 async function loadPassportStatus() {
   const { data } = await apiClient.dpp.passports.getById(passportId.value);
-  passportIsDraft.value =
-    data.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Draft;
+  passportStatus.value = data.lastStatusChange.currentStatus;
 }
 
 async function openCreateDialog() {
@@ -211,8 +217,8 @@ function onDeleteUpi(uuid: string) {
 // -------------------------------------------------------------------------
 
 onMounted(async () => {
-  // A failing status fetch must not block the list: passportIsDraft stays false,
-  // which locks create + delete rather than letting them 409 later.
+  // A failing status fetch must not block the list: the status stays null, which
+  // locks delete rather than letting it 409 later.
   await Promise.all([
     loadPassportStatus().catch((e) =>
       errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), e),
@@ -309,7 +315,7 @@ onMounted(async () => {
     <UniqueProductIdentifierCreateDialog
       v-model:visible="createDialogVisible"
       :passport-id="passportId"
-      :is-draft="passportIsDraft"
+      :passport-published="passportIsPublished"
       :create-gs1-upi="createGs1Upi"
       :create-internal-upi="createInternalUpi"
       @created="onUpiCreated"

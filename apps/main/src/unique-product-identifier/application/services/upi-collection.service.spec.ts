@@ -27,6 +27,7 @@ function makeDraftPassport(id: string) {
     organizationId: randomUUID(),
     isDraft: jest.fn(() => true),
     isPublished: jest.fn(() => false),
+    isArchived: jest.fn(() => false),
   };
 }
 
@@ -36,6 +37,17 @@ function makePublishedPassport(id: string) {
     organizationId: randomUUID(),
     isDraft: jest.fn(() => false),
     isPublished: jest.fn(() => true),
+    isArchived: jest.fn(() => false),
+  };
+}
+
+function makeArchivedPassport(id: string) {
+  return {
+    id,
+    organizationId: randomUUID(),
+    isDraft: jest.fn(() => false),
+    isPublished: jest.fn(() => false),
+    isArchived: jest.fn(() => true),
   };
 }
 
@@ -155,13 +167,37 @@ describe("UpiCollectionService.create", () => {
     );
   });
 
-  it("(b) PUBLISHED passport → ConflictException, no save", async () => {
+  it("(b) PUBLISHED passport — creates the UPI and flags passportPublished", async () => {
     const referenceId = randomUUID();
     const publishedPassport = makePublishedPassport(referenceId);
 
     const { service, upiRepo } = makeService({
       passportRepo: {
         findOne: jest.fn(async () => publishedPassport),
+      },
+    });
+
+    // Adding an identity to a published passport changes nothing that is already
+    // public — no existing permalink or scanned key moves. Only update/delete stay
+    // draft-gated.
+    const result = await service.create({
+      referenceId,
+      gtin: VALID_GTIN13,
+      organizationId: randomUUID(),
+    });
+
+    expect(upiRepo.save).toHaveBeenCalledTimes(1);
+    expect(result.gtin).toBe(VALID_GTIN13_AS_14);
+    expect(result.passportPublished).toBe(true);
+  });
+
+  it("(b2) ARCHIVED passport → ConflictException, no save", async () => {
+    const referenceId = randomUUID();
+    const archivedPassport = makeArchivedPassport(referenceId);
+
+    const { service, upiRepo } = makeService({
+      passportRepo: {
+        findOne: jest.fn(async () => archivedPassport),
       },
     });
 
@@ -277,11 +313,25 @@ describe("UpiCollectionService.createInternal", () => {
     expect(result.digitalLink).toBeNull();
   });
 
-  it("(b) PUBLISHED passport → ConflictException, no save", async () => {
+  it("(b) PUBLISHED passport — creates the internal UPI and flags passportPublished", async () => {
     const referenceId = randomUUID();
     const publishedPassport = makePublishedPassport(referenceId);
     const { service, upiRepo } = makeService({
       passportRepo: { findOne: jest.fn(async () => publishedPassport) },
+    });
+
+    const result = await service.createInternal({ referenceId, organizationId: randomUUID() });
+
+    expect(upiRepo.save).toHaveBeenCalledTimes(1);
+    expect(result.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
+    expect(result.passportPublished).toBe(true);
+  });
+
+  it("(b2) ARCHIVED passport → ConflictException, no save", async () => {
+    const referenceId = randomUUID();
+    const archivedPassport = makeArchivedPassport(referenceId);
+    const { service, upiRepo } = makeService({
+      passportRepo: { findOne: jest.fn(async () => archivedPassport) },
     });
 
     await expect(

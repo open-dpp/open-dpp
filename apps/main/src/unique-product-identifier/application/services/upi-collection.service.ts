@@ -24,10 +24,10 @@ export interface CreateGs1UpiInput {
 /**
  * Application service for the many-per-passport GS1 UPI collection.
  *
- * Owns the GS1 UPI write path: create a new GS1 UPI for a DRAFT passport.
- * Create / edit / delete of a GS1 UPI is allowed only while the referenced
- * passport is a draft; locked once published (mirrors `loadDraftPassportForWrite`
- * in the legacy identity controller).
+ * Owns the GS1 UPI write path. Creating an identity is additive and stays allowed
+ * once the passport is published — nothing already public moves. Editing and
+ * deleting are draft-only: both invalidate identities that printed GS1 codes
+ * already resolve through. An archived passport takes no writes at all.
  *
  * The many-per-passport model means we do NOT pre-check by `referenceId` before
  * creating; the DB partial-unique-key index is the backstop for duplicate-key 409s.
@@ -94,10 +94,15 @@ export class UpiCollectionService {
   }
 
   /**
-   * Create a new GS1 UPI for a DRAFT passport.
+   * Create a new GS1 UPI for a draft or published passport.
+   *
+   * Adding an identity is additive: it touches no existing permalink, frozen
+   * `publishedUrl`, or scanned GS1 key, so publication does not block it. Only
+   * `update` and `delete` stay draft-gated — those DO invalidate printed codes.
+   * An archived passport takes no writes at all.
    *
    * @throws NotFoundException when the passport does not exist.
-   * @throws ConflictException when the passport is published (lifecycle freeze).
+   * @throws ConflictException when the passport is archived.
    * @throws ConflictException when `repo.save` encounters a duplicate GS1 key (DB index).
    * @throws ValueError when the GTIN, batch, or serial is invalid (domain validation).
    */
@@ -106,10 +111,8 @@ export class UpiCollectionService {
     if (!passport) {
       throw new NotFoundException(`Passport ${input.referenceId} not found`);
     }
-    if (!passport.isDraft()) {
-      throw new ConflictException(
-        "A GS1 UPI can only be created while the passport is a draft; it is locked once the passport is published",
-      );
+    if (passport.isArchived()) {
+      throw new ConflictException("A GS1 UPI cannot be created for an archived passport");
     }
 
     // Throws ValueError for an invalid GTIN, batch, or serial — let it propagate.
@@ -135,20 +138,21 @@ export class UpiCollectionService {
 
     const resolverBase = await this.baseUrlResolver.getResolverBase(input.organizationId);
     // The documented contract (open-api-docs) is the list-item shape — same as
-    // createInternal. The passport is draft-gated above, so passportPublished
-    // is false by invariant.
-    return saved.toListItem({ resolverBase, passportPublished: false });
+    // createInternal. Creation is allowed on a published passport, so the flag
+    // has to be read off the passport rather than assumed false.
+    return saved.toListItem({ resolverBase, passportPublished: passport.isPublished() });
   }
 
   /**
-   * Create a new internal (`OPEN_DPP_UUID`) UPI for a DRAFT passport.
+   * Create a new internal (`OPEN_DPP_UUID`) UPI for a draft or published passport.
    *
    * An internal UPI carries no external identity data — the server mints its `uuid`.
    * Internal UPIs are freely deletable while the passport is a draft (ADR 0006: there
-   * is no canonical/auto-minted internal row anymore).
+   * is no canonical/auto-minted internal row anymore). Creation follows the same rule
+   * as `create`: additive, so publication does not block it; archived does.
    *
    * @throws NotFoundException when the passport does not exist.
-   * @throws ConflictException when the passport is published (lifecycle freeze).
+   * @throws ConflictException when the passport is archived.
    */
   async createInternal(input: {
     referenceId: string;
@@ -158,10 +162,8 @@ export class UpiCollectionService {
     if (!passport) {
       throw new NotFoundException(`Passport ${input.referenceId} not found`);
     }
-    if (!passport.isDraft()) {
-      throw new ConflictException(
-        "An internal UPI can only be created while the passport is a draft; it is locked once the passport is published",
-      );
+    if (passport.isArchived()) {
+      throw new ConflictException("An internal UPI cannot be created for an archived passport");
     }
 
     const upi = UniqueProductIdentifier.create({
@@ -171,7 +173,7 @@ export class UpiCollectionService {
     });
     const saved = await this.uniqueProductIdentifierRepository.save(upi);
 
-    return saved.toListItem({ passportPublished: false });
+    return saved.toListItem({ passportPublished: passport.isPublished() });
   }
 
   /**

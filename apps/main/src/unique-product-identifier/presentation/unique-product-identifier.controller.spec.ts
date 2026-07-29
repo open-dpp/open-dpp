@@ -77,7 +77,26 @@ describe("UniqueProductIdentifierController", () => {
     SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
-  async function createPassport(orgId: string, options: { published?: boolean } = {}) {
+  function lastStatusChangeFor(options: { published?: boolean; archived?: boolean }) {
+    if (options.archived) {
+      return DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      });
+    }
+    if (options.published) {
+      return DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      });
+    }
+    return DigitalProductDocumentStatusChange.create({});
+  }
+
+  async function createPassport(
+    orgId: string,
+    options: { published?: boolean; archived?: boolean } = {},
+  ) {
     const { aas, submodels } = ctx.getAasObjects();
     const passport = Passport.create({
       id: randomUUID(),
@@ -87,12 +106,7 @@ describe("UniqueProductIdentifierController", () => {
         submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
-      lastStatusChange: options.published
-        ? DigitalProductDocumentStatusChange.create({
-            previousStatus: DigitalProductDocumentStatus.Draft,
-            currentStatus: DigitalProductDocumentStatus.Published,
-          })
-        : DigitalProductDocumentStatusChange.create({}),
+      lastStatusChange: lastStatusChangeFor(options),
     });
     const moduleRef = ctx.getModuleRef();
     // Canonical UPI must carry organizationId so findAllByOrganizationId can include it.
@@ -157,16 +171,36 @@ describe("UniqueProductIdentifierController", () => {
       expect(response2.body.serial).toEqual(`C42B-${uniqueBase}-2`);
     });
 
-    it("returns 409 when the passport is published (lifecycle freeze)", async () => {
+    it("returns 201 when the passport is published (adding an identity is allowed)", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id, { published: true });
+      const uniqueSerial = `PUB-${randomUUID().slice(0, 8)}`;
 
       const response = await request(app.getHttpServer())
         .post(basePath)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
-        .send({ referenceId: passport.id, gtin: "04006381333931" });
+        .send({ referenceId: passport.id, gtin: "04006381333931", serial: uniqueSerial });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.passportPublished).toEqual(true);
+    });
+
+    it("returns 409 when the passport is archived", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id, { archived: true });
+
+      const response = await request(app.getHttpServer())
+        .post(basePath)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `ARC-${randomUUID().slice(0, 8)}`,
+        });
 
       expect(response.status).toEqual(409);
     });
@@ -268,10 +302,25 @@ describe("UniqueProductIdentifierController", () => {
       expect(response.body.uuid).toBeDefined();
     });
 
-    it("returns 409 when the passport is published (lifecycle freeze)", async () => {
+    it("returns 201 when the passport is published (adding an identity is allowed)", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id, { published: true });
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePath}/internal`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send({ referenceId: passport.id });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.passportPublished).toEqual(true);
+    });
+
+    it("returns 409 when the passport is archived", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id, { archived: true });
 
       const response = await request(app.getHttpServer())
         .post(`${basePath}/internal`)
