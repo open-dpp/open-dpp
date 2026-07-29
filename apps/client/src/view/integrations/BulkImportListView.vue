@@ -4,29 +4,50 @@ import { onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import BulkImportWizard from "../../components/bulk-import/BulkImportWizard.vue";
-import { useBulkImportStore } from "../../stores/bulk-import.ts";
+import { useBulkImportConfigRepo } from "../../composables/bulk-import-config-repo.ts";
+import { useBulkImportRunRepo } from "../../composables/bulk-import-run-repo.ts";
 
 const { t } = useI18n();
 const router = useRouter();
-const store = useBulkImportStore();
-const wizard = useTemplateRef("wizard");
+const configRepo = useBulkImportConfigRepo();
+const runRepo = useBulkImportRunRepo();
+const wizard = useTemplateRef<InstanceType<typeof BulkImportWizard> | null>("wizard");
 
 const loading = ref(false);
+const checkingEditability = ref<Record<string, boolean>>({});
+const editableConfigs = ref<Record<string, boolean>>({});
 const expandedRows = ref<Record<string, boolean>>({});
 const expandedConfigId = ref<string | null>(null);
+const configs = ref<BulkImportConfigDto[]>([]);
+const configRuns = ref<BulkImportRunDto[]>([]);
 
-function openWizard() {
-  wizard.value?.open();
+function openWizard(config?: BulkImportConfigDto) {
+  wizard.value?.open(config);
 }
 
 async function onWizardRunTriggered(runId: string) {
   await router.push({ name: "bulkImportRun", params: { runId } });
 }
 
+async function checkConfigEditability(configId: string): Promise<boolean> {
+  if (editableConfigs.value[configId] !== undefined) {
+    return editableConfigs.value[configId];
+  }
+  checkingEditability.value[configId] = true;
+  try {
+    const isEditable = await runRepo.isConfigEditable(configId);
+    editableConfigs.value[configId] = isEditable;
+    return isEditable;
+  } finally {
+    checkingEditability.value[configId] = false;
+  }
+}
+
 async function onRowExpand(event: { data: BulkImportConfigDto }) {
   expandedRows.value = { [event.data.id]: true };
   expandedConfigId.value = event.data.id;
-  await store.fetchRunsForConfig(event.data.id);
+  const runs = await runRepo.fetchRunsForConfig(event.data.id);
+  if (runs) configRuns.value = runs;
 }
 
 function onRowCollapse() {
@@ -35,7 +56,8 @@ function onRowCollapse() {
 }
 
 async function onDelete(config: BulkImportConfigDto) {
-  await store.deleteConfig(config.id);
+  await configRepo.deleteConfig(config.id);
+  configs.value = configs.value.filter((c) => c.id !== config.id);
   if (expandedConfigId.value === config.id) {
     onRowCollapse();
   }
@@ -60,15 +82,20 @@ function statusSeverity(status: string): string {
 
 onMounted(async () => {
   loading.value = true;
-  await store.fetchConfigs();
+  const fetchedConfigs = await configRepo.fetchConfigs();
+  if (fetchedConfigs) configs.value = fetchedConfigs;
   loading.value = false;
+  // Pre-check editability for all configs
+  for (const config of configs.value) {
+    void checkConfigEditability(config.id);
+  }
 });
 </script>
 
 <template>
   <DataTable
     v-model:expanded-rows="expandedRows"
-    :value="store.configs"
+    :value="configs"
     data-key="id"
     :loading="loading"
     @row-expand="onRowExpand"
@@ -77,7 +104,7 @@ onMounted(async () => {
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xl font-bold">{{ t("integrations.bulkImport.label") }}</span>
-        <Button :label="t('integrations.bulkImport.newConfig')" @click="openWizard" />
+        <Button :label="t('integrations.bulkImport.newConfig')" @click="openWizard()" />
       </div>
     </template>
     <Column expander style="width: 3rem" />
@@ -87,11 +114,24 @@ onMounted(async () => {
     <Column :header="t('common.actions')">
       <template #body="{ data }">
         <Button
+          icon="pi pi-pencil"
+          text
+          :aria-label="t('common.edit')"
+          :title="t('common.edit')"
+          :disabled="checkingEditability[data.id] || editableConfigs[data.id] === false"
+          @click="openWizard(data)"
+        />
+        <Button
           icon="pi pi-trash"
           severity="danger"
           text
           :aria-label="t('integrations.bulkImport.delete')"
-          :title="t('integrations.bulkImport.delete')"
+          :title="
+            editableConfigs[data.id] === false
+              ? t('integrations.bulkImport.configLockedTooltip')
+              : t('integrations.bulkImport.delete')
+          "
+          :disabled="checkingEditability[data.id] || editableConfigs[data.id] === false"
           @click="onDelete(data)"
         />
       </template>
@@ -100,12 +140,14 @@ onMounted(async () => {
       <div class="p-4">
         <h3 class="mb-2 font-semibold">{{ t("integrations.bulkImport.runHistory") }}</h3>
         <DataTable
-          v-if="store.configRuns.length > 0"
-          :value="data.id === expandedConfigId ? store.configRuns : []"
+          v-if="configRuns.length > 0"
+          :value="data.id === expandedConfigId ? configRuns : []"
           data-key="id"
         >
           <Column field="createdAt" :header="t('integrations.bulkImport.createdAt')">
-            <template #body="{ data: run }">{{ new Date(run.createdAt).toLocaleString() }}</template>
+            <template #body="{ data: run }">{{
+              new Date(run.createdAt).toLocaleString()
+            }}</template>
           </Column>
           <Column field="status">
             <template #body="{ data: run }">

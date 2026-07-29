@@ -329,6 +329,7 @@
         "completed_with_errors": "Completed with errors",
         "interrupted": "Interrupted"
       },
+      "configLockedTooltip": "Cannot edit config while imports are pending or running",
       "errorLoadSubmodels": "Failed to load template fields:",
       "invalidFile": "The selected file is not a valid JSON array of records.",
       "uploadFile": "Upload file",

@@ -1,3 +1,4 @@
+import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 import { useNotificationStore } from "../stores/notification.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
@@ -59,8 +60,22 @@ export function useBulkImportRunRepo() {
     }
   };
 
+  const isConfigEditable = async (configId: string): Promise<boolean> => {
+    try {
+      const runs = await fetchRunsForConfig(configId);
+      if (!runs) return false;
+      return !runs.some(
+        (run) => run.status === BulkImportRunStatusDto.Pending || run.status === BulkImportRunStatusDto.Running,
+      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(t("integrations.bulkImport.errorLoadRuns"), error);
+      return false;
+    }
+  };
+
   return {
     fetchRunsForConfig,
+    isConfigEditable,
     triggerRun,
     fetchRun,
     fetchRunItems,

@@ -329,6 +329,7 @@
         "completed_with_errors": "Abgeschlossen mit Fehlern",
         "interrupted": "Unterbrochen"
       },
+      "configLockedTooltip": "Konfiguration kann nicht bearbeitet werden, während Importe ausstehen oder ausgeführt werden",
       "errorLoadSubmodels": "Laden der Vorlagenfelder fehlgeschlagen:",
       "invalidFile": "Die ausgewählte Datei ist kein gültiges JSON-Array von Datensätzen.",
       "uploadFile": "Datei hochladen",

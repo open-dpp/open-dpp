@@ -1,16 +1,19 @@
 <script lang="ts" setup>
-import { computed, onMounted } from "vue";
+import type { BulkImportRunDto, BulkImportRunItemDto } from "@open-dpp/dto";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useIndexStore } from "../../stores";
-import { useBulkImportStore } from "../../stores/bulk-import.ts";
+import { useBulkImportRunRepo } from "../../composables/bulk-import-run-repo.ts";
 
 const { t } = useI18n();
 const route = useRoute();
 const indexStore = useIndexStore();
-const store = useBulkImportStore();
+const runRepo = useBulkImportRunRepo();
 
 const runId = computed(() => String(route.params.runId));
+const selectedRun = ref<BulkImportRunDto>();
+const runItems = ref<BulkImportRunItemDto[]>([]);
 
 function statusSeverity(status: string): string {
   switch (status) {
@@ -42,27 +45,26 @@ function passportLink(passportId: string): string {
 }
 
 onMounted(async () => {
-  await store.fetchRun(runId.value);
-  await store.fetchRunItems(runId.value);
+  selectedRun.value = await runRepo.fetchRun(runId.value);
+  const items = await runRepo.fetchRunItems(runId.value);
+  if (items) runItems.value = items;
 });
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
-    <div v-if="store.selectedRun" class="flex flex-wrap items-center gap-4">
+    <div v-if="selectedRun" class="flex flex-wrap items-center gap-4">
       <span class="text-xl font-bold">{{ t("integrations.bulkImport.runDetailTitle") }}</span>
       <Tag
-        :severity="statusSeverity(store.selectedRun.status)"
-        :value="t(`integrations.bulkImport.status.${store.selectedRun.status}`)"
+        :severity="statusSeverity(selectedRun.status)"
+        :value="t(`integrations.bulkImport.status.${selectedRun.status}`)"
       />
-      <span
-        >{{ t("integrations.bulkImport.succeeded") }}: {{ store.selectedRun.succeededCount }}</span
-      >
-      <span>{{ t("integrations.bulkImport.failed") }}: {{ store.selectedRun.failedCount }}</span>
-      <span>{{ t("integrations.bulkImport.total") }}: {{ store.selectedRun.totalCount }}</span>
+      <span>{{ t("integrations.bulkImport.succeeded") }}: {{ selectedRun.succeededCount }}</span>
+      <span>{{ t("integrations.bulkImport.failed") }}: {{ selectedRun.failedCount }}</span>
+      <span>{{ t("integrations.bulkImport.total") }}: {{ selectedRun.totalCount }}</span>
     </div>
 
-    <DataTable :value="store.runItems" paginator :rows="20" :rows-per-page-options="[20, 50, 100]">
+    <DataTable :value="runItems" paginator :rows="20" :rows-per-page-options="[20, 50, 100]">
       <template #header>
         <span class="text-xl font-bold">{{ t("integrations.bulkImport.items") }}</span>
       </template>
