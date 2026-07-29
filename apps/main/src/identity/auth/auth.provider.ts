@@ -5,14 +5,87 @@ import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { apiKey } from "@better-auth/api-key";
 import { admin, organization } from "better-auth/plugins";
-import { Connection, Types } from "mongoose";
+import { Connection } from "mongoose";
+import type { Db } from "mongodb";
+import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
 import { EmailService } from "../../email/email.service";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import {
+  completeVerifiedEmailChange,
+  decodeVerificationToken,
+  guardEmailChangeUpdate,
+  resolveUserLanguage,
+} from "../email-change-requests/infrastructure/email-change-hooks";
+import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
+import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
+import { LanguageEnum, LanguageType, LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export const AUTH = "auth";
+
+// Localized like the mjml template siblings (see EmailTemplate.localizedName).
+const VERIFICATION_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+  en: "Confirm your new email address",
+  de: "Neue E-Mail-Adresse bestätigen",
+};
+
+/**
+ * Seeds the env-configured admin (OPEN_DPP_AUTH_ADMIN_USERNAME/PASSWORD) ONLY when
+ * no admin account exists yet. This makes the env admin a one-time bootstrap seed
+ * instead of a value re-created on every startup: once any admin exists — including
+ * after an admin changes their own email — seeding is skipped, so the env
+ * credentials can never silently resurrect a second admin account.
+ *
+ * Exported for unit testing.
+ */
+export async function ensureAdminSeeded(
+  db: Db,
+  // Structural type: the better-auth `Auth` generic does not unify across the import
+  // boundary (duplicate better-call types + this app's user additionalFields), and
+  // `createUser` is added at runtime by the admin plugin and absent from the static
+  // api type — so we only require `api` and call createUser dynamically, as before.
+  auth: { api: Record<string, any> },
+  config: EnvService,
+  logger: Logger,
+): Promise<void> {
+  const adminUsername = config.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
+  const adminPassword = config.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+  if (!adminUsername || !adminPassword) {
+    return;
+  }
+
+  try {
+    const existingAdmin = await db
+      .collection("user")
+      .findOne({ role: "admin" }, { projection: { _id: 1 } });
+    if (existingAdmin) {
+      logger.log("Admin account already exists; skipping admin seeding.");
+      return;
+    }
+
+    await auth.api.createUser({
+      body: {
+        name: "open-dpp admin",
+        data: {
+          firstName: "open-dpp",
+          lastName: "admin",
+          emailVerified: true,
+        },
+        email: adminUsername,
+        password: adminPassword,
+        role: "admin",
+      },
+    });
+    logger.log("Admin Account created");
+  } catch (error) {
+    if (error instanceof APIError) {
+      logger.warn("Account with set admin username already exists and wont be updated.");
+    } else {
+      logger.error("Failed to create admin account", error);
+    }
+  }
+}
 
 export const AuthProvider: Provider = {
   provide: AUTH,
@@ -103,6 +176,16 @@ export const AuthProvider: Provider = {
             required: false,
             input: true,
           },
+          preferredLanguage: {
+            type: "string",
+            required: false,
+            input: true,
+            defaultValue: "en",
+            validator: { input: LanguageEnum },
+          },
+        },
+        changeEmail: {
+          enabled: true,
         },
       },
       emailAndPassword: {
@@ -123,8 +206,34 @@ export const AuthProvider: Provider = {
       },
       emailVerification: {
         sendOnSignUp: true,
-        sendVerificationEmail: async ({ user, url }: { user: any; url: string; token: string }) => {
+        expiresIn: EMAIL_CHANGE_REQUEST_TTL_SECONDS,
+        sendVerificationEmail: async ({
+          user,
+          url,
+          token,
+        }: {
+          user: any;
+          url: string;
+          token: string;
+        }) => {
           const firstName = (user as any).firstName ?? "User";
+          const decoded = decodeVerificationToken({ query: { token } });
+          if (decoded?.updateTo) {
+            const language = resolveUserLanguage(user);
+            await emailService.send(
+              EmailChangeVerificationMail.create({
+                to: user.email,
+                subject: VERIFICATION_SUBJECT_BY_LANGUAGE[language],
+                language,
+                templateProperties: {
+                  firstName,
+                  newEmail: user.email,
+                  link: url,
+                },
+              }),
+            );
+            return;
+          }
           await emailService.send(
             VerifyEmailMail.create({
               to: user.email,
@@ -142,26 +251,14 @@ export const AuthProvider: Provider = {
           create: {
             before: async (session) => {
               try {
-                // We need to access the database to get the active organization
-                // This logic was in AuthService.getActiveOrganization
-                // Since we don't have AuthService here, we need to replicate the query
-                // or find a way to reuse the logic.
-                // For now, replicating the simple query.
-                const userIdQuery = Types.ObjectId.isValid(session.userId)
-                  ? new Types.ObjectId(session.userId)
-                  : session.userId;
-                const member = await db
-                  .collection("member")
-                  .findOne({ userId: userIdQuery }, { sort: { createdAt: 1 } });
-
-                let organizationId;
-                if (member) {
-                  organizationId = member.organizationId;
-                }
+                const activeOrganizationId = await findActiveOrganizationIdForUser(
+                  db,
+                  session.userId,
+                );
                 return {
                   data: {
                     ...session,
-                    activeOrganizationId: organizationId ? organizationId.toString() : undefined, // Convert ObjectId to string since it otherwise is transferred to the frontend as Buffer which causes issues
+                    activeOrganizationId,
                   },
                 };
               } catch (error) {
@@ -171,6 +268,12 @@ export const AuthProvider: Provider = {
                 };
               }
             },
+          },
+        },
+        user: {
+          update: {
+            before: async (data, context) => guardEmailChangeUpdate(db, logger, data, context),
+            after: async (user) => completeVerifiedEmailChange(db, emailService, logger, user),
           },
         },
       },
@@ -215,35 +318,7 @@ export const AuthProvider: Provider = {
       }),
     });
 
-    const isAuthAdminProvided =
-      !!configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") &&
-      !!configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
-    if (isAuthAdminProvided) {
-      const adminUsername = configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
-      const adminPassword = configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
-      try {
-        await (auth.api as any).createUser({
-          body: {
-            name: "open-dpp admin",
-            data: {
-              firstName: "open-dpp",
-              lastName: "admin",
-              emailVerified: true,
-            },
-            email: adminUsername,
-            password: adminPassword,
-            role: "admin",
-          },
-        });
-        logger.log("Admin Account created");
-      } catch (error) {
-        if (error instanceof APIError) {
-          logger.warn("Account with set admin username already exists and wont be updated.");
-        } else {
-          logger.error("Failed to create admin account", error);
-        }
-      }
-    }
+    await ensureAdminSeeded(db, auth, configService, logger);
     logger.log("Auth initialized");
 
     return auth;

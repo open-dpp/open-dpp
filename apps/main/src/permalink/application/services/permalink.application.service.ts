@@ -6,7 +6,7 @@ import {
   PermalinkFallbackBaseUrlSource,
   PermalinkKind,
   PermalinkMetadataDtoSchema,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
@@ -95,7 +95,7 @@ export class PermalinkApplicationService {
     const presentationConfiguration = await this.presentationConfigurationRepository.findOneOrFail(
       permalink.presentationConfigurationId,
     );
-    if (presentationConfiguration.referenceType !== PresentationReferenceType.Passport) {
+    if (presentationConfiguration.referenceType !== DigitalProductDocumentTypes.Passport) {
       throw new NotFoundException(`Permalink ${permalink.id} does not target a passport`);
     }
     const passport = await this.passportRepository.findOneOrFail(
@@ -142,7 +142,7 @@ export class PermalinkApplicationService {
       let shouldBePrimary = false;
       if (
         !primaryAssignedInThisCall &&
-        config.referenceType === PresentationReferenceType.Passport
+        config.referenceType === DigitalProductDocumentTypes.Passport
       ) {
         const existingPrimary = await this.permalinkRepository.findPrimaryByPassportId(
           config.referenceId,
@@ -185,7 +185,7 @@ export class PermalinkApplicationService {
     permalink: Permalink,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    if (config.referenceType !== PresentationReferenceType.Passport) {
+    if (config.referenceType !== DigitalProductDocumentTypes.Passport) {
       return permalink;
     }
     const passport = await this.passportRepository.findOne(config.referenceId);

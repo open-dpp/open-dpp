@@ -44,6 +44,17 @@ describe("userSchema", () => {
     await module.close();
   });
 
+  describe("indexes", () => {
+    const findIndex = (key: string) =>
+      UserSchema.indexes().filter(([fields]) => Object.prototype.hasOwnProperty.call(fields, key));
+
+    it("declares a unique index on email (findOneByEmail lookups)", () => {
+      const emailIndexes = findIndex("email");
+      expect(emailIndexes.length).toBeGreaterThanOrEqual(1);
+      expect(emailIndexes.some(([, options]) => options?.unique === true)).toBe(true);
+    });
+  });
+
   it("should create a user document", async () => {
     const userData = {
       _id: new ObjectId(),
@@ -63,5 +74,44 @@ describe("userSchema", () => {
     expect(savedUser._id).toBe(userData._id);
     expect(savedUser.email).toBe(userData.email);
     expect(savedUser.role).toBe(userData.role);
+  });
+
+  it("stores and retrieves preferredLanguage", async () => {
+    const userData = {
+      _id: new ObjectId(),
+      email: "lang@example.com",
+      emailVerified: true,
+      firstName: "Lang",
+      lastName: "User",
+      name: "Lang User",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      role: UserRole.USER,
+      preferredLanguage: "de",
+    };
+
+    const user = new UserModel(userData);
+    const savedUser = await user.save();
+
+    expect(savedUser.preferredLanguage).toBe("de");
+  });
+
+  it("defaults preferredLanguage to 'en' when not provided", async () => {
+    const userData = {
+      _id: new ObjectId(),
+      email: "default-lang@example.com",
+      emailVerified: true,
+      firstName: "Default",
+      lastName: "Lang",
+      name: "Default Lang",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      role: UserRole.USER,
+    };
+
+    const user = new UserModel(userData);
+    const savedUser = await user.save();
+
+    expect(savedUser.preferredLanguage).toBe("en");
   });
 });

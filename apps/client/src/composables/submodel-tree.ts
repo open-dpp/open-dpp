@@ -1,5 +1,5 @@
 import type { SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
-import type { DisplayName } from "./display-name";
+import type { DisplayName } from "./language-text.ts";
 import { computed } from "vue";
 
 export interface SubmodelTreeElement {

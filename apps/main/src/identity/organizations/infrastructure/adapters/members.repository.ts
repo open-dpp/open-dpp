@@ -47,7 +47,7 @@ export class MembersRepository {
   async findByOrganizationId(organizationId: string): Promise<Member[]> {
     // Better Auth stores organizationId as ObjectId
     const filter = {
-      organizationId: this.toObjectIdIfValid(organizationId),
+      organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
     };
     const documents = await this.memberModel.find(filter as any);
     return documents.map((doc) => MemberMapper.toDomain(doc));
@@ -56,7 +56,7 @@ export class MembersRepository {
   async findByUserId(userId: string): Promise<Member[]> {
     // Better Auth stores userId as ObjectId
     const filter = {
-      userId: this.toObjectIdIfValid(userId),
+      userId: { $eq: this.toObjectIdIfValid(userId) },
     };
     const documents = await this.memberModel.find(filter as any);
     return documents.map((doc) => MemberMapper.toDomain(doc));
@@ -69,8 +69,8 @@ export class MembersRepository {
     // Better Auth stores userId and organizationId as ObjectIds, so we need to convert
     // the string query parameters to ObjectIds for the query to match
     const filter = {
-      userId: this.toObjectIdIfValid(userId),
-      organizationId: this.toObjectIdIfValid(organizationId),
+      userId: { $eq: this.toObjectIdIfValid(userId) },
+      organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
     };
 
     const document = await this.memberModel.findOne(filter as any);

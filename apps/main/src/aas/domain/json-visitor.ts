@@ -126,7 +126,9 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
   }
 
   visitSubmodel(element: Submodel, _context?: any): any {
-    const submodelElements = removeEmptyItems(element.submodelElements.map((e) => e.accept(this)));
+    const submodelElements = removeEmptyItems(
+      element.getSubmodelElements().map((e) => e.accept(this)),
+    );
     const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
@@ -154,7 +156,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
         first: element.first.accept(this),
         second: element.second.accept(this),
         extensions: element.extensions.map((e) => e.accept(this)),
-        annotations: element.annotations.map((a) => a.accept(this)),
+        annotations: element.getSubmodelElements().map((a) => a.accept(this)),
       },
       element,
     );
@@ -180,7 +182,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
         modelType: KeyTypes.Entity,
         entityType: element.entityType,
         extensions: element.extensions.map((e) => e.accept(this)),
-        statements: element.statements.map((s) => s.accept(this)),
+        statements: element.getSubmodelElements().map((s) => s.accept(this)),
         globalAssetId: element.globalAssetId,
         specificAssetIds: element.specificAssetIds.map((s) => s.accept(this)),
       },
@@ -254,7 +256,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, _context?: any): any {
-    const value = removeEmptyItems(element.value.map((e) => e.accept(this)));
+    const value = removeEmptyItems(element.getSubmodelElements().map((e) => e.accept(this)));
     const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
@@ -274,7 +276,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
         semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
         valueTypeListElement: element.valueTypeListElement,
         typeValueListElement: element.typeValueListElement,
-        value: removeEmptyItems(element.value.map((e) => e.accept(this))),
+        value: removeEmptyItems(element.getSubmodelElements().map((e) => e.accept(this))),
       },
       element,
     );

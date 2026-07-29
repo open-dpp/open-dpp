@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
@@ -54,7 +54,7 @@ export class AasExportable {
     expandedEnvironment: ExpandedEnvironment,
     presentationConfiguration: PresentationConfiguration | null = null,
   ) {
-    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Passport, data.id);
+    assertConfigMatches(presentationConfiguration, DigitalProductDocumentTypes.Passport, data.id);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -72,7 +72,7 @@ export class AasExportable {
     expandedEnvironment: ExpandedEnvironment,
     presentationConfiguration: PresentationConfiguration | null = null,
   ) {
-    assertConfigMatches(presentationConfiguration, PresentationReferenceType.Template, data.id);
+    assertConfigMatches(presentationConfiguration, DigitalProductDocumentTypes.Template, data.id);
     return AasExportable.create({
       id: data.id,
       organizationId: data.organizationId,
@@ -117,7 +117,7 @@ export class AasExportable {
 
 function assertConfigMatches(
   config: PresentationConfiguration | null,
-  expectedType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+  expectedType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
   expectedReferenceId: string,
 ): void {
   if (!config) return;

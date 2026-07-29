@@ -1,3 +1,5 @@
+import { ValueError } from "@open-dpp/exception";
+
 export class IdShortPath {
   constructor(private readonly _segments: Array<string>) {}
 
@@ -13,11 +15,37 @@ export class IdShortPath {
     return new IdShortPath([...this._segments, segment]);
   }
 
+  relativePath(other: IdShortPath): IdShortPath {
+    if (this.isEqual(other)) {
+      return new IdShortPath([]);
+    }
+    if (!this.isChildOf(other)) {
+      throw new ValueError(
+        `To evaluate relative path ${this.toString()} has to equal or a child of ${other.toString()}`,
+      );
+    }
+
+    return this.slice(other.length());
+  }
+
   isChildOf(idShortPath: IdShortPath): boolean {
+    // this is a child of idShortPath if:
+    // 1. idShortPath is shorter than or equal to this (parent <= child in length)
+    // 2. this starts with all segments of idShortPath
     if (idShortPath.length() > this.length()) {
       return false;
     }
-    return idShortPath.first === this.first;
+    for (let i = 0; i < idShortPath.length(); i++) {
+      if (this._segments[i] !== idShortPath._segments[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  isAncestorOf(idShortPath: IdShortPath): boolean {
+    // this is an ancestor of idShortPath (inverse of idShortPath.isChildOf(this))
+    return idShortPath.isChildOf(this);
   }
 
   isEqual(idShortPath: IdShortPath): boolean {
@@ -56,6 +84,10 @@ export class IdShortPath {
 
   isEmpty(): boolean {
     return this._segments.length === 0;
+  }
+
+  slice(start: number, end?: number): IdShortPath {
+    return new IdShortPath(this._segments.slice(start, end));
   }
 
   toString(): string {

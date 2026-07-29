@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { getConnectionToken, getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { PresentationReferenceType } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Connection } from "mongoose";
 
@@ -164,7 +164,7 @@ describe("PermalinkRepository", () => {
       const config = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(config);
 
@@ -200,12 +200,12 @@ describe("PermalinkRepository", () => {
       const configA = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       const configB = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(configA);
       await presentationConfigurationRepository.save(configB);
@@ -296,7 +296,7 @@ describe("PermalinkRepository", () => {
       const config = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(config);
       const presentation = Permalink.create({
@@ -322,7 +322,7 @@ describe("PermalinkRepository", () => {
       const otherConfig = PresentationConfiguration.create({
         organizationId,
         referenceId: otherPassportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(otherConfig);
       await repository.save(
@@ -361,7 +361,7 @@ describe("PermalinkRepository", () => {
       const config = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(config);
       const presentation = Permalink.create({
@@ -414,7 +414,7 @@ describe("PermalinkRepository", () => {
       const config = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(config);
 
@@ -452,12 +452,12 @@ describe("PermalinkRepository", () => {
       const configA = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       const configB = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(configA);
       await presentationConfigurationRepository.save(configB);
@@ -513,12 +513,12 @@ describe("PermalinkRepository", () => {
       const configA = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       const configB = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
       });
       await presentationConfigurationRepository.save(configA);
       await presentationConfigurationRepository.save(configB);

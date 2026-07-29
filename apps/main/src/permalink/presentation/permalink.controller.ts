@@ -37,7 +37,7 @@ import {
   PermalinkPaginationDtoSchema,
   PermalinkPublicDtoSchema,
   PermalinkUpdateRequestSchema,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError, ZodValidationPipe } from "@open-dpp/exception";
@@ -675,6 +675,6 @@ function passportToHolder(passport: Passport): PresentationReferenceHolder {
   return {
     id: passport.id,
     organizationId: passport.organizationId,
-    referenceType: PresentationReferenceType.Passport,
+    referenceType: DigitalProductDocumentTypes.Passport,
   };
 }

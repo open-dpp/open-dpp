@@ -32,10 +32,17 @@ z.config({
 });
 
 export function convertLocaleToLanguage(locale: string): LanguageType {
-  switch (locale) {
-    case "de-DE":
-      return Language.de;
+  if (locale.toLowerCase().startsWith("de")) {
+    return Language.de;
+  }
+  return Language.en;
+}
+
+export function convertLanguageToLocale(language: LanguageType): "en-US" | "de-DE" {
+  switch (language) {
+    case Language.de:
+      return "de-DE";
     default:
-      return Language.en;
+      return "en-US";
   }
 }

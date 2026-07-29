@@ -17,6 +17,7 @@ export interface SharedEditorProps<Data, RequestDto> {
   data: Data;
   callback: (data: RequestDto) => Promise<void>;
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
+  hideDrawer: () => void;
   aasNamespace: AasNamespace;
   errorHandlingStore: IErrorHandlingStore;
   id: string;

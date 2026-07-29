@@ -2,16 +2,19 @@ import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Language } from "@open-dpp/dto";
 import { ObjectId } from "mongodb";
+import { Model } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { EmailService } from "../../../../email/email.service";
 import { AuthModule } from "../../../auth/auth.module";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
+import { User as UserSchema } from "../schemas/user.schema";
 import { UsersModule } from "../../users.module";
 import { UsersRepository } from "./users.repository";
 
@@ -116,6 +119,26 @@ describe("UsersRepository", () => {
       expect(signIn).toBeDefined();
       expect(signIn.user.email).toBe(email);
     });
+
+    it("returns null when better-auth rejects a duplicate email", async () => {
+      const seeded = await seedUser();
+
+      const duplicate = User.create({
+        email: seeded.email,
+        firstName: "Duplicate",
+        lastName: "User",
+        role: UserRole.USER,
+      });
+
+      const result = await repository.save(duplicate, "another-password-1234");
+
+      expect(result).toBeNull();
+
+      const stillThere = await repository.findOneByEmail(seeded.email);
+      expect(stillThere).toBeInstanceOf(User);
+      expect(stillThere!.id).toBe(seeded.id);
+      expect(stillThere!.firstName).toBe("John");
+    });
   });
 
   describe("findOneById", () => {
@@ -152,6 +175,19 @@ describe("UsersRepository", () => {
     it("returns null when email is not found", async () => {
       const result = await repository.findOneByEmail(`${randomUUID()}@missing.test`);
       expect(result).toBeNull();
+    });
+  });
+
+  describe("NoSQL injection defense", () => {
+    it("findOneByEmail does not leak rows for an operator-shaped email", async () => {
+      const seeded = await seedUser();
+
+      const malicious = { $ne: null } as unknown as string;
+      try {
+        const leaked = await repository.findOneByEmail(malicious);
+        expect(leaked).toBeNull();
+      } catch {}
+      expect(await repository.findOneByEmail(seeded.email)).not.toBeNull();
     });
   });
 
@@ -220,6 +256,30 @@ describe("UsersRepository", () => {
       expect(roundTripped!.emailVerified).toBe(target);
     });
 
+    it("does not overwrite email when persisting other changes (concurrent email-change guard)", async () => {
+      const seeded = await seedUser();
+      const concurrentEmail = `${randomUUID()}@changed.test`;
+
+      // Simulate a concurrent better-auth email change landing on the same document,
+      // out-of-band (bypassing the repo) after we already hold the stale `seeded` entity.
+      const userModel = module.get<Model<UserSchema>>(getModelToken(UserSchema.name));
+      await userModel.updateOne(
+        { _id: new ObjectId(seeded.id) },
+        { $set: { email: concurrentEmail } },
+      );
+
+      // Persist an unrelated change from the stale entity (which still carries the old email).
+      const result = await repository.update(seeded.withName("Jane", "Roe"));
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.firstName).toBe("Jane");
+      // The concurrent email must survive — it must NOT be reverted to the stale snapshot.
+      expect(result!.email).toBe(concurrentEmail);
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.email).toBe(concurrentEmail);
+    });
+
     it("returns null for a user whose id is not a valid ObjectId", async () => {
       const user = User.create({
         email: `${randomUUID()}@test.test`,
@@ -240,10 +300,42 @@ describe("UsersRepository", () => {
         role: UserRole.USER,
         createdAt: new Date(),
         updatedAt: new Date(),
+        preferredLanguage: Language.en,
       });
 
       const result = await repository.update(user);
       expect(result).toBeNull();
+    });
+
+    it("persists preferredLanguage changes", async () => {
+      const seeded = await seedUser();
+      expect(seeded.preferredLanguage).toBe(Language.en);
+
+      const updated = seeded.withPreferredLanguage(Language.de);
+      const result = await repository.update(updated);
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.preferredLanguage).toBe(Language.de);
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.preferredLanguage).toBe(Language.de);
+    });
+
+    it("persists name changes via withName", async () => {
+      const seeded = await seedUser();
+
+      const updated = seeded.withName("Jane", "Roe");
+      const result = await repository.update(updated);
+
+      expect(result).toBeInstanceOf(User);
+      expect(result!.firstName).toBe("Jane");
+      expect(result!.lastName).toBe("Roe");
+      expect(result!.name).toBe("Jane Roe");
+
+      const roundTripped = await repository.findOneById(seeded.id);
+      expect(roundTripped!.firstName).toBe("Jane");
+      expect(roundTripped!.lastName).toBe("Roe");
+      expect(roundTripped!.name).toBe("Jane Roe");
     });
   });
 });

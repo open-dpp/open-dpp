@@ -1,14 +1,14 @@
 <script lang="ts" setup>
+import { storeToRefs } from "pinia";
 import { computed } from "vue";
-import { authClient } from "../../auth-client";
+import { useUserStore } from "../../stores/user";
+
+const { me } = storeToRefs(useUserStore());
 
 const fullName = computed(() => {
-  const session = authClient.useSession();
-  if (!session.value.data) return "AN";
-  const userSession = session.value.data;
-  const first = userSession.user.firstName;
-  const last = userSession.user.lastName;
-  return `${first} ${last}`;
+  if (!me.value) return "AN";
+  const name = [me.value.firstName, me.value.lastName].filter(Boolean).join(" ");
+  return name || "AN";
 });
 </script>
 
@@ -16,6 +16,6 @@ const fullName = computed(() => {
   <span
     aria-hidden="true"
     class="ml-4 hidden text-sm leading-6 font-semibold text-gray-900 xl:inline-block"
-    >{{ fullName ?? "AN" }}</span
+    >{{ fullName }}</span
   >
 </template>

@@ -9,10 +9,11 @@ import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
 const router = useRouter();
 const route = useRoute();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 
 const loading = ref<boolean>(false);
@@ -63,6 +64,7 @@ const signup = handleSubmit(async (values) => {
       firstName: values.firstName,
       lastName: values.lastName,
       name: `${values.firstName} ${values.lastName}`,
+      preferredLanguage: convertLocaleToLanguage(locale.value as string),
       callbackURL: redirectUri.value,
     });
 

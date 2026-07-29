@@ -26,6 +26,7 @@ import { Resource } from "./resource";
 import { AasAbility } from "./security/aas-ability";
 import { AccessPermissionRule } from "./security/access-permission-rule";
 import { SubjectAttributes } from "./security/subject-attributes";
+import { SubmodelSecurityContext } from "./security/submodel-security-context";
 import { SpecificAssetId } from "./specific-asset-id";
 import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
 import { Blob } from "./submodel-base/blob";
@@ -60,6 +61,7 @@ import { DefaultThumbnailsModified } from "../../activity-history/domain/change-
 export interface ModifierVisitorOptions {
   subject?: SubjectAttributes;
   ability: AasAbility;
+  submodelSecurityContext?: SubmodelSecurityContext;
 }
 export interface ModifierVisitorContextType {
   data: unknown;
@@ -144,6 +146,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
           parsed.security.localAccessControl.accessPermissionRules.map(
             AccessPermissionRule.fromPlain,
           ),
+          this.options.submodelSecurityContext,
         );
     }
   }

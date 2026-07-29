@@ -73,6 +73,11 @@ export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
 export const ColumnCreateEditorPropsSchema = z.discriminatedUnion("modelType", [
   z.object({ modelType: z.literal(AasSubmodelElements.Property), valueType: ValueTypeSchema }),
   z.object({ modelType: z.literal(AasSubmodelElements.File), contentType: z.string() }),
+  z.object({ modelType: z.literal(AasSubmodelElements.SubmodelElementCollection) }),
+  z.object({
+    modelType: z.literal(AasSubmodelElements.SubmodelElementList),
+    typeValueListElement: z.literal(AasSubmodelElements.SubmodelElementCollection),
+  }),
 ]);
 export type ColumnCreateEditorProps = z.infer<typeof ColumnCreateEditorPropsSchema>;
 export type ColumnEditorProps = SubmodelElementResponseDto;
@@ -119,6 +124,9 @@ export interface AasEditorPath {
   submodelId?: string;
   idShortPath?: string;
   idShortPathIncludingSubmodel?: string;
+  /** Set when this path was reached by drilling into a Table column's cell
+   * — lets the nested SubmodelElementListEditor navigate back up. */
+  parentTablePath?: AasEditorPath;
 }
 
 type callbackType = (data: any) => Promise<void>;

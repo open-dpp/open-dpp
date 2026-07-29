@@ -17,6 +17,7 @@ import PolicyModified from "./PolicyModified.vue";
 import ReferenceElementValueChanged from "./ReferenceElementValueChanged.vue";
 import RowAddedOrDeleted from "./RowAddedOrDeleted.vue";
 import ColumnAddedOrDeleted from "./ColumnAddedOrDeleted.vue";
+import ColumnInGroupChanged from "./ColumnInGroupChanged.vue";
 import SubmodelElementAddedOrDeleted from "./SubmodelElementAddedOrDeleted.vue";
 
 import PolicyDeleted from "./PolicyDeleted.vue";
@@ -29,7 +30,7 @@ const props = defineProps<{
   filterByActivityType?: ActivityDtoTypesType[];
 }>();
 
-const { activities, fetchActivities } = useActivityHistory(props.type);
+const { activities, fetchActivities, changePeriod } = useActivityHistory(props.type);
 
 const route = useRoute();
 
@@ -52,7 +53,10 @@ const { nextPage, reloadCurrentPage } = usePagination({
 const { t } = useI18n();
 
 function filterChanges(changes: any[], activityType: ActivityDtoTypesType) {
-  if (activityType === ActivityDtoTypes.ColumnModified) {
+  if (
+    activityType === ActivityDtoTypes.ColumnModified ||
+    activityType === ActivityDtoTypes.ColumnModifiedInGroup
+  ) {
     return changes.slice(0, 1);
   }
   if (activityType === ActivityDtoTypes.SubmodelAdded) {
@@ -76,6 +80,12 @@ function filterChanges(changes: any[], activityType: ActivityDtoTypesType) {
   return changes;
 }
 
+function refreshActivities() {
+  const now = dayjs().utc();
+  changePeriod([now.subtract(1, "month").toDate(), now.toDate()]);
+  reloadCurrentPage();
+}
+
 onMounted(async () => {
   await nextPage();
 });
@@ -85,7 +95,7 @@ onMounted(async () => {
   <div class="flex flex-col gap-4">
     <Toolbar>
       <template #start>
-        <Button @click="reloadCurrentPage" :aria-label="t('common.refresh')" icon="pi pi-refresh" />
+        <Button @click="refreshActivities" :aria-label="t('common.refresh')" icon="pi pi-refresh" />
       </template>
     </Toolbar>
     <Timeline :value="activities" align="left">
@@ -174,6 +184,17 @@ onMounted(async () => {
                   change.type === ChangeEventDtoTypes.ColumnAdded ||
                   change.type === ChangeEventDtoTypes.ColumnDeleted
                 "
+                :position="change.position"
+                :value="change.value"
+              />
+              <ColumnInGroupChanged
+                v-else-if="
+                  change.type === ChangeEventDtoTypes.ColumnAddedToGroup ||
+                  change.type === ChangeEventDtoTypes.ColumnDeletedFromGroup ||
+                  change.type === ChangeEventDtoTypes.ColumnModifiedInGroup ||
+                  change.type === ChangeEventDtoTypes.ColumnMovedToGroup
+                "
+                :group-id-short="change.groupIdShort"
                 :position="change.position"
                 :value="change.value"
               />

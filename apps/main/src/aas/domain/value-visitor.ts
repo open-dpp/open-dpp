@@ -100,7 +100,8 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
   }
 
   visitEntity(element: Entity, _context?: ValueVisitorContextType): JsonType {
-    const statements = element.statements
+    const statements = element
+      .getSubmodelElements()
       .map((st) => this.removeUndefined({ [st.idShort]: st.accept(this) }))
       .filter((s) => !isEmptyObject(s));
 
@@ -190,7 +191,7 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
 
   visitSubmodel(element: Submodel, _context?: ValueVisitorContextType): JsonType {
     const value: { [key: string]: any } = {};
-    for (const submodelElement of element.submodelElements) {
+    for (const submodelElement of element.getSubmodelElements()) {
       value[submodelElement.idShort] = submodelElement.accept(this);
     }
 
@@ -211,7 +212,7 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     _context?: ValueVisitorContextType,
   ): JsonType {
     const value: { [key: string]: any } = {};
-    for (const submodelElement of element.value) {
+    for (const submodelElement of element.getSubmodelElements()) {
       value[submodelElement.idShort] = submodelElement.accept(this);
     }
     const cleaned = this.removeUndefined(value);
@@ -222,6 +223,9 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     element: SubmodelElementList,
     _context?: ValueVisitorContextType,
   ): JsonType {
-    return element.value.map((v) => v.accept(this)).filter((e) => e !== undefined);
+    return element
+      .getSubmodelElements()
+      .map((v) => v.accept(this))
+      .filter((e) => e !== undefined);
   }
 }

@@ -70,7 +70,7 @@ export class UsersRepository {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
-    const document = await this.userModel.findOne({ email });
+    const document = await this.userModel.findOne({ email: { $eq: email } });
     if (!document) return null;
     return UserMapper.toDomain(document);
   }
@@ -92,7 +92,8 @@ export class UsersRepository {
     if (!ObjectId.isValid(user.id)) {
       return null;
     }
-    const { _id, ...fields } = UserMapper.toPersistence(user);
+    // `email` is intentionally excluded from the $set: only better-auth writes it
+    const { _id, email: _email, ...fields } = UserMapper.toPersistence(user);
     const document = await this.userModel.findOneAndUpdate(
       { _id: new ObjectId(user.id) },
       { $set: fields },

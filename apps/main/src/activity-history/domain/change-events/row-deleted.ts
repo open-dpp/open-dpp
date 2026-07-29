@@ -6,6 +6,7 @@ import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain"
 import { SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
 import { SubmodelElementCollection } from "../../../aas/domain/submodel-base/submodel-element-collection";
 import { ISubmodelElement } from "../../../aas/domain/submodel-base/submodel-base";
+import { Pointer } from "../../../aas/domain/submodel-base/pointer";
 
 const RowDeletedSchema = z.object({
   type: z.literal(ChangeEventTypes.RowDeleted),
@@ -22,7 +23,9 @@ export class RowDeleted implements IChangeEventWithPath {
     public readonly position: number,
     public readonly value: ISubmodelElement,
   ) {
-    value.setParentIdShortPath(this.path.getParentPath());
+    if (!value.getIdShortPath().isEqual(this.path)) {
+      value.setParentPointer(Pointer.create({ parentIdShortPath: this.path.getParentPath() }));
+    }
   }
 
   isNoop(): boolean {

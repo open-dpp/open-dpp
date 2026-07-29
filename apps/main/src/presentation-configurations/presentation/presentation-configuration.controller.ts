@@ -23,7 +23,7 @@ import {
   PresentationConfigurationDtoSchema,
   PresentationConfigurationListResponseSchema,
   PresentationConfigurationPatchSchema,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -42,8 +42,6 @@ import {
   PresentationReferenceHolder,
 } from "../application/services/presentation-configuration.service";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
-import type { Connection } from "mongoose";
-import { InjectConnection } from "@nestjs/mongoose";
 
 @Controller()
 export class PresentationConfigurationController {
@@ -57,19 +55,19 @@ export class PresentationConfigurationController {
     @Inject(forwardRef(() => EnvironmentService))
     private readonly environmentService: EnvironmentService,
     private readonly activityRepository: ActivityRepository,
-    @InjectConnection() private connection: Connection,
+    presentationConfigurationService: PresentationConfigurationService,
   ) {
     this.passportDocService = new DigitalProductDocumentService(
       this.environmentService,
       this.passportRepository,
       this.activityRepository,
-      this.connection,
+      presentationConfigurationService,
     );
     this.templateDocService = new DigitalProductDocumentService(
       this.environmentService,
       this.templateRepository,
       this.activityRepository,
-      this.connection,
+      presentationConfigurationService,
     );
   }
 
@@ -310,7 +308,7 @@ function toPassportHolder(passport: Passport): PresentationReferenceHolder {
   return {
     id: passport.id,
     organizationId: passport.organizationId,
-    referenceType: PresentationReferenceType.Passport,
+    referenceType: DigitalProductDocumentTypes.Passport,
   };
 }
 
@@ -318,6 +316,6 @@ function toTemplateHolder(template: Template): PresentationReferenceHolder {
   return {
     id: template.id,
     organizationId: template.organizationId,
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
   };
 }
