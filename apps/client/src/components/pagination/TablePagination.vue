@@ -18,11 +18,14 @@ const emits = defineEmits<{
 
 const { t } = useI18n();
 
-// On an empty page (itemCount === 0) the 1-based range would invert to "1 - 0"; show "0 - 0" instead.
+// On an empty page (itemCount === 0) the 1-based range would invert (e.g. "1 - 0", or "0 - 10"
+// on an empty later page); collapse both bounds to zero so every empty page shows "0 - 0".
 const rangeFrom = computed(() =>
   props.currentPage.itemCount === 0 ? 0 : props.currentPage.from + 1,
 );
-const rangeTo = computed(() => props.currentPage.from + props.currentPage.itemCount);
+const rangeTo = computed(() =>
+  props.currentPage.itemCount === 0 ? 0 : props.currentPage.from + props.currentPage.itemCount,
+);
 </script>
 
 <template>
