@@ -1,0 +1,175 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: 24
+      # Common. OPEN_DPP_URL must be a bare origin (validated in packages/env)
+      # AND must match the URL Playwright hits: better-auth uses it as baseURL
+      # and as its only trusted origin.
+      OPEN_DPP_PORT: "3000"
+      OPEN_DPP_URL: "http://localhost:3000"
+      # MongoDB. docker-compose.dev.yml publishes the same port in and out.
+      OPEN_DPP_MONGODB_PORT: "27017"
+      OPEN_DPP_MONGODB_HOST: "localhost"
+      OPEN_DPP_MONGODB_USER: "admin"
+      OPEN_DPP_MONGODB_PASSWORD: "test-mongo-password"
+      OPEN_DPP_MONGODB_DATABASE: "management"
+      # AI
+      OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
+      OPEN_DPP_OLLAMA_URL: "https://ollama-url"
+      # S3. The app runs on the host, so it reaches MinIO via the published port.
+      OPEN_DPP_S3_ENDPOINT: "localhost"
+      OPEN_DPP_S3_PORT: "9000"
+      OPEN_DPP_S3_SSL: "false"
+      OPEN_DPP_S3_ACCESS_KEY: "minioadmin"
+      OPEN_DPP_S3_SECRET_KEY: "test-minio-password"
+      OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
+      OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
+      # ClamAV. docker-compose.dev.yml maps ${OPEN_DPP_CLAMAV_PORT} -> 9000.
+      OPEN_DPP_CLAMAV_URL: "http://localhost"
+      OPEN_DPP_CLAMAV_PORT: "20006"
+      # Mail. The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ
+      # mail from Mailpit's HTTP API on 8025 (the MAILPIT_URL default).
+      OPEN_DPP_MAIL_HOST: "localhost"
+      OPEN_DPP_MAIL_PORT: "8026"
+      OPEN_DPP_MAIL_USER: "admin"
+      OPEN_DPP_MAIL_PASSWORD: "admin"
+      OPEN_DPP_MAIL_SENDER_ADDRESS: "open-dpp"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: "admin:admin"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: "true"
+      # Auth
+      OPEN_DPP_AUTH_SECRET: "change-this-to-a-good-secret"
+      OPEN_DPP_AUTH_CLOUD_ENABLED: "false"
+      # Instance settings. auth.setup.ts signs a fresh user up and creates an
+      # organization, so both flows have to be open.
+      OPEN_DPP_INSTANCE_SIGNUP_ENABLED: "true"
+      OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: "true"
+      # Frontend. Baked into the bundle at build time; apps/client/vite.config.ts
+      # points envDir outside the repo, so this has to be a real process env var.
+      VITE_API_ROOT: "http://localhost:3000/api"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      # The keyfile is gitignored, and MongoDB runs as uid 999 with a read-only
+      # --keyFile mount, so it needs that owner and mode 0400 or Mongo refuses
+      # to start.
+      - name: Generate MongoDB key file
+        run: |
+          openssl rand -base64 756 > docker/mongo_keyfile
+          chmod 0400 docker/mongo_keyfile
+          sudo chown 999:999 docker/mongo_keyfile
+
+      # Started early so image pulls overlap with the install and build steps.
+      - name: Start infrastructure
+        run: docker compose -f docker-compose.dev.yml up -d
+
+      # Neither init container has a healthcheck; both exit once they are done
+      # (rs.initiate for Mongo, bucket creation for MinIO). The replica set is
+      # mandatory because the app uses transactions.
+      - name: Wait for replica set and buckets
+        run: docker compose -f docker-compose.dev.yml wait mongo-init minio-init
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      # Also builds packages/env, whose schema the Playwright process parses.
+      - name: Build project
+        run: pnpm build
+
+      # Serve the frontend from Vite, exactly like `pnpm run dev` does: the
+      # backend proxies every non-/api route to :5173.
+      #
+      # NODE_ENV is deliberately left unset. Setting it to "production" would
+      # make the backend serve a static bundle instead, but it also switches
+      # better-auth's rate limiter on (it defaults to `enabled: isProduction`),
+      # and that caps /sign-in, /sign-up and /change-email at 3 requests per 10
+      # seconds per IP. Every request from a runner shares one IP, so the suite
+      # would 429 on its own fixtures.
+      - name: Start frontend
+        run: |
+          nohup pnpm --filter @open-dpp/client exec vite --port 5173 --strictPort \
+            > /tmp/vite.log 2>&1 &
+          for _ in $(seq 1 30); do
+            if curl -fsS http://localhost:5173 > /dev/null; then
+              echo "Frontend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend did not become ready within 60s"
+          cat /tmp/vite.log
+          exit 1
+
+      - name: Start backend
+        run: |
+          nohup node apps/main/dist/main.js > /tmp/app.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS "$OPEN_DPP_URL/api/v2/status" > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready within 120s"
+          cat /tmp/app.log
+          exit 1
+
+      - name: Run E2E tests
+        run: >
+          pnpm --filter e2e exec playwright test
+          --project=setup --project=chromium --project=account
+
+      - name: Application logs
+        if: failure()
+        run: |
+          echo "::group::backend"
+          cat /tmp/app.log
+          echo "::endgroup::"
+          echo "::group::frontend"
+          cat /tmp/vite.log
+          echo "::endgroup::"
+
+      - name: Infrastructure logs
+        if: failure()
+        run: docker compose -f docker-compose.dev.yml logs --no-color
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/e2e/playwright-report
+            apps/e2e/test-results
+          retention-days: 7

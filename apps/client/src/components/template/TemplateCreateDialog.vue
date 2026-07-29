@@ -51,7 +51,12 @@ async function submit() {
       <DisplayNameForm :submit-attempted="showErrors" />
       <div class="flex justify-end gap-2">
         <Button type="button" :label="t('common.cancel')" severity="secondary" @click="close" />
-        <Button type="button" :label="t('common.add')" @click="submit" />
+        <Button
+          type="button"
+          data-testid="create-template"
+          :label="t('common.add')"
+          @click="submit"
+        />
       </div>
     </div>
   </Dialog>
