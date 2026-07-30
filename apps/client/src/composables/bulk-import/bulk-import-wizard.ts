@@ -1,10 +1,10 @@
 import type { BulkImportConfigDto, BulkImportRunDto } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import type { useBulkImportConfigDetails } from "./bulk-import-config-details.ts";
-import type { useBulkImportConfigRepo } from "./bulk-import-config-repo.ts";
+import type { useBulkImportConfigRepo } from "./bulk-import-config.repo.ts";
 import type { useBulkImportFileUpload } from "./bulk-import-file-upload.ts";
 import type { useBulkImportMapping } from "./bulk-import-mapping.ts";
-import type { useBulkImportRunRepo } from "./bulk-import-run-repo.ts";
+import type { useBulkImportRunRepo } from "./bulk-import-run.repo.ts";
 
 export interface UseBulkImportWizardDeps {
   fileUpload: ReturnType<typeof useBulkImportFileUpload>;

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { useI18n } from "vue-i18n";
-import { useBulkImportConfigDetails } from "../../composables/bulk-import-config-details.ts";
-import { useBulkImportConfigRepo } from "../../composables/bulk-import-config-repo.ts";
-import { useBulkImportFileUpload } from "../../composables/bulk-import-file-upload.ts";
-import { useBulkImportMapping } from "../../composables/bulk-import-mapping.ts";
-import { useBulkImportRunRepo } from "../../composables/bulk-import-run-repo.ts";
-import { useBulkImportWizard } from "../../composables/bulk-import-wizard.ts";
+import { useBulkImportConfigDetails } from "../../composables/bulk-import/bulk-import-config-details.ts";
+import { useBulkImportConfigRepo } from "../../composables/bulk-import/bulk-import-config.repo.ts";
+import { useBulkImportFileUpload } from "../../composables/bulk-import/bulk-import-file-upload.ts";
+import { useBulkImportMapping } from "../../composables/bulk-import/bulk-import-mapping.ts";
+import { useBulkImportRunRepo } from "../../composables/bulk-import/bulk-import-run.repo.ts";
+import { useBulkImportWizard } from "../../composables/bulk-import/bulk-import-wizard.ts";
 import ConfigDetailsStep from "./steps/ConfigDetailsStep.vue";
 import MappingStep from "./steps/MappingStep.vue";
 import UploadTemplateStep from "./steps/UploadTemplateStep.vue";
@@ -70,7 +70,11 @@ async function onSubmit() {
         {{ t("common.cancel") }}
       </Button>
       <template v-if="wizard.isNewConfig.value">
-        <Button v-if="wizard.currentStep.value > 1" severity="secondary" @click="wizard.previousStep">
+        <Button
+          v-if="wizard.currentStep.value > 1"
+          severity="secondary"
+          @click="wizard.previousStep"
+        >
           {{ t("integrations.bulkImport.previous") }}
         </Button>
         <Button

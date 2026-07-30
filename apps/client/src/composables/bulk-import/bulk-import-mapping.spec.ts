@@ -135,14 +135,8 @@ describe("useBulkImportMapping", () => {
   });
 
   it("resets all state", () => {
-    const {
-      selectedTemplateId,
-      submodels,
-      mappings,
-      draftInput,
-      draftTarget,
-      reset,
-    } = useBulkImportMapping();
+    const { selectedTemplateId, submodels, mappings, draftInput, draftTarget, reset } =
+      useBulkImportMapping();
     selectedTemplateId.value = "template-1";
     submodels.value = [buildSubmodel()];
     mappings.value = [{ input: "a", submodelIdShort: "sm1", output: "a" }];
@@ -159,7 +153,7 @@ describe("useBulkImportMapping", () => {
   });
 
   it("reports an error notification when fetching submodels fails", async () => {
-    const errorHandlingModule = await import("../stores/error.handling.ts");
+    const errorHandlingModule = await import("../../stores/error.handling.ts");
     const errorHandlingStore = errorHandlingModule.useErrorHandlingStore();
     const logSpy = vi.spyOn(errorHandlingStore, "logErrorWithNotification");
     mocks.getSubmodels.mockRejectedValue(new Error("boom"));
@@ -168,7 +162,10 @@ describe("useBulkImportMapping", () => {
     selectedTemplateId.value = "template-1";
     await onTemplateSelected();
 
-    expect(logSpy).toHaveBeenCalledWith("integrations.bulkImport.errorLoadSubmodels", expect.any(Error));
+    expect(logSpy).toHaveBeenCalledWith(
+      "integrations.bulkImport.errorLoadSubmodels",
+      expect.any(Error),
+    );
     expect(submodelsLoading.value).toBe(false);
   });
 });

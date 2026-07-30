@@ -2,7 +2,7 @@
 import type { BulkImportConfigDto } from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useBulkImportConfigRepo } from "../../composables/bulk-import-config-repo.ts";
+import { useBulkImportConfigRepo } from "../../composables/bulk-import/bulk-import-config.repo.ts";
 
 const emit = defineEmits<{
   (e: "use-existing", config: BulkImportConfigDto): void;

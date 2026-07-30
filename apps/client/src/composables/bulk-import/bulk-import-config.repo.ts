@@ -1,7 +1,7 @@
 import { useI18n } from "vue-i18n";
-import { useNotificationStore } from "../stores/notification.ts";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
-import apiClient from "../lib/api-client.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import apiClient from "../../lib/api-client.ts";
 import type {
   BulkImportConfigCreateDto,
   BulkImportConfigDto,

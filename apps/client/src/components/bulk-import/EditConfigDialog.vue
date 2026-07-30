@@ -3,11 +3,12 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import type { BulkImportConfigDto } from "@open-dpp/dto";
 import { AasSubmodelElements } from "@open-dpp/dto";
-import { useBulkImportConfigDetails } from "../../composables/bulk-import-config-details.ts";
-import { useBulkImportConfigRepo } from "../../composables/bulk-import-config-repo.ts";
-import { useBulkImportMapping } from "../../composables/bulk-import-mapping.ts";
+import { useBulkImportConfigDetails } from "../../composables/bulk-import/bulk-import-config-details.ts";
+import { useBulkImportConfigRepo } from "../../composables/bulk-import/bulk-import-config.repo.ts";
+import { useBulkImportMapping } from "../../composables/bulk-import/bulk-import-mapping.ts";
 import IdShortPathSelect from "../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../json/JsonPathSelect.vue";
+import MappingsDataTable from "./MappingsDataTable.vue";
 
 const emit = defineEmits<{ (e: "saved", config: BulkImportConfigDto): void }>();
 
@@ -172,24 +173,10 @@ defineExpose({ open });
             @click="mapping.addMapping"
           />
         </div>
-
-        <!-- Mappings Table -->
-        <DataTable :value="mapping.mappings.value" data-key="index">
-          <Column field="input" :header="t('integrations.bulkImport.inputField')" />
-          <Column field="submodelIdShort" :header="t('integrations.bulkImport.template')" />
-          <Column field="output" :header="t('integrations.bulkImport.targetField')" />
-          <Column>
-            <template #body="{ index }">
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                text
-                :aria-label="t('common.delete')"
-                @click="mapping.removeMapping(index)"
-              />
-            </template>
-          </Column>
-        </DataTable>
+        <MappingsDataTable
+          :mappings="mapping.mappings.value"
+          :on-remove-mapping="mapping.removeMapping"
+        />
       </div>
     </div>
 

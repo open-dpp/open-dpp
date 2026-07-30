@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from "vue-i18n";
-import type { useBulkImportFileUpload } from "../../../composables/bulk-import-file-upload.ts";
-import type { useBulkImportMapping } from "../../../composables/bulk-import-mapping.ts";
+import type { useBulkImportFileUpload } from "../../../composables/bulk-import/bulk-import-file-upload.ts";
+import type { useBulkImportMapping } from "../../../composables/bulk-import/bulk-import-mapping.ts";
 import TemplateSelect from "../../template/TemplateSelect.vue";
 
 const props = defineProps<{
@@ -29,7 +29,9 @@ const { t } = useI18n();
       v-else-if="props.fileUpload.parsedRows.value.length > 0"
       class="text-surface-500 dark:text-surface-400"
     >
-      {{ t("integrations.bulkImport.rowsParsed", { count: props.fileUpload.parsedRows.value.length }) }}
+      {{
+        t("integrations.bulkImport.rowsParsed", { count: props.fileUpload.parsedRows.value.length })
+      }}
     </span>
 
     <label v-if="props.mapping" class="flex flex-col gap-2">

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import type { useBulkImportFileUpload } from "../../../composables/bulk-import-file-upload.ts";
-import type { useBulkImportMapping } from "../../../composables/bulk-import-mapping.ts";
+import type { useBulkImportFileUpload } from "../../../composables/bulk-import/bulk-import-file-upload.ts";
+import type { useBulkImportMapping } from "../../../composables/bulk-import/bulk-import-mapping.ts";
 import IdShortPathSelect from "../../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../../json/JsonPathSelect.vue";
+import MappingsDataTable from "../MappingsDataTable.vue";
 
 const props = defineProps<{
   fileUpload: ReturnType<typeof useBulkImportFileUpload>;
@@ -46,21 +47,9 @@ const excludedTargetModelTypes = [
       />
     </div>
 
-    <DataTable :value="props.mapping.mappings.value">
-      <Column field="input" :header="t('integrations.bulkImport.inputField')" />
-      <Column field="submodelIdShort" :header="t('integrations.bulkImport.template')" />
-      <Column field="output" :header="t('integrations.bulkImport.targetField')" />
-      <Column>
-        <template #body="{ index }">
-          <Button
-            icon="pi pi-trash"
-            severity="danger"
-            text
-            :aria-label="t('integrations.bulkImport.delete')"
-            @click="props.mapping.removeMapping(index)"
-          />
-        </template>
-      </Column>
-    </DataTable>
+    <MappingsDataTable
+      :mappings="props.mapping.mappings.value"
+      :on-remove-mapping="props.mapping.removeMapping"
+    />
   </div>
 </template>

@@ -1,9 +1,9 @@
 import type { SubmodelResponseDto } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import apiClient from "../lib/api-client.ts";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
-import type { IdShortPathOption } from "../lib/id-short-path-select.ts";
+import apiClient from "../../lib/api-client.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import type { IdShortPathOption } from "../../lib/id-short-path-select.ts";
 
 export interface MappingRow {
   input: string;

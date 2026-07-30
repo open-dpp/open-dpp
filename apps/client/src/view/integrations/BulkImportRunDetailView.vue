@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useIndexStore } from "../../stores";
-import { useBulkImportRunRepo } from "../../composables/bulk-import-run-repo.ts";
+import { useBulkImportRunRepo } from "../../composables/bulk-import/bulk-import-run.repo.ts";
 
 const { t } = useI18n();
 const route = useRoute();

@@ -5,8 +5,8 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import BulkImportWizard from "../../components/bulk-import/BulkImportWizard.vue";
 import EditConfigDialog from "../../components/bulk-import/EditConfigDialog.vue";
-import { useBulkImportConfigRepo } from "../../composables/bulk-import-config-repo.ts";
-import { useBulkImportRunRepo } from "../../composables/bulk-import-run-repo.ts";
+import { useBulkImportConfigRepo } from "../../composables/bulk-import/bulk-import-config.repo.ts";
+import { useBulkImportRunRepo } from "../../composables/bulk-import/bulk-import-run.repo.ts";
 
 const { t } = useI18n();
 const router = useRouter();

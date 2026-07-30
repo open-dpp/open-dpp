@@ -1,8 +1,8 @@
 import { BulkImportRunStatusDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import { useNotificationStore } from "../stores/notification.ts";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
-import apiClient from "../lib/api-client.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import apiClient from "../../lib/api-client.ts";
 import type { BulkImportRunCreateDto, BulkImportRunDto } from "@open-dpp/dto";
 
 export function useBulkImportRunRepo() {
@@ -65,10 +65,15 @@ export function useBulkImportRunRepo() {
       const runs = await fetchRunsForConfig(configId);
       if (!runs) return false;
       return !runs.some(
-        (run) => run.status === BulkImportRunStatusDto.Pending || run.status === BulkImportRunStatusDto.Running,
+        (run) =>
+          run.status === BulkImportRunStatusDto.Pending ||
+          run.status === BulkImportRunStatusDto.Running,
       );
     } catch (error) {
-      errorHandlingStore.logErrorWithNotification(t("integrations.bulkImport.errorLoadRuns"), error);
+      errorHandlingStore.logErrorWithNotification(
+        t("integrations.bulkImport.errorLoadRuns"),
+        error,
+      );
       return false;
     }
   };
