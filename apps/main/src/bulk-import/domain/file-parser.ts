@@ -1,4 +1,5 @@
 import type { BulkImportRowDto } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 
 /**
  * Abstract base class for file parsers using Template Method pattern.
@@ -10,11 +11,13 @@ export abstract class FileParser {
    * Maximum number of data rows allowed.
    */
   protected readonly MAX_ROWS = 1000;
+  protected errors: string[] = [];
 
   /**
    * Template method: defines the parsing algorithm.
    */
   parse(buffer: Buffer): { rows: BulkImportRowDto[] } {
+    this.errors = [];
     this.validateFileSize(buffer);
     const rows = this.parseFileContent(buffer);
     return { rows: this.postProcessRows(rows) };
@@ -46,39 +49,39 @@ export abstract class FileParser {
     return this.transformValues(rows);
   }
 
+  protected validateHeaders(headers: string[]): void {
+    const headerKeysSet = new Set(headers);
+    if (headerKeysSet.size !== headers.length) {
+      this.errors.push(`Duplicate column names: ${headers}`);
+    }
+  }
+
   /**
    * Validates parsed rows structure.
    */
   protected validateRows(rows: BulkImportRowDto[]): void {
-    const errors: string[] = [];
-
     if (rows.length < 1) {
-      errors.push("File must contain at least 1 data row (after headers)");
+      this.errors.push("File must contain at least 1 data row (after headers)");
     }
 
     if (rows.length > this.MAX_ROWS) {
-      errors.push(`File contains ${rows.length} rows, maximum allowed is ${this.MAX_ROWS}`);
+      this.errors.push(`File contains ${rows.length} rows, maximum allowed is ${this.MAX_ROWS}`);
     }
 
-    // Check for duplicate headers
     const headerKeys = Object.keys(rows[0] || {});
-    const duplicateHeaders = headerKeys.filter(
-      (key, index) => headerKeys.indexOf(key) !== index,
-    );
-    if (duplicateHeaders.length > 0) {
-      errors.push(`Duplicate column names: ${duplicateHeaders.join(", ")}`);
-    }
 
     // Check each row has same keys as header
     for (let i = 0; i < rows.length; i++) {
       const rowKeys = Object.keys(rows[i]);
       if (rowKeys.length !== headerKeys.length) {
-        errors.push(`Row ${i + 2} has ${rowKeys.length} columns, expected ${headerKeys.length}`);
+        this.errors.push(
+          `Row ${i + 2} has ${rowKeys.length} columns, expected ${headerKeys.length}`,
+        );
       }
     }
 
-    if (errors.length > 0) {
-      throw new Error(errors.join("; "));
+    if (this.errors.length > 0) {
+      throw new ValueError(this.errors.join("; "));
     }
   }
 
@@ -89,7 +92,8 @@ export abstract class FileParser {
     return rows.map((row) => {
       const transformed: BulkImportRowDto = {};
       for (const [key, value] of Object.entries(row)) {
-        transformed[key] = value === undefined || value === null || value === "" ? null : String(value);
+        transformed[key.trim()] =
+          value === undefined || value === null || value === "" ? null : String(value).trim();
       }
       return transformed;
     });

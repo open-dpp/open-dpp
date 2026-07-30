@@ -9,39 +9,44 @@ import { FileParser } from "./file-parser";
 export class ExcelParser extends FileParser {
   protected parseFileContent(buffer: Buffer): BulkImportRowDto[] {
     const workbook = XLSX.read(buffer, { type: "buffer" });
-    
+
     // Get first sheet only
     const sheetName = workbook.SheetNames[0];
-    
+
     if (!sheetName) {
       return [];
     }
 
     const worksheet = workbook.Sheets[sheetName];
-    
+
     // sheet_to_json with header: 1 returns arrays (first row is headers)
-    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null });
-    
+    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null, blankrows: false });
+
     if (data.length === 0) {
       return [];
     }
 
     // First row contains headers
     const headers = data[0] as string[];
+    this.validateHeaders(headers);
+
     const rows: BulkImportRowDto[] = [];
 
     // Process data rows (skip header row at index 0)
     for (let i = 1; i < data.length; i++) {
       const rowArray = data[i] as unknown[];
       const row: BulkImportRowDto = {};
-      
+
       for (let j = 0; j < headers.length; j++) {
+        if (headers[j] == null) {
+          continue;
+        }
         const header = headers[j];
         const value = rowArray[j];
         // Handle Excel dates/numbers - convert to string
         row[header] = this.normalizeExcelValue(value);
       }
-      
+
       rows.push(row);
     }
 
@@ -56,7 +61,7 @@ export class ExcelParser extends FileParser {
     if (value === undefined || value === null || value === "") {
       return null;
     }
-    
+
     // Excel dates are numbers - convert to string representation
     // Excel booleans are already true/false
     // Everything else becomes a string
@@ -66,11 +71,11 @@ export class ExcelParser extends FileParser {
       // But we keep as number string for now
       return String(value);
     }
-    
+
     if (typeof value === "boolean") {
       return value ? "true" : "false";
     }
-    
+
     return String(value);
   }
 }
