@@ -3,6 +3,7 @@ import { expect, test } from "../fixtures";
 import { createBatteryTemplate, deleteTemplate } from "../api/templates";
 import { getOrganizationId } from "../helpers/organizations";
 import { createBulkImportConfig, deleteBulkImportConfig } from "../api/bulk-import";
+import { BulkImportListViewPage } from "./bulk-import-list-view.page";
 
 const BULK_IMPORT_URL = (orgaId: string) =>
   `${EnvConfig.OPEN_DPP_URL}/organizations/${orgaId}/integrations/bulk-import`;
@@ -15,6 +16,7 @@ test("Bulk import config edit dialog opens and can edit configuration name", asy
 }) => {
   await page.goto(EnvConfig.OPEN_DPP_URL);
   const orgaId = await getOrganizationId(page);
+  const bulkImportListViewPage = new BulkImportListViewPage(page, await getOrganizationId(page));
 
   // Create a template via API
   const templateId = (await createBatteryTemplate(request, orgaId)).id;
@@ -25,48 +27,21 @@ test("Bulk import config edit dialog opens and can edit configuration name", asy
   const configId = createdConfig.id;
 
   // Navigate to bulk import page
-  await page.goto(BULK_IMPORT_URL(orgaId));
-  await expect(page.getByText("Bulk-Import").first()).toBeVisible();
-
-  // Find and click the edit button for our config
-  const row = page.getByRole("row").filter({ hasText: configName });
-  await expect(row).toBeVisible();
-  await row.getByRole("button", { name: "Editieren" }).click();
-
-  // Wait for the edit dialog to open
-  const dialog = page.getByRole("dialog", { name: "Konfiguration bearbeiten" });
-  await expect(dialog).toBeVisible();
-
-  // Verify the dialog has the expected fields
-  await expect(dialog.getByLabel("Konfigurationsname")).toBeVisible();
-  await expect(dialog.getByLabel("Id-Feld")).toBeVisible();
-  await expect(dialog.getByText("Felder zuordnen")).toBeVisible();
+  await bulkImportListViewPage.goto();
+  await bulkImportListViewPage.isLoaded();
+  const dialog = await bulkImportListViewPage.editBulkImportConfig(configName);
+  await dialog.isLoaded();
 
   // Edit the configuration name
   const newName = `${configName}-edited`;
-  await dialog.getByLabel("Konfigurationsname").fill(newName);
+  await dialog.fillName(newName);
 
   // Add a new mapping
-  await page.pause();
-  await dialog.getByTestId("Eingabefeld").click();
-  await page.getByText("batteryId").click();
+  await dialog.addMapping("batteryId", "Batterie-Kennung", "batteryIdentifier");
 
-  await dialog.getByTestId("Zielfeld").click();
-  await page.getByText("Batterie-Kennung").click();
-  await dialog.getByRole("button", { name: "Add Mapping" }).first().click();
-
-  // Verify the new mapping appears in the table
-  await expect(dialog.getByRole("row").filter({ hasText: "batteryId" })).toBeVisible();
-  await expect(dialog.getByRole("row").filter({ hasText: "batteryIdentifier" })).toBeVisible();
-
-  // Click save
-  await dialog.getByRole("button", { name: "Speichern" }).click();
-
-  // Wait for success notification
-  await expect(page.getByText("Bulk-Import-Konfiguration erfolgreich aktualisiert.")).toBeVisible();
-
+  await dialog.save();
   // Verify the dialog closed
-  await expect(dialog).not.toBeVisible();
+  await expect(dialog.dialog).not.toBeVisible();
 
   // Verify the config name was updated in the table
   await expect(page.getByRole("row").filter({ hasText: newName })).toBeVisible();
@@ -78,12 +53,10 @@ test("Bulk import config edit dialog opens and can edit configuration name", asy
 
 test("Bulk import config edit dialog validates required fields", async ({ page, request }) => {
   await page.goto(EnvConfig.OPEN_DPP_URL);
-  const orgaId = await page.evaluate(() =>
-    localStorage.getItem("open-dpp-local-last-selected-organization-id"),
-  );
+  const orgaId = await getOrganizationId(page);
 
   // Create a template via API
-  const templateId = await createBatteryTemplate(request, orgaId);
+  const templateId = (await createBatteryTemplate(request, orgaId)).id;
 
   // Create a bulk import config via API
   const configName = `Test Config-${Date.now()}`;
@@ -91,21 +64,18 @@ test("Bulk import config edit dialog validates required fields", async ({ page, 
   const configId = createdConfig.id;
 
   // Navigate to bulk import page
-  await page.goto(BULK_IMPORT_URL(orgaId));
+  const bulkImportListViewPage = new BulkImportListViewPage(page, orgaId);
+
+  await bulkImportListViewPage.goto();
   await expect(page.getByText("Bulk-Import").first()).toBeVisible();
 
   // Open edit dialog
-  const row = page.getByRole("row").filter({ hasText: configName });
-  await row.getByRole("button", { name: "Editieren" }).click();
-
-  const dialog = page.getByRole("dialog", { name: "Konfiguration bearbeiten" });
-  await expect(dialog).toBeVisible();
-
-  // Clear the name field
-  await dialog.getByLabel("Konfigurationsname").fill("");
+  const dialog = await bulkImportListViewPage.editBulkImportConfig(configName);
+  await dialog.isLoaded();
+  await dialog.fillName("");
 
   // Save button should be disabled
-  await expect(dialog.getByRole("button", { name: "Speichern" })).toBeDisabled();
+  await expect(dialog.dialog.getByRole("button", { name: "Speichern" })).toBeDisabled();
 
   // Cleanup
   await deleteBulkImportConfig(request, orgaId, configId);
