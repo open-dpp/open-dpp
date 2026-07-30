@@ -6,7 +6,7 @@ import { useJsonPathSelectTree } from "../../composables/json-path-select-tree.t
 const selected = defineModel<string | null>();
 const props = defineProps<{
   row: Record<string, unknown> | null;
-  placeholder?: string;
+  label: string;
 }>();
 
 const { treeNodes, expandedKeys } = useJsonPathSelectTree(() => props.row);
@@ -26,14 +26,19 @@ function filterBy(node: TreeNode): string {
 </script>
 
 <template>
-  <TreeSelect
-    v-model="selectionKeys"
-    v-model:expanded-keys="expandedKeys"
-    :options="treeNodes"
-    selection-mode="single"
-    filter
-    filter-mode="lenient"
-    :filter-by="filterBy"
-    :placeholder="props.placeholder"
-  />
+  <FloatLabel variant="on">
+    <TreeSelect
+      class="w-full"
+      v-model="selectionKeys"
+      v-model:expanded-keys="expandedKeys"
+      :options="treeNodes"
+      :data-testid="props.label"
+      selection-mode="single"
+      filter
+      filter-mode="lenient"
+      :filter-by="filterBy"
+      :aria-label="props.label"
+    />
+    <label for="on_label">{{ props.label }}</label>
+  </FloatLabel>
 </template>

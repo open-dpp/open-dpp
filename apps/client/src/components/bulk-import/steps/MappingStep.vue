@@ -25,20 +25,18 @@ const excludedTargetModelTypes = [
   <div class="flex flex-col gap-4">
     <div class="flex items-end gap-2">
       <label class="flex flex-1 flex-col gap-2">
-        <span>{{ t("integrations.bulkImport.inputField") }}</span>
         <JsonPathSelect
           :row="props.fileUpload.firstRow.value"
           v-model="props.mapping.draftInput.value"
-          :placeholder="t('integrations.bulkImport.inputField')"
+          :label="t('integrations.bulkImport.inputField')"
         />
       </label>
       <label class="flex flex-1 flex-col gap-2">
-        <span>{{ t("integrations.bulkImport.targetField") }}</span>
         <IdShortPathSelect
           :submodels="props.mapping.submodels.value"
           :exclude-model-types="excludedTargetModelTypes"
           v-model="props.mapping.draftTarget.value"
-          :placeholder="t('integrations.bulkImport.targetField')"
+          :label="t('integrations.bulkImport.targetField')"
         />
       </label>
       <Button

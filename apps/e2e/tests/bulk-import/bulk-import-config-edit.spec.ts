@@ -1,69 +1,11 @@
-import { EnvConfig, API_VERSION } from "../config";
+import { EnvConfig } from "../config";
 import { expect, test } from "../fixtures";
+import { createBatteryTemplate, deleteTemplate } from "../api/templates";
+import { getOrganizationId } from "../helpers/organizations";
+import { createBulkImportConfig, deleteBulkImportConfig } from "../api/bulk-import";
 
 const BULK_IMPORT_URL = (orgaId: string) =>
   `${EnvConfig.OPEN_DPP_URL}/organizations/${orgaId}/integrations/bulk-import`;
-const API_BASE = `${EnvConfig.OPEN_DPP_URL}/api/${API_VERSION}`;
-
-// Helper to create a minimal template
-async function createTemplate(request: any, orgaId: string) {
-  const templateData = {
-    environment: {
-      assetAdministrationShells: [
-        {
-          displayName: [{ language: "en", text: `Test Shell-${Date.now()}` }],
-          description: [],
-        },
-      ],
-    },
-  };
-  const headers = { "X-OPEN-DPP-ORGANIZATION-ID": orgaId };
-  const response = await request.post(`${API_BASE}/templates`, {
-    data: templateData,
-    headers,
-  });
-  expect(response.ok()).toBeTruthy();
-  return (await response.json()).id;
-}
-
-// Helper to create a bulk import config
-async function createBulkImportConfig(
-  request: any,
-  orgaId: string,
-  templateId: string,
-  name: string,
-) {
-  const configData = {
-    templateId,
-    name,
-    idField: "id",
-    submodelMappings: [
-      {
-        submodelIdShort: "TechnicalData",
-        fieldMappings: [{ input: "sku", output: "properties.sku" }],
-      },
-    ],
-  };
-  const headers = { "X-OPEN-DPP-ORGANIZATION-ID": orgaId };
-  const response = await request.post(`${API_BASE}/bulk-import/configs`, {
-    data: configData,
-    headers,
-  });
-  expect(response.ok()).toBeTruthy();
-  return await response.json();
-}
-
-// Helper to delete a bulk import config
-async function deleteBulkImportConfig(request: any, orgaId: string, configId: string) {
-  const headers = { "X-OPEN-DPP-ORGANIZATION-ID": orgaId };
-  await request.delete(`${API_BASE}/bulk-import/configs/${configId}`, { headers });
-}
-
-// Helper to delete a template
-async function deleteTemplate(request: any, orgaId: string, templateId: string) {
-  const headers = { "X-OPEN-DPP-ORGANIZATION-ID": orgaId };
-  await request.delete(`${API_BASE}/templates/${templateId}`, { headers });
-}
 
 test.use({ storageState: "playwright/.auth/user.json" });
 
@@ -72,14 +14,10 @@ test("Bulk import config edit dialog opens and can edit configuration name", asy
   request,
 }) => {
   await page.goto(EnvConfig.OPEN_DPP_URL);
-  const orgaId = await page.evaluate(() =>
-    localStorage.getItem("open-dpp-local-last-selected-organization-id"),
-  );
-
-  const headers = { "X-OPEN-DPP-ORGANIZATION-ID": orgaId };
+  const orgaId = await getOrganizationId(page);
 
   // Create a template via API
-  const templateId = await createTemplate(request, orgaId);
+  const templateId = (await createBatteryTemplate(request, orgaId)).id;
 
   // Create a bulk import config via API
   const configName = `Test Config-${Date.now()}`;
@@ -108,6 +46,19 @@ test("Bulk import config edit dialog opens and can edit configuration name", asy
   const newName = `${configName}-edited`;
   await dialog.getByLabel("Konfigurationsname").fill(newName);
 
+  // Add a new mapping
+  await page.pause();
+  await dialog.getByTestId("Eingabefeld").click();
+  await page.getByText("batteryId").click();
+
+  await dialog.getByTestId("Zielfeld").click();
+  await page.getByText("Batterie-Kennung").click();
+  await dialog.getByRole("button", { name: "Add Mapping" }).first().click();
+
+  // Verify the new mapping appears in the table
+  await expect(dialog.getByRole("row").filter({ hasText: "batteryId" })).toBeVisible();
+  await expect(dialog.getByRole("row").filter({ hasText: "batteryIdentifier" })).toBeVisible();
+
   // Click save
   await dialog.getByRole("button", { name: "Speichern" }).click();
 
@@ -132,7 +83,7 @@ test("Bulk import config edit dialog validates required fields", async ({ page, 
   );
 
   // Create a template via API
-  const templateId = await createTemplate(request, orgaId);
+  const templateId = await createBatteryTemplate(request, orgaId);
 
   // Create a bulk import config via API
   const configName = `Test Config-${Date.now()}`;

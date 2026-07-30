@@ -9,7 +9,7 @@ const selected = defineModel<IdShortPathOption | null>();
 const props = defineProps<{
   submodels: SubmodelResponseDto[];
   excludeModelTypes?: string[];
-  placeholder?: string;
+  label?: string;
 }>();
 
 const { treeNodes, expandedKeys, resolveNode, resolveKey } = useIdShortPathSelectTree(
@@ -34,14 +34,19 @@ function filterBy(node: TreeNode): string {
 </script>
 
 <template>
-  <TreeSelect
-    v-model="selectionKeys"
-    v-model:expanded-keys="expandedKeys"
-    :options="treeNodes"
-    selection-mode="single"
-    filter
-    filter-mode="lenient"
-    :filter-by="filterBy"
-    :placeholder="props.placeholder"
-  />
+  <FloatLabel variant="on">
+    <TreeSelect
+      class="w-full"
+      v-model="selectionKeys"
+      v-model:expanded-keys="expandedKeys"
+      :options="treeNodes"
+      selection-mode="single"
+      filter
+      :data-testid="props.label"
+      filter-mode="lenient"
+      :filter-by="filterBy"
+      :aria-label="props.label"
+    />
+    <label for="on_label">{{ props.label }}</label>
+  </FloatLabel>
 </template>

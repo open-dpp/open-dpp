@@ -135,11 +135,10 @@ defineExpose({ open });
 
       <!-- ID Field -->
       <label class="flex flex-col gap-2">
-        <span>{{ t("integrations.bulkImport.idFieldLabel") }}</span>
         <JsonPathSelect
           :row="currentConfig?.inputSample ?? {}"
           v-model="configDetails.idField.value"
-          :placeholder="t('integrations.bulkImport.idFieldLabel')"
+          :label="t('integrations.bulkImport.idFieldLabel')"
         />
         <span class="text-surface-500 dark:text-surface-400 text-sm">{{
           t("integrations.bulkImport.idFieldHelp")
@@ -149,28 +148,26 @@ defineExpose({ open });
       <!-- Field Mappings -->
       <div class="flex flex-col gap-2">
         <span>{{ t("integrations.bulkImport.mapFields") }}</span>
-
         <!-- Add Mapping Form -->
         <div class="flex items-end gap-2">
           <label class="flex flex-1 flex-col gap-2">
-            <span>{{ t("integrations.bulkImport.inputField") }}</span>
             <JsonPathSelect
               :row="currentConfig?.inputSample ?? {}"
+              :label="t('integrations.bulkImport.inputField')"
               v-model="mapping.draftInput.value"
-              :placeholder="t('integrations.bulkImport.inputField')"
             />
           </label>
           <label class="flex flex-1 flex-col gap-2">
-            <span>{{ t("integrations.bulkImport.targetField") }}</span>
             <IdShortPathSelect
               :submodels="mapping.submodels.value"
               :exclude-model-types="excludedTargetModelTypes"
               v-model="mapping.draftTarget.value"
-              :placeholder="t('integrations.bulkImport.targetField')"
+              :label="t('integrations.bulkImport.targetField')"
             />
           </label>
           <Button
             icon="pi pi-plus"
+            aria-label="Add Mapping"
             :disabled="!mapping.draftInput.value || !mapping.draftTarget.value"
             @click="mapping.addMapping"
           />

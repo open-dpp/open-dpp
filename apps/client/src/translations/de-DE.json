@@ -344,7 +344,7 @@
       "configDetails": "Konfigurationsdetails",
       "configName": "Konfigurationsname",
       "idFieldLabel": "Id-Feld",
-      "idFieldHelp": "Das Eingabefeld, das jedes Produkt eindeutig identifiziert, um den passenden Produktpass zu erstellen oder zu aktualisieren.",
+      "idFieldHelp": "Das Feld, welches jedes Produkt eindeutig identifiziert, um den passenden Produktpass zu erstellen oder zu aktualisieren.",
       "previous": "Zurück",
       "next": "Weiter",
       "createAndRun": "Erstellen und starten",
