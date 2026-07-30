@@ -16,8 +16,10 @@ import { BulkImportRunItemDoc, BulkImportRunItemSchema } from "./infrastructure/
 import { BulkImportRunItemRepository } from "./infrastructure/bulk-import-run-item.repository";
 import { BulkImportRunDoc, BulkImportRunSchema } from "./infrastructure/bulk-import-run.schema";
 import { BulkImportRunRepository } from "./infrastructure/bulk-import-run.repository";
+import { BulkImportFileParserService } from "./infrastructure/bulk-import-file-parser.service";
 import { BulkImportConfigController } from "./presentation/bulk-import-config.controller";
 import { BulkImportRunController } from "./presentation/bulk-import-run.controller";
+import { BulkImportFileParserController } from "./presentation/bulk-import-file-parser.controller";
 
 @Module({
   imports: [
@@ -31,7 +33,7 @@ import { BulkImportRunController } from "./presentation/bulk-import-run.controll
     forwardRef(() => PassportsModule),
     forwardRef(() => TemplatesModule),
   ],
-  controllers: [BulkImportConfigController, BulkImportRunController],
+  controllers: [BulkImportConfigController, BulkImportRunController, BulkImportFileParserController],
   providers: [
     BulkImportConfigRepository,
     BulkImportRunRepository,
@@ -39,6 +41,7 @@ import { BulkImportRunController } from "./presentation/bulk-import-run.controll
     BulkImportProductLinkRepository,
     BulkImportConfigService,
     BulkImportRunService,
+    BulkImportFileParserService,
   ],
   exports: [BulkImportConfigService],
 })
