@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useBulkImportRunRepo } from "../../composables/bulk-import/bulk-import-run.repo.ts";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -52,16 +53,34 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
-    <div v-if="selectedRun" class="flex flex-wrap items-center gap-4">
+  <ContentViewWrapper>
+    <div v-if="selectedRun" class="flex flex-col gap-3">
       <span class="text-xl font-bold">{{ t("integrations.bulkImport.runDetailTitle") }}</span>
-      <Tag
-        :severity="statusSeverity(selectedRun.status)"
-        :value="t(`integrations.bulkImport.status.${selectedRun.status}`)"
-      />
-      <span>{{ t("integrations.bulkImport.succeeded") }}: {{ selectedRun.succeededCount }}</span>
-      <span>{{ t("integrations.bulkImport.failed") }}: {{ selectedRun.failedCount }}</span>
-      <span>{{ t("integrations.bulkImport.total") }}: {{ selectedRun.totalCount }}</span>
+      <div class="grid grid-cols-1 gap-px bg-gray-900/5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white px-4 py-6 sm:px-6 lg:px-8">
+          <p class="text-sm/6 font-medium text-gray-500">
+            {{ t(`integrations.bulkImport.status.label`) }}
+          </p>
+          <p class="mt-2 flex items-baseline gap-x-2">
+            <Tag
+              :severity="statusSeverity(selectedRun.status)"
+              :value="t(`integrations.bulkImport.status.${selectedRun.status}`)"
+            />
+          </p>
+        </div>
+        <Stat
+          :value="selectedRun.succeededCount.toFixed()"
+          :label="t('integrations.bulkImport.succeeded')"
+        />
+        <Stat
+          :value="selectedRun.failedCount.toFixed()"
+          :label="t('integrations.bulkImport.failed')"
+        />
+        <Stat
+          :value="selectedRun.totalCount.toFixed()"
+          :label="t('integrations.bulkImport.total')"
+        />
+      </div>
     </div>
 
     <DataTable :value="runItems" paginator :rows="20" :rows-per-page-options="[20, 50, 100]">
@@ -90,5 +109,5 @@ onMounted(async () => {
       </Column>
       <Column field="error" :header="t('integrations.bulkImport.error')" />
     </DataTable>
-  </div>
+  </ContentViewWrapper>
 </template>

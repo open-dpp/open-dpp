@@ -324,6 +324,7 @@
       "delete": "Löschen",
       "noRuns": "Noch keine Durchläufe",
       "status": {
+        "label": "Status",
         "pending": "Ausstehend",
         "running": "Läuft",
         "completed": "Abgeschlossen",

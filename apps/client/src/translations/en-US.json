@@ -324,6 +324,7 @@
       "delete": "Delete",
       "noRuns": "No runs yet",
       "status": {
+        "label": "Status",
         "pending": "Pending",
         "running": "Running",
         "completed": "Completed",
