@@ -131,6 +131,13 @@ onMounted(async () => {
     <Column :header="t('common.actions')">
       <template #body="{ data }">
         <Button
+          icon="pi pi-play"
+          text
+          :aria-label="t('integrations.bulkImport.runNow')"
+          :title="t('integrations.bulkImport.runNow')"
+          @click="openWizard(data)"
+        />
+        <Button
           icon="pi pi-pencil"
           text
           :aria-label="t('common.edit')"
