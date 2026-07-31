@@ -65,6 +65,7 @@ function buildDeps(): UseBulkImportWizardDeps & {
       deleteConfig: vi.fn(),
     },
     runRepo: {
+      isConfigEditable: vi.fn(),
       fetchRunsForConfig: vi.fn(),
       triggerRun,
       fetchRun: vi.fn(),
@@ -170,7 +171,9 @@ describe("useBulkImportWizard", () => {
 
     expect(wizard.canGoToDetails.value).toBe(false);
     deps.mapping.selectedTemplateId.value = "template-1";
-    deps.mapping.mappings.value = [{ input: "sku", submodelIdShort: "TechnicalData", output: "sku" }];
+    deps.mapping.mappings.value = [
+      { input: "sku", submodelIdShort: "TechnicalData", output: "sku" },
+    ];
     expect(wizard.canGoToDetails.value).toBe(true);
 
     expect(wizard.canSubmitNewConfig.value).toBe(false);
