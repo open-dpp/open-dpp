@@ -56,14 +56,20 @@ describe("BulkImportRunService", () => {
         jest.fn<
           (
             bulkImportConfigId: string,
-            options?: { pagination?: Pagination; filter?: { status?: BulkImportRunStatusDtoType[] } },
+            options?: {
+              pagination?: Pagination;
+              filter?: { status?: BulkImportRunStatusDtoType[] };
+            },
           ) => Promise<PagingResult<BulkImportRun>>
         >(),
     };
     const runItemRepository = {
       createMany:
         jest.fn<(items: BulkImportRunItem[], options?: DbSessionOptions) => Promise<void>>(),
-      findAllByRunId: jest.fn<(id: string) => Promise<BulkImportRunItem[]>>(),
+      findAllByRunId:
+        jest.fn<
+          (id: string, pagination?: Pagination) => Promise<PagingResult<BulkImportRunItem>>
+        >(),
       save: jest.fn<(item: BulkImportRunItem, options?: DbSessionOptions) => Promise<void>>(),
     };
     const productLinkRepository = {
@@ -148,7 +154,9 @@ describe("BulkImportRunService", () => {
     });
     runRepository.findOneOrFail.mockImplementation(async (id: string) => savedRuns.get(id)!);
     configRepository.findOneOrFail.mockResolvedValue(config);
-    runItemRepository.findAllByRunId.mockResolvedValue([]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [] }),
+    );
 
     const run = await service.createRun(config, rows, subject, randomUUID());
 
@@ -189,7 +197,9 @@ describe("BulkImportRunService", () => {
 
     configRepository.findOneOrFail.mockResolvedValue(config);
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([item]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [item] }),
+    );
     productLinkRepository.findOne.mockResolvedValue(undefined);
     passportService.createPassportFromTemplate.mockResolvedValue({
       id: "passport-1",
@@ -264,7 +274,9 @@ describe("BulkImportRunService", () => {
 
     configRepository.findOneOrFail.mockResolvedValue(config);
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([item]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [item] }),
+    );
     productLinkRepository.findOne.mockResolvedValue(existingLink);
 
     await (service as any).processRun(run.id);
@@ -306,7 +318,9 @@ describe("BulkImportRunService", () => {
 
     configRepository.findOneOrFail.mockResolvedValue(config);
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([missingIdItem, okItem]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [missingIdItem, okItem] }),
+    );
     productLinkRepository.findOne.mockResolvedValue(undefined);
     passportService.createPassportFromTemplate.mockResolvedValue({ id: "passport-1" } as Passport);
 
@@ -345,7 +359,9 @@ describe("BulkImportRunService", () => {
 
     configRepository.findOneOrFail.mockResolvedValue(config);
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([item]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [item] }),
+    );
     productLinkRepository.findOne.mockResolvedValue(undefined);
     passportService.createPassportFromTemplate.mockResolvedValue({ id: "passport-1" } as Passport);
     passportService.digitalProductDocumentService.modifyValueOfMultipleSubmodels.mockRejectedValue(
@@ -388,7 +404,9 @@ describe("BulkImportRunService", () => {
 
     configRepository.findOneOrFail.mockResolvedValue(config);
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([failingItem, okItem]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [failingItem, okItem] }),
+    );
     productLinkRepository.findOne.mockResolvedValue(undefined);
     passportService.createPassportFromTemplate.mockImplementation(async () => {
       throw new Error("boom");
@@ -439,7 +457,12 @@ describe("BulkImportRunService", () => {
 
     configRepository.findOneOrFail.mockResolvedValue(config);
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([alreadyCreatedItem, pendingItem]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({
+        pagination: Pagination.create({}),
+        items: [alreadyCreatedItem, pendingItem],
+      }),
+    );
     productLinkRepository.findOne.mockResolvedValue(undefined);
     passportService.createPassportFromTemplate.mockResolvedValue({
       id: "passport-new",
@@ -525,12 +548,14 @@ describe("BulkImportRunService", () => {
     });
     const item = BulkImportRunItem.create({ runId: run.id, rowIndex: 0, inputData: { sku: "1" } });
     runRepository.findOneOrFail.mockResolvedValue(run);
-    runItemRepository.findAllByRunId.mockResolvedValue([item]);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [item] }),
+    );
 
-    const items = await service.findItemsForRun(run.id, "my-org");
+    const result = await service.findItemsForRun(run.id, "my-org");
 
-    expect(items).toEqual([item]);
-    expect(runItemRepository.findAllByRunId).toHaveBeenCalledWith(run.id);
+    expect(result.items).toEqual([item]);
+    expect(runItemRepository.findAllByRunId).toHaveBeenCalledWith(run.id, undefined);
   });
 
   it("findItemsForRun rejects a run from another organization", async () => {

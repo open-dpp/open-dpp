@@ -79,10 +79,9 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     bulkImportConfigId: string,
     pagination?: Pagination,
   ): Promise<PagingResult<BulkImportRun>> {
-    return await this.bulkImportRunRepository.findAllByBulkImportConfigId(
-      bulkImportConfigId,
-      { pagination: pagination },
-    );
+    return await this.bulkImportRunRepository.findAllByBulkImportConfigId(bulkImportConfigId, {
+      pagination: pagination,
+    });
   }
 
   async findByIdAndCheckOwnership(id: string, organizationId: string): Promise<BulkImportRun> {
@@ -93,17 +92,23 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     return run;
   }
 
-  async findItemsForRun(id: string, organizationId: string): Promise<BulkImportRunItem[]> {
+  async findItemsForRun(
+    id: string,
+    organizationId: string,
+    pagination?: Pagination,
+  ): Promise<PagingResult<BulkImportRunItem>> {
     await this.findByIdAndCheckOwnership(id, organizationId);
-    return await this.bulkImportRunItemRepository.findAllByRunId(id);
+    return await this.bulkImportRunItemRepository.findAllByRunId(id, pagination);
   }
 
   private async processRun(runId: string): Promise<void> {
     const run = await this.bulkImportRunRepository.findOneOrFail(runId);
     const config = await this.bulkImportConfigRepository.findOneOrFail(run.bulkImportConfigId);
-    const items = await this.bulkImportRunItemRepository.findAllByRunId(runId);
+    const pagingResult = await this.bulkImportRunItemRepository.findAllByRunId(runId);
     // Only unresolved rows: on a resume, already-created/updated/failed rows must stay untouched.
-    const pendingItems = items.filter((item) => item.status === BulkImportRunItemStatusDto.Pending);
+    const pendingItems = pagingResult.items.filter(
+      (item) => item.status === BulkImportRunItemStatusDto.Pending,
+    );
 
     run.start();
     await this.bulkImportRunRepository.save(run);
