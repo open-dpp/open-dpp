@@ -39,6 +39,23 @@ export function useBulkImportRunRepo() {
     }
   };
 
+  const triggerRunUpload = async (
+    configId: string,
+    file: File,
+  ): Promise<BulkImportRunDto | undefined> => {
+    try {
+      const response = await apiClient.dpp.bulkImport.createRunUpload(configId, file);
+      notificationStore.addSuccessNotification(t("integrations.bulkImport.triggerRunSuccess"));
+      return response.data;
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(
+        t("integrations.bulkImport.errorTriggerRun"),
+        error,
+      );
+      return undefined;
+    }
+  };
+
   const fetchRun = async (runId: string) => {
     try {
       const response = await apiClient.dpp.bulkImport.getRunById(runId);
@@ -82,6 +99,7 @@ export function useBulkImportRunRepo() {
     fetchRunsForConfig,
     isConfigEditable,
     triggerRun,
+    triggerRunUpload,
     fetchRun,
     fetchRunItems,
   };
