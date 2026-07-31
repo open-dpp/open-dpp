@@ -1,4 +1,4 @@
-import { BulkImportRunStatusDto } from "@open-dpp/dto";
+import { BulkImportRunStatusDto, type BulkImportRunItemPaginationDto, type PagingParamsDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 import { useNotificationStore } from "../../stores/notification.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
@@ -65,10 +65,13 @@ export function useBulkImportRunRepo() {
     }
   };
 
-  const fetchRunItems = async (runId: string) => {
+  const fetchRunItems = async (
+    runId: string,
+    params?: PagingParamsDto,
+  ): Promise<BulkImportRunItemPaginationDto | undefined> => {
     try {
-      const response = await apiClient.dpp.bulkImport.getRunItems(runId);
-      return response.data.result;
+      const response = await apiClient.dpp.bulkImport.getRunItems(runId, params);
+      return response.data;
     } catch (error) {
       errorHandlingStore.logErrorWithNotification(
         t("integrations.bulkImport.errorLoadRunItems"),

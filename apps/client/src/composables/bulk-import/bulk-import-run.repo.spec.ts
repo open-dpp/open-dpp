@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { useBulkImportRunRepo } from "./bulk-import-run.repo.ts";
 import apiClient from "../../lib/api-client.ts";
 import { BulkImportRunStatusDto } from "@open-dpp/dto";
+import type { BulkImportRunItemPaginationDto } from "@open-dpp/dto";
+import type { BulkImportRunItemDto } from "@open-dpp/dto";
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
@@ -60,7 +62,7 @@ const mockRun = {
   createdAt: new Date().toISOString(),
 };
 
-const mockRunItem = {
+const mockRunItem: BulkImportRunItemDto = {
   id: "item-1",
   runId: "run-1",
   rowIndex: 0,
@@ -180,19 +182,40 @@ describe("useBulkImportRunRepo", () => {
 
   describe("fetchRunItems", () => {
     it("fetches run items", async () => {
+      const mockPaginationDto: BulkImportRunItemPaginationDto = {
+        paging_metadata: { cursor: null },
+        result: [mockRunItem],
+      };
       mocks.getRunItems.mockResolvedValue({
-        data: {
-          paging_metadata: { cursor: null },
-          result: [mockRunItem],
-        },
+        data: mockPaginationDto,
         status: 200,
       });
 
       const { fetchRunItems } = useBulkImportRunRepo();
       const result = await fetchRunItems("run-1");
 
-      expect(result).toEqual([mockRunItem]);
-      expect(apiClient.dpp.bulkImport.getRunItems).toHaveBeenCalledWith("run-1");
+      expect(result).toEqual(mockPaginationDto);
+      expect(mocks.getRunItems).toHaveBeenCalledWith("run-1", undefined);
+    });
+
+    it("fetches run items with pagination params", async () => {
+      const mockPaginationDto: BulkImportRunItemPaginationDto = {
+        paging_metadata: { cursor: "some-cursor" },
+        result: [mockRunItem],
+      };
+      mocks.getRunItems.mockResolvedValue({
+        data: mockPaginationDto,
+        status: 200,
+      });
+
+      const { fetchRunItems } = useBulkImportRunRepo();
+      const result = await fetchRunItems("run-1", { limit: 10, cursor: "some-cursor" });
+
+      expect(result).toEqual(mockPaginationDto);
+      expect(mocks.getRunItems).toHaveBeenCalledWith("run-1", {
+        limit: 10,
+        cursor: "some-cursor",
+      });
     });
 
     it("returns undefined on error", async () => {
