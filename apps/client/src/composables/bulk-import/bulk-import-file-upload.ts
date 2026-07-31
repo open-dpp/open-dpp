@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import type { BulkImportParseResultDto, BulkImportRowDto } from "@open-dpp/dto";
+import axios from "axios";
 
 export function useBulkImportFileUpload() {
   const { t } = useI18n();
@@ -21,12 +22,19 @@ export function useBulkImportFileUpload() {
 
     selectedFile.value = file;
     isLoading.value = true;
+    let response = null;
     try {
-      const response = await apiClient.dpp.bulkImport.parseFile(file);
+      response = await apiClient.dpp.bulkImport.parseFile(file);
       const result: BulkImportParseResultDto = response.data;
       parsedRows.value = result.rows;
-    } catch {
-      fileError.value = t("integrations.bulkImport.invalidFile");
+    } catch (error: any) {
+      const errorMsg = t("integrations.bulkImport.invalidFile");
+      if (axios.isAxiosError(error)) {
+        const errorJson = error.response?.data;
+        fileError.value = errorJson?.message ? `${errorMsg}:\n${errorJson.message}` : errorMsg;
+      } else {
+        fileError.value = errorMsg;
+      }
       parsedRows.value = [];
       selectedFile.value = null;
     } finally {

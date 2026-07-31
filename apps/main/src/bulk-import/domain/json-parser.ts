@@ -1,5 +1,6 @@
 import { FileParser } from "./file-parser";
 import type { BulkImportRowDto } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 
 /**
  * Parser for JSON files.
@@ -11,13 +12,13 @@ export class JsonParser extends FileParser {
     const json: unknown = JSON.parse(content);
 
     if (!Array.isArray(json)) {
-      throw new Error("JSON root must be an array");
+      throw new ValueError("JSON root must be an array");
     }
 
     const rows: BulkImportRowDto[] = [];
     for (const item of json) {
       if (typeof item !== "object" || item === null || Array.isArray(item)) {
-        throw new Error("Each JSON array element must be a non-null object");
+        throw new ValueError("Each JSON array element must be a non-null object");
       }
       rows.push(item as BulkImportRowDto);
     }
