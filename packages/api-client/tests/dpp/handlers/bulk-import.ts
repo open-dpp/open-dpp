@@ -2,6 +2,9 @@ import { randomUUID } from "node:crypto";
 import { http, HttpResponse } from "msw";
 import { activeOrganization } from "./organization";
 import { baseURL } from "./index";
+import { checkQueryParameters } from "../../utils";
+
+import { paginationParams } from "./pagination";
 
 export const bulkImportConfig1 = {
   id: randomUUID(),
@@ -94,10 +97,20 @@ export function bulkImportHandlers() {
     http.get(`${runEndpoint}/${bulkImportRun1.id}`, async () => {
       return HttpResponse.json(bulkImportRun1, { status: 200 });
     }),
-    http.get(`${runEndpoint}/${bulkImportRun1.id}/items`, async () => {
-      return HttpResponse.json(
-        { paging_metadata: { cursor: null }, result: [bulkImportRunItem1] },
-        { status: 200 },
+    http.get(`${runEndpoint}/${bulkImportRun1.id}/items`, async ({ request }) => {
+      const errorResponse = checkQueryParameters(request, {
+        limit: paginationParams.limit.toFixed(),
+      });
+      // With pagination params, return paginated response
+      return (
+        errorResponse ||
+        HttpResponse.json(
+          {
+            paging_metadata: { cursor: null },
+            result: [bulkImportRunItem1],
+          },
+          { status: 200 },
+        )
       );
     }),
   ];

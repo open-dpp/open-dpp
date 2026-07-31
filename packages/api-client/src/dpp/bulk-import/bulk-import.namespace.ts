@@ -8,6 +8,7 @@ import type {
   BulkImportRunDto,
   BulkImportRunItemPaginationDto,
   BulkImportRunPaginationDto,
+  PagingParamsDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
 
@@ -74,7 +75,7 @@ export class BulkImportNamespace {
     );
   }
 
-  public async getRunsForConfig(configId: string, params?: { limit?: number; cursor?: string }) {
+  public async getRunsForConfig(configId: string, params?: PagingParamsDto) {
     return await this.axiosInstance.get<BulkImportRunPaginationDto>(
       `${this.configEndpoint}/${configId}/runs`,
       { params },
@@ -85,9 +86,10 @@ export class BulkImportNamespace {
     return await this.axiosInstance.get<BulkImportRunDto>(`${this.runEndpoint}/${id}`);
   }
 
-  public async getRunItems(id: string) {
+  public async getRunItems(id: string, params?: PagingParamsDto) {
     return await this.axiosInstance.get<BulkImportRunItemPaginationDto>(
       `${this.runEndpoint}/${id}/items`,
+      { params },
     );
   }
 }

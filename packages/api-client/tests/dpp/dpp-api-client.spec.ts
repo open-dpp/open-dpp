@@ -653,9 +653,13 @@ describe("apiClient", () => {
       expect(response.data).toEqual(bulkImportRun1);
     });
 
-    it("should return the items of a run", async () => {
-      const response = await sdk.dpp.bulkImport.getRunItems(bulkImportRun1.id);
+    it("should return the items of a run with pagination params", async () => {
+      const response = await sdk.dpp.bulkImport.getRunItems(bulkImportRun1.id, {
+        limit: paginationParams.limit,
+      });
+      expect(response.status).toEqual(200);
       expect(response.data.result).toEqual([bulkImportRunItem1]);
+      expect(response.data.paging_metadata).toBeDefined();
     });
 
     it("should parse a file", async () => {
