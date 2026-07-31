@@ -23,6 +23,53 @@ describe("BulkImportFileParserService", () => {
   });
 
   describe("parseFile", () => {
+    describe("JSON files", () => {
+      it("parses JSON file by MIME type", () => {
+        const jsonContent = JSON.stringify([{ name: "John", age: "30" }]);
+        const buffer = Buffer.from(jsonContent, "utf8");
+
+        const result = service.parseFile(buffer, "test.json", "application/json");
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].name).toBe("John");
+        expect(result.rows[0].age).toBe("30");
+      });
+
+      it("parses JSON file by extension", () => {
+        const jsonContent = JSON.stringify([{ name: "John", age: "30" }]);
+        const buffer = Buffer.from(jsonContent, "utf8");
+
+        const result = service.parseFile(buffer, "test.json", "application/octet-stream");
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].name).toBe("John");
+      });
+
+      it("parses JSON file by content detection", () => {
+        const jsonContent = JSON.stringify([{ name: "John", age: "30" }]);
+        const buffer = Buffer.from(jsonContent, "utf8");
+
+        const result = service.parseFile(buffer, "test.dat", "text/plain");
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].name).toBe("John");
+      });
+
+      it("parses JSON array with multiple objects", () => {
+        const jsonContent = JSON.stringify([
+          { sku: "A001", name: "Product 1" },
+          { sku: "A002", name: "Product 2" },
+        ]);
+        const buffer = Buffer.from(jsonContent, "utf8");
+
+        const result = service.parseFile(buffer, "test.json", "application/json");
+
+        expect(result.rows).toHaveLength(2);
+        expect(result.rows[0].sku).toBe("A001");
+        expect(result.rows[1].sku).toBe("A002");
+      });
+    });
+
     describe("CSV files", () => {
       it("parses CSV file by MIME type", () => {
         const csvContent = `name,age\nJohn,30`;
@@ -164,6 +211,24 @@ describe("BulkImportFileParserService", () => {
 
         expect(() => service.parseFile(buffer, "test.csv", "text/csv")).toThrow(
           /Duplicate column names/,
+        );
+      });
+
+      it("rejects JSON that is not an array", () => {
+        const jsonContent = JSON.stringify({ name: "John" });
+        const buffer = Buffer.from(jsonContent, "utf8");
+
+        expect(() => service.parseFile(buffer, "test.json", "application/json")).toThrow(
+          /JSON root must be an array/,
+        );
+      });
+
+      it("rejects JSON array with non-object elements", () => {
+        const jsonContent = JSON.stringify([{ name: "John" }, "not an object"]);
+        const buffer = Buffer.from(jsonContent, "utf8");
+
+        expect(() => service.parseFile(buffer, "test.json", "application/json")).toThrow(
+          /Each JSON array element must be a non-null object/,
         );
       });
     });

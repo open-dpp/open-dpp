@@ -1,13 +1,13 @@
 import { FileTypeValidator, MaxFileSizeValidator } from "@nestjs/common";
 
 /**
- * Custom validator for supported file types (CSV, Excel).
+ * Custom validator for supported file types (JSON, CSV, Excel).
  */
 export class BulkImportFileTypeValidator extends FileTypeValidator {
   constructor() {
     super({
       fileType:
-        /^(text\/csv|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/i,
+        /^(application\/json|text\/csv|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/i,
       skipMagicNumbersValidation: true,
     });
   }

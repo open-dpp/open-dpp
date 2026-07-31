@@ -1,46 +1,47 @@
 import type { FileUploadSelectEvent } from "primevue";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import apiClient from "../../lib/api-client.ts";
+import type { BulkImportParseResultDto, BulkImportRowDto } from "@open-dpp/dto";
 
 export function useBulkImportFileUpload() {
   const { t } = useI18n();
 
-  const parsedRows = ref<Record<string, unknown>[]>([]);
+  const parsedRows = ref<BulkImportRowDto[]>([]);
   const fileError = ref<string | null>(null);
+  const isLoading = ref(false);
 
-  const firstRow = computed<Record<string, unknown> | null>(() => parsedRows.value[0] ?? null);
+  const firstRow = computed<BulkImportRowDto | null>(() => parsedRows.value[0] ?? null);
 
   async function onFileSelect(event: FileUploadSelectEvent) {
     fileError.value = null;
     const file = event.files?.[0] as File | undefined;
     if (!file) return;
+
+    isLoading.value = true;
     try {
-      const json: unknown = JSON.parse(await file.text());
-      if (
-        !Array.isArray(json) ||
-        json.length === 0 ||
-        !json.every((row) => typeof row === "object" && row !== null && !Array.isArray(row))
-      ) {
-        fileError.value = t("integrations.bulkImport.invalidFile");
-        parsedRows.value = [];
-        return;
-      }
-      parsedRows.value = json as Record<string, unknown>[];
+      const response = await apiClient.dpp.bulkImport.parseFile(file);
+      const result: BulkImportParseResultDto = response.data;
+      parsedRows.value = result.rows;
     } catch {
       fileError.value = t("integrations.bulkImport.invalidFile");
       parsedRows.value = [];
+    } finally {
+      isLoading.value = false;
     }
   }
 
   function reset() {
     parsedRows.value = [];
     fileError.value = null;
+    isLoading.value = false;
   }
 
   return {
     parsedRows,
     fileError,
     firstRow,
+    isLoading,
     onFileSelect,
     reset,
   };

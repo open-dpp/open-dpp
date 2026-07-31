@@ -1,5 +1,5 @@
 import type { FileUploadSelectEvent } from "primevue";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useBulkImportFileUpload } from "./bulk-import-file-upload.ts";
 
 vi.mock("vue-i18n", () => ({
@@ -8,22 +8,55 @@ vi.mock("vue-i18n", () => ({
   }),
 }));
 
-// jsdom's Blob/File.text() implementation is unreliable in this test environment,
-// so fake just the .text() method the composable actually calls.
-function selectEventFor(content: string): FileUploadSelectEvent {
-  const file = { text: () => Promise.resolve(content) } as unknown as File;
+const mocks = vi.hoisted(() => {
+  return {
+    parseFile: vi.fn(),
+  };
+});
+
+// Mock the API client's parseFile method
+vi.mock("../../lib/api-client.ts", () => ({
+  default: {
+    dpp: {
+      bulkImport: {
+        parseFile: mocks.parseFile,
+      },
+    },
+  },
+}));
+
+function selectEventFor(file: File): FileUploadSelectEvent {
   return { files: [file] } as unknown as FileUploadSelectEvent;
 }
 
+function createMockFile(name: string = "test.json"): File {
+  return new File([], name, { type: "application/json" });
+}
+
 describe("useBulkImportFileUpload", () => {
-  it("parses a valid JSON array of records", async () => {
-    const { onFileSelect, parsedRows, fileError, firstRow } = useBulkImportFileUpload();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    await onFileSelect(selectEventFor(JSON.stringify([{ sku: "a" }, { sku: "b" }])));
+  it("parses a valid file via server", async () => {
+    const mockRows = [
+      { sku: "a", name: "Product A" },
+      { sku: "b", name: "Product B" },
+    ];
+    mocks.parseFile.mockResolvedValue({
+      data: { rows: mockRows },
+    });
 
+    const { onFileSelect, parsedRows, fileError, firstRow, isLoading } = useBulkImportFileUpload();
+
+    const file = createMockFile();
+    await onFileSelect(selectEventFor(file));
+
+    expect(isLoading.value).toBe(false);
     expect(fileError.value).toBeNull();
-    expect(parsedRows.value).toEqual([{ sku: "a" }, { sku: "b" }]);
-    expect(firstRow.value).toEqual({ sku: "a" });
+    expect(parsedRows.value).toEqual(mockRows);
+    expect(firstRow.value).toEqual({ sku: "a", name: "Product A" });
+    expect(mocks.parseFile).toHaveBeenCalledWith(file);
   });
 
   it("returns null for firstRow when no rows are parsed yet", () => {
@@ -32,47 +65,70 @@ describe("useBulkImportFileUpload", () => {
     expect(firstRow.value).toBeNull();
   });
 
-  it("rejects a JSON payload that isn't an array", async () => {
-    const { onFileSelect, parsedRows, fileError } = useBulkImportFileUpload();
+  it("handles server validation errors", async () => {
+    mocks.parseFile.mockRejectedValue(new Error("Validation failed"));
 
-    await onFileSelect(selectEventFor(JSON.stringify({ sku: "a" })));
+    const { onFileSelect, parsedRows, fileError, isLoading } = useBulkImportFileUpload();
 
+    const file = createMockFile();
+    await onFileSelect(selectEventFor(file));
+
+    expect(isLoading.value).toBe(false);
     expect(fileError.value).toBe("integrations.bulkImport.invalidFile");
     expect(parsedRows.value).toEqual([]);
   });
 
-  it("rejects an empty array", async () => {
-    const { onFileSelect, fileError } = useBulkImportFileUpload();
+  it("handles empty rows array from server", async () => {
+    mocks.parseFile.mockResolvedValue({
+      data: { rows: [] },
+    });
 
-    await onFileSelect(selectEventFor(JSON.stringify([])));
+    const { onFileSelect, parsedRows, fileError, isLoading } = useBulkImportFileUpload();
 
-    expect(fileError.value).toBe("integrations.bulkImport.invalidFile");
-  });
+    const file = createMockFile();
+    await onFileSelect(selectEventFor(file));
 
-  it("rejects an array containing non-object entries", async () => {
-    const { onFileSelect, fileError } = useBulkImportFileUpload();
-
-    await onFileSelect(selectEventFor(JSON.stringify([{ sku: "a" }, "not-an-object"])));
-
-    expect(fileError.value).toBe("integrations.bulkImport.invalidFile");
-  });
-
-  it("rejects malformed JSON", async () => {
-    const { onFileSelect, fileError, parsedRows } = useBulkImportFileUpload();
-
-    await onFileSelect(selectEventFor("{not valid json"));
-
-    expect(fileError.value).toBe("integrations.bulkImport.invalidFile");
+    expect(isLoading.value).toBe(false);
+    expect(fileError.value).toBeNull();
     expect(parsedRows.value).toEqual([]);
+  });
+
+  it("sets loading state during file upload", async () => {
+    const mockRows = [{ sku: "a" }];
+    let resolveParseFile: () => void;
+    mocks.parseFile.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveParseFile = () => resolve({ data: { rows: mockRows } });
+        }),
+    );
+
+    const { onFileSelect, isLoading } = useBulkImportFileUpload();
+
+    const file = createMockFile();
+    const promise = onFileSelect(selectEventFor(file));
+
+    expect(isLoading.value).toBe(true);
+
+    resolveParseFile!();
+    await promise;
+
+    expect(isLoading.value).toBe(false);
   });
 
   it("clears a previous error once a valid file is selected", async () => {
+    mocks.parseFile
+      .mockRejectedValueOnce(new Error("Validation failed"))
+      .mockResolvedValueOnce({ data: { rows: [{ sku: "a" }] } });
+
     const { onFileSelect, fileError } = useBulkImportFileUpload();
 
-    await onFileSelect(selectEventFor("not json"));
-    expect(fileError.value).not.toBeNull();
+    const file1 = createMockFile();
+    await onFileSelect(selectEventFor(file1));
+    expect(fileError.value).toBe("integrations.bulkImport.invalidFile");
 
-    await onFileSelect(selectEventFor(JSON.stringify([{ sku: "a" }])));
+    const file2 = createMockFile();
+    await onFileSelect(selectEventFor(file2));
     expect(fileError.value).toBeNull();
   });
 
@@ -83,15 +139,22 @@ describe("useBulkImportFileUpload", () => {
 
     expect(parsedRows.value).toEqual([]);
     expect(fileError.value).toBeNull();
+    expect(mocks.parseFile).not.toHaveBeenCalled();
   });
 
-  it("resets rows and error", async () => {
-    const { onFileSelect, reset, parsedRows, fileError } = useBulkImportFileUpload();
-    await onFileSelect(selectEventFor(JSON.stringify([{ sku: "a" }])));
+  it("resets rows, error, and loading state", async () => {
+    mocks.parseFile.mockResolvedValue({
+      data: { rows: [{ sku: "a" }] },
+    });
+
+    const { onFileSelect, reset, parsedRows, fileError, isLoading } = useBulkImportFileUpload();
+    const file = createMockFile();
+    await onFileSelect(selectEventFor(file));
 
     reset();
 
     expect(parsedRows.value).toEqual([]);
     expect(fileError.value).toBeNull();
+    expect(isLoading.value).toBe(false);
   });
 });

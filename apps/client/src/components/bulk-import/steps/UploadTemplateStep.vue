@@ -17,7 +17,7 @@ const { t } = useI18n();
     <FileUpload
       mode="basic"
       :auto="true"
-      accept=".json"
+      accept=".json,.csv,.xlsx,.xls"
       :choose-label="t('integrations.bulkImport.chooseFile')"
       custom-upload
       @select="props.fileUpload.onFileSelect"
