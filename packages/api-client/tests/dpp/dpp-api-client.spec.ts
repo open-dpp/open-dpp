@@ -657,5 +657,17 @@ describe("apiClient", () => {
       const response = await sdk.dpp.bulkImport.getRunItems(bulkImportRun1.id);
       expect(response.data.result).toEqual([bulkImportRunItem1]);
     });
+
+    it("should parse a file", async () => {
+      const file = new File([], "test.csv", { type: "text/csv" });
+      const response = await sdk.dpp.bulkImport.parseFile(file);
+      expect(response.data.rows).toEqual([{ sku: "4711" }, { sku: "4712" }]);
+    });
+
+    it("should create a run from uploaded file", async () => {
+      const file = new File([], "test.csv", { type: "text/csv" });
+      const response = await sdk.dpp.bulkImport.createRunUpload(bulkImportConfig1.id, file);
+      expect(response.data).toEqual(bulkImportRun1);
+    });
   });
 });

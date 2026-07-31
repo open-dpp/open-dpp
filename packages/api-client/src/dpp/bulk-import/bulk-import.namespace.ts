@@ -3,6 +3,7 @@ import type {
   BulkImportConfigDto,
   BulkImportConfigPaginationDto,
   BulkImportConfigUpdateDto,
+  BulkImportParseResultDto,
   BulkImportRunCreateDto,
   BulkImportRunDto,
   BulkImportRunItemPaginationDto,
@@ -42,6 +43,34 @@ export class BulkImportNamespace {
     return await this.axiosInstance.post<BulkImportRunDto>(
       `${this.configEndpoint}/${configId}/runs`,
       data,
+    );
+  }
+
+  public async createRunUpload(configId: string, file: File | Blob) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return await this.axiosInstance.post<BulkImportRunDto>(
+      `${this.configEndpoint}/${configId}/runs/upload`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+  }
+
+  public async parseFile(file: File | Blob) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return await this.axiosInstance.post<BulkImportParseResultDto>(
+      `/bulk-import/parse-file`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
   }
 

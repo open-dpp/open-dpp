@@ -9,7 +9,9 @@ export const bulkImportConfig1 = {
   templateId: randomUUID(),
   name: "ERP export",
   idField: "sku",
-  submodelMappings: [{ submodelId: randomUUID(), fieldMappings: [{ input: "sku", output: "sku" }] }],
+  submodelMappings: [
+    { submodelIdShort: randomUUID(), fieldMappings: [{ input: "sku", output: "sku" }] },
+  ],
   inputSample: { sku: "4711" },
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -44,6 +46,10 @@ export const bulkImportRunItem1 = {
   error: null,
 };
 
+export const bulkImportParseResult = {
+  rows: [{ sku: "4711" }, { sku: "4712" }],
+};
+
 export function bulkImportHandlers() {
   const configEndpoint = `${baseURL}/bulk-import/configs`;
   const runEndpoint = `${baseURL}/bulk-import/runs`;
@@ -72,6 +78,12 @@ export function bulkImportHandlers() {
     }),
     http.post(`${configEndpoint}/${bulkImportConfig1.id}/runs`, async () => {
       return HttpResponse.json(bulkImportRun1, { status: 201 });
+    }),
+    http.post(`${configEndpoint}/${bulkImportConfig1.id}/runs/upload`, async () => {
+      return HttpResponse.json(bulkImportRun1, { status: 201 });
+    }),
+    http.post(`${baseURL}/bulk-import/parse-file`, async () => {
+      return HttpResponse.json(bulkImportParseResult, { status: 201 });
     }),
     http.get(`${configEndpoint}/${bulkImportConfig1.id}/runs`, async () => {
       return HttpResponse.json(
