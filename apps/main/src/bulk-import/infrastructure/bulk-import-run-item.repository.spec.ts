@@ -5,6 +5,7 @@ import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
+import { encodeRowIndexCursor, Pagination } from "../../pagination/pagination";
 import { BulkImportRunItem } from "../domain/bulk-import-run-item";
 import { BulkImportRunItemRepository } from "./bulk-import-run-item.repository";
 import { BulkImportRunItemDoc, BulkImportRunItemSchema } from "./bulk-import-run-item.schema";
@@ -24,7 +25,9 @@ describe("bulkImportRunItemRepository", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([{ name: BulkImportRunItemDoc.name, schema: BulkImportRunItemSchema }]),
+        MongooseModule.forFeature([
+          { name: BulkImportRunItemDoc.name, schema: BulkImportRunItemSchema },
+        ]),
       ],
       providers: [BulkImportRunItemRepository],
     }).compile();
@@ -40,8 +43,8 @@ describe("bulkImportRunItemRepository", () => {
 
     await repository.createMany([item1, item0]);
 
-    const found = await repository.findAllByRunId(runId);
-    expect(found.map((i) => i.id)).toEqual([item0.id, item1.id]);
+    const result = await repository.findAllByRunId(runId);
+    expect(result.items.map((i: any) => i.id)).toEqual([item0.id, item1.id]);
   });
 
   it("does nothing when creating an empty list of items", async () => {
@@ -76,13 +79,53 @@ describe("bulkImportRunItemRepository", () => {
 
     await repository.deleteAllByRunIds([runId1, runId2]);
 
-    expect(await repository.findAllByRunId(runId1)).toEqual([]);
-    expect(await repository.findAllByRunId(runId2)).toEqual([]);
-    expect(await repository.findAllByRunId(otherRunId)).toHaveLength(1);
+    expect((await repository.findAllByRunId(runId1)).items).toEqual([]);
+    expect((await repository.findAllByRunId(runId2)).items).toEqual([]);
+    expect((await repository.findAllByRunId(otherRunId)).items).toHaveLength(1);
   });
 
   it("does nothing when deleting an empty list of runs", async () => {
     await expect(repository.deleteAllByRunIds([])).resolves.toBeUndefined();
+  });
+
+  describe("pagination", () => {
+    it("returns paginated results with cursor", async () => {
+      const runId = randomUUID();
+      const items = [
+        BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "0" } }),
+        BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "1" } }),
+        BulkImportRunItem.create({ runId, rowIndex: 2, inputData: { sku: "2" } }),
+      ];
+      await repository.createMany(items);
+
+      const page1 = await repository.findAllByRunId(runId, Pagination.create({ limit: 2 }));
+      expect(page1.items).toHaveLength(2);
+      expect(page1.items[0].rowIndex).toBe(0);
+      expect(page1.items[1].rowIndex).toBe(1);
+      expect(page1.pagination.cursor).toBe(encodeRowIndexCursor(1, items[1].id));
+
+      const page2 = await repository.findAllByRunId(runId, page1.pagination);
+      expect(page2.items).toHaveLength(1);
+      expect(page2.items[0].rowIndex).toBe(2);
+      const lastItem = items[2];
+      expect(page2.pagination.cursor).toEqual(encodeRowIndexCursor(lastItem.rowIndex, lastItem.id));
+    });
+
+    it("returns all items when no pagination is provided", async () => {
+      const runId = randomUUID();
+      const items = [
+        BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "0" } }),
+        BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "1" } }),
+        BulkImportRunItem.create({ runId, rowIndex: 2, inputData: { sku: "2" } }),
+      ];
+      await repository.createMany(items);
+
+      const result = await repository.findAllByRunId(runId);
+      expect(result.items).toHaveLength(3);
+      const lastItem = items[2];
+
+      expect(result.pagination.cursor).toBe(encodeRowIndexCursor(lastItem.rowIndex, lastItem.id));
+    });
   });
 
   afterAll(async () => {

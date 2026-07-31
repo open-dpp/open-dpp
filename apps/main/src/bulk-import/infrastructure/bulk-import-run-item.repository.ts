@@ -3,8 +3,11 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { convertToDomain, findOne, findOneOrFail, save } from "../../lib/repositories";
+import { Pagination } from "../../pagination/pagination";
+import { decodeRowIndexCursor, encodeRowIndexCursor } from "../../pagination/pagination";
 import { BulkImportRunItem } from "../domain/bulk-import-run-item";
 import { BulkImportRunItemDoc, BulkImportRunItemDocVersion } from "./bulk-import-run-item.schema";
+import { PagingResult } from "../../pagination/paging-result";
 
 @Injectable()
 export class BulkImportRunItemRepository {
@@ -55,10 +58,39 @@ export class BulkImportRunItemRepository {
     return await findOne(id, this.bulkImportRunItemDoc, this.fromPlain.bind(this));
   }
 
-  /** Rows in a run are capped (see BulkImportRunCreateDtoSchema), so returning the full list is fine. */
-  async findAllByRunId(runId: string): Promise<BulkImportRunItem[]> {
-    const docs = await this.bulkImportRunItemDoc.find({ runId }).sort({ rowIndex: 1 }).exec();
-    return await Promise.all(docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))));
+  /**
+   * Finds all items for a run, optionally paginated.
+   * Items are sorted by rowIndex then _id for consistent cursor-based pagination.
+   */
+  async findAllByRunId(
+    runId: string,
+    pagination?: Pagination,
+  ): Promise<PagingResult<BulkImportRunItem>> {
+    const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
+    const query: Record<string, unknown> = { runId };
+
+    if (tmpPagination.cursor) {
+      const { rowIndex, id } = decodeRowIndexCursor(tmpPagination.cursor);
+      query.$or = [{ rowIndex: { $gt: rowIndex } }, { rowIndex, _id: { $gt: id } }];
+    }
+
+    const mongooseQuery = this.bulkImportRunItemDoc.find(query).sort({ rowIndex: 1, _id: 1 });
+
+    if (tmpPagination.limit !== null) {
+      mongooseQuery.limit(tmpPagination.limit);
+    }
+
+    const docs = await mongooseQuery.exec();
+    const items = await Promise.all(
+      docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))),
+    );
+
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      tmpPagination.setCursor(encodeRowIndexCursor(lastItem.rowIndex, lastItem.id));
+    }
+
+    return PagingResult.create({ pagination: tmpPagination, items });
   }
 
   async deleteAllByRunIds(runIds: string[], options?: DbSessionOptions): Promise<void> {
