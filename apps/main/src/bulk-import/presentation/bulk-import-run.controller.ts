@@ -119,11 +119,11 @@ export class BulkImportRunController {
   async getRunItems(
     @OrganizationId() organizationId: string,
     @Param("id") id: string,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
   ): Promise<BulkImportRunItemPaginationDto> {
-    const items = await this.bulkImportRunService.findItemsForRun(id, organizationId);
-    return BulkImportRunItemPaginationDtoSchema.parse({
-      paging_metadata: { cursor: null },
-      result: items.map((item) => item.toPlain()),
-    });
+    const pagination = Pagination.create({ limit, cursor });
+    const page = await this.bulkImportRunService.findItemsForRun(id, organizationId, pagination);
+    return BulkImportRunItemPaginationDtoSchema.parse(page.toPlain());
   }
 }
