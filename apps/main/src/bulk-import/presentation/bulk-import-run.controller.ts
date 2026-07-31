@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseFilePipe,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { memoryStorage } from "multer";
 import type {
   BulkImportRunCreateDto,
   BulkImportRunDto,
@@ -24,12 +35,15 @@ import { LimitQueryParam } from "../../digital-product-document/presentation/dig
 import { Pagination } from "../../pagination/pagination";
 import { BulkImportConfigService } from "../application/services/bulk-import-config.service";
 import { BulkImportRunService } from "../application/services/bulk-import-run.service";
+import { BulkImportFileParserService } from "../infrastructure/bulk-import-file-parser.service";
+import { BulkImportFileSizeValidator, BulkImportFileTypeValidator } from "./file-validation";
 
 @Controller()
 export class BulkImportRunController {
   constructor(
     private readonly bulkImportConfigService: BulkImportConfigService,
     private readonly bulkImportRunService: BulkImportRunService,
+    private readonly bulkImportFileParserService: BulkImportFileParserService,
   ) {}
 
   @Post("bulk-import/configs/:configId/runs")
@@ -44,6 +58,38 @@ export class BulkImportRunController {
     const config = await this.bulkImportConfigService.findById(configId, organizationId);
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const run = await this.bulkImportRunService.createRun(config, body.rows, subject, userId);
+    return BulkImportRunDtoSchema.parse(run.toPlain());
+  }
+
+  @Post("bulk-import/configs/:configId/runs/upload")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: memoryStorage(),
+    }),
+  )
+  async createRunFromFile(
+    @OrganizationId() organizationId: string,
+    @Param("configId") configId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new BulkImportFileSizeValidator(), new BulkImportFileTypeValidator()],
+      }),
+    )
+    file: Express.Multer.File,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+  ): Promise<BulkImportRunDto> {
+    const config = await this.bulkImportConfigService.findById(configId, organizationId);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+
+    const { rows } = await this.bulkImportFileParserService.parseFile(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+    );
+
+    const run = await this.bulkImportRunService.createRun(config, rows, subject, userId);
     return BulkImportRunDtoSchema.parse(run.toPlain());
   }
 
