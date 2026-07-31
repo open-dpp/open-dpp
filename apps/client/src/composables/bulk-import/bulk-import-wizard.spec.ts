@@ -1,4 +1,4 @@
-import type { BulkImportConfigDto, BulkImportRunDto } from "@open-dpp/dto";
+import type { BulkImportConfigDto, BulkImportRowDto, BulkImportRunDto } from "@open-dpp/dto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { computed, ref } from "vue";
 import { useBulkImportWizard, type UseBulkImportWizardDeps } from "./bulk-import-wizard.ts";
@@ -7,11 +7,15 @@ import type { MappingRow } from "./bulk-import-mapping.ts";
 function buildDeps(): UseBulkImportWizardDeps & {
   createConfig: ReturnType<typeof vi.fn>;
   triggerRun: ReturnType<typeof vi.fn>;
+  triggerRunUpload: ReturnType<typeof vi.fn>;
 } {
-  const parsedRows = ref<Record<string, unknown>[]>([]);
+  const parsedRows = ref<BulkImportRowDto[]>([]);
+  const selectedFile = ref<File | null>(null);
   const fileError = ref<string | null>(null);
+  const isLoading = ref(false);
   const fileUploadReset = vi.fn(() => {
     parsedRows.value = [];
+    selectedFile.value = null;
     fileError.value = null;
   });
 
@@ -31,10 +35,13 @@ function buildDeps(): UseBulkImportWizardDeps & {
 
   const createConfig = vi.fn();
   const triggerRun = vi.fn();
+  const triggerRunUpload = vi.fn();
 
   return {
     fileUpload: {
       parsedRows,
+      isLoading,
+      selectedFile,
       fileError,
       firstRow: computed(() => parsedRows.value[0] ?? null),
       onFileSelect: vi.fn(),
@@ -68,11 +75,13 @@ function buildDeps(): UseBulkImportWizardDeps & {
       isConfigEditable: vi.fn(),
       fetchRunsForConfig: vi.fn(),
       triggerRun,
+      triggerRunUpload,
       fetchRun: vi.fn(),
       fetchRunItems: vi.fn(),
     },
     createConfig,
     triggerRun,
+    triggerRunUpload,
   };
 }
 
@@ -182,14 +191,18 @@ describe("useBulkImportWizard", () => {
     expect(wizard.canSubmitNewConfig.value).toBe(true);
   });
 
-  it("gates submission for an existing config on the parsed rows only", () => {
+  it("gates submission for an existing config on the selected file only", () => {
     const wizard = useBulkImportWizard(deps);
 
     expect(wizard.canSubmitExistingConfig.value).toBe(false);
-    deps.fileUpload.parsedRows.value = [{ sku: "a" }];
+    deps.fileUpload.selectedFile.value = new File([], "test.csv");
     expect(wizard.canSubmitExistingConfig.value).toBe(true);
 
     deps.fileUpload.fileError.value = "bad file";
+    expect(wizard.canSubmitExistingConfig.value).toBe(false);
+
+    deps.fileUpload.fileError.value = null;
+    deps.fileUpload.selectedFile.value = null;
     expect(wizard.canSubmitExistingConfig.value).toBe(false);
   });
 
@@ -252,22 +265,25 @@ describe("useBulkImportWizard", () => {
     const wizard = useBulkImportWizard(deps);
     const config = buildConfig({ id: "config-1" });
     wizard.open(config);
-    deps.fileUpload.parsedRows.value = [{ sku: "a" }];
+    const mockFile = new File([], "test.csv");
+    deps.fileUpload.selectedFile.value = mockFile;
     const run = buildRun();
-    deps.triggerRun.mockResolvedValue(run);
+    deps.triggerRunUpload.mockResolvedValue(run);
 
     const result = await wizard.submit();
 
     expect(deps.createConfig).not.toHaveBeenCalled();
-    expect(deps.triggerRun).toHaveBeenCalledWith("config-1", [{ sku: "a" }]);
+    expect(deps.triggerRunUpload).toHaveBeenCalledWith("config-1", mockFile);
+    expect(deps.triggerRun).not.toHaveBeenCalled();
     expect(result).toEqual(run);
   });
 
   it("stays open and returns undefined when triggering the run fails", async () => {
     const wizard = useBulkImportWizard(deps);
-    wizard.open(buildConfig());
-    deps.fileUpload.parsedRows.value = [{ sku: "a" }];
-    deps.triggerRun.mockResolvedValue(undefined);
+    const config = buildConfig();
+    wizard.open(config);
+    deps.fileUpload.selectedFile.value = new File([], "test.csv");
+    deps.triggerRunUpload.mockResolvedValue(undefined);
 
     const result = await wizard.submit();
 
@@ -275,12 +291,13 @@ describe("useBulkImportWizard", () => {
     expect(wizard.visible.value).toBe(true);
   });
 
-  it("tracks submitting state across the whole submit call", async () => {
+  it("tracks submitting state across the whole submit call for existing config", async () => {
     const wizard = useBulkImportWizard(deps);
-    wizard.open(buildConfig());
-    deps.fileUpload.parsedRows.value = [{ sku: "a" }];
+    const config = buildConfig();
+    wizard.open(config);
+    deps.fileUpload.selectedFile.value = new File([], "test.csv");
     let resolveTrigger: (run: BulkImportRunDto) => void = () => {};
-    deps.triggerRun.mockReturnValue(
+    deps.triggerRunUpload.mockReturnValue(
       new Promise<BulkImportRunDto>((resolve) => {
         resolveTrigger = resolve;
       }),

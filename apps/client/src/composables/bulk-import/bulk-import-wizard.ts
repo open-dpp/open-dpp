@@ -37,7 +37,7 @@ export function useBulkImportWizard(deps: UseBulkImportWizardDeps) {
       canGoToDetails.value,
   );
   const canSubmitExistingConfig = computed(
-    () => fileUpload.parsedRows.value.length > 0 && !fileUpload.fileError.value,
+    () => fileUpload.selectedFile.value !== null && !fileUpload.fileError.value,
   );
 
   function resetState() {
@@ -96,7 +96,9 @@ export function useBulkImportWizard(deps: UseBulkImportWizardDeps) {
         configId = created.id;
       }
 
-      const run = await runRepo.triggerRun(configId, fileUpload.parsedRows.value);
+      const run = existingConfig.value && fileUpload.selectedFile.value
+        ? await runRepo.triggerRunUpload(configId, fileUpload.selectedFile.value)
+        : await runRepo.triggerRun(configId, fileUpload.parsedRows.value);
       if (run) close();
       return run;
     } finally {

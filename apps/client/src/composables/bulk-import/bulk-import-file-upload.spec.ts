@@ -47,7 +47,7 @@ describe("useBulkImportFileUpload", () => {
       data: { rows: mockRows },
     });
 
-    const { onFileSelect, parsedRows, fileError, firstRow, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, parsedRows, selectedFile, fileError, firstRow, isLoading } = useBulkImportFileUpload();
 
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
@@ -55,6 +55,7 @@ describe("useBulkImportFileUpload", () => {
     expect(isLoading.value).toBe(false);
     expect(fileError.value).toBeNull();
     expect(parsedRows.value).toEqual(mockRows);
+    expect(selectedFile.value).toBe(file);
     expect(firstRow.value).toEqual({ sku: "a", name: "Product A" });
     expect(mocks.parseFile).toHaveBeenCalledWith(file);
   });
@@ -68,7 +69,7 @@ describe("useBulkImportFileUpload", () => {
   it("handles server validation errors", async () => {
     mocks.parseFile.mockRejectedValue(new Error("Validation failed"));
 
-    const { onFileSelect, parsedRows, fileError, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, parsedRows, selectedFile, fileError, isLoading } = useBulkImportFileUpload();
 
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
@@ -76,6 +77,7 @@ describe("useBulkImportFileUpload", () => {
     expect(isLoading.value).toBe(false);
     expect(fileError.value).toBe("integrations.bulkImport.invalidFile");
     expect(parsedRows.value).toEqual([]);
+    expect(selectedFile.value).toBeNull();
   });
 
   it("handles empty rows array from server", async () => {
@@ -83,7 +85,7 @@ describe("useBulkImportFileUpload", () => {
       data: { rows: [] },
     });
 
-    const { onFileSelect, parsedRows, fileError, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, parsedRows, selectedFile, fileError, isLoading } = useBulkImportFileUpload();
 
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
@@ -91,6 +93,7 @@ describe("useBulkImportFileUpload", () => {
     expect(isLoading.value).toBe(false);
     expect(fileError.value).toBeNull();
     expect(parsedRows.value).toEqual([]);
+    expect(selectedFile.value).toBe(file);
   });
 
   it("sets loading state during file upload", async () => {
@@ -142,18 +145,19 @@ describe("useBulkImportFileUpload", () => {
     expect(mocks.parseFile).not.toHaveBeenCalled();
   });
 
-  it("resets rows, error, and loading state", async () => {
+  it("resets rows, error, loading state, and selected file", async () => {
     mocks.parseFile.mockResolvedValue({
       data: { rows: [{ sku: "a" }] },
     });
 
-    const { onFileSelect, reset, parsedRows, fileError, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, reset, parsedRows, selectedFile, fileError, isLoading } = useBulkImportFileUpload();
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
 
     reset();
 
     expect(parsedRows.value).toEqual([]);
+    expect(selectedFile.value).toBeNull();
     expect(fileError.value).toBeNull();
     expect(isLoading.value).toBe(false);
   });

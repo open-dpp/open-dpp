@@ -8,6 +8,7 @@ export function useBulkImportFileUpload() {
   const { t } = useI18n();
 
   const parsedRows = ref<BulkImportRowDto[]>([]);
+  const selectedFile = ref<File | null>(null);
   const fileError = ref<string | null>(null);
   const isLoading = ref(false);
 
@@ -18,6 +19,7 @@ export function useBulkImportFileUpload() {
     const file = event.files?.[0] as File | undefined;
     if (!file) return;
 
+    selectedFile.value = file;
     isLoading.value = true;
     try {
       const response = await apiClient.dpp.bulkImport.parseFile(file);
@@ -26,6 +28,7 @@ export function useBulkImportFileUpload() {
     } catch {
       fileError.value = t("integrations.bulkImport.invalidFile");
       parsedRows.value = [];
+      selectedFile.value = null;
     } finally {
       isLoading.value = false;
     }
@@ -33,12 +36,14 @@ export function useBulkImportFileUpload() {
 
   function reset() {
     parsedRows.value = [];
+    selectedFile.value = null;
     fileError.value = null;
     isLoading.value = false;
   }
 
   return {
     parsedRows,
+    selectedFile,
     fileError,
     firstRow,
     isLoading,
