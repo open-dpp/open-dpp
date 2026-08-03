@@ -544,7 +544,20 @@ describe("PermalinkController", () => {
       return passport;
     }
 
+    /** A GS1 identifier — the only kind a gs1-link permalink may reference. */
     async function createUpiInOrg(orgId: string): Promise<UniqueProductIdentifier> {
+      const passport = await createPassportInOrg(orgId);
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: passport.id,
+        organizationId: orgId,
+        gtin: "09501101020917",
+        serial: `SER-${randomUUID().slice(0, 8)}`,
+      });
+      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+      return upi;
+    }
+
+    async function createNonGs1UpiInOrg(orgId: string): Promise<UniqueProductIdentifier> {
       const passport = await createPassportInOrg(orgId);
       const upi = UniqueProductIdentifier.create({
         referenceId: passport.id,
@@ -623,6 +636,25 @@ describe("PermalinkController", () => {
       });
 
       expect(response.status).toEqual(404);
+    });
+
+    it("rejects a non-GS1 unique product identifier with 400 and persists nothing", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createNonGs1UpiInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upi.uuid,
+      });
+
+      expect(response.status).toEqual(400);
+      const persisted = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findGs1LinkByUpiId(upi.uuid);
+      expect(persisted).toBeUndefined();
     });
 
     it("creates a gs1-link permalink when presentationConfigurationId is omitted", async () => {

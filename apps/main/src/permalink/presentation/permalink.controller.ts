@@ -1,6 +1,7 @@
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -38,6 +39,7 @@ import {
   PermalinkPublicDtoSchema,
   PermalinkUpdateRequestSchema,
   DigitalProductDocumentTypes,
+  UniqueProductIdentifierType,
 } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError, ZodValidationPipe } from "@open-dpp/exception";
@@ -334,6 +336,15 @@ export class PermalinkController {
       if (!upi) {
         throw new NotFoundException(
           `UniqueProductIdentifier ${body.uniqueProductIdentifierId} not found`,
+        );
+      }
+      // Only a GS1 identifier carries the GTIN/batch/serial a Digital Link is built
+      // from. Without this guard the permalink is created, renders as a presentation
+      // URL labelled "GS1 Digital Link", and cannot be frozen on publish
+      // (`computeFreezeUrl` throws for a UPI with no GS1 identity).
+      if (upi.type !== UniqueProductIdentifierType.GS1) {
+        throw new BadRequestException(
+          `UniqueProductIdentifier ${upi.uuid} is of type ${upi.type} and cannot back a GS1 Digital Link permalink`,
         );
       }
       const found = await this.passportRepository.findOne(upi.referenceId);

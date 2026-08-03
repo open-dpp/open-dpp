@@ -265,8 +265,35 @@ export class PermalinkApplicationService {
     return { permalink: frozen, publicUrl: frozen.publishedUrl as string };
   }
 
+  /**
+   * Pin every permalink of the passport to its `publishedUrl` — the publish-time
+   * freeze that makes a printed QR code immutable.
+   *
+   * Covers BOTH kinds. `findAllByPassportId` resolves permalinks through the
+   * presentation-configuration join only, so a gs1-link (null
+   * `presentationConfigurationId`, reachable through its UPI) is invisible to it;
+   * the passport's UPIs supply that half. A config-bound gs1-link matches both
+   * lookups, hence the de-duplication by id.
+   *
+   * Fails loudly (`ValueError` from `computeFreezeUrl`) when a gs1-link references
+   * a UPI without a GS1 identity — the controller rejects those at creation, so a
+   * surviving one is a data defect that must not be published over silently.
+   */
   async freezeAllForPassport(passport: Passport, options?: DbSessionOptions): Promise<void> {
-    const permalinks = await this.permalinkRepository.findAllByPassportId(passport.id, options);
+    const presentationPermalinks = await this.permalinkRepository.findAllByPassportId(
+      passport.id,
+      options,
+    );
+    const upis = await this.uniqueProductIdentifierRepository.findAllByReferencedId(passport.id);
+    const gs1LinkPermalinks = await this.permalinkRepository.findGs1LinksByUpiIds(
+      upis.map((upi) => upi.uuid),
+      options,
+    );
+    const permalinks = [
+      ...new Map(
+        [...presentationPermalinks, ...gs1LinkPermalinks.values()].map((p) => [p.id, p]),
+      ).values(),
+    ];
     if (permalinks.length === 0) {
       return;
     }

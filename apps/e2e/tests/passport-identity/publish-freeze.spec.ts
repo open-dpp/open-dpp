@@ -99,18 +99,7 @@ test("a published passport still accepts new identifiers but no longer allows de
   await expect(upiRows(page)).toHaveCount(before + 1);
 });
 
-// FIXME: publishing a passport does not freeze its GS1 Digital Link permalinks, so
-// this fails on `permalink-delete-btn` still being enabled. `freezeAllForPassport`
-// selects the permalinks to freeze with `PermalinkRepository.findAllByPassportId`,
-// whose aggregation matches only on the presentation-configuration `$lookup`
-// (`config.referenceId`). A gs1-link permalink carries `presentationConfigurationId:
-// null` and is reached through the UPI `$lookup` instead — `findPageByPassportId`
-// covers both with an `$or`, the freeze query does not — so it is never returned and
-// keeps `publishedUrl: null`. Because every freeze guard (`deletePermalink`,
-// `deleteGs1LinkForUpi`, the edit dialog's locked banner) keys off `publishedUrl`,
-// a Digital Link already printed on a product stays editable and deletable after
-// publication. Drop the .fixme once the freeze query covers gs1-link permalinks.
-test.fixme("a permalink published with the passport cannot be deleted", async ({ page }) => {
+test("a permalink published with the passport cannot be deleted", async ({ page }) => {
   const ids = await createBlankPassport(page);
   await gotoUpiList(page, ids);
   await createGs1Upi(page, { gtin: GTIN14, serial: uniqueSerial() });
