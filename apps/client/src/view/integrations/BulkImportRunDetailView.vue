@@ -154,7 +154,7 @@ onMounted(async () => {
                   :disabled="!canInterrupt"
                   severity="danger"
                   @click="interrupt"
-                  :tooltip="interruptTooltip"
+                  v-tooltip.top="interruptTooltip"
                 />
                 <Button :label="t('common.refresh')" @click="refresh" />
               </slot>
