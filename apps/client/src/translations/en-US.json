@@ -407,7 +407,8 @@
       "color": {
         "label": "Primary color",
         "palette": "Color palette",
-        "description": "This color will be used as a base color to generate a color palette."
+        "description": "This color will be used as a base color to generate a color palette.",
+        "error": "Please enter a valid hex color (e.g. 6bad87)."
       },
       "permalinkBaseUrl": {
         "label": "Base URL for passports",
