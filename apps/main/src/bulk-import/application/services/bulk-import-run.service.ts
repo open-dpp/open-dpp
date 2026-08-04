@@ -104,7 +104,10 @@ export class BulkImportRunService implements OnApplicationBootstrap {
   private async processRun(runId: string): Promise<void> {
     const run = await this.bulkImportRunRepository.findOneOrFail(runId);
     const config = await this.bulkImportConfigRepository.findOneOrFail(run.bulkImportConfigId);
-    const pagingResult = await this.bulkImportRunItemRepository.findAllByRunId(runId);
+    const pagingResult = await this.bulkImportRunItemRepository.findAllByRunId(
+      runId,
+      Pagination.create({ limit: undefined }),
+    );
     // Only unresolved rows: on a resume, already-created/updated/failed rows must stay untouched.
     const pendingItems = pagingResult.items.filter(
       (item) => item.status === BulkImportRunItemStatusDto.Pending,
@@ -113,6 +116,7 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     run.start();
     await this.bulkImportRunRepository.save(run);
 
+    let processedCount = 0;
     for (const item of pendingItems) {
       try {
         await this.applyRowToPassport(run, config, item);
@@ -122,6 +126,11 @@ export class BulkImportRunService implements OnApplicationBootstrap {
         run.recordItemOutcome(false);
       }
       await this.bulkImportRunItemRepository.save(item);
+
+      processedCount++;
+      if (processedCount % 50 === 0) {
+        await this.bulkImportRunRepository.save(run);
+      }
     }
 
     run.complete();

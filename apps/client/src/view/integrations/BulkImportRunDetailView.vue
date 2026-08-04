@@ -1,20 +1,51 @@
 <script lang="ts" setup>
-import type { BulkImportRunDto, BulkImportRunItemDto } from "@open-dpp/dto";
+import {
+  type BulkImportRunDto,
+  type BulkImportRunItemPaginationDto,
+  type PagingParamsDto,
+} from "@open-dpp/dto";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useBulkImportRunRepo } from "../../composables/bulk-import/bulk-import-run.repo.ts";
+import { usePagination } from "../../composables/pagination.ts";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
+import TablePagination from "../../components/pagination/TablePagination.vue";
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const indexStore = useIndexStore();
 const runRepo = useBulkImportRunRepo();
 
 const runId = computed(() => String(route.params.runId));
 const selectedRun = ref<BulkImportRunDto>();
-const runItems = ref<BulkImportRunItemDto[]>([]);
+const runItemsPagination = ref<BulkImportRunItemPaginationDto>();
+
+const {
+  currentPage,
+  hasNext,
+  previousPage,
+  nextPage,
+  hasPrevious,
+  resetCursor,
+  reloadCurrentPage,
+} = usePagination({
+  limit: 100,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  fetchCallback: async (params: PagingParamsDto) => {
+    const result = await runRepo.fetchRunItems(runId.value, params);
+    if (!result) throw new Error(t("integrations.bulkImport.errorLoadRunItems"));
+    runItemsPagination.value = result;
+    return result;
+  },
+  changeQueryParams: (params: Record<string, string | undefined>) => {
+    router.replace({ query: params });
+  },
+});
+
+const runItems = computed(() => runItemsPagination.value?.result ?? []);
 
 function statusSeverity(status: string): string {
   switch (status) {
@@ -45,10 +76,14 @@ function passportLink(passportId: string): string {
   return `/organizations/${indexStore.selectedOrganization}/passports/${passportId}`;
 }
 
+async function refresh() {
+  selectedRun.value = await runRepo.fetchRun(runId.value);
+  await reloadCurrentPage();
+}
+
 onMounted(async () => {
   selectedRun.value = await runRepo.fetchRun(runId.value);
-  const items = await runRepo.fetchRunItems(runId.value);
-  if (items) runItems.value = items;
+  await nextPage();
 });
 </script>
 
@@ -83,31 +118,51 @@ onMounted(async () => {
       </div>
     </div>
 
-    <DataTable :value="runItems" paginator :rows="20" :rows-per-page-options="[20, 50, 100]">
-      <template #header>
-        <span class="text-xl font-bold">{{ t("integrations.bulkImport.items") }}</span>
-      </template>
-      <Column field="rowIndex" :header="t('integrations.bulkImport.rowIndex')" />
-      <Column field="status" :header="t('common.actions')">
-        <template #body="{ data }">
-          <Tag
-            :severity="itemStatusSeverity(data.status)"
-            :value="t(`integrations.bulkImport.itemStatus.${data.status}`)"
-          />
+    <div class="flex flex-col gap-4">
+      <DataTable :value="runItems">
+        <template #header>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-bold">{{ t("integrations.bulkImport.items") }} </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <slot name="headerActions">
+                <Button :label="t('common.refresh')" @click="refresh" />
+              </slot>
+            </div>
+          </div>
         </template>
-      </Column>
-      <Column :header="t('integrations.bulkImport.passport')">
-        <template #body="{ data }">
-          <router-link
-            v-if="data.passportId"
-            :to="passportLink(data.passportId)"
-            class="text-primary-600 hover:text-primary-500"
-          >
-            {{ data.passportId }}
-          </router-link>
-        </template>
-      </Column>
-      <Column field="error" :header="t('integrations.bulkImport.error')" />
-    </DataTable>
+        <Column field="rowIndex" :header="t('integrations.bulkImport.rowIndex')" />
+        <Column field="status" :header="t('common.actions')">
+          <template #body="{ data }">
+            <Tag
+              :severity="itemStatusSeverity(data.status)"
+              :value="t(`integrations.bulkImport.itemStatus.${data.status}`)"
+            />
+          </template>
+        </Column>
+        <Column :header="t('integrations.bulkImport.passport')">
+          <template #body="{ data }">
+            <router-link
+              v-if="data.passportId"
+              :to="passportLink(data.passportId)"
+              class="text-primary-600 hover:text-primary-500"
+            >
+              {{ data.passportId }}
+            </router-link>
+          </template>
+        </Column>
+        <Column field="error" :header="t('integrations.bulkImport.error')" />
+      </DataTable>
+      <TablePagination
+        :current-page="currentPage"
+        :has-previous="hasPrevious"
+        :has-next="hasNext"
+        :total-count="selectedRun?.totalCount"
+        @next-page="nextPage"
+        @previous-page="previousPage"
+        @reset-cursor="resetCursor"
+      />
+    </div>
   </ContentViewWrapper>
 </template>
