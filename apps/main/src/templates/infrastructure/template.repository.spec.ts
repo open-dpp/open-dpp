@@ -231,6 +231,7 @@ describe("templateRepository", () => {
           limit: 100,
         }),
         items: [t5, t4, t3, t1],
+        totalCount: 4,
       }),
     );
 
@@ -247,6 +248,7 @@ describe("templateRepository", () => {
           limit: 100,
         }),
         items: [t5],
+        totalCount: 1,
       }),
     );
 
@@ -263,6 +265,7 @@ describe("templateRepository", () => {
           limit: 100,
         }),
         items: [t5, t4],
+        totalCount: 2,
       }),
     );
 
@@ -276,6 +279,7 @@ describe("templateRepository", () => {
       PagingResult.create({
         pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
         items: [t3, t1],
+        totalCount: 4,
       }),
     );
     pagination = Pagination.create({
@@ -292,6 +296,7 @@ describe("templateRepository", () => {
           limit: 1,
         }),
         items: [t3],
+        totalCount: 4,
       }),
     );
   });

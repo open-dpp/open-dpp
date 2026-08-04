@@ -170,6 +170,7 @@ describe("passportController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
@@ -196,6 +197,7 @@ describe("passportController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
@@ -213,6 +215,7 @@ describe("passportController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 1,
       },
       result: [secondPassport].map((p) => ({
         ...p.toPlain(),

@@ -1251,7 +1251,11 @@ export class EnvironmentService {
           ).populate(populateOptions),
       ),
     );
-    return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
+    return PagingResult.create({
+      pagination: pagingResult.pagination,
+      items: populatedItems,
+      totalCount: pagingResult.totalCount,
+    });
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

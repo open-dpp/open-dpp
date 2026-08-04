@@ -172,7 +172,8 @@
     "german": "Deutsch"
   },
   "pagination": {
-    "footer": "Zeigt: {from} - {to}, Anzahl: {count}"
+    "footer": "Zeigt: {from} - {to}, Anzahl: {count}",
+    "footerWithTotal": "Zeigt: {from} - {to} von {total}"
   },
   "builder": {
     "repeater": {
@@ -475,7 +476,8 @@
       "color": {
         "label": "Primärfarbe",
         "palette": "Farbpalette",
-        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
+        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette.",
+        "error": "Bitte eine gültige Hex-Farbe eingeben (z. B. 6bad87)."
       },
       "permalinkBaseUrl": {
         "label": "Basis-URL für Produktpässe",
