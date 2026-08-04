@@ -389,6 +389,12 @@ export class PermalinkRepository implements OnApplicationBootstrap {
    * schema casting), the cursor's `createdAt` must be wrapped in `new Date(...)`.
    * Unlike `findAllByPassportId` this does NOT apply D10 single-primary
    * normalization — a page cannot see the full set — matching the org-scoped list.
+   *
+   * The returned cursor is `null` on the last page — the documented contract
+   * (`PagingMetadataDtoSchema`) consumers page against, mirroring
+   * {@link findPageByCursor}. One extra doc is fetched purely to learn whether a
+   * next page exists; it is dropped before migration so neither the D10 legacy
+   * probe nor the page contents can see it.
    */
   async findPageByPassportId(
     passportId: string,
@@ -400,6 +406,7 @@ export class PermalinkRepository implements OnApplicationBootstrap {
       cursor: options?.pagination?.cursor,
     });
     const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
+    const limit = pagination.limit ?? 100;
     const cursorMatch = cursor
       ? [
           {
@@ -410,7 +417,7 @@ export class PermalinkRepository implements OnApplicationBootstrap {
           },
         ]
       : [];
-    const results = await this.permalinkDoc
+    const fetched = await this.permalinkDoc
       .aggregate([
         {
           $lookup: {
@@ -445,20 +452,22 @@ export class PermalinkRepository implements OnApplicationBootstrap {
           },
         },
         { $sort: { createdAt: -1, _id: -1 } },
-        { $limit: pagination.limit ?? 100 },
+        { $limit: limit + 1 },
         { $project: { config: 0, upi: 0 } },
       ])
       .session(dbOptions?.session ?? null);
 
+    const hasNextPage = fetched.length > limit;
+    const results = hasNextPage ? fetched.slice(0, limit) : fetched;
     const migrated = await Promise.all(
       results.map((plain) => this.fromPlainWithMigration({ ...plain, id: plain._id })),
     );
     const hadLegacyDocs = results.some((plain) => this.isLegacySchemaVersion(plain._schemaVersion));
     const items = await this.applyCanonicalPrimary(migrated, passportId, hadLegacyDocs, dbOptions);
-    if (items.length > 0) {
-      const last = items[items.length - 1];
-      pagination.setCursor(encodeCursor(last.createdAt.toISOString(), last.id));
-    }
+    const last = items[items.length - 1];
+    pagination.setCursor(
+      hasNextPage && last ? encodeCursor(last.createdAt.toISOString(), last.id) : null,
+    );
     return PagingResult.create<Permalink>({ pagination, items });
   }
 

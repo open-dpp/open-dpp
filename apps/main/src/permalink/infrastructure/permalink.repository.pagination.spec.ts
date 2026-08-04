@@ -398,9 +398,65 @@ describe("PermalinkRepository", () => {
       });
       expect(page2.items).toHaveLength(1);
       expect(page2.items[0].id).toBe(presentation.id);
+      // Last page is exactly full (2 rows, limit 1) — only a limit+1 probe can tell
+      // it apart from a page with a successor, and a non-null cursor here would
+      // make a contract-following consumer page forever.
+      expect(page2.pagination.cursor).toBeNull();
 
       const allIds = [page1.items[0].id, page2.items[0].id].sort();
       expect(allIds).toEqual([presentation.id, gs1Link.id].sort());
+    });
+
+    it("returns a null cursor on a partial last page", async () => {
+      const passportId = randomUUID();
+      const organizationId = `org-${randomUUID().slice(0, 8)}`;
+
+      const config = PresentationConfiguration.create({
+        organizationId,
+        referenceId: passportId,
+        referenceType: DigitalProductDocumentTypes.Passport,
+      });
+      await presentationConfigurationRepository.save(config);
+      await repository.save(
+        Permalink.create({
+          presentationConfigurationId: config.id,
+          organizationId,
+          createdAt: new Date("2024-04-01T10:00:00.000Z"),
+          updatedAt: new Date("2024-04-01T10:00:00.000Z"),
+        }),
+      );
+
+      for (const createdAt of [
+        new Date("2024-04-02T10:00:00.000Z"),
+        new Date("2024-04-03T10:00:00.000Z"),
+      ]) {
+        const upiId = randomUUID();
+        await connection
+          .collection("unique_product_identifiers")
+          .insertOne({ _id: upiId as any, referenceId: passportId });
+        await repository.save(
+          Permalink.create({
+            kind: "gs1-link",
+            uniqueProductIdentifierId: upiId,
+            presentationConfigurationId: null,
+            organizationId,
+            createdAt,
+            updatedAt: createdAt,
+          }),
+        );
+      }
+
+      const page1 = await repository.findPageByPassportId(passportId, {
+        pagination: { limit: 2 },
+      });
+      expect(page1.items).toHaveLength(2);
+      expect(page1.pagination.cursor).not.toBeNull();
+
+      const page2 = await repository.findPageByPassportId(passportId, {
+        pagination: { limit: 2, cursor: page1.pagination.cursor! },
+      });
+      expect(page2.items).toHaveLength(1);
+      expect(page2.pagination.cursor).toBeNull();
     });
 
     // The list view reads through this method while the public resolver reads
