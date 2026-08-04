@@ -92,4 +92,10 @@ export class BulkImportNamespace {
       { params },
     );
   }
+
+  public async interruptRun(id: string) {
+    return await this.axiosInstance.post<BulkImportRunDto>(
+      `${this.runEndpoint}/${id}/interrupt`,
+    );
+  }
 }

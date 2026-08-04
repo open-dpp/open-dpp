@@ -39,6 +39,12 @@ export const bulkImportRun1 = {
   createdAt: new Date().toISOString(),
 };
 
+export const bulkImportRun1Interrupted = {
+  ...bulkImportRun1,
+  status: "interrupted",
+  finishedAt: new Date().toISOString(),
+};
+
 export const bulkImportRunItem1 = {
   id: randomUUID(),
   runId: bulkImportRun1.id,
@@ -112,6 +118,9 @@ export function bulkImportHandlers() {
           { status: 200 },
         )
       );
+    }),
+    http.post(`${runEndpoint}/${bulkImportRun1.id}/interrupt`, async () => {
+      return HttpResponse.json(bulkImportRun1Interrupted, { status: 200 });
     }),
   ];
 }

@@ -32,6 +32,7 @@ import {
   bulkImportConfig1,
   bulkImportConfig2,
   bulkImportRun1,
+  bulkImportRun1Interrupted,
   bulkImportRunItem1,
 } from "./handlers/bulk-import";
 import { passport1, passport2 } from "./handlers/passports";
@@ -672,6 +673,12 @@ describe("apiClient", () => {
       const file = new File([], "test.csv", { type: "text/csv" });
       const response = await sdk.dpp.bulkImport.createRunUpload(bulkImportConfig1.id, file);
       expect(response.data).toEqual(bulkImportRun1);
+    });
+
+    it("should interrupt a run", async () => {
+      const response = await sdk.dpp.bulkImport.interruptRun(bulkImportRun1.id);
+      expect(response.data).toEqual(bulkImportRun1Interrupted);
+      expect(response.status).toEqual(200);
     });
   });
 });

@@ -347,4 +347,76 @@ describe("BulkImport controllers", () => {
 
     expect(response.status).toEqual(403);
   });
+
+  describe("interrupt run", () => {
+    it("interrupts a running bulk import run", async () => {
+      const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+      const template = await createTemplate(org.id);
+      await addNameplateSubmodel(template);
+
+      const configResponse = await request(app.getHttpServer())
+        .post("/bulk-import/configs")
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({
+          templateId: template.id,
+          name: "ERP export",
+          idField: "sku",
+          submodelMappings: [submodelFieldMapping()],
+        });
+
+      const runResponse = await request(app.getHttpServer())
+        .post(`/bulk-import/configs/${configResponse.body.id}/runs`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ rows: [{ sku: "4711" }, { sku: "4712" }] });
+      const runId = runResponse.body.id;
+
+      // Wait a bit for the run to start processing
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const interruptResponse = await request(app.getHttpServer())
+        .post(`/bulk-import/runs/${runId}/interrupt`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(interruptResponse.status).toEqual(200);
+      expect(interruptResponse.body.status).toEqual("interrupted");
+    });
+
+    it("rejects interrupting a run from another organization", async () => {
+      const { org: ownerOrg, userCookie: ownerCookie } =
+        await betterAuthHelper.createOrganizationAndUserWithCookie();
+      const template = await createTemplate(ownerOrg.id);
+      await addNameplateSubmodel(template);
+
+      const configResponse = await request(app.getHttpServer())
+        .post("/bulk-import/configs")
+        .set("Cookie", ownerCookie)
+        .set(ORGANIZATION_ID_HEADER, ownerOrg.id)
+        .send({
+          templateId: template.id,
+          name: "ERP export",
+          idField: "sku",
+          submodelMappings: [submodelFieldMapping()],
+        });
+
+      const runResponse = await request(app.getHttpServer())
+        .post(`/bulk-import/configs/${configResponse.body.id}/runs`)
+        .set("Cookie", ownerCookie)
+        .set(ORGANIZATION_ID_HEADER, ownerOrg.id)
+        .send({ rows: [{ sku: "4711" }] });
+      const runId = runResponse.body.id;
+
+      const { org: otherOrg, userCookie: otherCookie } =
+        await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+      const response = await request(app.getHttpServer())
+        .post(`/bulk-import/runs/${runId}/interrupt`)
+        .set("Cookie", otherCookie)
+        .set(ORGANIZATION_ID_HEADER, otherOrg.id);
+
+      expect(response.status).toEqual(403);
+    });
+  });
 });

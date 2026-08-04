@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseFilePipe,
   Post,
@@ -125,5 +126,15 @@ export class BulkImportRunController {
     const pagination = Pagination.create({ limit, cursor });
     const page = await this.bulkImportRunService.findItemsForRun(id, organizationId, pagination);
     return BulkImportRunItemPaginationDtoSchema.parse(page.toPlain());
+  }
+
+  @Post("bulk-import/runs/:id/interrupt")
+  @HttpCode(200)
+  async interruptRun(
+    @OrganizationId() organizationId: string,
+    @Param("id") id: string,
+  ): Promise<BulkImportRunDto> {
+    const run = await this.bulkImportRunService.interruptRun(id, organizationId);
+    return BulkImportRunDtoSchema.parse(run.toPlain());
   }
 }
