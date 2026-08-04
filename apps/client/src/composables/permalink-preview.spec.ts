@@ -359,5 +359,10 @@ describe("useGs1LinkPreview", () => {
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
     expect(preview.previewUrl.value).toBe("https://id.example.com");
+
+    // Even with attrs set: a query hung off the bare base is not a valid GS1
+    // Digital Link, so the preview stays the base alone.
+    attrs.value = { "3103": "000750" };
+    expect(preview.previewUrl.value).toBe("https://id.example.com");
   });
 });

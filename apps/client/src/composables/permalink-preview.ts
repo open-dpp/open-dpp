@@ -189,6 +189,10 @@ export function useGs1LinkPreview(
     if (locked.value && permalink.value.publishedUrl) return permalink.value.publishedUrl;
 
     const identityPath = deriveGs1IdentityPath(permalink.value.publicUrl);
+    // Without an identity path there is no GS1 Digital Link to preview — a bare
+    // attrs query hung off the base (`https://id.example.com?3103=…`) is not a
+    // valid one, so degrade to the base alone.
+    if (!identityPath) return effectiveBase.value;
     // The attrs map only ever holds validated pairs (the editor emits nothing
     // else), but never trust the boundary: a bad pair yields a query-less
     // preview rather than a thrown render.
