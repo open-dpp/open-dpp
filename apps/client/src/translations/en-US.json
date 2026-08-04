@@ -309,7 +309,9 @@
       "errorDeleteConfig": "Failed to delete bulk import configuration:",
       "errorLoadRuns": "Failed to load bulk import runs:",
       "triggerRunSuccess": "Bulk import run started successfully.",
+      "interruptRunSuccess": "Bulk import run interrupted successfully.",
       "errorTriggerRun": "Failed to start bulk import run:",
+      "errorInterruptRun": "Failed to interrupt bulk import run:",
       "errorLoadRun": "Failed to load bulk import run:",
       "errorLoadRunItems": "Failed to load bulk import run items:",
       "label": "Bulk Import",
@@ -365,7 +367,9 @@
       "passport": "Passport",
       "error": "Error",
       "runDetailTitle": "Bulk import run",
-      "items": "Rows"
+      "items": "Rows",
+      "interrupt": "Interrupt",
+      "interruptTooltip": "Cannot interrupt run with status '{status}'"
     },
     "connections": {
       "label": "Connection | Connections",

@@ -98,6 +98,20 @@ export function useBulkImportRunRepo() {
     }
   };
 
+  const interruptRun = async (runId: string): Promise<BulkImportRunDto | undefined> => {
+    try {
+      const response = await apiClient.dpp.bulkImport.interruptRun(runId);
+      notificationStore.addSuccessNotification(t("integrations.bulkImport.interruptRunSuccess"));
+      return response.data;
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(
+        t("integrations.bulkImport.errorInterruptRun"),
+        error,
+      );
+      return undefined;
+    }
+  };
+
   return {
     fetchRunsForConfig,
     isConfigEditable,
@@ -105,5 +119,6 @@ export function useBulkImportRunRepo() {
     triggerRunUpload,
     fetchRun,
     fetchRunItems,
+    interruptRun,
   };
 }

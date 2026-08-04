@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../lib/api-client", () => ({
+vi.mock("../../lib/api-client", () => ({
   default: {
     dpp: {
       templates: {

@@ -3,6 +3,7 @@ import {
   type BulkImportRunDto,
   type BulkImportRunItemPaginationDto,
   type PagingParamsDto,
+  BulkImportRunStatusDto,
 } from "@open-dpp/dto";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -76,6 +77,27 @@ function passportLink(passportId: string): string {
   return `/organizations/${indexStore.selectedOrganization}/passports/${passportId}`;
 }
 
+const canInterrupt = computed(() => {
+  if (!selectedRun.value) return false;
+  return (
+    selectedRun.value.status === BulkImportRunStatusDto.Pending ||
+    selectedRun.value.status === BulkImportRunStatusDto.Running
+  );
+});
+
+const interruptTooltip = computed(() => {
+  if (!selectedRun.value) return "";
+  if (canInterrupt.value) return "";
+  return t("integrations.bulkImport.interruptTooltip", {
+    status: t(`integrations.bulkImport.status.${selectedRun.value.status}`),
+  });
+});
+
+async function interrupt() {
+  await runRepo.interruptRun(runId.value);
+  await refresh();
+}
+
 async function refresh() {
   selectedRun.value = await runRepo.fetchRun(runId.value);
   await reloadCurrentPage();
@@ -127,6 +149,13 @@ onMounted(async () => {
             </div>
             <div class="flex items-center gap-2">
               <slot name="headerActions">
+                <Button
+                  :label="t('integrations.bulkImport.interrupt')"
+                  :disabled="!canInterrupt"
+                  severity="danger"
+                  @click="interrupt"
+                  :tooltip="interruptTooltip"
+                />
                 <Button :label="t('common.refresh')" @click="refresh" />
               </slot>
             </div>

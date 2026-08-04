@@ -309,7 +309,9 @@
       "errorDeleteConfig": "Löschen der Bulk-Import-Konfiguration fehlgeschlagen:",
       "errorLoadRuns": "Laden der Bulk-Import-Durchläufe fehlgeschlagen:",
       "triggerRunSuccess": "Bulk-Import-Durchlauf erfolgreich gestartet.",
+      "interruptRunSuccess": "Bulk-Import Durchlauf erfolgreich unterbrochen.",
       "errorTriggerRun": "Starten des Bulk-Import-Durchlaufs fehlgeschlagen:",
+      "errorInterruptRun": "Unterbrechen des Bulk-Import Durchlaufs fehlgeschlagen:",
       "errorLoadRun": "Laden des Bulk-Import-Durchlaufs fehlgeschlagen:",
       "errorLoadRunItems": "Laden der Bulk-Import-Zeilen fehlgeschlagen:",
       "label": "Bulk-Import",
@@ -365,7 +367,9 @@
       "passport": "Produktpass",
       "error": "Fehler",
       "runDetailTitle": "Bulk-Import-Durchlauf",
-      "items": "Zeilen"
+      "items": "Zeilen",
+      "interrupt": "Unterbrechen",
+      "interruptTooltip": "Durchlauf mit Status '{status}' kann nicht unterbrochen werden"
     },
     "connections": {
       "label": "Verbindung | Verbindungen",
