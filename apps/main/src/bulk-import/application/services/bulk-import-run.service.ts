@@ -101,8 +101,18 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     return await this.bulkImportRunItemRepository.findAllByRunId(id, pagination);
   }
 
+  async interruptRun(id: string, organizationId: string): Promise<BulkImportRun> {
+    const run = await this.findByIdAndCheckOwnership(id, organizationId);
+    if (!run.isRunning()) {
+      return run;
+    }
+    run.markInterrupted();
+    await this.bulkImportRunRepository.save(run);
+    return run;
+  }
+
   private async processRun(runId: string): Promise<void> {
-    const run = await this.bulkImportRunRepository.findOneOrFail(runId);
+    let run = await this.bulkImportRunRepository.findOneOrFail(runId);
     const config = await this.bulkImportConfigRepository.findOneOrFail(run.bulkImportConfigId);
     const pagingResult = await this.bulkImportRunItemRepository.findAllByRunId(
       runId,
@@ -117,24 +127,42 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     await this.bulkImportRunRepository.save(run);
 
     let processedCount = 0;
+    let batchSuccessCount = 0;
+    let batchFailCount = 0;
     for (const item of pendingItems) {
       try {
         await this.applyRowToPassport(run, config, item);
-        run.recordItemOutcome(true);
+        batchSuccessCount++;
       } catch (error) {
         item.markFailed(error instanceof Error ? error.message : String(error));
-        run.recordItemOutcome(false);
+        batchFailCount++;
       }
       await this.bulkImportRunItemRepository.save(item);
 
       processedCount++;
       if (processedCount % 50 === 0) {
-        await this.bulkImportRunRepository.save(run);
+        // Check for interruption by fetching fresh state
+        run = await this.bulkImportRunRepository.findOneOrFail(runId);
+        // Apply batch outcomes to the fresh run
+        for (let i = 0; i < batchSuccessCount; i++) run.recordItemOutcome(true);
+        for (let i = 0; i < batchFailCount; i++) run.recordItemOutcome(false);
+        run = await this.bulkImportRunRepository.save(run);
+        // Reset batch counters
+        batchSuccessCount = 0;
+        batchFailCount = 0;
+        if (!run.isRunning()) {
+          break;
+        }
       }
     }
 
-    run.complete();
-    await this.bulkImportRunRepository.save(run);
+    if (run.isRunning()) {
+      // Apply any remaining outcomes from the final partial batch
+      for (let i = 0; i < batchSuccessCount; i++) run.recordItemOutcome(true);
+      for (let i = 0; i < batchFailCount; i++) run.recordItemOutcome(false);
+      run.complete();
+      await this.bulkImportRunRepository.save(run);
+    }
   }
 
   private async applyRowToPassport(

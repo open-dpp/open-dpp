@@ -52,16 +52,15 @@ describe("BulkImportRunService", () => {
       save: jest.fn<(run: BulkImportRun) => Promise<BulkImportRun>>(),
       findOneOrFail: jest.fn<(id: string) => Promise<BulkImportRun>>(),
       findAllRunning: jest.fn<() => Promise<BulkImportRun[]>>(),
-      findAllByBulkImportConfigId:
-        jest.fn<
-          (
-            bulkImportConfigId: string,
-            options?: {
-              pagination?: Pagination;
-              filter?: { status?: BulkImportRunStatusDtoType[] };
-            },
-          ) => Promise<PagingResult<BulkImportRun>>
-        >(),
+      findAllByBulkImportConfigId: jest.fn<
+        (
+          bulkImportConfigId: string,
+          options?: {
+            pagination?: Pagination;
+            filter?: { status?: BulkImportRunStatusDtoType[] };
+          },
+        ) => Promise<PagingResult<BulkImportRun>>
+      >(),
     };
     const runItemRepository = {
       createMany:
@@ -486,6 +485,48 @@ describe("BulkImportRunService", () => {
     expect(runItemRepository.save).toHaveBeenCalledTimes(1);
   });
 
+  it("processRun applies batch counts correctly at checkpoints", async () => {
+    const {
+      service,
+      configRepository,
+      runRepository,
+      runItemRepository,
+      productLinkRepository,
+      passportService,
+    } = buildFakes();
+    const config = buildConfig();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: config.id,
+      organizationId: config.organizationId,
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 50,
+    });
+    const items = Array.from({ length: 50 }, (_, i) =>
+      BulkImportRunItem.create({
+        runId: run.id,
+        rowIndex: i,
+        inputData: { sku: String(i), weightKg: i },
+      }),
+    );
+
+    configRepository.findOneOrFail.mockResolvedValue(config);
+    runRepository.findOneOrFail.mockResolvedValue(run);
+    runRepository.save.mockResolvedValue(run);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items }),
+    );
+    productLinkRepository.findOne.mockResolvedValue(undefined);
+    passportService.createPassportFromTemplate.mockResolvedValue({ id: "passport-1" } as Passport);
+
+    await (service as any).processRun(run.id);
+
+    // All 50 items processed successfully, run should be completed
+    expect(run.succeededCount).toEqual(50);
+    expect(run.failedCount).toEqual(0);
+    expect(run.status).toEqual(BulkImportRunStatusDto.Completed);
+  });
+
   it("onApplicationBootstrap resumes stale runs instead of marking them interrupted", async () => {
     const { service, runRepository } = buildFakes();
     const run = BulkImportRun.create({
@@ -571,5 +612,61 @@ describe("BulkImportRunService", () => {
 
     await expect(service.findItemsForRun(run.id, "my-org")).rejects.toThrow(ForbiddenException);
     expect(runItemRepository.findAllByRunId).not.toHaveBeenCalled();
+  });
+
+  describe("interruptRun", () => {
+    it("interrupts a running run and returns it with Interrupted status", async () => {
+      const { service, runRepository } = buildFakes();
+      const run = BulkImportRun.create({
+        bulkImportConfigId: randomUUID(),
+        organizationId: "my-org",
+        subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+        userId: randomUUID(),
+        totalCount: 100,
+      });
+      run.start();
+      runRepository.findOneOrFail.mockResolvedValue(run);
+      runRepository.save.mockResolvedValue(run);
+
+      const result = await service.interruptRun(run.id, "my-org");
+
+      expect(result.status).toEqual(BulkImportRunStatusDto.Interrupted);
+      expect(runRepository.save).toHaveBeenCalledWith(run);
+    });
+
+    it("does not change status of an already completed run", async () => {
+      const { service, runRepository } = buildFakes();
+      const run = BulkImportRun.create({
+        bulkImportConfigId: randomUUID(),
+        organizationId: "my-org",
+        subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+        userId: randomUUID(),
+        totalCount: 1,
+      });
+      run.start();
+      run.recordItemOutcome(true);
+      run.complete();
+      runRepository.findOneOrFail.mockResolvedValue(run);
+
+      const result = await service.interruptRun(run.id, "my-org");
+
+      expect(result.status).toEqual(BulkImportRunStatusDto.Completed);
+      expect(runRepository.save).not.toHaveBeenCalled();
+    });
+
+    it("rejects interruption of a run from another organization", async () => {
+      const { service, runRepository } = buildFakes();
+      const run = BulkImportRun.create({
+        bulkImportConfigId: randomUUID(),
+        organizationId: "other-org",
+        subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+        userId: randomUUID(),
+        totalCount: 1,
+      });
+      run.start();
+      runRepository.findOneOrFail.mockResolvedValue(run);
+
+      await expect(service.interruptRun(run.id, "my-org")).rejects.toThrow(ForbiddenException);
+    });
   });
 });
