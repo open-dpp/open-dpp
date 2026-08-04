@@ -672,6 +672,80 @@ describe("PermalinkController", () => {
       expect(response.body.presentationConfigurationId).toBeNull();
       expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
     });
+
+    /**
+     * `createConfigInOrg` above saves a config that carries NO permalink — a state
+     * only reachable through POST /passports/:id/presentation-configurations. Every
+     * config of a passport created through POST /passports already backs a
+     * presentation permalink, which is the case these tests cover.
+     */
+    async function createConfigWithPresentationPermalinkInOrg(
+      orgId: string,
+    ): Promise<PresentationConfiguration> {
+      const config = await createConfigInOrg(orgId);
+      await ctx
+        .getModuleRef()
+        .get(PermalinkApplicationService)
+        .createPermalinksForConfigs([config], orgId);
+      return config;
+    }
+
+    it("binds a gs1-link to a config that already backs a presentation permalink", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createUpiInOrg(org.id);
+      const config = await createConfigWithPresentationPermalinkInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: config.id,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.presentationConfigurationId).toEqual(config.id);
+    });
+
+    it("binds several gs1-links to the same config (uniqueness is per UPI, not per config)", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const config = await createConfigWithPresentationPermalinkInOrg(org.id);
+      const first = await createUpiInOrg(org.id);
+      const second = await createUpiInOrg(org.id);
+
+      const firstResponse = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: first.uuid,
+        presentationConfigurationId: config.id,
+      });
+      const secondResponse = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        uniqueProductIdentifierId: second.uuid,
+        presentationConfigurationId: config.id,
+      });
+
+      expect(firstResponse.status).toEqual(201);
+      expect(secondResponse.status).toEqual(201);
+    });
+
+    it("creates the presentation permalink for a config that already carries a gs1-link", async () => {
+      const { org } = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const upi = await createUpiInOrg(org.id);
+      const config = await createConfigInOrg(org.id);
+      const service = ctx.getModuleRef().get(PermalinkApplicationService);
+      await service.createGs1LinkPermalink({
+        uniqueProductIdentifierId: upi.uuid,
+        organizationId: org.id,
+        presentationConfigurationId: config.id,
+      });
+
+      const [created] = await service.createPermalinksForConfigs([config], org.id);
+
+      expect(created.kind).toEqual("presentation");
+      expect(created.uniqueProductIdentifierId).toBeNull();
+    });
   });
 
   describe("PATCH /p/:id/slug", () => {

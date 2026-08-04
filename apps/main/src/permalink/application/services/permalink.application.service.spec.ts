@@ -206,6 +206,38 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     );
   });
 
+  it("freezeAllForPassport freezes a config-bound gs1-link once, in Digital Link form", async () => {
+    const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
+    const { config } = await seedConfigWithPermalink(passport);
+    // A distinct serial: gtin+batch+serial is unique across the collection.
+    const serial = `SER-${randomUUID().slice(0, 8)}`;
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: passport.id,
+      gtin: "00012345678905",
+      serial,
+      organizationId: passport.organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    // Bound to the same config as the presentation permalink: this row matches
+    // BOTH lookups inside freezeAllForPassport, so the de-duplication by id is
+    // what keeps it from being frozen twice.
+    const gs1Link = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      presentationConfigurationId: config.id,
+      baseUrl: "https://id.example.com",
+      organizationId: passport.organizationId,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(gs1Link);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await service.freezeAllForPassport(passport);
+
+    const frozen = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(gs1Link.id);
+    expect(frozen.publishedUrl).toBe(`https://id.example.com/01/00012345678905/21/${serial}`);
+  });
+
   it("freezeAllForPassport leaves an already-frozen permalink untouched (idempotent)", async () => {
     const passport = await seedPublishedPassport();
     await seedBranding(passport.organizationId);

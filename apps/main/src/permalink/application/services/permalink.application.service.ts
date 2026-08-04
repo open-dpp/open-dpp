@@ -125,7 +125,7 @@ export class PermalinkApplicationService {
     // Track whether a primary has been assigned during this call (to handle multi-config batches)
     let primaryAssignedInThisCall = false;
     for (const config of configs) {
-      const existing = await this.permalinkRepository.findByPresentationConfigurationId(
+      const existing = await this.permalinkRepository.findPresentationByPresentationConfigurationId(
         config.id,
         options,
       );
@@ -167,10 +167,11 @@ export class PermalinkApplicationService {
         saved = await this.permalinkRepository.save(created, options);
       } catch (error) {
         if (!isDuplicateKeyError(error)) throw error;
-        const recovered = await this.permalinkRepository.findByPresentationConfigurationId(
-          config.id,
-          options,
-        );
+        const recovered =
+          await this.permalinkRepository.findPresentationByPresentationConfigurationId(
+            config.id,
+            options,
+          );
         if (!recovered) throw error;
         results.push(recovered);
         continue;
@@ -508,6 +509,19 @@ export class PermalinkApplicationService {
       if (isDuplicateKeyErrorOnField(error, "uniqueProductIdentifierId")) {
         throw new ConflictException(
           `A GS1-link permalink already exists for UPI ${input.uniqueProductIdentifierId}`,
+        );
+      }
+      // Unreachable while the presentationConfigurationId index is scoped to
+      // kind "presentation" — but a raw E11000 escaping as a 500 is what made
+      // this path a defect in the first place, so it stays mapped. Only for a
+      // real config: a collision on the `null` slot means a stale full-unique
+      // index (a server defect), which must stay loud rather than blame the caller.
+      if (
+        input.presentationConfigurationId != null &&
+        isDuplicateKeyErrorOnField(error, "presentationConfigurationId")
+      ) {
+        throw new ConflictException(
+          `Presentation configuration ${input.presentationConfigurationId} already backs a permalink`,
         );
       }
       throw error;

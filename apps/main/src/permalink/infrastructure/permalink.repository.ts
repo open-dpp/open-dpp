@@ -38,8 +38,27 @@ export class PermalinkRepository implements OnApplicationBootstrap {
    * ponytail: syncIndexes also drops manually-added indexes on this collection.
    */
   async onApplicationBootstrap(): Promise<void> {
+    await this.backfillPermalinkKind();
     await this.permalinkDoc.syncIndexes();
     await this.backfillOrganizationIds();
+  }
+
+  /**
+   * One-shot backfill: rows written before `kind` existed carry no such field.
+   * `migrate1_2_0To1_3_0` supplies the default at read time but never writes it
+   * back, and the unique index on `presentationConfigurationId` is scoped to
+   * `kind: "presentation"` — so an unstamped row sits outside the index and its
+   * config would accept a second presentation permalink. Runs BEFORE
+   * `syncIndexes`; idempotent (the match set is empty after the first run).
+   */
+  private async backfillPermalinkKind(): Promise<void> {
+    const result = await this.permalinkDoc.updateMany(
+      { kind: { $exists: false } },
+      { $set: { kind: PermalinkKind.PRESENTATION } },
+    );
+    if (result.modifiedCount > 0) {
+      this.logger.log(`Backfilled kind on ${result.modifiedCount} permalink(s)`);
+    }
   }
 
   /**
@@ -157,12 +176,32 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return permalink;
   }
 
+  /** Any permalink bound to the config, whatever its kind. */
   async findByPresentationConfigurationId(
     presentationConfigurationId: string,
     options?: DbSessionOptions,
   ): Promise<Permalink | undefined> {
     const doc = await this.permalinkDoc
       .findOne({ presentationConfigurationId })
+      .session(options?.session ?? null);
+    if (!doc) return undefined;
+    const plain = doc.toObject();
+    return this.fromPlainWithMigration({ ...plain, id: plain._id });
+  }
+
+  /**
+   * The PRESENTATION permalink bound to the config. A config may also back
+   * gs1-links, so callers deciding whether the presentation permalink still has
+   * to be minted must ignore those — otherwise a config carrying only a gs1-link
+   * looks occupied and never gets its presentation permalink.
+   * `$ne` matches documents with no `kind` field, so legacy rows still count.
+   */
+  async findPresentationByPresentationConfigurationId(
+    presentationConfigurationId: string,
+    options?: DbSessionOptions,
+  ): Promise<Permalink | undefined> {
+    const doc = await this.permalinkDoc
+      .findOne({ presentationConfigurationId, kind: { $ne: PermalinkKind.GS1_LINK } })
       .session(options?.session ?? null);
     if (!doc) return undefined;
     const plain = doc.toObject();

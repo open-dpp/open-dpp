@@ -119,6 +119,10 @@ export type CursorPageOptions = {
  * stable across a `createdAt` tie — every collection stores its uuid as `_id`;
  * none has a stored `id` path. `filter` is the non-cursor scope
  * (`{ organizationId }`, `{ referenceId }`, …); the cursor clause is appended.
+ *
+ * The returned cursor is `null` on the last page — the documented contract
+ * (`PagingMetadataDtoSchema`) consumers page against. One extra doc is fetched
+ * purely to learn whether a next page exists; it is never returned.
  */
 export async function findPageByCursor<V extends IConvertableToPlain>(
   docModel: MongooseModel<any>,
@@ -136,19 +140,22 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
         ],
       }
     : {};
-  const docs = await docModel
+  const limit = pagination.limit ?? 100;
+  const fetched = await docModel
     .find({ ...filter, ...cursorFilter } as Record<string, unknown>)
     .sort({ createdAt: -1, _id: -1 })
-    .limit(pagination.limit ?? 100)
+    .limit(limit + 1)
     .session(options?.session ?? null)
     .exec();
+  const hasNextPage = fetched.length > limit;
+  const docs = hasNextPage ? fetched.slice(0, limit) : fetched;
   const items = await Promise.all(docs.map((doc) => convert(doc)));
-  if (docs.length > 0) {
-    const last = docs[docs.length - 1];
-    pagination.setCursor(
-      encodeCursor((last.get("createdAt") as Date).toISOString(), String(last._id)),
-    );
-  }
+  const last = docs[docs.length - 1];
+  pagination.setCursor(
+    hasNextPage && last
+      ? encodeCursor((last.get("createdAt") as Date).toISOString(), String(last._id))
+      : null,
+  );
   return PagingResult.create<V>({ pagination, items });
 }
 

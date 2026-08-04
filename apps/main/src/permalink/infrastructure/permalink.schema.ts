@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { PermalinkKind } from "@open-dpp/dto";
 import { Document } from "mongoose";
 
 export const PermalinkDocVersion = {
@@ -58,11 +59,25 @@ export class PermalinkDoc extends Document<string> {
 
 export const PermalinkSchema = SchemaFactory.createForClass(PermalinkDoc);
 
+/**
+ * One PRESENTATION permalink per config. gs1-links may also carry a config (that
+ * is what makes them redirect to the presentation view) and must not compete for
+ * the same slot — their uniqueness comes from the `uniqueProductIdentifierId`
+ * index below.
+ *
+ * `partialFilterExpression` supports no `$ne`, so this is an `$eq` filter: rows
+ * with no `kind` field at all (written before the field existed) fall outside the
+ * index. `PermalinkRepository.backfillPermalinkKind` stamps them before
+ * `syncIndexes` runs — keep that order.
+ */
 PermalinkSchema.index(
   { presentationConfigurationId: 1 },
   {
     unique: true,
-    partialFilterExpression: { presentationConfigurationId: { $type: "string" } },
+    partialFilterExpression: {
+      presentationConfigurationId: { $type: "string" },
+      kind: PermalinkKind.PRESENTATION,
+    },
   },
 );
 PermalinkSchema.index(

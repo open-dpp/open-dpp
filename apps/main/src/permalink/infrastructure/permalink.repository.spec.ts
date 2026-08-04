@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { getConnectionToken, getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";
 import type { Connection, Model } from "mongoose";
@@ -434,6 +434,7 @@ describe("PermalinkRepository", () => {
     );
     expect(index?.partialFilterExpression).toEqual({
       presentationConfigurationId: { $type: "string" },
+      kind: PermalinkKind.PRESENTATION,
     });
 
     // Two gs1-links (both presentationConfigurationId: null) must now coexist.
@@ -669,9 +670,37 @@ describe("PermalinkRepository", () => {
         pagination: { limit: 2, cursor: page1.pagination.cursor! },
       });
       expect(page2.items).toHaveLength(1);
+      // Partial last page — no successor, so the cursor is null rather than the
+      // last item's, which would make a contract-following consumer page forever.
+      expect(page2.pagination.cursor).toBeNull();
 
       const allIds = [...page1.items.map((p) => p.id), ...page2.items.map((p) => p.id)].sort();
       expect(allIds).toEqual([p1.id, p2.id, p3.id].sort());
+    });
+
+    it("returns a null cursor when the last page is exactly full", async () => {
+      const orgA = `org-exact-${randomUUID().slice(0, 8)}`;
+      const p1 = Permalink.create({
+        presentationConfigurationId: randomUUID(),
+        organizationId: orgA,
+      });
+      const p2 = Permalink.create({
+        presentationConfigurationId: randomUUID(),
+        organizationId: orgA,
+      });
+
+      await repository.save(p1);
+      await repository.save(p2);
+
+      const page1 = await repository.findAllByOrganizationId(orgA, { pagination: { limit: 1 } });
+      expect(page1.items).toHaveLength(1);
+      expect(page1.pagination.cursor).not.toBeNull();
+
+      const page2 = await repository.findAllByOrganizationId(orgA, {
+        pagination: { limit: 1, cursor: page1.pagination.cursor! },
+      });
+      expect(page2.items).toHaveLength(1);
+      expect(page2.pagination.cursor).toBeNull();
     });
 
     it("handles identical createdAt timestamps via _id tiebreaker (no overlap, no loss)", async () => {
@@ -784,6 +813,63 @@ describe("PermalinkRepository", () => {
 
     it("is a no-op on an empty collection", async () => {
       await expect(repository.onApplicationBootstrap()).resolves.not.toThrow();
+    });
+  });
+
+  describe("kind backfill and the presentation-scoped unique index", () => {
+    function permalinkCollection() {
+      return module.get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name)).collection;
+    }
+
+    /** A row written before `kind` existed: no field at all, schema 1.2.0. */
+    async function seedRowWithoutKind(presentationConfigurationId: string) {
+      const id = randomUUID();
+      await permalinkCollection().insertOne({
+        _id: id as any,
+        _schemaVersion: "1.2.0",
+        presentationConfigurationId,
+        organizationId: randomUUID(),
+        slug: null,
+        baseUrl: null,
+        publishedUrl: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+      return id;
+    }
+
+    it("stamps kind on rows written before the field existed", async () => {
+      const id = await seedRowWithoutKind(randomUUID());
+
+      await repository.onApplicationBootstrap();
+
+      const raw = await permalinkCollection().findOne({ _id: id as any });
+      expect(raw?.kind).toBe("presentation");
+    });
+
+    it("keeps enforcing one presentation permalink per config for backfilled rows", async () => {
+      const configId = randomUUID();
+      await seedRowWithoutKind(configId);
+      await repository.onApplicationBootstrap();
+
+      // Without the backfill this row would sit outside the kind-scoped partial
+      // index and the duplicate would be accepted.
+      await expect(
+        repository.save(Permalink.create({ presentationConfigurationId: configId })),
+      ).rejects.toThrow();
+    });
+
+    it("accepts a gs1-link on a config that already backs a presentation permalink", async () => {
+      const configId = randomUUID();
+      await repository.save(Permalink.create({ presentationConfigurationId: configId }));
+
+      const gs1Link = Permalink.create({
+        kind: PermalinkKind.GS1_LINK,
+        presentationConfigurationId: configId,
+        uniqueProductIdentifierId: randomUUID(),
+      });
+
+      await expect(repository.save(gs1Link)).resolves.toBeDefined();
     });
   });
 

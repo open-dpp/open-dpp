@@ -54,7 +54,19 @@ export function usePagination({
     return currentPage.value.cursor !== startCursor.value;
   });
 
+  // A null `paging_metadata.cursor` is the server saying "no next page"
+  // (`PagingMetadataDtoSchema`). Without it an exactly-full last page looks like
+  // it has a successor, and "next" would keep re-fetching the same page.
+  const isLastPage = ref(false);
+
+  const fetchPage = async (cursor: Cursor): Promise<PagingResult> => {
+    const response = await fetchCallback({ cursor: cursor ?? undefined, limit });
+    isLastPage.value = response.paging_metadata.cursor === null;
+    return response;
+  };
+
   const hasNext = computed(() => {
+    if (isLastPage.value) return false;
     return currentPage.value.itemCount === currentPage.value.to - currentPage.value.from + 1;
   });
 
@@ -95,13 +107,13 @@ export function usePagination({
       nextPage = pages.value[currentPageIndex.value]!;
     }
 
-    const response = await fetchCallback({
-      cursor: nextPage.cursor ?? undefined,
-      limit,
-    });
+    const response = await fetchPage(nextPage.cursor);
     nextPage.itemCount = response.result.length;
-    if (!findPageByCursor(response.paging_metadata.cursor)) {
-      addPage(response.paging_metadata.cursor);
+    const nextCursor = response.paging_metadata.cursor;
+    // Never fabricate a page from a null cursor — it would re-fetch from the
+    // start and show page 1's items under a later page number.
+    if (nextCursor !== null && !findPageByCursor(nextCursor)) {
+      addPage(nextCursor);
     }
     await updateCurrentPage();
 
@@ -115,19 +127,16 @@ export function usePagination({
     } else {
       previousPage = currentPage.value;
     }
-    await fetchCallback({ cursor: previousPage.cursor ?? undefined, limit });
+    await fetchPage(previousPage.cursor);
     await updateCurrentPage();
     return previousPage;
   };
 
   const reloadPage = async (page: Page) => {
-    const response = await fetchCallback({
-      cursor: page.cursor ?? undefined,
-      limit,
-    });
+    const response = await fetchPage(page.cursor);
     page.itemCount = response.result.length;
     const nextPage = findNextPage(page);
-    if (nextPage) {
+    if (nextPage && response.paging_metadata.cursor !== null) {
       nextPage.cursor = response.paging_metadata.cursor;
     }
   };

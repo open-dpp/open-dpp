@@ -223,12 +223,10 @@ describe("passportRepository", () => {
 
     let foundPassports = await passportRepository.findAllByOrganizationId(organizationId);
 
+    // Whole org fits in one page — no successor, so the cursor is null.
     expect(foundPassports).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(p1.createdAt.toISOString(), p1.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [p5, p4, p3, p1],
       }),
     );
@@ -241,10 +239,7 @@ describe("passportRepository", () => {
 
     expect(foundPassports).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(p5.createdAt.toISOString(), p5.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [p5],
       }),
     );
@@ -257,7 +252,7 @@ describe("passportRepository", () => {
     });
     expect(foundPassports).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
+        pagination: Pagination.create({}),
         items: [p3, p1],
       }),
     );
