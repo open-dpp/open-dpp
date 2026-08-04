@@ -172,7 +172,8 @@
     "german": "Deutsch"
   },
   "pagination": {
-    "footer": "Zeigt: {from} - {to}, Anzahl: {count}"
+    "footer": "Zeigt: {from} - {to}, Anzahl: {count}",
+    "footerWithTotal": "Zeigt: {from} - {to} von {total}"
   },
   "builder": {
     "repeater": {
