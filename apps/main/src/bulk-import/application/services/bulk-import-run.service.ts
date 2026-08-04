@@ -119,11 +119,10 @@ export class BulkImportRunService implements OnApplicationBootstrap {
       Pagination.create({ limit: undefined }),
     );
     // Only unresolved rows: on a resume, already-created/updated/failed rows must stay untouched.
-    const pendingItems = pagingResult.items.filter(
-      (item) => item.status === BulkImportRunItemStatusDto.Pending,
+    const pendingItems = run.startOrResume(
+      pagingResult.items.filter((item) => item.status === BulkImportRunItemStatusDto.Pending),
     );
 
-    run.start();
     await this.bulkImportRunRepository.save(run);
 
     let processedCount = 0;

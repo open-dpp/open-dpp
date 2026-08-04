@@ -13,6 +13,7 @@ import {
 } from "../../identity/organizations/domain/member-role.enum";
 import { UserRoleEnum, type UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
+import { BulkImportRunItem } from "./bulk-import-run-item";
 
 const DateTimeSchema = z.union([z.iso.datetime(), z.date()]);
 
@@ -133,12 +134,23 @@ export class BulkImportRun implements IPersistable {
     return this._succeededCount + this._failedCount;
   }
 
-  start(): void {
+  startOrResume(items: BulkImportRunItem[]): BulkImportRunItem[] {
     if (this._status !== BulkImportRunStatusDto.Pending) {
-      return;
+      return this.resume(items);
     }
     this._status = BulkImportRunStatusDto.Running;
     this._startedAt = DateTime.now();
+    return items;
+  }
+
+  private resume(items: BulkImportRunItem[]): BulkImportRunItem[] {
+    const pendingItems = items.filter((item) => item.pending());
+    if (this.processedCount + pendingItems.length !== this.totalCount) {
+      const failedItems = items.filter((item) => item.failed());
+      this._failedCount = failedItems.length;
+      this._succeededCount = this.totalCount - failedItems.length - pendingItems.length;
+    }
+    return pendingItems;
   }
 
   recordItemOutcome(succeeded: boolean): void {
@@ -151,12 +163,17 @@ export class BulkImportRun implements IPersistable {
 
   complete(): void {
     this._status =
-      this._failedCount > 0 ? BulkImportRunStatusDto.CompletedWithErrors : BulkImportRunStatusDto.Completed;
+      this._failedCount > 0
+        ? BulkImportRunStatusDto.CompletedWithErrors
+        : BulkImportRunStatusDto.Completed;
     this._finishedAt = DateTime.now();
   }
 
   markInterrupted(): void {
-    if (this._status !== BulkImportRunStatusDto.Pending && this._status !== BulkImportRunStatusDto.Running) {
+    if (
+      this._status !== BulkImportRunStatusDto.Pending &&
+      this._status !== BulkImportRunStatusDto.Running
+    ) {
       return;
     }
     this._status = BulkImportRunStatusDto.Interrupted;
@@ -164,6 +181,9 @@ export class BulkImportRun implements IPersistable {
   }
 
   isRunning(): boolean {
-    return this._status === BulkImportRunStatusDto.Pending || this._status === BulkImportRunStatusDto.Running;
+    return (
+      this._status === BulkImportRunStatusDto.Pending ||
+      this._status === BulkImportRunStatusDto.Running
+    );
   }
 }

@@ -50,7 +50,8 @@ describe("bulkImportRunRepository", () => {
 
   it("saves and finds a run, preserving progress", async () => {
     const run = buildRun();
-    run.start();
+
+    run.startOrResume([]);
     run.recordItemOutcome(true);
     run.recordItemOutcome(false);
     await repository.save(run);
@@ -75,23 +76,24 @@ describe("bulkImportRunRepository", () => {
     await repository.save(r3);
     await repository.save(otherConfigRun);
 
-    const page = await repository.findAllByBulkImportConfigId(
-      bulkImportConfigId,
-      { pagination: Pagination.create({ limit: 2 }) },
-    );
+    const page = await repository.findAllByBulkImportConfigId(bulkImportConfigId, {
+      pagination: Pagination.create({ limit: 2 }),
+    });
     expect(page.items.map((r) => r.id)).toEqual([r3.id, r2.id]);
     expect(page.pagination.cursor).toEqual(encodeCursor(r2.createdAt.toISOString(), r2.id));
 
-    const nextPage = await repository.findAllByBulkImportConfigId(bulkImportConfigId, { pagination: page.pagination });
+    const nextPage = await repository.findAllByBulkImportConfigId(bulkImportConfigId, {
+      pagination: page.pagination,
+    });
     expect(nextPage.items.map((r) => r.id)).toEqual([r1.id]);
   });
 
   it("finds runs still pending or running", async () => {
     const running = buildRun();
-    running.start();
+    running.startOrResume([]);
     const pending = buildRun();
     const completed = buildRun();
-    completed.start();
+    completed.startOrResume([]);
     completed.complete();
 
     await repository.save(running);
@@ -126,27 +128,27 @@ describe("bulkImportRunRepository", () => {
     const bulkImportConfigId = randomUUID();
     const pending = buildRun({ bulkImportConfigId });
     const running = buildRun({ bulkImportConfigId });
-    running.start();
+    running.startOrResume([]);
     const completed = buildRun({ bulkImportConfigId });
-    completed.start();
+    completed.startOrResume([]);
     completed.complete();
 
     await repository.save(pending);
     await repository.save(running);
     await repository.save(completed);
 
-    const activeRuns = await repository.findAllByBulkImportConfigId(
-      bulkImportConfigId,
-      { filter: { status: [BulkImportRunStatusDto.Pending, BulkImportRunStatusDto.Running] } },
-    );
+    const activeRuns = await repository.findAllByBulkImportConfigId(bulkImportConfigId, {
+      filter: { status: [BulkImportRunStatusDto.Pending, BulkImportRunStatusDto.Running] },
+    });
     expect(activeRuns.items.length).toBe(2);
-    expect(activeRuns.items.map((r) => r.id)).toEqual(expect.arrayContaining([pending.id, running.id]));
+    expect(activeRuns.items.map((r) => r.id)).toEqual(
+      expect.arrayContaining([pending.id, running.id]),
+    );
     expect(activeRuns.items.map((r) => r.id)).not.toContain(completed.id);
 
-    const completedRuns = await repository.findAllByBulkImportConfigId(
-      bulkImportConfigId,
-      { filter: { status: [BulkImportRunStatusDto.Completed] } },
-    );
+    const completedRuns = await repository.findAllByBulkImportConfigId(bulkImportConfigId, {
+      filter: { status: [BulkImportRunStatusDto.Completed] },
+    });
     expect(completedRuns.items.length).toBe(1);
     expect(completedRuns.items[0].id).toBe(completed.id);
 

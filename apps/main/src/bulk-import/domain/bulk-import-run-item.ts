@@ -83,6 +83,14 @@ export class BulkImportRunItem implements IPersistable {
     return this._error;
   }
 
+  failed(): boolean {
+    return this._status === BulkImportRunItemStatusDto.Failed;
+  }
+
+  pending(): boolean {
+    return this._status === BulkImportRunItemStatusDto.Pending;
+  }
+
   markCreated(passportId: string): void {
     this._status = BulkImportRunItemStatusDto.Created;
     this._passportId = passportId;

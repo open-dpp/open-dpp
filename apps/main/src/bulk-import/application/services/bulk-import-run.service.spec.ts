@@ -536,7 +536,7 @@ describe("BulkImportRunService", () => {
       userId: randomUUID(),
       totalCount: 1,
     });
-    run.start();
+    run.startOrResume([]);
     runRepository.findAllRunning.mockResolvedValue([run]);
     const processRunSpy = jest
       .spyOn(service as any, "processRun")
@@ -624,7 +624,7 @@ describe("BulkImportRunService", () => {
         userId: randomUUID(),
         totalCount: 100,
       });
-      run.start();
+      run.startOrResume([]);
       runRepository.findOneOrFail.mockResolvedValue(run);
       runRepository.save.mockResolvedValue(run);
 
@@ -643,7 +643,7 @@ describe("BulkImportRunService", () => {
         userId: randomUUID(),
         totalCount: 1,
       });
-      run.start();
+      run.startOrResume([]);
       run.recordItemOutcome(true);
       run.complete();
       runRepository.findOneOrFail.mockResolvedValue(run);
@@ -663,7 +663,7 @@ describe("BulkImportRunService", () => {
         userId: randomUUID(),
         totalCount: 1,
       });
-      run.start();
+      run.startOrResume([]);
       runRepository.findOneOrFail.mockResolvedValue(run);
 
       await expect(service.interruptRun(run.id, "my-org")).rejects.toThrow(ForbiddenException);
