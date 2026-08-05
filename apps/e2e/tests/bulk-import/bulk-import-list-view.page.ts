@@ -16,7 +16,7 @@ export class BulkImportListViewPage {
   }
 
   async isLoaded() {
-    await expect(this.page.getByText("Bulk-Import").first()).toBeVisible();
+    await expect(this.page.getByText("Massenimport").first()).toBeVisible();
   }
 
   async editBulkImportConfig(configName: string): Promise<EditConfigDialog> {

@@ -127,7 +127,7 @@ describe("passportService", () => {
     expect(await passportRepository.findOne(passport.id)).toBeDefined();
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeDefined();

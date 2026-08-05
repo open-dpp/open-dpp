@@ -5,9 +5,6 @@ import { getOrganizationId } from "../helpers/organizations";
 import { createBulkImportConfig, deleteBulkImportConfig } from "../api/bulk-import";
 import { BulkImportListViewPage } from "./bulk-import-list-view.page";
 
-const BULK_IMPORT_URL = (orgaId: string) =>
-  `${EnvConfig.OPEN_DPP_URL}/organizations/${orgaId}/integrations/bulk-import`;
-
 test.use({ storageState: "playwright/.auth/user.json" });
 
 test("Bulk import config edit dialog opens and can edit configuration name", async ({
@@ -67,7 +64,6 @@ test("Bulk import config edit dialog validates required fields", async ({ page, 
   const bulkImportListViewPage = new BulkImportListViewPage(page, orgaId);
 
   await bulkImportListViewPage.goto();
-  await expect(page.getByText("Bulk-Import").first()).toBeVisible();
 
   // Open edit dialog
   const dialog = await bulkImportListViewPage.editBulkImportConfig(configName);

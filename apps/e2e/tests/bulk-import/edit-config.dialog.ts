@@ -32,7 +32,7 @@ export class EditConfigDialog {
     await this.dialog.getByRole("button", { name: "Speichern" }).click();
     // Wait for success notification
     await expect(
-      this.page.getByText("Bulk-Import-Konfiguration erfolgreich aktualisiert."),
+      this.page.getByText("Massenimport Konfiguration erfolgreich aktualisiert."),
     ).toBeVisible();
   }
 }
