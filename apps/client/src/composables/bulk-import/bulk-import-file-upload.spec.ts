@@ -47,7 +47,8 @@ describe("useBulkImportFileUpload", () => {
       data: { rows: mockRows },
     });
 
-    const { onFileSelect, parsedRows, selectedFile, fileError, firstRow, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, parsedRows, selectedFile, fileError, firstRow, isLoading } =
+      useBulkImportFileUpload();
 
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
@@ -69,7 +70,8 @@ describe("useBulkImportFileUpload", () => {
   it("handles server validation errors", async () => {
     mocks.parseFile.mockRejectedValue(new Error("Validation failed"));
 
-    const { onFileSelect, parsedRows, selectedFile, fileError, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, parsedRows, selectedFile, fileError, isLoading } =
+      useBulkImportFileUpload();
 
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
@@ -85,7 +87,8 @@ describe("useBulkImportFileUpload", () => {
       data: { rows: [] },
     });
 
-    const { onFileSelect, parsedRows, selectedFile, fileError, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, parsedRows, selectedFile, fileError, isLoading } =
+      useBulkImportFileUpload();
 
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
@@ -150,7 +153,8 @@ describe("useBulkImportFileUpload", () => {
       data: { rows: [{ sku: "a" }] },
     });
 
-    const { onFileSelect, reset, parsedRows, selectedFile, fileError, isLoading } = useBulkImportFileUpload();
+    const { onFileSelect, reset, parsedRows, selectedFile, fileError, isLoading } =
+      useBulkImportFileUpload();
     const file = createMockFile();
     await onFileSelect(selectEventFor(file));
 

@@ -66,7 +66,9 @@ export class BulkImportRunRepository {
       mongooseQuery.limit(tmpPagination.limit ?? 100);
     }
     const docs = await mongooseQuery.exec();
-    const runs = await Promise.all(docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))));
+    const runs = await Promise.all(
+      docs.map((doc) => convertToDomain(doc, this.fromPlain.bind(this))),
+    );
     if (runs.length > 0) {
       const lastRun = runs[runs.length - 1];
       tmpPagination.setCursor(encodeCursor(lastRun.createdAt.toISOString(), lastRun.id));

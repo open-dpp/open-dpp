@@ -1,4 +1,10 @@
-import { decodeCursor, decodeRowIndexCursor, encodeCursor, encodeRowIndexCursor, Pagination } from "./pagination";
+import {
+  decodeCursor,
+  decodeRowIndexCursor,
+  encodeCursor,
+  encodeRowIndexCursor,
+  Pagination,
+} from "./pagination";
 
 describe("pagination", () => {
   const pages = ["1", "2", "3", "4"];

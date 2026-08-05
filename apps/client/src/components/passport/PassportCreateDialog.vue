@@ -58,10 +58,7 @@ defineExpose({
       <Button type="button" severity="secondary" @click="close">
         {{ t("common.cancel") }}
       </Button>
-      <Button
-        :disabled="mode === 'template' && template === null"
-        @click="newPassport"
-      >
+      <Button :disabled="mode === 'template' && template === null" @click="newPassport">
         {{ t("common.create") }}
       </Button>
     </div>

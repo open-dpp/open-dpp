@@ -5,14 +5,20 @@ import { PassportsModule } from "../passports/passports.module";
 import { TemplatesModule } from "../templates/templates.module";
 import { BulkImportConfigService } from "./application/services/bulk-import-config.service";
 import { BulkImportRunService } from "./application/services/bulk-import-run.service";
-import { BulkImportConfigDoc, BulkImportConfigSchema } from "./infrastructure/bulk-import-config.schema";
+import {
+  BulkImportConfigDoc,
+  BulkImportConfigSchema,
+} from "./infrastructure/bulk-import-config.schema";
 import { BulkImportConfigRepository } from "./infrastructure/bulk-import-config.repository";
 import {
   BulkImportProductLinkDoc,
   BulkImportProductLinkSchema,
 } from "./infrastructure/bulk-import-product-link.schema";
 import { BulkImportProductLinkRepository } from "./infrastructure/bulk-import-product-link.repository";
-import { BulkImportRunItemDoc, BulkImportRunItemSchema } from "./infrastructure/bulk-import-run-item.schema";
+import {
+  BulkImportRunItemDoc,
+  BulkImportRunItemSchema,
+} from "./infrastructure/bulk-import-run-item.schema";
 import { BulkImportRunItemRepository } from "./infrastructure/bulk-import-run-item.repository";
 import { BulkImportRunDoc, BulkImportRunSchema } from "./infrastructure/bulk-import-run.schema";
 import { BulkImportRunRepository } from "./infrastructure/bulk-import-run.repository";
@@ -33,7 +39,11 @@ import { BulkImportFileParserController } from "./presentation/bulk-import-file-
     forwardRef(() => PassportsModule),
     forwardRef(() => TemplatesModule),
   ],
-  controllers: [BulkImportConfigController, BulkImportRunController, BulkImportFileParserController],
+  controllers: [
+    BulkImportConfigController,
+    BulkImportRunController,
+    BulkImportFileParserController,
+  ],
   providers: [
     BulkImportConfigRepository,
     BulkImportRunRepository,

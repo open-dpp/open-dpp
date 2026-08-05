@@ -96,9 +96,10 @@ export function useBulkImportWizard(deps: UseBulkImportWizardDeps) {
         configId = created.id;
       }
 
-      const run = existingConfig.value && fileUpload.selectedFile.value
-        ? await runRepo.triggerRunUpload(configId, fileUpload.selectedFile.value)
-        : await runRepo.triggerRun(configId, fileUpload.parsedRows.value);
+      const run =
+        existingConfig.value && fileUpload.selectedFile.value
+          ? await runRepo.triggerRunUpload(configId, fileUpload.selectedFile.value)
+          : await runRepo.triggerRun(configId, fileUpload.parsedRows.value);
       if (run) close();
       return run;
     } finally {

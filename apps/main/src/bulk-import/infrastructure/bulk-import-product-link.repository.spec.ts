@@ -7,7 +7,10 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { BulkImportProductLink } from "../domain/bulk-import-product-link";
 import { BulkImportProductLinkRepository } from "./bulk-import-product-link.repository";
-import { BulkImportProductLinkDoc, BulkImportProductLinkSchema } from "./bulk-import-product-link.schema";
+import {
+  BulkImportProductLinkDoc,
+  BulkImportProductLinkSchema,
+} from "./bulk-import-product-link.schema";
 
 describe("bulkImportProductLinkRepository", () => {
   let repository: BulkImportProductLinkRepository;

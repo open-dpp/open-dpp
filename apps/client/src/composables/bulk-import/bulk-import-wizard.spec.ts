@@ -78,6 +78,7 @@ function buildDeps(): UseBulkImportWizardDeps & {
       triggerRunUpload,
       fetchRun: vi.fn(),
       fetchRunItems: vi.fn(),
+      interruptRun: vi.fn(),
     },
     createConfig,
     triggerRun,

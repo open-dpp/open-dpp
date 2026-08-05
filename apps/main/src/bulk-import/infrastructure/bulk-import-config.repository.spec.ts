@@ -26,7 +26,9 @@ describe("bulkImportConfigRepository", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([{ name: BulkImportConfigDoc.name, schema: BulkImportConfigSchema }]),
+        MongooseModule.forFeature([
+          { name: BulkImportConfigDoc.name, schema: BulkImportConfigSchema },
+        ]),
       ],
       providers: [BulkImportConfigRepository],
     }).compile();
