@@ -39,8 +39,32 @@ export class BulkImportRunDetailPage {
     return this.statTile("Gesamt").locator("span.text-4xl");
   }
 
+  private async numberFrom(locator: Locator): Promise<number> {
+    return Number(await locator.textContent());
+  }
+
+  async succeededCount(): Promise<number> {
+    return this.numberFrom(this.succeededValue());
+  }
+
+  async failedCount(): Promise<number> {
+    return this.numberFrom(this.failedValue());
+  }
+
+  async totalCount(): Promise<number> {
+    return this.numberFrom(this.totalValue());
+  }
+
   async refresh() {
     await this.page.getByRole("button", { name: "Aktualisieren" }).click();
+  }
+
+  interruptButton(): Locator {
+    return this.page.getByRole("button", { name: "Unterbrechen" });
+  }
+
+  async interrupt() {
+    await this.interruptButton().click();
   }
 
   private itemsTable(): Locator {
