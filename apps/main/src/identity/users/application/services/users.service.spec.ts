@@ -79,6 +79,39 @@ describe("UsersService", () => {
     );
   });
 
+  describe("resendPasswordResetEmail", () => {
+    it("resends the password-reset email for the target user", async () => {
+      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.resendPasswordResetEmail(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockAuth.api.requestPasswordReset).toHaveBeenCalledWith({
+        body: { email: user.email, redirectTo: "/password-reset" },
+      });
+      expect(result).toBe(user);
+    });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.resendPasswordResetEmail("unknown")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+      expect(mockAuth.api.requestPasswordReset).not.toHaveBeenCalled();
+    });
+
+    it("propagates the error when the password-reset email fails to send", async () => {
+      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      const smtpError = new Error("smtp down");
+      mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
+
+      await expect(service.resendPasswordResetEmail(user.id)).rejects.toThrow(smtpError);
+    });
+  });
+
   it("should find one by id", async () => {
     mockRepo.findOneById.mockResolvedValue({ id: "1" });
     const result = await service.findOne("1");

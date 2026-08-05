@@ -478,6 +478,11 @@
         "errorNotFound": "Dieser Benutzer existiert nicht mehr.",
         "error": "Rolle konnte nicht geändert werden. Bitte erneut versuchen."
       },
+      "resendPasswordReset": {
+        "action": "Passwort-Zurücksetzen-E-Mail erneut senden",
+        "success": "Passwort-Zurücksetzen-E-Mail wurde gesendet.",
+        "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
       "instanceSettings": {
         "title": "Instanz-Einstellungen",
         "signupEnabled": {

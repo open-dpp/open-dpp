@@ -16,6 +16,7 @@ import type { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../../database/config";
+import { BaseEmailTypes } from "../../../email/domain/base-email";
 import { EmailService } from "../../../email/email.service";
 import { AuthModule } from "../../auth/auth.module";
 import { AUTH } from "../../auth/auth.provider";
@@ -39,6 +40,7 @@ describe("UsersController", () => {
   let app: INestApplication;
   let moduleRef: TestingModule;
   let usersRepository: UsersRepository;
+  let usersService: UsersService;
   let emailSendMock: jest.Mock;
   let connection: Connection;
   const betterAuthHelper = new BetterAuthHelper();
@@ -70,7 +72,8 @@ describe("UsersController", () => {
       .useValue({ send: emailSendMock })
       .compile();
 
-    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
+    usersService = moduleRef.get<UsersService>(UsersService);
+    betterAuthHelper.init(usersService, moduleRef.get<Auth>(AUTH));
     usersRepository = moduleRef.get<UsersRepository>(UsersRepository);
     connection = moduleRef.get<Connection>(getConnectionToken());
 
@@ -187,6 +190,55 @@ describe("UsersController", () => {
 
       const persisted = await usersRepository.findOneById(target.id);
       expect(persisted!.role).toBe(UserRole.ADMIN);
+    });
+  });
+
+  describe("POST /users/:id/resend-password-reset", () => {
+    it("returns 403 when caller is not an admin", async () => {
+      const { user } = await betterAuthHelper.createUser();
+
+      const pending = await usersService.createUser(`${randomUUID()}@test.test`, "Jane", "Doe");
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${pending.id}/resend-password-reset`)
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(403);
+    });
+
+    it("returns 404 when the target user does not exist", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${new Types.ObjectId().toString()}/resend-password-reset`)
+        .set("Cookie", adminCookie);
+
+      expect(response.status).toBe(404);
+    });
+
+    it("resends the password-reset email for a user", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+      const pendingEmail = `${randomUUID()}@test.test`;
+      const pending = await usersService.createUser(pendingEmail, "Jane", "Doe");
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${pending.id}/resend-password-reset`)
+        .set("Cookie", adminCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({ id: pending.id, email: pendingEmail }),
+      );
+
+      const resetCall = (emailSendMock.mock.calls as unknown[][]).find(
+        (args) => (args[0] as { type?: string } | undefined)?.type === BaseEmailTypes.PasswordReset,
+      );
+      expect(resetCall).toBeDefined();
+      expect((resetCall![0] as { to: string }).to).toBe(pendingEmail);
     });
   });
 

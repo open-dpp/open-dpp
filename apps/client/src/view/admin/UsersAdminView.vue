@@ -1,16 +1,21 @@
 <script lang="ts" setup>
 import type { UserWithRole } from "better-auth/plugins";
 import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
 import AdminUsersList from "../../components/admin/AdminUsersList.vue";
 import ChangeUserRoleDialog from "../../components/admin/ChangeUserRoleDialog.vue";
 import InviteToOrganizationDialog from "../../components/admin/InviteToOrganizationDialog.vue";
 import InviteUserDialog from "../../components/admin/InviteUserDialog.vue";
+import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { ModalType, useLayoutStore } from "../../stores/layout.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
 
+const { t } = useI18n();
 const layoutStore = useLayoutStore();
 const errorHandlingStore = useErrorHandlingStore();
+const notificationStore = useNotificationStore();
 
 const session = authClient.useSession();
 const currentUserRole = computed(() => session.value.data?.user.role ?? "user");
@@ -63,6 +68,18 @@ function onChangeRoleClose() {
   changeRoleUser.value = null;
 }
 
+async function onResendPasswordReset(userId: string) {
+  try {
+    await apiClient.dpp.users.resendPasswordReset(userId);
+    notificationStore.addSuccessNotification(t("organizations.admin.resendPasswordReset.success"));
+  } catch (error) {
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.admin.resendPasswordReset.error"),
+      error,
+    );
+  }
+}
+
 onMounted(async () => {
   await fetchUsers();
 });
@@ -96,6 +113,7 @@ onMounted(async () => {
         @add="onAdd"
         @invite-to-org="onInviteToOrg"
         @change-role="onChangeRole"
+        @resend-password-reset="onResendPasswordReset"
       />
     </div>
   </section>

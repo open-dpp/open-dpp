@@ -478,6 +478,11 @@
         "errorNotFound": "This user no longer exists.",
         "error": "Could not change role. Please try again."
       },
+      "resendPasswordReset": {
+        "action": "Resend password reset email",
+        "success": "Password reset email sent.",
+        "error": "Could not send password reset email. Please try again."
+      },
       "instanceSettings": {
         "title": "Instance Settings",
         "signupEnabled": {

@@ -16,6 +16,12 @@ export class UsersService {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
+  private async sendPasswordResetEmail(email: string): Promise<void> {
+    await this.auth.api.requestPasswordReset({
+      body: { email, redirectTo: "/password-reset" },
+    });
+  }
+
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
     const user = User.create({
       email,
@@ -28,9 +34,7 @@ export class UsersService {
       throw new Error(`Failed to save user with email ${email}`);
     }
     try {
-      await this.auth.api.requestPasswordReset({
-        body: { email, redirectTo: "/password-reset" },
-      });
+      await this.sendPasswordResetEmail(email);
     } catch (error) {
       this.logger.error(
         `User ${saved.id} was created but the password-reset email failed to send. The user cannot log in until an admin re-triggers the reset email.`,
@@ -38,6 +42,12 @@ export class UsersService {
       );
     }
     return saved;
+  }
+
+  async resendPasswordResetEmail(id: string): Promise<User> {
+    const user = await this.findOneOrFail(id);
+    await this.sendPasswordResetEmail(user.email);
+    return user;
   }
 
   async findOne(id: string) {

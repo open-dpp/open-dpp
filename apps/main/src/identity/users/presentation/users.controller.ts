@@ -126,6 +126,14 @@ export class UsersController {
     return UserMapper.toDto(user);
   }
 
+  @Post(":id/resend-password-reset")
+  @HttpCode(HttpStatus.OK)
+  @UserHasRole([UserRole.ADMIN])
+  async resendPasswordReset(@Param("id") id: string): Promise<UserDto> {
+    const user = await this.usersService.resendPasswordResetEmail(id);
+    return UserMapper.toDto(user);
+  }
+
   @Get("me/invitations")
   async getInvitations(
     @UserEmailDecorator() email: string,

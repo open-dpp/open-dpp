@@ -51,6 +51,10 @@ export class UsersNamespace {
     return this.axiosInstance.patch<UserDto>(`/users/${id}/role`, data);
   }
 
+  public async resendPasswordReset(id: string) {
+    return this.axiosInstance.post<UserDto>(`/users/${id}/resend-password-reset`);
+  }
+
   public async getInvitations(params?: { status: InvitationStatusDtoType }) {
     return this.axiosInstance.get<InvitationResponseDto[]>("/users/me/invitations", { params });
   }

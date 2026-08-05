@@ -18,6 +18,7 @@ const emits = defineEmits<{
   (e: "add"): void;
   (e: "inviteToOrg", email: string): void;
   (e: "changeRole", userId: string, email: string, role: string): void;
+  (e: "resendPasswordReset", userId: string, email: string): void;
 }>();
 
 const { t } = useI18n();
@@ -64,6 +65,11 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
       label: t("organizations.admin.changeRoleDialog.title"),
       icon: "pi pi-shield",
       command: () => emits("changeRole", row.id, row.email, row.role),
+    });
+    items.push({
+      label: t("organizations.admin.resendPasswordReset.action"),
+      icon: "pi pi-envelope",
+      command: () => emits("resendPasswordReset", row.id, row.email),
     });
   }
   rowMenuItems.value = items;
