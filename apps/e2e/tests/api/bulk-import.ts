@@ -34,3 +34,18 @@ export async function createBulkImportConfig(
   expect(response.ok()).toBeTruthy();
   return await response.json();
 }
+
+export async function createBulkImportRun(
+  request: any,
+  orgaId: string,
+  configId: string,
+  rows: Record<string, unknown>[],
+) {
+  const headers = { [ORGANIZATION_ID_HEADER]: orgaId };
+  const response = await request.post(`${ApiBase}/bulk-import/configs/${configId}/runs`, {
+    data: { rows },
+    headers,
+  });
+  expect(response.ok()).toBeTruthy();
+  return await response.json();
+}
