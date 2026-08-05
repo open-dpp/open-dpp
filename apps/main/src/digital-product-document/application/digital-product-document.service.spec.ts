@@ -53,6 +53,7 @@ import { PropertyValueChanged } from "../../activity-history/domain/change-event
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
+import { TransactionService } from "../../database/transaction.service";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -87,6 +88,7 @@ describe("DigitalProductDocumentService", () => {
         PresentationConfigurationsModule,
       ],
       providers: [
+        TransactionService,
         EnvironmentService,
         PassportRepository,
         UniqueProductIdentifierRepository,

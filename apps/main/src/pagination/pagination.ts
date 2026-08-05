@@ -37,3 +37,13 @@ export function decodeCursor(cursor: string) {
   const json = Buffer.from(cursor, "base64url").toString("utf8");
   return JSON.parse(json);
 }
+
+export function encodeRowIndexCursor(rowIndex: number, id: string): string {
+  const payload = JSON.stringify({ rowIndex, id });
+  return Buffer.from(payload).toString("base64url");
+}
+
+export function decodeRowIndexCursor(cursor: string): { rowIndex: number; id: string } {
+  const json = Buffer.from(cursor, "base64url").toString("utf8");
+  return JSON.parse(json);
+}

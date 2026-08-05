@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { http, HttpResponse } from "msw";
 import { activeOrganization } from "./organization";
@@ -6,8 +5,8 @@ import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
 import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
+import { paginationParams } from "./pagination";
 
-export const paginationParams = { limit: 10, cursor: randomUUID() };
 export const passport1 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
 export const passport2 = passportsPlainFactory.build({ organizationId: activeOrganization.id });
 
