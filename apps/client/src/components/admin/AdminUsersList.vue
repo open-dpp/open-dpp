@@ -19,6 +19,7 @@ const emits = defineEmits<{
   (e: "inviteToOrg", email: string): void;
   (e: "changeRole", userId: string, email: string, role: string): void;
   (e: "resendPasswordReset", userId: string, email: string): void;
+  (e: "resendVerificationEmail", userId: string, email: string): void;
 }>();
 
 const { t } = useI18n();
@@ -71,6 +72,13 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
       icon: "pi pi-envelope",
       command: () => emits("resendPasswordReset", row.id, row.email),
     });
+    if (!row.emailVerified) {
+      items.push({
+        label: t("organizations.admin.resendVerificationEmail.action"),
+        icon: "pi pi-verified",
+        command: () => emits("resendVerificationEmail", row.id, row.email),
+      });
+    }
   }
   rowMenuItems.value = items;
   rowMenuRef.value.toggle(event);

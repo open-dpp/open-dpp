@@ -8,11 +8,13 @@ import { useConfirm } from "primevue/useconfirm";
 import { computed, nextTick, ref, watch, type ComponentPublicInstance } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { useUsersRepo } from "../../composables/users-repo.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useNotificationStore } from "../../stores/notification.ts";
 
 const props = defineProps<{
   email: string;
+  emailVerified: boolean;
   pendingEmailChange: { newEmail: string; requestedAt: Date } | null;
   loaded: boolean;
   hydrationFailed: boolean;
@@ -25,6 +27,7 @@ const emit = defineEmits<{
 const { t, locale } = useI18n();
 const notificationStore = useNotificationStore();
 const confirm = useConfirm();
+const usersRepo = useUsersRepo();
 
 const newEmailSchema = z.email();
 
@@ -154,6 +157,18 @@ async function cancelPending() {
   }
 }
 
+const verificationSubmitting = ref(false);
+
+async function resendVerification() {
+  if (verificationSubmitting.value) return;
+  verificationSubmitting.value = true;
+  try {
+    await usersRepo.resendVerificationEmail();
+  } finally {
+    verificationSubmitting.value = false;
+  }
+}
+
 function handleEmailKeydown(event: KeyboardEvent) {
   if (event.key === "Escape") {
     event.preventDefault();
@@ -203,6 +218,14 @@ function handleEmailKeydown(event: KeyboardEvent) {
         >
           {{ t("user.emailPending", { email: pendingEmail }) }}
         </span>
+        <span
+          v-else-if="!emailVerified"
+          class="border-status-warning/20 bg-status-warning/10 text-status-warning inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider wrap-break-word"
+          role="status"
+          aria-live="polite"
+        >
+          {{ t("user.emailNotVerified") }}
+        </span>
         <span v-if="pendingRequestedLabel" class="text-ink-muted text-xs leading-normal">
           {{ pendingRequestedLabel }}
         </span>
@@ -220,18 +243,31 @@ function handleEmailKeydown(event: KeyboardEvent) {
           data-testid="cancel-pending"
           @click="confirmCancelPending"
         />
-        <Button
-          v-else-if="!emailPanelOpen"
-          ref="changeEmailButtonRef"
-          type="button"
-          severity="secondary"
-          size="small"
-          :label="t('user.changeEmail')"
-          aria-controls="profile-email-panel"
-          :aria-expanded="emailPanelOpen"
-          data-testid="change-email"
-          @click="openEmailPanel"
-        />
+        <template v-else>
+          <Button
+            v-if="!emailVerified"
+            type="button"
+            severity="secondary"
+            size="small"
+            :label="t('user.resendVerificationEmail.action')"
+            :loading="verificationSubmitting"
+            :disabled="verificationSubmitting"
+            data-testid="resend-verification"
+            @click="resendVerification"
+          />
+          <Button
+            v-if="!emailPanelOpen"
+            ref="changeEmailButtonRef"
+            type="button"
+            severity="secondary"
+            size="small"
+            :label="t('user.changeEmail')"
+            aria-controls="profile-email-panel"
+            :aria-expanded="emailPanelOpen"
+            data-testid="change-email"
+            @click="openEmailPanel"
+          />
+        </template>
       </div>
     </div>
 

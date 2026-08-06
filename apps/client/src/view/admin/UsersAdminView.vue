@@ -80,6 +80,20 @@ async function onResendPasswordReset(userId: string) {
   }
 }
 
+async function onResendVerificationEmail(userId: string) {
+  try {
+    await apiClient.dpp.users.resendVerificationEmail(userId);
+    notificationStore.addSuccessNotification(
+      t("organizations.admin.resendVerificationEmail.success"),
+    );
+  } catch (error) {
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.admin.resendVerificationEmail.error"),
+      error,
+    );
+  }
+}
+
 onMounted(async () => {
   await fetchUsers();
 });
@@ -114,6 +128,7 @@ onMounted(async () => {
         @invite-to-org="onInviteToOrg"
         @change-role="onChangeRole"
         @resend-password-reset="onResendPasswordReset"
+        @resend-verification-email="onResendVerificationEmail"
       />
     </div>
   </section>

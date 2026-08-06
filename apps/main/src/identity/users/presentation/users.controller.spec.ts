@@ -33,6 +33,7 @@ import { UsersService } from "../application/services/users.service";
 import { UserRole } from "../domain/user-role.enum";
 import { UsersRepository } from "../infrastructure/adapters/users.repository";
 import { UsersModule } from "../users.module";
+import { z } from "zod/v4";
 
 const TEST_PASSWORD = "password1234";
 
@@ -193,6 +194,15 @@ describe("UsersController", () => {
     });
   });
 
+  const EmailSendArgumentSchema = z.looseObject({
+    to: z.string(),
+    type: z.string().optional(),
+  });
+
+  const EmailSendCallSchema = z.tuple([EmailSendArgumentSchema]).rest(z.unknown());
+
+  const EmailSendCallsSchema = z.array(EmailSendCallSchema);
+
   describe("POST /users/:id/resend-password-reset", () => {
     it("returns 403 when caller is not an admin", async () => {
       const { user } = await betterAuthHelper.createUser();
@@ -233,12 +243,136 @@ describe("UsersController", () => {
       expect(response.body).toEqual(
         expect.objectContaining({ id: pending.id, email: pendingEmail }),
       );
+      const emailSendCalls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
 
-      const resetCall = (emailSendMock.mock.calls as unknown[][]).find(
-        (args) => (args[0] as { type?: string } | undefined)?.type === BaseEmailTypes.PasswordReset,
-      );
+      const resetCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.PasswordReset);
+
       expect(resetCall).toBeDefined();
-      expect((resetCall![0] as { to: string }).to).toBe(pendingEmail);
+      expect(resetCall![0].to).toBe(pendingEmail);
+    });
+  });
+
+  describe("POST /users/:id/resend-verification-email", () => {
+    it("returns 403 when caller is not an admin", async () => {
+      const { user } = await betterAuthHelper.createUser();
+
+      const pending = await usersService.createUser(`${randomUUID()}@test.test`, "Jane", "Doe");
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${pending.id}/resend-verification-email`)
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(403);
+    });
+
+    it("returns 404 when the target user does not exist", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${new Types.ObjectId().toString()}/resend-verification-email`)
+        .set("Cookie", adminCookie);
+
+      expect(response.status).toBe(404);
+    });
+
+    it("resends the verification email for an unverified user", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+      const pendingEmail = `${randomUUID()}@test.test`;
+      const pending = await usersService.createUser(pendingEmail, "Jane", "Doe");
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${pending.id}/resend-verification-email`)
+        .set("Cookie", adminCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({ id: pending.id, email: pendingEmail }),
+      );
+
+      const emailSendCalls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
+
+      const verifyCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.VerifyEmail);
+      expect(verifyCall).toBeDefined();
+      expect(verifyCall![0].to).toBe(pendingEmail);
+    });
+
+    it("returns 200 but sends nothing for an already-verified user", async () => {
+      const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
+      const adminCookie = await betterAuthHelper.signAsUser(admin.id);
+      const { user: target } = await betterAuthHelper.createUser();
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post(`/users/${target.id}/resend-verification-email`)
+        .set("Cookie", adminCookie);
+
+      expect(response.status).toBe(200);
+      const emailSendCalls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
+
+      const verifyCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.VerifyEmail);
+      expect(verifyCall).toBeUndefined();
+    });
+  });
+
+  describe("POST /users/me/resend-verification-email", () => {
+    it("returns 403 when no session is present", async () => {
+      const response = await request(app.getHttpServer()).post(
+        "/users/me/resend-verification-email",
+      );
+      expect(response.status).toBe(403);
+    });
+
+    it("resends the verification email for the logged-in unverified user", async () => {
+      const auth = moduleRef.get<Auth>(AUTH);
+      const email = `${randomUUID()}@test.test`;
+
+      // Do NOT use betterAuthHelper.createUser (it auto-verifies). Sign up fresh
+      // so emailVerified stays false and there's something to resend.
+      const { user } = await (auth.api as any).signUpEmail({
+        body: {
+          firstName: "Fresh",
+          lastName: "Signup",
+          name: "Fresh Signup",
+          email,
+          password: TEST_PASSWORD,
+        },
+      });
+      betterAuthHelper.userMap.set(user.id, user);
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/resend-verification-email")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(expect.objectContaining({ id: user.id, email }));
+
+      const emailSendCalls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
+
+      const verifyCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.VerifyEmail);
+      expect(verifyCall).toBeDefined();
+      expect(verifyCall![0].to).toBe(email);
+    });
+
+    it("returns 200 but sends nothing when the logged-in user is already verified", async () => {
+      const { user } = await betterAuthHelper.createUser();
+      const userCookie = await betterAuthHelper.signAsUser(user.id);
+      emailSendMock.mockClear();
+
+      const response = await request(app.getHttpServer())
+        .post("/users/me/resend-verification-email")
+        .set("Cookie", userCookie);
+
+      expect(response.status).toBe(200);
+      const emailSendCalls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
+
+      const verifyCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.VerifyEmail);
+      expect(verifyCall).toBeUndefined();
     });
   });
 

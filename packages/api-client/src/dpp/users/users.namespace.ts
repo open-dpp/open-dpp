@@ -33,6 +33,10 @@ export class UsersNamespace {
     return this.axiosInstance.delete<MeDto>("/users/me/email-change");
   }
 
+  public async resendMyVerificationEmail() {
+    return this.axiosInstance.post<UserDto>("/users/me/resend-verification-email");
+  }
+
   public async revokeEmailChange(token: string) {
     return this.axiosInstance.post<{ status: "ok" | "invalid" | "error" }>(
       "/users/email-change/revoke",
@@ -53,6 +57,10 @@ export class UsersNamespace {
 
   public async resendPasswordReset(id: string) {
     return this.axiosInstance.post<UserDto>(`/users/${id}/resend-password-reset`);
+  }
+
+  public async resendVerificationEmail(id: string) {
+    return this.axiosInstance.post<UserDto>(`/users/${id}/resend-verification-email`);
   }
 
   public async getInvitations(params?: { status: InvitationStatusDtoType }) {

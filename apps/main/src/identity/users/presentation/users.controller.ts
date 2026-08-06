@@ -116,6 +116,13 @@ export class UsersController {
     };
   }
 
+  @Post("me/resend-verification-email")
+  @HttpCode(HttpStatus.OK)
+  async resendMyVerificationEmail(@AuthSession() session: SessionDomainEntity): Promise<UserDto> {
+    const user = await this.usersService.resendVerificationEmail(session.userId);
+    return UserMapper.toDto(user);
+  }
+
   @Patch(":id/role")
   @UserHasRole([UserRole.ADMIN])
   async setUserRole(
@@ -131,6 +138,14 @@ export class UsersController {
   @UserHasRole([UserRole.ADMIN])
   async resendPasswordReset(@Param("id") id: string): Promise<UserDto> {
     const user = await this.usersService.resendPasswordResetEmail(id);
+    return UserMapper.toDto(user);
+  }
+
+  @Post(":id/resend-verification-email")
+  @HttpCode(HttpStatus.OK)
+  @UserHasRole([UserRole.ADMIN])
+  async resendVerificationEmail(@Param("id") id: string): Promise<UserDto> {
+    const user = await this.usersService.resendVerificationEmail(id);
     return UserMapper.toDto(user);
   }
 

@@ -483,6 +483,11 @@
         "success": "Password reset email sent.",
         "error": "Could not send password reset email. Please try again."
       },
+      "resendVerificationEmail": {
+        "action": "Resend verification email",
+        "success": "Verification email sent.",
+        "error": "Could not send verification email. Please try again."
+      },
       "instanceSettings": {
         "title": "Instance Settings",
         "signupEnabled": {
@@ -643,6 +648,12 @@
     "sendVerification": "Send verification",
     "cancel": "Cancel",
     "emailPending": "Pending verification at { email }",
+    "emailNotVerified": "Email not verified",
+    "resendVerificationEmail": {
+      "action": "Resend verification email",
+      "success": "Verification email sent.",
+      "error": "Could not send verification email. Please try again."
+    },
     "cancelEmailChange": "Cancel request",
     "emailChangeCancelled": "Email change request cancelled",
     "emailChangeCancelFailed": "Could not cancel the email change request",

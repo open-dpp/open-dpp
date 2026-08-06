@@ -483,6 +483,11 @@
         "success": "Passwort-Zurücksetzen-E-Mail wurde gesendet.",
         "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
       },
+      "resendVerificationEmail": {
+        "action": "Verifizierungs-E-Mail erneut senden",
+        "success": "Verifizierungs-E-Mail wurde gesendet.",
+        "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
       "instanceSettings": {
         "title": "Instanz-Einstellungen",
         "signupEnabled": {
@@ -673,6 +678,12 @@
     "sendVerification": "Bestätigungslink senden",
     "cancel": "Abbrechen",
     "emailPending": "Wartet auf Bestätigung an { email }",
+    "emailNotVerified": "E-Mail nicht verifiziert",
+    "resendVerificationEmail": {
+      "action": "Verifizierungs-E-Mail erneut senden",
+      "success": "Verifizierungs-E-Mail wurde gesendet.",
+      "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+    },
     "cancelEmailChange": "Anfrage abbrechen",
     "emailChangeCancelled": "E-Mail-Änderungsanfrage abgebrochen",
     "emailChangeCancelFailed": "Die E-Mail-Änderungsanfrage konnte nicht abgebrochen werden",

@@ -27,6 +27,7 @@ describe("UsersService", () => {
     mockAuth = {
       api: {
         requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        sendVerificationEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
     };
 
@@ -109,6 +110,39 @@ describe("UsersService", () => {
       mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
 
       await expect(service.resendPasswordResetEmail(user.id)).rejects.toThrow(smtpError);
+    });
+  });
+
+  describe("resendVerificationEmail", () => {
+    it("resends the verification email for the target user", async () => {
+      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.resendVerificationEmail(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+        body: { email: user.email, callbackURL: "/login" },
+      });
+      expect(result).toBe(user);
+    });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.resendVerificationEmail("unknown")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+      expect(mockAuth.api.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it("propagates the error when the verification email fails to send", async () => {
+      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      const smtpError = new Error("smtp down");
+      mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
+
+      await expect(service.resendVerificationEmail(user.id)).rejects.toThrow(smtpError);
     });
   });
 
