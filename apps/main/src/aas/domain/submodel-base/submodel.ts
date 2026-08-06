@@ -7,7 +7,7 @@ import {
   ReferenceTypes,
   SubmodelJsonSchema,
 } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IdShortPath } from "../common/id-short-path";
 import { Key } from "../common/key";
@@ -44,6 +44,7 @@ import {
   withTrackingHelper,
 } from "../../../activity-history/domain/change-tracker";
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
+import { SubmodelElementMoved } from "../../../activity-history/domain/change-events/submodel-element-moved";
 import { Pointer } from "./pointer";
 import { NestedTableExtension } from "./table/nested-table-extension";
 import {
@@ -52,6 +53,7 @@ import {
   parseAsSubmodelElementListOrFail,
 } from "./table/table-extensable";
 import { AccessResult } from "../security/access-allowed";
+import { AasAbility } from "../security/aas-ability";
 
 export class Submodel
   implements ISubmodelBase, IPersistable, ITrackable, ISubmodelElementSearchable
@@ -388,6 +390,68 @@ export class Submodel
         `Cannot delete submodel element with idShortPath ${idShortPath.toString()}`,
       );
     }
+  }
+
+  public moveSubmodelElement(
+    sourcePath: IdShortPath,
+    options: { targetParentPath?: IdShortPath; position?: number; ability: AasAbility },
+  ): ISubmodelElement {
+    const element = this.findSubmodelElementOrFail(sourcePath);
+    const oldPath = element.getIdShortPath();
+    const sourceParent: ISubmodelBase = this.findSubmodelElementParent(sourcePath) ?? this;
+    const targetPath = options.targetParentPath ?? sourcePath.getParentPath();
+    const targetParent: ISubmodelBase = targetPath.isEmpty()
+      ? this
+      : this.findSubmodelElementOrFail(targetPath);
+
+    if (targetPath.isChildOf(sourcePath)) {
+      throw new ValueError(
+        `Cannot move submodel element with idShortPath ${sourcePath.toString()} into itself or one of its descendants`,
+      );
+    }
+
+    if (!options.ability.can(Permissions.Delete, element.getIdShortPath())) {
+      throw new ForbiddenError(
+        `Missing permissions to delete element ${element.getIdShortPath().toString()}.`,
+      );
+    }
+
+    const sourceSiblings = sourceParent.getSubmodelElements();
+    const indexInSource = sourceSiblings.findIndex((el) => el.idShort === element.idShort);
+    sourceSiblings.splice(indexInSource, 1);
+
+    try {
+      if (targetParent === (this as ISubmodelBase)) {
+        addSubmodelElementOrFail(this, element, {
+          position: options.position,
+          ability: options.ability,
+        });
+      } else {
+        targetParent.addSubmodelElement(element, {
+          position: options.position,
+          ability: options.ability,
+        });
+      }
+    } catch (e) {
+      sourceSiblings.splice(indexInSource, 0, element);
+      element.setParentPointer(sourceParent.getPointer());
+      throw e;
+    }
+
+    const newPosition = targetParent
+      .getSubmodelElements()
+      .findIndex((el) => el.idShort === element.idShort);
+
+    this.tracker.track(
+      SubmodelElementMoved.create({
+        oldPath,
+        newPath: element.getIdShortPath(),
+        position: newPosition,
+        value: element,
+      }),
+    );
+
+    return element;
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
