@@ -82,7 +82,11 @@ describe("UsersService", () => {
 
   describe("resendPasswordResetEmail", () => {
     it("resends the password-reset email for the target user", async () => {
-      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
       mockRepo.findOneOrFail.mockResolvedValue(user);
 
       const result = await service.resendPasswordResetEmail(user.id);
@@ -104,7 +108,11 @@ describe("UsersService", () => {
     });
 
     it("propagates the error when the password-reset email fails to send", async () => {
-      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
       mockRepo.findOneOrFail.mockResolvedValue(user);
       const smtpError = new Error("smtp down");
       mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
@@ -115,7 +123,11 @@ describe("UsersService", () => {
 
   describe("resendVerificationEmail", () => {
     it("resends the verification email for the target user", async () => {
-      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
       mockRepo.findOneOrFail.mockResolvedValue(user);
 
       const result = await service.resendVerificationEmail(user.id);
@@ -137,7 +149,11 @@ describe("UsersService", () => {
     });
 
     it("propagates the error when the verification email fails to send", async () => {
-      const user = User.create({ email: "pending@example.com", firstName: "Jane", lastName: "Doe" });
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
       mockRepo.findOneOrFail.mockResolvedValue(user);
       const smtpError = new Error("smtp down");
       mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);

@@ -58,7 +58,7 @@ const status = computed(() => {
       <template #footer>
         <div class="flex justify-center">
           <Button asChild v-slot="slotProps">
-            <RouterLink to="/signin" :class="slotProps.class">{{
+            <RouterLink to="/signin" data-testid="verify-signin-link" :class="slotProps.class">{{
               t("auth.emailVerified.ctaSignIn")
             }}</RouterLink>
           </Button>
