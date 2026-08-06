@@ -760,6 +760,15 @@
       "errorTitle": "Etwas ist schiefgelaufen",
       "errorBody": "Die E-Mail-Änderung konnte gerade nicht widerrufen werden. Bitte versuche den Link in einem Moment erneut. Falls es weiterhin fehlschlägt, melde dich an und überprüfe dein Konto.",
       "ctaSignIn": "Zur Anmeldung"
+    },
+    "emailVerified": {
+      "successTitle": "E-Mail verifiziert",
+      "successBody": "Deine E-Mail-Adresse wurde verifiziert. Du kannst dich jetzt anmelden.",
+      "expiredTitle": "Link abgelaufen",
+      "expiredBody": "Dieser Verifizierungslink ist abgelaufen. Bitte fordere einen neuen über dein Profil an oder bitte einen Administrator, ihn erneut zu senden.",
+      "invalidTitle": "Link ungültig",
+      "invalidBody": "Dieser Verifizierungslink ist ungültig oder wurde bereits verwendet.",
+      "ctaSignIn": "Zur Anmeldung"
     }
   },
   "api": {

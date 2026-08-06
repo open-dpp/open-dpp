@@ -760,6 +760,15 @@
       "errorTitle": "Something went wrong",
       "errorBody": "We couldn't revoke the email change just now. Please try the link again in a moment. If it keeps failing, sign in and review your account.",
       "ctaSignIn": "Go to sign in"
+    },
+    "emailVerified": {
+      "successTitle": "Email verified",
+      "successBody": "Your email address has been verified. You can now sign in.",
+      "expiredTitle": "Link expired",
+      "expiredBody": "This verification link has expired. Please request a new one from your profile, or ask an admin to resend it.",
+      "invalidTitle": "Link invalid",
+      "invalidBody": "This verification link is invalid or has already been used.",
+      "ctaSignIn": "Go to sign in"
     }
   },
   "api": {

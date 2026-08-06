@@ -122,7 +122,7 @@ describe("UsersService", () => {
 
       expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
       expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
-        body: { email: user.email, callbackURL: "/login" },
+        body: { email: user.email, callbackURL: "/email-verified" },
       });
       expect(result).toBe(user);
     });

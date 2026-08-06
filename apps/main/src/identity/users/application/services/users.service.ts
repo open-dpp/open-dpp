@@ -53,7 +53,7 @@ export class UsersService {
   async resendVerificationEmail(id: string): Promise<User> {
     const user = await this.findOneOrFail(id);
     await this.auth.api.sendVerificationEmail({
-      body: { email: user.email, callbackURL: "/login" },
+      body: { email: user.email, callbackURL: "/email-verified" },
     });
     return user;
   }
