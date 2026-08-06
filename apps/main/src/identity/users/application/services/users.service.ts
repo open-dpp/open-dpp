@@ -22,6 +22,12 @@ export class UsersService {
     });
   }
 
+  private async sendVerificationEmail(email: string): Promise<void> {
+    await this.auth.api.sendVerificationEmail({
+      body: { email, callbackURL: "/email-verified" },
+    });
+  }
+
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
     const user = User.create({
       email,
@@ -41,6 +47,14 @@ export class UsersService {
         error,
       );
     }
+    try {
+      await this.sendVerificationEmail(email);
+    } catch (error) {
+      this.logger.error(
+        `User ${saved.id} was created but the verification email failed to send. An admin can re-trigger it later.`,
+        error,
+      );
+    }
     return saved;
   }
 
@@ -52,9 +66,7 @@ export class UsersService {
 
   async resendVerificationEmail(id: string): Promise<User> {
     const user = await this.findOneOrFail(id);
-    await this.auth.api.sendVerificationEmail({
-      body: { email: user.email, callbackURL: "/email-verified" },
-    });
+    await this.sendVerificationEmail(user.email);
     return user;
   }
 

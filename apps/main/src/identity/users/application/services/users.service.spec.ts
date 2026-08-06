@@ -51,6 +51,12 @@ describe("UsersService", () => {
     mockRepo.save.mockResolvedValue(savedUser);
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
+    expect(mockAuth.api.requestPasswordReset).toHaveBeenCalledWith({
+      body: { email: "test@example.com", redirectTo: "/password-reset" },
+    });
+    expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+      body: { email: "test@example.com", callbackURL: "/email-verified" },
+    });
     expect(result).toBe(savedUser);
   });
 
@@ -69,6 +75,27 @@ describe("UsersService", () => {
 
     expect(result).toBe(savedUser);
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+    expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+
+  it("returns the saved user and logs an error when the verification email fails to send", async () => {
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const smtpError = new Error("smtp down");
+    mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+    const result = await service.createUser("test@example.com", "John", "Doe");
+
+    expect(result).toBe(savedUser);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+    expect(mockAuth.api.requestPasswordReset).toHaveBeenCalled();
 
     errorSpy.mockRestore();
   });

@@ -115,6 +115,7 @@ describe("UsersController", () => {
       const { user: admin } = await betterAuthHelper.createUser({ role: UserRole.ADMIN });
       const adminCookie = await betterAuthHelper.signAsUser(admin.id);
       const newEmail = `${randomUUID()}@test.test`;
+      emailSendMock.mockClear();
 
       const response = await request(app.getHttpServer())
         .post("/users")
@@ -134,6 +135,14 @@ describe("UsersController", () => {
 
       const persisted = await usersRepository.findOneByEmail(newEmail);
       expect(persisted!.email).toBe(newEmail);
+
+      const emailSendCalls = EmailSendCallsSchema.parse(emailSendMock.mock.calls);
+      const resetCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.PasswordReset);
+      const verifyCall = emailSendCalls.find(([mail]) => mail.type === BaseEmailTypes.VerifyEmail);
+      expect(resetCall).toBeDefined();
+      expect(resetCall![0].to).toBe(newEmail);
+      expect(verifyCall).toBeDefined();
+      expect(verifyCall![0].to).toBe(newEmail);
     });
 
     it("creates a user from an email-only invite with empty names", async () => {
