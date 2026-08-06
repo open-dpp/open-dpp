@@ -39,6 +39,8 @@ import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { EmailService } from "../../../email/email.service";
+import { jest } from "@jest/globals";
 
 describe("passportService", () => {
   let service: PassportService;
@@ -71,7 +73,12 @@ describe("passportService", () => {
         PermalinkModule,
       ],
       providers: [PassportService, PassportRepository, UniqueProductIdentifierRepository],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     service = module.get<PassportService>(PassportService);
     passportRepository = module.get<PassportRepository>(PassportRepository);

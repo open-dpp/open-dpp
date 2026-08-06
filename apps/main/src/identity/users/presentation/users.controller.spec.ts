@@ -94,6 +94,10 @@ describe("UsersController", () => {
     }
   });
 
+  beforeEach(async () => {
+    jest.restoreAllMocks();
+  });
+
   describe("POST /users", () => {
     it("returns 403 when caller is not an admin", async () => {
       const { user } = await betterAuthHelper.createUser();

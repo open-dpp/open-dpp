@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -19,6 +19,7 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateDocVersion, TemplateSchema } from "./template.schema";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { EmailService } from "../../email/email.service";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;
@@ -47,7 +48,12 @@ describe("templateRepository", () => {
         ActivityHistoryModule,
       ],
       providers: [TemplateRepository],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
     await module.init();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
