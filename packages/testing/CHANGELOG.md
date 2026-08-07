@@ -1,5 +1,13 @@
 # @open-dpp/testing
 
+## 2.9.0
+
+### Patch Changes
+
+- Updated dependencies [[`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e)]:
+  - @open-dpp/dto@2.9.0
+  - @open-dpp/env@2.9.0
+
 ## 2.8.0
 
 ### Patch Changes

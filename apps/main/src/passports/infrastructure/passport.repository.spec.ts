@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { Test } from "@nestjs/testing";
@@ -21,6 +21,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "./passport.repository";
 import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
+import { EmailService } from "../../email/email.service";
 
 describe("passportRepository", () => {
   let passportRepository: PassportRepository;
@@ -47,7 +48,12 @@ describe("passportRepository", () => {
         AasModule,
       ],
       providers: [PassportRepository],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
     PassportDocument = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
@@ -327,7 +333,7 @@ describe("passportRepository", () => {
     // Second page must stay within the Archived filter — before the fix the cursor $or
     // overwrote the status $or and this returned the published p1.
     const secondPage = await passportRepository.findAllByOrganizationId(organizationId, {
-      pagination: Pagination.create({ cursor: firstPage.pagination.cursor, limit: 1 }),
+      pagination: Pagination.create({ cursor: firstPage.pagination.cursor ?? undefined, limit: 1 }),
       filter: { status: [DigitalProductDocumentStatus.Archived] },
     });
     expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);

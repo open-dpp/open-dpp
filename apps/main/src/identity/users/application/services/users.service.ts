@@ -16,6 +16,18 @@ export class UsersService {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
+  private async sendPasswordResetEmail(email: string): Promise<void> {
+    await this.auth.api.requestPasswordReset({
+      body: { email, redirectTo: "/password-reset" },
+    });
+  }
+
+  private async sendVerificationEmail(email: string): Promise<void> {
+    await this.auth.api.sendVerificationEmail({
+      body: { email, callbackURL: "/email-verified" },
+    });
+  }
+
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
     const user = User.create({
       email,
@@ -28,16 +40,34 @@ export class UsersService {
       throw new Error(`Failed to save user with email ${email}`);
     }
     try {
-      await this.auth.api.requestPasswordReset({
-        body: { email, redirectTo: "/password-reset" },
-      });
+      await this.sendPasswordResetEmail(email);
     } catch (error) {
       this.logger.error(
         `User ${saved.id} was created but the password-reset email failed to send. The user cannot log in until an admin re-triggers the reset email.`,
         error,
       );
     }
+    try {
+      await this.sendVerificationEmail(email);
+    } catch (error) {
+      this.logger.error(
+        `User ${saved.id} was created but the verification email failed to send. An admin can re-trigger it later.`,
+        error,
+      );
+    }
     return saved;
+  }
+
+  async resendPasswordResetEmail(id: string): Promise<User> {
+    const user = await this.findOneOrFail(id);
+    await this.sendPasswordResetEmail(user.email);
+    return user;
+  }
+
+  async resendVerificationEmail(id: string): Promise<User> {
+    const user = await this.findOneOrFail(id);
+    await this.sendVerificationEmail(user.email);
+    return user;
   }
 
   async findOne(id: string) {

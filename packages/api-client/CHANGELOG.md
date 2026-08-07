@@ -1,5 +1,16 @@
 # @open-dpp/api-client
 
+## 2.9.0
+
+### Minor Changes
+
+- [#673](https://github.com/open-dpp/open-dpp/pull/673) [`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6) Thanks [@mr42](https://github.com/mr42)! - Allow admin to resend reset or verification email. Allow users to resend verification email in their profile. Add email verification page to give user feedback about verification success/ error
+
+### Patch Changes
+
+- Updated dependencies [[`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e)]:
+  - @open-dpp/dto@2.9.0
+
 ## 2.8.0
 
 ### Minor Changes

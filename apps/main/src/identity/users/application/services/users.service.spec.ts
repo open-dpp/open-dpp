@@ -27,6 +27,7 @@ describe("UsersService", () => {
     mockAuth = {
       api: {
         requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        sendVerificationEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
     };
 
@@ -50,6 +51,12 @@ describe("UsersService", () => {
     mockRepo.save.mockResolvedValue(savedUser);
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
+    expect(mockAuth.api.requestPasswordReset).toHaveBeenCalledWith({
+      body: { email: "test@example.com", redirectTo: "/password-reset" },
+    });
+    expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+      body: { email: "test@example.com", callbackURL: "/email-verified" },
+    });
     expect(result).toBe(savedUser);
   });
 
@@ -68,6 +75,27 @@ describe("UsersService", () => {
 
     expect(result).toBe(savedUser);
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+    expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+
+  it("returns the saved user and logs an error when the verification email fails to send", async () => {
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const smtpError = new Error("smtp down");
+    mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+    const result = await service.createUser("test@example.com", "John", "Doe");
+
+    expect(result).toBe(savedUser);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+    expect(mockAuth.api.requestPasswordReset).toHaveBeenCalled();
 
     errorSpy.mockRestore();
   });
@@ -77,6 +105,88 @@ describe("UsersService", () => {
     await expect(service.createUser("test@example.com", "John", "Doe")).rejects.toThrow(
       "Failed to save user with email test@example.com",
     );
+  });
+
+  describe("resendPasswordResetEmail", () => {
+    it("resends the password-reset email for the target user", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.resendPasswordResetEmail(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockAuth.api.requestPasswordReset).toHaveBeenCalledWith({
+        body: { email: user.email, redirectTo: "/password-reset" },
+      });
+      expect(result).toBe(user);
+    });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.resendPasswordResetEmail("unknown")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+      expect(mockAuth.api.requestPasswordReset).not.toHaveBeenCalled();
+    });
+
+    it("propagates the error when the password-reset email fails to send", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      const smtpError = new Error("smtp down");
+      mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
+
+      await expect(service.resendPasswordResetEmail(user.id)).rejects.toThrow(smtpError);
+    });
+  });
+
+  describe("resendVerificationEmail", () => {
+    it("resends the verification email for the target user", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.resendVerificationEmail(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+        body: { email: user.email, callbackURL: "/email-verified" },
+      });
+      expect(result).toBe(user);
+    });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.resendVerificationEmail("unknown")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+      expect(mockAuth.api.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it("propagates the error when the verification email fails to send", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      const smtpError = new Error("smtp down");
+      mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
+
+      await expect(service.resendVerificationEmail(user.id)).rejects.toThrow(smtpError);
+    });
   });
 
   it("should find one by id", async () => {
