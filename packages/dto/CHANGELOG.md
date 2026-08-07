@@ -1,5 +1,17 @@
 # @open-dpp/dto
 
+## 2.9.0
+
+### Minor Changes
+
+- [#666](https://github.com/open-dpp/open-dpp/pull/666) [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e) Thanks [@murphylan](https://github.com/murphylan)! - Add total item count to organization-scoped paginated lists
+
+  Passport and template list endpoints now report a `total_count` in their
+  `paging_metadata`, computed with an index-backed `countDocuments` against the
+  same filter used for the page. The passport and template list views surface it
+  in the table footer ("Showing: 1 - 10 of 42"). The field is optional, so other
+  paginated endpoints keep their existing response shape.
+
 ## 2.8.0
 
 ### Minor Changes
