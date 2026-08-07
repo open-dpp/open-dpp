@@ -340,28 +340,44 @@ export class TableExtension implements ITableExtendable {
     this.moveColumnToGroup(columnIdShort, group.idShort, options);
   }
 
+  private applyReorderColumn(idShort: string, position: number, groupIdShort?: string): void {
+    for (const row of this.rows) {
+      const container = this.resolveContainer(row, groupIdShort);
+      const siblings = container.getSubmodelElements();
+      const currentIndex = siblings.findIndex((el) => el.idShort === idShort);
+      if (currentIndex !== -1) {
+        const [column] = siblings.splice(currentIndex, 1);
+        siblings.splice(position, 0, column);
+      }
+    }
+  }
+
   /**
    * Reorders a column within its current container (the header row, or a group
-   * within it). Unlike moveColumnToGroup, this never touches per-row cell values:
-   * every row-cell lookup elsewhere in this class is by idShort, not array index,
-   * so only the header row's (or group's) child order needs to change.
+   * within it). This must reposition the column in every row, not just the header:
+   * whichever row sits at index 0 becomes the header (see setHeaderRow/deleteRow), so
+   * a header-only reorder would silently revert itself once that row is deleted. It
+   * would also desync the positional-insert assumption createGroupFromColumn relies on
+   * (it inserts a brand-new, not-yet-existing group at the header's column index into
+   * every row, since there's no idShort to match against yet).
    */
   reorderColumn(idShortOfColumn: string, groupIdShort: string | undefined, position: number): void {
-    const container = groupIdShort
+    const headerContainer = groupIdShort
       ? this.getGroupInRowOrFail(this.headerRow!, groupIdShort)
       : this.headerRow!;
-    const siblings = container.getSubmodelElements();
-    const currentIndex = siblings.findIndex((el) => el.idShort === idShortOfColumn);
-    if (currentIndex === -1) {
+    if (!headerContainer.getSubmodelElements().some((el) => el.idShort === idShortOfColumn)) {
       throw new NotFoundError("Column", idShortOfColumn);
     }
-    const [column] = siblings.splice(currentIndex, 1);
-    siblings.splice(position, 0, column);
-    const newPosition = siblings.findIndex((el) => el.idShort === idShortOfColumn);
 
-    const path = column.getIdShortPath();
+    this.applyReorderColumn(idShortOfColumn, position, groupIdShort);
+
+    const newPosition = headerContainer
+      .getSubmodelElements()
+      .findIndex((el) => el.idShort === idShortOfColumn);
+    const value = headerContainer.getSubmodelElements()[newPosition];
+    const path = value.getIdShortPath();
     this.tracker.track(
-      SubmodelElementMoved.create({ oldPath: path, newPath: path, position: newPosition, value: column }),
+      SubmodelElementMoved.create({ oldPath: path, newPath: path, position: newPosition, value }),
     );
   }
 

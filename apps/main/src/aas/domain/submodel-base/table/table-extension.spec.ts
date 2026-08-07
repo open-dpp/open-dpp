@@ -367,7 +367,7 @@ describe("tableExtension", () => {
     ]);
   });
 
-  it("should reorder a top-level column without touching row cell order", () => {
+  it("should reorder a top-level column and keep every row positionally in sync", () => {
     const { table, ability, submodelElementList } = createTable();
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
@@ -377,15 +377,12 @@ describe("tableExtension", () => {
     table.addColumn(col3, { ability });
     table.addRow({ ability });
 
-    const dataRow = table.rows[1];
-    const originalRowOrder = dataRow.getSubmodelElements().map((el) => el.idShort);
-
     table.reorderColumn("col3", undefined, 0);
 
     expect(table.columns.map((c) => c.idShort)).toEqual(["col3", "col1", "col2"]);
-    // per-row cell array order is untouched — proves no fan-out happened, since
-    // cell lookup elsewhere is always by idShort, not array position
-    expect(dataRow.getSubmodelElements().map((el) => el.idShort)).toEqual(originalRowOrder);
+    // the data row must move in lockstep with the header, not just the header itself
+    const dataRow = table.rows[1];
+    expect(dataRow.getSubmodelElements().map((el) => el.idShort)).toEqual(["col3", "col1", "col2"]);
 
     const valueVisitor = new ValueVisitor({ ability });
     const valueRepr = submodelElementList.accept(valueVisitor);
@@ -395,17 +392,38 @@ describe("tableExtension", () => {
     ]);
   });
 
-  it("should reorder a column within a group", () => {
+  it("should keep the reordered order after the header row is deleted and a data row is promoted", () => {
+    const { table, ability } = createTable();
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
+    table.addColumn(col1, { ability });
+    table.addColumn(col2, { ability });
+    table.addRow({ ability });
+
+    table.reorderColumn("col2", undefined, 0);
+    const headerRowIdShort = table.rows[0].idShort;
+
+    table.deleteRow(headerRowIdShort, { ability, onDelete: () => {} });
+
+    // the remaining (former data) row is now promoted to header — it must reflect
+    // the reordered layout, not the original pre-reorder column order
+    expect(table.columns.map((c) => c.idShort)).toEqual(["col2", "col1"]);
+  });
+
+  it("should reorder a column within a group and keep rows in sync", () => {
     const { table, ability } = createTable();
     const sub1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "sub1", value: "a" }));
     const sub2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "sub2", value: "b" }));
     const group = SubmodelElementCollection.create({ idShort: "group1", value: [sub1, sub2] });
     table.addColumn(group, { ability });
+    table.addRow({ ability });
 
     table.reorderColumn("sub2", "group1", 0);
 
-    const headerGroup = table.columns.find((c) => c.idShort === "group1")!;
-    expect(headerGroup.getSubmodelElements().map((el) => el.idShort)).toEqual(["sub2", "sub1"]);
+    for (const row of table.rows) {
+      const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1")!;
+      expect(rowGroup.getSubmodelElements().map((el) => el.idShort)).toEqual(["sub2", "sub1"]);
+    }
   });
 
   it("should throw NotFoundError when reordering a non-existent column", () => {
@@ -414,6 +432,34 @@ describe("tableExtension", () => {
     table.addColumn(col1, { ability });
 
     expect(() => table.reorderColumn("missing", undefined, 0)).toThrow(NotFoundError);
+  });
+
+  it("should place a new group at the right position in every row after a prior reorder", () => {
+    // Regression test: createGroupFromColumn inserts the brand-new group at the
+    // header's column *index* into every row (there's no idShort to match against
+    // yet), so it silently breaks if a prior reorderColumn desynced row order from
+    // the header.
+    const { table, ability } = createTable();
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "v1" }),
+    );
+    const col2 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col2", value: "v2" }),
+    );
+    table.addColumn(col1, { ability });
+    table.addColumn(col2, { ability });
+    table.addRow({ ability });
+
+    table.reorderColumn("col2", undefined, 0);
+    expect(table.columns.map((c) => c.idShort)).toEqual(["col2", "col1"]);
+
+    const newGroup = SubmodelElementCollection.create({ idShort: "group1", value: [] });
+    const onMoveMock = jest.fn();
+    table.createGroupFromColumn("col1", newGroup, { ability, onMove: onMoveMock });
+
+    for (const row of table.rows) {
+      expect(row.getSubmodelElements().map((el) => el.idShort)).toEqual(["col2", "group1"]);
+    }
   });
 
   it("should create a group from an existing top-level column, migrating its per-row values", () => {
