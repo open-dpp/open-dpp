@@ -478,6 +478,16 @@
         "errorNotFound": "Dieser Benutzer existiert nicht mehr.",
         "error": "Rolle konnte nicht geändert werden. Bitte erneut versuchen."
       },
+      "resendPasswordReset": {
+        "action": "Passwort-Zurücksetzen-E-Mail erneut senden",
+        "success": "Passwort-Zurücksetzen-E-Mail wurde gesendet.",
+        "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
+      "resendVerificationEmail": {
+        "action": "Verifizierungs-E-Mail erneut senden",
+        "success": "Verifizierungs-E-Mail wurde gesendet.",
+        "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
       "instanceSettings": {
         "title": "Instanz-Einstellungen",
         "signupEnabled": {
@@ -668,6 +678,12 @@
     "sendVerification": "Bestätigungslink senden",
     "cancel": "Abbrechen",
     "emailPending": "Wartet auf Bestätigung an { email }",
+    "emailNotVerified": "E-Mail nicht verifiziert",
+    "resendVerificationEmail": {
+      "action": "Verifizierungs-E-Mail erneut senden",
+      "success": "Verifizierungs-E-Mail wurde gesendet.",
+      "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+    },
     "cancelEmailChange": "Anfrage abbrechen",
     "emailChangeCancelled": "E-Mail-Änderungsanfrage abgebrochen",
     "emailChangeCancelFailed": "Die E-Mail-Änderungsanfrage konnte nicht abgebrochen werden",
@@ -743,6 +759,15 @@
       "invalidBody": "Der Widerruf-Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Wenn du die Änderung nicht angefordert hast, melde dich an und überprüfe dein Konto.",
       "errorTitle": "Etwas ist schiefgelaufen",
       "errorBody": "Die E-Mail-Änderung konnte gerade nicht widerrufen werden. Bitte versuche den Link in einem Moment erneut. Falls es weiterhin fehlschlägt, melde dich an und überprüfe dein Konto.",
+      "ctaSignIn": "Zur Anmeldung"
+    },
+    "emailVerified": {
+      "successTitle": "E-Mail verifiziert",
+      "successBody": "Deine E-Mail-Adresse wurde verifiziert. Du kannst dich jetzt anmelden.",
+      "expiredTitle": "Link abgelaufen",
+      "expiredBody": "Dieser Verifizierungslink ist abgelaufen. Bitte fordere einen neuen über dein Profil an oder bitte einen Administrator, ihn erneut zu senden.",
+      "invalidTitle": "Link ungültig",
+      "invalidBody": "Dieser Verifizierungslink ist ungültig oder wurde bereits verwendet.",
       "ctaSignIn": "Zur Anmeldung"
     }
   },

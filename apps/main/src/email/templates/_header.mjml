@@ -1,0 +1,5 @@
+<mj-section>
+  <mj-column width="100%">
+    <mj-image src="{{ logoUrl }}" alt="header image" padding="10px"></mj-image>
+  </mj-column>
+</mj-section>

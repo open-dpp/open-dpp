@@ -64,7 +64,6 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       layout: "none",
       public: true,
-      onlyAnonymous: true,
     },
   },
   {

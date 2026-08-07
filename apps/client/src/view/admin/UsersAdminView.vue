@@ -8,12 +8,15 @@ import InviteToOrganizationDialog from "../../components/admin/InviteToOrganizat
 import InviteUserDialog from "../../components/admin/InviteUserDialog.vue";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { ModalType, useLayoutStore } from "../../stores/layout.ts";
+import { useUsersRepo } from "../../composables/users-repo.ts";
 
 const layoutStore = useLayoutStore();
 const errorHandlingStore = useErrorHandlingStore();
 
 const session = authClient.useSession();
 const currentUserRole = computed(() => session.value.data?.user.role ?? "user");
+const currentUserId = computed(() => session.value.data?.user.id);
+const { resendPasswordReset, resendVerificationEmail } = useUsersRepo();
 
 const users = ref<UserWithRole[]>([]);
 const inviteToOrgEmail = ref<string | null>(null);
@@ -93,9 +96,12 @@ onMounted(async () => {
       <AdminUsersList
         :users="users"
         :current-user-role="currentUserRole"
+        :current-user-id="currentUserId"
         @add="onAdd"
         @invite-to-org="onInviteToOrg"
         @change-role="onChangeRole"
+        @resend-password-reset="resendPasswordReset"
+        @resend-verification-email="resendVerificationEmail"
       />
     </div>
   </section>
