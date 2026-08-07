@@ -100,6 +100,12 @@ export class NestedTableExtension implements ITableExtendable {
     });
   }
 
+  reorderColumn(idShortOfColumn: string, groupIdShort: string | undefined, position: number): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.reorderColumn(idShortOfColumn, groupIdShort, position);
+    });
+  }
+
   addRow(options: AddOptions) {
     new TableExtension(this.data).withTracking(this.tracker).addRow(options);
   }

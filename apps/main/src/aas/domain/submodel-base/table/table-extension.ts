@@ -15,6 +15,7 @@ import { ColumnDeleted } from "../../../../activity-history/domain/change-events
 import { ColumnAddedToGroup } from "../../../../activity-history/domain/change-events/column-added-to-group";
 import { ColumnDeletedFromGroup } from "../../../../activity-history/domain/change-events/column-deleted-from-group";
 import { RowDeleted } from "../../../../activity-history/domain/change-events/row-deleted";
+import { SubmodelElementMoved } from "../../../../activity-history/domain/change-events/submodel-element-moved";
 import { ITableExtendable, MoveOptions } from "./table-extensable";
 import { TableRowCopyVisitor } from "./table-row-copy-visitor";
 
@@ -337,6 +338,31 @@ export class TableExtension implements ITableExtendable {
     // Reuse the existing, already-tested move: migrates the column's real
     // per-row values into the group and tracks ColumnDeleted + ColumnAddedToGroup.
     this.moveColumnToGroup(columnIdShort, group.idShort, options);
+  }
+
+  /**
+   * Reorders a column within its current container (the header row, or a group
+   * within it). Unlike moveColumnToGroup, this never touches per-row cell values:
+   * every row-cell lookup elsewhere in this class is by idShort, not array index,
+   * so only the header row's (or group's) child order needs to change.
+   */
+  reorderColumn(idShortOfColumn: string, groupIdShort: string | undefined, position: number): void {
+    const container = groupIdShort
+      ? this.getGroupInRowOrFail(this.headerRow!, groupIdShort)
+      : this.headerRow!;
+    const siblings = container.getSubmodelElements();
+    const currentIndex = siblings.findIndex((el) => el.idShort === idShortOfColumn);
+    if (currentIndex === -1) {
+      throw new NotFoundError("Column", idShortOfColumn);
+    }
+    const [column] = siblings.splice(currentIndex, 1);
+    siblings.splice(position, 0, column);
+    const newPosition = siblings.findIndex((el) => el.idShort === idShortOfColumn);
+
+    const path = column.getIdShortPath();
+    this.tracker.track(
+      SubmodelElementMoved.create({ oldPath: path, newPath: path, position: newPosition, value: column }),
+    );
   }
 
   private generateRowIdShort() {

@@ -367,6 +367,55 @@ describe("tableExtension", () => {
     ]);
   });
 
+  it("should reorder a top-level column without touching row cell order", () => {
+    const { table, ability, submodelElementList } = createTable();
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
+    const col3 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col3", value: "3" }));
+    table.addColumn(col1, { ability });
+    table.addColumn(col2, { ability });
+    table.addColumn(col3, { ability });
+    table.addRow({ ability });
+
+    const dataRow = table.rows[1];
+    const originalRowOrder = dataRow.getSubmodelElements().map((el) => el.idShort);
+
+    table.reorderColumn("col3", undefined, 0);
+
+    expect(table.columns.map((c) => c.idShort)).toEqual(["col3", "col1", "col2"]);
+    // per-row cell array order is untouched — proves no fan-out happened, since
+    // cell lookup elsewhere is always by idShort, not array position
+    expect(dataRow.getSubmodelElements().map((el) => el.idShort)).toEqual(originalRowOrder);
+
+    const valueVisitor = new ValueVisitor({ ability });
+    const valueRepr = submodelElementList.accept(valueVisitor);
+    expect(valueRepr).toMatchObject([
+      { col1: "1", col2: "2", col3: "3" },
+      { col1: null, col2: null, col3: null },
+    ]);
+  });
+
+  it("should reorder a column within a group", () => {
+    const { table, ability } = createTable();
+    const sub1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "sub1", value: "a" }));
+    const sub2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "sub2", value: "b" }));
+    const group = SubmodelElementCollection.create({ idShort: "group1", value: [sub1, sub2] });
+    table.addColumn(group, { ability });
+
+    table.reorderColumn("sub2", "group1", 0);
+
+    const headerGroup = table.columns.find((c) => c.idShort === "group1")!;
+    expect(headerGroup.getSubmodelElements().map((el) => el.idShort)).toEqual(["sub2", "sub1"]);
+  });
+
+  it("should throw NotFoundError when reordering a non-existent column", () => {
+    const { table, ability } = createTable();
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
+    table.addColumn(col1, { ability });
+
+    expect(() => table.reorderColumn("missing", undefined, 0)).toThrow(NotFoundError);
+  });
+
   it("should create a group from an existing top-level column, migrating its per-row values", () => {
     const { table, ability, submodelElementList } = createTable();
 

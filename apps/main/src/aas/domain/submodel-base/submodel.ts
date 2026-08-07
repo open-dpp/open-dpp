@@ -298,6 +298,17 @@ export class Submodel
     return tableExtension.getTableElement();
   }
 
+  reorderColumn(
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.reorderColumn(idShortOfColumn, groupIdShort, position);
+    return tableExtension.getTableElement();
+  }
+
   getKeyType() {
     return KeyTypes.Submodel;
   }
