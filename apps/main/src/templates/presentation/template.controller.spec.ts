@@ -325,6 +325,7 @@ describe("templateController", () => {
       paging_metadata: {
         // Single page — no successor, so the cursor is null.
         cursor: null,
+        total_count: 1,
       },
       result: [t2].map((p) => ({
         ...p.toPlain(),

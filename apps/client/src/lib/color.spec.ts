@@ -4,8 +4,36 @@ import {
   darkenHex,
   getContrastRatio,
   getPalettePositionByContrast,
+  isValidHexColor,
   lightenHex,
 } from "./color";
+
+describe("isValidHexColor", () => {
+  it("accepts 6-digit hex with and without leading #", () => {
+    expect(isValidHexColor("#336699")).toBe(true);
+    expect(isValidHexColor("336699")).toBe(true);
+  });
+
+  it("accepts 3-digit shorthand hex", () => {
+    expect(isValidHexColor("#abc")).toBe(true);
+    expect(isValidHexColor("abc")).toBe(true);
+  });
+
+  it("ignores surrounding whitespace", () => {
+    expect(isValidHexColor("  336699  ")).toBe(true);
+  });
+
+  it("rejects non-hex characters", () => {
+    expect(isValidHexColor("#zzzzzz")).toBe(false);
+    expect(isValidHexColor("xyz")).toBe(false);
+  });
+
+  it("rejects hex strings of the wrong length", () => {
+    expect(isValidHexColor("12")).toBe(false);
+    expect(isValidHexColor("1234")).toBe(false);
+    expect(isValidHexColor("")).toBe(false);
+  });
+});
 
 describe("getContrastRatio", () => {
   it("returns 21 for black and white", () => {

@@ -111,6 +111,8 @@ function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusT
 export type CursorPageOptions = {
   pagination?: Pagination;
   session?: ClientSession | null;
+  /** Also count every document matching `filter` and surface it as `total_count`. */
+  withTotalCount?: boolean;
 };
 
 /**
@@ -123,6 +125,9 @@ export type CursorPageOptions = {
  * The returned cursor is `null` on the last page — the documented contract
  * (`PagingMetadataDtoSchema`) consumers page against. One extra doc is fetched
  * purely to learn whether a next page exists; it is never returned.
+ *
+ * With `withTotalCount`, the count of all documents matching `filter` (the full
+ * result set the cursor pages through, not the page) is reported as `total_count`.
  */
 export async function findPageByCursor<V extends IConvertableToPlain>(
   docModel: MongooseModel<any>,
@@ -132,6 +137,10 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
 ): Promise<PagingResult<V>> {
   const pagination = options?.pagination ?? Pagination.create({ limit: 100 });
   const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
+  // The cursor window is its own $or, and `filter` may carry one of its own (the
+  // status filter) — the two must be combined with $and. Spreading both into one
+  // object would let the cursor $or overwrite the other, silently returning
+  // documents outside the filter on paginated requests.
   const cursorFilter = cursor
     ? {
         $or: [
@@ -139,10 +148,10 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
           { createdAt: cursor.createdAt, _id: { $lt: cursor.id } },
         ],
       }
-    : {};
+    : null;
   const limit = pagination.limit ?? 100;
   const fetched = await docModel
-    .find({ ...filter, ...cursorFilter } as Record<string, unknown>)
+    .find(cursorFilter ? { $and: [filter, cursorFilter] } : filter)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
     .session(options?.session ?? null)
@@ -156,7 +165,12 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
       ? encodeCursor((last.get("createdAt") as Date).toISOString(), String(last._id))
       : null,
   );
-  return PagingResult.create<V>({ pagination, items });
+  // Counted against the cursor-free `filter`, backed by the { organizationId, createdAt }
+  // index, so this stays performant even with hundreds of thousands of documents.
+  const totalCount = options?.withTotalCount
+    ? await docModel.countDocuments(filter).session(options?.session ?? null)
+    : undefined;
+  return PagingResult.create<V>({ pagination, items, totalCount });
 }
 
 export async function findAllByOrganizationId<
@@ -175,5 +189,6 @@ export async function findAllByOrganizationId<
   };
   return findPageByCursor<V>(docModel, filter, (d) => convertToDomain(d, fromPlain), {
     pagination: options?.pagination,
+    withTotalCount: true,
   });
 }

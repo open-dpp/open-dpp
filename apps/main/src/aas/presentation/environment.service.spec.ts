@@ -94,6 +94,7 @@ import { ValueModificationRequest } from "./requests/value-modification.request"
 import { SubmodelElementModificationRequest } from "./requests/submodel-element-modification.request";
 import { MoveSubmodelBaseObserver } from "./event-bus/move-submodel-base-observer";
 import { DeleteSubmodelBaseObserver } from "./event-bus/delete-submodel-base-observer";
+import { EmailService } from "../../email/email.service";
 
 const moveObserver: jest.Mocked<MoveSubmodelBaseObserver> = {
   onMove: jest.fn<MoveSubmodelBaseObserver["onMove"]>(),
@@ -132,7 +133,12 @@ describe("environmentService", () => {
         UsersModule,
         ActivityHistoryModule,
       ],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
     await module.init();
     environmentService = module.get<EnvironmentService>(EnvironmentService);
     passportRepository = module.get<PassportRepository>(PassportRepository);

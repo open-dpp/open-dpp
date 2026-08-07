@@ -172,7 +172,8 @@
     "german": "German"
   },
   "pagination": {
-    "footer": "Showing: {from} - {to}, Count: {count}"
+    "footer": "Showing: {from} - {to}, Count: {count}",
+    "footerWithTotal": "Showing: {from} - {to} of {total}"
   },
   "builder": {
     "repeater": {
@@ -407,7 +408,8 @@
       "color": {
         "label": "Primary color",
         "palette": "Color palette",
-        "description": "This color will be used as a base color to generate a color palette."
+        "description": "This color will be used as a base color to generate a color palette.",
+        "error": "Please enter a valid hex color (e.g. 6bad87)."
       },
       "permalinkBaseUrl": {
         "label": "Base URL for passports",
@@ -475,6 +477,16 @@
         "errorForbidden": "You don't have permission to change roles. Contact an admin.",
         "errorNotFound": "This user no longer exists.",
         "error": "Could not change role. Please try again."
+      },
+      "resendPasswordReset": {
+        "action": "Resend password reset email",
+        "success": "Password reset email sent.",
+        "error": "Could not send password reset email. Please try again."
+      },
+      "resendVerificationEmail": {
+        "action": "Resend verification email",
+        "success": "Verification email sent.",
+        "error": "Could not send verification email. Please try again."
       },
       "instanceSettings": {
         "title": "Instance Settings",
@@ -636,6 +648,12 @@
     "sendVerification": "Send verification",
     "cancel": "Cancel",
     "emailPending": "Pending verification at { email }",
+    "emailNotVerified": "Email not verified",
+    "resendVerificationEmail": {
+      "action": "Resend verification email",
+      "success": "Verification email sent.",
+      "error": "Could not send verification email. Please try again."
+    },
     "cancelEmailChange": "Cancel request",
     "emailChangeCancelled": "Email change request cancelled",
     "emailChangeCancelFailed": "Could not cancel the email change request",
@@ -741,6 +759,15 @@
       "invalidBody": "The revoke link may have expired or already been used. If you didn't request the change, sign in and review your account.",
       "errorTitle": "Something went wrong",
       "errorBody": "We couldn't revoke the email change just now. Please try the link again in a moment. If it keeps failing, sign in and review your account.",
+      "ctaSignIn": "Go to sign in"
+    },
+    "emailVerified": {
+      "successTitle": "Email verified",
+      "successBody": "Your email address has been verified. You can now sign in.",
+      "expiredTitle": "Link expired",
+      "expiredBody": "This verification link has expired. Please request a new one from your profile, or ask an admin to resend it.",
+      "invalidTitle": "Link invalid",
+      "invalidBody": "This verification link is invalid or has already been used.",
       "ctaSignIn": "Go to sign in"
     }
   },

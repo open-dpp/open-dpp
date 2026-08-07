@@ -171,6 +171,7 @@ describe("passportController", () => {
       paging_metadata: {
         // Single page — no successor, so the cursor is null.
         cursor: null,
+        total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
@@ -198,6 +199,7 @@ describe("passportController", () => {
       paging_metadata: {
         // Single page — no successor, so the cursor is null.
         cursor: null,
+        total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
@@ -216,6 +218,7 @@ describe("passportController", () => {
       paging_metadata: {
         // Single page — no successor, so the cursor is null.
         cursor: null,
+        total_count: 1,
       },
       result: [secondPassport].map((p) => ({
         ...p.toPlain(),

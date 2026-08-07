@@ -246,6 +246,7 @@ function discard() {
     <section class="py-6">
       <EmailChangeCard
         :email="currentEmail"
+        :email-verified="user?.emailVerified ?? false"
         :pending-email-change="pendingEmailChange"
         :loaded="loaded"
         :hydration-failed="hydrationFailed"

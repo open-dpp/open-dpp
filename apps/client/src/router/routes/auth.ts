@@ -38,4 +38,20 @@ export const EMAIL_CHANGE_REVOKED: RouteRecordRaw = {
   },
 };
 
-export const AUTH_ROUTES = [PROFILE, LOGOUT, EMAIL_CHANGE_REVOKE_CONFIRM, EMAIL_CHANGE_REVOKED];
+export const EMAIL_VERIFIED: RouteRecordRaw = {
+  path: "/email-verified",
+  name: "EmailVerified",
+  component: () => import("../../view/auth/EmailVerifiedView.vue"),
+  meta: {
+    layout: "none",
+    public: true,
+  },
+};
+
+export const AUTH_ROUTES = [
+  PROFILE,
+  LOGOUT,
+  EMAIL_CHANGE_REVOKE_CONFIRM,
+  EMAIL_CHANGE_REVOKED,
+  EMAIL_VERIFIED,
+];

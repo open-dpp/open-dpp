@@ -13,7 +13,7 @@ export interface Page {
 }
 
 export interface PagingResult {
-  paging_metadata: { cursor: Cursor };
+  paging_metadata: { cursor: Cursor; total_count?: number };
   result: any[];
 }
 
@@ -32,6 +32,8 @@ export interface IPagination {
   previousPage: () => Promise<Page>;
   currentPage: Ref<Page>;
   reloadCurrentPage: () => Promise<void>;
+  // Total number of items across all pages, or null when the endpoint does not report it.
+  totalCount: Ref<number | null>;
 }
 
 export function usePagination({
@@ -43,6 +45,7 @@ export function usePagination({
   const startCursor = ref<string | null>(initialCursor ?? null);
   const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
   const currentPageIndex = ref<number>(0);
+  const totalCount = ref<number | null>(null);
   const currentPage = ref<Page>({
     cursor: startCursor.value,
     from: 0,
@@ -62,6 +65,7 @@ export function usePagination({
   const fetchPage = async (cursor: Cursor): Promise<PagingResult> => {
     const response = await fetchCallback({ cursor: cursor ?? undefined, limit });
     isLastPage.value = response.paging_metadata.cursor === null;
+    totalCount.value = response.paging_metadata.total_count ?? null;
     return response;
   };
 
@@ -162,5 +166,6 @@ export function usePagination({
     previousPage,
     currentPage,
     reloadCurrentPage,
+    totalCount,
   };
 }

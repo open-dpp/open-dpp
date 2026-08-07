@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { Test } from "@nestjs/testing";
@@ -21,6 +21,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "./passport.repository";
 import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
+import { EmailService } from "../../email/email.service";
 
 describe("passportRepository", () => {
   let passportRepository: PassportRepository;
@@ -47,7 +48,12 @@ describe("passportRepository", () => {
         AasModule,
       ],
       providers: [PassportRepository],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
     PassportDocument = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
@@ -228,6 +234,7 @@ describe("passportRepository", () => {
       PagingResult.create({
         pagination: Pagination.create({ limit: 100 }),
         items: [p5, p4, p3, p1],
+        totalCount: 4,
       }),
     );
 
@@ -241,6 +248,7 @@ describe("passportRepository", () => {
       PagingResult.create({
         pagination: Pagination.create({ limit: 100 }),
         items: [p5],
+        totalCount: 1,
       }),
     );
 
@@ -254,6 +262,7 @@ describe("passportRepository", () => {
       PagingResult.create({
         pagination: Pagination.create({}),
         items: [p3, p1],
+        totalCount: 4,
       }),
     );
     pagination = Pagination.create({
@@ -270,6 +279,7 @@ describe("passportRepository", () => {
           limit: 1,
         }),
         items: [p3],
+        totalCount: 4,
       }),
     );
   });
@@ -354,6 +364,57 @@ describe("passportRepository", () => {
     const missingId = randomUUID();
     const result = await passportRepository.findByIds([missingId]);
     expect(result.size).toBe(0);
+  });
+
+  it("keeps the status filter when paginating with a cursor", async () => {
+    const organizationId = randomUUID();
+    const archived = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Archived,
+        }),
+      });
+    const published = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Published,
+        }),
+      });
+
+    const a1 = archived(new Date("2022-01-01T00:00:00.000Z"));
+    const p1 = published(new Date("2022-01-02T00:00:00.000Z"));
+    const a2 = archived(new Date("2022-01-03T00:00:00.000Z"));
+    const p2 = published(new Date("2022-01-04T00:00:00.000Z"));
+    for (const passport of [a1, p1, a2, p2]) {
+      await passportRepository.save(passport);
+    }
+
+    // First page: newest archived passport only, total counts every archived doc (not the page).
+    const firstPage = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1 }),
+      filter: { status: [DigitalProductDocumentStatus.Archived] },
+    });
+    expect(firstPage.items.map((p) => p.id)).toEqual([a2.id]);
+    expect(firstPage.totalCount).toBe(2);
+
+    // Second page must stay within the Archived filter — before the fix the cursor $or
+    // overwrote the status $or and this returned the published p1.
+    const secondPage = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ cursor: firstPage.pagination.cursor ?? undefined, limit: 1 }),
+      filter: { status: [DigitalProductDocumentStatus.Archived] },
+    });
+    expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);
+    expect(secondPage.totalCount).toBe(2);
   });
 
   afterAll(async () => {

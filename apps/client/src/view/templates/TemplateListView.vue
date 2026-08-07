@@ -50,6 +50,7 @@ const {
   nextPage,
   currentPage,
   reloadCurrentPage,
+  totalCount,
 } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
@@ -114,6 +115,7 @@ onMounted(async () => {
     :has-previous="hasPrevious"
     :has-next="hasNext"
     :current-page="currentPage"
+    :total-count="totalCount"
     :items="templates ? templates.result : []"
     :loading="loading"
     :title="t('templates.label', 2)"
