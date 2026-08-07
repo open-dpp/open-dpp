@@ -1,16 +1,21 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
-import { findOne, findOneOrFail, save } from "../../lib/repositories";
+import { findOne, findOneOrFail, findPageByCursor, save } from "../../lib/repositories";
+import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
+import { PASSPORT_COLLECTION } from "../../passports/infrastructure/passport.schema";
 import { PresentationConfigurationDoc } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
+import { UNIQUE_PRODUCT_IDENTIFIER_COLLECTION } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { Permalink } from "../domain/permalink";
 import { PermalinkDoc, PermalinkDocVersion } from "./permalink.schema";
 
 @Injectable()
-export class PermalinkRepository {
+export class PermalinkRepository implements OnApplicationBootstrap {
+  private readonly logger = new Logger(PermalinkRepository.name);
   private readonly permalinkDoc: MongooseModel<PermalinkDoc>;
   private readonly presentationConfigurationDoc: MongooseModel<PresentationConfigurationDoc>;
 
@@ -24,15 +29,122 @@ export class PermalinkRepository {
     this.presentationConfigurationDoc = presentationConfigurationDoc;
   }
 
+  /**
+   * Reconcile the collection's indexes with the schema definitions. Mongoose
+   * never updates an EXISTING index whose options changed (the partial filters
+   * on the unique indexes were added after early deployments), so a stale
+   * full-unique index survives forever and — with `null` counting as a value —
+   * rejects every second gs1-link insert with a misleading E11000.
+   * ponytail: syncIndexes also drops manually-added indexes on this collection.
+   */
+  async onApplicationBootstrap(): Promise<void> {
+    await this.backfillPermalinkKind();
+    await this.permalinkDoc.syncIndexes();
+    await this.backfillOrganizationIds();
+  }
+
+  /**
+   * One-shot backfill: rows written before `kind` existed carry no such field.
+   * `migrate1_2_0To1_3_0` supplies the default at read time but never writes it
+   * back, and the unique index on `presentationConfigurationId` is scoped to
+   * `kind: "presentation"` — so an unstamped row sits outside the index and its
+   * config would accept a second presentation permalink. Runs BEFORE
+   * `syncIndexes`; idempotent (the match set is empty after the first run).
+   */
+  private async backfillPermalinkKind(): Promise<void> {
+    const result = await this.permalinkDoc.updateMany(
+      { kind: { $exists: false } },
+      { $set: { kind: PermalinkKind.PRESENTATION } },
+    );
+    if (result.modifiedCount > 0) {
+      this.logger.log(`Backfilled kind on ${result.modifiedCount} permalink(s)`);
+    }
+  }
+
+  /**
+   * One-shot backfill: rows written before `organizationId` existed carry null,
+   * which 403s the owning org on every /permalinks mutating route and hides the
+   * row from the org-scoped list. Resolve config → passport → organizationId
+   * once at bootstrap; idempotent (the match set is empty after the first run).
+   * `kind: {$ne: gs1-link}` (legacy docs have no `kind` field) keeps a gs1-link
+   * row bound to a foreign presentation config from inheriting that config's org.
+   */
+  private async backfillOrganizationIds(): Promise<void> {
+    const rows: { _id: string; organizationId: string }[] = await this.permalinkDoc.aggregate([
+      {
+        $match: {
+          organizationId: null,
+          kind: { $ne: PermalinkKind.GS1_LINK },
+          presentationConfigurationId: { $ne: null },
+        },
+      },
+      {
+        $lookup: {
+          from: this.presentationConfigurationDoc.collection.name,
+          localField: "presentationConfigurationId",
+          foreignField: "_id",
+          as: "config",
+        },
+      },
+      { $unwind: "$config" },
+      {
+        $lookup: {
+          from: PASSPORT_COLLECTION,
+          localField: "config.referenceId",
+          foreignField: "_id",
+          as: "passport",
+        },
+      },
+      { $unwind: "$passport" },
+      { $project: { organizationId: "$passport.organizationId" } },
+    ]);
+    if (rows.length === 0) return;
+    await this.permalinkDoc.bulkWrite(
+      rows.map((row) => ({
+        updateOne: {
+          filter: { _id: row._id },
+          update: { $set: { organizationId: row.organizationId } },
+        },
+      })),
+    );
+    this.logger.log(`Backfilled organizationId on ${rows.length} permalink(s)`);
+  }
+
+  /**
+   * Pure per-doc migration from schema 1.2.0 to 1.3.0.
+   *
+   * NOTE: `primary` defaults to `false` here (NOT `true`) — a per-doc migration
+   * cannot see sibling documents, so it must NOT unconditionally mint a primary.
+   * Collection-aware normalization (D10) happens in `findAllByPassportId` /
+   * `findPrimaryByPassportId` after all docs in a passport's set are loaded.
+   */
+  migrate1_2_0To1_3_0(plain: any): any {
+    return {
+      ...plain,
+      primary: plain.primary ?? false,
+      uniqueProductIdentifierId: plain.uniqueProductIdentifierId ?? null,
+      gs1DataAttributes: plain.gs1DataAttributes ?? null,
+      _schemaVersion: PermalinkDocVersion.v1_3_0,
+    };
+  }
+
   async fromPlain(plain: any): Promise<Permalink> {
     return Permalink.fromPlain(plain);
+  }
+
+  async fromPlainWithMigration(plain: any): Promise<Permalink> {
+    let migrated = plain;
+    if (!migrated._schemaVersion || migrated._schemaVersion <= PermalinkDocVersion.v1_2_0) {
+      migrated = this.migrate1_2_0To1_3_0(migrated);
+    }
+    return this.fromPlain(migrated);
   }
 
   async save(permalink: Permalink, options?: DbSessionOptions): Promise<Permalink> {
     return await save(
       permalink,
       this.permalinkDoc,
-      PermalinkDocVersion.v1_2_0,
+      PermalinkDocVersion.v1_3_0,
       this.fromPlain.bind(this),
       undefined,
       options,
@@ -40,11 +152,11 @@ export class PermalinkRepository {
   }
 
   async findOne(id: string): Promise<Permalink | undefined> {
-    return await findOne(id, this.permalinkDoc, this.fromPlain.bind(this));
+    return await findOne(id, this.permalinkDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async findOneOrFail(id: string): Promise<Permalink> {
-    return await findOneOrFail(id, this.permalinkDoc, this.fromPlain.bind(this));
+    return await findOneOrFail(id, this.permalinkDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async findBySlug(slug: string, options?: DbSessionOptions): Promise<Permalink | undefined> {
@@ -53,7 +165,7 @@ export class PermalinkRepository {
       .session(options?.session ?? null);
     if (!doc) return undefined;
     const plain = doc.toObject();
-    return Permalink.fromPlain({ ...plain, id: plain._id });
+    return this.fromPlainWithMigration({ ...plain, id: plain._id });
   }
 
   async findBySlugOrFail(slug: string, options?: DbSessionOptions): Promise<Permalink> {
@@ -64,6 +176,7 @@ export class PermalinkRepository {
     return permalink;
   }
 
+  /** Any permalink bound to the config, whatever its kind. */
   async findByPresentationConfigurationId(
     presentationConfigurationId: string,
     options?: DbSessionOptions,
@@ -73,7 +186,81 @@ export class PermalinkRepository {
       .session(options?.session ?? null);
     if (!doc) return undefined;
     const plain = doc.toObject();
-    return Permalink.fromPlain({ ...plain, id: plain._id });
+    return this.fromPlainWithMigration({ ...plain, id: plain._id });
+  }
+
+  /**
+   * The PRESENTATION permalink bound to the config. A config may also back
+   * gs1-links, so callers deciding whether the presentation permalink still has
+   * to be minted must ignore those — otherwise a config carrying only a gs1-link
+   * looks occupied and never gets its presentation permalink.
+   * `$ne` matches documents with no `kind` field, so legacy rows still count.
+   */
+  async findPresentationByPresentationConfigurationId(
+    presentationConfigurationId: string,
+    options?: DbSessionOptions,
+  ): Promise<Permalink | undefined> {
+    const doc = await this.permalinkDoc
+      .findOne({ presentationConfigurationId, kind: { $ne: PermalinkKind.GS1_LINK } })
+      .session(options?.session ?? null);
+    if (!doc) return undefined;
+    const plain = doc.toObject();
+    return this.fromPlainWithMigration({ ...plain, id: plain._id });
+  }
+
+  private isLegacySchemaVersion(schemaVersion: string | undefined): boolean {
+    if (!schemaVersion) return true;
+    return schemaVersion <= PermalinkDocVersion.v1_2_0;
+  }
+
+  /**
+   * Collection-aware single-primary normalization (D10).
+   *
+   * Applied ONLY to sets that contain at least one legacy document (schema ≤ 1.2.0),
+   * because those docs lacked the `primary` field and therefore all arrive with
+   * `primary:false` after per-doc migration — no single-primary invariant can be
+   * inferred from the stored values alone.
+   *
+   * For fully-current sets (all docs at 1.3.0) the stored `primary` flags are
+   * authoritative; this function is a no-op.
+   *
+   * Rules when normalization fires:
+   * - Zero primaries → promote the earliest-`createdAt` presentation permalink
+   *   (ties broken by `_id` ascending).
+   * - More than one primary → keep only the earliest one as primary; demote the rest.
+   *
+   * This is read-time normalization: corrected flags are returned in the domain
+   * objects but the underlying documents are NOT rewritten. A subsequent `save()` or
+   * the eager backfill (Slice 25.1) persists the corrected flags.
+   */
+  private normalizePrimaryInSet(permalinks: Permalink[], hadLegacyDocs: boolean): Permalink[] {
+    if (permalinks.length === 0) return [];
+
+    const primaries = permalinks.filter((p) => p.primary);
+
+    if (primaries.length === 1) {
+      // Already correct — no change needed regardless of legacy presence
+      return permalinks;
+    }
+
+    // Only apply D10 normalization if the set contained legacy docs
+    if (!hadLegacyDocs) {
+      return permalinks;
+    }
+
+    // Determine the canonical primary: earliest createdAt, ties broken by _id (both ASC)
+    const sorted = [...permalinks].sort((a, b) => {
+      const timeDiff = a.createdAt.getTime() - b.createdAt.getTime();
+      if (timeDiff !== 0) return timeDiff;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+    const canonicalId = sorted[0].id;
+
+    return permalinks.map((p) => {
+      const shouldBePrimary = p.id === canonicalId;
+      if (p.primary === shouldBePrimary) return p;
+      return p.withPrimary(shouldBePrimary);
+    });
   }
 
   async findAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<Permalink[]> {
@@ -98,7 +285,227 @@ export class PermalinkRepository {
       ])
       .session(options?.session ?? null);
 
-    return results.map((plain) => Permalink.fromPlain({ ...plain, id: plain._id }));
+    const hadLegacyDocs = results.some((plain) => this.isLegacySchemaVersion(plain._schemaVersion));
+    const migrated = await Promise.all(
+      results.map((plain) => this.fromPlainWithMigration({ ...plain, id: plain._id })),
+    );
+    return this.normalizePrimaryInSet(migrated, hadLegacyDocs);
+  }
+
+  async findPrimaryByPassportId(
+    passportId: string,
+    options?: DbSessionOptions,
+  ): Promise<Permalink | undefined> {
+    // Load ALL presentation permalinks for the passport (migration + D10 normalization applied),
+    // then return the one with primary:true. This ensures legacy docs with zero primaries are
+    // correctly promoted rather than returning undefined for a passport that has valid permalinks.
+    const all = await this.findAllByPassportId(passportId, options);
+    return all.find((p) => p.primary);
+  }
+
+  async findGs1LinkByUpiId(
+    upiUuid: string,
+    options?: DbSessionOptions,
+  ): Promise<Permalink | undefined> {
+    const doc = await this.permalinkDoc
+      .findOne({ uniqueProductIdentifierId: { $eq: upiUuid } })
+      .session(options?.session ?? null);
+    if (!doc) return undefined;
+    const plain = doc.toObject();
+    return this.fromPlainWithMigration({ ...plain, id: plain._id });
+  }
+
+  /**
+   * Batch-load the gs1-link permalinks referencing the given UPI uuids,
+   * keyed by `uniqueProductIdentifierId`. At most one entry per UPI
+   * (partial unique index). Presentation permalinks never match.
+   */
+  async findGs1LinksByUpiIds(
+    upiUuids: string[],
+    options?: DbSessionOptions,
+  ): Promise<Map<string, Permalink>> {
+    if (upiUuids.length === 0) return new Map();
+    const docs = await this.permalinkDoc
+      .find({ uniqueProductIdentifierId: { $in: upiUuids } })
+      .session(options?.session ?? null);
+    const entries = await Promise.all(
+      docs.map(async (doc): Promise<[string, Permalink]> => {
+        const plain = doc.toObject();
+        const permalink = await this.fromPlainWithMigration({ ...plain, id: plain._id });
+        return [plain.uniqueProductIdentifierId as string, permalink];
+      }),
+    );
+    return new Map(entries);
+  }
+
+  /**
+   * Delete every gs1-link permalink referencing one of the given UPI uuids
+   * (cascade for passport deletion — presentation permalinks are handled by
+   * `deleteAllByPassportId`).
+   */
+  async deleteGs1LinksByUpiIds(upiUuids: string[], options?: DbSessionOptions): Promise<void> {
+    if (upiUuids.length === 0) return;
+    await this.permalinkDoc
+      .deleteMany({ uniqueProductIdentifierId: { $in: upiUuids } })
+      .session(options?.session ?? null);
+  }
+
+  async findAllByOrganizationId(
+    organizationId: string,
+    options?: { pagination?: { limit?: number; cursor?: string } },
+    dbOptions?: DbSessionOptions,
+  ): Promise<PagingResult<Permalink>> {
+    return findPageByCursor(
+      this.permalinkDoc,
+      { organizationId: { $eq: organizationId } },
+      (doc) => {
+        const plain = doc.toObject();
+        return this.fromPlainWithMigration({ ...plain, id: plain._id });
+      },
+      {
+        pagination: Pagination.create({
+          limit: options?.pagination?.limit ?? 100,
+          cursor: options?.pagination?.cursor,
+        }),
+        session: dbOptions?.session ?? null,
+      },
+    );
+  }
+
+  /**
+   * List ALL permalinks belonging to a single passport — the UNION of:
+   *   - presentation permalinks (resolved via the presentation-configuration join:
+   *     `presentationConfigurationId → config.referenceId === passportId`), and
+   *   - gs1-link permalinks (resolved via the UPI join:
+   *     `uniqueProductIdentifierId → upi.referenceId === passportId`).
+   *
+   * `findAllByPassportId` returns ONLY the presentation set; gs1-link permalinks
+   * carry a null `presentationConfigurationId` and reference a UPI, so they are
+   * invisible to that join. This method unions both kinds in a single aggregate so
+   * the backoffice per-passport list shows every permalink for the passport.
+   *
+   * Newest-first with the same `createdAt + _id` cursor used by
+   * `findAllByOrganizationId`. NOTE: because this is an aggregate (no Mongoose
+   * schema casting), the cursor's `createdAt` must be wrapped in `new Date(...)`.
+   * Unlike `findAllByPassportId` this does NOT apply D10 single-primary
+   * normalization — a page cannot see the full set — matching the org-scoped list.
+   *
+   * The returned cursor is `null` on the last page — the documented contract
+   * (`PagingMetadataDtoSchema`) consumers page against, mirroring
+   * {@link findPageByCursor}. One extra doc is fetched purely to learn whether a
+   * next page exists; it is dropped before migration so neither the D10 legacy
+   * probe nor the page contents can see it.
+   */
+  async findPageByPassportId(
+    passportId: string,
+    options?: { pagination?: { limit?: number; cursor?: string } },
+    dbOptions?: DbSessionOptions,
+  ): Promise<PagingResult<Permalink>> {
+    const pagination = Pagination.create({
+      limit: options?.pagination?.limit ?? 100,
+      cursor: options?.pagination?.cursor,
+    });
+    const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
+    const limit = pagination.limit ?? 100;
+    const cursorMatch = cursor
+      ? [
+          {
+            $or: [
+              { createdAt: { $lt: new Date(cursor.createdAt) } },
+              { createdAt: new Date(cursor.createdAt), _id: { $lt: cursor.id } },
+            ],
+          },
+        ]
+      : [];
+    const fetched = await this.permalinkDoc
+      .aggregate([
+        {
+          $lookup: {
+            from: this.presentationConfigurationDoc.collection.name,
+            localField: "presentationConfigurationId",
+            foreignField: "_id",
+            as: "config",
+          },
+        },
+        {
+          $lookup: {
+            from: UNIQUE_PRODUCT_IDENTIFIER_COLLECTION,
+            localField: "uniqueProductIdentifierId",
+            foreignField: "_id",
+            as: "upi",
+          },
+        },
+        {
+          $match: {
+            $and: [
+              {
+                $or: [
+                  {
+                    "config.referenceType": DigitalProductDocumentTypes.Passport,
+                    "config.referenceId": { $eq: passportId },
+                  },
+                  { "upi.referenceId": { $eq: passportId } },
+                ],
+              },
+              ...cursorMatch,
+            ],
+          },
+        },
+        { $sort: { createdAt: -1, _id: -1 } },
+        { $limit: limit + 1 },
+        { $project: { config: 0, upi: 0 } },
+      ])
+      .session(dbOptions?.session ?? null);
+
+    const hasNextPage = fetched.length > limit;
+    const results = hasNextPage ? fetched.slice(0, limit) : fetched;
+    const migrated = await Promise.all(
+      results.map((plain) => this.fromPlainWithMigration({ ...plain, id: plain._id })),
+    );
+    const hadLegacyDocs = results.some((plain) => this.isLegacySchemaVersion(plain._schemaVersion));
+    const items = await this.applyCanonicalPrimary(migrated, passportId, hadLegacyDocs, dbOptions);
+    const last = items[items.length - 1];
+    pagination.setCursor(
+      hasNextPage && last ? encodeCursor(last.createdAt.toISOString(), last.id) : null,
+    );
+    return PagingResult.create<Permalink>({ pagination, items });
+  }
+
+  /**
+   * Page-safe counterpart of {@link normalizePrimaryInSet} (D10).
+   *
+   * A page is not the set: this query sorts `createdAt` DESC while the canonical
+   * primary is the EARLIEST one, so on a multi-page passport that row sits on the
+   * last page — normalizing per page would mint a different primary on every page.
+   * Instead the canonical primary is resolved over the full set via
+   * {@link findPrimaryByPassportId} (which runs the D10 normalization) and the page
+   * rows are re-flagged against it.
+   *
+   * Only runs when the page contains legacy docs (schema ≤ 1.2.0), matching the D10
+   * contract: for fully-current sets the stored flags are authoritative and this is a
+   * no-op costing zero extra queries. Read-time only — nothing is rewritten.
+   */
+  private async applyCanonicalPrimary(
+    permalinks: Permalink[],
+    passportId: string,
+    hadLegacyDocs: boolean,
+    options?: DbSessionOptions,
+  ): Promise<Permalink[]> {
+    if (!hadLegacyDocs || permalinks.length === 0) return permalinks;
+
+    const canonical = await this.findPrimaryByPassportId(passportId, options);
+    // No presentation permalink to promote (e.g. a gs1-link-only passport)
+    if (!canonical) return permalinks;
+
+    return permalinks.map((p) => {
+      const shouldBePrimary = p.id === canonical.id;
+      if (p.primary === shouldBePrimary) return p;
+      return p.withPrimary(shouldBePrimary);
+    });
+  }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.permalinkDoc.findByIdAndDelete(id, options);
   }
 
   async deleteByPresentationConfigurationId(

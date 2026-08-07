@@ -36,7 +36,6 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { AnalyticsModule } from "../analytics.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { TimePeriod } from "../domain/time-period";
@@ -82,7 +81,6 @@ describe("passportMetricController", () => {
       ],
       providers: [
         UniqueProductIdentifierRepository,
-        UniqueProductIdentifierApplicationService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,

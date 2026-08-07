@@ -169,7 +169,8 @@ describe("passportController", () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        cursor: expect.any(String),
+        // Single page — no successor, so the cursor is null.
+        cursor: null,
         total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
@@ -196,7 +197,8 @@ describe("passportController", () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        cursor: expect.any(String),
+        // Single page — no successor, so the cursor is null.
+        cursor: null,
         total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
@@ -214,7 +216,8 @@ describe("passportController", () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        cursor: expect.any(String),
+        // Single page — no successor, so the cursor is null.
+        cursor: null,
         total_count: 1,
       },
       result: [secondPassport].map((p) => ({

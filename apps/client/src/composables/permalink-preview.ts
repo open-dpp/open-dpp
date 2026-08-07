@@ -1,5 +1,7 @@
 import type { PermalinkFallbackBaseUrlSource, PermalinkPublicDto } from "@open-dpp/dto";
 import {
+  baseUrlOrigin,
+  buildGs1DataAttributeQuery,
   canonicaliseBaseUrl,
   PERMALINK_RESERVED_SLUGS,
   PermalinkBaseUrlSchema,
@@ -116,4 +118,92 @@ export function usePermalinkPreview(
   });
 
   return { effectiveBase, effectiveSlug, previewUrl, previewSource, previewValid, locked };
+}
+
+/**
+ * The GS1 identity path (`/01/{gtin}[/10/{batch}][/21/{serial}]`) of a gs1-link
+ * permalink, parsed from its backend-authoritative `publicUrl` with the query
+ * dropped.
+ *
+ * ponytail: `01` (GTIN) is always the leading Application Identifier of a GS1
+ * Digital Link, so the first `/01/` marks where the identity path starts —
+ * anything before it is the base's own path, which we recompute from the base
+ * cascade. Returns "" when no `/01/` is present (e.g. the presentation-form
+ * fallback the backend emits when the referenced UPI was deleted).
+ */
+function deriveGs1IdentityPath(publicUrl: string): string {
+  try {
+    const url = new URL(publicUrl);
+    const idx = url.pathname.indexOf("/01/");
+    return idx === -1 ? "" : url.pathname.slice(idx);
+  } catch {
+    return "";
+  }
+}
+
+export interface Gs1LinkPreview {
+  /** The live GS1 Digital Link URL: base cascade + identity path + attrs query. */
+  previewUrl: ComputedRef<string>;
+  /** True once published — the URL is frozen and the editor is read-only. */
+  locked: ComputedRef<boolean>;
+}
+
+/**
+ * Live preview of a gs1-link permalink's GS1 Digital Link URL while the user edits
+ * its custom base URL and GS1 data attributes.
+ *
+ * Reuses the same three inputs the backend's `resolveGs1LinkPublicUrl` composes,
+ * so the preview matches the persisted `publicUrl` with zero drift:
+ * - **base** — the permalink base-URL cascade (typed override → `fallbackBaseUrl`),
+ *   identical to {@link usePermalinkPreview}'s `effectiveBase`.
+ * - **identity path** — kept verbatim from the backend's `publicUrl` (GTIN
+ *   normalization stays backend-owned; the frontend never rebuilds the path).
+ * - **query** — rebuilt live from the edited attrs via the shared
+ *   `buildGs1DataAttributeQuery` (the very function the backend uses).
+ *
+ * Once published, the frozen `publishedUrl` is shown verbatim.
+ */
+export function useGs1LinkPreview(
+  permalink: Ref<PermalinkPublicDto | undefined>,
+  baseUrlInput: Ref<string>,
+  gs1DataAttributes: Ref<Record<string, string>>,
+): Gs1LinkPreview {
+  const trimmedBase = computed(() => trimToNull(baseUrlInput.value));
+  const locked = computed(() => Boolean(permalink.value?.publishedUrl));
+
+  const effectiveBase = computed(() => {
+    const base =
+      trimmedBase.value !== null
+        ? canonicaliseBaseUrl(trimmedBase.value)
+        : permalink.value
+          ? deriveFallbackBaseUrl(permalink.value)
+          : "";
+    // GS1 Digital Links resolve at the domain root, so the preview renders on the
+    // base's origin (drops the presentation `/p` — or any other path the cascade
+    // base carries), matching the backend's `resolveGs1LinkPublicUrl`.
+    return base ? baseUrlOrigin(base) : "";
+  });
+
+  const previewUrl = computed(() => {
+    if (!permalink.value) return "";
+    if (locked.value && permalink.value.publishedUrl) return permalink.value.publishedUrl;
+
+    const identityPath = deriveGs1IdentityPath(permalink.value.publicUrl);
+    // Without an identity path there is no GS1 Digital Link to preview — a bare
+    // attrs query hung off the base (`https://id.example.com?3103=…`) is not a
+    // valid one, so degrade to the base alone.
+    if (!identityPath) return effectiveBase.value;
+    // The attrs map only ever holds validated pairs (the editor emits nothing
+    // else), but never trust the boundary: a bad pair yields a query-less
+    // preview rather than a thrown render.
+    let query = "";
+    try {
+      query = buildGs1DataAttributeQuery(gs1DataAttributes.value);
+    } catch {
+      query = "";
+    }
+    return `${effectiveBase.value}${identityPath}${query}`;
+  });
+
+  return { previewUrl, locked };
 }

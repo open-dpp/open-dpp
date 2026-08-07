@@ -1,20 +1,27 @@
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Logger,
+  NotFoundException,
   Param,
   Patch,
+  Post,
 } from "@nestjs/common";
 import type {
   ApiVersionsDtoType,
   AssetAdministrationShellPaginationResponseDto,
   PassportPermalinkBundleDto,
+  PermalinkCreateRequest,
   PermalinkUpdateRequest,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -22,17 +29,20 @@ import type {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-
 import {
   AllApiVersions,
   PassportPermalinkBundleDtoSchema,
+  PermalinkCreateRequestSchema,
+  PermalinkKind,
   PermalinkListDtoSchema,
+  PermalinkPaginationDtoSchema,
   PermalinkPublicDtoSchema,
   PermalinkUpdateRequestSchema,
   DigitalProductDocumentTypes,
+  UniqueProductIdentifierType,
 } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
-import { ZodValidationPipe } from "@open-dpp/exception";
+import { ValueError, ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { Environment } from "../../aas/domain/environment";
@@ -66,6 +76,7 @@ import {
   PresentationConfigurationService,
   PresentationReferenceHolder,
 } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Permalink } from "../domain/permalink";
@@ -73,9 +84,14 @@ import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import {
   isMemberOfPassportOrg,
   PermalinkApplicationService,
-  resolveFallbackBaseUrl,
+  type PermalinkUpdate,
 } from "../application/services/permalink.application.service";
+import {
+  BaseUrlResolver,
+  resolveFallbackBaseUrl,
+} from "../application/services/base-url-resolver.service";
 import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
 @Controller({ version: AllApiVersions })
@@ -84,11 +100,14 @@ export class PermalinkController {
 
   constructor(
     private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly baseUrlResolver: BaseUrlResolver,
     private readonly permalinkRepository: PermalinkRepository,
     private readonly environmentService: EnvironmentService,
     private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly passportRepository: PassportRepository,
     private readonly envService: EnvService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
   @OptionalAuth()
@@ -200,19 +219,17 @@ export class PermalinkController {
     }
   }
 
+  /**
+   * Resolve branding for a passport response: `forPin` is the tolerant branding
+   * load (null when the org/branding is absent — logged once by the repository —
+   * so the URL is computed without pinning); `display` falls back to the default
+   * branding so the response always carries a renderable branding object.
+   */
   private async resolveBranding(
     organizationId: string,
   ): Promise<{ display: Branding; forPin: Branding | null }> {
-    try {
-      const branding = await this.permalinkApplicationService.loadBranding(organizationId);
-      return { display: branding, forPin: branding };
-    } catch (error) {
-      this.logger.warn(
-        `Branding load failed for organizationId=${organizationId}; serving default branding and skipping permalink URL pinning`,
-        error instanceof Error ? error.stack : String(error),
-      );
-      return { display: Branding.getDefault(), forPin: null };
-    }
+    const forPin = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
+    return { display: forPin ?? Branding.getDefault(), forPin };
   }
 
   private async toPublicDto(
@@ -234,6 +251,263 @@ export class PermalinkController {
       fallbackBaseUrl: fallback.url,
       fallbackBaseUrlSource: fallback.source,
     };
+  }
+
+  @Get("/permalinks")
+  async listByOrganization(
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const pagination = Pagination.create({ limit, cursor });
+    const { items, cursor: nextCursor } = await this.permalinkApplicationService.listByOrganization(
+      organizationId,
+      pagination,
+    );
+    return PermalinkPaginationDtoSchema.parse({
+      paging_metadata: { cursor: nextCursor },
+      result: items.map(({ permalink, publicUrl, fallbackBaseUrl, fallbackBaseUrlSource }) => ({
+        ...permalink.toPlain(),
+        publicUrl,
+        fallbackBaseUrl,
+        fallbackBaseUrlSource,
+      })),
+    });
+  }
+
+  @Get("/passports/:id/permalinks")
+  async listByPassport(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const passport = await this.passportRepository.findOne(id);
+    if (!passport) {
+      throw new NotFoundException(`Passport ${id} not found`);
+    }
+    if (passport.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    const pagination = Pagination.create({ limit, cursor });
+    const { items, cursor: nextCursor } = await this.permalinkApplicationService.listByPassport(
+      id,
+      pagination,
+    );
+    return PermalinkPaginationDtoSchema.parse({
+      paging_metadata: { cursor: nextCursor },
+      result: items.map(({ permalink, publicUrl, fallbackBaseUrl, fallbackBaseUrlSource }) => ({
+        ...permalink.toPlain(),
+        publicUrl,
+        fallbackBaseUrl,
+        fallbackBaseUrlSource,
+      })),
+    });
+  }
+
+  @Post("/permalinks")
+  @HttpCode(HttpStatus.CREATED)
+  async createPermalink(
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Body(new ZodValidationPipe(PermalinkCreateRequestSchema))
+    body: PermalinkCreateRequest,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+
+    // Resolve the owning passport, check ownership, and create — one dispatch per kind.
+    let passport: Passport;
+    let created: Permalink;
+    if (body.kind === PermalinkKind.GS1_LINK) {
+      // gs1-link: look up UPI → use its referenceId to find the passport
+      const upi = await this.uniqueProductIdentifierRepository.findOne(
+        body.uniqueProductIdentifierId,
+      );
+      if (!upi) {
+        throw new NotFoundException(
+          `UniqueProductIdentifier ${body.uniqueProductIdentifierId} not found`,
+        );
+      }
+      // Only a GS1 identifier carries the GTIN/batch/serial a Digital Link is built
+      // from. Without this guard the permalink is created, renders as a presentation
+      // URL labelled "GS1 Digital Link", and cannot be frozen on publish
+      // (`computeFreezeUrl` throws for a UPI with no GS1 identity).
+      if (upi.type !== UniqueProductIdentifierType.GS1) {
+        throw new BadRequestException(
+          `UniqueProductIdentifier ${upi.uuid} is of type ${upi.type} and cannot back a GS1 Digital Link permalink`,
+        );
+      }
+      const found = await this.passportRepository.findOne(upi.referenceId);
+      if (!found) {
+        throw new NotFoundException(`Passport ${upi.referenceId} not found`);
+      }
+      passport = found;
+      if (passport.organizationId !== organizationId) {
+        throw new ForbiddenException();
+      }
+      // A caller-supplied presentation config must belong to the caller's org;
+      // otherwise a caller could bind their permalink to another org's config
+      // (and occupy its unique-index slot). Missing config -> 404, wrong org -> 403.
+      let presentationConfigurationId: string | null = null;
+      if (body.presentationConfigurationId != null) {
+        const config = await this.presentationConfigurationRepository.findOne(
+          body.presentationConfigurationId,
+        );
+        if (!config) {
+          throw new NotFoundException(
+            `PresentationConfiguration ${body.presentationConfigurationId} not found`,
+          );
+        }
+        if (config.organizationId !== organizationId) {
+          throw new ForbiddenException();
+        }
+        presentationConfigurationId = config.id;
+      }
+      created = await this.permalinkApplicationService.createGs1LinkPermalink({
+        uniqueProductIdentifierId: body.uniqueProductIdentifierId,
+        organizationId: passport.organizationId,
+        presentationConfigurationId,
+        gs1DataAttributes: body.gs1DataAttributes ?? null,
+        baseUrl: body.baseUrl ?? null,
+      });
+    } else {
+      // presentation: look up the config → use its referenceId to find the passport
+      const config = await this.presentationConfigurationRepository.findOneOrFail(
+        body.presentationConfigurationId,
+      );
+      const found = await this.passportRepository.findOne(config.referenceId);
+      if (!found) {
+        throw new NotFoundException(`Passport ${config.referenceId} not found`);
+      }
+      passport = found;
+      if (passport.organizationId !== organizationId) {
+        throw new ForbiddenException();
+      }
+      created = await this.permalinkApplicationService.createPresentationPermalink(
+        config,
+        passport.organizationId,
+      );
+    }
+
+    const branding = await this.resolveBranding(passport.organizationId);
+    return PermalinkPublicDtoSchema.parse(await this.toPublicDto(created, branding, passport));
+  }
+
+  @Patch("/permalinks/:id")
+  async updatePermalink(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(PermalinkUpdateRequestSchema))
+    body: PermalinkUpdateRequest,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const permalink = await this.permalinkRepository.findOneOrFail(id);
+    if (permalink.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    try {
+      const update: PermalinkUpdate = {};
+      if (body.slug !== undefined) update.slug = body.slug;
+      if (body.baseUrl !== undefined) update.baseUrl = body.baseUrl;
+      if (body.gs1DataAttributes !== undefined) update.gs1DataAttributes = body.gs1DataAttributes;
+      const next = await this.permalinkApplicationService.updatePermalink(id, update);
+      const passport = await this.resolvePassportForPermalink(next);
+      const branding = await this.resolveBranding(organizationId);
+      return PermalinkPublicDtoSchema.parse(await this.toPublicDto(next, branding, passport));
+    } catch (error) {
+      if (isDuplicateKeyError(error)) {
+        throw new ConflictException("Slug is already taken");
+      }
+      if (
+        error instanceof ValueError &&
+        error.message.includes("Cannot modify a published permalink")
+      ) {
+        throw new ConflictException("Permalink is published and its slug/baseUrl are locked");
+      }
+      throw error;
+    }
+  }
+
+  @Post("/permalinks/:id/primary")
+  @HttpCode(HttpStatus.OK)
+  async setPrimary(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const permalink = await this.permalinkRepository.findOneOrFail(id);
+    if (permalink.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    const passport = await this.resolvePassportForPermalink(permalink);
+    await this.environmentService.withTransaction(async (options) => {
+      await this.permalinkApplicationService.setPrimary(passport.id, id, options);
+    });
+    const updated = await this.permalinkRepository.findOneOrFail(id);
+    const branding = await this.resolveBranding(organizationId);
+    return PermalinkPublicDtoSchema.parse(await this.toPublicDto(updated, branding, passport));
+  }
+
+  @Delete("/permalinks/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePermalink(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<void> {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const permalink = await this.permalinkRepository.findOneOrFail(id);
+    if (permalink.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    await this.permalinkApplicationService.deletePermalink(id);
+  }
+
+  private async resolvePassportForPermalink(permalink: Permalink): Promise<Passport> {
+    if (permalink.kind === PermalinkKind.GS1_LINK && permalink.uniqueProductIdentifierId !== null) {
+      const upi = await this.uniqueProductIdentifierRepository.findOne(
+        permalink.uniqueProductIdentifierId,
+      );
+      if (!upi) {
+        throw new NotFoundException(
+          `UniqueProductIdentifier ${permalink.uniqueProductIdentifierId} not found`,
+        );
+      }
+      const passport = await this.passportRepository.findOne(upi.referenceId);
+      if (!passport) {
+        throw new NotFoundException(`Passport ${upi.referenceId} not found`);
+      }
+      return passport;
+    }
+    if (permalink.presentationConfigurationId !== null) {
+      const config = await this.presentationConfigurationRepository.findOneOrFail(
+        permalink.presentationConfigurationId,
+      );
+      const passport = await this.passportRepository.findOne(config.referenceId);
+      if (!passport) {
+        throw new NotFoundException(`Passport ${config.referenceId} not found`);
+      }
+      return passport;
+    }
+    throw new NotFoundException(`Cannot resolve passport for permalink ${permalink.id}`);
   }
 
   @OptionalAuth()

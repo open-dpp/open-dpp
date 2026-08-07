@@ -230,12 +230,10 @@ describe("templateRepository", () => {
 
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId);
 
+    // Whole org fits in one page — no successor, so the cursor is null.
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(t1.createdAt.toISOString(), t1.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [t5, t4, t3, t1],
         totalCount: 4,
       }),
@@ -249,10 +247,7 @@ describe("templateRepository", () => {
 
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(t5.createdAt.toISOString(), t5.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [t5],
         totalCount: 1,
       }),
@@ -266,10 +261,7 @@ describe("templateRepository", () => {
 
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [t5, t4],
         totalCount: 2,
       }),
@@ -283,7 +275,7 @@ describe("templateRepository", () => {
     });
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
+        pagination: Pagination.create({}),
         items: [t3, t1],
         totalCount: 4,
       }),

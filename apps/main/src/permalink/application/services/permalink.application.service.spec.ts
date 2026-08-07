@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
-import { DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { ConflictException, NotFoundException } from "@nestjs/common";
+import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
 import type { Model } from "mongoose";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
@@ -26,6 +27,8 @@ import { PresentationConfigurationsModule } from "../../../presentation-configur
 import { Permalink } from "../../domain/permalink";
 import { PermalinkRepository } from "../../infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../infrastructure/permalink.schema";
+import { UniqueProductIdentifier } from "../../../unique-product-identifier/domain/unique.product.identifier";
+import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { InstanceSettingsModule } from "../../../instance-settings/instance-settings.module";
 import { PermalinkModule } from "../../permalink.module";
 import { PermalinkApplicationService } from "./permalink.application.service";
@@ -203,6 +206,38 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     );
   });
 
+  it("freezeAllForPassport freezes a config-bound gs1-link once, in Digital Link form", async () => {
+    const passport = await seedPublishedPassport();
+    await seedBranding(passport.organizationId);
+    const { config } = await seedConfigWithPermalink(passport);
+    // A distinct serial: gtin+batch+serial is unique across the collection.
+    const serial = `SER-${randomUUID().slice(0, 8)}`;
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: passport.id,
+      gtin: "00012345678905",
+      serial,
+      organizationId: passport.organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    // Bound to the same config as the presentation permalink: this row matches
+    // BOTH lookups inside freezeAllForPassport, so the de-duplication by id is
+    // what keeps it from being frozen twice.
+    const gs1Link = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      presentationConfigurationId: config.id,
+      baseUrl: "https://id.example.com",
+      organizationId: passport.organizationId,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(gs1Link);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await service.freezeAllForPassport(passport);
+
+    const frozen = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(gs1Link.id);
+    expect(frozen.publishedUrl).toBe(`https://id.example.com/01/00012345678905/21/${serial}`);
+  });
+
   it("freezeAllForPassport leaves an already-frozen permalink untouched (idempotent)", async () => {
     const passport = await seedPublishedPassport();
     await seedBranding(passport.organizationId);
@@ -235,7 +270,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [created] = await service.createPermalinksForConfigs([config]);
+    const [created] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(created.publishedUrl).toBe(`http://localhost:3000/p/${created.id}`);
   });
@@ -273,7 +308,64 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     expect(persisted.publishedUrl).toBeNull();
   });
 
+  it("resolvePublicUrlWithFreeze computes the live GS1 Digital Link URL for an unfrozen gs1-link (unpublished passport)", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "00012345678905",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    const passport = await seedPassport();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const { permalink: unchanged, publicUrl } = await service.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      null,
+      "http://localhost:3000/p",
+    );
+
+    expect(publicUrl).toBe("https://id.example.com/01/00012345678905");
+    // pre-freeze: the permalink stays unfrozen (live-computed, not pinned)
+    expect(unchanged.publishedUrl).toBeNull();
+  });
+
+  it("resolvePublicUrlWithFreeze falls back to the presentation form when the gs1-link's UPI is missing (deleted)", async () => {
+    const organizationId = randomUUID();
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: randomUUID(),
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    const passport = await seedPassport();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const { publicUrl } = await service.resolvePublicUrlWithFreeze(
+      permalink,
+      passport,
+      null,
+      "http://localhost:3000/p",
+    );
+
+    expect(publicUrl).toBe(`https://id.example.com/${permalink.id}`);
+  });
+
   it("createPermalinksForConfigs recovers idempotently when a concurrent create wins the unique-index race", async () => {
+    // This test provokes the unique-index duplicate-key path, so the index on
+    // presentationConfigurationId must exist. Mongoose autoIndex is async and lags under the
+    // full parallel suite; build it deterministically first (mirrors permalink.repository.spec).
+    await ctx
+      .getModuleRef()
+      .get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name))
+      .syncIndexes();
     const passport = await seedPassport();
     const config = PresentationConfiguration.createForPassport({
       organizationId: passport.organizationId,
@@ -289,7 +381,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
       .mockResolvedValueOnce(undefined);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [result] = await service.createPermalinksForConfigs([config]);
+    const [result] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(result.id).toEqual(winner.id);
     const all = await ctx.getModuleRef().get(PermalinkRepository).findAllByPassportId(passport.id);
@@ -306,8 +398,361 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const [created] = await service.createPermalinksForConfigs([config]);
+    const [created] = await service.createPermalinksForConfigs([config], passport.organizationId);
 
     expect(created.publishedUrl).toBeNull();
+  });
+
+  it("freezePermalink freezes a gs1-link permalink as its GS1 Digital Link URL, not the presentation form", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "04006381333931",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      organizationId,
+    });
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
+
+    expect(frozen.publishedUrl).toBe("https://id.example.com/01/04006381333931");
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
+    expect(persisted.publishedUrl).toBe("https://id.example.com/01/04006381333931");
+  });
+
+  it("freezePermalink threads batch, serial and gs1DataAttributes into the frozen GS1 URL", async () => {
+    const organizationId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: randomUUID(),
+      gtin: "04006381333931",
+      batch: "LOT-42",
+      serial: "SN-001",
+      organizationId,
+    });
+    await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      uniqueProductIdentifierId: upi.uuid,
+      baseUrl: "https://id.example.com",
+      gs1DataAttributes: { "3103": "000750" },
+      organizationId,
+    });
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
+
+    expect(frozen.publishedUrl).toBe(
+      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-001?3103=000750",
+    );
+  });
+});
+
+describe("PermalinkApplicationService.resolveToPassport (polymorphic)", () => {
+  const ctx = createAasTestContext(
+    "/p",
+    "/p",
+    {
+      imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
+      providers: [
+        PermalinkRepository,
+        PermalinkApplicationService,
+        PassportRepository,
+        BrandingRepository,
+        PresentationConfigurationRepository,
+      ],
+    },
+    [
+      { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    ],
+    PermalinkRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER }),
+  );
+
+  async function seedPassport(options?: { published?: boolean }) {
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    });
+    if (options?.published) {
+      passport.publish();
+    }
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
+    return passport;
+  }
+
+  async function seedConfigAndPermalink(
+    passport: Passport,
+    permalinkOptions?: {
+      uniqueProductIdentifierId?: string;
+    },
+  ) {
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    const permalink = Permalink.create({
+      presentationConfigurationId: config.id,
+      ...(permalinkOptions?.uniqueProductIdentifierId !== undefined && {
+        kind: "gs1-link" as const,
+        uniqueProductIdentifierId: permalinkOptions.uniqueProductIdentifierId,
+      }),
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
+    return { config, permalink };
+  }
+
+  // (a) presentation permalink resolves to its config's passport as today
+  it("(a) resolves a presentation permalink to its config's passport", async () => {
+    const passport = await seedPassport({ published: true });
+    const { permalink } = await seedConfigAndPermalink(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.resolveToPassport(permalink.id);
+
+    expect(result.permalink.id).toBe(permalink.id);
+    expect(result.passport.id).toBe(passport.id);
+    expect(result.presentationConfiguration).toBeDefined();
+  });
+
+  // (b) a permalink with both presentationConfigurationId and uniqueProductIdentifierId set
+  //     still resolves via the config
+  it("(b) resolves a gs1-link permalink with both configId and upiId via the config", async () => {
+    const passport = await seedPassport({ published: true });
+    const upiId = randomUUID();
+    const { config, permalink } = await seedConfigAndPermalink(passport, {
+      uniqueProductIdentifierId: upiId,
+    });
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.resolveToPassport(permalink.id);
+
+    expect(result.permalink.id).toBe(permalink.id);
+    expect(result.presentationConfiguration.id).toBe(config.id);
+    expect(result.passport.id).toBe(passport.id);
+  });
+
+  // (c) unchanged: throws NotFoundException when the resolved passport is unpublished
+  //     and access is anonymous
+  it("(c) throws NotFoundException when passport is unpublished and access is anonymous", async () => {
+    const passport = await seedPassport({ published: false });
+    const { permalink } = await seedConfigAndPermalink(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    await expect(service.resolveToPassport(permalink.id, undefined)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+});
+
+describe("PermalinkApplicationService primary management", () => {
+  const ctx = createAasTestContext(
+    "/p",
+    "/p",
+    {
+      imports: [PermalinkModule, PresentationConfigurationsModule, InstanceSettingsModule],
+      providers: [
+        PermalinkRepository,
+        PermalinkApplicationService,
+        PassportRepository,
+        BrandingRepository,
+        PresentationConfigurationRepository,
+      ],
+    },
+    [
+      { name: PassportDoc.name, schema: PassportSchema },
+      { name: BrandingDoc.name, schema: BrandingSchema },
+      { name: PermalinkDoc.name, schema: PermalinkSchema },
+      { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    ],
+    PermalinkRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER }),
+  );
+
+  async function seedPassport() {
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    });
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
+    return passport;
+  }
+
+  async function seedConfig(passport: Passport) {
+    const config = PresentationConfiguration.createForPassport({
+      organizationId: passport.organizationId,
+      referenceId: passport.id,
+    });
+    await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+    return config;
+  }
+
+  // (a) createPermalinksForConfigs marks the first presentation permalink primary
+  it("(a) createPermalinksForConfigs marks the first presentation permalink as primary", async () => {
+    const passport = await seedPassport();
+    const config = await seedConfig(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [created] = await service.createPermalinksForConfigs([config], passport.organizationId);
+
+    expect(created.primary).toBe(true);
+    // Persisted value should also be primary:true
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(created.id);
+    expect(persisted.primary).toBe(true);
+  });
+
+  // (a) ensureDefaultForPassport marks the first presentation permalink primary
+  it("(a) ensureDefaultForPassport marks the first presentation permalink as primary", async () => {
+    const passport = await seedPassport();
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const permalink = await service.ensureDefaultForPassport(passport);
+
+    expect(permalink.primary).toBe(true);
+    const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
+    expect(persisted.primary).toBe(true);
+  });
+
+  // (b) a second presentation permalink stays non-primary while the first stays primary
+  it("(b) second presentation permalink stays non-primary; first stays primary", async () => {
+    const passport = await seedPassport();
+    const config1 = await seedConfig(passport);
+    const config2 = await seedConfig(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [first, second] = await service.createPermalinksForConfigs(
+      [config1, config2],
+      passport.organizationId,
+    );
+
+    expect(first.primary).toBe(true);
+    expect(second.primary).toBe(false);
+    const repo = ctx.getModuleRef().get(PermalinkRepository);
+    expect((await repo.findOneOrFail(first.id)).primary).toBe(true);
+    expect((await repo.findOneOrFail(second.id)).primary).toBe(false);
+  });
+
+  // (a) gs1-link permalink is never marked primary
+  it("(a) a gs1-link permalink created via createPermalinksForConfigs is never marked primary", async () => {
+    // gs1-link permalinks are not created via createPermalinksForConfigs in practice,
+    // but createPermalinksForConfigs deals with config-based presentation permalinks only.
+    // Test: if no presentation permalink exists yet, a manually seeded gs1-link should not
+    // affect the primary assignment logic, and after calling createPermalinksForConfigs for a
+    // presentation config the presentation permalink gets primary:true.
+    const passport = await seedPassport();
+    // Seed a gs1-link permalink manually (not through createPermalinksForConfigs)
+    const gs1Link = Permalink.create({
+      kind: "gs1-link" as const,
+      uniqueProductIdentifierId: randomUUID(),
+      presentationConfigurationId: null,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(gs1Link);
+
+    const config = await seedConfig(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    const [presentation] = await service.createPermalinksForConfigs(
+      [config],
+      passport.organizationId,
+    );
+
+    // The presentation permalink should be primary; the gs1-link should NOT be primary
+    expect(presentation.primary).toBe(true);
+    const savedGs1Link = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findOneOrFail(gs1Link.id);
+    expect(savedGs1Link.primary).toBe(false);
+  });
+
+  // (c) setPrimary moves the primary flag to the target
+  it("(c) setPrimary flips primary to the target and clears the old primary", async () => {
+    const passport = await seedPassport();
+    const config1 = await seedConfig(passport);
+    const config2 = await seedConfig(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [first, second] = await service.createPermalinksForConfigs(
+      [config1, config2],
+      passport.organizationId,
+    );
+    expect(first.primary).toBe(true);
+    expect(second.primary).toBe(false);
+
+    await service.setPrimary(passport.id, second.id);
+
+    const all = await ctx.getModuleRef().get(PermalinkRepository).findAllByPassportId(passport.id);
+    const updatedFirst = all.find((p) => p.id === first.id)!;
+    const updatedSecond = all.find((p) => p.id === second.id)!;
+    expect(updatedFirst.primary).toBe(false);
+    expect(updatedSecond.primary).toBe(true);
+    expect(all.filter((p) => p.primary)).toHaveLength(1);
+  });
+
+  // (d) setPrimary rejects a gs1-link target with ConflictException
+  it("(d) setPrimary throws ConflictException when target is a gs1-link permalink", async () => {
+    const passport = await seedPassport();
+    const gs1Link = Permalink.create({
+      kind: "gs1-link" as const,
+      uniqueProductIdentifierId: randomUUID(),
+      presentationConfigurationId: null,
+    });
+    await ctx.getModuleRef().get(PermalinkRepository).save(gs1Link);
+
+    // Seed a presentation config so findAllByPassportId has context
+    const config = await seedConfig(passport);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+    await service.createPermalinksForConfigs([config], passport.organizationId);
+
+    await expect(service.setPrimary(passport.id, gs1Link.id)).rejects.toThrow(ConflictException);
+  });
+
+  // (e) setPrimary rejects a permalink belonging to a different passport with NotFoundException
+  it("(e) setPrimary throws NotFoundException when target belongs to a different passport", async () => {
+    const passport1 = await seedPassport();
+    const passport2 = await seedPassport();
+    const config1 = await seedConfig(passport1);
+    const config2 = await seedConfig(passport2);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const [permalink1] = await service.createPermalinksForConfigs(
+      [config1],
+      passport1.organizationId,
+    );
+    const [permalink2] = await service.createPermalinksForConfigs(
+      [config2],
+      passport2.organizationId,
+    );
+
+    // Try to set passport1's primary to permalink2 (which belongs to passport2)
+    await expect(service.setPrimary(passport1.id, permalink2.id)).rejects.toThrow(
+      NotFoundException,
+    );
+    // And ensure passport1's permalink1 is still primary
+    const persisted1 = await ctx
+      .getModuleRef()
+      .get(PermalinkRepository)
+      .findOneOrFail(permalink1.id);
+    expect(persisted1.primary).toBe(true);
   });
 });

@@ -7,6 +7,7 @@ import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
 import { presentationConfigurationPaths } from "./presentation-configuration.paths";
 import { permalinkPaths } from "./permalink.paths";
+import { uniqueProductIdentifierPaths } from "./unique-product-identifier.paths";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 const document = createDocument({
@@ -36,6 +37,7 @@ const document = createDocument({
     ...organizationsPaths,
     ...presentationConfigurationPaths,
     ...permalinkPaths,
+    ...uniqueProductIdentifierPaths,
   },
   components: {
     parameters: {

@@ -14,7 +14,8 @@ export class Pagination {
     return this._cursor;
   }
 
-  setCursor(cursor: string) {
+  /** `null` marks the last page — the paging metadata contract consumers stop on. */
+  setCursor(cursor: string | null) {
     this._cursor = cursor;
   }
 

@@ -12,6 +12,21 @@ export function canonicaliseBaseUrl(s: string): string {
   }
 }
 
+/**
+ * The origin (`scheme://host[:port]`) of a base URL, dropping any path, query, or
+ * fragment. The GS1 Digital Link resolver is mounted at the domain root
+ * (`/01/{gtin}`), so a GS1 link renders on the origin even when the shared
+ * permalink base carries a path (e.g. the presentation viewer's `/p`). Returns the
+ * input unchanged when it cannot be parsed as a URL.
+ */
+export function baseUrlOrigin(s: string): string {
+  try {
+    return new URL(s).origin;
+  } catch {
+    return s;
+  }
+}
+
 export const PermalinkBaseUrlSchema = z
   .string()
   .min(8)

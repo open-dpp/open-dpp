@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { Branding } from "../../../branding/domain/branding";
 import { Permalink } from "../../domain/permalink";
-import { resolveFallbackBaseUrl, resolvePublicUrl } from "./permalink.application.service";
+import { resolveFallbackBaseUrl } from "./base-url-resolver.service";
+import { resolvePublicUrl } from "./permalink.application.service";
 
 const ENV_FALLBACK = "https://instance.example.com";
 

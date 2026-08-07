@@ -31,5 +31,9 @@ module.exports = {
 
   globalSetup: "<rootDir>/test/global-setup.ts",
   globalTeardown: "<rootDir>/test/global-teardown.ts",
-  testTimeout: 20000,
+  // Integration suites build a full NestJS module + Mongoose connections in beforeAll.
+  // Under the full parallel suite (~130 suites contending for CPU/IO) that setup can
+  // exceed a 20s ceiling on contended machines, even though each suite runs in ~8s in
+  // isolation. 45s gives headroom without masking a genuinely hung test.
+  testTimeout: 45000,
 };
