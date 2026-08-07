@@ -163,7 +163,7 @@ async function resendVerification() {
   if (verificationSubmitting.value) return;
   verificationSubmitting.value = true;
   try {
-    await usersRepo.resendVerificationEmail();
+    await usersRepo.resendMyVerificationEmail();
   } finally {
     verificationSubmitting.value = false;
   }

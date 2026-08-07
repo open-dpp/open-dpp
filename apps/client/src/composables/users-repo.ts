@@ -8,7 +8,35 @@ export function useUsersRepo() {
   const notificationStore = useNotificationStore();
   const { t } = useI18n();
 
-  async function resendVerificationEmail(): Promise<boolean> {
+  async function resendPasswordReset(userId: string) {
+    try {
+      await apiClient.dpp.users.resendPasswordReset(userId);
+      notificationStore.addSuccessNotification(
+        t("organizations.admin.resendPasswordReset.success"),
+      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(
+        t("organizations.admin.resendPasswordReset.error"),
+        error,
+      );
+    }
+  }
+
+  async function resendVerificationEmail(userId: string) {
+    try {
+      await apiClient.dpp.users.resendVerificationEmail(userId);
+      notificationStore.addSuccessNotification(
+        t("organizations.admin.resendVerificationEmail.success"),
+      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(
+        t("organizations.admin.resendVerificationEmail.error"),
+        error,
+      );
+    }
+  }
+
+  async function resendMyVerificationEmail(): Promise<boolean> {
     try {
       await apiClient.dpp.users.resendMyVerificationEmail();
       notificationStore.addSuccessNotification(t("user.resendVerificationEmail.success"));
@@ -19,5 +47,5 @@ export function useUsersRepo() {
     }
   }
 
-  return { resendVerificationEmail };
+  return { resendVerificationEmail, resendMyVerificationEmail, resendPasswordReset };
 }

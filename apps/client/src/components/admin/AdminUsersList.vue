@@ -12,6 +12,7 @@ const props = defineProps<{
     name?: string;
   })[];
   currentUserRole: string;
+  currentUserId?: string;
 }>();
 
 const emits = defineEmits<{
@@ -62,16 +63,19 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
     },
   ];
   if (props.currentUserRole === "admin") {
-    items.push({
-      label: t("organizations.admin.changeRoleDialog.title"),
-      icon: "pi pi-shield",
-      command: () => emits("changeRole", row.id, row.email, row.role),
-    });
-    items.push({
-      label: t("organizations.admin.resendPasswordReset.action"),
-      icon: "pi pi-envelope",
-      command: () => emits("resendPasswordReset", row.id, row.email),
-    });
+    const isSelf = row.id === props.currentUserId;
+    if (!isSelf) {
+      items.push({
+        label: t("organizations.admin.changeRoleDialog.title"),
+        icon: "pi pi-shield",
+        command: () => emits("changeRole", row.id, row.email, row.role),
+      });
+      items.push({
+        label: t("organizations.admin.resendPasswordReset.action"),
+        icon: "pi pi-envelope",
+        command: () => emits("resendPasswordReset", row.id, row.email),
+      });
+    }
     if (!row.emailVerified) {
       items.push({
         label: t("organizations.admin.resendVerificationEmail.action"),

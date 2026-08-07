@@ -63,8 +63,8 @@ describe("usersRepo composable", () => {
     const notificationStore = useNotificationStore();
     mocks.resendMyVerificationEmail.mockResolvedValueOnce({ data: {} });
 
-    const { resendVerificationEmail } = mountHarness();
-    const result = await resendVerificationEmail();
+    const { resendMyVerificationEmail } = mountHarness();
+    const result = await resendMyVerificationEmail();
 
     expect(result).toBe(true);
     expect(mocks.resendMyVerificationEmail).toHaveBeenCalledOnce();
@@ -78,8 +78,8 @@ describe("usersRepo composable", () => {
     const notificationStore = useNotificationStore();
     mocks.resendMyVerificationEmail.mockRejectedValueOnce(new Error("network down"));
 
-    const { resendVerificationEmail } = mountHarness();
-    const result = await resendVerificationEmail();
+    const { resendMyVerificationEmail } = mountHarness();
+    const result = await resendMyVerificationEmail();
 
     expect(result).toBe(false);
     expect(notificationStore.notifications).toHaveLength(1);
