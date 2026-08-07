@@ -108,7 +108,8 @@
     "formLabels": {
       "value": "Wert",
       "name": "Name",
-      "id": "Identifikator"
+      "id": "Identifikator",
+      "description": "Beschreibung"
     },
     "table": {
       "edit": "Tabelle bearbeiten",
