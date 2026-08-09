@@ -1,5 +1,28 @@
 # @open-dpp/main
 
+## 2.9.0
+
+### Minor Changes
+
+- [#673](https://github.com/open-dpp/open-dpp/pull/673) [`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6) Thanks [@mr42](https://github.com/mr42)! - Allow admin to resend reset or verification email. Allow users to resend verification email in their profile. Add email verification page to give user feedback about verification success/ error
+
+- [#666](https://github.com/open-dpp/open-dpp/pull/666) [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e) Thanks [@murphylan](https://github.com/murphylan)! - Add total item count to organization-scoped paginated lists
+
+  Passport and template list endpoints now report a `total_count` in their
+  `paging_metadata`, computed with an index-backed `countDocuments` against the
+  same filter used for the page. The passport and template list views surface it
+  in the table footer ("Showing: 1 - 10 of 42"). The field is optional, so other
+  paginated endpoints keep their existing response shape.
+
+### Patch Changes
+
+- Updated dependencies [[`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6), [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e)]:
+  - @open-dpp/api-client@2.9.0
+  - @open-dpp/dto@2.9.0
+  - @open-dpp/env@2.9.0
+  - @open-dpp/exception@2.9.0
+  - @open-dpp/permission@2.9.0
+
 ## 2.8.0
 
 ### Minor Changes
