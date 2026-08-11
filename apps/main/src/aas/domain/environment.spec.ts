@@ -58,4 +58,53 @@ describe("environment", () => {
     environment.deleteSubmodel(submodelToDelete);
     expect(environment.submodels).toEqual([otherSubmodel.id]);
   });
+
+  it("should move submodel to front, back and middle", () => {
+    const environment = Environment.create({});
+    const sub1 = Submodel.create({ id: "sub1", idShort: "sub1" });
+    const sub2 = Submodel.create({ id: "sub2", idShort: "sub2" });
+    const sub3 = Submodel.create({ id: "sub3", idShort: "sub3" });
+    environment.addSubmodel(sub1);
+    environment.addSubmodel(sub2);
+    environment.addSubmodel(sub3);
+    expect(environment.submodels).toEqual(["sub1", "sub2", "sub3"]);
+
+    environment.moveSubmodel("sub3", 0);
+    expect(environment.submodels).toEqual(["sub3", "sub1", "sub2"]);
+
+    environment.moveSubmodel("sub3", 2);
+    expect(environment.submodels).toEqual(["sub1", "sub2", "sub3"]);
+
+    environment.moveSubmodel("sub1", 1);
+    expect(environment.submodels).toEqual(["sub2", "sub1", "sub3"]);
+  });
+
+  it("should throw when moving an unknown submodel", () => {
+    const environment = Environment.create({});
+    environment.addSubmodel(Submodel.create({ id: "sub1", idShort: "sub1" }));
+    expect(() => environment.moveSubmodel("unknown", 0)).toThrow(
+      new ValueError(`Submodel with id unknown does not exist`),
+    );
+  });
+
+  it("should track a SubmodelMoved change-event, noop when position is unchanged", () => {
+    const environment = Environment.create({});
+    environment.addSubmodel(Submodel.create({ id: "sub1", idShort: "sub1" }));
+    environment.addSubmodel(Submodel.create({ id: "sub2", idShort: "sub2" }));
+    environment.withTracking();
+
+    environment.moveSubmodel("sub2", 0);
+    const [moveEvent] = environment.tracker.stop();
+    expect(moveEvent.isNoop()).toBe(false);
+    expect(moveEvent.toPlain()).toMatchObject({
+      submodelId: "sub2",
+      oldPosition: 1,
+      position: 0,
+    });
+
+    environment.withTracking();
+    environment.moveSubmodel("sub2", 0);
+    const changesAfterNoopMove = environment.tracker.stop();
+    expect(changesAfterNoopMove).toHaveLength(0);
+  });
 });

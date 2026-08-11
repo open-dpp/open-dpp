@@ -10,6 +10,7 @@ import {
 } from "../../activity-history/domain/change-tracker";
 import { AddedSubmodelToEnv } from "../../activity-history/domain/change-events/added-submodel-to-env";
 import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
+import { SubmodelMoved } from "../../activity-history/domain/change-events/submodel-moved";
 
 export class Environment implements IConvertableToPlain, ITrackable {
   readonly tracker = ChangeTracker.create();
@@ -84,6 +85,16 @@ export class Environment implements IConvertableToPlain, ITrackable {
         position: index,
       }),
     );
+  }
+
+  moveSubmodel(submodelId: string, position: number): void {
+    const oldPosition = this.submodels.indexOf(submodelId);
+    if (oldPosition === -1) {
+      throw new ValueError(`Submodel with id ${submodelId} does not exist`);
+    }
+    this.submodels.splice(oldPosition, 1);
+    this.submodels.splice(position, 0, submodelId);
+    this.tracker.track(SubmodelMoved.create({ submodelId, oldPosition, position }));
   }
 
   toPlain(): Record<string, any> {
