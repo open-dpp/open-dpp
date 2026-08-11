@@ -165,6 +165,10 @@ describe("templateController", () => {
     await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
 
+  it("/POST move submodel", async () => {
+    await ctx.asserts.moveSubmodel(createTemplate);
+  });
+
   it(`/PATCH submodel value`, async () => {
     await ctx.asserts.modifyValueOfSubmodel(createTemplate, saveTemplate);
   });

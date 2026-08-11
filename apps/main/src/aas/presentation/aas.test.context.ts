@@ -932,6 +932,30 @@ export function createAasTestContext<T>(
     }).toEqual(modificationBody);
   }
 
+  async function assertMoveSubmodel(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/move`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ position: 0 });
+    expect(response.status).toEqual(201);
+    expect(response.body.id).toEqual(submodels[1].id);
+
+    const getResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/submodels?limit=2`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(getResponse.status).toEqual(200);
+    expect(getResponse.body.result.map((s: any) => s.id)).toEqual([
+      submodels[1].id,
+      submodels[0].id,
+    ]);
+  }
+
   async function assertModifyValueOfSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
@@ -1669,6 +1693,7 @@ export function createAasTestContext<T>(
       postSubmodelV1: assertPostSubmodelV1,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
+      moveSubmodel: assertMoveSubmodel,
       modifyValueOfSubmodel: assertModifyValueOfSubmodel,
       modifySubmodelElement: assertModifySubmodelElement,
       modifySubmodelElementValue: assertModifySubmodelElementValue,

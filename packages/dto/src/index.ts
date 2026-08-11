@@ -54,6 +54,7 @@ export * from "./aas/submodel-base/submodel-base-json-schema";
 export * from "./aas/submodel-base/create-group-from-column-schema";
 export * from "./aas/submodel-base/move-submodel-element-schema";
 export * from "./aas/submodel-base/reorder-column-schema";
+export * from "./aas/submodel-base/move-submodel-schema";
 export * from "./aas/submodel-base/submodel-element-collection-json-schema";
 export * from "./aas/submodel-base/submodel-element-list-json-schema";
 export * from "./aas/submodel-base/submodel-element-modification-schema";

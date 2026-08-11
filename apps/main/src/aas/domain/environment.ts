@@ -1,7 +1,8 @@
-import { EnvironmentJsonSchema } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { EnvironmentJsonSchema, Permissions } from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { IConvertableToPlain } from "./convertable-to-plain";
+import { AasAbility } from "./security/aas-ability";
 import { Submodel } from "./submodel-base/submodel";
 import {
   ChangeTracker,
@@ -73,10 +74,13 @@ export class Environment implements IConvertableToPlain, ITrackable {
     return submodel;
   }
 
-  deleteSubmodel(submodel: Submodel) {
+  deleteSubmodel(submodel: Submodel, ability: AasAbility) {
     const index = this.submodels.indexOf(submodel.id);
     if (index === -1) {
       throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
+    }
+    if (!ability.can(Permissions.Delete, submodel.getIdShortPath())) {
+      throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
     }
     this.submodels.splice(index, 1);
     this.tracker.track(
@@ -87,14 +91,17 @@ export class Environment implements IConvertableToPlain, ITrackable {
     );
   }
 
-  moveSubmodel(submodelId: string, position: number): void {
-    const oldPosition = this.submodels.indexOf(submodelId);
+  moveSubmodel(submodel: Submodel, position: number, ability: AasAbility): void {
+    const oldPosition = this.submodels.indexOf(submodel.id);
     if (oldPosition === -1) {
-      throw new ValueError(`Submodel with id ${submodelId} does not exist`);
+      throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
+    }
+    if (!ability.can(Permissions.Edit, submodel.getIdShortPath())) {
+      throw new ForbiddenError(`Missing permissions to edit submodel ${submodel.idShort}.`);
     }
     this.submodels.splice(oldPosition, 1);
-    this.submodels.splice(position, 0, submodelId);
-    this.tracker.track(SubmodelMoved.create({ submodelId, oldPosition, position }));
+    this.submodels.splice(position, 0, submodel.id);
+    this.tracker.track(SubmodelMoved.create({ submodelId: submodel.id, oldPosition, position }));
   }
 
   toPlain(): Record<string, any> {

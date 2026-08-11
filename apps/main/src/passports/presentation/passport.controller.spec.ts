@@ -489,6 +489,10 @@ describe("passportController", () => {
     await ctx.asserts.modifySubmodel(createPassport, savePassport);
   });
 
+  it("/POST move submodel", async () => {
+    await ctx.asserts.moveSubmodel(createPassport);
+  });
+
   it(`/PATCH submodel value`, async () => {
     await ctx.asserts.modifyValueOfSubmodel(createPassport, savePassport);
   });

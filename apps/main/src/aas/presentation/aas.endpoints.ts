@@ -3,6 +3,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelDto,
   MoveSubmodelElementDto,
   ReorderColumnDto,
   SubmodelElementListResponseDto,
@@ -300,6 +301,17 @@ export interface IAasModifyEndpoints {
     userId: string,
     version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
+  moveSubmodel: (
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: MoveSubmodelDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+    userId: string,
+    version: ApiVersionsDtoType,
+  ) => Promise<SubmodelResponseDto>;
 }
 
 export interface IAasDeleteEndpoints {

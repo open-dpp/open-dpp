@@ -8,6 +8,7 @@ import type {
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
+  MoveSubmodelDto,
   MoveSubmodelElementDto,
   ReorderColumnDto,
   SubmodelElementListResponseDto,
@@ -69,6 +70,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiMoveColumnToGroup,
+  ApiMoveSubmodel,
   ApiMoveSubmodelElement,
   ApiPatchColumn,
   ApiReorderColumn,
@@ -95,6 +97,7 @@ import {
   IdParam,
   IdShortPathParam,
   MoveSubmodelElementRequestBody,
+  MoveSubmodelRequestBody,
   PositionQueryParam,
   ReorderColumnRequestBody,
   RowParam,
@@ -301,6 +304,30 @@ export class TemplateController
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodel(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveSubmodel()
+  async moveSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @MoveSubmodelRequestBody() body: MoveSubmodelDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveSubmodel(
       correlationId,
       organizationId,
       id,

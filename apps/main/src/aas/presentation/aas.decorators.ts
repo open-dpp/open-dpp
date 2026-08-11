@@ -16,6 +16,7 @@ import {
   CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   MoveSubmodelElementSchema,
+  MoveSubmodelSchema,
   ReorderColumnSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
@@ -78,6 +79,11 @@ export function ApiDeleteSubmodelById(prefix?: string) {
 
 export function ApiPatchSubmodel(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetSubmodelByIdPath, prefix)));
+}
+
+export const ApiMoveSubmodelPath = `${ApiGetSubmodelByIdPath}/move`;
+export function ApiMoveSubmodel(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiMoveSubmodelPath, prefix)));
 }
 
 export const ApiGetSubmodelValuePath = "/:id/submodels/:submodelId/$value";
@@ -350,6 +356,7 @@ export const CreateGroupFromColumnRequestBody = () =>
 export const MoveSubmodelElementRequestBody = () =>
   Body(new ZodValidationPipe(MoveSubmodelElementSchema));
 export const ReorderColumnRequestBody = () => Body(new ZodValidationPipe(ReorderColumnSchema));
+export const MoveSubmodelRequestBody = () => Body(new ZodValidationPipe(MoveSubmodelSchema));
 export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

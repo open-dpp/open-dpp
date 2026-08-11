@@ -9,6 +9,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelDto,
   MoveSubmodelElementDto,
   ReorderColumnDto,
   SubmodelElementListResponseDto,
@@ -74,6 +75,33 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       SubmodelRequest.create({ body, version }),
       this.saveEnvironmentCallback(item),
       userContext,
+    );
+  }
+
+  async moveSubmodel(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: MoveSubmodelDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveSubmodel(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      body.position,
+      this.saveEnvironmentCallback(item),
+      userContext,
+      version,
     );
   }
 
