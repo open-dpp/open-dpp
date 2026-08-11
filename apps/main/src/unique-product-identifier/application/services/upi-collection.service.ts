@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
+  type PermalinkKindType,
   type UniqueProductIdentifierListItemDto,
   UniqueProductIdentifierType,
   UpdateGs1UniqueProductIdentifierRequest,
@@ -42,15 +43,17 @@ export class UpiCollectionService {
   ) {}
 
   /**
-   * Batch-resolve the gs1-link permalink summaries for a page of UPIs
-   * (GS1 rows only — non-GS1 rows can never be referenced by a permalink).
+   * Batch-resolve the latest permalink summary (any kind) for a page of UPIs —
+   * GS1 rows carry their gs1-link, open-dpp rows their newest open-dpp permalink.
    */
   private async loadPermalinkSummaries(
     upis: UniqueProductIdentifier[],
     organizationId: string,
-  ): Promise<Map<string, { id: string; publicUrl: string }>> {
-    const gs1Uuids = upis.filter((upi) => upi.gs1).map((upi) => upi.uuid);
-    return this.permalinkApplicationService.getGs1LinkSummariesByUpiIds(gs1Uuids, organizationId);
+  ): Promise<Map<string, { id: string; kind: PermalinkKindType; publicUrl: string }>> {
+    return this.permalinkApplicationService.getPermalinkSummariesByUpiIds(
+      upis.map((upi) => upi.uuid),
+      organizationId,
+    );
   }
 
   /**

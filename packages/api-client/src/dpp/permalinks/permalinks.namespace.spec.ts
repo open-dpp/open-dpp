@@ -72,16 +72,9 @@ describe("PermalinksNamespace", () => {
       expect(axios.delete).toHaveBeenCalledWith("/permalinks/a%2Fb");
     });
 
-    it("setPrimary('pl-1') calls POST /permalinks/pl-1/primary with no body", async () => {
-      const { ns, axios } = makeNamespace();
-      await ns.setPrimary("pl-1");
-      expect(axios.post).toHaveBeenCalledWith("/permalinks/pl-1/primary");
-    });
-
-    it("setPrimary encodes the id in the URL", async () => {
-      const { ns, axios } = makeNamespace();
-      await ns.setPrimary("a/b");
-      expect(axios.post).toHaveBeenCalledWith("/permalinks/a%2Fb/primary");
+    it("no longer exposes setPrimary (primary concept removed)", () => {
+      const { ns } = makeNamespace();
+      expect((ns as unknown as Record<string, unknown>).setPrimary).toBeUndefined();
     });
   });
 

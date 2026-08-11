@@ -92,7 +92,11 @@ describe("uniqueProductIdentifierPlainFactory", () => {
     });
 
     it("accepts a permalink summary override that still parses", () => {
-      const permalink = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-slug" };
+      const permalink = {
+        id: randomUUID(),
+        kind: "gs1-link" as const,
+        publicUrl: "https://dpp.example.com/my-slug",
+      };
       const result = uniqueProductIdentifierPlainFactory.build(
         { permalink },
         { transient: { gs1: true } },

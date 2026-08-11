@@ -4,15 +4,22 @@ import { gs1DataAttributesPlainFactory } from "../gs1/gs1-data-attributes.factor
 import { permalinksPlainFactory } from "./permalinks.factory";
 
 describe("permalinksPlainFactory", () => {
-  describe("default build (presentation permalink)", () => {
+  describe("default build (open-dpp permalink)", () => {
     it("produces an object that parses against PermalinkDtoSchema", () => {
       const result = permalinksPlainFactory.build();
       expect(() => PermalinkDtoSchema.parse(result)).not.toThrow();
     });
 
-    it("defaults to kind='presentation'", () => {
+    it("defaults to kind='open-dpp'", () => {
       const result = permalinksPlainFactory.build();
-      expect(result.kind).toBe("presentation");
+      expect(result.kind).toBe("open-dpp");
+    });
+
+    it("has a passportId that is a UUID", () => {
+      const result = permalinksPlainFactory.build();
+      expect(result.passportId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
     });
 
     it("has a non-null presentationConfigurationId", () => {
@@ -31,16 +38,27 @@ describe("permalinksPlainFactory", () => {
       expect(result.gs1DataAttributes).toBeNull();
     });
 
-    it("has primary=false", () => {
+    it("does not include the removed 'primary' field", () => {
       const result = permalinksPlainFactory.build();
-      expect(result.primary).toBe(false);
+      expect("primary" in result).toBe(false);
     });
   });
 
-  describe("{primary:true} transient", () => {
-    it("flips primary to true and still parses", () => {
-      const result = permalinksPlainFactory.build({}, { transient: { primary: true } });
-      expect(result.primary).toBe(true);
+  describe("bare open-dpp permalink (both refs null)", () => {
+    it("parses when presentationConfigurationId is overridden to null", () => {
+      const result = permalinksPlainFactory.build({ presentationConfigurationId: null });
+      expect(result.presentationConfigurationId).toBeNull();
+      expect(result.uniqueProductIdentifierId).toBeNull();
+      expect(() => PermalinkDtoSchema.parse(result)).not.toThrow();
+    });
+  });
+
+  describe("open-dpp permalink bound to a UPI", () => {
+    it("parses with an overridden uniqueProductIdentifierId", () => {
+      const upiId = randomUUID();
+      const result = permalinksPlainFactory.build({ uniqueProductIdentifierId: upiId });
+      expect(result.kind).toBe("open-dpp");
+      expect(result.uniqueProductIdentifierId).toBe(upiId);
       expect(() => PermalinkDtoSchema.parse(result)).not.toThrow();
     });
   });
@@ -53,6 +71,13 @@ describe("permalinksPlainFactory", () => {
       expect(result.uniqueProductIdentifierId).toBeTruthy();
     });
 
+    it("has a passportId on gs1-link", () => {
+      const result = permalinksPlainFactory.build({}, { transient: { gs1: true } });
+      expect(result.passportId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
+    });
+
     it("has a null presentationConfigurationId by default on gs1-link", () => {
       const result = permalinksPlainFactory.build({}, { transient: { gs1: true } });
       expect(result.presentationConfigurationId).toBeNull();
@@ -62,7 +87,6 @@ describe("permalinksPlainFactory", () => {
       const result = permalinksPlainFactory.build({}, { transient: { gs1: true } });
       expect(result.gs1DataAttributes).not.toBeNull();
       expect(typeof result.gs1DataAttributes).toBe("object");
-      // Should have at least one AI entry (from default factory)
       expect(Object.keys(result.gs1DataAttributes!).length).toBeGreaterThan(0);
     });
 
@@ -81,17 +105,6 @@ describe("permalinksPlainFactory", () => {
       );
       expect(result.kind).toBe("gs1-link");
       expect(result.presentationConfigurationId).toBe(configId);
-      expect(() => PermalinkDtoSchema.parse(result)).not.toThrow();
-    });
-  });
-
-  describe("presentationConfigurationId:null override", () => {
-    it("a gs1-link with null presentationConfigurationId parses (nullability guard)", () => {
-      const result = permalinksPlainFactory.build(
-        { presentationConfigurationId: null },
-        { transient: { gs1: true } },
-      );
-      expect(result.presentationConfigurationId).toBeNull();
       expect(() => PermalinkDtoSchema.parse(result)).not.toThrow();
     });
   });

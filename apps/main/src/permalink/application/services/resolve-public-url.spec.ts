@@ -9,6 +9,7 @@ const ENV_FALLBACK = "https://instance.example.com";
 
 function makePermalink(opts: { slug?: string | null; baseUrl?: string | null } = {}) {
   return Permalink.create({
+    passportId: randomUUID(),
     presentationConfigurationId: randomUUID(),
     slug: opts.slug ?? null,
     baseUrl: opts.baseUrl ?? null,
@@ -95,6 +96,7 @@ describe("resolvePublicUrl", () => {
     const id = "11111111-1111-4111-8111-111111111111";
     const permalink = Permalink.create({
       id,
+      passportId: randomUUID(),
       presentationConfigurationId: randomUUID(),
     });
     const branding = Branding.create({ organizationId: "org" });

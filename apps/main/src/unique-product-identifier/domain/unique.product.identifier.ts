@@ -6,6 +6,7 @@ import {
   Gs1IdentityDtoSchema,
   isValidCset82Component,
   normalizeToGtin14,
+  type PermalinkKindType,
   UniqueProductIdentifierType,
   type UniqueProductIdentifierTypeValue,
 } from "@open-dpp/dto";
@@ -305,7 +306,7 @@ export class UniqueProductIdentifier {
   }: {
     resolverBase?: string;
     passportPublished: boolean;
-    permalink?: { id: string; publicUrl: string } | null;
+    permalink?: { id: string; kind: PermalinkKindType; publicUrl: string } | null;
   }) {
     const digitalLink = this.gs1 && resolverBase ? this.buildDigitalLink(resolverBase) : null;
 

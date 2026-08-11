@@ -142,7 +142,10 @@ describe("passportMetricController", () => {
     const presentationConfigurationRepository = module.get(PresentationConfigurationRepository);
     await presentationConfigurationRepository.save(presentationConfig);
 
-    const permalink = Permalink.create({ presentationConfigurationId: presentationConfig.id });
+    const permalink = Permalink.create({
+      passportId: passport.id,
+      presentationConfigurationId: presentationConfig.id,
+    });
     const permalinkRepository = module.get(PermalinkRepository);
     await permalinkRepository.save(permalink);
 

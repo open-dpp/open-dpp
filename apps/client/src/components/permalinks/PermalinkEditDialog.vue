@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PermalinkPublicDto } from "@open-dpp/dto";
+import type { PermalinkPublicDto, PresentationConfigurationDto } from "@open-dpp/dto";
 import { PermalinkKind } from "@open-dpp/dto";
 import { isAxiosError } from "axios";
 import { computed, ref, watch } from "vue";
@@ -34,6 +34,8 @@ const notificationStore = useNotificationStore();
 
 const slug = ref<string>("");
 const baseUrl = ref<string>("");
+const selectedConfigId = ref<string | undefined>(undefined);
+const configs = ref<PresentationConfigurationDto[]>([]);
 const gs1DataAttributes = ref<Record<string, string>>({});
 // Save is blocked while the attributes field holds an invalid or partial row —
 // gs1DataAttributes then still carries the last valid map, and saving it would
@@ -70,11 +72,34 @@ watch(
   (pl) => {
     slug.value = pl.slug ?? "";
     baseUrl.value = pl.baseUrl ?? "";
+    selectedConfigId.value = pl.presentationConfigurationId ?? undefined;
     gs1DataAttributes.value = pl.gs1DataAttributes ?? {};
     slugError.value = null;
   },
   { immediate: true },
 );
+
+// The config picker (open-dpp kind, pre-freeze rebind) — loaded lazily when the
+// dialog opens; the permalink's own passportId scopes the list.
+watch(
+  model,
+  async (visible) => {
+    if (!visible || isGs1Link.value || locked.value) return;
+    try {
+      const response = await apiClient.dpp.passports.presentationConfiguration.list(
+        props.permalink.passportId,
+      );
+      configs.value = response.data ?? [];
+    } catch (e) {
+      errorHandlingStore.logErrorWithNotification(t("permalink.edit.saveError"), e);
+    }
+  },
+  { immediate: true },
+);
+
+function configLabel(config: PresentationConfigurationDto): string {
+  return config.label ?? config.id;
+}
 
 // ---------------------------------------------------------------------------
 // Submit
@@ -100,6 +125,8 @@ async function save() {
       : {
           slug: trimToNull(slug.value),
           baseUrl: trimToNull(baseUrl.value),
+          // Pre-freeze config rebind; clearing the select rebinds to the standard view.
+          presentationConfigurationId: selectedConfigId.value ?? null,
         };
 
     const result = await apiClient.dpp.permalinks.updateById(props.permalink.id, body);
@@ -168,7 +195,25 @@ function cancel() {
         </small>
       </div>
 
-      <!-- Custom base URL — shown for both presentation and GS1 Digital Link permalinks -->
+      <!-- Presentation configuration (open-dpp only; pre-freeze rebind) -->
+      <div v-if="!isGs1Link" class="flex flex-col gap-2">
+        <label for="permalink-edit-config" class="text-sm leading-6 font-medium text-gray-900">
+          {{ t("permalink.edit.config.label") }}
+        </label>
+        <Select
+          id="permalink-edit-config"
+          v-model="selectedConfigId"
+          data-testid="permalink-edit-config-select"
+          :options="configs"
+          option-value="id"
+          :option-label="configLabel"
+          :placeholder="t('permalink.edit.config.placeholder')"
+          :disabled="locked || saving"
+          show-clear
+        />
+      </div>
+
+      <!-- Custom base URL — shown for both permalink kinds -->
       <div class="flex flex-col gap-2">
         <label
           for="permalink-edit-base-url-input"

@@ -864,17 +864,25 @@
         }
       }
     },
-    "createGs1Link": {
-      "title": "Create GS1 Digital Link",
-      "selectUpi": "Select Product Identifier",
-      "noUpisAvailable": "All GS1 product identifiers of this passport already have a GS1 Digital Link.",
-      "loadFailed": "The product identifiers could not be loaded. Please try again.",
+    "create": {
+      "title": "Create Permalink",
+      "selectUpi": "Product Identifier (optional)",
+      "selectUpiPlaceholder": "No product identifier — link the passport directly",
+      "kindHint": "Creates a {kind} permalink.",
+      "selectConfig": "Presentation configuration (optional)",
+      "selectConfigPlaceholder": "Standard view",
+      "loadFailed": "The form data could not be loaded. Please try again.",
+      "slug": {
+        "label": "Short name (optional)",
+        "placeholder": "Last path segment of the URL"
+      },
       "baseUrl": {
         "label": "Custom base URL (optional)",
         "placeholder": "e.g. https://id.example.com"
       },
       "gs1DataAttributes": "GS1 Data Attributes (optional)",
-      "conflict": "A GS1 Digital Link permalink for this UPI already exists.",
+      "upiConflict": "A GS1 Digital Link permalink for this product identifier already exists.",
+      "slugConflict": "This short name is already in use by another permalink.",
       "createFailed": "The permalink could not be created. Please try again.",
       "submit": "Create"
     },
@@ -882,8 +890,12 @@
       "title": "Edit Permalink",
       "type": {
         "label": "Type",
-        "presentation": "Presentation",
+        "presentation": "open-dpp",
         "gs1Link": "GS1 Digital Link"
+      },
+      "config": {
+        "label": "Presentation configuration",
+        "placeholder": "Standard view"
       },
       "saveSuccess": "Permalink saved.",
       "saveError": "Could not save permalink.",
@@ -902,24 +914,19 @@
       }
     },
     "list": {
-      "setPrimary": "Set primary",
       "delete": "Delete",
-      "deletePrimaryTooltip": "Cannot delete the primary or last presentation permalink",
       "deletePublishedTooltip": "Cannot delete a published permalink",
       "deleteConfirmMessage": "Are you sure you want to delete this permalink?",
       "deleteConfirmHeader": "Delete Permalink",
       "deleteSuccess": "Permalink deleted.",
       "deleteError": "Could not delete permalink.",
-      "setPrimarySuccess": "Primary permalink updated.",
-      "setPrimaryError": "Could not update primary permalink.",
       "label": "Permalink | Permalinks",
       "kind": "Kind",
       "publicUrl": "Public URL",
-      "primary": "Primary",
       "frozenInfo": "This passport has been published. The published URLs are frozen and can no longer change.",
       "kindPresentation": "open-dpp",
       "kindGs1Link": "GS1 Digital Link",
-      "createGs1Link": "Create GS1 link",
+      "createPermalink": "Create Permalink",
       "empty": "No permalinks found.",
       "actions": "Actions"
     }
@@ -928,6 +935,7 @@
     "label": "Product Identifier | Product Identifiers",
     "list": {
       "type": "Type",
+      "identity": "Identity",
       "gtin": "GTIN",
       "batch": "Batch / Lot",
       "serial": "Serial",

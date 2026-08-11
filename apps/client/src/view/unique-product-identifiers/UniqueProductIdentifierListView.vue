@@ -3,11 +3,7 @@ import type {
   UniqueProductIdentifierListItemDto,
   UniqueProductIdentifierTypeValue,
 } from "@open-dpp/dto";
-import {
-  DigitalProductDocumentStatusDto,
-  PermalinkKind,
-  UniqueProductIdentifierType,
-} from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, UniqueProductIdentifierType } from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref, watch } from "vue";
@@ -22,6 +18,7 @@ import { useUniqueProductIdentifiers } from "../../composables/unique-product-id
 import apiClient from "../../lib/api-client";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -146,11 +143,14 @@ function openQrDialog(upi: UniqueProductIdentifierListItemDto) {
   qrDialogVisible.value = true;
 }
 
-// The row's permalink summary carries no kind — by definition it is the UPI's
-// gs1-link permalink (max one per UPI), so the kind is constant here.
+// The row's permalink summary is the UPI's LATEST permalink (any kind) — the
+// summary carries the kind so the QR renders its GS1 extras only for gs1-links.
 const qrPermalink = computed(() =>
   qrUpi.value?.permalink
-    ? { kind: PermalinkKind.GS1_LINK, publicUrl: qrUpi.value.permalink.publicUrl }
+    ? {
+        kind: qrUpi.value.permalink.kind,
+        publicUrl: qrUpi.value.permalink.publicUrl,
+      }
     : null,
 );
 
@@ -229,7 +229,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <ContentViewWrapper>
     <ConfirmDialog />
 
     <DataTable
@@ -248,24 +248,18 @@ onMounted(async () => {
       </template>
 
       <Column field="type" :header="t('uniqueProductIdentifiers.list.type')" />
-      <Column field="gtin" :header="t('uniqueProductIdentifiers.list.gtin')">
+      <Column field="identity" :header="t('uniqueProductIdentifiers.list.identity')">
         <template #body="{ data }">
-          <span>{{ data.gtin ?? "" }}</span>
+          <div v-if="data.type === UniqueProductIdentifierType.GS1">
+            <div>{{ data.gtin ? `${t('uniqueProductIdentifiers.list.gtin')}: ${data.gtin}` : "" }}</div>
+            <div>{{ data.gtin ? `${t('uniqueProductIdentifiers.list.batch')}:  ${data.gtin}` : "" }}</div>
+            <div>{{ data.serial ? `${t('uniqueProductIdentifiers.list.batch')}: " + ${data.serial}` : "" }}</div>
+          </div>
+          <div v-else-if="data.type === UniqueProductIdentifierType.OPEN_DPP_UUID">
+            <span>{{ data.uuid ?? "" }}</span>
+          </div>
         </template>
       </Column>
-      <Column field="batch" :header="t('uniqueProductIdentifiers.list.batch')">
-        <template #body="{ data }">
-          <span>{{ data.batch ?? "" }}</span>
-        </template>
-      </Column>
-      <Column field="serial" :header="t('uniqueProductIdentifiers.list.serial')">
-        <template #body="{ data }">
-          <span>{{ data.serial ?? "" }}</span>
-        </template>
-      </Column>
-      <!-- Actions column: QR for rows with a gs1-link permalink, create-CTA for GS1
-           rows without one; delete only for user-managed rows on a draft passport
-           (ADR 0006) — otherwise disabled with a tooltip explaining the lock -->
       <Column style="width: 9rem">
         <template #body="{ data }">
           <div data-testid="upi-row-actions" class="flex gap-1">
@@ -278,8 +272,13 @@ onMounted(async () => {
               data-testid="upi-qr-btn"
               @click="openQrDialog(data)"
             />
+            <!-- GS1 rows link once (one Digital Link per UPI); open-dpp rows may
+                 always create another permalink. -->
             <Button
-              v-else-if="data.type === 'GS1'"
+              v-if="
+                (data.type === UniqueProductIdentifierType.GS1 && !data.permalink) ||
+                data.type === UniqueProductIdentifierType.OPEN_DPP_UUID
+              "
               icon="pi pi-link"
               severity="primary"
               :aria-label="t('uniqueProductIdentifiers.list.createPermalink')"
@@ -332,5 +331,5 @@ onMounted(async () => {
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
       <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" :identity="qrIdentity" />
     </Dialog>
-  </div>
+  </ContentViewWrapper>
 </template>

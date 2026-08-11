@@ -35,7 +35,9 @@ watch(
 
 const toast = useToast();
 
-const link = computed(() => permalinks.value?.[0]?.publicUrl);
+// The editor QR shows the passport's LATEST-created permalink of any kind
+// (the list arrives oldest-first).
+const link = computed(() => permalinks.value?.at(-1)?.publicUrl);
 
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { copy } = useClipboard();

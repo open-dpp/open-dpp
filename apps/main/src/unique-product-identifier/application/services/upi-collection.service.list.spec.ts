@@ -34,7 +34,7 @@ function makeService(overrides?: {
     getResolverBase: jest.Mock;
   }>;
   permalinkApplicationService?: Partial<{
-    getGs1LinkSummariesByUpiIds: jest.Mock;
+    getPermalinkSummariesByUpiIds: jest.Mock;
     deleteGs1LinkForUpi: jest.Mock;
   }>;
 }) {
@@ -62,7 +62,7 @@ function makeService(overrides?: {
     ...overrides?.baseUrlResolver,
   };
   const permalinkApplicationService = {
-    getGs1LinkSummariesByUpiIds: jest.fn(async () => new Map()),
+    getPermalinkSummariesByUpiIds: jest.fn(async () => new Map()),
     deleteGs1LinkForUpi: jest.fn(async () => undefined),
     ...overrides?.permalinkApplicationService,
   };
@@ -489,13 +489,17 @@ describe("UpiCollectionService permalink enrichment", () => {
     return { id, organizationId, isDraft: () => true, isPublished: () => false };
   }
 
-  it("list: GS1 row with a gs1-link permalink carries the summary; others null; one batched call with GS1 uuids only", async () => {
+  it("list: GS1 row with a gs1-link permalink carries the summary; others null; one batched call with ALL page uuids", async () => {
     const linkedUpi = makeGs1Upi();
     const unlinkedUpi = makeGs1Upi();
     const systemUpi = makeSystemUpi();
-    const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+    const summary = {
+      id: randomUUID(),
+      kind: "gs1-link",
+      publicUrl: "https://dpp.example.com/my-link",
+    };
 
-    const getGs1LinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
+    const getPermalinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
     const { service } = makeService({
       upiRepo: {
         findAllByOrganizationId: jest.fn(async () =>
@@ -510,14 +514,14 @@ describe("UpiCollectionService permalink enrichment", () => {
           async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]]),
         ),
       },
-      permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
+      permalinkApplicationService: { getPermalinkSummariesByUpiIds },
     });
 
     const result = await service.list(organizationId);
 
-    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledTimes(1);
-    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledWith(
-      [linkedUpi.uuid, unlinkedUpi.uuid],
+    expect(getPermalinkSummariesByUpiIds).toHaveBeenCalledTimes(1);
+    expect(getPermalinkSummariesByUpiIds).toHaveBeenCalledWith(
+      [linkedUpi.uuid, unlinkedUpi.uuid, systemUpi.uuid],
       organizationId,
     );
     const byUuid = new Map(result.items.map((i) => [i.uuid, i]));
@@ -526,12 +530,16 @@ describe("UpiCollectionService permalink enrichment", () => {
     expect(byUuid.get(systemUpi.uuid)!.permalink).toBeNull();
   });
 
-  it("listByPassport: enriches GS1 rows via one batched call scoped to the passport's org", async () => {
+  it("listByPassport: enriches rows via one batched call scoped to the passport's org", async () => {
     const linkedUpi = makeGs1Upi();
     const systemUpi = makeSystemUpi();
-    const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+    const summary = {
+      id: randomUUID(),
+      kind: "gs1-link",
+      publicUrl: "https://dpp.example.com/my-link",
+    };
 
-    const getGs1LinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
+    const getPermalinkSummariesByUpiIds = jest.fn(async () => new Map([[linkedUpi.uuid, summary]]));
     const { service } = makeService({
       upiRepo: {
         findAllByReferencedIdPaginated: jest.fn(async () =>
@@ -542,21 +550,24 @@ describe("UpiCollectionService permalink enrichment", () => {
         ),
       },
       passportRepo: { findOne: jest.fn(async () => makeDraftPassportStub(referenceId)) },
-      permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
+      permalinkApplicationService: { getPermalinkSummariesByUpiIds },
     });
 
     const result = await service.listByPassport(referenceId);
 
-    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledTimes(1);
-    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledWith([linkedUpi.uuid], organizationId);
+    expect(getPermalinkSummariesByUpiIds).toHaveBeenCalledTimes(1);
+    expect(getPermalinkSummariesByUpiIds).toHaveBeenCalledWith(
+      [linkedUpi.uuid, systemUpi.uuid],
+      organizationId,
+    );
     const byUuid = new Map(result.items.map((i) => [i.uuid, i]));
     expect(byUuid.get(linkedUpi.uuid)!.permalink).toEqual(summary);
     expect(byUuid.get(systemUpi.uuid)!.permalink).toBeNull();
   });
 
-  it("list: no GS1 rows on the page — the summary service is still called with an empty array (cheap no-op)", async () => {
+  it("list: rows without permalinks — the summary service is called with every page uuid and yields nulls", async () => {
     const systemUpi = makeSystemUpi();
-    const getGs1LinkSummariesByUpiIds = jest.fn(async () => new Map());
+    const getPermalinkSummariesByUpiIds = jest.fn(async () => new Map());
     const { service } = makeService({
       upiRepo: {
         findAllByOrganizationId: jest.fn(async () =>
@@ -571,12 +582,12 @@ describe("UpiCollectionService permalink enrichment", () => {
           async () => new Map([[referenceId, makeDraftPassportStub(referenceId)]]),
         ),
       },
-      permalinkApplicationService: { getGs1LinkSummariesByUpiIds },
+      permalinkApplicationService: { getPermalinkSummariesByUpiIds },
     });
 
     const result = await service.list(organizationId);
 
-    expect(getGs1LinkSummariesByUpiIds).toHaveBeenCalledWith([], organizationId);
+    expect(getPermalinkSummariesByUpiIds).toHaveBeenCalledWith([systemUpi.uuid], organizationId);
     expect(result.items[0].permalink).toBeNull();
   });
 });

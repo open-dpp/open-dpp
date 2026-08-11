@@ -19,6 +19,7 @@ import { HasCreatedAt } from "../../lib/has-created-at";
 export class Permalink implements IPersistable, HasCreatedAt {
   private constructor(
     public readonly id: string,
+    public readonly passportId: string,
     public readonly slug: string | null,
     public readonly baseUrl: string | null,
     public readonly publishedUrl: string | null,
@@ -26,7 +27,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly kind: PermalinkKindType,
-    public readonly primary: boolean,
     public readonly uniqueProductIdentifierId: string | null,
     public readonly gs1DataAttributes: Gs1DataAttributes | null,
     public readonly organizationId: string | null,
@@ -35,9 +35,9 @@ export class Permalink implements IPersistable, HasCreatedAt {
   static create(data: {
     id?: string;
     kind?: PermalinkKindType;
+    passportId: string;
     presentationConfigurationId?: string | null;
     uniqueProductIdentifierId?: string | null;
-    primary?: boolean;
     slug?: string | null;
     baseUrl?: string | null;
     gs1DataAttributes?: Gs1DataAttributes | null;
@@ -45,9 +45,10 @@ export class Permalink implements IPersistable, HasCreatedAt {
     updatedAt?: Date;
     organizationId?: string | null;
   }): Permalink {
-    const kind = data.kind ?? PermalinkKind.PRESENTATION;
+    const kind = data.kind ?? PermalinkKind.OPEN_DPP;
     const baseFields = {
       kind,
+      passportId: data.passportId,
       slug: data.slug ?? null,
       baseUrl: data.baseUrl ?? null,
     };
@@ -60,10 +61,11 @@ export class Permalink implements IPersistable, HasCreatedAt {
         gs1DataAttributes: data.gs1DataAttributes ?? null,
       };
     } else {
-      // For presentation kind, pass the gs1 fields so the schema can reject them if set
+      // For open-dpp kind, pass gs1DataAttributes through so the strict schema rejects it if set
       invariantsInput = {
         ...baseFields,
-        presentationConfigurationId: data.presentationConfigurationId,
+        presentationConfigurationId: data.presentationConfigurationId ?? null,
+        uniqueProductIdentifierId: data.uniqueProductIdentifierId ?? null,
         ...(data.gs1DataAttributes !== undefined && {
           gs1DataAttributes: data.gs1DataAttributes,
         }),
@@ -75,29 +77,26 @@ export class Permalink implements IPersistable, HasCreatedAt {
     }
     const now = DateTime.now();
 
-    let presentationConfigurationId: string | null;
     let uniqueProductIdentifierId: string | null;
     let gs1DataAttributes: Gs1DataAttributes | null;
     if (parsed.kind === PermalinkKind.GS1_LINK) {
-      presentationConfigurationId = parsed.presentationConfigurationId ?? null;
       uniqueProductIdentifierId = parsed.uniqueProductIdentifierId;
       gs1DataAttributes = parsed.gs1DataAttributes ?? null;
     } else {
-      presentationConfigurationId = parsed.presentationConfigurationId;
-      uniqueProductIdentifierId = null;
+      uniqueProductIdentifierId = parsed.uniqueProductIdentifierId ?? null;
       gs1DataAttributes = null;
     }
 
     return new Permalink(
       data.id ?? randomUUID(),
+      parsed.passportId,
       parsed.slug ?? null,
       parsed.baseUrl ?? null,
       null,
-      presentationConfigurationId,
+      parsed.presentationConfigurationId ?? null,
       data.createdAt ?? now,
       data.updatedAt ?? now,
       parsed.kind,
-      data.primary ?? false,
       uniqueProductIdentifierId,
       gs1DataAttributes,
       data.organizationId ?? null,
@@ -111,6 +110,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
       typeof rawData.organizationId === "string" ? rawData.organizationId : null;
     return new Permalink(
       parsed.id,
+      parsed.passportId,
       parsed.slug,
       parsed.baseUrl ?? null,
       parsed.publishedUrl ?? null,
@@ -118,7 +118,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
       parsed.kind,
-      parsed.primary,
       parsed.uniqueProductIdentifierId,
       parsed.gs1DataAttributes,
       organizationId,
@@ -129,11 +128,11 @@ export class Permalink implements IPersistable, HasCreatedAt {
     return {
       id: this.id,
       kind: this.kind,
+      passportId: this.passportId,
       slug: this.slug,
       baseUrl: this.baseUrl,
       publishedUrl: this.publishedUrl,
       presentationConfigurationId: this.presentationConfigurationId,
-      primary: this.primary,
       uniqueProductIdentifierId: this.uniqueProductIdentifierId,
       gs1DataAttributes: this.gs1DataAttributes,
       organizationId: this.organizationId,
@@ -164,15 +163,20 @@ export class Permalink implements IPersistable, HasCreatedAt {
     return this.copy({ publishedUrl: validated });
   }
 
-  private assertNotPublished(): void {
-    if (this.publishedUrl !== null) {
-      throw new ValueError("Cannot modify a published permalink; slug and baseUrl are locked.");
+  withPresentationConfigurationId(presentationConfigurationId: string | null): Permalink {
+    this.assertNotPublished();
+    if (presentationConfigurationId !== null) {
+      parseOrThrow(z.uuid(), presentationConfigurationId, "Permalink presentationConfigurationId");
     }
+    return this.copy({ presentationConfigurationId });
   }
 
-  withPrimary(primary: boolean): Permalink {
-    // primary governs resolution — not frozen post-publish (per Slice 18 design decision)
-    return this.copy({ primary });
+  private assertNotPublished(): void {
+    if (this.publishedUrl !== null) {
+      throw new ValueError(
+        "Cannot modify a published permalink; slug, baseUrl, and presentation configuration are locked.",
+      );
+    }
   }
 
   private assertGs1Kind(): void {
@@ -199,6 +203,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
   private copy(
     overrides: Partial<{
       id: string;
+      passportId: string;
       slug: string | null;
       baseUrl: string | null;
       publishedUrl: string | null;
@@ -206,7 +211,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
       createdAt: Date;
       updatedAt: Date;
       kind: PermalinkKindType;
-      primary: boolean;
       uniqueProductIdentifierId: string | null;
       gs1DataAttributes: Gs1DataAttributes | null;
       organizationId: string | null;
@@ -214,6 +218,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
   ): Permalink {
     const s = {
       id: this.id,
+      passportId: this.passportId,
       slug: this.slug,
       baseUrl: this.baseUrl,
       publishedUrl: this.publishedUrl,
@@ -221,7 +226,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
       createdAt: this.createdAt,
       updatedAt: DateTime.now(),
       kind: this.kind,
-      primary: this.primary,
       uniqueProductIdentifierId: this.uniqueProductIdentifierId,
       gs1DataAttributes: this.gs1DataAttributes,
       organizationId: this.organizationId,
@@ -229,6 +233,7 @@ export class Permalink implements IPersistable, HasCreatedAt {
     };
     return new Permalink(
       s.id,
+      s.passportId,
       s.slug,
       s.baseUrl,
       s.publishedUrl,
@@ -236,7 +241,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
       s.createdAt,
       s.updatedAt,
       s.kind,
-      s.primary,
       s.uniqueProductIdentifierId,
       s.gs1DataAttributes,
       s.organizationId,

@@ -59,10 +59,10 @@ describe("PermalinkApplicationService.listByOrganization", () => {
   async function seedGs1Permalink(organizationId: string) {
     const permalink = Permalink.create({
       kind: PermalinkKind.GS1_LINK,
+      passportId: randomUUID(),
       uniqueProductIdentifierId: randomUUID(),
       presentationConfigurationId: null,
       gs1DataAttributes: null,
-      primary: false,
       organizationId,
     });
     return await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
@@ -101,17 +101,18 @@ describe("PermalinkApplicationService.listByOrganization", () => {
   });
 
   async function seedResolvableGs1Permalink(organizationId: string, gtin: string) {
+    const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({
-      referenceId: randomUUID(),
+      referenceId,
       gtin,
       organizationId,
     });
     await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
     const permalink = Permalink.create({
       kind: PermalinkKind.GS1_LINK,
+      passportId: referenceId,
       uniqueProductIdentifierId: upi.uuid,
       baseUrl: "https://id.example.com",
-      primary: false,
       organizationId,
     });
     await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
@@ -158,7 +159,7 @@ describe("PermalinkApplicationService.listByOrganization", () => {
   });
 });
 
-describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
+describe("PermalinkApplicationService.getPermalinkSummariesByUpiIds", () => {
   const ctx = createAasTestContext(
     "/p",
     "/p",
@@ -186,10 +187,10 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
   async function seedGs1Link(organizationId: string, upiUuid: string) {
     const permalink = Permalink.create({
       kind: PermalinkKind.GS1_LINK,
+      passportId: randomUUID(),
       uniqueProductIdentifierId: upiUuid,
       presentationConfigurationId: null,
       gs1DataAttributes: null,
-      primary: false,
       organizationId,
     });
     return await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
@@ -197,7 +198,7 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
 
   it("returns an empty map for empty input", async () => {
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
-    const result = await service.getGs1LinkSummariesByUpiIds([], randomUUID());
+    const result = await service.getPermalinkSummariesByUpiIds([], randomUUID());
     expect(result.size).toBe(0);
   });
 
@@ -209,7 +210,7 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
     await seedGs1Link(organizationId, upiB);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const result = await service.getGs1LinkSummariesByUpiIds([upiA, upiB], organizationId);
+    const result = await service.getPermalinkSummariesByUpiIds([upiA, upiB], organizationId);
 
     expect(result.size).toBe(2);
     const summaryA = result.get(upiA);
@@ -226,7 +227,7 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
     await ctx.getModuleRef().get(PermalinkRepository).save(frozen);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const result = await service.getGs1LinkSummariesByUpiIds([upiUuid], organizationId);
+    const result = await service.getPermalinkSummariesByUpiIds([upiUuid], organizationId);
 
     expect(result.get(upiUuid)?.publicUrl).toBe("https://frozen.example.com/my-link");
   });
@@ -237,7 +238,7 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
     await seedGs1Link(organizationId, upiWithLink);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const result = await service.getGs1LinkSummariesByUpiIds(
+    const result = await service.getPermalinkSummariesByUpiIds(
       [upiWithLink, randomUUID()],
       organizationId,
     );
@@ -248,14 +249,16 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
 
   it("renders the live GS1 Digital Link URL when the referenced UPI resolves", async () => {
     const organizationId = randomUUID();
+    const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({
-      referenceId: randomUUID(),
+      referenceId,
       gtin: "88000000000206",
       organizationId,
     });
     await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
     const link = Permalink.create({
       kind: PermalinkKind.GS1_LINK,
+      passportId: referenceId,
       uniqueProductIdentifierId: upi.uuid,
       baseUrl: "https://id.example.com",
       organizationId,
@@ -263,7 +266,7 @@ describe("PermalinkApplicationService.getGs1LinkSummariesByUpiIds", () => {
     await ctx.getModuleRef().get(PermalinkRepository).save(link);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const result = await service.getGs1LinkSummariesByUpiIds([upi.uuid], organizationId);
+    const result = await service.getPermalinkSummariesByUpiIds([upi.uuid], organizationId);
 
     expect(result.get(upi.uuid)?.publicUrl).toBe("https://id.example.com/01/88000000000206");
   });
@@ -315,6 +318,7 @@ describe("PermalinkApplicationService.listByPassport", () => {
     });
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
     const permalink = Permalink.create({
+      passportId: passport.id,
       presentationConfigurationId: config.id,
       organizationId: passport.organizationId,
     });
@@ -379,6 +383,7 @@ describe("PermalinkApplicationService.listByPassport", () => {
     await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
     const link = Permalink.create({
       kind: PermalinkKind.GS1_LINK,
+      passportId: passport.id,
       uniqueProductIdentifierId: upi.uuid,
       baseUrl: "https://id.example.com",
       organizationId: passport.organizationId,

@@ -28,22 +28,32 @@ export type PermalinkPublishedUrl = z.infer<typeof PermalinkPublishedUrlSchema>;
 
 /**
  * Discriminator for the two permalink kinds:
- * - PRESENTATION: references a presentation configuration
- * - GS1_LINK: references a UPI (may also reference a presentation configuration)
+ * - OPEN_DPP: passport-bound permalink; may additionally reference a
+ *   presentation configuration (custom rendering) and/or an open-dpp UPI
+ * - GS1_LINK: requires a GS1 UPI (may also reference a presentation configuration)
  */
 export const PermalinkKind = {
-  PRESENTATION: "presentation",
+  OPEN_DPP: "open-dpp",
   GS1_LINK: "gs1-link",
 } as const;
 
+/**
+ * Wire value stored by documents written before the open-dpp rename.
+ * Mapped to PermalinkKind.OPEN_DPP on read by the backend; never emitted
+ * by the API and never accepted in requests.
+ */
+export const LEGACY_PERMALINK_KIND = "presentation" as const;
+
 export type PermalinkKindType = (typeof PermalinkKind)[keyof typeof PermalinkKind];
 
-export const PermalinkKindSchema = z.enum([PermalinkKind.PRESENTATION, PermalinkKind.GS1_LINK]);
+export const PermalinkKindSchema = z.enum([PermalinkKind.OPEN_DPP, PermalinkKind.GS1_LINK]);
 
-const PermalinkInvariantsPresentationSchema = z
+const PermalinkInvariantsOpenDppSchema = z
   .object({
-    kind: z.literal(PermalinkKind.PRESENTATION),
-    presentationConfigurationId: z.uuid(),
+    kind: z.literal(PermalinkKind.OPEN_DPP),
+    passportId: z.uuid(),
+    presentationConfigurationId: z.uuid().nullish(),
+    uniqueProductIdentifierId: z.uuid().nullish(),
     slug: PermalinkSlugSchema.nullish(),
     baseUrl: PermalinkBaseUrlSchema.nullable().optional(),
   })
@@ -51,6 +61,7 @@ const PermalinkInvariantsPresentationSchema = z
 
 const PermalinkInvariantsGs1LinkSchema = z.object({
   kind: z.literal(PermalinkKind.GS1_LINK),
+  passportId: z.uuid(),
   uniqueProductIdentifierId: z.uuid(),
   presentationConfigurationId: z.uuid().nullable(),
   gs1DataAttributes: Gs1DataAttributesSchema.nullable().optional(),
@@ -59,7 +70,7 @@ const PermalinkInvariantsGs1LinkSchema = z.object({
 });
 
 export const PermalinkInvariantsSchema = z.discriminatedUnion("kind", [
-  PermalinkInvariantsPresentationSchema,
+  PermalinkInvariantsOpenDppSchema,
   PermalinkInvariantsGs1LinkSchema,
 ]);
 
@@ -68,20 +79,22 @@ export const PermalinkInvariantsSchema = z.discriminatedUnion("kind", [
  *
  * Cross-field invariants are enforced via .check():
  *   - "gs1-link" kind requires a non-null uniqueProductIdentifierId
- *   - "presentation" kind requires a non-null presentationConfigurationId
- *   - "presentation" kind forbids non-null uniqueProductIdentifierId, gs1DataAttributes
+ *   - "open-dpp" kind forbids non-null gs1DataAttributes
  *   - unknown kind is rejected
+ *
+ * Both presentationConfigurationId and uniqueProductIdentifierId are optional
+ * for the "open-dpp" kind — a bare passport-bound permalink is valid.
  */
 export const PermalinkDtoSchema = z
   .object({
     id: z.uuid(),
-    kind: PermalinkKindSchema.default(PermalinkKind.PRESENTATION),
+    kind: PermalinkKindSchema.default(PermalinkKind.OPEN_DPP),
+    passportId: z.uuid(),
     slug: PermalinkSlugSchema.nullable(),
     baseUrl: PermalinkBaseUrlSchema.nullish(),
     publishedUrl: PermalinkPublishedUrlSchema.nullish(),
     presentationConfigurationId: z.uuid().nullable(),
     uniqueProductIdentifierId: z.uuid().nullable().default(null),
-    primary: z.boolean().default(false),
     gs1DataAttributes: Gs1DataAttributesSchema.nullable().default(null),
     createdAt: DateTimeSchema,
     updatedAt: DateTimeSchema,
@@ -98,28 +111,12 @@ export const PermalinkDtoSchema = z
           path: ["uniqueProductIdentifierId"],
         });
       }
-    } else if (kind === PermalinkKind.PRESENTATION) {
-      if (ctx.value.presentationConfigurationId == null) {
-        ctx.issues.push({
-          code: "custom",
-          input: ctx.value,
-          message: 'A presentation permalink requires a non-null "presentationConfigurationId"',
-          path: ["presentationConfigurationId"],
-        });
-      }
-      if (uniqueProductIdentifierId != null) {
-        ctx.issues.push({
-          code: "custom",
-          input: ctx.value,
-          message: 'A presentation permalink must have "uniqueProductIdentifierId" = null',
-          path: ["uniqueProductIdentifierId"],
-        });
-      }
+    } else if (kind === PermalinkKind.OPEN_DPP) {
       if (gs1DataAttributes != null) {
         ctx.issues.push({
           code: "custom",
           input: ctx.value,
-          message: 'A presentation permalink must have "gs1DataAttributes" = null',
+          message: 'An open-dpp permalink must have "gs1DataAttributes" = null',
           path: ["gs1DataAttributes"],
         });
       }
@@ -165,10 +162,12 @@ export const PermalinkMetadataDtoSchema = z.object({
 
 export type PermalinkMetadataDto = z.infer<typeof PermalinkMetadataDtoSchema>;
 
-const PermalinkCreatePresentationSchema = z
+const PermalinkCreateOpenDppSchema = z
   .object({
-    kind: z.literal(PermalinkKind.PRESENTATION),
-    presentationConfigurationId: z.uuid(),
+    kind: z.literal(PermalinkKind.OPEN_DPP),
+    passportId: z.uuid(),
+    presentationConfigurationId: z.uuid().nullish(),
+    uniqueProductIdentifierId: z.uuid().nullish(),
     slug: PermalinkSlugSchema.nullish(),
     baseUrl: PermalinkBaseUrlSchema.nullable().optional(),
   })
@@ -176,6 +175,7 @@ const PermalinkCreatePresentationSchema = z
 
 const PermalinkCreateGs1LinkSchema = z.object({
   kind: z.literal(PermalinkKind.GS1_LINK),
+  passportId: z.uuid(),
   uniqueProductIdentifierId: z.uuid(),
   presentationConfigurationId: z.uuid().nullable().optional(),
   gs1DataAttributes: Gs1DataAttributesSchema.nullable().optional(),
@@ -184,7 +184,7 @@ const PermalinkCreateGs1LinkSchema = z.object({
 });
 
 export const PermalinkCreateRequestSchema = z
-  .discriminatedUnion("kind", [PermalinkCreatePresentationSchema, PermalinkCreateGs1LinkSchema])
+  .discriminatedUnion("kind", [PermalinkCreateOpenDppSchema, PermalinkCreateGs1LinkSchema])
   .meta({ id: "PermalinkCreateRequest" });
 
 export type PermalinkCreateRequest = z.infer<typeof PermalinkCreateRequestSchema>;
@@ -193,7 +193,6 @@ export const PermalinkUpdateRequestSchema = z
   .object({
     slug: PermalinkSlugSchema.nullish(),
     baseUrl: PermalinkBaseUrlSchema.nullish(),
-    primary: z.boolean().optional(),
     gs1DataAttributes: Gs1DataAttributesSchema.nullish(),
     presentationConfigurationId: z.uuid().nullish(),
   })
@@ -205,7 +204,7 @@ export const PassportPermalinkBundleDtoSchema = z
   .object({
     passport: PassportDtoSchema,
     branding: BrandingDtoSchema,
-    presentationConfiguration: PresentationConfigurationDtoSchema,
+    presentationConfiguration: PresentationConfigurationDtoSchema.nullable(),
     publicUrl: z.string().url(),
   })
   .meta({ id: "PassportPermalinkBundle" });

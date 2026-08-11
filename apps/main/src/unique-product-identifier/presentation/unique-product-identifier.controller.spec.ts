@@ -414,6 +414,7 @@ describe("UniqueProductIdentifierController", () => {
       const permalink = await moduleRef.get(PermalinkRepository).save(
         Permalink.create({
           kind: PermalinkKind.GS1_LINK,
+          passportId: passport.id,
           uniqueProductIdentifierId: linkedUpi.uuid,
           presentationConfigurationId: null,
           organizationId: org!.id,
@@ -858,6 +859,7 @@ describe("UniqueProductIdentifierController", () => {
       const permalink = await moduleRef.get(PermalinkRepository).save(
         Permalink.create({
           kind: PermalinkKind.GS1_LINK,
+          passportId: passport.id,
           uniqueProductIdentifierId: linkedUpi.uuid,
           presentationConfigurationId: null,
           organizationId: org!.id,

@@ -1,9 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import {
-  type Gs1IdentityResponse,
-  PermalinkKind,
-  UniqueProductIdentifierType,
-} from "@open-dpp/dto";
+import { type Gs1IdentityResponse, UniqueProductIdentifierType } from "@open-dpp/dto";
 import { BaseUrlResolver } from "../../../permalink/application/services/base-url-resolver.service";
 import {
   PermalinkApplicationService,
@@ -57,22 +53,20 @@ export class Gs1IdentityService {
 
   /**
    * Resolve a scanned full GS1 key (gtin + optional batch + optional serial) to
-   * the passport's public permalink URL.
+   * the gs1-link permalink's own presentation view URL.
    *
-   * Resolution order (per-UPI first, fallback to passport primary):
+   * Self-contained resolution (no primary/default lookup):
    * 1. Find the UPI by its exact GS1 key.
-   * 2. Look up the UPI's own GS1-link permalink (if any).
-   * 3. If the gs1-link permalink has a non-null `presentationConfigurationId`,
-   *    redirect to THAT permalink's presentation view (its config's passport
-   *    governs the publish gate).
-   * 4. Otherwise (no gs1-link, or gs1-link has null config), fall back to the
-   *    passport's PRIMARY presentation permalink.
+   * 2. Look up the UPI's gs1-link permalink — none means the key has no public
+   *    resolution.
+   * 3. Redirect to THAT permalink's presentation view (`/p/{slug ?? id}`): the
+   *    viewer renders its bound config when set, else the standard view.
    *
-   * Publish-gating is inherited from whichever permalink is selected: an unpublished
+   * Publish-gating is inherited from the permalink's passport: an unpublished
    * passport (with anonymous access) makes `resolveToPassport` throw NotFound.
    *
-   * @throws NotFoundException when no GS1 UPI carries the exact key, or when
-   * neither a usable gs1-link config nor a passport primary exists.
+   * @throws NotFoundException when no GS1 UPI carries the exact key, or when the
+   * UPI has no gs1-link permalink.
    */
   async resolveGs1KeyToPublicUrl(key: Gs1KeyInput): Promise<string> {
     const upi = await this.uniqueProductIdentifierRepository.findByGs1Key({
@@ -84,46 +78,32 @@ export class Gs1IdentityService {
       throw new NotFoundException(`No passport found for GS1 key ${JSON.stringify(key)}`);
     }
 
-    // Step 2 & 3: Check for a gs1-link permalink with its own presentation config.
     const gs1LinkPermalink = await this.permalinkRepository.findGs1LinkByUpiId(upi.uuid);
-    let targetPermalink =
-      gs1LinkPermalink?.presentationConfigurationId != null ? gs1LinkPermalink : undefined;
-
-    // Step 4: Fall back to the passport's primary presentation permalink when no
-    // usable gs1-link config was found.
-    if (!targetPermalink) {
-      targetPermalink = await this.permalinkRepository.findPrimaryByPassportId(upi.referenceId);
-    }
-
-    if (!targetPermalink) {
+    if (!gs1LinkPermalink) {
       throw new NotFoundException(`No usable permalink found for GS1 key ${JSON.stringify(key)}`);
     }
 
     // Anonymous resolution: pass no access context so the permalink applies its
-    // publish gate (unpublished → NotFound). The config's passport governs the gate
-    // in the gs1-link-with-own-config branch.
+    // publish gate (unpublished → NotFound).
     const { passport } = await this.permalinkApplicationService.resolveToPassport(
-      targetPermalink.id,
+      gs1LinkPermalink.id,
       undefined,
     );
     const branding = await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId);
     const fallbackEnvUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();
-    const { permalink: resolved, publicUrl } =
+    // The freeze/read publicUrl of a gs1-link IS the scanned Digital Link —
+    // returning it would 302 this resolver onto itself. The freeze call is kept
+    // for its lazy QR pinning (publishedUrl = the Digital Link form); the
+    // redirect target is the permalink's own presentation view, computed live
+    // so old printed QR codes follow the org's current viewer base.
+    const { permalink: resolved } =
       await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
-        targetPermalink,
+        gs1LinkPermalink,
         passport,
         branding,
         fallbackEnvUrl,
       );
-    if (resolved.kind === PermalinkKind.GS1_LINK) {
-      // For a gs1-link the freeze/read publicUrl IS the scanned Digital Link —
-      // returning it would 302 this resolver onto itself. The freeze call above
-      // is kept for its lazy QR pinning (publishedUrl = the Digital Link form);
-      // the redirect target is the permalink's presentation view, computed live
-      // so old printed QR codes follow the org's current viewer base.
-      return resolvePresentationViewUrl(resolved, branding, fallbackEnvUrl);
-    }
-    return publicUrl;
+    return resolvePresentationViewUrl(resolved, branding, fallbackEnvUrl);
   }
 
   private async toResponse(

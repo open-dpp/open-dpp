@@ -12,9 +12,10 @@ import {
 } from "../helpers/passport";
 
 /**
- * Permalinks of a draft passport: the seeded presentation permalink, creating a
- * GS1 Digital Link for a GS1 identifier, editing the short name, and the delete
- * guards. Publication-related behaviour lives in publish-freeze.spec.ts.
+ * Permalinks of a draft passport: the seeded presentation permalink, creating
+ * permalinks through the unified dialog (GS1 Digital Link and bare open-dpp),
+ * editing the short name, and the freeze-only delete guard. Publication-related
+ * behaviour lives in publish-freeze.spec.ts.
  */
 
 // PrimeVue renders a placeholder row while the table has no data, so it has to be
@@ -34,25 +35,19 @@ async function rowPermalinkId(row: ReturnType<typeof permalinkRows>): Promise<st
 
 /** Creates the gs1-link permalink for the passport's only linkable GS1 identifier. */
 async function createGs1LinkPermalink(page: Page): Promise<void> {
-  await page.getByTestId("permalink-create-gs1-link-btn").click();
-  await pickSelectOption(page, "gs1-link-upi-select", new RegExp(GTIN14));
-  await page.getByTestId("gs1-link-create-submit").click();
-  await expect(page.getByTestId("gs1-link-create-submit")).toHaveCount(0);
+  await page.getByTestId("permalink-create-btn").click();
+  await pickSelectOption(page, "permalink-create-upi-select", new RegExp(GTIN14));
+  await page.getByTestId("permalink-create-submit").click();
+  await expect(page.getByTestId("permalink-create-submit")).toHaveCount(0);
 }
 
-test("a new passport has exactly one primary presentation permalink with a QR code", async ({
-  page,
-}) => {
+test("a new passport has exactly one open-dpp permalink with a QR code", async ({ page }) => {
   const ids = await createBlankPassport(page);
   await gotoPermalinkList(page, ids);
 
   await expect(permalinkRows(page)).toHaveCount(1);
   const row = permalinkRows(page).first();
   const permalinkId = await rowPermalinkId(row);
-
-  // The star button only *sets* primary — this tag is what identifies the primary row.
-  await expect(page.getByTestId(`permalink-primary-tag-${permalinkId}`)).toBeVisible();
-  await expect(page.getByTestId("permalink-data-table").getByText(/Primär|Primary/)).toHaveCount(1);
 
   const publicUrl = await page.getByTestId(`permalink-public-url-${permalinkId}`).innerText();
   expect(publicUrl).toContain("/p/");
@@ -63,37 +58,40 @@ test("a new passport has exactly one primary presentation permalink with a QR co
   await expect(page.getByTestId("permalink-qr-copy-btn")).toBeVisible();
 });
 
-test("the GS1-link button unlocks with a linkable identifier and locks again once linked", async ({
+test("a bare permalink can be created without selecting an identifier", async ({ page }) => {
+  const ids = await createBlankPassport(page);
+  await gotoPermalinkList(page, ids);
+  await expect(permalinkRows(page)).toHaveCount(1);
+
+  // The create button is never disabled — a bare passport-bound permalink is
+  // always possible.
+  await expect(page.getByTestId("permalink-create-btn")).toBeEnabled();
+  await page.getByTestId("permalink-create-btn").click();
+  await page.getByTestId("permalink-create-submit").click();
+  await expect(page.getByTestId("permalink-create-submit")).toHaveCount(0);
+
+  await expect(permalinkRows(page)).toHaveCount(2);
+  await expect(
+    page.getByTestId("permalink-data-table").getByText(/open-dpp/).first(),
+  ).toBeVisible();
+});
+
+test("a GS1 identifier can be linked once; its row swaps the CTA for the QR code", async ({
   page,
 }) => {
   const ids = await createBlankPassport(page);
-
-  // No GS1 identifier yet — there is nothing a Digital Link could point at.
-  await gotoPermalinkList(page, ids);
-  await expect(page.getByTestId("permalink-create-gs1-link-btn")).toBeDisabled();
 
   const serial = uniqueSerial();
   await gotoUpiList(page, ids);
   await createGs1Upi(page, { gtin: GTIN14, serial });
   await page.getByTestId("gs1-link-prompt-skip").click();
 
-  // The button is deliberately fail-open: it only turns disabled once the passport's
-  // identifiers are in, so waiting for that load is what makes "enabled" meaningful.
-  await Promise.all([
-    page.waitForResponse(
-      (r) => r.url().includes("/unique-product-identifiers") && r.status() === 200,
-    ),
-    gotoPermalinkList(page, ids),
-  ]);
-  await expect(page.getByTestId("permalink-create-gs1-link-btn")).toBeEnabled();
-
+  await gotoPermalinkList(page, ids);
   await createGs1LinkPermalink(page);
 
   await expect(permalinkRows(page)).toHaveCount(2);
-  // Every GS1 identifier now carries its one allowed Digital Link.
-  await expect(page.getByTestId("permalink-create-gs1-link-btn")).toBeDisabled();
 
-  // And the identifier row swaps its "create a link" call to action for the QR code
+  // The identifier row swaps its "create a link" call to action for the QR code
   // of the link it now owns.
   await gotoUpiList(page, ids);
   const gs1Row = page.getByTestId("upi-data-table").locator("tbody tr").filter({ hasText: serial });
@@ -143,7 +141,7 @@ test("a short name already taken by another passport is reported on the field", 
   await expect(page.getByTestId("permalink-edit-slug-error")).toBeVisible();
 });
 
-test("a GS1 Digital Link can be deleted, the sole primary presentation permalink cannot", async ({
+test("every unpublished permalink can be deleted — even the passport's last one", async ({
   page,
 }) => {
   const ids = await createBlankPassport(page);
@@ -159,16 +157,18 @@ test("a GS1 Digital Link can be deleted, the sole primary presentation permalink
   await createGs1LinkPermalink(page);
   await expect(permalinkRows(page)).toHaveCount(2);
 
-  // Primary and the only presentation permalink — deleting it would orphan the passport.
-  await expect(page.getByTestId(`permalink-delete-btn-${presentationId}`)).toBeDisabled();
-
   const gs1LinkRow = permalinkRows(page).filter({ hasText: /GS1 Digital Link/i });
   const gs1LinkId = await rowPermalinkId(gs1LinkRow);
   await page.getByTestId(`permalink-delete-btn-${gs1LinkId}`).click();
   await acceptDeleteConfirm(page);
-
   await expect(permalinkRows(page)).toHaveCount(1);
-  await expect(page.getByTestId(`permalink-kind-${presentationId}`)).toBeVisible();
+
+  // The standard view keeps the passport renderable without any permalink, so
+  // even the last row deletes freely on a draft.
+  await expect(page.getByTestId(`permalink-delete-btn-${presentationId}`)).toBeEnabled();
+  await page.getByTestId(`permalink-delete-btn-${presentationId}`).click();
+  await acceptDeleteConfirm(page);
+  await expect(permalinkRows(page)).toHaveCount(0);
 });
 
 test("creating a GS1 Digital Link does not publish the passport", async ({ page }) => {

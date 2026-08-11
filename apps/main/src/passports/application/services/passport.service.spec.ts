@@ -114,6 +114,7 @@ describe("passportService", () => {
       .create({ organizationId });
     const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
     const permalink = Permalink.create({
+      passportId: passport.id,
       presentationConfigurationId: config.id,
       slug: "frozen-on-publish",
     });
@@ -147,7 +148,10 @@ describe("passportService", () => {
     });
     await presentationConfigurationRepository.save(config);
     const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
-    const permalink = Permalink.create({ presentationConfigurationId: config.id });
+    const permalink = Permalink.create({
+      passportId: passport.id,
+      presentationConfigurationId: config.id,
+    });
     await permalinkRepository.save(permalink);
 
     await service.modifyPassportStatus(
@@ -356,6 +360,7 @@ describe("passportService", () => {
     await upiRepository.save(upi);
     const gs1Link = Permalink.create({
       kind: "gs1-link",
+      passportId: draft.id,
       uniqueProductIdentifierId: upi.uuid,
       presentationConfigurationId: null,
       organizationId,

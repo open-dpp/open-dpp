@@ -57,10 +57,4 @@ export class PermalinksNamespace {
   public async delete(id: string) {
     return this.axiosInstance.delete<void>(`${this.backofficeEndpoint}/${encodeURIComponent(id)}`);
   }
-
-  public async setPrimary(id: string) {
-    return this.axiosInstance.post<void>(
-      `${this.backofficeEndpoint}/${encodeURIComponent(id)}/primary`,
-    );
-  }
 }

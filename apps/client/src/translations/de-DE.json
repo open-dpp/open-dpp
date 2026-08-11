@@ -864,17 +864,25 @@
         }
       }
     },
-    "createGs1Link": {
-      "title": "GS1 Digital Link erstellen",
-      "selectUpi": "UPI auswählen",
-      "noUpisAvailable": "Alle GS1-Produktidentifikatoren dieses Passes haben bereits einen GS1 Digital Link.",
-      "loadFailed": "Die Produktidentifikatoren konnten nicht geladen werden. Bitte erneut versuchen.",
+    "create": {
+      "title": "Permalink erstellen",
+      "selectUpi": "Produktidentifikator (optional)",
+      "selectUpiPlaceholder": "Kein Produktidentifikator — Pass direkt verlinken",
+      "kindHint": "Erstellt einen {kind} Permalink.",
+      "selectConfig": "Präsentationskonfiguration (optional)",
+      "selectConfigPlaceholder": "Standardansicht",
+      "loadFailed": "Die Formulardaten konnten nicht geladen werden. Bitte erneut versuchen.",
+      "slug": {
+        "label": "Kurzname (optional)",
+        "placeholder": "Ende der URL des Passes"
+      },
       "baseUrl": {
         "label": "Produktpass Basis-URL (optional)",
         "placeholder": "z. B. https://id.example.com"
       },
       "gs1DataAttributes": "GS1 Datenattribute (optional)",
-      "conflict": "Ein GS1 Digital Link Permalink für diesen UPI existiert bereits.",
+      "upiConflict": "Ein GS1 Digital Link Permalink für diesen Produktidentifikator existiert bereits.",
+      "slugConflict": "Dieser Kurzname wird bereits von einem anderen Permalink verwendet.",
       "createFailed": "Der Permalink konnte nicht erstellt werden. Bitte erneut versuchen.",
       "submit": "Erstellen"
     },
@@ -882,8 +890,12 @@
       "title": "Permalink bearbeiten",
       "type": {
         "label": "Typ",
-        "presentation": "Präsentation",
+        "presentation": "open-dpp",
         "gs1Link": "GS1 Digital Link"
+      },
+      "config": {
+        "label": "Präsentationskonfiguration",
+        "placeholder": "Standardansicht"
       },
       "saveSuccess": "Permalink gespeichert.",
       "saveError": "Permalink konnte nicht gespeichert werden.",
@@ -902,24 +914,19 @@
       }
     },
     "list": {
-      "setPrimary": "Als primär festlegen",
       "delete": "Löschen",
-      "deletePrimaryTooltip": "Primärer oder letzter Präsentations-Permalink kann nicht gelöscht werden",
       "deletePublishedTooltip": "Veröffentlichter Permalink kann nicht gelöscht werden",
       "deleteConfirmMessage": "Soll dieser Permalink wirklich gelöscht werden?",
       "deleteConfirmHeader": "Permalink löschen",
       "deleteSuccess": "Permalink gelöscht.",
       "deleteError": "Permalink konnte nicht gelöscht werden.",
-      "setPrimarySuccess": "Primärer Permalink aktualisiert.",
-      "setPrimaryError": "Primärer Permalink konnte nicht aktualisiert werden.",
       "label": "Permalink | Permalinks",
       "kind": "Typ",
       "publicUrl": "Öffentliche URL",
-      "primary": "Primär",
       "frozenInfo": "Dieser Produktpass wurde veröffentlicht. Die veröffentlichten URLs sind eingefroren und können nicht mehr geändert werden.",
       "kindPresentation": "open-dpp",
       "kindGs1Link": "GS1 Digital Link",
-      "createGs1Link": "GS1-Link erstellen",
+      "createPermalink": "Permalink erstellen",
       "empty": "Keine Permalinks gefunden.",
       "actions": "Aktionen"
     }
@@ -928,6 +935,7 @@
     "label": "Produktidentifikator | Produktidentifikatoren",
     "list": {
       "type": "Typ",
+      "identity": "Identität",
       "gtin": "GTIN",
       "batch": "Charge / Los",
       "serial": "Seriennummer",

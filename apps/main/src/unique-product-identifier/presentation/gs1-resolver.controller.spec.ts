@@ -103,28 +103,67 @@ describe("Gs1ResolverController", () => {
       environment,
       lastStatusChange,
     });
-    const config = PresentationConfiguration.createForPassport({
-      organizationId,
-      referenceId: passport.id,
-    });
-    // Mark the permalink primary so findPrimaryByPassportId can resolve it.
-    const permalink = Permalink.create({ presentationConfigurationId: config.id }).withPrimary(
-      true,
-    );
     const upi = UniqueProductIdentifier.createGs1({
       referenceId: passport.id,
       gtin: options.gtin,
       batch: options.batch,
       serial: options.serial,
     });
+    // The UPI's own gs1-link permalink IS the resolution target: the resolver
+    // 302s to its `/p/{slug ?? id}` presentation view (no primary fallback).
+    const permalink = Permalink.create({
+      kind: PermalinkKind.GS1_LINK,
+      passportId: passport.id,
+      uniqueProductIdentifierId: upi.uuid,
+      presentationConfigurationId: null,
+      organizationId,
+    });
 
     const moduleRef = ctx.getModuleRef();
     await moduleRef.get(PassportRepository).save(passport);
-    await moduleRef.get(PresentationConfigurationRepository).save(config);
     await moduleRef.get(PermalinkRepository).save(permalink);
     await moduleRef.get(UniqueProductIdentifierRepository).save(upi);
     return { passport, permalink, gtin: upi.gs1!.gtin };
   }
+
+  it("returns 404 when the UPI has no gs1-link permalink (no fallback to other permalinks)", async () => {
+    // A GS1 UPI whose passport has a presentation permalink but no gs1-link:
+    // under the self-contained resolution there is nothing to redirect to.
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId,
+      environment: Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
+    });
+    const config = PresentationConfiguration.createForPassport({
+      organizationId,
+      referenceId: passport.id,
+    });
+    const presentation = Permalink.create({
+      passportId: passport.id,
+      presentationConfigurationId: config.id,
+    });
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: passport.id,
+      gtin: "88000000000909",
+    });
+    const moduleRef = ctx.getModuleRef();
+    await moduleRef.get(PassportRepository).save(passport);
+    await moduleRef.get(PresentationConfigurationRepository).save(config);
+    await moduleRef.get(PermalinkRepository).save(presentation);
+    await moduleRef.get(UniqueProductIdentifierRepository).save(upi);
+
+    const response = await request(ctx.globals().app.getHttpServer()).get("/01/88000000000909");
+    expect(response.status).toBe(404);
+  });
 
   it("302-redirects a scanned GTIN to the passport's permalink public URL", async () => {
     const { permalink } = await seedGs1Passport({ gtin: "4006381333931" });
@@ -295,6 +334,7 @@ describe("Gs1ResolverController", () => {
       });
       const permalink = Permalink.create({
         kind: PermalinkKind.GS1_LINK,
+        passportId: passport.id,
         uniqueProductIdentifierId: upi.uuid,
         presentationConfigurationId: config.id,
         gs1DataAttributes: options.gs1DataAttributes ?? null,

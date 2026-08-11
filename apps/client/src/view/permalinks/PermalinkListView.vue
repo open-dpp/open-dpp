@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import type { PagingParamsDto, PermalinkPublicDto } from "@open-dpp/dto";
+import type {
+  PagingParamsDto,
+  PermalinkPublicDto,
+  PresentationConfigurationDto,
+} from "@open-dpp/dto";
 import {
   DigitalProductDocumentStatusDto,
   PermalinkKind,
@@ -10,7 +14,7 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfirm } from "primevue/useconfirm";
 import { useRoute, useRouter } from "vue-router";
-import PermalinkCreateGs1LinkDialog from "../../components/permalinks/PermalinkCreateGs1LinkDialog.vue";
+import PermalinkCreateDialog from "../../components/permalinks/PermalinkCreateDialog.vue";
 import PermalinkEditDialog from "../../components/permalinks/PermalinkEditDialog.vue";
 import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
 import TablePagination from "../../components/pagination/TablePagination.vue";
@@ -21,6 +25,7 @@ import apiClient from "../../lib/api-client";
 import { DigitalProductDocumentType } from "../../lib/digital-product-document";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const { t } = useI18n();
 const confirm = useConfirm();
@@ -41,7 +46,7 @@ const passportId = computed(() => String(route.params.passportId));
 
 const permalinks = ref<PermalinkPublicDto[]>([]);
 const loading = ref(false);
-const createGs1DialogVisible = ref(false);
+const createDialogVisible = ref(false);
 
 // Deep link from the UPI table CTA: ?createForUpi=<uuid> auto-opens the
 // create dialog with that UPI preselected (param is stripped after opening).
@@ -107,14 +112,6 @@ const qrDialogVisible = ref(false);
 const qrPermalink = ref<PermalinkPublicDto | null>(null);
 
 // -------------------------------------------------------------------------
-// Derived: presentation permalink count (for guarded delete)
-// -------------------------------------------------------------------------
-
-const presentationPermalinkCount = computed(
-  () => permalinks.value.filter((pl) => pl.kind === PermalinkKind.PRESENTATION).length,
-);
-
-// -------------------------------------------------------------------------
 // Passport status (drives the frozen-URLs info alert)
 // -------------------------------------------------------------------------
 
@@ -131,7 +128,7 @@ async function loadPassportStatus() {
 }
 
 // -------------------------------------------------------------------------
-// Linkable GS1 UPIs (drive both the create button and the dialog's picker)
+// Linkable UPIs + presentation configs (feed the create dialog)
 // -------------------------------------------------------------------------
 
 const { upis, fetchUniqueProductIdentifiers } = useUniqueProductIdentifiers();
@@ -140,30 +137,37 @@ const { upis, fetchUniqueProductIdentifiers } = useUniqueProductIdentifiers();
 // and a passport's UPI count stays far below this in practice.
 const UPI_PICKER_LIMIT = 1000;
 
-// Fail-open: a failed load must never lock the create button, so the disabled
-// state is only claimed once we actually know the passport's UPIs.
-const upisLoaded = ref(false);
-
-async function loadGs1Upis() {
+async function loadUpis() {
   try {
     await fetchUniqueProductIdentifiers(passportId.value, { limit: UPI_PICKER_LIMIT });
-    upisLoaded.value = true;
   } catch (e) {
-    upisLoaded.value = false;
-    errorHandlingStore.logErrorWithNotification(t("permalink.createGs1Link.loadFailed"), e);
+    errorHandlingStore.logErrorWithNotification(t("permalink.create.loadFailed"), e);
   }
 }
 
 /**
- * Only GS1 UPIs without an existing gs1-link permalink can receive one —
- * OPEN_DPP_UUID rows are system-only and cannot be used as a gs1-link target,
- * and each UPI carries at most one gs1-link permalink (row's own summary).
+ * The UPIs the picker offers:
+ *  - GS1 rows without an existing gs1-link permalink (one Digital Link per UPI)
+ *  - every open-dpp row (an open-dpp UPI may carry any number of permalinks)
  */
-const linkableGs1Upis = computed(() =>
-  upis.value.filter((upi) => upi.type === UniqueProductIdentifierType.GS1 && upi.permalink == null),
+const linkableUpis = computed(() =>
+  upis.value.filter(
+    (upi) =>
+      (upi.type === UniqueProductIdentifierType.GS1 && upi.permalink == null) ||
+      upi.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
+  ),
 );
 
-const createGs1Disabled = computed(() => upisLoaded.value && linkableGs1Upis.value.length === 0);
+const configs = ref<PresentationConfigurationDto[]>([]);
+
+async function loadConfigs() {
+  try {
+    const response = await apiClient.dpp.passports.presentationConfiguration.list(passportId.value);
+    configs.value = response.data ?? [];
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(t("permalink.create.loadFailed"), e);
+  }
+}
 
 // -------------------------------------------------------------------------
 // Create dialog
@@ -171,15 +175,14 @@ const createGs1Disabled = computed(() => upisLoaded.value && linkableGs1Upis.val
 
 // Refetch before opening — a UPI linked elsewhere since the last load must drop
 // out of the picker (rows carry their own permalink summary).
-async function openCreateGs1Dialog() {
-  await loadGs1Upis();
-  createGs1DialogVisible.value = true;
+async function openCreateDialog() {
+  await Promise.all([loadUpis(), loadConfigs()]);
+  createDialogVisible.value = true;
 }
 
 async function onPermalinkCreated(_permalink: PermalinkPublicDto) {
-  createGs1DialogVisible.value = false;
-  // Reload the UPIs too: linking the last free one has to disable the button.
-  await Promise.all([reloadCurrentPage(), loadGs1Upis()]);
+  createDialogVisible.value = false;
+  await Promise.all([reloadCurrentPage(), loadUpis()]);
 }
 
 // -------------------------------------------------------------------------
@@ -206,47 +209,16 @@ function openQrDialog(permalink: PermalinkPublicDto) {
 }
 
 // -------------------------------------------------------------------------
-// Set primary
+// Delete — the only guard is the freeze rule (published URLs are immutable)
 // -------------------------------------------------------------------------
 
-async function onSetPrimary(permalink: PermalinkPublicDto) {
-  try {
-    await apiClient.dpp.permalinks.setPrimary(permalink.id);
-    notificationStore.addSuccessNotification(t("permalink.list.setPrimarySuccess"));
-    await reloadCurrentPage();
-  } catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("permalink.list.setPrimaryError"), e);
-  }
-}
-
-// -------------------------------------------------------------------------
-// Delete (guarded)
-// -------------------------------------------------------------------------
-
-/**
- * A permalink can be deleted when:
- *  - it is not published (publishedUrl is null)
- *  - AND it is not the primary presentation permalink
- *  - AND it is not the last/sole presentation permalink
- */
 function canDelete(permalink: PermalinkPublicDto): boolean {
-  if (permalink.publishedUrl != null) return false;
-  if (permalink.kind === PermalinkKind.PRESENTATION) {
-    if (permalink.primary) return false;
-    if (presentationPermalinkCount.value <= 1) return false;
-  }
-  return true;
+  return permalink.publishedUrl == null;
 }
 
 function deleteTooltip(permalink: PermalinkPublicDto): string {
   if (permalink.publishedUrl != null) {
     return t("permalink.list.deletePublishedTooltip");
-  }
-  if (
-    permalink.kind === PermalinkKind.PRESENTATION &&
-    (permalink.primary || presentationPermalinkCount.value <= 1)
-  ) {
-    return t("permalink.list.deletePrimaryTooltip");
   }
   return t("permalink.list.delete");
 }
@@ -289,17 +261,16 @@ function kindLabel(kind: string): string {
 onMounted(async () => {
   // A failing status fetch must not block the list — fetchById already notified
   // the user, and the banner stays hidden rather than claiming a publication.
-  // loadGs1Upis handles its own failure — the button then stays enabled.
-  await Promise.all([loadPassportStatus().catch(() => undefined), nextPage(), loadGs1Upis()]);
+  await Promise.all([loadPassportStatus().catch(() => undefined), nextPage()]);
   if (preselectedUpiId.value) {
-    createGs1DialogVisible.value = true;
+    await openCreateDialog();
     changeQueryParams({ createForUpi: undefined });
   }
 });
 </script>
 
 <template>
-  <div>
+  <ContentViewWrapper>
     <ConfirmDialog />
 
     <Message
@@ -322,19 +293,11 @@ onMounted(async () => {
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("permalink.list.label", 2) }}</span>
-          <!-- The title sits on the wrapper: a disabled <button> receives no
-               pointer events, so a tooltip on the button itself never shows. -->
-          <span
-            :title="createGs1Disabled ? t('permalink.createGs1Link.noUpisAvailable') : undefined"
-            data-testid="permalink-create-gs1-link-wrapper"
-          >
-            <Button
-              :label="t('permalink.list.createGs1Link')"
-              data-testid="permalink-create-gs1-link-btn"
-              :disabled="createGs1Disabled"
-              @click="openCreateGs1Dialog"
-            />
-          </span>
+          <Button
+            :label="t('permalink.list.createPermalink')"
+            data-testid="permalink-create-btn"
+            @click="openCreateDialog"
+          />
         </div>
       </template>
 
@@ -345,16 +308,6 @@ onMounted(async () => {
             <span :data-testid="`permalink-kind-${data.id}`">
               {{ kindLabel(data.kind) }}
             </span>
-            <!-- The star in the actions column is the affordance for *setting*
-                 primary; this tag is what identifies the primary row. -->
-            <Tag
-              v-if="data.primary"
-              severity="warn"
-              icon="pi pi-star-fill"
-              :data-testid="`permalink-primary-tag-${data.id}`"
-            >
-              {{ t("permalink.list.primary") }}
-            </Tag>
           </div>
         </template>
       </Column>
@@ -397,21 +350,6 @@ onMounted(async () => {
               @click="openEditDialog(data)"
             />
 
-            <!-- Primary star (presentation rows only): filled amber + disabled when
-                 primary, gray outline + clickable to set primary otherwise -->
-            <Button
-              v-if="data.kind === PermalinkKind.PRESENTATION"
-              :icon="data.primary ? 'pi pi-star-fill' : 'pi pi-star'"
-              :severity="data.primary ? 'warn' : 'secondary'"
-              :disabled="data.primary"
-              :aria-label="
-                data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')
-              "
-              :title="data.primary ? t('permalink.list.primary') : t('permalink.list.setPrimary')"
-              :data-testid="`permalink-primary-btn-${data.id}`"
-              @click="onSetPrimary(data)"
-            />
-
             <!-- Delete button -->
             <Button
               icon="pi pi-trash"
@@ -438,10 +376,12 @@ onMounted(async () => {
       </template>
     </DataTable>
 
-    <!-- Create GS1 Link dialog -->
-    <PermalinkCreateGs1LinkDialog
-      v-model:visible="createGs1DialogVisible"
-      :upis="linkableGs1Upis"
+    <!-- Create dialog -->
+    <PermalinkCreateDialog
+      v-model:visible="createDialogVisible"
+      :passport-id="passportId"
+      :upis="linkableUpis"
+      :configs="configs"
       :preselected-upi-id="preselectedUpiId"
       @created="onPermalinkCreated"
     />
@@ -458,5 +398,5 @@ onMounted(async () => {
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
       <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
     </Dialog>
-  </div>
+  </ContentViewWrapper>
 </template>

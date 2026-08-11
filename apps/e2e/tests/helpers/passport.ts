@@ -32,7 +32,7 @@ export function uniqueSerial(prefix = "e2e"): string {
  * Creates an empty passport through the UI and returns the ids from the editor URL.
  *
  * The backend seeds every new passport with one internal (OPEN_DPP_UUID) unique
- * product identifier and one primary presentation permalink, which is the starting
+ * product identifier and one open-dpp permalink, which is the starting
  * point all permalink/UPI specs assume.
  */
 export async function createBlankPassport(page: Page): Promise<PassportIds> {

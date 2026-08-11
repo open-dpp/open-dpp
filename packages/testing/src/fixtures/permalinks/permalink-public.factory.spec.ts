@@ -26,9 +26,9 @@ describe("permalinkPublicPlainFactory", () => {
       expect(["branding", "instance"]).toContain(result.fallbackBaseUrlSource);
     });
 
-    it("defaults to primary=false", () => {
+    it("does not include the removed 'primary' field", () => {
       const result = permalinkPublicPlainFactory.build();
-      expect(result.primary).toBe(false);
+      expect("primary" in result).toBe(false);
     });
 
     it("has gs1DataAttributes=null", () => {
@@ -41,17 +41,16 @@ describe("permalinkPublicPlainFactory", () => {
       expect(result.uniqueProductIdentifierId).toBeNull();
     });
 
-    it("defaults to kind='presentation'", () => {
+    it("defaults to kind='open-dpp'", () => {
       const result = permalinkPublicPlainFactory.build();
-      expect(result.kind).toBe("presentation");
+      expect(result.kind).toBe("open-dpp");
     });
-  });
 
-  describe("{primary:true} transient", () => {
-    it("flips primary to true and still parses", () => {
-      const result = permalinkPublicPlainFactory.build({}, { transient: { primary: true } });
-      expect(result.primary).toBe(true);
-      expect(() => PermalinkPublicDtoSchema.parse(result)).not.toThrow();
+    it("has a passportId that is a UUID", () => {
+      const result = permalinkPublicPlainFactory.build();
+      expect(result.passportId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
     });
   });
 
@@ -83,9 +82,9 @@ describe("permalinkPublicPlainFactory", () => {
     });
 
     it("mixed kinds array parses against PermalinkListDtoSchema", () => {
-      const presentation = permalinkPublicPlainFactory.build();
+      const openDpp = permalinkPublicPlainFactory.build();
       const gs1 = permalinkPublicPlainFactory.build({}, { transient: { gs1: true } });
-      expect(() => PermalinkListDtoSchema.parse([presentation, gs1])).not.toThrow();
+      expect(() => PermalinkListDtoSchema.parse([openDpp, gs1])).not.toThrow();
     });
   });
 
@@ -112,6 +111,13 @@ describe("permalinkPublicPlainFactory", () => {
         { transient: { gs1: true } },
       );
       expect(result.uniqueProductIdentifierId).toBe(customUpiId);
+      expect(() => PermalinkPublicDtoSchema.parse(result)).not.toThrow();
+    });
+
+    it("accepts an overridden passportId", () => {
+      const customPassportId = randomUUID();
+      const result = permalinkPublicPlainFactory.build({ passportId: customPassportId });
+      expect(result.passportId).toBe(customPassportId);
       expect(() => PermalinkPublicDtoSchema.parse(result)).not.toThrow();
     });
   });

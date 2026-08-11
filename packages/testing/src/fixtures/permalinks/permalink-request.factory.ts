@@ -4,23 +4,23 @@ import { Factory } from "fishery";
 import { gs1DataAttributesPlainFactory } from "../gs1/gs1-data-attributes.factory";
 
 // ---------------------------------------------------------------------------
-// Presentation create request factory
+// Open-dpp create request factory
 // ---------------------------------------------------------------------------
 
-interface PresentationCreateRequestRaw {
-  kind: "presentation";
-  presentationConfigurationId: string;
+interface OpenDppCreateRequestRaw {
+  kind: "open-dpp";
+  passportId: string;
+  presentationConfigurationId?: string | null;
+  uniqueProductIdentifierId?: string | null;
   slug?: string | null;
   baseUrl?: string | null;
 }
 
-/** Raw PermalinkCreateRequest (presentation variant); default kind='presentation' with a uuid configId. */
-export const permalinkCreateRequestPlainFactory = Factory.define<PresentationCreateRequestRaw>(
-  () => ({
-    kind: "presentation" as const,
-    presentationConfigurationId: randomUUID(),
-  }),
-);
+/** Raw PermalinkCreateRequest (open-dpp variant); bare by default — passportId only. */
+export const permalinkCreateRequestPlainFactory = Factory.define<OpenDppCreateRequestRaw>(() => ({
+  kind: "open-dpp" as const,
+  passportId: randomUUID(),
+}));
 
 // ---------------------------------------------------------------------------
 // GS1-link create request factory
@@ -29,6 +29,7 @@ export const permalinkCreateRequestPlainFactory = Factory.define<PresentationCre
 /** Raw (pre-parse) shape of a gs1-link create request. */
 interface Gs1LinkCreateRequestRaw {
   kind: "gs1-link";
+  passportId: string;
   uniqueProductIdentifierId: string;
   presentationConfigurationId?: string | null;
   gs1DataAttributes?: Gs1DataAttributes | null;
@@ -48,6 +49,7 @@ export const permalinkGs1LinkCreateRequestPlainFactory = Factory.define<Gs1LinkC
 
     return {
       kind: "gs1-link" as const,
+      passportId: randomUUID(),
       uniqueProductIdentifierId: randomUUID(),
       gs1DataAttributes,
     };

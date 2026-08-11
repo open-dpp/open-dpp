@@ -6,23 +6,28 @@ import {
   permalinkUpdateRequestPlainFactory,
 } from "./permalink-request.factory";
 
-describe("permalinkCreateRequestPlainFactory (presentation)", () => {
-  it("produces an object that parses against PermalinkCreateRequestSchema (presentation variant)", () => {
+describe("permalinkCreateRequestPlainFactory (open-dpp)", () => {
+  it("produces an object that parses against PermalinkCreateRequestSchema (open-dpp variant)", () => {
     const result = permalinkCreateRequestPlainFactory.build();
     expect(() => PermalinkCreateRequestSchema.parse(result)).not.toThrow();
   });
 
-  it("defaults to kind='presentation'", () => {
+  it("defaults to kind='open-dpp'", () => {
     const result = permalinkCreateRequestPlainFactory.build();
-    expect(result.kind).toBe("presentation");
+    expect(result.kind).toBe("open-dpp");
   });
 
-  it("has a non-null presentationConfigurationId that is a UUID", () => {
+  it("has a passportId that is a UUID", () => {
     const result = permalinkCreateRequestPlainFactory.build();
-    expect(typeof result.presentationConfigurationId).toBe("string");
-    expect(result.presentationConfigurationId).toMatch(
+    expect(result.passportId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
+  });
+
+  it("is bare by default (no presentationConfigurationId, no uniqueProductIdentifierId)", () => {
+    const result = permalinkCreateRequestPlainFactory.build();
+    expect("presentationConfigurationId" in result).toBe(false);
+    expect("uniqueProductIdentifierId" in result).toBe(false);
   });
 
   it("accepts a custom presentationConfigurationId override", () => {
@@ -31,12 +36,22 @@ describe("permalinkCreateRequestPlainFactory (presentation)", () => {
       presentationConfigurationId: configId,
     });
     expect(result.presentationConfigurationId).toBe(configId);
+    expect(() => PermalinkCreateRequestSchema.parse(result)).not.toThrow();
   });
 
-  it("two consecutive builds produce distinct presentationConfigurationId values", () => {
+  it("accepts a custom uniqueProductIdentifierId override", () => {
+    const upiId = randomUUID();
+    const result = permalinkCreateRequestPlainFactory.build({
+      uniqueProductIdentifierId: upiId,
+    });
+    expect(result.uniqueProductIdentifierId).toBe(upiId);
+    expect(() => PermalinkCreateRequestSchema.parse(result)).not.toThrow();
+  });
+
+  it("two consecutive builds produce distinct passportId values", () => {
     const a = permalinkCreateRequestPlainFactory.build();
     const b = permalinkCreateRequestPlainFactory.build();
-    expect(a.presentationConfigurationId).not.toBe(b.presentationConfigurationId);
+    expect(a.passportId).not.toBe(b.passportId);
   });
 });
 
@@ -49,6 +64,13 @@ describe("permalinkGs1LinkCreateRequestPlainFactory (gs1-link)", () => {
   it("defaults to kind='gs1-link'", () => {
     const result = permalinkGs1LinkCreateRequestPlainFactory.build();
     expect(result.kind).toBe("gs1-link");
+  });
+
+  it("has a passportId that is a UUID", () => {
+    const result = permalinkGs1LinkCreateRequestPlainFactory.build();
+    expect(result.passportId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
   });
 
   it("has a uniqueProductIdentifierId that is a UUID", () => {
@@ -110,10 +132,9 @@ describe("permalinkUpdateRequestPlainFactory", () => {
     expect("kind" in result).toBe(false);
   });
 
-  it("accepts primary:true override", () => {
-    const result = permalinkUpdateRequestPlainFactory.build({ primary: true });
-    expect(result.primary).toBe(true);
-    expect(() => PermalinkUpdateRequestSchema.parse(result)).not.toThrow();
+  it("does not include the removed 'primary' field", () => {
+    const result = permalinkUpdateRequestPlainFactory.build();
+    expect("primary" in result).toBe(false);
   });
 
   it("accepts gs1DataAttributes override", () => {

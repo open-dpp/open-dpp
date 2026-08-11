@@ -4,6 +4,7 @@ import {
   UniqueProductIdentifierTypeSchema,
 } from "./unique-product-identifier-type";
 import { Cset82ComponentSchema, Gtin14Schema } from "./gs1/gs1-digital-link";
+import { PermalinkKindSchema } from "../permalinks/permalink.dto";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 /**
@@ -26,6 +27,7 @@ import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 export const UniqueProductIdentifierPermalinkSummaryDtoSchema = z
   .object({
     id: z.uuid(),
+    kind: PermalinkKindSchema,
     publicUrl: z.string().url(),
   })
   .meta({ id: "UniqueProductIdentifierPermalinkSummary" });

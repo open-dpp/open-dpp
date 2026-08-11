@@ -106,13 +106,13 @@ test("a permalink published with the passport cannot be deleted", async ({ page 
   await page.getByTestId("gs1-link-prompt-skip").click();
 
   await gotoPermalinkList(page, ids);
-  await page.getByTestId("permalink-create-gs1-link-btn").click();
-  await page.getByTestId("gs1-link-upi-select").getByRole("combobox").click();
+  await page.getByTestId("permalink-create-btn").click();
+  await page.getByTestId("permalink-create-upi-select").getByRole("combobox").click();
   await page
     .getByRole("option", { name: new RegExp(GTIN14) })
     .first()
     .click();
-  await page.getByTestId("gs1-link-create-submit").click();
+  await page.getByTestId("permalink-create-submit").click();
   await expect(permalinkRows(page)).toHaveCount(2);
 
   await publishPassport(page, ids);

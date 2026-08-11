@@ -67,7 +67,7 @@ function makeService(overrides?: {
     getResolverBase: jest.Mock;
   }>;
   permalinkApplicationService?: Partial<{
-    getGs1LinkSummariesByUpiIds: jest.Mock;
+    getPermalinkSummariesByUpiIds: jest.Mock;
     deleteGs1LinkForUpi: jest.Mock;
   }>;
 }) {
@@ -95,7 +95,7 @@ function makeService(overrides?: {
     ...overrides?.baseUrlResolver,
   };
   const permalinkApplicationService = {
-    getGs1LinkSummariesByUpiIds: jest.fn(async () => new Map()),
+    getPermalinkSummariesByUpiIds: jest.fn(async () => new Map()),
     deleteGs1LinkForUpi: jest.fn(async () => undefined),
     ...overrides?.permalinkApplicationService,
   };
