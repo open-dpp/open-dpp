@@ -230,8 +230,6 @@ onMounted(async () => {
 
 <template>
   <ContentViewWrapper>
-    <ConfirmDialog />
-
     <DataTable
       :value="upis ?? []"
       :loading="loading"

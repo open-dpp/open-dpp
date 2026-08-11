@@ -70,10 +70,12 @@ test("the prompt's 'add link' hands the identifier over to the permalink list", 
   // The create dialog opens on mount, but only once the passport's UPIs have
   // loaded — the preselection races that fetch.
   await expect(async () => {
-    await expect(page.getByTestId("gs1-link-upi-select")).toContainText(GTIN14, { timeout: 2_000 });
+    await expect(page.getByTestId("permalink-create-upi-select")).toContainText(GTIN14, {
+      timeout: 2_000,
+    });
   }).toPass({ timeout: 15_000 });
 
-  await page.getByTestId("gs1-link-create-submit").click();
+  await page.getByTestId("permalink-create-submit").click();
 
   const gs1LinkRow = page
     .getByTestId("permalink-data-table")

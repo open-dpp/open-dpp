@@ -271,8 +271,6 @@ onMounted(async () => {
 
 <template>
   <ContentViewWrapper>
-    <ConfirmDialog />
-
     <Message
       v-if="passportIsPublished"
       severity="info"

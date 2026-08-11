@@ -3,11 +3,11 @@ import { v4 as uuid4 } from "uuid";
 import {
   acceptDeleteConfirm,
   createBlankPassport,
+  createGs1LinkPermalink,
   createGs1Upi,
   GTIN14,
   gotoPermalinkList,
   gotoUpiList,
-  pickSelectOption,
   uniqueSerial,
 } from "../helpers/passport";
 
@@ -31,14 +31,6 @@ async function rowPermalinkId(row: ReturnType<typeof permalinkRows>): Promise<st
   const testId = await row.locator("[data-testid^='permalink-kind-']").getAttribute("data-testid");
   expect(testId, "permalink row should expose its id through the kind cell").not.toBeNull();
   return testId!.replace("permalink-kind-", "");
-}
-
-/** Creates the gs1-link permalink for the passport's only linkable GS1 identifier. */
-async function createGs1LinkPermalink(page: Page): Promise<void> {
-  await page.getByTestId("permalink-create-btn").click();
-  await pickSelectOption(page, "permalink-create-upi-select", new RegExp(GTIN14));
-  await page.getByTestId("permalink-create-submit").click();
-  await expect(page.getByTestId("permalink-create-submit")).toHaveCount(0);
 }
 
 test("a new passport has exactly one open-dpp permalink with a QR code", async ({ page }) => {

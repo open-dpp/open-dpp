@@ -128,12 +128,21 @@ export async function pickSelectOption(page: Page, testId: string, option: RegEx
 }
 
 /**
+ * Creates a gs1-link permalink for the passport's only linkable GS1 identifier
+ * through the unified create dialog on the permalink list view.
+ */
+export async function createGs1LinkPermalink(page: Page): Promise<void> {
+  await page.getByTestId("permalink-create-btn").click();
+  await pickSelectOption(page, "permalink-create-upi-select", new RegExp(GTIN14));
+  await page.getByTestId("permalink-create-submit").click();
+  await expect(page.getByTestId("permalink-create-submit")).toHaveCount(0);
+}
+
+/**
  * Confirms a PrimeVue ConfirmDialog whose accept button is labelled "Löschen"/"Delete".
  *
- * The list views mount their own `<ConfirmDialog />` on top of the global one in
- * App.vue, so a confirmation currently opens twice. Both run the same callback, but
- * only the topmost one is clickable — the other sits under its modal mask. `.last()`
- * keeps this working once that duplication is removed.
+ * `.last()` guards against a second `<ConfirmDialog />` mount answering the same
+ * confirmation — only the topmost one is clickable.
  */
 export async function acceptDeleteConfirm(page: Page): Promise<void> {
   await page

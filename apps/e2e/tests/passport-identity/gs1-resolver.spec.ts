@@ -2,8 +2,10 @@ import { expect, test } from "@playwright/test";
 import { EnvConfig } from "../config";
 import {
   createBlankPassport,
+  createGs1LinkPermalink,
   createGs1Upi,
   GTIN14,
+  gotoPermalinkList,
   gotoUpiList,
   publishPassport,
   uniqueSerial,
@@ -28,6 +30,10 @@ test("a scanned key on a published passport redirects to its presentation view",
   const serial = uniqueSerial();
   await createGs1Upi(page, { gtin: GTIN14, serial });
   await page.getByTestId("gs1-link-prompt-skip").click();
+  // Resolution is self-contained on the UPI's gs1-link permalink (no
+  // primary/default fallback) — without one, every scan is a 404.
+  await gotoPermalinkList(page, ids);
+  await createGs1LinkPermalink(page);
   await publishPassport(page, ids);
 
   const anonymous = await context.browser()!.newContext();
@@ -57,6 +63,10 @@ test("a scanned key on an unpublished passport stays hidden", async ({ page, con
   const serial = uniqueSerial();
   await createGs1Upi(page, { gtin: GTIN14, serial });
   await page.getByTestId("gs1-link-prompt-skip").click();
+  // Resolution is self-contained on the UPI's gs1-link permalink (no
+  // primary/default fallback) — without one, every scan is a 404.
+  await gotoPermalinkList(page, ids);
+  await createGs1LinkPermalink(page);
 
   const anonymous = await context.browser()!.newContext();
   const response = await anonymous.request.get(scanUrl(`/01/${GTIN14}/21/${serial}`), {
@@ -72,6 +82,10 @@ test("unknown and malformed keys answer 404", async ({ page, context }) => {
   const serial = uniqueSerial();
   await createGs1Upi(page, { gtin: GTIN14, serial });
   await page.getByTestId("gs1-link-prompt-skip").click();
+  // Resolution is self-contained on the UPI's gs1-link permalink (no
+  // primary/default fallback) — without one, every scan is a 404.
+  await gotoPermalinkList(page, ids);
+  await createGs1LinkPermalink(page);
   await publishPassport(page, ids);
 
   const anonymous = await context.browser()!.newContext();
