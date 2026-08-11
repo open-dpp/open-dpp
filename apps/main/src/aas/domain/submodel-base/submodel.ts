@@ -53,6 +53,7 @@ import {
   parseAsSubmodelElementListOrFail,
 } from "./table/table-extensable";
 import { AccessResult } from "../security/access-allowed";
+import { AasAbility } from "../security/aas-ability";
 
 export class Submodel
   implements ISubmodelBase, IPersistable, ITrackable, ISubmodelElementSearchable
@@ -302,9 +303,10 @@ export class Submodel
     idShortOfColumn: string,
     groupIdShort: string | undefined,
     position: number,
+    options: { ability: AasAbility },
   ) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.reorderColumn(idShortOfColumn, groupIdShort, position);
+    tableExtension.reorderColumn(idShortOfColumn, groupIdShort, position, options);
     return tableExtension.getTableElement();
   }
 

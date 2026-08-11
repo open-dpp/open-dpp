@@ -16,6 +16,7 @@ import {
   CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   MoveSubmodelElementSchema,
+  ReorderColumnSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -135,6 +136,11 @@ export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)));
 }
 
+export const ApiReorderColumnPath = `${ApiGetColumnByIdShortPath}/reorder`;
+export function ApiReorderColumn(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiReorderColumnPath, prefix)));
+}
+
 export const ApiCreateGroupFromColumnPath = `${ApiGetSubmodelElementByIdPath}/groups`;
 
 export function ApiCreateGroupFromColumn(prefix?: string) {
@@ -171,6 +177,18 @@ export const GroupIdShortParamSchema = z.string().meta({
 
 export const GroupIdShortParam = () =>
   Param("groupIdShort", new ZodValidationPipe(GroupIdShortParamSchema));
+
+export const GroupIdShortQueryParamSchema = z
+  .string()
+  .optional()
+  .meta({
+    description: "IdShort of the group the column currently lives in, if any.",
+    example: "Group1",
+    param: { in: "query", name: "groupIdShort" },
+  });
+
+export const GroupIdShortQueryParam = () =>
+  Query("groupIdShort", new ZodValidationPipe(GroupIdShortQueryParamSchema));
 
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
@@ -331,6 +349,7 @@ export const CreateGroupFromColumnRequestBody = () =>
   Body(new ZodValidationPipe(CreateGroupFromColumnSchema));
 export const MoveSubmodelElementRequestBody = () =>
   Body(new ZodValidationPipe(MoveSubmodelElementSchema));
+export const ReorderColumnRequestBody = () => Body(new ZodValidationPipe(ReorderColumnSchema));
 export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

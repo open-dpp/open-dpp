@@ -291,6 +291,7 @@ describe("NestedTableExtension", () => {
       "newCol1",
       undefined,
       0,
+      { ability },
     );
 
     const row111 = submodel.findSubmodelElementOrFail(

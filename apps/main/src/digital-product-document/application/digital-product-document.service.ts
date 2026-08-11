@@ -10,6 +10,7 @@ import type {
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
   MoveSubmodelElementDto,
+  ReorderColumnDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -320,6 +321,38 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortOfColumn,
       SubmodelElementModificationRequest.create({ body, version }),
       userContext,
+    );
+  }
+
+  async reorderColumn(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    body: ReorderColumnDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.reorderColumn(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      groupIdShort,
+      body.position,
+      userContext,
+      version,
     );
   }
 

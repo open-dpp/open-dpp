@@ -1,6 +1,6 @@
 import { expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
-import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { MemberRole } from "../../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../../identity/users/domain/user-role.enum";
@@ -377,7 +377,7 @@ describe("tableExtension", () => {
     table.addColumn(col3, { ability });
     table.addRow({ ability });
 
-    table.reorderColumn("col3", undefined, 0);
+    table.reorderColumn("col3", undefined, 0, { ability });
 
     expect(table.columns.map((c) => c.idShort)).toEqual(["col3", "col1", "col2"]);
     // the data row must move in lockstep with the header, not just the header itself
@@ -400,7 +400,7 @@ describe("tableExtension", () => {
     table.addColumn(col2, { ability });
     table.addRow({ ability });
 
-    table.reorderColumn("col2", undefined, 0);
+    table.reorderColumn("col2", undefined, 0, { ability });
     const headerRowIdShort = table.rows[0].idShort;
 
     table.deleteRow(headerRowIdShort, { ability, onDelete: () => {} });
@@ -418,7 +418,7 @@ describe("tableExtension", () => {
     table.addColumn(group, { ability });
     table.addRow({ ability });
 
-    table.reorderColumn("sub2", "group1", 0);
+    table.reorderColumn("sub2", "group1", 0, { ability });
 
     for (const row of table.rows) {
       const rowGroup = row.getSubmodelElements().find((el) => el.idShort === "group1")!;
@@ -431,7 +431,23 @@ describe("tableExtension", () => {
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
     table.addColumn(col1, { ability });
 
-    expect(() => table.reorderColumn("missing", undefined, 0)).toThrow(NotFoundError);
+    expect(() => table.reorderColumn("missing", undefined, 0, { ability })).toThrow(NotFoundError);
+  });
+
+  it("should reject reordering a column without permission", () => {
+    const { table, ability } = createTable();
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
+    table.addColumn(col1, { ability });
+    table.addColumn(col2, { ability });
+
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const anonymousAbility = Security.create({}).defineAbilityForSubject(anonymous);
+
+    expect(() =>
+      table.reorderColumn("col2", undefined, 0, { ability: anonymousAbility }),
+    ).toThrow(ForbiddenError);
+    expect(table.columns.map((c) => c.idShort)).toEqual(["col1", "col2"]);
   });
 
   it("should place a new group at the right position in every row after a prior reorder", () => {
@@ -450,7 +466,7 @@ describe("tableExtension", () => {
     table.addColumn(col2, { ability });
     table.addRow({ ability });
 
-    table.reorderColumn("col2", undefined, 0);
+    table.reorderColumn("col2", undefined, 0, { ability });
     expect(table.columns.map((c) => c.idShort)).toEqual(["col2", "col1"]);
 
     const newGroup = SubmodelElementCollection.create({ idShort: "group1", value: [] });

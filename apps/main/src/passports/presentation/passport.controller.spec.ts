@@ -553,6 +553,10 @@ describe("passportController", () => {
     await ctx.asserts.moveColumnToGroup(createPassport, savePassport);
   });
 
+  it("/POST reorder column", async () => {
+    await ctx.asserts.reorderColumn(createPassport, savePassport);
+  });
+
   it("/POST create group from column", async () => {
     await ctx.asserts.createGroupFromColumn(createPassport, savePassport);
   });

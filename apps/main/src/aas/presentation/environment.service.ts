@@ -800,6 +800,49 @@ export class EnvironmentService {
     }
   }
 
+  async reorderColumn(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    const modifiedSubmodelElementList = submodel
+      .withTracking()
+      .reorderColumn(idShortPath, idShortOfColumn, groupIdShort, position, { ability });
+
+    const activity = SubmodelElementMovedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        if (!activity.isNoop()) {
+          await this.activityRepository.createMany([activity], { session });
+        }
+      });
+      return SubmodelElementListResponse.create({
+        submodelElement: modifiedSubmodelElementList,
+        version,
+        ability,
+      }).toJSON();
+    } finally {
+      await session.endSession();
+    }
+  }
+
   async deleteColumn(
     correlationId: string,
     digitalProductDocumentId: string,

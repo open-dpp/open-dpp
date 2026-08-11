@@ -1534,6 +1534,32 @@ export function createAasTestContext<T>(
     expect(bodyGroup1.value[0].idShort).toEqual(col1.idShort);
   }
 
+  async function assertReorderColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, submodel, submodelElementList, entity } =
+      await createEmpytTable(createEntity);
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column2" }));
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
+    row0.addSubmodelElement(col1, { ability });
+    row0.addSubmodelElement(col2, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col2.idShort}/reorder`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ position: 0 });
+    expect(response.status).toEqual(201);
+    const bodyRow0 = response.body.value[0];
+    expect(bodyRow0.value.map((c: any) => c.idShort)).toEqual(["column2", "column1"]);
+  }
+
   async function assertCreateGroupFromColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
     const { org, userCookie, submodel, submodelElementList, entity } =
       await createEmpytTable(createEntity);
@@ -1653,6 +1679,7 @@ export function createAasTestContext<T>(
       modifyColumnInGroup: assertModifyColumnInGroup,
       deleteColumnFromGroup: assertDeleteColumnFromGroup,
       moveColumnToGroup: assertMoveColumnToGroup,
+      reorderColumn: assertReorderColumn,
       createGroupFromColumn: assertCreateGroupFromColumn,
       addRow: assertAddRow,
       deletePolicy: assertDeletePolicy,

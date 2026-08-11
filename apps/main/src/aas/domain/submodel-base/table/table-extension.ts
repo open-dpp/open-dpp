@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements } from "@open-dpp/dto";
-import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { AasSubmodelElements, Permissions } from "@open-dpp/dto";
+import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../../modifier-visitor";
+import { AasAbility } from "../../security/aas-ability";
 import { AddOptions, DeleteOptions, ISubmodelElement } from "../submodel-base";
 import { SubmodelElementCollection } from "../submodel-element-collection";
 import { SubmodelElementList } from "../submodel-element-list";
@@ -361,12 +362,25 @@ export class TableExtension implements ITableExtendable {
    * (it inserts a brand-new, not-yet-existing group at the header's column index into
    * every row, since there's no idShort to match against yet).
    */
-  reorderColumn(idShortOfColumn: string, groupIdShort: string | undefined, position: number): void {
+  reorderColumn(
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    options: { ability: AasAbility },
+  ): void {
     const headerContainer = groupIdShort
       ? this.getGroupInRowOrFail(this.headerRow!, groupIdShort)
       : this.headerRow!;
-    if (!headerContainer.getSubmodelElements().some((el) => el.idShort === idShortOfColumn)) {
+    const existingColumn = headerContainer
+      .getSubmodelElements()
+      .find((el) => el.idShort === idShortOfColumn);
+    if (!existingColumn) {
       throw new NotFoundError("Column", idShortOfColumn);
+    }
+    if (!options.ability.can(Permissions.Edit, existingColumn.getIdShortPath())) {
+      throw new ForbiddenError(
+        `Missing permissions to edit column ${existingColumn.getIdShortPath().toString()}.`,
+      );
     }
 
     this.applyReorderColumn(idShortOfColumn, position, groupIdShort);

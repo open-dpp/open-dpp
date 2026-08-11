@@ -29,7 +29,12 @@ export interface ITableExtendable extends ITrackable {
   ): void;
   moveColumnToGroup(columnIdShort: string, groupIdShort: string, options: MoveOptions): void;
   createGroupFromColumn(columnIdShort: string, group: ISubmodelElement, options: MoveOptions): void;
-  reorderColumn(idShortOfColumn: string, groupIdShort: string | undefined, position: number): void;
+  reorderColumn(
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    options: { ability: AasAbility },
+  ): void;
   addRow(options: AddOptions): void;
   deleteRow(idShort: string, options: DeleteOptions): void;
   getTableElement(): ISubmodelElement;

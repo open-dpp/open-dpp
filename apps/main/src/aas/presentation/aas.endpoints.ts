@@ -4,6 +4,7 @@ import type {
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
   MoveSubmodelElementDto,
+  ReorderColumnDto,
   SubmodelElementListResponseDto,
 } from "@open-dpp/dto";
 import {
@@ -162,19 +163,6 @@ export interface IAasCreateEndpoints {
     userId: string,
     version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
-  moveColumnToGroupInSubmodelElementList: (
-    correlationId: string,
-    organizationId: string,
-    id: string,
-    submodelId: string,
-    idShortPath: IdShortPath,
-    groupIdShort: string,
-    columnIdShort: string,
-    userRole: UserRoleType,
-    memberRole: MemberRoleType | undefined,
-    userId: string,
-    version: ApiVersionsDtoType,
-  ) => Promise<SubmodelElementListResponseDto>;
   createGroupFromColumnInSubmodelElementList: (
     correlationId: string,
     organizationId: string,
@@ -273,6 +261,19 @@ export interface IAasModifyEndpoints {
     userId: string,
     version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
+  moveColumnToGroupInSubmodelElementList: (
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    columnIdShort: string,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+    userId: string,
+    version: ApiVersionsDtoType,
+  ) => Promise<SubmodelElementListResponseDto>;
   moveSubmodelElement: (
     correlationId: string,
     organizationId: string,
@@ -285,6 +286,20 @@ export interface IAasModifyEndpoints {
     userId: string,
     version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementResponseDto>;
+  reorderColumn: (
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    body: ReorderColumnDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+    userId: string,
+    version: ApiVersionsDtoType,
+  ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasDeleteEndpoints {
