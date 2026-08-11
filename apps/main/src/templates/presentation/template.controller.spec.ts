@@ -246,6 +246,10 @@ describe("templateController", () => {
     await ctx.asserts.postSubmodelElementAtIdShortPath(createTemplate);
   });
 
+  it("/POST move submodel element", async () => {
+    await ctx.asserts.moveSubmodelElement(createTemplate, saveTemplate);
+  });
+
   it(`/GET submodel element by id`, async () => {
     await ctx.asserts.getSubmodelElementByIdV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelElementById(createTemplate);

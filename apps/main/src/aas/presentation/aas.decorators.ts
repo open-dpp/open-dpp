@@ -15,6 +15,7 @@ import {
   AssetAdministrationShellModificationSchema,
   CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
+  MoveSubmodelElementSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -112,6 +113,11 @@ export function ApiPatchSubmodelElement(prefix?: string) {
 
 export function ApiPostSubmodelElementAtIdShortPath(prefix?: string) {
   return applyDecorators(Post(withPrefix(ApiGetSubmodelElementByIdPath, prefix)));
+}
+
+export const ApiMoveSubmodelElementPath = `${ApiGetSubmodelElementByIdPath}/move`;
+export function ApiMoveSubmodelElement(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiMoveSubmodelElementPath, prefix)));
 }
 export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
 
@@ -323,6 +329,8 @@ export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
 export const CreateGroupFromColumnRequestBody = () =>
   Body(new ZodValidationPipe(CreateGroupFromColumnSchema));
+export const MoveSubmodelElementRequestBody = () =>
+  Body(new ZodValidationPipe(MoveSubmodelElementSchema));
 export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

@@ -475,19 +475,22 @@ describe("submodel", () => {
     submodel.addSubmodelElement(sectionB, { ability });
 
     // reorder within the same parent (SectionA was added first, so this actually changes order)
-    const moved = submodel.moveSubmodelElement(IdShortPath.create({ path: "SectionB" }), {
-      position: 0,
-      ability,
-    });
+    const moved = submodel.moveSubmodelElement(
+      IdShortPath.create({ path: "SectionB" }),
+      { position: 0 },
+      { ability, onMove: jest.fn() },
+    );
     expect(moved).toBe(sectionB);
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["SectionB", "SectionA"]);
 
     // reparent to a sibling collection, descendants should be recomputed
     submodel.withTracking();
-    const movedSub1 = submodel.moveSubmodelElement(IdShortPath.create({ path: "SectionA.Sub1" }), {
-      targetParentPath: IdShortPath.create({ path: "SectionB" }),
-      ability,
-    });
+    const onMove = jest.fn();
+    const movedSub1 = submodel.moveSubmodelElement(
+      IdShortPath.create({ path: "SectionA.Sub1" }),
+      { path: IdShortPath.create({ path: "SectionB" }) },
+      { ability, onMove },
+    );
     const changes = submodel.tracker.stop();
     expect(changes).toHaveLength(1);
     const moveEvent = changes[0] as SubmodelElementMoved;
@@ -497,6 +500,12 @@ describe("submodel", () => {
     // can actually match against them
     expect(moveEvent.oldPath.toString()).toBe("sm.SectionA.Sub1");
     expect(moveEvent.path.toString()).toBe("sm.SectionB.Sub1");
+    // onMove must fire with the same absolute paths, so the presentation layer can
+    // feed them into the security-policy / presentation-config rewrite pipeline
+    expect(onMove).toHaveBeenCalledWith(
+      IdShortPath.create({ path: "sm.SectionA.Sub1" }),
+      IdShortPath.create({ path: "sm.SectionB.Sub1" }),
+    );
     expect(movedSub1).toBe(sub1);
     expect(sectionA.getSubmodelElements()).toEqual([]);
     expect(sectionB.getSubmodelElements().map((e) => e.idShort)).toEqual(["Other", "Sub1"]);
@@ -512,7 +521,8 @@ describe("submodel", () => {
     // reparent up to the submodel root (omitting targetParentPath keeps the same parent, so pass root explicitly)
     const movedLeaf = submodel.moveSubmodelElement(
       IdShortPath.create({ path: "SectionB.Sub1.Leaf1" }),
-      { targetParentPath: IdShortPath.fromSegments([]), ability },
+      { path: IdShortPath.fromSegments([]) },
+      { ability, onMove: jest.fn() },
     );
     expect(movedLeaf).toBe(leaf);
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual([
@@ -538,16 +548,18 @@ describe("submodel", () => {
     submodel.addSubmodelElement(parent, { ability });
 
     expect(() =>
-      submodel.moveSubmodelElement(IdShortPath.create({ path: "Parent" }), {
-        targetParentPath: IdShortPath.create({ path: "Parent" }),
-        ability,
-      }),
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Parent" }),
+        { path: IdShortPath.create({ path: "Parent" }) },
+        { ability, onMove: jest.fn() },
+      ),
     ).toThrow(ValueError);
     expect(() =>
-      submodel.moveSubmodelElement(IdShortPath.create({ path: "Parent" }), {
-        targetParentPath: IdShortPath.create({ path: "Parent.Child" }),
-        ability,
-      }),
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Parent" }),
+        { path: IdShortPath.create({ path: "Parent.Child" }) },
+        { ability, onMove: jest.fn() },
+      ),
     ).toThrow(ValueError);
   });
 
@@ -569,10 +581,11 @@ describe("submodel", () => {
     submodel.addSubmodelElement(sectionB, { ability });
 
     expect(() =>
-      submodel.moveSubmodelElement(IdShortPath.create({ path: "SectionA.Clash" }), {
-        targetParentPath: IdShortPath.create({ path: "SectionB" }),
-        ability,
-      }),
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "SectionA.Clash" }),
+        { path: IdShortPath.create({ path: "SectionB" }) },
+        { ability, onMove: jest.fn() },
+      ),
     ).toThrow(ValueError);
     // rolled back: still in its original position under SectionA
     expect(sectionA.getSubmodelElements()).toEqual([prop]);
@@ -599,10 +612,11 @@ describe("submodel", () => {
     submodel.addSubmodelElement(list, { ability });
 
     expect(() =>
-      submodel.moveSubmodelElement(IdShortPath.create({ path: "Prop1" }), {
-        targetParentPath: IdShortPath.create({ path: "List1" }),
-        ability,
-      }),
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Prop1" }),
+        { path: IdShortPath.create({ path: "List1" }) },
+        { ability, onMove: jest.fn() },
+      ),
     ).toThrow();
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["Prop1", "List1"]);
     expect(prop.getIdShortPath().toString()).toBe("sm.Prop1");
@@ -626,10 +640,11 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop, { ability });
 
     expect(() =>
-      submodel.moveSubmodelElement(IdShortPath.create({ path: "Prop1" }), {
-        targetParentPath: IdShortPath.create({ path: "SectionA" }),
-        ability: anonymousAbility,
-      }),
+      submodel.moveSubmodelElement(
+        IdShortPath.create({ path: "Prop1" }),
+        { path: IdShortPath.create({ path: "SectionA" }) },
+        { ability: anonymousAbility, onMove: jest.fn() },
+      ),
     ).toThrow(ForbiddenError);
     expect(submodel.getSubmodelElements().map((e) => e.idShort)).toEqual(["SectionA", "Prop1"]);
   });

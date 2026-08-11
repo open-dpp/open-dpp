@@ -53,7 +53,6 @@ import {
   parseAsSubmodelElementListOrFail,
 } from "./table/table-extensable";
 import { AccessResult } from "../security/access-allowed";
-import { AasAbility } from "../security/aas-ability";
 
 export class Submodel
   implements ISubmodelBase, IPersistable, ITrackable, ISubmodelElementSearchable
@@ -405,13 +404,14 @@ export class Submodel
 
   public moveSubmodelElement(
     sourcePath: IdShortPath,
-    options: { targetParentPath?: IdShortPath; position?: number; ability: AasAbility },
+    targetParent: { path?: IdShortPath; position?: number },
+    options: MoveOptions,
   ): ISubmodelElement {
     const element = this.findSubmodelElementOrFail(sourcePath);
     const oldPath = element.getIdShortPath();
     const sourceParent: ISubmodelBase = this.findSubmodelElementParent(sourcePath) ?? this;
-    const targetPath = options.targetParentPath ?? sourcePath.getParentPath();
-    const targetParent: ISubmodelBase = targetPath.isEmpty()
+    const targetPath = targetParent.path ?? sourcePath.getParentPath();
+    const resolvedTargetParent: ISubmodelBase = targetPath.isEmpty()
       ? this
       : this.findSubmodelElementOrFail(targetPath);
 
@@ -432,14 +432,14 @@ export class Submodel
     sourceSiblings.splice(indexInSource, 1);
 
     try {
-      if (targetParent === (this as ISubmodelBase)) {
+      if (resolvedTargetParent === (this as ISubmodelBase)) {
         addSubmodelElementOrFail(this, element, {
-          position: options.position,
+          position: targetParent.position,
           ability: options.ability,
         });
       } else {
-        targetParent.addSubmodelElement(element, {
-          position: options.position,
+        resolvedTargetParent.addSubmodelElement(element, {
+          position: targetParent.position,
           ability: options.ability,
         });
       }
@@ -449,18 +449,20 @@ export class Submodel
       throw e;
     }
 
-    const newPosition = targetParent
+    const newPosition = resolvedTargetParent
       .getSubmodelElements()
       .findIndex((el) => el.idShort === element.idShort);
+    const newPath = element.getIdShortPath();
 
     this.tracker.track(
       SubmodelElementMoved.create({
         oldPath,
-        newPath: element.getIdShortPath(),
+        newPath,
         position: newPosition,
         value: element,
       }),
     );
+    options.onMove(oldPath, newPath);
 
     return element;
   }

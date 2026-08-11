@@ -8,6 +8,7 @@ import type {
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
+  MoveSubmodelElementDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -67,6 +68,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiMoveColumnToGroup,
+  ApiMoveSubmodelElement,
   ApiPatchColumn,
   ApiPatchColumnInGroup,
   ApiPatchShell,
@@ -89,6 +91,7 @@ import {
   GroupIdShortParam,
   IdParam,
   IdShortPathParam,
+  MoveSubmodelElementRequestBody,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -820,6 +823,32 @@ export class TemplateController
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveSubmodelElement()
+  async moveSubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @MoveSubmodelElementRequestBody() body: MoveSubmodelElementDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveSubmodelElement(
       correlationId,
       organizationId,
       id,

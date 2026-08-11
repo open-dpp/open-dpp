@@ -570,6 +570,10 @@ describe("passportController", () => {
     await ctx.asserts.postSubmodelElementAtIdShortPath(createPassport);
   });
 
+  it("/POST move submodel element", async () => {
+    await ctx.asserts.moveSubmodelElement(createPassport, savePassport);
+  });
+
   it(`/GET submodel element by id`, async () => {
     await ctx.asserts.getSubmodelElementByIdV1(createPassport, savePassport);
     await ctx.asserts.getSubmodelElementById(createPassport);

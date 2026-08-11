@@ -9,6 +9,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelElementDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -38,6 +39,7 @@ import { SubmodelRequest } from "../../aas/presentation/requests/submodel.reques
 import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel-modification.request";
 import { ValueModificationRequest } from "../../aas/presentation/requests/value-modification.request";
 import { SubmodelElementModificationRequest } from "../../aas/presentation/requests/submodel-element-modification.request";
+import { MoveSubmodelElementRequest } from "../../aas/presentation/requests/move-submodel-element.request";
 import { PresentationDeletionObserver } from "../../aas/presentation/event-bus/delete-submodel-base-observer";
 import { PresentationMoveObserver } from "../../aas/presentation/event-bus/move-submodel-base-observer";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
@@ -181,6 +183,40 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       SubmodelElementRequest.create({ body, version }),
       userContext,
       idShortPath,
+    );
+  }
+
+  async moveSubmodelElement(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: MoveSubmodelElementDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveSubmodelElement(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      MoveSubmodelElementRequest.create({ body, version }),
+      userContext,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 

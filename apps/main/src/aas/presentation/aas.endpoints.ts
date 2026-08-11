@@ -3,6 +3,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelElementDto,
   SubmodelElementListResponseDto,
 } from "@open-dpp/dto";
 import {
@@ -272,6 +273,18 @@ export interface IAasModifyEndpoints {
     userId: string,
     version: ApiVersionsDtoType,
   ) => Promise<SubmodelElementListResponseDto>;
+  moveSubmodelElement: (
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: MoveSubmodelElementDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+    userId: string,
+    version: ApiVersionsDtoType,
+  ) => Promise<SubmodelElementResponseDto>;
 }
 
 export interface IAasDeleteEndpoints {

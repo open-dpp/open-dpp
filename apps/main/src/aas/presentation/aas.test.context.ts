@@ -749,6 +749,49 @@ export function createAasTestContext<T>(
     );
   }
 
+  async function assertMoveSubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const prop1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "prop1" }));
+    const sub1 = SubmodelElementCollection.create({ idShort: "sub1", value: [prop1] });
+    const sectionA = SubmodelElementCollection.create({ idShort: "sectionA", value: [sub1] });
+    const sectionB = SubmodelElementCollection.create({ idShort: "sectionB" });
+    submodel.addSubmodelElement(sectionA, { ability });
+    submodel.addSubmodelElement(sectionB, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/sectionA.sub1/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ targetParentIdShortPath: "sectionB" });
+    expect(response.status).toEqual(201);
+    expect(response.body.idShort).toEqual("sub1");
+
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    const foundSectionA = foundSubmodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "sectionA" }),
+    );
+    const foundSectionB = foundSubmodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "sectionB" }),
+    );
+    expect(foundSectionA.getSubmodelElements()).toEqual([]);
+    expect(foundSectionB.getSubmodelElements().map((e) => e.idShort)).toEqual(["sub1"]);
+    expect(
+      foundSubmodel.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "sectionB.sub1.prop1" }),
+      ),
+    ).toBeDefined();
+  }
+
   async function assertGetSubmodelValue(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
@@ -1620,6 +1663,7 @@ export function createAasTestContext<T>(
       postSubmodelElement: assertPostSubmodelElement,
       postSubmodelElementAtIdShortPathV1: assertPostSubmodelElementAtIdShortPathV1,
       postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
+      moveSubmodelElement: assertMoveSubmodelElement,
       downloadActivities: assertDownloadActivities,
     },
   };
