@@ -232,10 +232,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
     expect(url).toBe("https://instance.example.com/p/my-slug");
-    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(
-      gs1LinkPermalink.id,
-      undefined,
-    );
+    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalink.id, undefined);
   });
 
   it("propagates the NotFound gate when the passport is unpublished (anonymous)", async () => {
@@ -384,10 +381,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
     expect(permalinkRepo.findGs1LinkByUpiId).toHaveBeenCalledWith(upi.uuid);
-    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(
-      gs1LinkPermalink.id,
-      undefined,
-    );
+    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalink.id, undefined);
     expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalink.id}`);
   });
 

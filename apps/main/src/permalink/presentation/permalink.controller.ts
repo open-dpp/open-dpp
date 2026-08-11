@@ -403,9 +403,7 @@ export class PermalinkController {
   ): Promise<void> {
     const upi = await this.uniqueProductIdentifierRepository.findOne(uniqueProductIdentifierId);
     if (!upi) {
-      throw new NotFoundException(
-        `UniqueProductIdentifier ${uniqueProductIdentifierId} not found`,
-      );
+      throw new NotFoundException(`UniqueProductIdentifier ${uniqueProductIdentifierId} not found`);
     }
     if (upi.referenceId !== passport.id) {
       throw new BadRequestException(

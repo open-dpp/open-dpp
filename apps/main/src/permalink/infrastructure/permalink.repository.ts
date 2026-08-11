@@ -503,9 +503,7 @@ export class PermalinkRepository implements OnApplicationBootstrap {
       .deleteMany({
         $or: [
           { passportId: { $eq: passportId } },
-          ...(configIds.length > 0
-            ? [{ presentationConfigurationId: { $in: configIds } }]
-            : []),
+          ...(configIds.length > 0 ? [{ presentationConfigurationId: { $in: configIds } }] : []),
         ],
       })
       .session(options?.session ?? null);

@@ -251,9 +251,17 @@ onMounted(async () => {
       <Column field="identity" :header="t('uniqueProductIdentifiers.list.identity')">
         <template #body="{ data }">
           <div v-if="data.type === UniqueProductIdentifierType.GS1">
-            <div>{{ data.gtin ? `${t('uniqueProductIdentifiers.list.gtin')}: ${data.gtin}` : "" }}</div>
-            <div>{{ data.gtin ? `${t('uniqueProductIdentifiers.list.batch')}:  ${data.gtin}` : "" }}</div>
-            <div>{{ data.serial ? `${t('uniqueProductIdentifiers.list.batch')}: " + ${data.serial}` : "" }}</div>
+            <div>
+              {{ data.gtin ? `${t("uniqueProductIdentifiers.list.gtin")}: ${data.gtin}` : "" }}
+            </div>
+            <div>
+              {{ data.gtin ? `${t("uniqueProductIdentifiers.list.batch")}:  ${data.gtin}` : "" }}
+            </div>
+            <div>
+              {{
+                data.serial ? `${t("uniqueProductIdentifiers.list.batch")}: " + ${data.serial}` : ""
+              }}
+            </div>
           </div>
           <div v-else-if="data.type === UniqueProductIdentifierType.OPEN_DPP_UUID">
             <span>{{ data.uuid ?? "" }}</span>

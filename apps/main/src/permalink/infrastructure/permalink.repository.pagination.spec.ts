@@ -255,9 +255,7 @@ describe("PermalinkRepository", () => {
         updatedAt: now,
       });
 
-      await expect(repository.findOneOrFail(legacyId)).rejects.toThrow(
-        NotFoundInDatabaseException,
-      );
+      await expect(repository.findOneOrFail(legacyId)).rejects.toThrow(NotFoundInDatabaseException);
     });
 
     it("loads a legacy permalink lacking organizationId without throwing", async () => {
@@ -343,9 +341,7 @@ describe("PermalinkRepository", () => {
       });
 
       // Control: permalink of a DIFFERENT passport
-      await repository.save(
-        Permalink.create({ passportId: otherPassportId, organizationId }),
-      );
+      await repository.save(Permalink.create({ passportId: otherPassportId, organizationId }));
 
       const result = await repository.findPageByPassportId(passportId);
       const ids = result.items.map((p) => p.id).sort();

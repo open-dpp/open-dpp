@@ -72,7 +72,10 @@ test("a bare permalink can be created without selecting an identifier", async ({
 
   await expect(permalinkRows(page)).toHaveCount(2);
   await expect(
-    page.getByTestId("permalink-data-table").getByText(/open-dpp/).first(),
+    page
+      .getByTestId("permalink-data-table")
+      .getByText(/open-dpp/)
+      .first(),
   ).toBeVisible();
 });
 

@@ -277,7 +277,9 @@ describe("PermalinkRepository", () => {
       expect(deleted).toBe(2);
 
       expect(await repository.findOne(direct.id)).toBeUndefined();
-      expect(await connection.collection("permalinks").findOne({ _id: legacyId as any })).toBeNull();
+      expect(
+        await connection.collection("permalinks").findOne({ _id: legacyId as any }),
+      ).toBeNull();
     });
 
     it("returns 0 when nothing belongs to the passport", async () => {
@@ -376,9 +378,7 @@ describe("PermalinkRepository", () => {
       const passportId = randomUUID();
       const upiUuid = randomUUID();
 
-      await repository.save(
-        Permalink.create({ passportId, uniqueProductIdentifierId: upiUuid }),
-      );
+      await repository.save(Permalink.create({ passportId, uniqueProductIdentifierId: upiUuid }));
       await expect(
         repository.save(Permalink.create({ passportId, uniqueProductIdentifierId: upiUuid })),
       ).resolves.toBeDefined();
@@ -537,9 +537,7 @@ describe("PermalinkRepository", () => {
     // Two permalinks sharing one config must now coexist.
     const passportId = randomUUID();
     const configId = randomUUID();
-    await repository.save(
-      Permalink.create({ passportId, presentationConfigurationId: configId }),
-    );
+    await repository.save(Permalink.create({ passportId, presentationConfigurationId: configId }));
     await expect(
       repository.save(Permalink.create({ passportId, presentationConfigurationId: configId })),
     ).resolves.toBeDefined();
