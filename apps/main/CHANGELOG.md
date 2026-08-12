@@ -1,5 +1,22 @@
 # @open-dpp/main
 
+## 2.10.0
+
+### Minor Changes
+
+- [#621](https://github.com/open-dpp/open-dpp/pull/621) [`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756) Thanks [@Hentra](https://github.com/Hentra)! - Add 26 more languages to multilanguage description
+
+### Patch Changes
+
+- [#678](https://github.com/open-dpp/open-dpp/pull/678) [`43ef264`](https://github.com/open-dpp/open-dpp/commit/43ef2641d8bbc722ae7c47592f91be23d85879cb) Thanks [@florianBieck](https://github.com/florianBieck)! - Simplified email footers
+
+- Updated dependencies [[`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756)]:
+  - @open-dpp/api-client@2.10.0
+  - @open-dpp/dto@2.10.0
+  - @open-dpp/env@2.10.0
+  - @open-dpp/exception@2.10.0
+  - @open-dpp/permission@2.10.0
+
 ## 2.9.0
 
 ### Minor Changes
