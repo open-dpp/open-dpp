@@ -3,6 +3,7 @@ import {
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
+  CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   DigitalProductDocumentStatusModificationDtoSchema,
   PassportDtoSchema,
@@ -23,22 +24,27 @@ import {
 } from "@open-dpp/dto";
 import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/export-schemas/aas-export-v1.schema";
 import {
+  ApiCreateGroupFromColumnPath,
   ApiDeletePolicyPath,
   ApiDeleteRowPath,
   ApiGetColumnByIdShortPath,
+  ApiGetColumnInGroupByIdShortPath,
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementValuePath,
   ApiGetSubmodelValuePath,
+  ApiMoveColumnToGroupPath,
   ApiPatchShellPath,
   ApiPostColumnPath,
+  ApiPostColumnToGroupPath,
   ApiPostRowPath,
   ApiSubmodelElementsPath,
   ApiSubmodelsPath,
   AssetAdministrationShellIdParamSchema,
   ColumnParamSchema,
   CursorQueryParamSchema,
+  GroupIdShortParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
   PositionQueryParamSchema,
@@ -316,6 +322,122 @@ export function createAasPaths(tag: string) {
         },
         responses: {
           [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}${convertPathToOpenApi(ApiCreateGroupFromColumnPath)}`]: {
+      post: {
+        tags: [tag],
+        summary: `Creates a new group column from an existing column within a Submodel Element List, moving the existing column inside the new group.`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: CreateGroupFromColumnSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}${convertPathToOpenApi(ApiPostColumnToGroupPath)}`]: {
+      post: {
+        tags: [tag],
+        summary: `Add column to a group within a Submodel Element List.`,
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          GroupIdShortParamSchema,
+          PositionQueryParamSchema,
+          orgaIdHeader,
+        ],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}${convertPathToOpenApi(ApiGetColumnInGroupByIdShortPath)}`]: {
+      patch: {
+        tags: [tag],
+        summary: `Modifies a column inside a group within a Submodel Element List.`,
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          GroupIdShortParamSchema,
+          ColumnParamSchema,
+          orgaIdHeader,
+        ],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
+        },
+        security,
+      },
+      delete: {
+        tags: [tag],
+        summary: `Deletes a column from a group within a Submodel Element List, promoting it to the top level of the row.`,
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          GroupIdShortParamSchema,
+          ColumnParamSchema,
+          orgaIdHeader,
+        ],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}${convertPathToOpenApi(ApiMoveColumnToGroupPath)}`]: {
+      post: {
+        tags: [tag],
+        summary: `Moves a top-level column into a group within a Submodel Element List.`,
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          GroupIdShortParamSchema,
+          ColumnParamSchema,
+          orgaIdHeader,
+        ],
+        responses: {
+          [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
             },

@@ -1,14 +1,7 @@
 import { z } from "zod";
 import { KeyTypes, KeyTypesEnum } from "../aas/enums/key-types-enum";
-import { DateTimeSchema } from "../shared/digital-product-document.schemas";
-
-export const PresentationReferenceType = {
-  Template: "template",
-  Passport: "passport",
-} as const;
-
-export const PresentationReferenceTypeEnum = z.enum(PresentationReferenceType);
-export type PresentationReferenceTypeType = z.infer<typeof PresentationReferenceTypeEnum>;
+import { DateTimeSchema } from "../digital-product-document/digital-product-document.schemas";
+import { DigitalProductDocumentTypesEnum } from "../digital-product-document/digital-product-document.dto";
 
 export const PresentationComponentName = {
   BigNumber: "BigNumber",
@@ -37,7 +30,7 @@ export const PresentationConfigurationDtoSchema = z
     id: z.uuid(),
     organizationId: z.string().min(1),
     referenceId: z.uuid(),
-    referenceType: PresentationReferenceTypeEnum,
+    referenceType: DigitalProductDocumentTypesEnum,
     label: z.string().min(1).nullable().default(null),
     elementDesign: z
       .preprocess(
@@ -61,7 +54,7 @@ export type PresentationConfigurationDto = z.infer<typeof PresentationConfigurat
 export const PresentationConfigurationInvariantsSchema = z.object({
   organizationId: z.string().min(1),
   referenceId: z.uuid(),
-  referenceType: PresentationReferenceTypeEnum,
+  referenceType: DigitalProductDocumentTypesEnum,
   label: z.string().min(1).nullable(),
 });
 

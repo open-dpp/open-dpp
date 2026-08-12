@@ -1,0 +1,32 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    {{> emailHeader }}
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Hallo {{ firstName }},</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >deine Konto-E-Mail-Adresse wurde von <strong>{{ previousEmail }}</strong> auf
+          <strong>{{ currentEmail }}</strong> ge&auml;ndert.<br />
+          <p></p
+        ></mj-text>
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Falls du das nicht warst, kontaktiere bitte sofort den Support. Deine vorherige
+          E-Mail-Adresse k&ouml;nnte kompromittiert sein.</mj-text
+        >
+        <mj-text
+          align="center"
+          color="#000000"
+          font-size="14px"
+          font-family="Arial, sans-serif"
+          padding-top="40px"
+          >&mdash; open-dpp</mj-text
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

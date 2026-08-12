@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BrandingDtoSchema } from "../branding/branding.dto";
 import { PassportDtoSchema } from "../passports/passport.dto";
 import { PresentationConfigurationDtoSchema } from "../presentation-configurations/presentation-configuration.dto";
-import { DateTimeSchema } from "../shared/digital-product-document.schemas";
+import { DateTimeSchema } from "../digital-product-document/digital-product-document.schemas";
 import { PermalinkBaseUrlSchema } from "../shared/permalink-base-url.schema";
 
 export const PERMALINK_RESERVED_SLUGS: readonly string[] = ["new", "edit"];

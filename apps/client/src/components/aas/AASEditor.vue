@@ -195,14 +195,15 @@ onUnmounted(() => {
 
 const popover = ref();
 
-function onHideDrawer() {
+async function onHideDrawer() {
   hideDrawer();
-  router.push({
+  await router.push({
     query: {
       ...route.query,
       edit: undefined,
     },
   });
+  await reloadCurrentPage();
 }
 
 function addClicked(event: any, node: TreeNode) {
@@ -217,9 +218,9 @@ async function deleteClicked(node: TreeNode) {
     await deleteSubmodelElement(node.data.path);
   }
 }
-function onSubmit() {
+async function onSubmit() {
   if (componentRef.value) {
-    componentRef.value.submit();
+    await componentRef.value.submit();
   }
 }
 
@@ -446,6 +447,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
               <component
                 :is="editorVNode.component"
                 v-if="editorVNode"
+                :key="editorVNode.props.path.idShortPathIncludingSubmodel ?? ''"
                 v-bind="editorVNode.props"
                 :id="model.id"
                 ref="componentRef"
@@ -457,6 +459,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 :modify-shell="modifyShell"
                 :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
                 :is-archived="isArchived"
+                :hide-drawer="onHideDrawer"
               />
             </TabPanel>
             <TabPanel v-if="showPresentationTab" value="presentation">

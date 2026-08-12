@@ -55,6 +55,7 @@ import {
 } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { EmailService } from "../../../email/email.service";
 
 const adminPlain = {
   subjectAttribute: [
@@ -342,7 +343,12 @@ describe("aasSerializationService", () => {
           useValue: mockMediaService,
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     aasSerializationService = module.get<AasSerializationService>(AasSerializationService);
     passportRepository = module.get<PassportRepository>(PassportRepository);

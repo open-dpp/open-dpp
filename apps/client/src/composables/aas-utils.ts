@@ -10,7 +10,7 @@ import { convertLocaleToLanguage } from "../translations/util";
 import { usePresentationLanguage } from "./presentation-language";
 
 export interface IAasUtils {
-  parseLanguageTexts: (displayNames: LanguageTextDto[]) => string;
+  parseLanguageTexts: (displayNames: LanguageTextDto[], fallback?: string) => string;
   parseLanguageTextsFromAas: (
     assetAdministrationShell: Pick<AssetAdministrationShellResponseDto, "displayName">,
   ) => string;
@@ -26,7 +26,7 @@ export function useAasUtils(): IAasUtils {
     () => presentationLanguage?.value ?? convertLocaleToLanguage(locale.value),
   );
 
-  function parseLanguageTexts(displayNames: LanguageTextDto[]) {
+  function parseLanguageTexts(displayNames: LanguageTextDto[], fallback?: string) {
     const baseLanguage = (tag: string) => tag.split("-")[0];
 
     const exactMatch = displayNames.find((d) => d.language === selectedLanguage.value);
@@ -41,7 +41,7 @@ export function useAasUtils(): IAasUtils {
     const englishMatch = displayNames.find((d) => baseLanguage(d.language) === "en");
     if (englishMatch) return englishMatch.text;
 
-    return t("common.untitled");
+    return fallback ? fallback : t("common.untitled");
   }
 
   function parseLanguageTextsFromAas(

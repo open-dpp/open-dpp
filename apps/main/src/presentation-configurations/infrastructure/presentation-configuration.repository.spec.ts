@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { KeyTypes, PresentationComponentName, PresentationReferenceType } from "@open-dpp/dto";
+import { KeyTypes, PresentationComponentName, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Connection } from "mongoose";
 
@@ -51,7 +51,7 @@ describe("presentationConfigurationRepository", () => {
     const config = PresentationConfiguration.create({
       organizationId: "org-1",
       referenceId: randomUUID(),
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
       elementDesign: { "submodel-1.prop-1": PresentationComponentName.BigNumber },
       defaultComponents: { [KeyTypes.Property]: PresentationComponentName.BigNumber },
     });
@@ -73,18 +73,18 @@ describe("presentationConfigurationRepository", () => {
     const config = PresentationConfiguration.create({
       organizationId: "org-2",
       referenceId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
     });
     await repository.save(config);
 
     const found = await repository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId,
     });
     expect(found?.id).toBe(config.id);
 
     const missing = await repository.findByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId: randomUUID(),
     });
     expect(missing).toBeUndefined();
@@ -93,7 +93,7 @@ describe("presentationConfigurationRepository", () => {
   it("counts presentation configurations by reference", async () => {
     const referenceId = randomUUID();
     const missingBefore = await repository.countByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId,
     });
     expect(missingBefore).toBe(0);
@@ -101,12 +101,12 @@ describe("presentationConfigurationRepository", () => {
     const config = PresentationConfiguration.create({
       organizationId: "org-count",
       referenceId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
     });
     await repository.save(config);
 
     const count = await repository.countByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId,
     });
     expect(count).toBe(1);
@@ -117,20 +117,20 @@ describe("presentationConfigurationRepository", () => {
     const a = PresentationConfiguration.create({
       organizationId: "org-1",
       referenceId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       label: null,
     });
     const b = PresentationConfiguration.create({
       organizationId: "org-1",
       referenceId,
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       label: "Variant A",
     });
     await repository.save(a);
     await repository.save(b);
 
     const list = await repository.findManyByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId,
     });
     expect(list).toHaveLength(2);
@@ -227,7 +227,7 @@ describe("presentationConfigurationRepository", () => {
         PresentationConfiguration.create({
           organizationId: "org-tx",
           referenceId,
-          referenceType: PresentationReferenceType.Template,
+          referenceType: DigitalProductDocumentTypes.Template,
         }),
         { session },
       );
@@ -237,7 +237,7 @@ describe("presentationConfigurationRepository", () => {
     }
 
     const found = await repository.findByReference({
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
       referenceId,
     });
     expect(found).toBeUndefined();

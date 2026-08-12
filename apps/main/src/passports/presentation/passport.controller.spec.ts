@@ -31,7 +31,7 @@ import {
   KeyTypes,
   LatestApiVersionWithPrefixDto,
   PresentationComponentName,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
   ReferenceTypes,
 } from "@open-dpp/dto";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
@@ -170,6 +170,7 @@ describe("passportController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
@@ -196,6 +197,7 @@ describe("passportController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 2,
       },
       result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
@@ -213,6 +215,7 @@ describe("passportController", () => {
     expect(response.body).toEqual({
       paging_metadata: {
         cursor: expect.any(String),
+        total_count: 1,
       },
       result: [secondPassport].map((p) => ({
         ...p.toPlain(),
@@ -407,7 +410,7 @@ describe("passportController", () => {
     ).toHaveLength(0);
     expect(
       await ctx.getModuleRef().get(PresentationConfigurationRepository).findManyByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passportId,
       }),
     ).toHaveLength(0);
@@ -428,7 +431,7 @@ describe("passportController", () => {
       .get(PresentationConfigurationRepository);
 
     await presentationConfigurationRepository.deleteByReference({
-      referenceType: PresentationReferenceType.Passport,
+      referenceType: DigitalProductDocumentTypes.Passport,
       referenceId: passport.id,
     });
 
@@ -441,7 +444,7 @@ describe("passportController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeUndefined();
@@ -455,7 +458,7 @@ describe("passportController", () => {
 
     expect(
       await presentationConfigurationRepository.findByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passport.id,
       }),
     ).toBeUndefined();
@@ -532,6 +535,26 @@ describe("passportController", () => {
 
   it("/DELETE column", async () => {
     await ctx.asserts.deleteColumn(createPassport, savePassport);
+  });
+
+  it("/POST add column to group", async () => {
+    await ctx.asserts.addColumnToGroup(createPassport, savePassport);
+  });
+
+  it("/PATCH modify column in group", async () => {
+    await ctx.asserts.modifyColumnInGroup(createPassport, savePassport);
+  });
+
+  it("/DELETE column from group", async () => {
+    await ctx.asserts.deleteColumnFromGroup(createPassport, savePassport);
+  });
+
+  it("/POST move column to group", async () => {
+    await ctx.asserts.moveColumnToGroup(createPassport, savePassport);
+  });
+
+  it("/POST create group from column", async () => {
+    await ctx.asserts.createGroupFromColumn(createPassport, savePassport);
   });
 
   it("/POST add row", async () => {
@@ -1021,7 +1044,7 @@ describe("passportController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository);
       const configs = await presentationConfigurationRepository.findManyByReference({
-        referenceType: PresentationReferenceType.Passport,
+        referenceType: DigitalProductDocumentTypes.Passport,
         referenceId: passportId,
       });
       const merged: Record<string, string> = {};

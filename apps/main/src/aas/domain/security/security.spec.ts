@@ -1,15 +1,21 @@
-import { expect, it } from "@jest/globals";
-import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { beforeAll, expect, it } from "@jest/globals";
+import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
+import { Property } from "../submodel-base/property";
+import { registerSubmodelElementClasses } from "../submodel-base/register-submodel-element-classes";
+import { Submodel } from "../submodel-base/submodel";
+import { SubmodelElementCollection } from "../submodel-base/submodel-element-collection";
+import { SubmodelElementList } from "../submodel-base/submodel-element-list";
 import { createAasObject } from "./aas-object";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { Security } from "./security";
 import { SubjectAttributes } from "./subject-attributes";
+import { SubmodelSecurityContext } from "./submodel-security-context";
 import { PolicyDeleted } from "../../../activity-history/domain/change-events/policy-deleted";
 import { ChangeTracker } from "../../../activity-history/domain/change-tracker";
 import { PolicyAdded } from "../../../activity-history/domain/change-events/policy-added";
@@ -17,6 +23,145 @@ import { PolicyModified } from "../../../activity-history/domain/change-events/p
 
 describe("security", () => {
   const policyManagementError = "Administrator has no permission to add/ modify/ delete policy.";
+
+  beforeAll(() => {
+    registerSubmodelElementClasses();
+  });
+
+  function createSubmodelWithTable() {
+    return Submodel.create({
+      idShort: "section1",
+      submodelElements: [
+        SubmodelElementList.create({
+          idShort: "table1",
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          value: [
+            SubmodelElementCollection.create({
+              idShort: "row1",
+              value: [
+                Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  it("should move policy recursively for all descendants", () => {
+    const security = Security.create({}).withTracking();
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    const permissionsA = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ];
+    const permissionsB = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ];
+    const permissionsC = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ];
+
+    security.addPolicy(subject, IdShortPath.create({ path: "A" }), permissionsA);
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B" }), permissionsB);
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B.C" }), permissionsC);
+
+    security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const result = security.findPoliciesBySubject(subject);
+    expect(result).toHaveLength(1);
+    expect(result[0].permissionsPerObject).toHaveLength(3);
+    expect(result[0].permissionsPerObject.some((p) => p.object.idShort === "X")).toBeTruthy();
+    expect(result[0].permissionsPerObject.some((p) => p.object.idShort === "X.B")).toBeTruthy();
+    expect(result[0].permissionsPerObject.some((p) => p.object.idShort === "X.B.C")).toBeTruthy();
+  });
+
+  it("should overwrite existing destination policy when moving", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    const permissions1 = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ];
+    const permissions2 = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ];
+
+    security.addPolicy(subject, IdShortPath.create({ path: "A" }), permissions1);
+    security.addPolicy(subject, IdShortPath.create({ path: "X" }), permissions2);
+
+    security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const result = security.findPoliciesBySubject(subject);
+    expect(result).toHaveLength(1);
+    expect(result[0].permissionsPerObject).toHaveLength(1);
+    expect(result[0].permissionsPerObject[0].object.idShort).toBe("X");
+    expect(result[0].permissionsPerObject[0].permissions).toEqual(permissions1);
+  });
+
+  it("should reject move when destination is child of source", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    expect(() => {
+      security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "A.B" }));
+    }).toThrow(ValueError);
+
+    expect(() => {
+      security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "A.B.C" }));
+    }).toThrow(ValueError);
+  });
+
+  it("should move children even when parent has no policy", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    security.addPolicy(subject, IdShortPath.create({ path: "A.B.C" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    security.movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const result = security.findPoliciesBySubject(subject);
+    expect(result).toHaveLength(1);
+    expect(result[0].permissionsPerObject).toHaveLength(1);
+    expect(result[0].permissionsPerObject[0].object.idShort).toBe("X.B.C");
+  });
+
+  it("should track PolicyDeleted and PolicyAdded events when moving policy", () => {
+    const security = Security.create({});
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    const permissions = [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ];
+
+    security.addPolicy(subject, IdShortPath.create({ path: "A" }), permissions);
+    security
+      .withTracking()
+      .movePolicy(IdShortPath.create({ path: "A" }), IdShortPath.create({ path: "X" }));
+
+    const changes = security.tracker.stop();
+    expect(changes).toHaveLength(2);
+    expect(changes[0]).toEqual(
+      PolicyDeleted.create({
+        userRole: subject.userRole,
+        memberRole: subject.memberRole,
+        object: createAasObject(IdShortPath.create({ path: "A" })),
+      }),
+    );
+    expect(changes[1]).toEqual(
+      PolicyAdded.create({
+        userRole: subject.userRole,
+        memberRole: subject.memberRole,
+        object: createAasObject(IdShortPath.create({ path: "X" })),
+        value: permissions,
+      }),
+    );
+  });
+
   it("create security schema and checks permissions", () => {
     const security = Security.create({});
     security.addPolicy(
@@ -332,6 +477,87 @@ describe("security", () => {
               }),
               Permission.create({
                 permission: Permissions.Edit,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("should reject applying rules that target an element inside a table", () => {
+    const security = Security.create({});
+    const submodelSecurityContext = SubmodelSecurityContext.create({
+      submodels: [createSubmodelWithTable()],
+    });
+    const modifications = [
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1.table1.row1.col1" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+    expect(() => security.applyModifiedRules(modifications, submodelSecurityContext)).toThrow(
+      ValueError,
+    );
+    expect(
+      security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER })),
+    ).toEqual([]);
+  });
+
+  it("should skip unresolvable targets while still applying the rest of the batch", () => {
+    const security = Security.create({});
+    const submodelSecurityContext = SubmodelSecurityContext.create({
+      submodels: [createSubmodelWithTable()],
+    });
+    const modifications = [
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1.doesNotExist" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
+    expect(() => security.applyModifiedRules(modifications, submodelSecurityContext)).not.toThrow();
+    expect(
+      security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER })),
+    ).toEqual([
+      {
+        tracker: expect.any(ChangeTracker),
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        _permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [
+              Permission.create({
+                permission: Permissions.Read,
                 kindOfPermission: PermissionKind.Allow,
               }),
             ],

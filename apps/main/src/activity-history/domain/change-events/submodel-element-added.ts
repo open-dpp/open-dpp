@@ -8,6 +8,7 @@ import { ChangeEventTypes } from "./change-event-types";
 import { z } from "zod";
 import { SubmodelElementSchema } from "@open-dpp/dto";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
+import { Pointer } from "../../../aas/domain/submodel-base/pointer";
 
 const SubmodelElementAddedSchema = z.object({
   type: z.literal(ChangeEventTypes.SubmodelElementAdded),
@@ -21,7 +22,9 @@ export class SubmodelElementAdded implements IChangeEventWithPath {
     public readonly path: IdShortPath,
     public readonly value: ISubmodelElement,
   ) {
-    value.setParentIdShortPath(this.path.getParentPath());
+    if (!value.getIdShortPath().isEqual(this.path)) {
+      value.setParentPointer(Pointer.create({ parentIdShortPath: this.path.getParentPath() }));
+    }
   }
 
   isNoop(): boolean {

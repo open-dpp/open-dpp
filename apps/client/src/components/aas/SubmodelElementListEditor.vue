@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
-import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  DataTypeDef,
+  Permissions,
+  type SubmodelElementListModificationDto,
+  ValueSchema,
+} from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../lib/table/menu.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -17,7 +22,6 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
 import FileField from "./form/FileField.vue";
 import FormContainer from "./form/FormContainer.vue";
-import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -74,10 +78,17 @@ const {
   rows,
   rowsContext,
   columns,
+  flatColumns,
+  hasGroups,
   onCellEditComplete,
   buildColumnMenu,
   buildRowMenu,
   formatCellValue,
+  resolveFieldValue,
+  setFieldValue,
+  openNestedTable,
+  hasParentTable,
+  goBackToParentTable,
   save,
 } = useAasTableExtension({
   id: props.id,
@@ -97,6 +108,11 @@ const {
   disableColumnEditing: !canEdit.value,
 });
 
+const minPropertyColumnWidth: Record<any, string> = {
+  [DataTypeDef.Date]: "min-w-35",
+  [DataTypeDef.DateTime]: "min-w-50",
+};
+
 const showErrors = computed(() => submitCount.value > 0);
 
 async function submit() {
@@ -110,7 +126,20 @@ async function submit() {
       props.errorHandlingStore.logErrorWithNotification(t("aasEditor.table.errorEditEntries"), e);
     }
     await props.callback({ ...data });
+    if (hasParentTable.value) {
+      await goBackToParentTable();
+    } else {
+      props.hideDrawer();
+    }
   })();
+}
+
+function rowCountOfTableCell(cellData: any, field: string): number {
+  const fieldValueParsed = ValueSchema.safeParse(resolveFieldValue(cellData, field));
+  if (fieldValueParsed.success) {
+    return Number(fieldValueParsed.data ?? 0);
+  }
+  return 0;
 }
 
 defineExpose<{
@@ -137,6 +166,11 @@ function onFileChange(value: string | undefined, cellData: any, rowIndex: number
     index: rowIndex,
   });
 }
+
+function resolveContext(rowIndex: number, field: string): any {
+  return rowsContext.value[rowIndex]?.[field];
+}
+
 onErrorCaptured((err) => {
   props.errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), err);
   return false; // stops error from bubbling further
@@ -147,6 +181,17 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
 
 <template>
   <div class="flex flex-col gap-1 p-2">
+    <Button
+      v-if="hasParentTable"
+      data-cy="back-to-parent-table"
+      :label="t('aasEditor.table.backToParentTable')"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      size="small"
+      outlined
+      class="self-start"
+      @click="goBackToParentTable"
+    />
     <FormContainer>
       <SubmodelBaseForm
         :show-errors="showErrors"
@@ -154,6 +199,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         :disabled="!canEdit"
       />
       <PermissionsForm
+        v-if="!hasParentTable"
         ref="permissionsFormRef"
         :disabled="!canEdit"
         :path="props.path"
@@ -176,10 +222,24 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             newValue: event.newValue,
           })
       "
+      tableStyle="min-width: 50rem"
+      showGridlines
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
+          <div class="flex items-center gap-2">
+            <Button
+              v-if="hasParentTable"
+              data-cy="back-to-parent-table"
+              v-tooltip.top="t('aasEditor.table.backToParentTable')"
+              :aria-label="t('aasEditor.table.backToParentTable')"
+              icon="pi pi-chevron-left"
+              severity="secondary"
+              variant="text"
+              @click="goBackToParentTable"
+            />
+            <h3 class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</h3>
+          </div>
           <Button
             v-tooltip.top="!canCreateColumnsAndRows ? missingPermissionsMsg : undefined"
             :label="t('aasEditor.table.addColumnEnd')"
@@ -188,13 +248,97 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           />
         </div>
       </template>
-      <Column class="w-12 font-bold" frozen>
+
+      <!-- Always render ColumnGroup — v-if on ColumnGroup itself causes PrimeVue to duplicate body cells -->
+      <ColumnGroup type="header">
+        <Row>
+          <Column :rowspan="hasGroups ? 2 : 1" />
+          <Column
+            v-for="(col, colIndex) in columns"
+            :key="col.idShort"
+            :colspan="col.children ? col.children.length : 1"
+            :rowspan="col.children ? 1 : hasGroups ? 2 : 1"
+          >
+            <template #header>
+              <div class="flex items-center gap-2">
+                <Button
+                  v-if="col.children"
+                  :data-cy="`column-menu-${col.idShort}`"
+                  :aria-label="t('common.actions')"
+                  icon="pi pi-chevron-down"
+                  variant="text"
+                  severity="secondary"
+                  size="small"
+                  @click="
+                    toggleColumnMenu($event, {
+                      position: colIndex,
+                      isGroupHeader: true,
+                      groupIdShort: col.idShort,
+                    })
+                  "
+                />
+                <Button
+                  v-else
+                  :data-cy="`column-menu-${col.idShort}`"
+                  :aria-label="t('common.actions')"
+                  icon="pi pi-chevron-down"
+                  variant="text"
+                  severity="secondary"
+                  size="small"
+                  @click="
+                    toggleColumnMenu($event, {
+                      position: colIndex,
+                      addColumnActions: true,
+                    })
+                  "
+                />
+                <span>{{ col.label }}</span>
+              </div>
+            </template>
+          </Column>
+        </Row>
+        <!-- Sub-column header row: only rendered when groups exist -->
+        <Row v-if="hasGroups">
+          <template v-for="col in columns" :key="col.idShort">
+            <Column
+              v-for="(subCol, subColIndex) in col.children"
+              :key="`${col.idShort}_${subCol.idShort}`"
+            >
+              <template #header>
+                <div class="flex items-center gap-2">
+                  <Button
+                    :data-cy="`column-menu-${col.idShort}-${subCol.idShort}`"
+                    :aria-label="t('common.actions')"
+                    icon="pi pi-chevron-down"
+                    variant="text"
+                    severity="secondary"
+                    size="small"
+                    @click="
+                      toggleColumnMenu($event, {
+                        position: subColIndex,
+                        addColumnActions: true,
+                        groupIdShort: col.idShort,
+                      })
+                    "
+                  />
+                  <span>{{ subCol.label }}</span>
+                </div>
+              </template>
+            </Column>
+          </template>
+        </Row>
+      </ColumnGroup>
+
+      <!-- Row action button column -->
+
+      <Column class="w-12 font-bold">
         <template #body="{ index }">
           <div class="flex items-center gap-2 rounded-md">
             <Button
               :data-cy="`row-menu-${index}`"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
+              variant="text"
               severity="secondary"
               size="small"
               @click="toggleRowMenu($event, { position: index })"
@@ -202,23 +346,29 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           </div>
         </template>
       </Column>
-      <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
+
+      <!--      Data columns (flat, groups expanded into their sub-columns)-->
+      <Column
+        v-for="(flatCol, flatIndex) in flatColumns"
+        :key="flatCol.field"
+        :field="flatCol.field"
+      >
         <template #header>
           <div class="flex items-center gap-2">
             <Button
-              :data-cy="`column-menu-${col.idShort}`"
+              :data-cy="`column-menu-${flatCol.idShort}`"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
               severity="secondary"
               size="small"
               @click="
                 toggleColumnMenu($event, {
-                  position: index,
+                  position: flatIndex,
                   addColumnActions: true,
                 })
               "
             />
-            <span>{{ col.label }}</span>
+            <span>{{ flatCol.label }}</span>
           </div>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
@@ -227,35 +377,35 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             <FileField
               v-if="
                 canEdit &&
-                col.plain.modelType === AasSubmodelElements.File &&
-                rowsContext[rowIndex] != null &&
-                rowsContext[rowIndex][field] != null
+                flatCol.plain.modelType === AasSubmodelElements.File &&
+                resolveContext(rowIndex, field) != null
               "
               :id="`${rowIndex}-${field}`"
-              v-model:content-type="rowsContext[rowIndex][field].contentType"
+              v-model:content-type="resolveContext(rowIndex, field).contentType"
               :disabled="!canEdit"
-              :model-value="cellData[field]"
+              :model-value="resolveFieldValue(cellData, field) ?? undefined"
               @update:model-value="(value) => onFileChange(value, cellData, rowIndex, field)"
             />
             <MediaFieldView
               v-else-if="
                 !canEdit &&
-                col.plain.modelType === AasSubmodelElements.File &&
-                cellData[field] != null
+                flatCol.plain.modelType === AasSubmodelElements.File &&
+                resolveFieldValue(cellData, field) != null
               "
-              :media-id="cellData[field]"
+              :media-id="resolveFieldValue(cellData, field)!"
             />
             <PropertyValue
+              :class="[minPropertyColumnWidth[flatCol.plain.valueType] ?? '']"
               v-else-if="
                 canEdit &&
-                col.plain.modelType === AasSubmodelElements.Property &&
-                (col.plain.valueType === DataTypeDef.Date ||
-                  col.plain.valueType === DataTypeDef.DateTime ||
-                  col.plain.valueType === DataTypeDef.Boolean)
+                flatCol.plain.modelType === AasSubmodelElements.Property &&
+                (flatCol.plain.valueType === DataTypeDef.Date ||
+                  flatCol.plain.valueType === DataTypeDef.DateTime ||
+                  flatCol.plain.valueType === DataTypeDef.Boolean)
               "
               :id="`${rowIndex}-${field}`"
-              :model-value="cellData[field]"
-              :value-type="col.plain.valueType"
+              :model-value="resolveFieldValue(cellData, field)"
+              :value-type="flatCol.plain.valueType"
               withinList
               @update:model-value="
                 (value) =>
@@ -269,38 +419,53 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             />
             <span
               v-else-if="
-                col.plain.modelType === AasSubmodelElements.Property && cellData[field] != null
+                flatCol.plain.modelType === AasSubmodelElements.Property &&
+                resolveFieldValue(cellData, field) != null
               "
             >
-              {{ formatCellValue(cellData[field], col) }}
+              {{ formatCellValue(resolveFieldValue(cellData, field) as string, flatCol) }}
             </span>
+            <Button
+              v-else-if="flatCol.plain.modelType === AasSubmodelElements.SubmodelElementList"
+              :label="t('aasEditor.table.rows')"
+              v-tooltip.top="t('aasEditor.table.edit')"
+              :aria-label="t('aasEditor.table.edit')"
+              :badge="rowCountOfTableCell(cellData, field).toFixed()"
+              icon="pi pi-table"
+              severity="secondary"
+              size="small"
+              outlined
+              @click="openNestedTable(rowIndex, flatCol)"
+            />
             <InputText v-else autofocus fluid readonly :disabled="!canEdit" />
           </div>
         </template>
         <template
           v-if="
             canEdit &&
-            col.plain.modelType !== AasSubmodelElements.File &&
+            flatCol.plain.modelType !== AasSubmodelElements.File &&
+            flatCol.plain.modelType !== AasSubmodelElements.SubmodelElementList &&
             !(
-              col.plain.modelType === AasSubmodelElements.Property &&
-              (col.plain.valueType === DataTypeDef.Date ||
-                col.plain.valueType === DataTypeDef.DateTime ||
-                col.plain.valueType === DataTypeDef.Boolean)
+              flatCol.plain.modelType === AasSubmodelElements.Property &&
+              (flatCol.plain.valueType === DataTypeDef.Date ||
+                flatCol.plain.valueType === DataTypeDef.DateTime ||
+                flatCol.plain.valueType === DataTypeDef.Boolean)
             )
           "
           #editor="{ data: editorData, field, index: rowIndex }"
         >
           <PropertyValue
-            v-if="col.plain.modelType === AasSubmodelElements.Property"
+            v-if="flatCol.plain.modelType === AasSubmodelElements.Property"
             :id="`${rowIndex}-${field}`"
-            v-model="editorData[field]"
-            :value-type="col.plain.valueType"
+            :model-value="resolveFieldValue(editorData, field)"
+            :value-type="flatCol.plain.valueType"
             withinList
+            @update:model-value="(value) => setFieldValue(editorData, field, value ?? null)"
           />
         </template>
       </Column>
     </DataTable>
-    <Menu
+    <TieredMenu
       id="overlay_column_menu"
       ref="columnMenuPopover"
       :model="columnMenu"

@@ -3,7 +3,8 @@ import {
   KeyTypes,
   PresentationComponentName,
   PresentationComponentNameType,
-  PresentationReferenceType,
+  type DigitalProductDocumentTypesType,
+  DigitalProductDocumentTypes,
 } from "@open-dpp/dto";
 import { Document } from "mongoose";
 
@@ -52,9 +53,9 @@ export class PresentationConfigurationDoc extends Document<string> {
   @Prop({
     type: String,
     required: true,
-    enum: Object.values(PresentationReferenceType),
+    enum: Object.values(DigitalProductDocumentTypes),
   })
-  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
+  referenceType: DigitalProductDocumentTypesType;
 
   @Prop({ type: String, default: null })
   label: string | null;

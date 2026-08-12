@@ -1,5 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { UpdateProfileDto } from "@open-dpp/dto";
 import { NotFoundError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
@@ -15,13 +16,23 @@ export class UsersService {
     @Inject(AUTH) private readonly auth: Auth,
   ) {}
 
+  private async sendPasswordResetEmail(email: string): Promise<void> {
+    await this.auth.api.requestPasswordReset({
+      body: { email, redirectTo: "/password-reset" },
+    });
+  }
+
+  private async sendVerificationEmail(email: string): Promise<void> {
+    await this.auth.api.sendVerificationEmail({
+      body: { email, callbackURL: "/email-verified" },
+    });
+  }
+
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
-    const fn = firstName?.trim() ?? "";
-    const ln = lastName?.trim() ?? "";
     const user = User.create({
       email,
-      firstName: fn,
-      lastName: ln,
+      firstName: firstName ?? "",
+      lastName: lastName ?? "",
       role: UserRole.USER,
     });
     const saved = await this.usersRepository.save(user);
@@ -29,13 +40,34 @@ export class UsersService {
       throw new Error(`Failed to save user with email ${email}`);
     }
     try {
-      await this.auth.api.requestPasswordReset({
-        body: { email, redirectTo: "/password-reset" },
-      });
+      await this.sendPasswordResetEmail(email);
     } catch (error) {
-      this.logger.error("Failed to send password reset email", error);
+      this.logger.error(
+        `User ${saved.id} was created but the password-reset email failed to send. The user cannot log in until an admin re-triggers the reset email.`,
+        error,
+      );
+    }
+    try {
+      await this.sendVerificationEmail(email);
+    } catch (error) {
+      this.logger.error(
+        `User ${saved.id} was created but the verification email failed to send. An admin can re-trigger it later.`,
+        error,
+      );
     }
     return saved;
+  }
+
+  async resendPasswordResetEmail(id: string): Promise<User> {
+    const user = await this.findOneOrFail(id);
+    await this.sendPasswordResetEmail(user.email);
+    return user;
+  }
+
+  async resendVerificationEmail(id: string): Promise<User> {
+    const user = await this.findOneOrFail(id);
+    await this.sendVerificationEmail(user.email);
+    return user;
   }
 
   async findOne(id: string) {
@@ -44,10 +76,6 @@ export class UsersService {
 
   async findOneOrFail(id: string) {
     return await this.usersRepository.findOneOrFail(id);
-  }
-
-  async findByEmail(email: string) {
-    return this.usersRepository.findOneByEmail(email);
   }
 
   async findAllByIds(ids: Array<string>): Promise<User[]> {
@@ -73,6 +101,29 @@ export class UsersService {
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
       throw new NotFoundError(User.name, id);
+    }
+    return saved;
+  }
+
+  async getMe(userId: string): Promise<User> {
+    return this.usersRepository.findOneOrFail(userId);
+  }
+
+  async updateProfile(userId: string, patch: UpdateProfileDto): Promise<User> {
+    const user = await this.usersRepository.findOneOrFail(userId);
+    let next = user;
+    if (patch.firstName !== undefined || patch.lastName !== undefined) {
+      next = next.withName(patch.firstName ?? user.firstName, patch.lastName ?? user.lastName);
+    }
+    if (patch.preferredLanguage !== undefined) {
+      next = next.withPreferredLanguage(patch.preferredLanguage);
+    }
+    if (next === user) {
+      return user;
+    }
+    const saved = await this.usersRepository.update(next);
+    if (!saved) {
+      throw new NotFoundError(User.name, userId);
     }
     return saved;
   }

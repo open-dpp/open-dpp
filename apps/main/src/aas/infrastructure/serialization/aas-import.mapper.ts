@@ -4,7 +4,6 @@ import {
   KeyTypes,
   Language,
   ModellingKind,
-  PresentationReferenceType,
   QualifierKind,
   ReferenceTypes,
 } from "@open-dpp/dto";
@@ -27,7 +26,6 @@ import { Submodel } from "../../domain/submodel-base/submodel";
 import { parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
 import { AasExportLatestVersion } from "./export-schemas/aas-export-types";
 import { ReferenceSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
-import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 
 type ReferenceSchema = z.infer<typeof ReferenceSchemaV1_0>;
 type ShellSchema = AasExportLatestVersion["environment"]["assetAdministrationShells"][number];
@@ -131,26 +129,6 @@ export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
 
 export function mapSecurity(shell: ShellSchema): Security {
   return Security.fromPlain(shell.security);
-}
-
-export function mapPresentationConfiguration(params: {
-  schema: AasExportLatestVersion;
-  organizationId: string;
-  referenceId: string;
-  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
-}): PresentationConfiguration | null {
-  const { schema, organizationId, referenceId, referenceType } = params;
-  if (schema.presentationConfiguration) {
-    return PresentationConfiguration.create({
-      organizationId,
-      referenceId,
-      referenceType,
-      elementDesign: schema.presentationConfiguration.elementDesign,
-      defaultComponents: schema.presentationConfiguration.defaultComponents,
-    });
-  }
-
-  return null;
 }
 
 export function mapAssetAdministrationShells(

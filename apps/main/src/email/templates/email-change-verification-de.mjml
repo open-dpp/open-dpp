@@ -1,0 +1,45 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    {{> emailHeader }}
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Hallo {{ firstName }},</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >bitte best&auml;tige, dass du deine open-dpp-Konto-E-Mail-Adresse auf
+          <strong>{{ newEmail }}</strong> &auml;ndern m&ouml;chtest.<br />
+          <p></p
+        ></mj-text>
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Klicke auf den Button unten, um deine neue E-Mail-Adresse zu best&auml;tigen.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{ link }}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >Neue E-Mail best&auml;tigen</mj-button
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial" padding-top="20px"
+          >Falls du diese &Auml;nderung nicht angefordert hast, kannst du diese Nachricht ignorieren
+          &mdash; deine Konto-E-Mail-Adresse bleibt dann unver&auml;ndert.</mj-text
+        >
+        <mj-text
+          align="center"
+          color="#000000"
+          font-size="14px"
+          font-family="Arial, sans-serif"
+          padding-top="40px"
+          >&mdash; open-dpp</mj-text
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

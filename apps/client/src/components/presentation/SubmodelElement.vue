@@ -2,7 +2,7 @@
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useLanguageTextList } from "../../composables/language.ts";
-import { usePresentationDispatch } from "./presentation-dispatch";
+import { usePresentationDispatch } from "../../lib/presentation/presentation-dispatch.ts";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
 const { element, parentPath } = defineProps<{

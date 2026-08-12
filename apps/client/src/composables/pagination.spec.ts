@@ -137,4 +137,45 @@ describe("pagination", () => {
     await resetCursor();
     expect(currentPage.value).toEqual(pageAfterReset);
   });
+
+  it("should expose the total count reported by the endpoint", async () => {
+    const items = [0, 1, 2, 3, 4];
+
+    const { nextPage, previousPage, totalCount } = usePagination({
+      limit: 2,
+      fetchCallback: async (params) => {
+        const fromIndex = params.cursor ? Number(params.cursor) + 1 : 0;
+        const result = items.slice(fromIndex, fromIndex + params.limit!);
+        return {
+          paging_metadata: {
+            cursor: String(result[result.length - 1]),
+            total_count: items.length,
+          },
+          result,
+        };
+      },
+      changeQueryParams,
+    });
+
+    expect(totalCount.value).toBeNull();
+    await nextPage();
+    expect(totalCount.value).toBe(5);
+    await nextPage();
+    expect(totalCount.value).toBe(5);
+    await previousPage();
+    expect(totalCount.value).toBe(5);
+  });
+
+  it("should keep the total count null when the endpoint does not report it", async () => {
+    const items = [0, 1, 2];
+
+    const { nextPage, totalCount } = usePagination({
+      limit: 2,
+      fetchCallback: (params) => fetchCallback(params, items),
+      changeQueryParams,
+    });
+
+    await nextPage();
+    expect(totalCount.value).toBeNull();
+  });
 });

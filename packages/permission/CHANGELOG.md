@@ -1,5 +1,9 @@
 # @open-dpp/permission
 
+## 2.9.0
+
+## 2.8.0
+
 ## 2.7.0
 
 ### Minor Changes

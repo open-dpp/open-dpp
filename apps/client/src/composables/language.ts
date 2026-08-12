@@ -7,14 +7,37 @@ import { convertLocaleToLanguage } from "../translations/util";
 
 export type LanguageOption = { key: string; description: string };
 
-export function useLanguageTextList(languageOptions: MaybeRefOrGetter<LanguageTextDto[]>) {
+export function useLanguageTextList(
+  languageOptions: MaybeRefOrGetter<LanguageTextDto[]>,
+  fallback?: string,
+) {
   const { parseLanguageTexts } = useAasUtils();
 
-  const name = computed(() => parseLanguageTexts(toValue(languageOptions)));
+  const name = computed(() => parseLanguageTexts(toValue(languageOptions), fallback));
 
   return {
     name,
   };
+}
+
+export function resolveLanguageTexts(
+  options: LanguageTextDto[],
+  locale: string,
+  fallback: string,
+): string {
+  const shortLocale = locale.split("-")[0];
+
+  let option = options.find((opt) => opt.language === shortLocale);
+
+  if (!option) {
+    option = options.find((opt) => opt.language === "en");
+  }
+
+  if (!option) {
+    option = options[0];
+  }
+
+  return option ? option.text : fallback;
 }
 
 export function useLanguageSelect() {

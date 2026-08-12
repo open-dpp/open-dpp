@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/main",
-  "version": "2.7.0",
+  "version": "2.9.0",
   "private": true,
   "description": "",
   "license": "ISC",
@@ -39,6 +39,7 @@
     "@nestjs/platform-socket.io": "^11.1.26",
     "@nestjs/serve-static": "^5.0.5",
     "@nestjs/swagger": "^11.4.4",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.26",
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/dto": "workspace:*",

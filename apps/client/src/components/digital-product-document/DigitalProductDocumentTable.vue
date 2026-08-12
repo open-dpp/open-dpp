@@ -23,6 +23,7 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
+  totalCount?: number | null;
 }>();
 const route = useRoute();
 const router = useRouter();
@@ -102,6 +103,7 @@ async function goToItem(item: DigitalProductDocumentDto) {
         :current-page="props.currentPage"
         :has-previous="props.hasPrevious"
         :has-next="props.hasNext"
+        :total-count="props.totalCount"
         @reset-cursor="emits('resetCursor')"
         @previous-page="emits('previousPage')"
         @next-page="emits('nextPage')"

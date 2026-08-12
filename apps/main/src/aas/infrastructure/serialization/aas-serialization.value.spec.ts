@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
-import { DataTypeDef, PresentationReferenceType } from "@open-dpp/dto";
+import { DataTypeDef, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { MediaService } from "../../../media/infrastructure/media.service";
@@ -62,7 +62,7 @@ describe("export submodel value", () => {
                 PresentationConfiguration.create({
                   organizationId: holder.organizationId,
                   referenceId: holder.id,
-                  referenceType: PresentationReferenceType.Passport,
+                  referenceType: DigitalProductDocumentTypes.Passport,
                 }),
               ),
           },
