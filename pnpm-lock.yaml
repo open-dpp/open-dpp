@@ -154,6 +154,9 @@ importers:
       '@types/dompurify':
         specifier: ^3.2.0
         version: 3.2.0
+      '@types/language-tags':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@types/lodash':
         specifier: ^4.17.24
         version: 4.17.24
@@ -3382,6 +3385,9 @@ packages:
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
+
+  '@types/language-tags@1.0.4':
+    resolution: {integrity: sha512-20PQbifv3v/djCT+KlXybv0KqO5ofoR1qD1wkinN59kfggTPVTWGmPFgL/1yWuDyRcsQP/POvkqK+fnl5nOwTg==}
 
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
@@ -11406,6 +11412,8 @@ snapshots:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 25.9.3
+
+  '@types/language-tags@1.0.4': {}
 
   '@types/linkify-it@5.0.0': {}
 

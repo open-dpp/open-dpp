@@ -9,7 +9,7 @@ import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
 import { SignupFormSchema } from "../../lib/signup-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 
 const router = useRouter();
 const route = useRoute();

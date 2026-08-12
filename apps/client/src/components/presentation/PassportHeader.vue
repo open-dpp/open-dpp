@@ -8,7 +8,7 @@ import { usePassportStore } from "../../stores/passport";
 
 const passportStore = usePassportStore();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 
 const aasUtils = useAasUtils();
@@ -26,7 +26,7 @@ const firstShell = computed(() => {
 });
 
 const displayName = computed(() =>
-  firstShell.value ? aasUtils.parseDisplayNameFromAas(firstShell.value) : undefined,
+  firstShell.value ? aasUtils.parseLanguageTextsFromAas(firstShell.value) : undefined,
 );
 
 const productPassport = computed(() => passportStore.productPassport);

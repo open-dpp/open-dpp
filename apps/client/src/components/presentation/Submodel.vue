@@ -1,18 +1,17 @@
 <script lang="ts" setup>
-import type { SubmodelElementResponseDto } from "@open-dpp/dto";
-import type { DisplayName } from "../../composables/language-text.ts";
-import { useLanguageTexts } from "../../composables/language-text.ts";
+import type { LanguageTextDto, SubmodelElementResponseDto } from "@open-dpp/dto";
+import { useLanguageTextList } from "../../composables/language.ts";
 import SubmodelElement from "./SubmodelElement.vue";
 
 const { title, idShort, parentPathOverride } = defineProps<{
-  title: DisplayName[];
+  title: LanguageTextDto[];
   idShort: string;
   parentId?: string;
   parentPathOverride?: string;
   submodelElements: SubmodelElementResponseDto[];
 }>();
 
-const { text: name } = useLanguageTexts(title);
+const { name } = useLanguageTextList(() => title);
 </script>
 
 <template>

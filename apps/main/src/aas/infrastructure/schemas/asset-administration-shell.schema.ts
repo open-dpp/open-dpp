@@ -30,7 +30,7 @@ export class AssetAdministrationShellDoc extends Document<string> {
     enum: Object.values(AssetAdministrationShellDocSchemaVersion),
     type: String,
   }) // Track schema version
-  _schemaVersion: AssetAdministrationShellDocSchemaVersionType;
+  declare _schemaVersion: AssetAdministrationShellDocSchemaVersionType;
 
   @Prop({ type: MongooseSchema.Types.Mixed, required: true })
   assetInformation: AssetInformationDb;

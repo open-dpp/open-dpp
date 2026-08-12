@@ -58,7 +58,7 @@ describe("updateProfileDto", () => {
   });
 
   it("rejects an unsupported preferredLanguage", () => {
-    const result = UpdateProfileDtoSchema.safeParse({ preferredLanguage: "fr" });
+    const result = UpdateProfileDtoSchema.safeParse({ preferredLanguage: "kl" });
     expect(result.success).toBe(false);
   });
 
