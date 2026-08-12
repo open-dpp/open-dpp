@@ -167,6 +167,10 @@
     "type": "Type",
     "error": "{method} @:common.failed"
   },
+  "languages": {
+    "english": "English",
+    "german": "German"
+  },
   "pagination": {
     "footer": "Showing: {from} - {to}, Count: {count}",
     "footerWithTotal": "Showing: {from} - {to} of {total}"
