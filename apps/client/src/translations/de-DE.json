@@ -166,7 +166,7 @@
     "timezone": "Zeitzone",
     "type": "Typ",
     "error": "{method} @:common.failed"
-  }, 
+  },
   "languages": {
     "english": "Englisch",
     "german": "Deutsch"
