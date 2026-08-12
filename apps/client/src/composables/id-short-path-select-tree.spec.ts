@@ -1,12 +1,8 @@
 import type { SubmodelElementSharedResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import { describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
-import {
-  classifyByModelType,
-  type IdShortPathNode,
-  SUBMODEL_MODEL_TYPE,
-  useIdShortPathSelectTree,
-} from "./id-short-path-select-tree.ts";
+import { classifyByModelType, useIdShortPathSelectTree } from "./id-short-path-select-tree.ts";
+import { type IdShortPathPointer, SUBMODEL_MODEL_TYPE } from "../lib/id-short-path-select.ts";
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
@@ -157,13 +153,13 @@ describe("useIdShortPathSelectTree", () => {
   it("resolveTarget and resolveKey round-trip a leaf's key and { submodelId, idShortPath }", () => {
     const submodels = [submodel("sm-1", [collection("group", [property("field")])])];
 
-    const { treeNodes, resolveNode, resolveKey } = useIdShortPathSelectTree(submodels);
+    const { treeNodes, resolveNodePointer, resolveKey } = useIdShortPathSelectTree(submodels);
 
     const leafKey = treeNodes.value[0]!.children![0]!.children![0]!.key;
-    const target = resolveNode(leafKey);
+    const target = resolveNodePointer(leafKey);
     expect(target).toEqual({ submodelIdShort: "sm-1", idShortPath: "group.field" });
     expect(resolveKey(target)).toBe(leafKey);
-    expect(resolveNode(undefined)).toBeNull();
+    expect(resolveNodePointer(undefined)).toBeNull();
     expect(resolveKey(null)).toBeNull();
   });
 
@@ -189,9 +185,7 @@ describe("useIdShortPathSelectTree", () => {
       });
 
       expect(treeNodes.value).toHaveLength(1);
-      const technicalData = treeNodes.value[0]!.children!.find(
-        (n) => n.label === "technicalData",
-      )!;
+      const technicalData = treeNodes.value[0]!.children!.find((n) => n.label === "technicalData")!;
       expect(technicalData.children!.map((n) => n.label)).toEqual(["keep"]);
       expect(treeNodes.value[0]!.children!.find((n) => n.label === "measurements")).toBeUndefined();
     });
@@ -201,7 +195,7 @@ describe("useIdShortPathSelectTree", () => {
         submodel("sm-1", [collection("sectionA", [collection("subsection", [property("leaf")])])]),
       ];
 
-      const { treeNodes, resolveNode, resolveKey } = useIdShortPathSelectTree(submodels, {
+      const { treeNodes, resolveNodePointer, resolveKey } = useIdShortPathSelectTree(submodels, {
         classify: classifyByModelType({
           // include the sentinel to also offer "move to the submodel's top level"
           selectable: ["SubmodelElementCollection", "SubmodelElementList", SUBMODEL_MODEL_TYPE],
@@ -218,7 +212,7 @@ describe("useIdShortPathSelectTree", () => {
       expect(subsection.children).toBeUndefined();
 
       // the submodel root resolves via an empty idShortPath, e.g. "move to the top level"
-      const target = resolveNode(root.key);
+      const target = resolveNodePointer(root.key);
       expect(target).toEqual({ submodelIdShort: "sm-1", idShortPath: "" });
       expect(resolveKey(target)).toBe(root.key);
     });
@@ -249,8 +243,8 @@ describe("useIdShortPathSelectTree", () => {
           collection("sectionB", [property("otherLeaf")]),
         ]),
       ];
-      const excluded: IdShortPathNode = { submodelIdShort: "sm-1", idShortPath: "sectionA" };
-      const isExcluded = (node: IdShortPathNode) =>
+      const excluded: IdShortPathPointer = { submodelIdShort: "sm-1", idShortPath: "sectionA" };
+      const isExcluded = (node: IdShortPathPointer) =>
         node.submodelIdShort === excluded.submodelIdShort &&
         (node.idShortPath === excluded.idShortPath ||
           node.idShortPath.startsWith(`${excluded.idShortPath}.`));
@@ -288,7 +282,9 @@ describe("useIdShortPathSelectTree", () => {
 
     it("can gate selectability on an arbitrary predicate, e.g. a permission check per path", () => {
       const submodels = [
-        submodel("sm-1", [collection("group", [property("allowedField"), property("deniedField")])]),
+        submodel("sm-1", [
+          collection("group", [property("allowedField"), property("deniedField")]),
+        ]),
       ];
       const allowedPaths = new Set(["group.allowedField"]);
 

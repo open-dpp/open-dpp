@@ -1,50 +1,16 @@
-import type { SubmodelElementSharedResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
-import { AasSubmodelElements, SubmodelElementSharedSchema } from "@open-dpp/dto";
+import type { SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
 import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { z } from "zod";
-import { resolveLanguageTexts } from "./language-text.ts";
-
-const SCALAR_LEAF_MODEL_TYPES: string[] = [
-  AasSubmodelElements.Property,
-  AasSubmodelElements.MultiLanguageProperty,
-  AasSubmodelElements.ReferenceElement,
-  AasSubmodelElements.File,
-];
-
-// Both SubmodelElementCollection *and* SubmodelElementList can hold scalar leaves - unlike the
-// existing tree composables (submodel-tree.ts, aas-editor.ts), which only recurse into
-// SubmodelElementCollection and would silently skip fields nested inside a list/table.
-const CONTAINER_MODEL_TYPES: string[] = [
-  AasSubmodelElements.SubmodelElementCollection,
-  AasSubmodelElements.SubmodelElementList,
-];
-
-/** Sentinel modelType passed to `classify` for the submodel root itself (a Submodel isn't a submodel element, so it has no real modelType). */
-export const SUBMODEL_MODEL_TYPE = "Submodel";
-
-const ContainerChildrenSchema = z.object({ value: SubmodelElementSharedSchema.array() });
-
-export interface IdShortPathNode {
-  submodelIdShort: string;
-  idShortPath: string;
-}
-
-export type IdShortPathNodeVisibility = "hidden" | "visible" | "selectable";
-
-/**
- * Classifies a node during tree construction:
- * - "hidden": the node and everything beneath it are dropped entirely.
- * - "visible": shown for navigation (e.g. to reach a selectable descendant), but can't itself be picked.
- * - "selectable": shown and can be picked.
- *
- * `modelType` is the element's AAS model type, or the `SUBMODEL_MODEL_TYPE` sentinel for the submodel root.
- */
-export type ClassifyIdShortPathNode = (
-  node: IdShortPathNode,
-  modelType: string,
-) => IdShortPathNodeVisibility;
+import {
+  type ClassifyIdShortPathNode,
+  CONTAINER_MODEL_TYPES,
+  type IdShortPathPointer,
+  makeIdShortPathNode,
+  SCALAR_LEAF_MODEL_TYPES,
+  SUBMODEL_MODEL_TYPE,
+  type TreeBuildContext,
+} from "../lib/id-short-path-select.ts";
 
 /**
  * Convenience builder for the common "classify purely by model type" case. Every
@@ -75,16 +41,8 @@ export function classifyByModelType(config: {
 
 const defaultClassify = classifyByModelType({});
 
-function submodelNodeKey(submodelIdShort: string): string {
-  return `sm:${submodelIdShort}`;
-}
-
-function elementNodeKey(submodelIdShort: string, idShortPath: string): string {
-  return `sm:${submodelIdShort}:${idShortPath}`;
-}
-
-function nodeToKey(node: IdShortPathNode): string {
-  return `${node.submodelIdShort}::${node.idShortPath}`;
+function nodePointerToKey(pointer: IdShortPathPointer): string {
+  return `${pointer.submodelIdShort}::${pointer.idShortPath}`;
 }
 
 export interface UseIdShortPathSelectTreeOptions {
@@ -100,74 +58,27 @@ export function useIdShortPathSelectTree(
   const classify = options.classify ?? defaultClassify;
 
   const treeState = computed(() => {
-    const nodesByKey = new Map<string, IdShortPathNode>();
-    const keysByNode = new Map<string, string>();
-
-    const registerSelectable = (key: string, node: IdShortPathNode) => {
-      nodesByKey.set(key, node);
-      keysByNode.set(nodeToKey(node), key);
+    const nodePointersByKey = new Map<string, IdShortPathPointer>();
+    const keysByNodePointer = new Map<string, string>();
+    const ctx: TreeBuildContext = {
+      classify,
+      register: (key, node) => {
+        nodePointersByKey.set(key, node);
+        keysByNodePointer.set(nodePointerToKey(node), key);
+      },
     };
 
-    const buildElementNode = (
-      submodelIdShort: string,
-      parentIdShortPath: string | undefined,
-      element: SubmodelElementSharedResponseDto,
-    ): TreeNode | null => {
-      const idShortPath = parentIdShortPath
-        ? `${parentIdShortPath}.${element.idShort}`
-        : element.idShort;
-      const node: IdShortPathNode = { submodelIdShort, idShortPath };
-      const visibility = classify(node, element.modelType);
-      if (visibility === "hidden") return null;
+    const treeNodes = toValue(submodels)
+      .map((submodel) =>
+        makeIdShortPathNode({
+          kind: "submodel",
+          submodelIdShort: submodel.id,
+          submodel,
+        }).toTreeNode(ctx, locale.value),
+      )
+      .filter((node): node is TreeNode => node !== null);
 
-      const key = elementNodeKey(submodelIdShort, idShortPath);
-      const label = resolveLanguageTexts(element.displayName, locale.value, element.idShort);
-      const isSelectable = visibility === "selectable";
-
-      let children: TreeNode[] | undefined;
-      if (CONTAINER_MODEL_TYPES.includes(element.modelType)) {
-        children = ContainerChildrenSchema.parse(element)
-          .value.map((child) => buildElementNode(submodelIdShort, idShortPath, child))
-          .filter((n): n is TreeNode => n !== null);
-        if (!isSelectable && children.length === 0) return null;
-      } else if (!isSelectable) {
-        // A non-container node can never have children, so if it's not selectable
-        // it's a dead end — drop it rather than clutter the tree with it.
-        return null;
-      }
-
-      if (isSelectable) registerSelectable(key, node);
-      return {
-        key,
-        label,
-        ...(isSelectable ? {} : { selectable: false }),
-        ...(children && children.length > 0 ? { children } : {}),
-      };
-    };
-
-    const treeNodes: TreeNode[] = [];
-    for (const submodel of toValue(submodels)) {
-      const children = submodel.submodelElements
-        .map((element) => buildElementNode(submodel.id, undefined, element))
-        .filter((node): node is TreeNode => node !== null);
-
-      const rootNode: IdShortPathNode = { submodelIdShort: submodel.id, idShortPath: "" };
-      const rootVisibility = classify(rootNode, SUBMODEL_MODEL_TYPE);
-      const isRootSelectable = rootVisibility === "selectable";
-      if (rootVisibility === "hidden" || (children.length === 0 && !isRootSelectable)) continue;
-
-      const key = submodelNodeKey(submodel.id);
-      if (isRootSelectable) registerSelectable(key, rootNode);
-
-      treeNodes.push({
-        key,
-        label: resolveLanguageTexts(submodel.displayName, locale.value, submodel.idShort),
-        ...(isRootSelectable ? {} : { selectable: false }),
-        ...(children.length > 0 ? { children } : {}),
-      });
-    }
-
-    return { treeNodes, targetsByKey: nodesByKey, keysByTarget: keysByNode };
+    return { treeNodes, nodePointersByKey, keysByNodePointer };
   });
 
   const treeNodes = computed(() => treeState.value.treeNodes);
@@ -181,15 +92,15 @@ export function useIdShortPathSelectTree(
     { immediate: true },
   );
 
-  function resolveNode(key: string | undefined): IdShortPathNode | null {
+  function resolveNodePointer(key: string | undefined): IdShortPathPointer | null {
     if (!key) return null;
-    return treeState.value.targetsByKey.get(key) ?? null;
+    return treeState.value.nodePointersByKey.get(key) ?? null;
   }
 
-  function resolveKey(target: IdShortPathNode | null | undefined): string | null {
+  function resolveKey(target: IdShortPathPointer | null | undefined): string | null {
     if (!target) return null;
-    return treeState.value.keysByTarget.get(nodeToKey(target)) ?? null;
+    return treeState.value.keysByNodePointer.get(nodePointerToKey(target)) ?? null;
   }
 
-  return { treeNodes, expandedKeys, resolveNode, resolveKey };
+  return { treeNodes, expandedKeys, resolveNodePointer, resolveKey };
 }

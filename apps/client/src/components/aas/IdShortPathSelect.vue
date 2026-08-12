@@ -4,10 +4,9 @@ import type { TreeNode } from "primevue/treenode";
 import { computed } from "vue";
 import {
   classifyByModelType,
-  type ClassifyIdShortPathNode,
   useIdShortPathSelectTree,
 } from "../../composables/id-short-path-select-tree.ts";
-import type { IdShortPathOption } from "../../lib/id-short-path-select.ts";
+import type { ClassifyIdShortPathNode, IdShortPathOption } from "../../lib/id-short-path-select.ts";
 
 const selected = defineModel<IdShortPathOption | null>();
 const props = defineProps<{
@@ -23,7 +22,7 @@ const resolvedClassify = computed(
   () => props.classify ?? classifyByModelType({ hidden: props.excludeModelTypes ?? [] }),
 );
 
-const { treeNodes, expandedKeys, resolveNode, resolveKey } = useIdShortPathSelectTree(
+const { treeNodes, expandedKeys, resolveNodePointer, resolveKey } = useIdShortPathSelectTree(
   () => props.submodels,
   { classify: (node, modelType) => resolvedClassify.value(node, modelType) },
 );
@@ -35,12 +34,12 @@ const selectionKeys = computed<Record<string, boolean>>({
   },
   set(keys) {
     const key = Object.keys(keys).find((candidate) => keys[candidate]);
-    selected.value = resolveNode(key);
+    selected.value = resolveNodePointer(key);
   },
 });
 
 function filterBy(node: TreeNode): string {
-  return `${node.label ?? ""} ${resolveNode(node.key)?.idShortPath ?? ""}`;
+  return `${node.label ?? ""} ${resolveNodePointer(node.key)?.idShortPath ?? ""}`;
 }
 </script>
 
