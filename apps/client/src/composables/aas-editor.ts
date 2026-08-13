@@ -36,7 +36,7 @@ import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
-import { computed, type MaybeRefOrGetter, type Ref, ref, toRaw, toValue } from "vue";
+import { computed, type MaybeRefOrGetter, type Ref, ref, shallowRef, toRaw, toValue } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
@@ -49,6 +49,7 @@ import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
 import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
+import { type IAasMoveDialog, useAasMoveDialog } from "./aas-move-dialog.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -63,7 +64,7 @@ export interface AasEditorProps {
   status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
 }
 
-export interface IAasEditor extends IAasDrawer, IPagination {
+export interface IAasEditor extends IAasDrawer, IPagination, IAasMoveDialog {
   init: () => Promise<void>;
   findTreeNodeByKey: (key: string, children?: TreeNode[]) => TreeNode | undefined;
   displayName: Ref<string>;
@@ -120,6 +121,7 @@ export function useAasEditor({
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
   const moveMenuItems = ref<MenuItem[]>([]);
+  const rawSubmodels = shallowRef<SubmodelResponseDto[]>([]);
 
   const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({
     translate,
@@ -132,9 +134,8 @@ export function useAasEditor({
     try {
       const response = await aasNamespace.getSubmodels(id, pagingParams);
       if (response.status === HTTPCode.OK) {
-        submodels.value = convertSubmodelsToTree(
-          SubmodelJsonSchema.array().parse(response.data.result),
-        );
+        rawSubmodels.value = SubmodelJsonSchema.array().parse(response.data.result);
+        submodels.value = convertSubmodelsToTree(rawSubmodels.value);
         return response.data;
       } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
@@ -648,14 +649,17 @@ export function useAasEditor({
     return undefined;
   }
 
-  async function moveSubmodelElementTo(path: AasEditorPath, position: number) {
+  async function moveSubmodelElementTo(
+    path: AasEditorPath,
+    options: { position?: number; targetParentIdShortPath?: string | null },
+  ) {
     try {
       if (path.submodelId && path.idShortPath) {
         const response = await aasNamespace.moveSubmodelElement(
           id,
           path.submodelId,
           path.idShortPath,
-          { position },
+          options,
         );
         await finalizeApiRequest({ status: response.status });
         await pagination.reloadCurrentPage();
@@ -680,6 +684,13 @@ export function useAasEditor({
       );
     }
   }
+
+  const moveDialog = useAasMoveDialog({
+    rawSubmodels,
+    errorHandlingStore,
+    translate,
+    moveSubmodelElementTo,
+  });
 
   function buildMoveMenu(node: TreeNode) {
     const moveUpLabel = translate("common.moveUp");
@@ -728,7 +739,7 @@ export function useAasEditor({
         icon: "pi pi-arrow-up",
         disabled: index <= 0,
         command: async () => {
-          await moveSubmodelElementTo(path, index - 1);
+          await moveSubmodelElementTo(path, { position: index - 1 });
         },
       },
       {
@@ -736,7 +747,14 @@ export function useAasEditor({
         icon: "pi pi-arrow-down",
         disabled: index >= siblings.length - 1,
         command: async () => {
-          await moveSubmodelElementTo(path, index + 1);
+          await moveSubmodelElementTo(path, { position: index + 1 });
+        },
+      },
+      {
+        label: translate("common.moveTo"),
+        icon: "pi pi-sign-in",
+        command: () => {
+          moveDialog.openMoveToDialog(path);
         },
       },
     ];
@@ -832,6 +850,7 @@ export function useAasEditor({
     buildAddSubmodelElementMenu,
     buildMoveMenu,
     moveMenuItems,
+    ...moveDialog,
     createSubmodel,
     deletePolicyBySubjectAndObject,
     deleteSubmodel,

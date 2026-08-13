@@ -1131,6 +1131,7 @@ describe("aasEditor composable", () => {
       expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
         { label: "common.moveUp", disabled: true },
         { label: "common.moveDown", disabled: false },
+        { label: "common.moveTo", disabled: false },
       ]);
 
       mocks.moveSubmodelElement.mockResolvedValueOnce({ status: HTTPCode.OK });
@@ -1148,6 +1149,7 @@ describe("aasEditor composable", () => {
       expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
         { label: "common.moveUp", disabled: false },
         { label: "common.moveDown", disabled: true },
+        { label: "common.moveTo", disabled: false },
       ]);
 
       mocks.moveSubmodelElement.mockRejectedValueOnce({ status: HTTPCode.INTERNAL_SERVER_ERROR });
@@ -1156,6 +1158,31 @@ describe("aasEditor composable", () => {
         "aasEditor.errorMoveSubmodelElement",
         { status: HTTPCode.INTERNAL_SERVER_ERROR },
       );
+    });
+
+    it("wires the 'Move to...' menu item to open the move dialog", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems, moveToDialogVisible } =
+        mountHarness({
+          id: aasWrapperId,
+          aasNamespace: apiClient.dpp.templates.aas,
+          changeQueryParams,
+          errorHandlingStore,
+          selectedLanguage,
+          openConfirm: mockOpenConfirm,
+          translate,
+          status,
+        });
+      await init();
+
+      buildMoveMenu(findTreeNodeByKey("Design_V01.Author")!);
+      const moveToItem = moveMenuItems.value.find((i) => i.label === "common.moveTo")!;
+      expect(moveToDialogVisible.value).toBe(false);
+      (moveToItem.command as any)();
+      expect(moveToDialogVisible.value).toBe(true);
     });
   });
 });
