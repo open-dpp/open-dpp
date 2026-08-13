@@ -35,6 +35,7 @@ import {
 import SubmodelElementListEditor from "./SubmodelElementListEditor.vue";
 import SubmodelElementCollectionEditor from "./SubmodelElementCollectionEditor.vue";
 import SubmodelEditor from "./SubmodelEditor.vue";
+import AasMoveDialog from "./AasMoveDialog.vue";
 
 const model = defineModel<DigitalProductDocumentDto>({ required: true });
 
@@ -97,6 +98,11 @@ const {
   buildAddSubmodelElementMenu,
   buildMoveMenu,
   moveMenuItems,
+  moveToDialogVisible,
+  moveToDialogSubmodels,
+  moveToDialogClassify,
+  moveToDialogSelected,
+  confirmMoveTo,
   init,
   createSubmodel,
   openAssetAdministrationShellEditor,
@@ -317,6 +323,9 @@ const isFullPosition = computed(() => position.value === fullPosition);
           :loading="loading"
           :rows="10"
           :rows-per-page-options="[10]"
+          :pt="{
+            row: ({ props: rowProps }: any) => ({ id: `row-${rowProps.node.key}` }),
+          }"
         >
           <template #header>
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -406,6 +415,13 @@ const isFullPosition = computed(() => position.value === fullPosition);
           :model="moveMenuItems"
           :popup="true"
           position="right"
+        />
+        <AasMoveDialog
+          v-model:visible="moveToDialogVisible"
+          v-model:selected="moveToDialogSelected"
+          :submodels="moveToDialogSubmodels"
+          :classify="moveToDialogClassify"
+          :confirm="confirmMoveTo"
         />
       </template>
     </Card>
