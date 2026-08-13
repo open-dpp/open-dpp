@@ -70,6 +70,8 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
+  buildMoveMenu: (node: TreeNode) => void;
+  moveMenuItems: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
   deleteSubmodel: (submodelId: string) => Promise<void>;
   deleteSubmodelElement: (path: AasEditorPath) => Promise<void>;
@@ -117,6 +119,7 @@ export function useAasEditor({
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
+  const moveMenuItems = ref<MenuItem[]>([]);
 
   const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({
     translate,
@@ -625,6 +628,120 @@ export function useAasEditor({
     });
   }
 
+  /** Finds the ordered list of siblings a node belongs to, and its index within
+   * them, by walking the tree — the node's own siblings are whichever array
+   * (top-level `submodels`, or some ancestor's `children`) actually contains it. */
+  function findSiblingsAndIndex(
+    key: string,
+    nodes: TreeNode[] = submodels.value,
+  ): { siblings: TreeNode[]; index: number } | undefined {
+    const index = nodes.findIndex((n) => n.key === key);
+    if (index !== -1) {
+      return { siblings: nodes, index };
+    }
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        const found = findSiblingsAndIndex(key, node.children);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  async function moveSubmodelElementTo(path: AasEditorPath, position: number) {
+    try {
+      if (path.submodelId && path.idShortPath) {
+        const response = await aasNamespace.moveSubmodelElement(
+          id,
+          path.submodelId,
+          path.idShortPath,
+          { position },
+        );
+        await finalizeApiRequest({ status: response.status });
+        await pagination.reloadCurrentPage();
+      }
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(
+        translate(`${translatePrefix}.errorMoveSubmodelElement`),
+        error,
+      );
+    }
+  }
+
+  async function moveSubmodelTo(submodelId: string, position: number) {
+    try {
+      const response = await aasNamespace.moveSubmodel(id, submodelId, { position });
+      await finalizeApiRequest({ status: response.status });
+      await pagination.reloadCurrentPage();
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(
+        translate(`${translatePrefix}.errorMoveSubmodel`),
+        error,
+      );
+    }
+  }
+
+  function buildMoveMenu(node: TreeNode) {
+    const moveUpLabel = translate("common.moveUp");
+    const moveDownLabel = translate("common.moveDown");
+
+    if (node.data.modelType === KeyTypes.Submodel) {
+      const pageIndex = submodels.value.findIndex((n) => n.key === node.key);
+      if (pageIndex === -1) {
+        moveMenuItems.value = [];
+        return;
+      }
+      const absolutePosition = pagination.currentPage.value.from + pageIndex;
+      const canMoveUp = pageIndex > 0 || pagination.hasPrevious.value;
+      const canMoveDown = pageIndex < submodels.value.length - 1 || pagination.hasNext.value;
+      moveMenuItems.value = [
+        {
+          label: moveUpLabel,
+          icon: "pi pi-arrow-up",
+          disabled: !canMoveUp,
+          command: async () => {
+            await moveSubmodelTo(node.key as string, absolutePosition - 1);
+          },
+        },
+        {
+          label: moveDownLabel,
+          icon: "pi pi-arrow-down",
+          disabled: !canMoveDown,
+          command: async () => {
+            await moveSubmodelTo(node.key as string, absolutePosition + 1);
+          },
+        },
+      ];
+      return;
+    }
+
+    const found = findSiblingsAndIndex(node.key as string);
+    if (!found) {
+      moveMenuItems.value = [];
+      return;
+    }
+    const { siblings, index } = found;
+    const path = toRaw(node.data.path) as AasEditorPath;
+    moveMenuItems.value = [
+      {
+        label: moveUpLabel,
+        icon: "pi pi-arrow-up",
+        disabled: index <= 0,
+        command: async () => {
+          await moveSubmodelElementTo(path, index - 1);
+        },
+      },
+      {
+        label: moveDownLabel,
+        icon: "pi pi-arrow-down",
+        disabled: index >= siblings.length - 1,
+        command: async () => {
+          await moveSubmodelElementTo(path, index + 1);
+        },
+      },
+    ];
+  }
+
   async function createSubmodelElementList(
     path: AasEditorPath,
     data: SubmodelElementListRequestDto,
@@ -713,6 +830,8 @@ export function useAasEditor({
     submodelElementsToAdd,
     openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
+    buildMoveMenu,
+    moveMenuItems,
     createSubmodel,
     deletePolicyBySubjectAndObject,
     deleteSubmodel,

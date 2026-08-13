@@ -95,6 +95,8 @@ const {
   submodels,
   selectTreeNode,
   buildAddSubmodelElementMenu,
+  buildMoveMenu,
+  moveMenuItems,
   init,
   createSubmodel,
   openAssetAdministrationShellEditor,
@@ -209,6 +211,13 @@ async function onHideDrawer() {
 function addClicked(event: any, node: TreeNode) {
   buildAddSubmodelElementMenu(node);
   popover.value.toggle(event);
+}
+
+const movePopover = ref();
+
+function moveClicked(event: any, node: TreeNode) {
+  buildMoveMenu(node);
+  movePopover.value.toggle(event);
 }
 
 async function deleteClicked(node: TreeNode) {
@@ -352,6 +361,15 @@ const isFullPosition = computed(() => position.value === fullPosition);
                     @click="addClicked($event, node)"
                   />
                   <Button
+                    v-if="node.data.actions.edit.visible"
+                    v-tooltip.top="t('common.move')"
+                    :aria-label="t('common.move')"
+                    icon="pi pi-sort-alt"
+                    severity="secondary"
+                    :disabled="!node.data.actions.edit.enabled"
+                    @click="moveClicked($event, node)"
+                  />
+                  <Button
                     v-if="node.data.actions.delete.visible"
                     v-tooltip.top="node.data.actions.delete.tooltip"
                     :aria-label="t('common.remove')"
@@ -379,6 +397,13 @@ const isFullPosition = computed(() => position.value === fullPosition);
           id="overlay_menu"
           ref="popover"
           :model="submodelElementsToAdd"
+          :popup="true"
+          position="right"
+        />
+        <Menu
+          id="move_menu"
+          ref="movePopover"
+          :model="moveMenuItems"
           :popup="true"
           position="right"
         />

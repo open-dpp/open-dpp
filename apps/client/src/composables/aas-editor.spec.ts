@@ -58,6 +58,8 @@ const mocks = vi.hoisted(() => {
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
+    moveSubmodel: vi.fn(),
+    moveSubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
     deleteSubmodelElementById: vi.fn(),
     asSubject: vi.fn(),
@@ -75,10 +77,12 @@ vi.mock("../lib/api-client", () => ({
           createSubmodel: mocks.createSubmodel,
           deleteSubmodelById: mocks.deleteSubmodelById,
           modifySubmodel: mocks.modifySubmodel,
+          moveSubmodel: mocks.moveSubmodel,
           getSubmodels: mocks.getSubmodels,
           createSubmodelElement: mocks.createSubmodelElement,
           createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          moveSubmodelElement: mocks.moveSubmodelElement,
           deleteSubmodelElementById: mocks.deleteSubmodelElementById,
         },
       },
@@ -1054,6 +1058,102 @@ describe("aasEditor composable", () => {
       await deleteSubmodelElement(pathToDelete);
       expect(mocks.logErrorNotification).toHaveBeenCalledWith(
         "aasEditor.errorRemoveSubmodelElement",
+        { status: HTTPCode.INTERNAL_SERVER_ERROR },
+      );
+    });
+  });
+
+  describe("should move", () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it("builds an up/down menu for a submodel node, gated on its position on the page", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems } = mountHarness({
+        id: aasWrapperId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: mockOpenConfirm,
+        translate,
+        status,
+      });
+      await init();
+
+      buildMoveMenu(findTreeNodeByKey(submodel1.id)!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: true },
+        { label: "common.moveDown", disabled: false },
+      ]);
+
+      mocks.moveSubmodel.mockResolvedValueOnce({ status: HTTPCode.OK });
+      await (moveMenuItems.value[1]!.command as any)();
+      expect(mocks.moveSubmodel).toHaveBeenCalledWith(aasWrapperId, submodel1.id, { position: 1 });
+      expect(mocks.getSubmodels).toHaveBeenCalledTimes(2); // initial load + reload after move
+
+      buildMoveMenu(findTreeNodeByKey(submodel2.id)!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: false },
+        { label: "common.moveDown", disabled: true },
+      ]);
+
+      mocks.moveSubmodel.mockRejectedValueOnce({ status: HTTPCode.INTERNAL_SERVER_ERROR });
+      await (moveMenuItems.value[0]!.command as any)();
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith("aasEditor.errorMoveSubmodel", {
+        status: HTTPCode.INTERNAL_SERVER_ERROR,
+      });
+    });
+
+    it("builds an up/down menu for a submodel element, gated on its position among siblings", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems } = mountHarness({
+        id: aasWrapperId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: mockOpenConfirm,
+        translate,
+        status,
+      });
+      await init();
+
+      // "Author" is the first of Design_V01's 8 children.
+      buildMoveMenu(findTreeNodeByKey("Design_V01.Author")!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: true },
+        { label: "common.moveDown", disabled: false },
+      ]);
+
+      mocks.moveSubmodelElement.mockResolvedValueOnce({ status: HTTPCode.OK });
+      await (moveMenuItems.value[1]!.command as any)();
+      expect(mocks.moveSubmodelElement).toHaveBeenCalledWith(
+        aasWrapperId,
+        submodel1.id,
+        "Design_V01.Author",
+        { position: 1 },
+      );
+      expect(mocks.getSubmodels).toHaveBeenCalledTimes(2); // initial load + reload after move
+
+      // "ModelName" is the last of Design_V01's 8 children.
+      buildMoveMenu(findTreeNodeByKey("Design_V01.ModelName")!);
+      expect(moveMenuItems.value.map((i) => ({ label: i.label, disabled: !!i.disabled }))).toEqual([
+        { label: "common.moveUp", disabled: false },
+        { label: "common.moveDown", disabled: true },
+      ]);
+
+      mocks.moveSubmodelElement.mockRejectedValueOnce({ status: HTTPCode.INTERNAL_SERVER_ERROR });
+      await (moveMenuItems.value[0]!.command as any)();
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith(
+        "aasEditor.errorMoveSubmodelElement",
         { status: HTTPCode.INTERNAL_SERVER_ERROR },
       );
     });

@@ -159,13 +159,20 @@ export function convertDataToColumns(
       children,
     };
 
-    const foundColumn = columns.find((c) => c.idShort === col.idShort);
-    if (!foundColumn) {
+    const currentIndex = columns.findIndex((c) => c.idShort === col.idShort);
+    if (currentIndex === -1) {
       columns.splice(index, 0, column);
     } else {
+      const foundColumn = columns[currentIndex]!;
       if (foundColumn.label !== column.label) foundColumn.label = column.label;
       foundColumn.plain = column.plain;
       foundColumn.children = children;
+      // Reordering (e.g. reorderColumn) changes position without changing set
+      // membership, so the update above alone would leave stale array order.
+      if (currentIndex !== index) {
+        columns.splice(currentIndex, 1);
+        columns.splice(index, 0, foundColumn);
+      }
     }
   }
 }
