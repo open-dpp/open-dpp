@@ -404,6 +404,18 @@ export class Submodel
     }
   }
 
+  /** Whether `target` is a table (SubmodelElementList) itself, or is any of
+   * its rows or other descendants — i.e. its reference passes through a
+   * SubmodelElementList on the way down from the Submodel root. */
+  private isWithinTable(target: ISubmodelBase): boolean {
+    return (
+      target
+        .getReference()
+        .constructIdShortPathsForType(KeyTypes.SubmodelElementList, { excludeSubmodel: true })
+        .length > 0
+    );
+  }
+
   public moveSubmodelElement(
     sourcePath: IdShortPath,
     targetParent: { path?: IdShortPath; position?: number },
@@ -416,6 +428,12 @@ export class Submodel
     const resolvedTargetParent: ISubmodelBase = targetPath.isEmpty()
       ? this
       : this.findSubmodelElementOrFail(targetPath);
+
+    if (this.isWithinTable(resolvedTargetParent)) {
+      throw new ValueError(
+        `Cannot move submodel element with idShortPath ${sourcePath.toString()} into a SubmodelElementList (table) with idShortPath ${targetPath.toString()}, or any of its rows or other descendants; rows must be added via the table's row/column operations.`,
+      );
+    }
 
     if (targetPath.isChildOf(sourcePath)) {
       throw new ValueError(

@@ -11,11 +11,15 @@ export class MoveSubmodelElementRequest {
   }
 
   toDomain(): { targetParentPath?: IdShortPath; position?: number } {
-    return {
-      targetParentPath: this.body.targetParentIdShortPath
-        ? IdShortPath.create({ path: this.body.targetParentIdShortPath })
-        : undefined,
-      position: this.body.position,
-    };
+    const raw = this.body.targetParentIdShortPath;
+    let targetParentPath: IdShortPath | undefined;
+    if (raw === undefined) {
+      targetParentPath = undefined; // keep the current parent
+    } else if (raw === null) {
+      targetParentPath = IdShortPath.fromSegments([]); // move to the Submodel root
+    } else {
+      targetParentPath = IdShortPath.create({ path: raw });
+    }
+    return { targetParentPath, position: this.body.position };
   }
 }

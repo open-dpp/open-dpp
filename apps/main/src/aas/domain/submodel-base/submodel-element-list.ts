@@ -6,6 +6,7 @@ import {
   KeyTypesType,
   SubmodelElementListJsonSchema,
 } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -177,7 +178,7 @@ export class SubmodelElementList implements ISubmodelElement {
 
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
     if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
-      throw new Error(
+      throw new ValueError(
         `Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`,
       );
     }

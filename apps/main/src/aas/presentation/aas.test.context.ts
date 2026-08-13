@@ -786,8 +786,61 @@ export function createAasTestContext<T>(
     expect(foundSectionA.getSubmodelElements()).toEqual([]);
     expect(foundSectionB.getSubmodelElements().map((e) => e.idShort)).toEqual(["sub1"]);
     expect(
-      foundSubmodel.findSubmodelElementOrFail(
-        IdShortPath.create({ path: "sectionB.sub1.prop1" }),
+      foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "sectionB.sub1.prop1" })),
+    ).toBeDefined();
+
+    // An explicit null targets the Submodel root itself — distinct from
+    // omitting targetParentIdShortPath entirely, which keeps the current parent.
+    const rootResponse = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/sectionB.sub1/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ targetParentIdShortPath: null });
+    expect(rootResponse.status).toEqual(201);
+    expect(rootResponse.body.idShort).toEqual("sub1");
+
+    const submodelAfterRootMove = await submodelRepository.findOneOrFail(submodel.id);
+    expect(
+      submodelAfterRootMove.findSubmodelElementOrFail(IdShortPath.create({ path: "sub1" })),
+    ).toBeDefined();
+    expect(
+      submodelAfterRootMove
+        .findSubmodelElementOrFail(IdShortPath.create({ path: "sectionB" }))
+        .getSubmodelElements(),
+    ).toEqual([]);
+
+    // A datafield can never become a direct child of a table (its rows are
+    // SubmodelElementCollections) — this must be rejected as a 400, not a 500.
+    const table = SubmodelElementList.create({
+      idShort: "table1",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    submodelAfterRootMove.addSubmodelElement(table, { ability });
+    await submodelRepository.save(submodelAfterRootMove);
+
+    const rejectedResponse = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/sub1.prop1/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ targetParentIdShortPath: "table1" });
+    expect(rejectedResponse.status).toEqual(400);
+
+    const submodelAfterRejectedMove = await submodelRepository.findOneOrFail(submodel.id);
+    expect(
+      submodelAfterRejectedMove.findSubmodelElementOrFail(IdShortPath.create({ path: "table1" })),
+    ).toBeDefined();
+    expect(
+      submodelAfterRejectedMove
+        .findSubmodelElementOrFail(IdShortPath.create({ path: "table1" }))
+        .getSubmodelElements(),
+    ).toEqual([]);
+    expect(
+      submodelAfterRejectedMove.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "sub1.prop1" }),
       ),
     ).toBeDefined();
   }
