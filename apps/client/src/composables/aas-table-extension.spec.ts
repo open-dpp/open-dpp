@@ -101,8 +101,8 @@ describe("aasTableExtension composable", () => {
     },
     {
       idShort: "Column4",
-      modelType: AasSubmodelElements.Property,
       displayName: [{ language: "en", text: "Link" }],
+      modelType: AasSubmodelElements.Property,
       valueType: DataTypeDef.AnyUri,
     },
   ];
@@ -227,7 +227,7 @@ describe("aasTableExtension composable", () => {
       openConfirm: mockOpenConfirmDialog,
       errorHandlingStore,
       translate,
-      selectedLanguage: Language.en,
+      selectedLanguage: Language["en"],
       openDrawer,
       callbackOfSubmodelElementListEditor,
     });
@@ -819,7 +819,7 @@ describe("aasTableExtension composable", () => {
       aasNamespace: apiClient.dpp.templates.aas,
       errorHandlingStore,
       openConfirm: openAutoConfirm,
-      selectedLanguage: Language.en,
+      selectedLanguage: Language["en"],
       translate,
       openDrawer,
       callbackOfSubmodelElementListEditor,

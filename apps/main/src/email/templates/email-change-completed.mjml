@@ -19,14 +19,6 @@
           >If this wasn&rsquo;t you, contact support immediately. Your previous email may be
           compromised.</mj-text
         >
-        <mj-text
-          align="center"
-          color="#000000"
-          font-size="14px"
-          font-family="Arial, sans-serif"
-          padding-top="40px"
-          >&mdash; open-dpp</mj-text
-        >
       </mj-column>
     </mj-section>
   </mj-body>

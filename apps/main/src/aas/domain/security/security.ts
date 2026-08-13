@@ -5,7 +5,6 @@ import { MemberRole } from "../../../identity/organizations/domain/member-role.e
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
 import { ConvertToPlainOptions } from "../convertable-to-plain";
-import { Submodel } from "../submodel-base/submodel";
 import { AasAbility } from "./aas-ability";
 import { createAasObject } from "./aas-object";
 import { AccessControl, AccessControlSchema } from "./access-control";
@@ -153,7 +152,7 @@ export class Security implements ITrackable {
     }
   }
 
-  addDefaultPolicyForSubmodelIfNoExists(submodel: Submodel): void {
+  addDefaultPolicyForSubmodelIfNoExists(submodel: { idShort: string }): void {
     this.addDefaultPolicyForObjectIfNoExists(IdShortPath.create({ path: submodel.idShort }));
   }
 

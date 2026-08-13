@@ -1,8 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
-import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { getModelToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
 import {
   DataTypeDef,
   EntityType,
@@ -22,6 +21,7 @@ import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelRegistryInitializer } from "../presentation/submodel-registry-initializer";
 import { SubmodelDoc, SubmodelDocSchemaVersion, SubmodelSchema } from "./schemas/submodel.schema";
 import { SubmodelRepository } from "./submodel.repository";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { UserRole } from "../../identity/users/domain/user-role.enum";

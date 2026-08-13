@@ -87,6 +87,7 @@ export * from "./users/pending-email-change.dto";
 export * from "./users/request-email-change.dto";
 export * from "./users/set-user-role.dto";
 export * from "./users/update-profile.dto";
+export * from "./users/display-language.dto";
 export * from "./users/user.dto";
 
 export * from "./activity-history/activity-history.dto";

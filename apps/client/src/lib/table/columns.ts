@@ -5,7 +5,7 @@ import {
   ValueSchema,
 } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
-import { resolveLanguageTexts } from "../../composables/language-text.ts";
+import { resolveLanguageTexts } from "../../composables/language";
 
 export interface Column {
   idShort: string;

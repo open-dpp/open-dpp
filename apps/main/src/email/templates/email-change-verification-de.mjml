@@ -31,14 +31,6 @@
           >Falls du diese &Auml;nderung nicht angefordert hast, kannst du diese Nachricht ignorieren
           &mdash; deine Konto-E-Mail-Adresse bleibt dann unver&auml;ndert.</mj-text
         >
-        <mj-text
-          align="center"
-          color="#000000"
-          font-size="14px"
-          font-family="Arial, sans-serif"
-          padding-top="40px"
-          >&mdash; open-dpp</mj-text
-        >
       </mj-column>
     </mj-section>
   </mj-body>

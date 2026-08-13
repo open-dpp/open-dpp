@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { LanguageType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { EmailChangeNotificationMail } from "../../../email/domain/email-change-notification-mail";
+import { DisplayLanguageType } from "@open-dpp/dto";
 
 // Localized like the mjml template siblings (see EmailTemplate.localizedName).
-const NOTIFICATION_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+const NOTIFICATION_SUBJECT_BY_LANGUAGE: Record<DisplayLanguageType, string> = {
   en: "Your email is being changed",
   de: "Deine E-Mail-Adresse wird geändert",
 };
@@ -76,7 +76,7 @@ export class EmailChangeRequest {
   public generateNotificationEmail(props: {
     firstName: string | null;
     revokeUrl: string;
-    language?: LanguageType;
+    language?: DisplayLanguageType;
   }): EmailChangeNotificationMail {
     const language = props.language ?? "en";
     return EmailChangeNotificationMail.create({
