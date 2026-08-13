@@ -71,7 +71,7 @@ function submodel(
 ): SubmodelResponseDto {
   return {
     id,
-    idShort: "submodel",
+    idShort: id,
     displayName: displayNameText ? displayName(displayNameText) : [],
     submodelElements,
   } as unknown as SubmodelResponseDto;
@@ -145,7 +145,7 @@ describe("useIdShortPathSelectTree", () => {
 
     const { treeNodes } = useIdShortPathSelectTree(submodels);
 
-    expect(treeNodes.value[0]!.label).toBe("submodel");
+    expect(treeNodes.value[0]!.label).toBe("sm-1");
     expect(treeNodes.value[0]!.children![0]!.label).toBe("group");
     expect(treeNodes.value[0]!.children![0]!.children![0]!.label).toBe("field");
   });

@@ -72,7 +72,7 @@ export function useIdShortPathSelectTree(
       .map((submodel) =>
         makeIdShortPathNode({
           kind: "submodel",
-          submodelIdShort: submodel.id,
+          submodelIdShort: submodel.idShort,
           submodel,
         }).toTreeNode(ctx, locale.value),
       )
