@@ -13,6 +13,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+    AasMoveDialog: typeof import('./src/components/aas/AasMoveDialog.vue')['default']
     ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
@@ -65,6 +66,7 @@ declare module 'vue' {
     GalleriaEdit: typeof import('./src/components/media/GalleriaEdit.vue')['default']
     IdField: typeof import('./src/components/aas/form/IdField.vue')['default']
     IdShortPath: typeof import('./src/components/activity-history/IdShortPath.vue')['default']
+    IdShortPathSelect: typeof import('./src/components/aas/IdShortPathSelect.vue')['default']
     Image: typeof import('primevue/image')['default']
     InputGroup: typeof import('primevue/inputgroup')['default']
     InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
@@ -164,6 +166,7 @@ declare module 'vue' {
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     Toolbar: typeof import('primevue/toolbar')['default']
     Tree: typeof import('primevue/tree')['default']
+    TreeSelect: typeof import('primevue/treeselect')['default']
     TreeTable: typeof import('primevue/treetable')['default']
     UserInvitationsList: typeof import('./src/components/organizations/UserInvitationsList.vue')['default']
     Username: typeof import('./src/components/profile/Username.vue')['default']
@@ -176,6 +179,7 @@ declare module 'vue' {
 // For TSX support
 declare global {
   const AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+  const AasMoveDialog: typeof import('./src/components/aas/AasMoveDialog.vue')['default']
   const ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
   const AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
   const AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
@@ -228,6 +232,7 @@ declare global {
   const GalleriaEdit: typeof import('./src/components/media/GalleriaEdit.vue')['default']
   const IdField: typeof import('./src/components/aas/form/IdField.vue')['default']
   const IdShortPath: typeof import('./src/components/activity-history/IdShortPath.vue')['default']
+  const IdShortPathSelect: typeof import('./src/components/aas/IdShortPathSelect.vue')['default']
   const Image: typeof import('primevue/image')['default']
   const InputGroup: typeof import('primevue/inputgroup')['default']
   const InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
@@ -327,6 +332,7 @@ declare global {
   const ToggleSwitch: typeof import('primevue/toggleswitch')['default']
   const Toolbar: typeof import('primevue/toolbar')['default']
   const Tree: typeof import('primevue/tree')['default']
+  const TreeSelect: typeof import('primevue/treeselect')['default']
   const TreeTable: typeof import('primevue/treetable')['default']
   const UserInvitationsList: typeof import('./src/components/organizations/UserInvitationsList.vue')['default']
   const Username: typeof import('./src/components/profile/Username.vue')['default']

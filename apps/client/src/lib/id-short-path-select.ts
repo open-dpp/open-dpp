@@ -4,9 +4,9 @@ import {
   SubmodelElementSharedSchema,
   type SubmodelResponseDto,
 } from "@open-dpp/dto";
-import { resolveLanguageTexts } from "../composables/language-text.ts";
 import type { TreeNode } from "primevue/treenode";
 import { z } from "zod";
+import { resolveLanguageTexts } from "../composables/language.ts";
 
 export interface IdShortPathOption {
   submodelIdShort: string;
