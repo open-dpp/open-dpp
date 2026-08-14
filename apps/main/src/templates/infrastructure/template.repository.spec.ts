@@ -230,7 +230,6 @@ describe("templateRepository", () => {
 
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId);
 
-    // Whole org fits in one page — no successor, so the cursor is null.
     expect(foundTemplates).toEqual(
       PagingResult.create({
         pagination: Pagination.create({ limit: 100 }),

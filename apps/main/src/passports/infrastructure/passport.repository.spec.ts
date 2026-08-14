@@ -229,7 +229,6 @@ describe("passportRepository", () => {
 
     let foundPassports = await passportRepository.findAllByOrganizationId(organizationId);
 
-    // Whole org fits in one page — no successor, so the cursor is null.
     expect(foundPassports).toEqual(
       PagingResult.create({
         pagination: Pagination.create({ limit: 100 }),

@@ -4,18 +4,12 @@ export function isDuplicateKeyError(error: unknown): boolean {
   return extractMongoErrorCode(error) === MONGO_DUPLICATE_KEY_ERROR_CODE;
 }
 
-/**
- * True only when the duplicate-key error fired on an index over `field`.
- * A collection can carry several unique indexes — mapping every E11000 to one
- * business conflict misattributes collisions on the other indexes.
- */
 export function isDuplicateKeyErrorOnField(error: unknown, field: string): boolean {
   if (!isDuplicateKeyError(error)) return false;
   const keyPatterns = extractKeyPatterns(error);
   if (keyPatterns.length > 0) {
     return keyPatterns.some((pattern) => field in pattern);
   }
-  // Fallback: the raw server message names the index ("index: <field>_1").
   const message = extractMessage(error);
   return message !== undefined && message.includes(`index: ${field}`);
 }

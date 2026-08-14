@@ -223,7 +223,6 @@ describe("PermalinkDtoSchema publishedUrl", () => {
   });
 });
 
-// UUIDs used in the polymorphism tests
 const upiId = "55555555-5555-4555-8555-555555555555";
 
 describe("PermalinkKind", () => {

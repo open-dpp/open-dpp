@@ -57,9 +57,6 @@ export function usePagination({
     return currentPage.value.cursor !== startCursor.value;
   });
 
-  // A null `paging_metadata.cursor` is the server saying "no next page"
-  // (`PagingMetadataDtoSchema`). Without it an exactly-full last page looks like
-  // it has a successor, and "next" would keep re-fetching the same page.
   const isLastPage = ref(false);
 
   const fetchPage = async (cursor: Cursor): Promise<PagingResult> => {
@@ -114,8 +111,6 @@ export function usePagination({
     const response = await fetchPage(nextPage.cursor);
     nextPage.itemCount = response.result.length;
     const nextCursor = response.paging_metadata.cursor;
-    // Never fabricate a page from a null cursor — it would re-fetch from the
-    // start and show page 1's items under a later page number.
     if (nextCursor !== null && !findPageByCursor(nextCursor)) {
       addPage(nextCursor);
     }

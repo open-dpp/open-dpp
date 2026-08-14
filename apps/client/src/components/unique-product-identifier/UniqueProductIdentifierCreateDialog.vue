@@ -8,10 +8,7 @@ import { useErrorHandlingStore } from "../../stores/error.handling";
 const model = defineModel<boolean>("visible");
 
 const props = defineProps<{
-  // The passport this dialog creates a UPI for — taken from the route, not chosen here.
   passportId: string;
-  // Creating is allowed on a published passport, but the new identifier is frozen
-  // immediately (update/delete stay draft-only) — this only drives the info note.
   passportPublished: boolean;
   createGs1Upi: (data: {
     referenceId: string;
@@ -19,7 +16,6 @@ const props = defineProps<{
     batch?: string;
     serial?: string;
   }) => Promise<UniqueProductIdentifierListItemDto>;
-  // Mint a plain internal (OPEN_DPP_UUID) UPI — no identity payload. See ADR 0005.
   createInternalUpi: (passportId: string) => Promise<UniqueProductIdentifierListItemDto>;
 }>();
 
@@ -30,8 +26,6 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 
-// The identifier type the user is creating. GS1 carries a GTIN (+ optional
-// batch/serial); INTERNAL is a server-minted UUID with no identity payload.
 const UPI_TYPE_GS1 = "GS1";
 const UPI_TYPE_INTERNAL = "OPEN_DPP_UUID";
 const upiType = ref<string>(UPI_TYPE_GS1);
@@ -47,12 +41,6 @@ const serial = ref<string>("");
 const gtinError = ref<string | null>(null);
 const busy = ref<boolean>(false);
 
-/**
- * Live client-side validation for an optional batch / serial:
- * an empty value is valid (it clears the component);
- * a non-empty value must satisfy GS1 CSET-82 and the 20-character cap.
- * Returns a localized error message or null.
- */
 function validateComponent(value: string): string | null {
   const trimmed = value.trim();
   if (trimmed.length === 0) return null;
@@ -67,7 +55,6 @@ const hasComponentError = computed(() => batchError.value !== null || serialErro
 
 const canSubmit = computed(() => {
   if (busy.value) return false;
-  // An internal UPI needs no input — the server mints its uuid.
   if (!isGs1.value) return true;
   return gtin.value.trim().length > 0 && !hasComponentError.value;
 });

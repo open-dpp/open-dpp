@@ -38,13 +38,6 @@ export class BrandingRepository {
     return Branding.fromDb(brandingDoc.toObject());
   }
 
-  /**
-   * Load an organization's branding, tolerating an absent organization: returns
-   * `null` (logged once) instead of throwing when the org — and therefore its
-   * branding — cannot be resolved, so the base-URL cascade falls through to the
-   * instance default. The single canonical home for the "tolerant branding load"
-   * previously copied across the permalink / UPI area.
-   */
   async findOneByOrganizationIdOrNull(organizationId: string): Promise<Branding | null> {
     try {
       return await this.findOneByOrganizationId(organizationId);

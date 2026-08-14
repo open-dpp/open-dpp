@@ -571,7 +571,6 @@ describe("PermalinkController", () => {
       return passport;
     }
 
-    /** A GS1 identifier on the given passport — the only kind a gs1-link permalink may reference. */
     async function createGs1Upi(
       orgId: string,
       passport: Passport,
@@ -1396,8 +1395,6 @@ describe("PermalinkController", () => {
   });
 
   describe("mutating /permalinks/:id routes work for the owning org", () => {
-    // Permalinks minted through the real service flow (createPermalinksForConfigs)
-    // must carry the passport's organizationId — otherwise these routes 403 the owner.
     async function seedViaServiceFlow(orgId: string) {
       const passport = Passport.create({
         id: randomUUID(),

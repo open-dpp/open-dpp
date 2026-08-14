@@ -236,7 +236,6 @@ describe("usePermalinkPreview", () => {
 
 describe("useGs1LinkPreview", () => {
   const upiId = "44444444-4444-4444-8444-444444444444";
-  // A gs1-link permalink whose backend publicUrl already carries base + identity path.
   function makeGs1Permalink(overrides: Partial<PermalinkPublicDto> = {}): PermalinkPublicDto {
     return makePermalink({
       kind: "gs1-link",
@@ -262,13 +261,11 @@ describe("useGs1LinkPreview", () => {
       "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1",
     );
 
-    // User adds a net-weight data attribute (AI 3103, 6 digits) — preview updates live.
     attrs.value = { "3103": "000750" };
     expect(preview.previewUrl.value).toBe(
       "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1?3103=000750",
     );
 
-    // Adds an expiry-date attribute (AI 17, YYMMDD) — canonical ascending AI order.
     attrs.value = { "3103": "000750", "17": "251231" };
     expect(preview.previewUrl.value).toBe(
       "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1?17=251231&3103=000750",
@@ -296,8 +293,6 @@ describe("useGs1LinkPreview", () => {
 
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
-    // The `/r` path is dropped: the GS1 Digital Link resolver lives at the domain
-    // root, so the link renders on the origin, matching the backend.
     expect(preview.previewUrl.value).toBe(
       "https://brand.example.com/01/04006381333931/10/LOT-42/21/SN-1",
     );
@@ -360,8 +355,6 @@ describe("useGs1LinkPreview", () => {
 
     expect(preview.previewUrl.value).toBe("https://id.example.com");
 
-    // Even with attrs set: a query hung off the bare base is not a valid GS1
-    // Digital Link, so the preview stays the base alone.
     attrs.value = { "3103": "000750" };
     expect(preview.previewUrl.value).toBe("https://id.example.com");
   });

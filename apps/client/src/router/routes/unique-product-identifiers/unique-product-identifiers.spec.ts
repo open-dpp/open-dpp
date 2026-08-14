@@ -1,8 +1,3 @@
-/**
- * Tests for the passport-scoped unique-product-identifier route
- * `/organizations/:organizationId/passports/:passportId/unique-product-identifiers`.
- */
-
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 
@@ -19,9 +14,6 @@ vi.mock("../../../const.ts", () => ({
   AI_INTEGRATION_ID: "ai-integration",
 }));
 
-// Import passports first to mirror the production load order
-// (organizations → passports → leaf), so PASSPORT_PARENT.children is built after the
-// leaf route consts are defined.
 import { ORGANIZATION_PASSPORTS_PARENT } from "../passports/passports";
 import { PASSPORT_UNIQUE_PRODUCT_IDENTIFIERS_LIST } from "./unique-product-identifiers";
 

@@ -132,9 +132,6 @@ export class PassportService {
       throw new ForbiddenException('Only passports with the status "Draft" can be deleted');
     }
 
-    // Collect the passport's UPI uuids BEFORE deleting them: their gs1-link
-    // permalinks must be cascaded too (deleteAllByPassportId only covers the
-    // presentation kind, which joins via presentation configurations).
     const upis = await this.uniqueProductIdentifierRepository.findAllByReferencedId(passport.id);
 
     const session = await this.connection.startSession();

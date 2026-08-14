@@ -10,10 +10,6 @@ import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 import Gs1DataAttributesField from "./Gs1DataAttributesField.vue";
 
-// ---------------------------------------------------------------------------
-// Props / emits / model
-// ---------------------------------------------------------------------------
-
 const model = defineModel<boolean>("visible");
 
 const props = defineProps<{
@@ -24,10 +20,6 @@ const emit = defineEmits<{
   updated: [permalink: PermalinkPublicDto];
 }>();
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
@@ -37,17 +29,10 @@ const baseUrl = ref<string>("");
 const selectedConfigId = ref<string | undefined>(undefined);
 const configs = ref<PresentationConfigurationDto[]>([]);
 const gs1DataAttributes = ref<Record<string, string>>({});
-// Save is blocked while the attributes field holds an invalid or partial row —
-// gs1DataAttributes then still carries the last valid map, and saving it would
-// silently persist stale data (audit M5).
 const gs1AttributesValid = ref(true);
 
 const saving = ref(false);
 const slugError = ref<string | null>(null);
-
-// ---------------------------------------------------------------------------
-// Derived state
-// ---------------------------------------------------------------------------
 
 const isGs1Link = computed(() => props.permalink.kind === PermalinkKind.GS1_LINK);
 const typeLabel = computed(() =>
@@ -55,17 +40,11 @@ const typeLabel = computed(() =>
 );
 const locked = computed(() => Boolean(props.permalink.publishedUrl));
 
-// Live GS1 Digital Link preview — reflects base-URL and data-attribute edits as
-// they happen, matching the URL the backend will freeze on publish.
 const { previewUrl: gs1PreviewUrl } = useGs1LinkPreview(
   computed(() => props.permalink),
   baseUrl,
   gs1DataAttributes,
 );
-
-// ---------------------------------------------------------------------------
-// Sync form state when permalink prop changes
-// ---------------------------------------------------------------------------
 
 watch(
   () => props.permalink,
@@ -79,8 +58,6 @@ watch(
   { immediate: true },
 );
 
-// The config picker (open-dpp kind, pre-freeze rebind) — loaded lazily when the
-// dialog opens; the permalink's own passportId scopes the list.
 watch(
   model,
   async (visible) => {
@@ -101,10 +78,6 @@ function configLabel(config: PresentationConfigurationDto): string {
   return config.label ?? config.id;
 }
 
-// ---------------------------------------------------------------------------
-// Submit
-// ---------------------------------------------------------------------------
-
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed.length === 0 ? null : trimmed;
@@ -117,7 +90,6 @@ async function save() {
   try {
     const body = isGs1Link.value
       ? {
-          // A GS1 Digital Link has no slug ("Short name") — only a custom base URL.
           baseUrl: trimToNull(baseUrl.value),
           gs1DataAttributes:
             Object.keys(gs1DataAttributes.value).length > 0 ? gs1DataAttributes.value : null,
@@ -125,7 +97,6 @@ async function save() {
       : {
           slug: trimToNull(slug.value),
           baseUrl: trimToNull(baseUrl.value),
-          // Pre-freeze config rebind; clearing the select rebinds to the standard view.
           presentationConfigurationId: selectedConfigId.value ?? null,
         };
 
@@ -157,7 +128,6 @@ function cancel() {
     class="w-full md:w-2/3 xl:w-1/2"
   >
     <div class="flex flex-col gap-4">
-      <!-- Type (read-only) -->
       <div class="flex flex-col gap-1" data-testid="permalink-edit-type">
         <span class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.edit.type.label") }}
@@ -167,7 +137,6 @@ function cancel() {
         </span>
       </div>
 
-      <!-- Locked banner -->
       <div
         v-if="locked"
         data-testid="permalink-edit-locked-banner"
@@ -176,7 +145,6 @@ function cancel() {
         {{ t("permalink.edit.locked") }}
       </div>
 
-      <!-- Slug field — presentation only; a GS1 Digital Link has no "Short name" -->
       <div v-if="!isGs1Link" class="flex flex-col gap-2">
         <label for="permalink-edit-slug-input" class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.edit.slug.label") }}
@@ -195,7 +163,6 @@ function cancel() {
         </small>
       </div>
 
-      <!-- Presentation configuration (open-dpp only; pre-freeze rebind) -->
       <div v-if="!isGs1Link" class="flex flex-col gap-2">
         <label for="permalink-edit-config" class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.edit.config.label") }}
@@ -213,7 +180,6 @@ function cancel() {
         />
       </div>
 
-      <!-- Custom base URL — shown for both permalink kinds -->
       <div class="flex flex-col gap-2">
         <label
           for="permalink-edit-base-url-input"
@@ -231,9 +197,7 @@ function cancel() {
         />
       </div>
 
-      <!-- GS1-link-only fields -->
       <template v-if="isGs1Link">
-        <!-- GS1 Data Attributes -->
         <div class="flex flex-col gap-2">
           <label class="text-sm leading-6 font-medium text-gray-900">
             {{ t("permalink.edit.gs1DataAttributes") }}
@@ -245,7 +209,6 @@ function cancel() {
           />
         </div>
 
-        <!-- Live GS1 Digital Link preview -->
         <div class="flex flex-col gap-1">
           <span class="text-xs font-medium tracking-wider text-gray-500 uppercase">
             {{ t("permalink.edit.gs1Preview.label") }}

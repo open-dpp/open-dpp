@@ -61,7 +61,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
         gs1DataAttributes: data.gs1DataAttributes ?? null,
       };
     } else {
-      // For open-dpp kind, pass gs1DataAttributes through so the strict schema rejects it if set
       invariantsInput = {
         ...baseFields,
         presentationConfigurationId: data.presentationConfigurationId ?? null,
@@ -193,13 +192,6 @@ export class Permalink implements IPersistable, HasCreatedAt {
     return this.copy({ gs1DataAttributes: validated });
   }
 
-  /**
-   * Clone this permalink, applying `overrides` and advancing `updatedAt`.
-   * Spreading over a full snapshot keeps the single positional constructor call
-   * in one place and removes the transposition hazard of the six `string | null`
-   * fields — an explicit `null` override wins, an absent key keeps the current
-   * value.
-   */
   private copy(
     overrides: Partial<{
       id: string;

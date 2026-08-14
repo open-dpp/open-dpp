@@ -26,22 +26,11 @@ export const PermalinkSchema = z.union([z.uuid(), PermalinkSlugSchema]);
 export const PermalinkPublishedUrlSchema = z.string().url().max(2048);
 export type PermalinkPublishedUrl = z.infer<typeof PermalinkPublishedUrlSchema>;
 
-/**
- * Discriminator for the two permalink kinds:
- * - OPEN_DPP: passport-bound permalink; may additionally reference a
- *   presentation configuration (custom rendering) and/or an open-dpp UPI
- * - GS1_LINK: requires a GS1 UPI (may also reference a presentation configuration)
- */
 export const PermalinkKind = {
   OPEN_DPP: "open-dpp",
   GS1_LINK: "gs1-link",
 } as const;
 
-/**
- * Wire value stored by documents written before the open-dpp rename.
- * Mapped to PermalinkKind.OPEN_DPP on read by the backend; never emitted
- * by the API and never accepted in requests.
- */
 export const LEGACY_PERMALINK_KIND = "presentation" as const;
 
 export type PermalinkKindType = (typeof PermalinkKind)[keyof typeof PermalinkKind];
@@ -74,17 +63,6 @@ export const PermalinkInvariantsSchema = z.discriminatedUnion("kind", [
   PermalinkInvariantsGs1LinkSchema,
 ]);
 
-/**
- * PermalinkDtoSchema — single ZodObject (required for .extend() in PermalinkPublicDtoSchema).
- *
- * Cross-field invariants are enforced via .check():
- *   - "gs1-link" kind requires a non-null uniqueProductIdentifierId
- *   - "open-dpp" kind forbids non-null gs1DataAttributes
- *   - unknown kind is rejected
- *
- * Both presentationConfigurationId and uniqueProductIdentifierId are optional
- * for the "open-dpp" kind — a bare passport-bound permalink is valid.
- */
 export const PermalinkDtoSchema = z
   .object({
     id: z.uuid(),
@@ -140,11 +118,6 @@ export type PermalinkPublicDto = z.infer<typeof PermalinkPublicDtoSchema>;
 export const PermalinkListDtoSchema = z.array(PermalinkPublicDtoSchema);
 export type PermalinkListDto = z.infer<typeof PermalinkListDtoSchema>;
 
-/**
- * The cursor-paginated envelope returned by the org-scoped `GET /permalinks`
- * backoffice list. Mirrors `PassportPaginationDtoSchema`. The public `/p`
- * resolver endpoints continue to return the bare `PermalinkListDtoSchema`.
- */
 export const PermalinkPaginationDtoSchema = z
   .object({
     ...PagingMetadataDtoSchema.shape,

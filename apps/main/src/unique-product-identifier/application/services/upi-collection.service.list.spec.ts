@@ -1,8 +1,3 @@
-/**
- * UpiCollectionService.list / listByPassport / permalink enrichment
- *
- * Pure-unit suite mirroring gs1-identity.service.spec makeService pattern.
- */
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { PagingResult } from "../../../pagination/paging-result";
@@ -13,8 +8,6 @@ import { UpiCollectionService } from "./upi-collection.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-// The cascade base carries `/p` on a default install; emitted Digital Links must
-// render on the origin (resolver is root-mounted at /01).
 const RESOLVER_BASE = "https://id.example.com/p";
 const RESOLVER_ORIGIN = "https://id.example.com";
 
@@ -74,10 +67,6 @@ function makeService(overrides?: {
   );
   return { service, upiRepo, passportRepo, baseUrlResolver, permalinkApplicationService };
 }
-
-// ---------------------------------------------------------------------------
-// Slice 34 — UpiCollectionService.list
-// ---------------------------------------------------------------------------
 
 describe("UpiCollectionService.list", () => {
   const organizationId = randomUUID();
@@ -190,7 +179,6 @@ describe("UpiCollectionService.list", () => {
       (item) => item.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
     );
 
-    // passportPublished=false for draft → editable
     expect(gs1Item!.passportPublished).toBe(false);
     expect(systemItem!.passportPublished).toBe(false);
   });
@@ -226,7 +214,6 @@ describe("UpiCollectionService.list", () => {
     expect(resultForOrg.items).toHaveLength(1);
     expect(resultForOther.items).toHaveLength(0);
 
-    // findAllByOrganizationId called with the correct org on each call
     expect(upiRepo.findAllByOrganizationId).toHaveBeenNthCalledWith(
       1,
       organizationId,
@@ -299,7 +286,6 @@ describe("UpiCollectionService.list", () => {
     expect(draftItem).toBeDefined();
     expect(draftItem!.passportPublished).toBe(false);
 
-    // Only ONE passport query per list() call — no N+1
     expect(passportRepo.findByIds).toHaveBeenCalledTimes(1);
     const calledWithIds = (passportRepo.findByIds.mock.calls[0] as [string[]])[0];
     expect(calledWithIds).toHaveLength(2);
@@ -330,19 +316,13 @@ describe("UpiCollectionService.list", () => {
       Pagination.create({ limit: 1, cursor: "the-cursor" }),
     );
 
-    // The incoming pagination is forwarded verbatim to the repository.
     expect(findAllByOrganizationId).toHaveBeenCalledWith(organizationId, {
       pagination: { limit: 1, cursor: "the-cursor" },
     });
-    // The repo's advanced cursor is surfaced on the result.
     expect(result.cursor).toBe("next-cursor");
     expect(result.items).toHaveLength(1);
   });
 });
-
-// ---------------------------------------------------------------------------
-// Passport-scoped list — UpiCollectionService.listByPassport
-// ---------------------------------------------------------------------------
 
 describe("UpiCollectionService.listByPassport", () => {
   const referenceId = randomUUID();

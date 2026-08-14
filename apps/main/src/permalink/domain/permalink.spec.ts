@@ -521,7 +521,6 @@ describe("Permalink", () => {
 
     it("withGs1DataAttributes throws ValueError on an invalid AI map", () => {
       const original = makeGs1Link();
-      // "01" is a key AI (identifier), not a data attribute
       const invalid: Record<string, string> = { "01": "04006381333931" };
       expect(() => original.withGs1DataAttributes(invalid)).toThrow(ValueError);
     });
@@ -553,9 +552,6 @@ describe("Permalink", () => {
     });
   });
 
-  // copy() is private; exercise it through withPresentationConfigurationId (which
-  // overrides only the config ref), proving the clone helper preserves every other
-  // field, advances updatedAt, and does not mutate the receiver.
   describe("copy() semantics", () => {
     const fullyPopulated = () =>
       Permalink.create({
@@ -576,7 +572,6 @@ describe("Permalink", () => {
 
       expect(next).not.toBe(original);
       expect(next.presentationConfigurationId).toBe(newConfigId);
-      // every other field is carried over unchanged
       expect(next.id).toBe(original.id);
       expect(next.slug).toBe(original.slug);
       expect(next.baseUrl).toBe(original.baseUrl);

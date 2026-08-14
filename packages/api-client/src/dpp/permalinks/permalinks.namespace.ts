@@ -18,8 +18,6 @@ export class PermalinksNamespace {
     this.aas = new AasNamespace(this.axiosInstance, "p");
   }
 
-  // ─── Public resolver methods ────────────────────────────────────────────────
-
   public async getByPassport(passportId: string) {
     return this.axiosInstance.get<PermalinkPublicDto[]>(
       `/p?passportId=${encodeURIComponent(passportId)}`,
@@ -34,11 +32,6 @@ export class PermalinksNamespace {
     return this.axiosInstance.patch<PermalinkPublicDto>(`/p/${encodeURIComponent(id)}`, body);
   }
 
-  // ─── Backoffice CRUD methods ─────────────────────────────────────────────────
-
-  // The org-scoped backoffice list returns the standard cursor envelope
-  // ({ paging_metadata, result }). The public `/p` resolver methods above still
-  // return bare arrays.
   public async list(params?: CursorListParams) {
     return this.axiosInstance.get<PermalinkPaginationDto>(this.backofficeEndpoint, { params });
   }

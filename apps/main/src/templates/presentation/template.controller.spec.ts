@@ -283,7 +283,6 @@ describe("templateController", () => {
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
-    // t2 and t1 are the remainder after t3 — last page, so the cursor is null.
     expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => ({
@@ -323,7 +322,6 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        // Single page — no successor, so the cursor is null.
         cursor: null,
         total_count: 1,
       },

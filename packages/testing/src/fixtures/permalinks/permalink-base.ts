@@ -2,13 +2,10 @@ import type { Gs1DataAttributes, PermalinkDto } from "@open-dpp/dto";
 import { randomUUID } from "node:crypto";
 import { gs1DataAttributesPlainFactory } from "../gs1/gs1-data-attributes.factory";
 
-/** Transient inputs shared by the permalink DTO and public-DTO factories. */
 export interface PermalinkBaseTransient {
-  /** Set to true to produce a gs1-link permalink (kind, uniqueProductIdentifierId, gs1DataAttributes) instead of an open-dpp one. */
   gs1?: boolean;
 }
 
-/** Shared gs1/open-dpp branch for the permalink factories; fishery overlays the presentationConfigurationId/uniqueProductIdentifierId params, only gs1DataAttributes needs explicit replacement (fishery deep-merges nested objects). */
 export function buildPermalinkCore(
   params: { gs1DataAttributes?: unknown },
   transientParams: PermalinkBaseTransient,

@@ -456,7 +456,6 @@ describe("PermalinkRepository", () => {
       });
       await repository.save(linkA);
       await repository.save(linkB);
-      // Open-dpp permalink bound to a UPI must never appear in the gs1 map
       await repository.save(
         Permalink.create({
           passportId: randomUUID(),
@@ -515,7 +514,6 @@ describe("PermalinkRepository", () => {
   it("onApplicationBootstrap drops the retired config-unique index", async () => {
     const model = module.get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name));
 
-    // Simulate the legacy DB state: the retired unique index still exists.
     await model.collection.deleteMany({});
     const existing = (await model.collection.indexes()).map((i) => i.name);
     if (!existing.includes("presentationConfigurationId_1")) {
@@ -534,7 +532,6 @@ describe("PermalinkRepository", () => {
     const names = (await model.collection.indexes()).map((i) => i.name);
     expect(names).not.toContain("presentationConfigurationId_1");
 
-    // Two permalinks sharing one config must now coexist.
     const passportId = randomUUID();
     const configId = randomUUID();
     await repository.save(Permalink.create({ passportId, presentationConfigurationId: configId }));
@@ -691,7 +688,6 @@ describe("PermalinkRepository", () => {
       const organizationId = randomUUID();
       const passportId = randomUUID();
       const passportModel = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
-      // Raw driver insert: the backfill $lookup only needs _id + organizationId.
       await passportModel.collection.insertOne({ _id: passportId as any, organizationId });
 
       const config = PresentationConfiguration.createForPassport({
@@ -700,7 +696,6 @@ describe("PermalinkRepository", () => {
       });
       await presentationConfigurationRepository.save(config);
 
-      // Permalink.create without organizationId reproduces the legacy null state.
       const legacy = Permalink.create({ passportId, presentationConfigurationId: config.id });
       await repository.save(legacy);
       return { organizationId, legacy };
@@ -755,7 +750,6 @@ describe("PermalinkRepository", () => {
       return module.get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name)).collection;
     }
 
-    /** A row written before `kind` existed: no field at all, schema 1.2.0. */
     async function seedRowWithoutKind(presentationConfigurationId: string) {
       const id = randomUUID();
       await permalinkCollection().insertOne({

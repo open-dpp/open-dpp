@@ -114,8 +114,6 @@ describe("UniqueProductIdentifier (GS1)", () => {
   });
 
   describe("toGs1Response", () => {
-    // The cascade base carries the presentation path (`/p`) on a default install;
-    // the emitted Digital Link must render on the origin (resolver is root-mounted).
     const RESOLVER_BASE = "https://id.example.com/p";
     const RESOLVER_ORIGIN = "https://id.example.com";
 
@@ -232,7 +230,6 @@ describe("UniqueProductIdentifier (GS1)", () => {
         batch: "LOT-42",
         serial: "SN-001",
       });
-      // original untouched (still a bare GTIN)
       expect(base.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
     });
 
@@ -367,7 +364,6 @@ describe("UniqueProductIdentifier (GS1)", () => {
   });
 
   describe("toListItem", () => {
-    // Path-carrying base in, origin-based Digital Link out (see toGs1Response).
     const RESOLVER_BASE = "https://id.example.com/p";
     const RESOLVER_ORIGIN = "https://id.example.com";
 

@@ -37,26 +37,15 @@ const { fetchById: fetchPassportById } = useDigitalProductDocument(
   DigitalProductDocumentType.Passport,
 );
 
-// The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
-
-// -------------------------------------------------------------------------
-// State
-// -------------------------------------------------------------------------
 
 const permalinks = ref<PermalinkPublicDto[]>([]);
 const loading = ref(false);
 const createDialogVisible = ref(false);
 
-// Deep link from the UPI table CTA: ?createForUpi=<uuid> auto-opens the
-// create dialog with that UPI preselected (param is stripped after opening).
 const preselectedUpiId = ref(
   route.query.createForUpi ? String(route.query.createForUpi) : undefined,
 );
-
-// -------------------------------------------------------------------------
-// Pagination wiring (server-side cursor pagination, mirrors the other list views)
-// -------------------------------------------------------------------------
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
@@ -71,8 +60,6 @@ async function fetchCallback(pagingParams: PagingParamsDto) {
   loading.value = true;
   try {
     const response = await apiClient.dpp.passports.getPermalinks(passportId.value, pagingParams);
-    // The passport-scoped list returns the standard cursor envelope
-    // ({ paging_metadata, result }) — expose the rows and surface the next cursor.
     const items = (response.data?.result ?? []) as PermalinkPublicDto[];
     const cursor = response.data?.paging_metadata?.cursor ?? null;
     permalinks.value = items;
@@ -97,28 +84,12 @@ const {
   changeQueryParams,
 });
 
-// -------------------------------------------------------------------------
-// Edit dialog state
-// -------------------------------------------------------------------------
-
 const editDialogVisible = ref(false);
 const selectedPermalink = ref<PermalinkPublicDto | null>(null);
-
-// -------------------------------------------------------------------------
-// QR dialog state
-// -------------------------------------------------------------------------
 
 const qrDialogVisible = ref(false);
 const qrPermalink = ref<PermalinkPublicDto | null>(null);
 
-// -------------------------------------------------------------------------
-// Passport status (drives the frozen-URLs info alert)
-// -------------------------------------------------------------------------
-
-// Read from the passport itself, never inferred from the rows: a permalink's
-// publishedUrl is immutable once frozen, so an archived-then-restored (or
-// legacy) passport keeps frozen rows while being a draft again. Creating a
-// permalink must never make this view claim the passport was published.
 const passportIsPublished = ref(false);
 
 async function loadPassportStatus() {
@@ -127,14 +98,8 @@ async function loadPassportStatus() {
     passport?.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Published;
 }
 
-// -------------------------------------------------------------------------
-// Linkable UPIs + presentation configs (feed the create dialog)
-// -------------------------------------------------------------------------
-
 const { upis, fetchUniqueProductIdentifiers } = useUniqueProductIdentifiers();
 
-// ponytail: one big page instead of a cursor loop — server limit is uncapped
-// and a passport's UPI count stays far below this in practice.
 const UPI_PICKER_LIMIT = 1000;
 
 async function loadUpis() {
@@ -145,11 +110,6 @@ async function loadUpis() {
   }
 }
 
-/**
- * The UPIs the picker offers:
- *  - GS1 rows without an existing gs1-link permalink (one Digital Link per UPI)
- *  - every open-dpp row (an open-dpp UPI may carry any number of permalinks)
- */
 const linkableUpis = computed(() =>
   upis.value.filter(
     (upi) =>
@@ -169,12 +129,6 @@ async function loadConfigs() {
   }
 }
 
-// -------------------------------------------------------------------------
-// Create dialog
-// -------------------------------------------------------------------------
-
-// Refetch before opening — a UPI linked elsewhere since the last load must drop
-// out of the picker (rows carry their own permalink summary).
 async function openCreateDialog() {
   await Promise.all([loadUpis(), loadConfigs()]);
   createDialogVisible.value = true;
@@ -184,10 +138,6 @@ async function onPermalinkCreated(_permalink: PermalinkPublicDto) {
   createDialogVisible.value = false;
   await Promise.all([reloadCurrentPage(), loadUpis()]);
 }
-
-// -------------------------------------------------------------------------
-// Edit dialog
-// -------------------------------------------------------------------------
 
 function openEditDialog(permalink: PermalinkPublicDto) {
   selectedPermalink.value = permalink;
@@ -199,18 +149,10 @@ async function onPermalinkUpdated(_permalink: PermalinkPublicDto) {
   await reloadCurrentPage();
 }
 
-// -------------------------------------------------------------------------
-// QR dialog
-// -------------------------------------------------------------------------
-
 function openQrDialog(permalink: PermalinkPublicDto) {
   qrPermalink.value = permalink;
   qrDialogVisible.value = true;
 }
-
-// -------------------------------------------------------------------------
-// Delete — the only guard is the freeze rule (published URLs are immutable)
-// -------------------------------------------------------------------------
 
 function canDelete(permalink: PermalinkPublicDto): boolean {
   return permalink.publishedUrl == null;
@@ -243,10 +185,6 @@ async function onDelete(permalink: PermalinkPublicDto) {
   });
 }
 
-// -------------------------------------------------------------------------
-// Helpers
-// -------------------------------------------------------------------------
-
 function kindLabel(kind: string): string {
   if (kind === PermalinkKind.GS1_LINK) {
     return t("permalink.list.kindGs1Link");
@@ -254,13 +192,7 @@ function kindLabel(kind: string): string {
   return t("permalink.list.kindPresentation");
 }
 
-// -------------------------------------------------------------------------
-// Mount
-// -------------------------------------------------------------------------
-
 onMounted(async () => {
-  // A failing status fetch must not block the list — fetchById already notified
-  // the user, and the banner stays hidden rather than claiming a publication.
   await Promise.all([loadPassportStatus().catch(() => undefined), nextPage()]);
   if (preselectedUpiId.value) {
     await openCreateDialog();
@@ -299,7 +231,6 @@ onMounted(async () => {
         </div>
       </template>
 
-      <!-- Kind column -->
       <Column field="kind" :header="t('permalink.list.kind')">
         <template #body="{ data }">
           <div class="flex items-center gap-2">
@@ -310,7 +241,6 @@ onMounted(async () => {
         </template>
       </Column>
 
-      <!-- Public URL column -->
       <Column field="publicUrl" :header="t('permalink.list.publicUrl')">
         <template #body="{ data }">
           <a
@@ -324,11 +254,9 @@ onMounted(async () => {
         </template>
       </Column>
 
-      <!-- Actions column -->
       <Column :header="t('common.actions')">
         <template #body="{ data }">
           <div class="flex gap-1">
-            <!-- Show QR button (all rows) -->
             <Button
               icon="pi pi-qrcode"
               severity="info"
@@ -338,7 +266,6 @@ onMounted(async () => {
               @click="openQrDialog(data)"
             />
 
-            <!-- Edit button (all rows) -->
             <Button
               icon="pi pi-pencil"
               severity="primary"
@@ -348,7 +275,6 @@ onMounted(async () => {
               @click="openEditDialog(data)"
             />
 
-            <!-- Delete button -->
             <Button
               icon="pi pi-trash"
               severity="danger"
@@ -374,7 +300,6 @@ onMounted(async () => {
       </template>
     </DataTable>
 
-    <!-- Create dialog -->
     <PermalinkCreateDialog
       v-model:visible="createDialogVisible"
       :passport-id="passportId"
@@ -384,7 +309,6 @@ onMounted(async () => {
       @created="onPermalinkCreated"
     />
 
-    <!-- Edit dialog -->
     <PermalinkEditDialog
       v-if="selectedPermalink"
       v-model:visible="editDialogVisible"
@@ -392,7 +316,6 @@ onMounted(async () => {
       @updated="onPermalinkUpdated"
     />
 
-    <!-- QR dialog -->
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
       <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
     </Dialog>

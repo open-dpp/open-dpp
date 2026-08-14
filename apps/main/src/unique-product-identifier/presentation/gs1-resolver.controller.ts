@@ -14,21 +14,6 @@ import { Cset82ComponentSchema, GtinInputSchema } from "@open-dpp/dto";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { Gs1IdentityService } from "../application/services/gs1-identity.service";
 
-/**
- * Public GS1 Digital Link resolver.
- *
- * Mounted OUTSIDE the `/api` global prefix (carved out in `main.ts` for the dev
- * Vite proxy, and reachable in prod via ServeStatic `fallthrough`). A scanned
- * `/01/{gtin}` — optionally with `/10/{batch}` and/or `/21/{serial}` —
- * 302-redirects to the passport's permalink public URL. Publish gating and
- * "unknown key → 404" are inherited from the resolution service. Resolution is on
- * the EXACT full key, so a serialized unit and a bare GTIN never shadow each other.
- */
-// Version-neutral: the public GS1 Digital Link contract is the bare `/01/{gtin}`
-// with no version segment. In prod the global-prefix `exclude` also drops the
-// `/api` + version; declaring VERSION_NEUTRAL makes that explicit and keeps the
-// route reachable under any app config (e.g. the versioned test harness, which
-// has no global-prefix exclude).
 @Controller({ version: VERSION_NEUTRAL })
 export class Gs1ResolverController {
   private readonly logger = new Logger(Gs1ResolverController.name);
@@ -79,11 +64,6 @@ export class Gs1ResolverController {
     await this.resolve({ gtin, batch, serial }, req, res);
   }
 
-  /**
-   * Validate the scanned key segments at the boundary and 302-redirect to the
-   * resolved permalink URL. A malformed GTIN, batch, or serial can never resolve
-   * to a passport, so it surfaces as a 404.
-   */
   private async resolve(
     raw: { gtin: string; batch?: string; serial?: string },
     req: Request,
@@ -103,13 +83,6 @@ export class Gs1ResolverController {
     res.redirect(HttpStatus.FOUND, target);
   }
 
-  /**
-   * GS1-Conformant Resolver standard §2.12 / conformance item 19: pass on all
-   * key=value pairs of the request query string when redirecting. Pairs are
-   * forwarded verbatim (no decode/re-encode); a pair already present verbatim on
-   * the target — a gs1-link permalink's own frozen data attributes — is not
-   * duplicated, while a same-key-different-value pair is appended alongside it.
-   */
   private withForwardedQuery(publicUrl: string, req: Request): string {
     const queryStart = req.originalUrl.indexOf("?");
     if (queryStart === -1) {

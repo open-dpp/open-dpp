@@ -27,12 +27,6 @@ import { AllApiVersions, ApiVersionsDto } from "@open-dpp/dto";
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
 
-/**
- * Public backend routes that live OUTSIDE the `/api` prefix and therefore must
- * not be proxied to the dev SPA. The GS1 Digital Link resolver:
- * `GET /01/{gtin}`, `/01/{gtin}/10/{batch}`, `/01/{gtin}/21/{serial}`, and the
- * combined `/01/{gtin}/10/{batch}/21/{serial}`.
- */
 function isPublicBackendRoute(pathOrUrl: string): boolean {
   const path = pathOrUrl.split("?")[0];
   return /^\/01\/[^/]+(?:\/10\/[^/]+)?(?:\/21\/[^/]+)?\/?$/.test(path);
@@ -109,8 +103,6 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix("api", {
-    // Public GS1 Digital Link resolver lives outside the /api prefix. All four
-    // route shapes (bare GTIN, +batch, +serial, combined) are excluded.
     exclude: [
       { path: "01/:gtin", method: RequestMethod.GET },
       { path: "01/:gtin/10/:batch", method: RequestMethod.GET },

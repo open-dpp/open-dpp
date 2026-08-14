@@ -393,17 +393,10 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
     expect(persisted.organizationId).toBe(organizationId);
   });
 
-  // (f) regression: a stale FULL-unique presentationConfigurationId index (dropped
-  // from the schema, but surviving on a legacy DB) makes every gs1-link insert
-  // (presentationConfigurationId: null) collide. That E11000 must NOT be
-  // misreported as "gs1-link already exists for this UPI".
   it("(f) a duplicate-key on a different index is rethrown, not misreported as UPI conflict", async () => {
     const model = ctx.getModuleRef().get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name));
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    // Simulate the legacy DB state: the retired index still exists as full-unique,
-    // plus one existing doc occupying the null slot. (Clear the collection first —
-    // the full unique index cannot build over earlier tests' null-config docs.)
     await model.collection.deleteMany({});
     await model.collection.createIndex(
       { presentationConfigurationId: 1 },
@@ -429,7 +422,6 @@ describe("PermalinkApplicationService.createGs1LinkPermalink", () => {
       expect(thrown).toBeDefined();
       expect(thrown).not.toBeInstanceOf(ConflictException);
     } finally {
-      // syncIndexes drops the stale index (it is no longer schema-defined).
       await model.syncIndexes();
     }
   });

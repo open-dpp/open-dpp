@@ -9,8 +9,6 @@ import { Gs1IdentityService } from "./gs1-identity.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-// The cascade base carries `/p` on a default install; emitted Digital Links must
-// render on the origin (resolver is root-mounted at /01).
 const RESOLVER_BASE = "https://id.example.com/p";
 const RESOLVER_ORIGIN = "https://id.example.com";
 
@@ -63,10 +61,6 @@ function makeService(overrides?: {
   return { service, upiRepo, permalinkService, permalinkRepo, baseUrlResolver };
 }
 
-// ---------------------------------------------------------------------------
-// Slice 38 — structural assertions: the service must NOT contain write paths
-// ---------------------------------------------------------------------------
-
 describe("Slice 38 — Gs1IdentityService source must not contain write paths", () => {
   const serviceSrc = readFileSync(
     resolve(
@@ -81,7 +75,6 @@ describe("Slice 38 — Gs1IdentityService source must not contain write paths", 
   });
 
   it("does not contain a setIdentity method", () => {
-    // The method name must not appear as a method definition
     expect(serviceSrc).not.toMatch(/\bsetIdentity\b/);
   });
 
@@ -90,28 +83,15 @@ describe("Slice 38 — Gs1IdentityService source must not contain write paths", 
   });
 
   it("does not perform a GS1 write via findByReferenceIdAndType(GS1) — only getIdentity (read) is allowed", () => {
-    // The service is allowed to call findByReferenceIdAndType for getIdentity (read),
-    // but there must be exactly one call site (the getIdentity method) and it must not
-    // be wrapped inside a write (save) path. We check that `save` is no longer called
-    // alongside findByReferenceIdAndType.
-    //
-    // Structural check: no call to repo.save() remains in the service at all
-    // (writes moved to UpiCollectionService).
     expect(serviceSrc).not.toMatch(/\brepo\.save\b|\buniqueProductIdentifierRepository\.save\b/);
   });
 
   it("delegates getResolverBase to BaseUrlResolver (no duplicate cascade)", () => {
-    // The base-URL cascade lives in BaseUrlResolver; this service must delegate
-    // to it, not re-implement it.
     expect(serviceSrc).toContain("baseUrlResolver.getResolverBase");
     expect(serviceSrc).not.toContain("loadOrgResolverOverride");
     expect(serviceSrc).not.toContain("loadInstanceResolverSetting");
   });
 });
-
-// ---------------------------------------------------------------------------
-// getIdentity — still present and working
-// ---------------------------------------------------------------------------
 
 describe("Gs1IdentityService.getIdentity", () => {
   it("returns the GS1 identity with the assembled Digital Link", async () => {
@@ -160,10 +140,6 @@ describe("Gs1IdentityService.getIdentity", () => {
     expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
-
-// ---------------------------------------------------------------------------
-// resolveGs1KeyToPublicUrl — still present and working
-// ---------------------------------------------------------------------------
 
 describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
   it("404s when no GS1 UPI carries the key", async () => {
@@ -272,8 +248,6 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       permalinkService: {
         resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        // Realistic: for a gs1-link the freeze/read publicUrl IS the Digital
-        // Link form — the scanned URL itself (M1).
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
           publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
@@ -283,14 +257,10 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
 
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
-    // findGs1LinkByUpiId was called with the UPI's uuid
     expect(permalinkRepo.findGs1LinkByUpiId).toHaveBeenCalledWith(upi.uuid);
     expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalinkId, undefined);
-    // The redirect target is the permalink's presentation view — never the
-    // Digital Link form, which would 302 the resolver onto itself.
     expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalinkId}`);
     expect(url).not.toContain("/01/");
-    // The freeze call is retained for its lazy QR pinning side effect.
     expect(permalinkService.resolvePublicUrlWithFreeze).toHaveBeenCalledTimes(1);
   });
 
@@ -329,8 +299,6 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       id: randomUUID(),
       kind: PermalinkKind.GS1_LINK,
       slug: null,
-      // The permalink's own baseUrl is the Digital Link/QR host — it must NOT
-      // become the viewer host.
       baseUrl: "https://qr.example.com",
       presentationConfigurationId: randomUUID(),
     };
@@ -408,14 +376,12 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       gtin: VALID_GTIN13,
     });
     const gs1LinkPermalinkId = randomUUID();
-    // gs1-link references a config from a DIFFERENT passport
     const gs1LinkPermalink = {
       id: gs1LinkPermalinkId,
       kind: PermalinkKind.GS1_LINK,
       slug: null,
-      presentationConfigurationId: randomUUID(), // config that belongs to configPassportId
+      presentationConfigurationId: randomUUID(),
     };
-    // config's passport is PUBLISHED — resolveToPassport succeeds (not gated)
     const configPassport = { organizationId: randomUUID() };
     const { service, permalinkService } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
@@ -423,7 +389,6 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
       },
       permalinkService: {
-        // resolveToPassport resolves the config's passport (published) — does NOT throw
         resolveToPassport: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
           passport: configPassport,
@@ -438,12 +403,10 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
 
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
-    // Used the gs1-link permalink (config's passport governs); target is the
-    // presentation view, never the Digital Link form (M1).
     expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalinkId, undefined);
     expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalinkId}`);
     expect(url).not.toContain("/01/");
-    void configPassportId; // referenced above for clarity
+    void configPassportId;
   });
 
   it("(Slice 31-g) cross-passport own-config: config's passport draft → anonymous scan is gated (404)", async () => {
@@ -454,7 +417,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     });
     const gs1LinkPermalink = {
       id: randomUUID(),
-      presentationConfigurationId: randomUUID(), // config that belongs to a DRAFT passport
+      presentationConfigurationId: randomUUID(),
     };
     const { service } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
@@ -462,7 +425,6 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
       },
       permalinkService: {
-        // config's passport is DRAFT → gated for anonymous
         resolveToPassport: jest.fn(async () => {
           throw new NotFoundException("gated: config passport is draft");
         }),

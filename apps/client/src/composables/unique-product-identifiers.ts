@@ -22,9 +22,6 @@ export function useUniqueProductIdentifiers() {
         passportId,
         pagingParams,
       );
-      // The passport-scoped endpoint returns the standard cursor envelope
-      // ({ paging_metadata, result }). Expose the rows directly and surface the
-      // next-page cursor for the pagination composable.
       const items = (response.data?.result ?? []) as UniqueProductIdentifierListItemDto[];
       const cursor = response.data?.paging_metadata?.cursor ?? null;
       upis.value = items;

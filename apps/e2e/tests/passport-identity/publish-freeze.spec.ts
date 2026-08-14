@@ -10,13 +10,6 @@ import {
   uniqueSerial,
 } from "../helpers/passport";
 
-/**
- * What publishing a passport locks down: permalink URLs freeze, and identifiers
- * can still be added but no longer removed.
- */
-
-// PrimeVue renders a placeholder row while the table has no data, so it has to be
-// excluded — otherwise every `toHaveCount(1)` is satisfied by the empty table.
 function permalinkRows(page: Page) {
   return page
     .getByTestId("permalink-data-table")
@@ -44,8 +37,6 @@ test("publishing freezes the permalink and opens it to anonymous visitors", asyn
   const publicUrl = await page.getByTestId(`permalink-public-url-${permalinkId}`).innerText();
   await expect(page.getByTestId("permalink-frozen-info")).toHaveCount(0);
 
-  // `/p/:slug` is a client-side route that always serves the SPA shell, so the publish
-  // gate has to be probed on the API the viewer calls, not on the HTML document.
   const slug = publicUrl.split("/p/")[1];
   const anonymous = await context.browser()!.newContext();
   const beforePublish = await anonymous.request.get(`${ApiBase}/p/${slug}`);
@@ -55,14 +46,12 @@ test("publishing freezes the permalink and opens it to anonymous visitors", asyn
   await page.reload();
 
   await expect(page.getByTestId("permalink-frozen-info")).toBeVisible();
-  // A frozen permalink keeps the URL that was published — editing is refused.
   await expect(page.getByTestId(`permalink-public-url-${permalinkId}`)).toHaveText(publicUrl);
   await page.getByTestId(`permalink-edit-btn-${permalinkId}`).click();
   await expect(page.getByTestId("permalink-edit-locked-banner")).toBeVisible();
   await expect(page.getByTestId("permalink-edit-save")).toBeDisabled();
   await expect(page.getByTestId("permalink-edit-slug")).toBeDisabled();
 
-  // The published URL now resolves without the authoring session's cookies.
   const afterPublish = await anonymous.request.get(`${ApiBase}/p/${slug}`);
   expect(afterPublish.status(), `anonymous visitors should reach ${publicUrl}`).toBe(200);
   await anonymous.close();
@@ -75,19 +64,16 @@ test("a published passport still accepts new identifiers but no longer allows de
   await publishPassport(page, ids);
   await gotoUpiList(page, ids);
 
-  // Deletion invalidates identifiers that may already be printed on a product.
   await expect(upiRows(page)).toHaveCount(1);
   const deleteButtons = upiRows(page).getByTestId("upi-delete-btn");
   await expect(deleteButtons).toHaveCount(1);
   await expect(deleteButtons.first()).toBeDisabled();
-  // The lock is explained through a translated tooltip, not a raw i18n key.
   await expect(deleteButtons.first()).toHaveAttribute(
     "title",
     /Produktidentifikatoren sind gesperrt|locked once the passport is published/i,
   );
   await expect(page.locator("body")).not.toContainText("uniqueProductIdentifiers.list.");
 
-  // Adding is a different question: nothing already public moves.
   const before = await upiRows(page).count();
   await page.getByTestId("upi-add-btn").click();
   await expect(page.getByTestId("upi-passport-published-note")).toBeVisible();

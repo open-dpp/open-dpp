@@ -139,7 +139,6 @@ export const uniqueProductIdentifierPaths = {
       security,
     },
   },
-  // Passport-scoped list (system + GS1)
   "/passports/{id}/unique-product-identifiers": {
     get: {
       tags: ["unique-product-identifiers"],

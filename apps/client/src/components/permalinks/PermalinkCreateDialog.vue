@@ -12,33 +12,18 @@ import { useErrorHandlingStore } from "../../stores/error.handling";
 import apiClient from "../../lib/api-client";
 import Gs1DataAttributesField from "./Gs1DataAttributesField.vue";
 
-// ---------------------------------------------------------------------------
-// Props / emits / model
-// ---------------------------------------------------------------------------
-
 const model = defineModel<boolean>("visible");
 
 const props = defineProps<{
-  /** The passport the new permalink belongs to. */
   passportId: string;
-  /**
-   * The UPIs offered in the (optional) picker — GS1 rows without a gs1-link
-   * plus every open-dpp row. The caller owns the load.
-   */
   upis: UniqueProductIdentifierListItemDto[];
-  /** The passport's presentation configurations for the (optional) config picker. */
   configs: PresentationConfigurationDto[];
-  /** Preselect this UPI in the Select (e.g. handed over via ?createForUpi=). */
   preselectedUpiId?: string;
 }>();
 
 const emit = defineEmits<{
   created: [permalink: PermalinkPublicDto];
 }>();
-
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
@@ -48,16 +33,10 @@ const selectedConfigId = ref<string | undefined>(undefined);
 const slug = ref<string>("");
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
-// Submit is blocked while the attributes field holds an invalid or partial row —
-// gs1DataAttributes then still carries the last valid map (audit M5).
 const gs1AttributesValid = ref(true);
 
 const conflictError = ref<string | null>(null);
 const busy = ref(false);
-
-// ---------------------------------------------------------------------------
-// Derived state — the permalink kind follows the selected UPI's type
-// ---------------------------------------------------------------------------
 
 const selectedUpi = computed(() => props.upis.find((upi) => upi.uuid === selectedUpiId.value));
 const isGs1 = computed(() => selectedUpi.value?.type === UniqueProductIdentifierType.GS1);
@@ -67,10 +46,6 @@ const kindLabel = computed(() =>
 );
 
 const canSubmit = computed(() => !busy.value && (!isGs1.value || gs1AttributesValid.value));
-
-// ---------------------------------------------------------------------------
-// Option labels
-// ---------------------------------------------------------------------------
 
 function upiLabel(upi: UniqueProductIdentifierListItemDto): string {
   if (upi.type === UniqueProductIdentifierType.GS1) {
@@ -93,10 +68,6 @@ watch(
     if (upiId) selectedUpiId.value = upiId;
   },
 );
-
-// ---------------------------------------------------------------------------
-// Submit
-// ---------------------------------------------------------------------------
 
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();
@@ -167,7 +138,6 @@ function cancel() {
     class="w-full md:w-2/3 xl:w-1/2"
   >
     <div class="flex flex-col gap-4">
-      <!-- UPI Select (optional) — the permalink kind follows the selection -->
       <div class="flex flex-col gap-2">
         <label for="permalink-create-upi" class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.create.selectUpi") }}
@@ -189,7 +159,6 @@ function cancel() {
         </small>
       </div>
 
-      <!-- Conflict error (409) -->
       <Message
         v-if="conflictError"
         severity="error"
@@ -199,9 +168,7 @@ function cancel() {
         {{ conflictError }}
       </Message>
 
-      <!-- Open-dpp-only fields -->
       <template v-if="!isGs1">
-        <!-- Vanity slug (optional) -->
         <div class="flex flex-col gap-2">
           <label for="permalink-create-slug" class="text-sm leading-6 font-medium text-gray-900">
             {{ t("permalink.create.slug.label") }}
@@ -216,7 +183,6 @@ function cancel() {
           />
         </div>
 
-        <!-- Presentation configuration (optional; null renders the standard view) -->
         <div class="flex flex-col gap-2">
           <label for="permalink-create-config" class="text-sm leading-6 font-medium text-gray-900">
             {{ t("permalink.create.selectConfig") }}
@@ -235,7 +201,6 @@ function cancel() {
         </div>
       </template>
 
-      <!-- Custom base URL (optional) -->
       <div class="flex flex-col gap-2">
         <label for="permalink-create-base-url" class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.create.baseUrl.label") }}
@@ -250,7 +215,6 @@ function cancel() {
         />
       </div>
 
-      <!-- GS1-only: data attributes (optional) -->
       <div v-if="isGs1" class="flex flex-col gap-2">
         <label class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.create.gs1DataAttributes") }}

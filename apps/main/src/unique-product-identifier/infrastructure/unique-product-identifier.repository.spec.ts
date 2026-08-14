@@ -50,9 +50,6 @@ describe("uniqueProductIdentifierRepository", () => {
     uniqueProductIdentifierDoc = module.get<Model<UniqueProductIdentifierDoc>>(
       getModelToken(UniqueProductIdentifierDoc.name),
     );
-    // Build the partial unique index on (gtin, batch, serial) up front. Mongoose autoIndex
-    // is async; under the full parallel suite the uniqueness tests below can otherwise run
-    // before the index exists and see a duplicate insert succeed. Mirrors permalink.repository.spec.
     await uniqueProductIdentifierDoc.syncIndexes();
   });
 
@@ -205,8 +202,6 @@ describe("uniqueProductIdentifierRepository", () => {
     await uniqueProductIdentifierRepository.save(legacy);
     await uniqueProductIdentifierDoc.updateOne({ _id: legacy.uuid }, { $unset: { type: 1 } });
 
-    // The legacy-tolerance must NOT leak into the GS1 path: a type-less row is
-    // canonical, never a GS1 match.
     const resolvedGs1 = await uniqueProductIdentifierRepository.findByReferenceIdAndType(
       referenceId,
       UniqueProductIdentifierType.GS1,
@@ -269,9 +264,6 @@ describe("uniqueProductIdentifierRepository", () => {
   });
 
   it("onApplicationBootstrap reconciles a stale gs1-key index with the schema's partial-unique index", async () => {
-    // Simulate an existing deployment: same key pattern, old (non-unique) options.
-    // Mongoose autoIndex never updates an existing index whose options changed,
-    // so without the bootstrap sync the uniqueness constraint stays unenforced.
     const coll = uniqueProductIdentifierDoc.collection;
     await coll.dropIndex("gtin_1_batch_1_serial_1");
     await coll.createIndex({ gtin: 1, batch: 1, serial: 1 });
@@ -282,7 +274,6 @@ describe("uniqueProductIdentifierRepository", () => {
     expect(index?.unique).toBe(true);
     expect(index?.partialFilterExpression).toEqual({ gtin: { $type: "string" } });
 
-    // The constraint is live again: a duplicate full key is rejected.
     const shared = { gtin: "88000000000701", batch: "LOT-SYNC", serial: "SN-SYNC" };
     await uniqueProductIdentifierRepository.save(
       UniqueProductIdentifier.createGs1({ referenceId: uuid4(), ...shared }),
@@ -326,7 +317,6 @@ describe("uniqueProductIdentifierRepository", () => {
     });
     expect(foundSerial!.uuid).toBe(serialized.uuid);
 
-    // a batch-keyed lookup on a key that was never stored resolves nothing
     expect(
       await uniqueProductIdentifierRepository.findByGs1Key({ gtin, batch: "LOT-NOPE" }),
     ).toBeUndefined();
@@ -349,7 +339,6 @@ describe("uniqueProductIdentifierRepository", () => {
     expect(found!.uuid).toBe(upi.uuid);
   });
 
-  // Slice 24: organizationId + findAllByOrganizationId
   it("persists and loads organizationId on a UPI", async () => {
     const referenceId = uuid4();
     const orgId = uuid4();
@@ -374,7 +363,6 @@ describe("uniqueProductIdentifierRepository", () => {
     });
     const upiB = UniqueProductIdentifier.create({ referenceId: ref3, organizationId: orgB });
     await uniqueProductIdentifierRepository.save(upiA1);
-    // Ensure ordering: make upiA1 older
     await uniqueProductIdentifierDoc.updateOne(
       { _id: upiA1.uuid },
       { $set: { createdAt: new Date(Date.now() - 10000) } },
@@ -387,7 +375,6 @@ describe("uniqueProductIdentifierRepository", () => {
     expect(uuids).toContain(upiA1.uuid);
     expect(uuids).toContain(upiA2.uuid);
     expect(uuids).not.toContain(upiB.uuid);
-    // newest-first: upiA2 should come before upiA1
     expect(uuids.indexOf(upiA2.uuid)).toBeLessThan(uuids.indexOf(upiA1.uuid));
   });
 
@@ -398,7 +385,6 @@ describe("uniqueProductIdentifierRepository", () => {
     const upiC1 = UniqueProductIdentifier.create({ referenceId: ref4, organizationId: orgC });
     const upiC2 = UniqueProductIdentifier.create({ referenceId: ref5, organizationId: orgC });
     await uniqueProductIdentifierRepository.save(upiC1);
-    // Make upiC1 older so upiC2 is newest
     await uniqueProductIdentifierDoc.updateOne(
       { _id: upiC1.uuid },
       { $set: { createdAt: new Date(Date.now() - 20000) } },
@@ -410,7 +396,6 @@ describe("uniqueProductIdentifierRepository", () => {
     });
     expect(page1.items).toHaveLength(1);
     expect(page1.pagination.cursor).not.toBeNull();
-    // newest first, so page1 should have upiC2
     expect(page1.items[0].uuid).toBe(upiC2.uuid);
 
     const page2 = await uniqueProductIdentifierRepository.findAllByOrganizationId(orgC, {
@@ -418,24 +403,17 @@ describe("uniqueProductIdentifierRepository", () => {
     });
     expect(page2.items).toHaveLength(1);
     expect(page2.items[0].uuid).toBe(upiC1.uuid);
-    // No overlap
     expect(page2.items[0].uuid).not.toBe(page1.items[0].uuid);
   });
 
-  // Slice 26 — UPI no-GS1-backfill regression (characterization test)
-  // These tests pin existing read-time behaviour so future schema changes can't silently break it.
-  // Expected GREEN on first run — no production code change required.
   describe("Slice 26 — no-GS1-backfill regression", () => {
     it("reads a legacy UPI doc with no gtin/batch/serial as a canonical OPEN_DPP_UUID identity with null GS1 fields", async () => {
       const legacyUuid = uuid4();
       const legacyReferenceId = uuid4();
-      // Insert a raw legacy doc bypassing Mongoose validation (simulates a v1.0.0 row
-      // written before the type/gtin fields existed).
       const legacyDoc = new uniqueProductIdentifierDoc({
         _id: legacyUuid,
         _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
         referenceId: legacyReferenceId,
-        // Deliberately omit: type, gtin, batch, serial
       });
       await legacyDoc.save({ validateBeforeSave: false });
 
@@ -443,7 +421,6 @@ describe("uniqueProductIdentifierRepository", () => {
       expect(found).toBeDefined();
       expect(found!.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(found!.gs1).toBeUndefined();
-      // toPlain() should carry null for GS1 fields
       const plain = found!.toPlain();
       expect(plain.gtin).toBeNull();
       expect(plain.batch).toBeNull();
@@ -457,18 +434,13 @@ describe("uniqueProductIdentifierRepository", () => {
         _id: legacyUuid,
         _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
         referenceId: legacyReferenceId,
-        // Deliberately omit: type, gtin, batch, serial
       });
       await legacyDoc.save({ validateBeforeSave: false });
 
-      // Read through the repository (triggers convertToDomain, no storage write)
       await uniqueProductIdentifierRepository.findOne(legacyUuid);
 
-      // Now verify the raw stored document is unchanged
       const rawDoc = await uniqueProductIdentifierDoc.findById(legacyUuid).lean();
       expect(rawDoc?._schemaVersion).toBe(UniqueProductIdentifierSchemaVersion.v1_0_0);
-      // gtin should still be absent (or null if the schema default injected it)
-      // What matters: it was NOT mutated to something unexpected by the read
       expect(rawDoc?.gtin ?? null).toBeNull();
     });
   });
@@ -488,7 +460,6 @@ describe("uniqueProductIdentifierRepository", () => {
       });
       const other = UniqueProductIdentifier.create({ referenceId: passportB });
       await uniqueProductIdentifierRepository.save(system);
-      // Make the system row older so the GS1 row is newest.
       await uniqueProductIdentifierDoc.updateOne(
         { _id: system.uuid },
         { $set: { createdAt: new Date(Date.now() - 10000) } },
@@ -502,7 +473,6 @@ describe("uniqueProductIdentifierRepository", () => {
       expect(uuids).toContain(system.uuid);
       expect(uuids).toContain(gs1.uuid);
       expect(uuids).not.toContain(other.uuid);
-      // newest-first: gs1 (newer) before system (older)
       expect(uuids.indexOf(gs1.uuid)).toBeLessThan(uuids.indexOf(system.uuid));
     });
 
@@ -523,7 +493,7 @@ describe("uniqueProductIdentifierRepository", () => {
       );
       expect(page1.items).toHaveLength(1);
       expect(page1.pagination.cursor).not.toBeNull();
-      expect(page1.items[0].uuid).toBe(u2.uuid); // newest first
+      expect(page1.items[0].uuid).toBe(u2.uuid);
 
       const page2 = await uniqueProductIdentifierRepository.findAllByReferencedIdPaginated(
         passport,

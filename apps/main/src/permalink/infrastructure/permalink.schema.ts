@@ -24,10 +24,6 @@ export class PermalinkDoc extends Document<string> {
   @Prop({ type: String, required: true })
   declare _id: string;
 
-  /**
-   * Direct passport reference (v1.4.0+). Legacy docs carry null and are
-   * resolved on read via the config/UPI join in `PermalinkRepository`.
-   */
   @Prop({ type: String, required: false, default: null })
   passportId: string | null;
 
@@ -72,14 +68,6 @@ PermalinkSchema.index(
   },
 );
 
-/**
- * One gs1-link per UPI: the GS1 resolver maps a gtin to exactly one permalink,
- * and the Digital Link URL is gtin-keyed, so two gs1-links on one UPI would
- * share a public URL and make the config-override choice ambiguous. Open-dpp
- * permalinks have per-permalink URLs (`/p/{slug ?? id}`) and may reference a
- * UPI without limit, so the filter is kind-scoped. The `"gs1-link"` wire value
- * predates the open-dpp rename and is stable — no legacy-value handling needed.
- */
 PermalinkSchema.index(
   { uniqueProductIdentifierId: 1 },
   {

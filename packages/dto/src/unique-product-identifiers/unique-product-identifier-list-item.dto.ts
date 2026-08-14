@@ -7,23 +7,6 @@ import { Cset82ComponentSchema, Gtin14Schema } from "./gs1/gs1-digital-link";
 import { PermalinkKindSchema } from "../permalinks/permalink.dto";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
-/**
- * Read-only snapshot of a single UniqueProductIdentifier for the org-scoped UPI list.
- *
- * - `uuid`              — the UPI's own UUID (primary key)
- * - `referenceId`       — the passport UUID this UPI belongs to
- * - `type`              — discriminator: OPEN_DPP_UUID | GS1 | GTIN | EAN
- * - `gtin`              — GTIN-14 (null for OPEN_DPP_UUID rows)
- * - `batch`             — GS1 batch / lot AI 10, CSET-82 ≤ 20 chars (null when absent)
- * - `serial`            — GS1 serial AI 21, CSET-82 ≤ 20 chars (null when absent)
- * - `granularity`       — derived: model | batch | item | null (null for non-GS1)
- * - `digitalLink`       — server-assembled GS1 Digital Link URL, or null when no resolver
- * - `passportPublished` — whether the owning passport is currently published
- * - `permalink`         — summary of the gs1-link permalink referencing this UPI
- *                         (max one per UPI), or null when none / non-GS1 / single-item reads
- *
- * No GS1 data attributes appear on this schema — the list item is a display-only snapshot.
- */
 export const UniqueProductIdentifierPermalinkSummaryDtoSchema = z
   .object({
     id: z.uuid(),
@@ -63,21 +46,12 @@ export type UniqueProductIdentifierListItemDto = z.infer<
   typeof UniqueProductIdentifierListItemDtoSchema
 >;
 
-/**
- * The list-level wrapper: an array of `UniqueProductIdentifierListItemDto` items.
- * `.element` is the item schema for use in API client and OpenAPI generation.
- */
 export const UniqueProductIdentifierListDtoSchema = z.array(
   UniqueProductIdentifierListItemDtoSchema,
 );
 
 export type UniqueProductIdentifierListDto = z.infer<typeof UniqueProductIdentifierListDtoSchema>;
 
-/**
- * The cursor-paginated envelope returned by `GET /unique-product-identifiers`.
- * Mirrors `PassportPaginationDtoSchema`: `paging_metadata.cursor` carries the
- * next-page cursor (null on the last page) and `result` holds the page items.
- */
 export const UniqueProductIdentifierPaginationDtoSchema = z
   .object({
     ...PagingMetadataDtoSchema.shape,

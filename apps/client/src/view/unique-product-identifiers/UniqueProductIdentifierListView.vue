@@ -27,12 +27,7 @@ const confirm = useConfirm();
 const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
 
-// The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
-
-// -------------------------------------------------------------------------
-// Pagination wiring
-// -------------------------------------------------------------------------
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
@@ -65,16 +60,7 @@ const {
   changeQueryParams,
 });
 
-// -------------------------------------------------------------------------
-// Create dialog
-// -------------------------------------------------------------------------
-
 const createDialogVisible = ref(false);
-// The passport's lifecycle status. `passportIsDraft` gates deletion (draft-only on
-// the backend); `passportIsPublished` only drives the create dialog's note — creating
-// is allowed on a published passport. Loaded on mount (the delete buttons need it at
-// first render) and refreshed when the create dialog opens. Stays null if the fetch
-// fails, so deletion stays locked rather than failing later with a 409.
 const passportStatus = ref<string | null>(null);
 const passportIsDraft = computed(
   () => passportStatus.value === DigitalProductDocumentStatusDto.Draft,
@@ -93,17 +79,11 @@ async function openCreateDialog() {
   createDialogVisible.value = true;
 }
 
-// -------------------------------------------------------------------------
-// GS1 Digital Link prompt dialog
-// -------------------------------------------------------------------------
-
 const promptDialogVisible = ref(false);
 const promptUpi = ref<UniqueProductIdentifierListItemDto | null>(null);
 
 async function onUpiCreated(upi: UniqueProductIdentifierListItemDto) {
   createDialogVisible.value = false;
-  // The GS1 Digital Link prompt only applies to GS1 UPIs; an internal UPI has no
-  // structured key to build a Digital Link from, so just refresh the list.
   if (upi.type === "GS1") {
     promptUpi.value = upi;
     promptDialogVisible.value = true;
@@ -113,9 +93,6 @@ async function onUpiCreated(upi: UniqueProductIdentifierListItemDto) {
 }
 
 async function onAddLink(upi: UniqueProductIdentifierListItemDto) {
-  // Jump to this passport's permalink list with the UPI preselected for permalink
-  // creation. The prompt stays open — a successful navigation unmounts this view,
-  // and closing it here would trigger the close-watch reload mid-navigation.
   await router.push({
     name: "passportPermalinks",
     params: { organizationId: route.params.organizationId, passportId: passportId.value },
@@ -123,17 +100,11 @@ async function onAddLink(upi: UniqueProductIdentifierListItemDto) {
   });
 }
 
-// Any close of the prompt (Skip button, ESC, mask click) means the user stays on
-// this list — refresh it so the newly created UPI row appears.
 watch(promptDialogVisible, async (visible) => {
   if (!visible) {
     await reloadCurrentPage();
   }
 });
-
-// -------------------------------------------------------------------------
-// QR dialog
-// -------------------------------------------------------------------------
 
 const qrDialogVisible = ref(false);
 const qrUpi = ref<UniqueProductIdentifierListItemDto | null>(null);
@@ -143,8 +114,6 @@ function openQrDialog(upi: UniqueProductIdentifierListItemDto) {
   qrDialogVisible.value = true;
 }
 
-// The row's permalink summary is the UPI's LATEST permalink (any kind) — the
-// summary carries the kind so the QR renders its GS1 extras only for gs1-links.
 const qrPermalink = computed(() =>
   qrUpi.value?.permalink
     ? {
@@ -160,21 +129,11 @@ const qrIdentity = computed(() =>
     : null,
 );
 
-// -------------------------------------------------------------------------
-// Delete (guarded)
-// -------------------------------------------------------------------------
-
-// GTIN / EAN rows are read-only system rows; only these two types are user-managed.
 const USER_MANAGED_TYPES: UniqueProductIdentifierTypeValue[] = [
   UniqueProductIdentifierType.GS1,
   UniqueProductIdentifierType.OPEN_DPP_UUID,
 ];
 
-/**
- * Mirrors the backend guard in `UpiCollectionService.delete`: a UPI can be deleted
- * when it is user-managed (GS1 / OPEN_DPP_UUID) AND its passport is still a draft
- * (ADR 0006). Anything else answers 409, so the button is disabled instead.
- */
 function canDelete(upi: UniqueProductIdentifierListItemDto): boolean {
   return passportIsDraft.value && USER_MANAGED_TYPES.includes(upi.type);
 }
@@ -212,13 +171,7 @@ function onDeleteUpi(uuid: string) {
   });
 }
 
-// -------------------------------------------------------------------------
-// Mount
-// -------------------------------------------------------------------------
-
 onMounted(async () => {
-  // A failing status fetch must not block the list: the status stays null, which
-  // locks delete rather than letting it 409 later.
   await Promise.all([
     loadPassportStatus().catch((e) =>
       errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), e),
@@ -278,8 +231,6 @@ onMounted(async () => {
               data-testid="upi-qr-btn"
               @click="openQrDialog(data)"
             />
-            <!-- GS1 rows link once (one Digital Link per UPI); open-dpp rows may
-                 always create another permalink. -->
             <Button
               v-if="
                 (data.type === UniqueProductIdentifierType.GS1 && !data.permalink) ||
@@ -333,7 +284,6 @@ onMounted(async () => {
       @add-link="onAddLink"
     />
 
-    <!-- QR dialog: rendered entirely from row data, no extra fetch -->
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
       <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" :identity="qrIdentity" />
     </Dialog>

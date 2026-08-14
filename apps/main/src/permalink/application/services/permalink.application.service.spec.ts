@@ -243,7 +243,6 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const passport = await seedPublishedPassport();
     await seedBranding(passport.organizationId);
     const { config } = await seedConfigWithPermalink(passport);
-    // A distinct serial: gtin+batch+serial is unique across the collection.
     const serial = `SER-${randomUUID().slice(0, 8)}`;
     const upi = UniqueProductIdentifier.createGs1({
       referenceId: passport.id,
@@ -366,7 +365,6 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     );
 
     expect(publicUrl).toBe("https://id.example.com/01/00012345678905");
-    // pre-freeze: the permalink stays unfrozen (live-computed, not pinned)
     expect(unchanged.publishedUrl).toBeNull();
   });
 

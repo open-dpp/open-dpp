@@ -6,8 +6,6 @@ import { useClipboard } from "@vueuse/core";
 import { useNotificationStore } from "../../stores/notification";
 
 const props = defineProps<{
-  // Minimal permalink shape this component actually reads; callers may pass a
-  // full PermalinkPublicDto or assemble the two fields from other row data.
   permalink: { kind: PermalinkKindType; publicUrl: string };
   identity?: { gtin: string; batch?: string | null; serial?: string | null } | null;
 }>();
@@ -16,29 +14,14 @@ const { t } = useI18n();
 const notificationStore = useNotificationStore();
 const { copy } = useClipboard();
 
-/**
- * Whether this permalink is a GS1-link permalink (vs. a presentation permalink).
- * Gates only the GS1-specific extras (element string, "GS1 Digital Link" caption);
- * the QR itself renders for every kind.
- */
 const isGs1Link = computed(() => props.permalink.kind === PermalinkKind.GS1_LINK);
 
-/**
- * The URL the QR encodes — the permalink's public URL. For a gs1-link permalink
- * this is the full GS1 Digital Link; for a presentation permalink the public
- * presentation URL.
- */
 const url = computed(() => props.permalink.publicUrl);
 
 const urlLabel = computed(() =>
   isGs1Link.value ? t("permalinkQrCode.digitalLink.label") : t("permalink.list.publicUrl"),
 );
 
-/**
- * The human-readable GS1 element string, e.g. `(01) … (10) … (21) …`.
- * Built from the shared formatter. Falls back to undefined if no identity is
- * provided or if the identity somehow fails to format (e.g. invalid GTIN).
- */
 const elementString = computed<string | undefined>(() => {
   if (!isGs1Link.value || !props.identity) return undefined;
   const { gtin, batch, serial } = props.identity;

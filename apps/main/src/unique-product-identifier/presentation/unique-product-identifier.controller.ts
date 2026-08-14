@@ -34,39 +34,6 @@ import { Pagination } from "../../pagination/pagination";
 import { PassportService } from "../../passports/application/services/passport.service";
 import { UpiCollectionService } from "../application/services/upi-collection.service";
 
-/**
- * Backoffice surface for the org-scoped UPI collection.
- *
- * Authorization: an org member (any role). Non-members receive 403. A missing
- * org header is rejected with 400 by the `@OrganizationId()` decorator.
- *
- * GET /unique-product-identifiers — list UPIs (OPEN_DPP_UUID + GS1) that belong
- * to the requesting organisation, newest-first, with cursor-based pagination
- * (`?limit` + `?cursor`). Returns the standard `{ paging_metadata, result }`
- * envelope.
- *
- * POST /unique-product-identifiers — create a new GS1 UPI for a DRAFT passport.
- * Ownership of the passport is verified (403 if not a member of the owning org).
- * The passport must be a draft (409 if published). A duplicate full GS1 key
- * surfaces as 409. An invalid GTIN check digit surfaces as 400 (via ZodValidationPipe).
- *
- * POST /unique-product-identifiers/internal — create a new internal (OPEN_DPP_UUID)
- * UPI for a DRAFT passport (the server mints its uuid; no identity payload).
- * Ownership verified (403); 409 if the passport is published. A user-created
- * internal UPI is never the passport's canonical row. See ADR 0005.
- *
- * GET /unique-product-identifiers/:id — fetch a single UPI by its uuid. Ownership
- * is verified via the UPI's owning passport (403 cross-org). 404 for unknown id.
- *
- * PATCH /unique-product-identifiers/:id — update the GS1 identity of an existing
- * GS1 UPI while the referenced passport is a draft (409 if published, or if the
- * row is not GS1 — internal identifiers carry no editable data). A duplicate
- * resulting key surfaces as 409.
- *
- * DELETE /unique-product-identifiers/:id — delete a single UPI while the referenced
- * passport is a draft (409 if published, or if the row is read-only: the canonical
- * internal UPI or a GTIN/EAN system row). Returns 204 on success.
- */
 @Controller("unique-product-identifiers")
 export class UniqueProductIdentifierController {
   constructor(
@@ -99,9 +66,7 @@ export class UniqueProductIdentifierController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
-    // Load the UPI (→ 404 if not found).
     const upi = await this.upiCollectionService.get(id);
-    // Derive the owning passport and verify org membership (→ 403 cross-org).
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
       upi.referenceId,
@@ -121,8 +86,6 @@ export class UniqueProductIdentifierController {
     body: CreateGs1UniqueProductIdentifierRequest,
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    // Verifies passport ownership and org membership (403 if not a member or if the
-    // passport belongs to a different org). The draft gate lives in the service.
     await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
       body.referenceId,
       subject,
@@ -148,8 +111,6 @@ export class UniqueProductIdentifierController {
     body: CreateInternalUniqueProductIdentifierRequest,
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    // Verifies passport ownership and org membership (403 if not a member or if the
-    // passport belongs to a different org). The draft gate lives in the service.
     await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
       body.referenceId,
       subject,
@@ -171,8 +132,6 @@ export class UniqueProductIdentifierController {
     @Body(new ZodValidationPipe(UpdateGs1UniqueProductIdentifierRequestSchema))
     body: UpdateGs1UniqueProductIdentifierRequest,
   ) {
-    // Resolve ownership: load the UPI to get its referenceId, then check passport
-    // membership. The draft gate and read-only system-row check live in the service.
     const upiSnapshot = await this.upiCollectionService.get(id);
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
@@ -180,8 +139,6 @@ export class UniqueProductIdentifierController {
       subject,
       orgId,
     );
-    // Delegate to the service — throws ConflictException (409) for published
-    // passport or system row, throws NotFoundException (404) for unknown id.
     return this.upiCollectionService.update(id, body);
   }
 
@@ -193,8 +150,6 @@ export class UniqueProductIdentifierController {
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
-    // Resolve ownership: load the UPI to get its referenceId, then check passport
-    // membership. The draft gate and read-only system-row check live in the service.
     const upiSnapshot = await this.upiCollectionService.get(id);
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
@@ -202,8 +157,6 @@ export class UniqueProductIdentifierController {
       subject,
       orgId,
     );
-    // Delegate to the service — throws ConflictException (409) for published
-    // passport or system row, throws NotFoundException (404) for unknown id.
     await this.upiCollectionService.delete(id);
   }
 }

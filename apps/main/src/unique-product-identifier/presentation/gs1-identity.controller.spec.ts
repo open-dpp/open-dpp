@@ -44,7 +44,7 @@ describe("Gs1IdentityController", () => {
 
   const ctx = createAasTestContext(
     basePath,
-    basePath, // basePathV2 — AAS v2 battery not exercised by this suite
+    basePath,
     {
       imports: [
         UniqueProductIdentifierModule,
@@ -91,17 +91,12 @@ describe("Gs1IdentityController", () => {
     return passport;
   }
 
-  // ---------------------------------------------------------------------------
-  // GET /passports/:id/gs1-identity
-  // ---------------------------------------------------------------------------
-
   it("GET returns the most-recently-created GS1 UPI's identity when the passport has two", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createPassport(org!.id);
     const repo = ctx.getModuleRef().get(UniqueProductIdentifierRepository);
 
-    // First UPI: serial SN-FIRST
     await repo.save(
       UniqueProductIdentifier.createGs1({
         referenceId: passport.id,
@@ -110,10 +105,8 @@ describe("Gs1IdentityController", () => {
       }),
     );
 
-    // Small delay so that the second UPI gets a later createdAt timestamp.
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    // Second (most-recent) UPI: serial SN-SECOND
     await repo.save(
       UniqueProductIdentifier.createGs1({
         referenceId: passport.id,
@@ -129,7 +122,6 @@ describe("Gs1IdentityController", () => {
       .send();
 
     expect(response.status).toEqual(200);
-    // Must be the SECOND (most-recently-created) UPI's serial, not the first.
     expect(response.body.serial).toEqual("SN-SECOND");
     expect(response.body.gtin).toEqual(VALID_GTIN13_AS_14);
   });
@@ -198,10 +190,6 @@ describe("Gs1IdentityController", () => {
     expect(response.body.digitalLink).toEqual(`https://id.override.example/01/${gtin}`);
   });
 
-  // ---------------------------------------------------------------------------
-  // PUT and DELETE routes are retired — they must now respond 404 (not found)
-  // ---------------------------------------------------------------------------
-
   it("PUT /:id/gs1-identity → 404 (write route retired in Slice 44)", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
@@ -220,9 +208,6 @@ describe("Gs1IdentityController", () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createPassport(org!.id);
-    // Seed a GS1 UPI so the old DELETE would have returned 204; now the retired
-    // route must return 404 (route-not-found). Use a unique serial to avoid GS1
-    // key-index conflicts across tests (the index covers gtin+batch+serial).
     await ctx
       .getModuleRef()
       .get(UniqueProductIdentifierRepository)

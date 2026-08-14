@@ -280,7 +280,6 @@ describe("PermalinkRepository", () => {
         kind: "presentation",
         createdAt: now,
         updatedAt: now,
-        // organizationId intentionally absent
       });
 
       const found = await repository.findOneOrFail(legacyId);
@@ -294,11 +293,9 @@ describe("PermalinkRepository", () => {
       const otherPassportId = randomUUID();
       const organizationId = `org-${randomUUID().slice(0, 8)}`;
 
-      // New-style row: matched directly via passportId
       const direct = Permalink.create({ passportId, organizationId });
       await repository.save(direct);
 
-      // Legacy row without passportId: matched via presentation-config join
       const config = PresentationConfiguration.create({
         organizationId,
         referenceId: passportId,
@@ -320,7 +317,6 @@ describe("PermalinkRepository", () => {
         updatedAt: now,
       });
 
-      // Legacy gs1-link without passportId: matched via UPI join
       const upiId = randomUUID();
       await connection
         .collection("unique_product_identifiers")
@@ -340,7 +336,6 @@ describe("PermalinkRepository", () => {
         updatedAt: now,
       });
 
-      // Control: permalink of a DIFFERENT passport
       await repository.save(Permalink.create({ passportId: otherPassportId, organizationId }));
 
       const result = await repository.findPageByPassportId(passportId);
@@ -385,16 +380,13 @@ describe("PermalinkRepository", () => {
       });
       expect(page1.items).toHaveLength(1);
       expect(page1.pagination.cursor).not.toBeNull();
-      expect(page1.items[0].id).toBe(newer.id); // newest first
+      expect(page1.items[0].id).toBe(newer.id);
 
       const page2 = await repository.findPageByPassportId(passportId, {
         pagination: { limit: 1, cursor: page1.pagination.cursor! },
       });
       expect(page2.items).toHaveLength(1);
       expect(page2.items[0].id).toBe(older.id);
-      // Last page is exactly full (2 rows, limit 1) — only a limit+1 probe can tell
-      // it apart from a page with a successor, and a non-null cursor here would
-      // make a contract-following consumer page forever.
       expect(page2.pagination.cursor).toBeNull();
     });
 

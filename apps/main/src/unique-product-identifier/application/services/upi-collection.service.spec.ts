@@ -1,8 +1,3 @@
-/**
- * Slices 32, 33 & 34: UpiCollectionService.create / update / delete / list
- *
- * Pure-unit suite mirroring gs1-identity.service.spec makeService pattern.
- */
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { ConflictException, NotFoundException } from "@nestjs/common";
@@ -16,8 +11,6 @@ import { UpiCollectionService } from "./upi-collection.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-// The cascade base carries `/p` on a default install; emitted Digital Links must
-// render on the origin (resolver is root-mounted at /01).
 const RESOLVER_BASE = "https://id.example.com/p";
 const RESOLVER_ORIGIN = "https://id.example.com";
 
@@ -133,8 +126,6 @@ describe("UpiCollectionService.create", () => {
     expect(result.referenceId).toBe(referenceId);
     expect(result.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
-    // The create response is the documented list-item shape — `type` drives the
-    // client's GS1 Digital Link prompt (AUDIT_GENERAL M3).
     expect(result.type).toBe(UniqueProductIdentifierType.GS1);
     expect(result.passportPublished).toBe(false);
     expect(result.permalink).toBeNull();
@@ -177,9 +168,6 @@ describe("UpiCollectionService.create", () => {
       },
     });
 
-    // Adding an identity to a published passport changes nothing that is already
-    // public — no existing permalink or scanned key moves. Only update/delete stay
-    // draft-gated.
     const result = await service.create({
       referenceId,
       gtin: VALID_GTIN13,
@@ -229,7 +217,6 @@ describe("UpiCollectionService.create", () => {
   it("(d) repo.save throws a duplicate-key error → ConflictException with 'GS1 identity already assigned'", async () => {
     const referenceId = randomUUID();
     const draftPassport = makeDraftPassport(referenceId);
-    // Simulate a MongoDB duplicate key error (code 11000)
     const dupKeyError = Object.assign(new Error("Duplicate key"), { code: 11000 });
 
     const { service } = makeService({
@@ -263,7 +250,7 @@ describe("UpiCollectionService.create", () => {
     await expect(
       service.create({
         referenceId,
-        gtin: "4006381333930", // bad check digit
+        gtin: "4006381333930",
         organizationId: randomUUID(),
       }),
     ).rejects.toThrow(ValueError);
@@ -287,10 +274,6 @@ describe("UpiCollectionService.create", () => {
     expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
-
-// ---------------------------------------------------------------------------
-// ADR 0005 — UpiCollectionService.createInternal
-// ---------------------------------------------------------------------------
 
 describe("UpiCollectionService.createInternal", () => {
   it("(a) DRAFT passport — creates an internal (OPEN_DPP_UUID) UPI with no GS1 data", async () => {
@@ -352,10 +335,6 @@ describe("UpiCollectionService.createInternal", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Slice 33 — UpiCollectionService.update / delete
-// ---------------------------------------------------------------------------
-
 describe("UpiCollectionService.update", () => {
   const referenceId = randomUUID();
   const upiUuid = randomUUID();
@@ -407,7 +386,6 @@ describe("UpiCollectionService.update", () => {
     expect(savedArg.gs1?.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.batch).toBe("NEW-BATCH");
-    // The update response is the documented list-item shape (same as create).
     expect(result.type).toBe(UniqueProductIdentifierType.GS1);
     expect(result.passportPublished).toBe(false);
   });
@@ -528,7 +506,6 @@ describe("UpiCollectionService.delete", () => {
 
     await service.delete(upiUuid);
 
-    // Must use deleteById with the single UPI uuid — NOT deleteByReferenceIdAndType
     expect(upiRepo.deleteById).toHaveBeenCalledWith(upiUuid);
     expect(upiRepo.deleteById).toHaveBeenCalledTimes(1);
   });

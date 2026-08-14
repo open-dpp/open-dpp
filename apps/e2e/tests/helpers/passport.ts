@@ -2,52 +2,25 @@ import { expect, type Page } from "@playwright/test";
 import { v4 as uuid4 } from "uuid";
 import { ApiBase, EnvConfig } from "../config";
 
-/**
- * GTIN-14 form of the shared test GTIN-13 `4006381333931`
- * (packages/testing/src/fixtures/unique-product-identifier/gtin.fixtures.ts).
- * Hardcoded rather than imported: the e2e package deliberately takes no workspace
- * dependency beyond `@open-dpp/env`, the same reason `API_VERSION` is a literal.
- */
 export const GTIN14 = "04006381333931";
 
-/** Header the backend reads the acting organization from (ORGANIZATION_ID_HEADER). */
 export const ORG_ID_HEADER = "x-open-dpp-organization-id";
 
 export type PassportIds = { orgId: string; passportId: string };
 
-/**
- * A unique batch/serial component.
- *
- * The gs1-key (gtin + batch + serial) carries an instance-wide unique index, and
- * every spec reuses the single valid `GTIN14`. Tests therefore MUST vary the
- * batch/serial instead — a bare-GTIN UPI could only ever be created once per
- * database and would poison every later run against a persistent dev instance.
- * CSET-82 permits the alphanumerics used here.
- */
 export function uniqueSerial(prefix = "e2e"): string {
   return `${prefix}${uuid4().replace(/-/g, "").slice(0, 12)}`;
 }
 
-/**
- * Creates an empty passport through the UI and returns the ids from the editor URL.
- *
- * The backend seeds every new passport with one internal (OPEN_DPP_UUID) unique
- * product identifier and one open-dpp permalink, which is the starting
- * point all permalink/UPI specs assume.
- */
 export async function createBlankPassport(page: Page): Promise<PassportIds> {
   await page.goto(EnvConfig.OPEN_DPP_URL);
   await page.getByRole("link", { name: /Pässe|Passports/i, exact: true }).click();
   await page.getByRole("button", { name: /Hinzufügen|Add/i }).click();
 
   const dialog = page.getByRole("dialog");
-  // "Blank" is the dialog's default mode; checking it explicitly keeps the helper
-  // honest if that default ever changes.
   await dialog.getByRole("radio", { name: /Leer|Blank/i }).check();
   await dialog.getByRole("button", { name: /^(Erstellen|Create)$/i }).click();
 
-  // Creating a passport navigates straight into its editor. The organization id is
-  // a Mongo ObjectId while the passport id is a uuid, hence the two shapes.
   await page.waitForURL(/\/organizations\/[0-9a-f]{24}\/passports\/[0-9a-f-]{36}/i);
   const match = page.url().match(/\/organizations\/([0-9a-f]{24})\/passports\/([0-9a-f-]{36})/i);
   expect(match, "passport editor URL should carry the organization and passport id").not.toBeNull();
@@ -72,19 +45,11 @@ export async function gotoPermalinkList(page: Page, ids: PassportIds): Promise<v
   await expect(page.getByTestId("permalink-data-table")).toBeVisible();
 }
 
-/**
- * Drives the create dialog on the UPI list to mint a GS1 identifier.
- *
- * Leaves the follow-up "create a GS1 Digital Link?" prompt OPEN — the caller
- * decides between `gs1-link-prompt-skip` and `gs1-link-prompt-add`, which is the
- * fork the specs are actually about.
- */
 export async function createGs1Upi(
   page: Page,
   gs1: { gtin?: string; batch?: string; serial?: string },
 ): Promise<void> {
   await page.getByTestId("upi-add-btn").click();
-  // GS1 is the dialog's default type; the SelectButton option is a plain button.
   await page.getByTestId("upi-create-type").getByRole("button", { name: /^GS1$/ }).click();
   await page.getByTestId("upi-create-gtin").fill(gs1.gtin ?? GTIN14);
   if (gs1.batch) await page.getByTestId("upi-create-batch").fill(gs1.batch);
@@ -93,13 +58,6 @@ export async function createGs1Upi(
   await expect(page.getByTestId("gs1-link-prompt-skip")).toBeVisible();
 }
 
-/**
- * Publishes a passport over the API instead of the toolbar button.
- *
- * Publishing is only ever an arrange step in these specs — the request reuses the
- * signed-in browser context's cookies and skips a UI round trip that has its own
- * coverage elsewhere.
- */
 export async function publishPassport(
   page: Page,
   { orgId, passportId }: PassportIds,
@@ -111,13 +69,6 @@ export async function publishPassport(
   expect(response.status(), `publishing passport ${passportId} should succeed`).toBe(200);
 }
 
-/**
- * Picks an option from a PrimeVue Select.
- *
- * The panel can drop a click while the underlying options are still loading, so
- * the interaction is retried until the value sticks (same approach as
- * `selectPresentationComponent` in presentation-bignumber.spec.ts).
- */
 export async function pickSelectOption(page: Page, testId: string, option: RegExp): Promise<void> {
   const select = page.getByTestId(testId);
   await expect(async () => {
@@ -127,10 +78,6 @@ export async function pickSelectOption(page: Page, testId: string, option: RegEx
   }).toPass({ timeout: 15_000 });
 }
 
-/**
- * Creates a gs1-link permalink for the passport's only linkable GS1 identifier
- * through the unified create dialog on the permalink list view.
- */
 export async function createGs1LinkPermalink(page: Page): Promise<void> {
   await page.getByTestId("permalink-create-btn").click();
   await pickSelectOption(page, "permalink-create-upi-select", new RegExp(GTIN14));
@@ -138,12 +85,6 @@ export async function createGs1LinkPermalink(page: Page): Promise<void> {
   await expect(page.getByTestId("permalink-create-submit")).toHaveCount(0);
 }
 
-/**
- * Confirms a PrimeVue ConfirmDialog whose accept button is labelled "Löschen"/"Delete".
- *
- * `.last()` guards against a second `<ConfirmDialog />` mount answering the same
- * confirmation — only the topmost one is clickable.
- */
 export async function acceptDeleteConfirm(page: Page): Promise<void> {
   await page
     .locator('[role="alertdialog"]:visible')

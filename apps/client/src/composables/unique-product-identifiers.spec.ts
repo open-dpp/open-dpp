@@ -104,8 +104,6 @@ describe("useUniqueProductIdentifiers", () => {
     expect(mocks.listUpis).toHaveBeenCalledWith("passport-1", pagingParams);
     expect(capturedLoading).toBe(true);
     expect(loading.value).toBe(false);
-    // The endpoint returns the cursor envelope; the composable exposes the result rows
-    // directly and surfaces the next-page cursor for the pagination composable.
     expect(upis.value).toEqual(upisItems);
     expect(result).toEqual({ paging_metadata: { cursor: "next-cursor" }, result: upisItems });
   });

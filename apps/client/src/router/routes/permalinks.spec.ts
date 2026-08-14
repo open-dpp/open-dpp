@@ -1,8 +1,3 @@
-/**
- * Tests for the passport-scoped permalink route
- * `/organizations/:organizationId/passports/:passportId/permalinks`.
- */
-
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { createPinia, setActivePinia } from "pinia";
 
@@ -19,10 +14,6 @@ vi.mock("../../const.ts", () => ({
   AI_INTEGRATION_ID: "ai-integration",
 }));
 
-// Import passports first to mirror the production load order
-// (organizations → passports → leaf). passports.ts builds PASSPORT_PARENT.children
-// from the leaf route consts, so it must fully evaluate the leaf modules before the
-// array is constructed.
 import { ORGANIZATION_PASSPORTS_PARENT } from "./passports/passports";
 import { PASSPORT_PERMALINKS_LIST } from "./permalinks";
 
@@ -51,7 +42,6 @@ describe("PASSPORT_PERMALINKS_LIST route", () => {
 
     const { useLayoutStore } = await import("../../stores/layout");
     const layoutStore = useLayoutStore();
-    // [passports list, passport, permalinks] — passport context + the list label.
     expect(layoutStore.breadcrumbs.length).toBeGreaterThanOrEqual(2);
     const last = layoutStore.breadcrumbs[layoutStore.breadcrumbs.length - 1]!;
     expect(last.name).toMatchObject({ text: "permalink.list.label", localized: true });

@@ -40,12 +40,6 @@ export interface PermalinkUpdate {
   presentationConfigurationId?: string | null;
 }
 
-/**
- * A resolved permalink list row: the domain permalink, its read-time public URL,
- * and the `{ url, source }` fallback base that would apply if the permalink
- * carries no own `baseUrl`. Shared by the org-scoped and passport-scoped list
- * paths so the shape (and its `fallbackBaseUrlSource` enum) is spelled once.
- */
 export interface PermalinkListItem {
   permalink: Permalink;
   publicUrl: string;
@@ -91,14 +85,6 @@ export class PermalinkApplicationService {
     return await this.permalinkRepository.findBySlugOrFail(idOrSlug);
   }
 
-  /**
-   * Resolve a permalink (by id or slug) to its passport, publish-gated.
-   *
-   * Passport-first: the passport comes straight from `permalink.passportId`.
-   * The bound presentation configuration is returned when the permalink carries
-   * one — null means the standard view (no customization). A dangling config
-   * reference surfaces as NotFound rather than being papered over.
-   */
   async resolveToPassport(
     idOrSlug: string,
     access?: PermalinkAccessContext,
@@ -123,8 +109,6 @@ export class PermalinkApplicationService {
       (presentationConfiguration.referenceType !== DigitalProductDocumentTypes.Passport ||
         presentationConfiguration.referenceId !== passport.id)
     ) {
-      // Creation/rebind validate this; a mismatch here is data corruption and
-      // must not render another passport's (or a template's) styling.
       throw new NotFoundException(`Permalink ${permalink.id} does not target a passport`);
     }
     return { permalink, presentationConfiguration, passport };
@@ -146,7 +130,6 @@ export class PermalinkApplicationService {
   ): Promise<Permalink[]> {
     const results: Permalink[] = [];
     for (const config of configs) {
-      // Template configs have no passport to bind to — nothing to create.
       if (config.referenceType !== DigitalProductDocumentTypes.Passport) {
         continue;
       }
@@ -158,10 +141,6 @@ export class PermalinkApplicationService {
         results.push(existing);
         continue;
       }
-      // organizationId comes from the caller, NOT a passport lookup here: both
-      // passport-controller call sites run inside a transaction where the passport
-      // was just saved with the session, and passportRepository.findOne is
-      // session-less — it would not see the uncommitted passport.
       const created = Permalink.create({
         passportId: config.referenceId,
         presentationConfigurationId: config.id,
@@ -189,11 +168,6 @@ export class PermalinkApplicationService {
     return this.freezePermalink(permalink, branding, await this.getPermalinkBaseUrl(), options);
   }
 
-  /**
-   * The instance base URL. Delegates to {@link BaseUrlResolver}, which owns the
-   * base cascade (ADR 0004); kept here as the app-service entry point external
-   * callers already depend on.
-   */
   async getPermalinkBaseUrl(): Promise<string> {
     return this.baseUrlResolver.getInstanceBaseUrl();
   }
@@ -212,12 +186,6 @@ export class PermalinkApplicationService {
     return await this.permalinkRepository.save(frozen, options);
   }
 
-  /**
-   * The URL frozen into `publishedUrl`. A GS1-link permalink freezes as its
-   * GS1 Digital Link URL (path from the referenced UPI's GS1 identity, query
-   * from the permalink's gs1DataAttributes); every other kind freezes as the
-   * presentation `base/slug` form.
-   */
   private async computeFreezeUrl(
     permalink: Permalink,
     branding: Branding | null,
@@ -258,16 +226,6 @@ export class PermalinkApplicationService {
     return { permalink: frozen, publicUrl: frozen.publishedUrl as string };
   }
 
-  /**
-   * Pin every permalink of the passport to its `publishedUrl` — the publish-time
-   * freeze that makes a printed QR code immutable. `findAllByPassportId` returns
-   * the full union (direct passportId, legacy config join, legacy UPI join), so
-   * every kind — bare, config-bound, UPI-bound, gs1-link — is covered.
-   *
-   * Fails loudly (`ValueError` from `computeFreezeUrl`) when a gs1-link references
-   * a UPI without a GS1 identity — the controller rejects those at creation, so a
-   * surviving one is a data defect that must not be published over silently.
-   */
   async freezeAllForPassport(passport: Passport, options?: DbSessionOptions): Promise<void> {
     const permalinks = await this.permalinkRepository.findAllByPassportId(passport.id, options);
     if (permalinks.length === 0) {
@@ -284,14 +242,6 @@ export class PermalinkApplicationService {
     return await this.brandingRepository.findOneByOrganizationId(organizationId);
   }
 
-  /**
-   * Batch-load the GS1 identities referenced by a page of permalinks, keyed by
-   * UPI uuid. Only unfrozen gs1-link permalinks are considered — frozen ones read
-   * their pinned `publishedUrl`, open-dpp permalinks never render a Digital Link —
-   * so the whole page costs a single `findByIds` query (no N+1). A UPI that is
-   * missing or carries no GS1 identity is simply absent from the map;
-   * {@link resolveReadUrl} then falls back to the presentation form.
-   */
   private async loadGs1IdentitiesForPermalinks(
     permalinks: Permalink[],
   ): Promise<Map<string, Gs1Identity>> {
@@ -317,14 +267,6 @@ export class PermalinkApplicationService {
     return identities;
   }
 
-  /**
-   * Resolve the shared render context for a page of permalinks: the org's
-   * tolerant branding, the instance base, and the page's batch-loaded GS1
-   * identities (one `findByIds` — no N+1). The single home for the preamble
-   * shared by {@link listByOrganization}, {@link listByPassport}, and
-   * {@link getPermalinkSummariesByUpiIds}. A null `organizationId` (e.g. an absent
-   * passport) skips the per-org branding load and falls through to the instance base.
-   */
   private async resolvePageContext(
     permalinks: Permalink[],
     organizationId: string | null,
@@ -341,13 +283,6 @@ export class PermalinkApplicationService {
     return { branding, envUrl, gs1Identities };
   }
 
-  /**
-   * Render a page of permalinks as {@link PermalinkListItem} rows: resolve the
-   * shared page context, then map each permalink through {@link resolveReadUrl}
-   * with the one `{ url, source }` fallback computed once for the page. Backs
-   * both the org-scoped and passport-scoped list paths, which differ only in the
-   * repository call and the branding source.
-   */
   private async renderListItems(
     permalinks: Permalink[],
     organizationId: string | null,
@@ -365,13 +300,6 @@ export class PermalinkApplicationService {
     }));
   }
 
-  /**
-   * The read-time public URL for a permalink. A frozen permalink returns its
-   * pinned `publishedUrl`; an unfrozen gs1-link whose GS1 identity resolved
-   * renders the live GS1 Digital Link form (BE2); everything else — open-dpp
-   * permalinks, and gs1-links whose UPI is missing/unresolvable — falls back to
-   * the presentation `base/slug` form.
-   */
   private resolveReadUrl(
     permalink: Permalink,
     gs1Identities: Map<string, Gs1Identity>,
@@ -427,13 +355,6 @@ export class PermalinkApplicationService {
     return permalink;
   }
 
-  /**
-   * Create an open-dpp permalink for a passport. Both the presentation
-   * configuration and the UPI binding are optional — a bare permalink renders
-   * the standard view. Consistency (config/UPI belong to the passport, UPI is
-   * of open-dpp type) is validated by the controller, which owns the HTTP error
-   * mapping; a duplicate slug surfaces as ConflictException here.
-   */
   async createOpenDppPermalink(
     input: CreateOpenDppPermalinkInput,
     options?: DbSessionOptions,
@@ -456,8 +377,6 @@ export class PermalinkApplicationService {
       }
       throw error;
     }
-    // Freeze-on-create parity with the config flow: a permalink born into an
-    // already-published passport is pinned immediately.
     const passport = await this.passportRepository.findOne(input.passportId);
     if (!passport || !passport.isPublished()) {
       return saved;
@@ -466,20 +385,10 @@ export class PermalinkApplicationService {
     return this.freezePermalink(saved, branding, await this.getPermalinkBaseUrl(), options);
   }
 
-  /**
-   * Create a GS1 Digital Link permalink referencing a UPI.
-   *
-   * Rules:
-   * - Exactly one gs1-link permalink per UPI (enforced by the kind-scoped
-   *   partial unique index + pre-check).
-   * - Invalid gs1DataAttributes surface as ValueError (delegated to domain/DTO).
-   * - A second gs1-link for the same UPI throws ConflictException.
-   */
   async createGs1LinkPermalink(
     input: CreateGs1LinkPermalinkInput,
     options?: DbSessionOptions,
   ): Promise<Permalink> {
-    // Pre-check: enforce at most one gs1-link permalink per UPI
     const existing = await this.permalinkRepository.findGs1LinkByUpiId(
       input.uniqueProductIdentifierId,
       options,
@@ -490,7 +399,6 @@ export class PermalinkApplicationService {
       );
     }
 
-    // Build the gs1-link permalink via Permalink.create (domain validates gs1DataAttributes)
     const permalink = Permalink.create({
       kind: PermalinkKind.GS1_LINK,
       passportId: input.passportId,
@@ -505,9 +413,6 @@ export class PermalinkApplicationService {
     try {
       return await this.permalinkRepository.save(permalink, options);
     } catch (error) {
-      // Only a collision on the UPI index means "already exists for this UPI";
-      // duplicates on other unique indexes (slug) must surface as what they are,
-      // not as a phantom UPI conflict.
       if (isDuplicateKeyErrorOnField(error, "uniqueProductIdentifierId")) {
         throw new ConflictException(
           `A GS1-link permalink already exists for UPI ${input.uniqueProductIdentifierId}`,
@@ -520,10 +425,6 @@ export class PermalinkApplicationService {
     }
   }
 
-  /**
-   * Delete the gs1-link permalink referencing a UPI (cascade for UPI deletion).
-   * No-op when none exists; a published (frozen) permalink blocks the delete.
-   */
   async deleteGs1LinkForUpi(upiUuid: string, options?: DbSessionOptions): Promise<void> {
     const permalink = await this.permalinkRepository.findGs1LinkByUpiId(upiUuid, options);
     if (!permalink) return;
@@ -535,12 +436,6 @@ export class PermalinkApplicationService {
     await this.permalinkRepository.deleteById(permalink.id, options);
   }
 
-  /**
-   * Delete a permalink. The only guard is the freeze rule: a published
-   * permalink (publishedUrl set) is immutable and cannot be deleted. Everything
-   * else — any kind, any binding — deletes freely; the standard view keeps the
-   * passport renderable without any permalink.
-   */
   async deletePermalink(permalinkId: string, options?: DbSessionOptions): Promise<void> {
     const permalink = await this.permalinkRepository.findOneOrFail(permalinkId);
 
@@ -553,20 +448,6 @@ export class PermalinkApplicationService {
     await this.permalinkRepository.deleteById(permalinkId, options);
   }
 
-  /**
-   * List all permalinks belonging to an organisation, newest-first, with
-   * cursor-based pagination.
-   *
-   * The incoming `pagination` (limit + cursor) is forwarded to the repository's
-   * `_id`-based cursor query; the repository's advanced cursor is surfaced as
-   * `cursor` on the result (null on the last page / empty org).
-   *
-   * Resolves publicUrl for each item using the same branding-aware fallback used
-   * by the public `/p` endpoints. Unfrozen gs1-link permalinks render their live
-   * GS1 Digital Link URL — the page's UPI GS1 identities are batch-loaded in one
-   * query (no N+1) and threaded through {@link resolveReadUrl}; a gs1-link whose
-   * UPI is missing/unresolvable falls back to the presentation `base/slug` form.
-   */
   async listByOrganization(
     organizationId: string,
     pagination?: Pagination,
@@ -581,15 +462,6 @@ export class PermalinkApplicationService {
     return { items, cursor: result.pagination.cursor };
   }
 
-  /**
-   * List ALL permalinks belonging to a single passport — the union of the
-   * direct passportId match and the legacy join paths (see
-   * `findPageByPassportId`) — newest first, with cursor-based pagination. The
-   * passport-scoped sibling of `listByOrganization`.
-   *
-   * Branding (for the publicUrl/fallback cascade) is resolved from the passport's
-   * own organisation, so the controller only needs the passport id.
-   */
   async listByPassport(
     passportId: string,
     pagination?: Pagination,
@@ -605,14 +477,6 @@ export class PermalinkApplicationService {
     return { items, cursor: result.pagination.cursor };
   }
 
-  /**
-   * Batch-resolve the LATEST permalink summary (any kind) for a page of UPI
-   * uuids, keyed by UPI uuid. Used to enrich UPI list rows; publicUrl follows
-   * the same rule as the list paths via {@link resolveReadUrl}: frozen →
-   * pinned `publishedUrl`, unfrozen gs1-link → live GS1 Digital Link form
-   * (GS1 identities batch-loaded in one query), everything else → the
-   * `base/slug` presentation form.
-   */
   async getPermalinkSummariesByUpiIds(
     upiUuids: string[],
     organizationId: string,
@@ -656,16 +520,6 @@ export function resolvePublicUrl(
   return `${base}/${slugOrId}`;
 }
 
-/**
- * Render a gs1-link permalink as its GS1 Digital Link URL:
- * `{base}/01/{gtin}[/10/{batch}][/21/{serial}][?attrs]`.
- *
- * The base follows the same permalink cascade as {@link resolvePublicUrl}
- * (`permalink.baseUrl` → branding → instance default — NOT the UPI-level
- * resolver base); the path comes from the referenced UPI's GS1 identity and the
- * query from the permalink's `gs1DataAttributes`. Shared by the freeze path
- * (BE1) and the read-time live path (BE2).
- */
 export function resolveGs1LinkPublicUrl(
   permalink: Permalink,
   gs1: Gs1Identity,
@@ -673,10 +527,6 @@ export function resolveGs1LinkPublicUrl(
   fallbackEnvUrl: string,
 ): string {
   const base = permalink.baseUrl ?? resolveFallbackBaseUrl(branding, fallbackEnvUrl).url;
-  // The GS1 Digital Link resolver is mounted at the domain root (`/01/{gtin}`), so
-  // the link renders on the base's ORIGIN. Any path the cascade base carries — most
-  // notably the presentation viewer's `/p` in the instance-default fallback — would
-  // make `{base}/01/…` unreachable by the root resolver.
   return buildGs1DigitalLink(baseUrlOrigin(base), {
     gtin: gs1.gtin,
     batch: gs1.batch,
@@ -685,15 +535,6 @@ export function resolveGs1LinkPublicUrl(
   });
 }
 
-/**
- * Render the presentation-view form of a permalink — `{base}/{slug ?? id}` on
- * the branding → instance cascade — regardless of kind. Deliberately ignores
- * `permalink.baseUrl`: for a gs1-link permalink that field is the Digital
- * Link/QR host (possibly a third-party GS1 resolver), not a host that serves
- * the passport viewer. (Rejected alternative `{baseUrlOrigin(baseUrl)}/p/{id}`:
- * duplicates the instance-fallback `/p` semantics and breaks on QR hosts that
- * are not this app.) Backs the GS1 resolver's redirect target.
- */
 export function resolvePresentationViewUrl(
   permalink: Permalink,
   branding: Branding | null,

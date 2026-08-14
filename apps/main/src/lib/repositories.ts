@@ -111,24 +111,9 @@ function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusT
 export type CursorPageOptions = {
   pagination?: Pagination;
   session?: ClientSession | null;
-  /** Also count every document matching `filter` and surface it as `total_count`. */
   withTotalCount?: boolean;
 };
 
-/**
- * Newest-first, cursor-paginated `.find()` shared by every org/passport-scoped
- * list. The cursor is `createdAt + _id` (both descending) so the sort stays
- * stable across a `createdAt` tie — every collection stores its uuid as `_id`;
- * none has a stored `id` path. `filter` is the non-cursor scope
- * (`{ organizationId }`, `{ referenceId }`, …); the cursor clause is appended.
- *
- * The returned cursor is `null` on the last page — the documented contract
- * (`PagingMetadataDtoSchema`) consumers page against. One extra doc is fetched
- * purely to learn whether a next page exists; it is never returned.
- *
- * With `withTotalCount`, the count of all documents matching `filter` (the full
- * result set the cursor pages through, not the page) is reported as `total_count`.
- */
 export async function findPageByCursor<V extends IConvertableToPlain>(
   docModel: MongooseModel<any>,
   filter: Record<string, unknown>,
@@ -137,10 +122,6 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
 ): Promise<PagingResult<V>> {
   const pagination = options?.pagination ?? Pagination.create({ limit: 100 });
   const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
-  // The cursor window is its own $or, and `filter` may carry one of its own (the
-  // status filter) — the two must be combined with $and. Spreading both into one
-  // object would let the cursor $or overwrite the other, silently returning
-  // documents outside the filter on paginated requests.
   const cursorFilter = cursor
     ? {
         $or: [
@@ -165,8 +146,6 @@ export async function findPageByCursor<V extends IConvertableToPlain>(
       ? encodeCursor((last.get("createdAt") as Date).toISOString(), String(last._id))
       : null,
   );
-  // Counted against the cursor-free `filter`, backed by the { organizationId, createdAt }
-  // index, so this stays performant even with hundreds of thousands of documents.
   const totalCount = options?.withTotalCount
     ? await docModel.countDocuments(filter).session(options?.session ?? null)
     : undefined;

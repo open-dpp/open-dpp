@@ -97,7 +97,6 @@ describe("pagination", () => {
     expect(hasPrevious.value).toBeFalsy();
   });
 
-  // The documented server contract: the cursor is null once there is no next page.
   async function fetchCallbackNullOnLastPage(
     params: PagingParamsDto,
     items: number[],
@@ -113,7 +112,7 @@ describe("pagination", () => {
   }
 
   it("stops on an exactly-full last page when the server sends a null cursor", async () => {
-    const items = [0, 1, 2, 3]; // two full pages of two
+    const items = [0, 1, 2, 3];
 
     const { hasNext, nextPage, currentPage } = usePagination({
       limit: 2,
@@ -127,10 +126,8 @@ describe("pagination", () => {
 
     await nextPage();
     expect(currentPage.value).toEqual({ cursor: "1", itemCount: 2, from: 2, to: 3 });
-    // Full page, but the null cursor says it is the last one.
     expect(hasNext.value).toBeFalsy();
 
-    // No phantom page was appended, so a stray "next" cannot restart at page 1.
     await nextPage();
     expect(currentPage.value).toEqual({ cursor: "1", itemCount: 2, from: 2, to: 3 });
   });

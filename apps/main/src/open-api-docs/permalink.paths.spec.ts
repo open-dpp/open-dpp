@@ -37,8 +37,6 @@ describe("permalinkPaths", () => {
     expect(keys.length).toBe(uniqueKeys.size);
   });
 
-  // --- Slice 40: org-scoped backoffice routes ---
-
   it("should export GET + POST /permalinks", () => {
     expect(permalinkPaths).toHaveProperty("/permalinks");
     const path = permalinkPaths["/permalinks"];
@@ -123,8 +121,6 @@ describe("permalinkPaths", () => {
     expect(hasOrgHeader).toBe(true);
     expect(post.security).toEqual([{ apiKeyAuth: [] }]);
   });
-
-  // --- Passport-scoped backoffice route ---
 
   it("should export GET /passports/{id}/permalinks", () => {
     expect(permalinkPaths).toHaveProperty("/passports/{id}/permalinks");

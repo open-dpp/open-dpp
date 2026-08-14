@@ -13,8 +13,6 @@ import { UNIQUE_PRODUCT_IDENTIFIER_COLLECTION } from "../../unique-product-ident
 import { Permalink } from "../domain/permalink";
 import { PermalinkDoc, PermalinkDocVersion } from "./permalink.schema";
 
-/** The three ways a permalink row can belong to a passport: its own passportId
- * (v1.4.0+), a legacy presentation-config join, or a legacy UPI join. */
 function passportUnionMatch(passportId: string) {
   return {
     $or: [
@@ -44,28 +42,12 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     this.presentationConfigurationDoc = presentationConfigurationDoc;
   }
 
-  /**
-   * Reconcile the collection's indexes with the schema definitions. Mongoose
-   * never updates an EXISTING index whose options changed, so stale unique
-   * indexes (the retired config-unique index, the pre-kind-scoped UPI index)
-   * survive forever and reject valid inserts with a misleading E11000.
-   * ponytail: syncIndexes also drops manually-added indexes on this collection.
-   */
   async onApplicationBootstrap(): Promise<void> {
     await this.backfillPermalinkKind();
     await this.permalinkDoc.syncIndexes();
     await this.backfillOrganizationIds();
   }
 
-  /**
-   * One-shot backfill: rows written before `kind` existed carry no such field
-   * and fall outside every kind-scoped partial index and query. They all
-   * predate gs1-links, so their end-state kind is "open-dpp" — stamped
-   * directly, skipping the legacy "presentation" value. Runs BEFORE
-   * `syncIndexes`; idempotent (the match set is empty after the first run).
-   * Rows already stamped with the legacy "presentation" value are NOT
-   * rewritten — the on-read migration maps them.
-   */
   private async backfillPermalinkKind(): Promise<void> {
     const result = await this.permalinkDoc.updateMany(
       { kind: { $exists: false } },
@@ -76,14 +58,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     }
   }
 
-  /**
-   * One-shot backfill: rows written before `organizationId` existed carry null,
-   * which 403s the owning org on every /permalinks mutating route and hides the
-   * row from the org-scoped list. Resolve config → passport → organizationId
-   * once at bootstrap; idempotent (the match set is empty after the first run).
-   * `kind: {$ne: gs1-link}` keeps a gs1-link row bound to a foreign
-   * presentation config from inheriting that config's org.
-   */
   private async backfillOrganizationIds(): Promise<void> {
     const rows: { _id: string; organizationId: string }[] = await this.permalinkDoc.aggregate([
       {
@@ -125,7 +99,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     this.logger.log(`Backfilled organizationId on ${rows.length} permalink(s)`);
   }
 
-  /** Pure per-doc migration from schema 1.2.0 to 1.3.0. */
   migrate1_2_0To1_3_0(plain: any): any {
     return {
       ...plain,
@@ -135,12 +108,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     };
   }
 
-  /**
-   * Pure per-doc migration from schema 1.3.0 to 1.4.0: the legacy
-   * "presentation" kind becomes "open-dpp" and the retired `primary` flag is
-   * dropped. `passportId` is resolved separately (it needs a DB lookup for
-   * legacy docs — see `resolveLegacyPassportId`).
-   */
   migrate1_3_0To1_4_0(plain: any): any {
     const { primary: _primary, ...rest } = plain;
     return {
@@ -151,12 +118,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     };
   }
 
-  /**
-   * Legacy docs (< 1.4.0) carry no passportId; derive it from the refs they do
-   * carry: presentation-config → referenceId, else UPI → referenceId. A doc
-   * whose refs all dangle is unreadable data corruption — surfaced as a
-   * NotFound rather than silently hydrating an unresolvable permalink.
-   */
   private async resolveLegacyPassportId(plain: {
     presentationConfigurationId?: string | null;
     uniqueProductIdentifierId?: string | null;
@@ -234,7 +195,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return permalink;
   }
 
-  /** Any permalink bound to the config, whatever its kind. */
   async findByPresentationConfigurationId(
     presentationConfigurationId: string,
     options?: DbSessionOptions,
@@ -247,13 +207,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return this.fromPlainWithMigration({ ...plain, id: plain._id });
   }
 
-  /**
-   * The open-dpp permalink bound to the config. A config may also back
-   * gs1-links as a rendering override, so callers deciding whether the config's
-   * own permalink still has to be minted must ignore those.
-   * `$ne` matches documents with the legacy "presentation" value and documents
-   * with no `kind` field, so legacy rows still count.
-   */
   async findOpenDppByPresentationConfigurationId(
     presentationConfigurationId: string,
     options?: DbSessionOptions,
@@ -266,11 +219,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return this.fromPlainWithMigration({ ...plain, id: plain._id });
   }
 
-  /**
-   * Every permalink belonging to the passport, oldest first — the union of the
-   * direct `passportId` match (v1.4.0+ rows) and the two legacy join paths
-   * (config-bound and UPI-bound rows written before the field existed).
-   */
   async findAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<Permalink[]> {
     const results = await this.permalinkDoc
       .aggregate([
@@ -313,12 +261,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return this.fromPlainWithMigration({ ...plain, id: plain._id });
   }
 
-  /**
-   * Batch-load the gs1-link permalinks referencing the given UPI uuids,
-   * keyed by `uniqueProductIdentifierId`. At most one entry per UPI
-   * (kind-scoped partial unique index). Open-dpp permalinks bound to a UPI
-   * never match.
-   */
   async findGs1LinksByUpiIds(
     upiUuids: string[],
     options?: DbSessionOptions,
@@ -337,12 +279,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return new Map(entries);
   }
 
-  /**
-   * Batch-load the LATEST permalink (any kind) referencing each of the given
-   * UPI uuids, keyed by `uniqueProductIdentifierId`. Open-dpp UPIs may carry
-   * several permalinks; the newest-created one is the row's "current link"
-   * (same convention as the passport editor's QR button).
-   */
   async findLatestPermalinksByUpiIds(
     upiUuids: string[],
     options?: DbSessionOptions,
@@ -362,11 +298,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return result;
   }
 
-  /**
-   * Delete every permalink referencing one of the given UPI uuids (cascade for
-   * passport deletion — config-bound and direct-passportId permalinks are
-   * handled by `deleteAllByPassportId`).
-   */
   async deleteGs1LinksByUpiIds(upiUuids: string[], options?: DbSessionOptions): Promise<void> {
     if (upiUuids.length === 0) return;
     await this.permalinkDoc
@@ -396,20 +327,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     );
   }
 
-  /**
-   * List ALL permalinks belonging to a single passport, newest-first with the
-   * same `createdAt + _id` cursor used by `findAllByOrganizationId`. Same
-   * union as {@link findAllByPassportId}: direct passportId plus the two
-   * legacy join paths.
-   *
-   * NOTE: because this is an aggregate (no Mongoose schema casting), the
-   * cursor's `createdAt` must be wrapped in `new Date(...)`.
-   *
-   * The returned cursor is `null` on the last page — the documented contract
-   * (`PagingMetadataDtoSchema`) consumers page against, mirroring
-   * {@link findPageByCursor}. One extra doc is fetched purely to learn whether a
-   * next page exists; it is dropped before migration.
-   */
   async findPageByPassportId(
     passportId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
@@ -485,12 +402,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
       .session(options?.session ?? null);
   }
 
-  /**
-   * Cascade for passport deletion: removes rows matched directly by passportId
-   * (v1.4.0+) and legacy rows matched via the passport's presentation configs.
-   * Legacy UPI-bound gs1-links are covered by `deleteGs1LinksByUpiIds` in the
-   * same flow.
-   */
   async deleteAllByPassportId(passportId: string, options?: DbSessionOptions): Promise<number> {
     const configDocs = await this.presentationConfigurationDoc
       .find({

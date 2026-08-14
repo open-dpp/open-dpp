@@ -15,11 +15,9 @@ describe("uniqueProductIdentifierUpdateRequestPlainFactory", () => {
 
     it("emits a raw (un-normalized) GTIN-13 that normalizes to GTIN-14 on parse", () => {
       const result = uniqueProductIdentifierUpdateRequestPlainFactory.build();
-      // The factory emits a raw GTIN-13 (13 digits) — i.e. un-normalized input
       expect(typeof result.gtin).toBe("string");
       expect(result.gtin.length).toBe(13);
 
-      // Parse transforms it to GTIN-14
       const parsed = UpdateGs1UniqueProductIdentifierRequestSchema.parse(result);
       expect(parsed.gtin.length).toBe(14);
     });

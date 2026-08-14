@@ -1,9 +1,6 @@
 import { ValueError } from "./domain.errors";
 import { parseOrThrow } from "./parse-or-throw";
 
-// Structural fakes satisfying SafeParseable — keeps this test (and the package)
-// free of a zod dependency. Real-ZodError integration (incl. `cause instanceof
-// ZodError`) is covered by the permalink / presentation-configuration domain specs.
 const ok = <T>(data: T) => ({ safeParse: () => ({ success: true as const, data }) });
 const fail = (issues: { path: PropertyKey[]; message: string }[], error: unknown = { issues }) => ({
   safeParse: () => ({ success: false as const, error }),

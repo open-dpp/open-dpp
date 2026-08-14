@@ -9,22 +9,6 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { PassportService } from "../../passports/application/services/passport.service";
 import { Gs1IdentityService } from "../application/services/gs1-identity.service";
 
-/**
- * Backoffice surface (under the `/api` prefix) for a passport's GS1 identity —
- * **read-only** as of Slice 44.
- *
- * **Authorization:** an org member with passport-view rights.
- *
- * **GET `/passports/:id/gs1-identity`** returns the MOST-RECENTLY-CREATED GS1
- * UPI for the passport, 404 when the passport has no GS1 UPI.  This is a
- * deliberate backward-compatibility convenience for legacy 1:1 callers; the
- * authoritative many-per-passport surface is the UPI collection
- * (`GET /unique-product-identifiers`, Slices 41/43).
- *
- * **Write surface retired.** The `PUT` and `DELETE` endpoints that used to live
- * here have been removed (Slice 44).  GS1 UPI creation, mutation and deletion
- * are now handled entirely by the UPI collection API.
- */
 @Controller("/passports")
 export class Gs1IdentityController {
   constructor(

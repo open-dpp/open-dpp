@@ -24,14 +24,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     this.uniqueProductIdentifierDoc = uniqueProductIdentifierDoc;
   }
 
-  /**
-   * Reconcile the collection's indexes with the schema definitions. Mongoose
-   * never updates an EXISTING index whose options changed, so on a deployment
-   * that predates the partial-unique gs1-key index the uniqueness constraint
-   * would otherwise stay unenforced forever (duplicate GTIN creates succeed
-   * instead of the second returning 409). Mirrors PermalinkRepository.
-   * ponytail: syncIndexes also drops manually-added indexes on this collection.
-   */
   async onApplicationBootstrap(): Promise<void> {
     await this.uniqueProductIdentifierDoc.syncIndexes();
   }
@@ -90,11 +82,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     return uniqueProductIdentifier;
   }
 
-  /**
-   * Batch-load UPIs by uuid. Used to resolve a page of GS1 identities in one
-   * query (no N+1) when rendering live GS1 Digital Link permalink URLs. Missing
-   * uuids are simply absent from the result — the caller decides the fallback.
-   */
   async findByIds(uuids: string[]): Promise<UniqueProductIdentifier[]> {
     if (uuids.length === 0) return [];
     const docs = await this.uniqueProductIdentifierDoc.find({ _id: { $in: uuids } });
@@ -115,15 +102,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     return this.convertToDomain(uniqueProductIdentifierDoc);
   }
 
-  /**
-   * Resolve the newest UPI for a passport filtered by external identifier type.
-   *
-   * Used by the legacy GS1 1:1 identity service (`findByReferenceIdAndType(.., GS1)`).
-   * The canonical `OPEN_DPP_UUID` lookup was removed in ADR 0006 (media keys on the
-   * passportId; AI chat resolves the passport directly), so this is a plain
-   * type-filtered, newest-first lookup. `_id` is a stable secondary key (matching the
-   * sibling list queries) so the result is deterministic on a `createdAt` tie.
-   */
   async findByReferenceIdAndType(
     referenceId: string,
     type: UniqueProductIdentifierTypeValue,
@@ -140,16 +118,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     return this.convertToDomain(doc);
   }
 
-  /**
-   * Resolve the GS1 UPI carrying an EXACT assembled key (gtin + optional batch +
-   * optional serial). Used by the public resolver to turn a scanned
-   * `/01/{gtin}[/10/{batch}][/21/{serial}]` into its passport.
-   *
-   * The match is on the full key: an absent batch/serial maps to a `null` filter,
-   * so a bare-GTIN scan resolves only the bare-GTIN row and never a serialized
-   * sibling that shares the GTIN (and vice versa). This mirrors the
-   * (gtin, batch, serial) compound unique index.
-   */
   async findByGs1Key(key: {
     gtin: string;
     batch?: string | null;
@@ -176,14 +144,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     return uniqueProductIdentifiers.map((upi) => this.convertToDomain(upi));
   }
 
-  /**
-   * List a single passport's UPIs (OPEN_DPP_UUID + GS1), newest-first, with
-   * cursor-based pagination. Mirrors `findAllByOrganizationId` but scopes by
-   * `referenceId` (the owning passport's uuid) instead of `organizationId`.
-   *
-   * The cursor is built from the doc's `createdAt + _id` (both descending) so the
-   * sort stays stable even when two docs share the same `createdAt` millisecond.
-   */
   async findAllByReferencedIdPaginated(
     referenceId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
@@ -191,13 +151,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     return this.findPageByFilter({ referenceId: { $eq: referenceId } }, options);
   }
 
-  /**
-   * List all UPIs for an organisation, newest-first, with cursor-based pagination.
-   *
-   * Mirrors `activity.repository.ts findByAggregateId`. The cursor is built from
-   * the doc's `createdAt + _id` (both descending) so that the sort is stable even
-   * when two docs share the same `createdAt` millisecond.
-   */
   async findAllByOrganizationId(
     organizationId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
@@ -205,10 +158,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     return this.findPageByFilter({ organizationId: { $eq: organizationId } }, options);
   }
 
-  /**
-   * Shared newest-first cursor pagination for the org-scoped and passport-scoped
-   * UPI lists — they differ only in the scope filter field.
-   */
   private findPageByFilter(
     filter: Record<string, unknown>,
     options?: { pagination?: { limit?: number; cursor?: string } },
@@ -226,13 +175,6 @@ export class UniqueProductIdentifierRepository implements OnApplicationBootstrap
     );
   }
 
-  /**
-   * Delete a single UPI by its uuid.
-   *
-   * Single-id scoped so that deleting one GS1 UPI never touches sibling UPIs
-   * for the same passport (e.g. the canonical OPEN_DPP_UUID row). A no-op for
-   * an unknown uuid.
-   */
   async deleteById(uuid: string, options?: DbSessionOptions) {
     await this.uniqueProductIdentifierDoc.findByIdAndDelete(uuid, {
       session: options?.session ?? null,

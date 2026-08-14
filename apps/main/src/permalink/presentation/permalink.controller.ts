@@ -144,9 +144,6 @@ export class PermalinkController {
     @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportPermalinkBundleDto> {
-    // The permalink's OWN bound config renders when set; null means the
-    // standard view — the client falls back to its built-in default styling.
-    // No getEffective lookup, no config seeding on the render path.
     const { permalink, passport, presentationConfiguration } =
       await this.permalinkApplicationService.resolveToPassport(id, {
         organizationId,
@@ -200,12 +197,6 @@ export class PermalinkController {
     }
   }
 
-  /**
-   * Resolve branding for a passport response: `forPin` is the tolerant branding
-   * load (null when the org/branding is absent — logged once by the repository —
-   * so the URL is computed without pinning); `display` falls back to the default
-   * branding so the response always carries a renderable branding object.
-   */
   private async resolveBranding(
     organizationId: string,
   ): Promise<{ display: Branding; forPin: Branding | null }> {
@@ -306,9 +297,6 @@ export class PermalinkController {
       throw new ForbiddenException();
     }
 
-    // Passport-first: ownership is checked on the passport itself; the optional
-    // config/UPI refs must then belong to that same passport (cross-passport
-    // permalinks are a lie → 400).
     const passport = await this.passportRepository.findOne(body.passportId);
     if (!passport) {
       throw new NotFoundException(`Passport ${body.passportId} not found`);
@@ -356,11 +344,6 @@ export class PermalinkController {
     return PermalinkPublicDtoSchema.parse(await this.toPublicDto(created, branding, passport));
   }
 
-  /**
-   * Validate an optional presentation-config reference for a create/rebind:
-   * missing → 404, foreign org → 403, different passport → 400. Returns the
-   * validated id (or null when none was supplied).
-   */
   private async validateConfigRef(
     presentationConfigurationId: string | null,
     passport: Passport,
@@ -391,11 +374,6 @@ export class PermalinkController {
     return config.id;
   }
 
-  /**
-   * Validate a UPI reference for a create: missing → 404, wrong passport →
-   * 400, type outside the kind's allowlist → 400 (strict kind matching:
-   * gs1-link ↔ GS1, open-dpp ↔ OPEN_DPP_UUID; GTIN/EAN back nothing yet).
-   */
   private async validateUpiRef(
     uniqueProductIdentifierId: string,
     passport: Passport,
@@ -439,8 +417,6 @@ export class PermalinkController {
       if (body.baseUrl !== undefined) update.baseUrl = body.baseUrl;
       if (body.gs1DataAttributes !== undefined) update.gs1DataAttributes = body.gs1DataAttributes;
       if (body.presentationConfigurationId !== undefined) {
-        // Pre-freeze config rebind (null = back to the standard view); the
-        // target config must belong to the permalink's own passport.
         update.presentationConfigurationId = await this.validateConfigRef(
           body.presentationConfigurationId ?? null,
           passport,
