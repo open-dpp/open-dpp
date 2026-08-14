@@ -13,7 +13,9 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+    AasEditorDrawer: typeof import('./src/components/aas/AasEditorDrawer.vue')['default']
     AasMoveDialog: typeof import('./src/components/aas/AasMoveDialog.vue')['default']
+    AasSubmodelTree: typeof import('./src/components/aas/AasSubmodelTree.vue')['default']
     ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
@@ -179,7 +181,9 @@ declare module 'vue' {
 // For TSX support
 declare global {
   const AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
+  const AasEditorDrawer: typeof import('./src/components/aas/AasEditorDrawer.vue')['default']
   const AasMoveDialog: typeof import('./src/components/aas/AasMoveDialog.vue')['default']
+  const AasSubmodelTree: typeof import('./src/components/aas/AasSubmodelTree.vue')['default']
   const ActivityHistory: typeof import('./src/components/activity-history/ActivityHistory.vue')['default']
   const AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
   const AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
