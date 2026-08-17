@@ -43,7 +43,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    await this.permalinkDoc.syncIndexes();
     await this.backfillOrganizationIds();
   }
 
