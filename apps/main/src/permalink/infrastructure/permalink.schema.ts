@@ -7,7 +7,6 @@ export const PermalinkDocVersion = {
   v1_1_0: "1.1.0",
   v1_2_0: "1.2.0",
   v1_3_0: "1.3.0",
-  v1_4_0: "1.4.0",
 } as const;
 
 type PermalinkDocVersionType = (typeof PermalinkDocVersion)[keyof typeof PermalinkDocVersion];
@@ -15,7 +14,7 @@ type PermalinkDocVersionType = (typeof PermalinkDocVersion)[keyof typeof Permali
 @Schema({ collection: "permalinks" })
 export class PermalinkDoc extends Document<string> {
   @Prop({
-    default: PermalinkDocVersion.v1_4_0,
+    default: PermalinkDocVersion.v1_3_0,
     enum: Object.values(PermalinkDocVersion),
     type: String,
   })
