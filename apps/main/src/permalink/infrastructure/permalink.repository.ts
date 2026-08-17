@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { DigitalProductDocumentTypes, LEGACY_PERMALINK_KIND, PermalinkKind } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
@@ -108,16 +108,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     };
   }
 
-  migrate1_3_0To1_4_0(plain: any): any {
-    const { primary: _primary, ...rest } = plain;
-    return {
-      ...rest,
-      kind:
-        !plain.kind || plain.kind === LEGACY_PERMALINK_KIND ? PermalinkKind.OPEN_DPP : plain.kind,
-      _schemaVersion: PermalinkDocVersion.v1_4_0,
-    };
-  }
-
   private async resolveLegacyPassportId(plain: {
     presentationConfigurationId?: string | null;
     uniqueProductIdentifierId?: string | null;
@@ -150,9 +140,6 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     if (!migrated._schemaVersion || migrated._schemaVersion <= PermalinkDocVersion.v1_2_0) {
       migrated = this.migrate1_2_0To1_3_0(migrated);
     }
-    if (migrated._schemaVersion <= PermalinkDocVersion.v1_3_0) {
-      migrated = this.migrate1_3_0To1_4_0(migrated);
-    }
     if (typeof migrated.passportId !== "string") {
       migrated = { ...migrated, passportId: await this.resolveLegacyPassportId(migrated) };
     }
@@ -163,7 +150,7 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     return await save(
       permalink,
       this.permalinkDoc,
-      PermalinkDocVersion.v1_4_0,
+      PermalinkDocVersion.v1_3_0,
       this.fromPlain.bind(this),
       undefined,
       options,
