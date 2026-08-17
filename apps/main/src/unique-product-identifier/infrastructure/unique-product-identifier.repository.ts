@@ -1,5 +1,5 @@
 import type { Model as MongooseModel } from "mongoose";
-import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
@@ -14,18 +14,14 @@ import {
 } from "./unique-product-identifier.schema";
 
 @Injectable()
-export class UniqueProductIdentifierRepository implements OnApplicationBootstrap {
-  private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
+export class UniqueProductIdentifierRepository {
+  private readonly uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
 
   constructor(
     @InjectModel(UniqueProductIdentifierDoc.name)
     uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>,
   ) {
     this.uniqueProductIdentifierDoc = uniqueProductIdentifierDoc;
-  }
-
-  async onApplicationBootstrap(): Promise<void> {
-    await this.uniqueProductIdentifierDoc.syncIndexes();
   }
 
   convertToDomain(uniqueProductIdentifierDoc: UniqueProductIdentifierDoc) {
