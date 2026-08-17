@@ -43,19 +43,8 @@ export class PermalinkRepository implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
-    await this.backfillPermalinkKind();
     await this.permalinkDoc.syncIndexes();
     await this.backfillOrganizationIds();
-  }
-
-  private async backfillPermalinkKind(): Promise<void> {
-    const result = await this.permalinkDoc.updateMany(
-      { kind: { $exists: false } },
-      { $set: { kind: PermalinkKind.OPEN_DPP } },
-    );
-    if (result.modifiedCount > 0) {
-      this.logger.log(`Backfilled kind on ${result.modifiedCount} permalink(s)`);
-    }
   }
 
   private async backfillOrganizationIds(): Promise<void> {
