@@ -263,26 +263,71 @@ describe("uniqueProductIdentifierRepository", () => {
     ).rejects.toThrow();
   });
 
-  it("onApplicationBootstrap reconciles a stale gs1-key index with the schema's partial-unique index", async () => {
-    const coll = uniqueProductIdentifierDoc.collection;
-    await coll.dropIndex("gtin_1_batch_1_serial_1");
-    await coll.createIndex({ gtin: 1, batch: 1, serial: 1 });
-
-    await uniqueProductIdentifierRepository.onApplicationBootstrap();
-
-    const index = (await coll.indexes()).find((i) => i.name === "gtin_1_batch_1_serial_1");
-    expect(index?.unique).toBe(true);
-    expect(index?.partialFilterExpression).toEqual({ gtin: { $type: "string" } });
-
-    const shared = { gtin: "88000000000701", batch: "LOT-SYNC", serial: "SN-SYNC" };
-    await uniqueProductIdentifierRepository.save(
-      UniqueProductIdentifier.createGs1({ referenceId: uuid4(), ...shared }),
+  it("declares the global partial-unique canonical-value index", async () => {
+    const index = (await uniqueProductIdentifierDoc.collection.indexes()).find(
+      (i) => i.name === "type_1_value_1",
     );
+    expect(index?.unique).toBe(true);
+    expect(index?.partialFilterExpression).toEqual({ value: { $type: "string" } });
+  });
+
+  it("persists the canonical value and parts breakdown of a GS1 UPI", async () => {
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: uuid4(),
+      gtin: "88000000000701",
+      batch: "LOT-9",
+      serial: "SN-9",
+    });
+    await uniqueProductIdentifierRepository.save(upi);
+
+    const rawDoc = await uniqueProductIdentifierDoc.findById(upi.uuid).lean();
+    expect(rawDoc?.value).toBe("01/88000000000701/10/LOT-9/21/SN-9");
+    expect(rawDoc?.parts).toEqual([
+      { key: "gtin", value: "88000000000701" },
+      { key: "batch", value: "LOT-9" },
+      { key: "serial", value: "SN-9" },
+    ]);
+  });
+
+  it("persists an OPEN_DPP_UUID UPI with its uuid as canonical value and no parts", async () => {
+    const upi = UniqueProductIdentifier.create({ referenceId: uuid4() });
+    await uniqueProductIdentifierRepository.save(upi);
+
+    const rawDoc = await uniqueProductIdentifierDoc.findById(upi.uuid).lean();
+    expect(rawDoc?.value).toBe(upi.uuid);
+    expect(rawDoc?.parts).toBeUndefined();
+  });
+
+  it("percent-encoding keeps ambiguous batch/serial keys distinct (no canonical collision)", async () => {
+    const gtin = "88000000000800";
+    // Unencoded, both would serialize to .../10/ABC/21/7 — encoding keeps them apart.
+    const batchOnly = UniqueProductIdentifier.createGs1({
+      referenceId: uuid4(),
+      gtin,
+      batch: "ABC/21/7",
+    });
+    const batchAndSerial = UniqueProductIdentifier.createGs1({
+      referenceId: uuid4(),
+      gtin,
+      batch: "ABC",
+      serial: "7",
+    });
+    await uniqueProductIdentifierRepository.save(batchOnly);
     await expect(
-      uniqueProductIdentifierRepository.save(
-        UniqueProductIdentifier.createGs1({ referenceId: uuid4(), ...shared }),
-      ),
-    ).rejects.toThrow();
+      uniqueProductIdentifierRepository.save(batchAndSerial),
+    ).resolves.toBeDefined();
+
+    const found = await uniqueProductIdentifierRepository.findByGs1Key({
+      gtin,
+      batch: "ABC/21/7",
+    });
+    expect(found!.uuid).toBe(batchOnly.uuid);
+  });
+
+  it("findByGs1Key returns undefined for an unparseable key instead of throwing", async () => {
+    expect(
+      await uniqueProductIdentifierRepository.findByGs1Key({ gtin: "not-a-gtin" }),
+    ).toBeUndefined();
   });
 
   it("allows a bare GTIN and a serialized unit of the same GTIN to coexist", async () => {
@@ -427,7 +472,7 @@ describe("uniqueProductIdentifierRepository", () => {
       expect(plain.serial).toBeNull();
     });
 
-    it("reading a legacy UPI doc does not rewrite the stored doc (_schemaVersion stays 1.0.0, gtin stays absent)", async () => {
+    it("reading a legacy UPI doc does not rewrite the stored doc (_schemaVersion stays 1.0.0, value/parts stay absent)", async () => {
       const legacyUuid = uuid4();
       const legacyReferenceId = uuid4();
       const legacyDoc = new uniqueProductIdentifierDoc({
@@ -441,7 +486,8 @@ describe("uniqueProductIdentifierRepository", () => {
 
       const rawDoc = await uniqueProductIdentifierDoc.findById(legacyUuid).lean();
       expect(rawDoc?._schemaVersion).toBe(UniqueProductIdentifierSchemaVersion.v1_0_0);
-      expect(rawDoc?.gtin ?? null).toBeNull();
+      expect(rawDoc?.value).toBeUndefined();
+      expect(rawDoc?.parts).toBeUndefined();
     });
   });
 

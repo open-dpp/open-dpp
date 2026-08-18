@@ -3,6 +3,7 @@ import { GS1_AI_TABLE, type Gs1AiTableEntry } from "./gs1-ai-table";
 import {
   buildGs1DataAttributeQuery,
   buildGs1DigitalLink,
+  buildGs1DigitalLinkPath,
   Cset82ComponentInputSchema,
   Cset82ComponentSchema,
   GS1_DATA_ATTRIBUTE_MAX_LENGTH,
@@ -110,6 +111,21 @@ describe("RFC 3986 canonical encoding", () => {
   it("percent-encodes !'()* in data-attribute query values", () => {
     // AI 90 (X..30, CSET-82) accepts all four characters raw.
     expect(buildGs1DataAttributeQuery({ "90": "A!'()*B" })).toBe("?90=A%21%27%28%29%2AB");
+  });
+});
+
+describe("buildGs1DigitalLinkPath", () => {
+  it("builds the base-less canonical path with normalization and encoding", () => {
+    expect(
+      buildGs1DigitalLinkPath({ gtin: "4006381333931", batch: "LOT/1", serial: "SN-1" }),
+    ).toBe("01/04006381333931/10/LOT%2F1/21/SN-1");
+  });
+
+  it("matches the path portion of buildGs1DigitalLink", () => {
+    const parts = { gtin: "04006381333931", batch: "B(1)", serial: "S:1" };
+    expect(buildGs1DigitalLink("https://r.example", parts)).toBe(
+      `https://r.example/${buildGs1DigitalLinkPath(parts)}`,
+    );
   });
 });
 

@@ -363,6 +363,23 @@ describe("UniqueProductIdentifier (GS1)", () => {
     });
   });
 
+  describe("canonicalValue", () => {
+    it("is the Digital-Link path with normalized GTIN-14 and encoded components", () => {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        batch: "LOT/1",
+        serial: "SN-1",
+      });
+      expect(upi.canonicalValue).toBe(`01/${VALID_GTIN13_AS_14}/10/LOT%2F1/21/SN-1`);
+    });
+
+    it("is the uuid for a non-GS1 UPI", () => {
+      const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+      expect(upi.canonicalValue).toBe(upi.uuid);
+    });
+  });
+
   describe("toListItem", () => {
     const RESOLVER_BASE = "https://id.example.com/p";
     const RESOLVER_ORIGIN = "https://id.example.com";

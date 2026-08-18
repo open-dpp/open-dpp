@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   baseUrlOrigin,
   buildGs1DigitalLink,
+  buildGs1DigitalLinkPath,
   type Gs1IdentityResponse,
   Gs1IdentityDtoSchema,
   isValidCset82Component,
@@ -68,6 +69,23 @@ function normalizeGs1Identity(input: Gs1IdentityInput): Gs1Identity {
   const batch = normalizeOptionalComponentOrThrow(input.batch, "Batch");
   const serial = normalizeOptionalComponentOrThrow(input.serial, "Serial");
   return assembleGs1Identity(gtin, batch, serial);
+}
+
+/**
+ * Canonical, exact-match lookup value for a GS1 identity: the Digital-Link path
+ * `01/{gtin14}[/10/{batch}][/21/{serial}]` with percent-encoded components.
+ * Percent-encoding keeps the form unambiguous — CSET-82 allows "/", so an
+ * unencoded serialization could collide
+ * (e.g. batch "ABC/21/7" vs batch "ABC" + serial "7").
+ *
+ * @throws ValueError when the GTIN or a batch/serial component is invalid.
+ */
+export function canonicalGs1Value(input: Gs1IdentityInput): string {
+  try {
+    return buildGs1DigitalLinkPath(input);
+  } catch (error) {
+    throw new ValueError(error instanceof Error ? error.message : "Invalid GS1 identity");
+  }
 }
 
 export class UniqueProductIdentifier {
@@ -178,6 +196,14 @@ export class UniqueProductIdentifier {
       normalizeGs1Identity(input),
       this.organizationId,
     );
+  }
+
+  /**
+   * Canonical exact-match value for this identifier: the Digital-Link path for
+   * a GS1 identity, the entity's own uuid otherwise.
+   */
+  get canonicalValue(): string {
+    return this.gs1 ? canonicalGs1Value(this.gs1) : this.uuid;
   }
 
   get granularity(): "model" | "batch" | "item" | null {

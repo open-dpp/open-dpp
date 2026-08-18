@@ -324,20 +324,36 @@ function normalizeOptionalComponent(
  *   length / the dot-segment rule.
  */
 export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkParts): string {
+  const base = canonicaliseBaseUrl(resolverBase);
+  let url = `${base}/${buildGs1DigitalLinkPath(parts)}`;
+  url += buildGs1DataAttributeQuery(parts.dataAttributes);
+  return url;
+}
+
+/**
+ * Build the base-less canonical GS1 Digital Link path
+ * `01/{gtin14}[/10/{batch}][/21/{serial}]` (no leading slash, no query string).
+ * Same normalization, validation, and percent-encoding as `buildGs1DigitalLink`;
+ * usable as an exact-match canonical value for a GS1 identity.
+ *
+ * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 /
+ *   length / the dot-segment rule.
+ */
+export function buildGs1DigitalLinkPath(
+  parts: Omit<Gs1DigitalLinkParts, "dataAttributes">,
+): string {
   const gtin14 = normalizeToGtin14(parts.gtin);
   const batch = normalizeOptionalComponent(parts.batch, "Batch");
   const serial = normalizeOptionalComponent(parts.serial, "Serial");
-  const base = canonicaliseBaseUrl(resolverBase);
 
-  let url = `${base}/${GS1_AI_GTIN}/${gtin14}`;
+  let path = `${GS1_AI_GTIN}/${gtin14}`;
   if (batch !== undefined) {
-    url += `/${GS1_AI_BATCH}/${encodeRfc3986(batch)}`;
+    path += `/${GS1_AI_BATCH}/${encodeRfc3986(batch)}`;
   }
   if (serial !== undefined) {
-    url += `/${GS1_AI_SERIAL}/${encodeRfc3986(serial)}`;
+    path += `/${GS1_AI_SERIAL}/${encodeRfc3986(serial)}`;
   }
-  url += buildGs1DataAttributeQuery(parts.dataAttributes);
-  return url;
+  return path;
 }
 
 /**

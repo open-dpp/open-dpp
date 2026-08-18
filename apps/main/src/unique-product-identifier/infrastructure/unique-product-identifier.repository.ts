@@ -6,12 +6,34 @@ import { DbSessionOptions } from "../../database/query-options";
 import { findPageByCursor } from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
+import { canonicalGs1Value, UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import { UniqueProductIdentifierType, type UniqueProductIdentifierTypeValue } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import {
+  type IdentifierPart,
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchemaVersion,
 } from "./unique-product-identifier.schema";
+
+const GS1_PART_KEYS = ["gtin", "batch", "serial"] as const;
+
+function toParts(plain: {
+  gtin: string | null;
+  batch: string | null;
+  serial: string | null;
+}): Pick<IdentifierPart, "key" | "value">[] | undefined {
+  if (plain.gtin === null) {
+    return undefined;
+  }
+  return GS1_PART_KEYS.flatMap((key) => {
+    const value = plain[key];
+    return value === null ? [] : [{ key, value }];
+  });
+}
+
+function partValue(parts: IdentifierPart[] | undefined, key: string): string | null {
+  return parts?.find((part) => part.key === key)?.value ?? null;
+}
 
 @Injectable()
 export class UniqueProductIdentifierRepository {
@@ -29,9 +51,9 @@ export class UniqueProductIdentifierRepository {
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
       type: uniqueProductIdentifierDoc.type ?? null,
-      gtin: uniqueProductIdentifierDoc.gtin ?? null,
-      batch: uniqueProductIdentifierDoc.batch ?? null,
-      serial: uniqueProductIdentifierDoc.serial ?? null,
+      gtin: partValue(uniqueProductIdentifierDoc.parts, "gtin"),
+      batch: partValue(uniqueProductIdentifierDoc.parts, "batch"),
+      serial: partValue(uniqueProductIdentifierDoc.parts, "serial"),
       organizationId: uniqueProductIdentifierDoc.organizationId ?? null,
     });
   }
@@ -44,9 +66,8 @@ export class UniqueProductIdentifierRepository {
         _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_3_0,
         referenceId: plain.referenceId,
         type: plain.type,
-        gtin: plain.gtin,
-        batch: plain.batch,
-        serial: plain.serial,
+        value: uniqueProductIdentifier.canonicalValue,
+        parts: toParts(plain),
         organizationId: plain.organizationId,
       },
       {
@@ -119,11 +140,19 @@ export class UniqueProductIdentifierRepository {
     batch?: string | null;
     serial?: string | null;
   }): Promise<UniqueProductIdentifier | undefined> {
+    let canonicalValue: string;
+    try {
+      canonicalValue = canonicalGs1Value(key);
+    } catch (error) {
+      // An unparseable key can never match a stored canonical value.
+      if (error instanceof ValueError) {
+        return undefined;
+      }
+      throw error;
+    }
     const doc = await this.uniqueProductIdentifierDoc.findOne({
-      gtin: { $eq: key.gtin },
-      batch: { $eq: key.batch ?? null },
-      serial: { $eq: key.serial ?? null },
       type: { $eq: UniqueProductIdentifierType.GS1 },
+      value: { $eq: canonicalValue },
     });
     if (!doc) {
       return undefined;
