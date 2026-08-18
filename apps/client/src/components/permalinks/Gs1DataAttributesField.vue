@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import {
   GS1_AI_TABLE,
-  getGs1AiDescription,
   isGs1DataAttributeAi,
   isValidGs1DataAttributeValue,
   type Gs1AiTableEntry,
 } from "@open-dpp/dto";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { convertLocaleToLanguage } from "../../translations/i18n";
+import { gs1AiDescriptionOrTitle, gs1AiOptionLabel } from "../../lib/gs1-ai-option-label";
 
 const props = defineProps<{
   modelValue: Record<string, string>;
@@ -20,12 +19,11 @@ const emit = defineEmits<{
 }>();
 
 const { t, locale } = useI18n();
-const lang = computed(() => convertLocaleToLanguage(locale.value));
 
 const aiOptions = Object.values(GS1_AI_TABLE).filter((e) => e.type === "D");
 
 function aiOptionLabel(entry: Gs1AiTableEntry): string {
-  return `${entry.ai} — ${getGs1AiDescription(entry.ai, lang.value) ?? entry.title}`;
+  return gs1AiOptionLabel(entry, locale.value);
 }
 
 interface Row {
@@ -135,9 +133,7 @@ function removeRow(index: number) {
           <template #option="{ option }">
             <div class="flex items-center gap-2">
               <span class="font-mono text-sm">{{ option.ai }}</span>
-              <span class="truncate">{{
-                getGs1AiDescription(option.ai, lang) ?? option.title
-              }}</span>
+              <span class="truncate">{{ gs1AiDescriptionOrTitle(option, locale) }}</span>
             </div>
           </template>
         </Select>
