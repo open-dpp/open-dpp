@@ -3,8 +3,8 @@ import type {
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
 import { AasSubmodelElements } from "@open-dpp/dto";
-import { resolveLanguageTexts } from "../../composables/language-text.ts";
 import { columnKindOf, flattenColumns, isGroupColumn, type Column } from "../table/columns.ts";
+import { resolveLanguageTexts } from "../../composables/language.ts";
 
 export interface ColumnDef {
   header: string;

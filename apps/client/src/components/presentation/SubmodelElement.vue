@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
-import { useLanguageTexts } from "../../composables/language-text.ts";
+import { useLanguageTextList } from "../../composables/language.ts";
 import { usePresentationDispatch } from "../../lib/presentation/presentation-dispatch.ts";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
@@ -10,7 +10,7 @@ const { element, parentPath } = defineProps<{
   parentPath?: string;
 }>();
 
-const { text: elementName } = useLanguageTexts(element.displayName);
+const { name: elementName } = useLanguageTextList(element.displayName);
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),

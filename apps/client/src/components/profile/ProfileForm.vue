@@ -19,7 +19,7 @@ import {
 import apiClient from "../../lib/api-client.ts";
 import { useNotificationStore } from "../../stores/notification.ts";
 import { useUserStore } from "../../stores/user.ts";
-import { convertLanguageToLocale } from "../../translations/i18n.ts";
+import { convertLanguageToLocale, convertLocaleToLanguage } from "../../translations/util.ts";
 import EmailChangeCard from "./EmailChangeCard.vue";
 
 const { t, locale } = useI18n();

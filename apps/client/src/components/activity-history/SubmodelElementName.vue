@@ -13,7 +13,7 @@ const { t } = useI18n();
 <template>
   <div v-if="props.value.displayName">
     <DescriptionTerm :dt="t('activityHistory.name')">
-      {{ parseLanguageTexts(props.value.displayName, props.value.idShort) }}
+      {{ parseLanguageTexts(props.value.displayName) }}
     </DescriptionTerm>
   </div>
 </template>

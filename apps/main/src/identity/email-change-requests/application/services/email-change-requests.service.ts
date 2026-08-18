@@ -1,6 +1,5 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { LanguageType } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { EmailService } from "../../../../email/email.service";
@@ -10,6 +9,7 @@ import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers
 import { EmailChangeRequest } from "../../domain/email-change-request";
 import { signRevokeToken } from "../../domain/revoke-token";
 import { EmailChangeRequestsRepository } from "../../infrastructure/adapters/email-change-requests.repository";
+import { DisplayLanguageType } from "@open-dpp/dto";
 
 const REVOKE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -17,7 +17,7 @@ export interface EmailChangeRequester {
   id: string;
   email: string;
   firstName: string | null;
-  preferredLanguage?: LanguageType;
+  preferredLanguage?: DisplayLanguageType;
 }
 
 @Injectable()

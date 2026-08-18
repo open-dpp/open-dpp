@@ -1,5 +1,5 @@
-import { LanguageEnum } from "../aas/enums/language-enum";
 import { z } from "zod";
+import { DisplayLanguageEnum } from "./display-language.dto";
 
 export const UserDtoSchema = z.object({
   id: z.string(),
@@ -9,7 +9,7 @@ export const UserDtoSchema = z.object({
   name: z.string().nullable(),
   image: z.string().nullable(),
   emailVerified: z.boolean(),
-  preferredLanguage: LanguageEnum,
+  preferredLanguage: DisplayLanguageEnum,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

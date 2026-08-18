@@ -1,5 +1,16 @@
 # @open-dpp/api-client
 
+## 2.10.0
+
+### Minor Changes
+
+- [#621](https://github.com/open-dpp/open-dpp/pull/621) [`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756) Thanks [@Hentra](https://github.com/Hentra)! - Add 26 more languages to multilanguage description
+
+### Patch Changes
+
+- Updated dependencies [[`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756)]:
+  - @open-dpp/dto@2.10.0
+
 ## 2.9.0
 
 ### Minor Changes

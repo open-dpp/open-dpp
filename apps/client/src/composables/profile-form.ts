@@ -1,18 +1,18 @@
 import type { UpdateProfileDto, UserDto } from "@open-dpp/dto";
-import { Language, type LanguageType } from "@open-dpp/dto";
+import { DisplayLanguage, type DisplayLanguageType } from "@open-dpp/dto";
 
 export interface ProfileFormValues {
   firstName: string;
   lastName: string;
   email: string;
-  preferredLanguage: LanguageType;
+  preferredLanguage: DisplayLanguageType;
 }
 
 export interface ProfileFormInput {
   firstName?: string;
   lastName?: string;
   email?: string;
-  preferredLanguage?: LanguageType;
+  preferredLanguage?: DisplayLanguageType;
 }
 
 export function mapUserToFormValues(user: UserDto): ProfileFormValues {
@@ -20,7 +20,7 @@ export function mapUserToFormValues(user: UserDto): ProfileFormValues {
     firstName: user.firstName ?? "",
     lastName: user.lastName ?? "",
     email: user.email,
-    preferredLanguage: user.preferredLanguage ?? Language.en,
+    preferredLanguage: user.preferredLanguage ?? DisplayLanguage.en,
   };
 }
 

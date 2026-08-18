@@ -175,6 +175,11 @@
     "footer": "Zeigt: {from} - {to}, Anzahl: {count}",
     "footerWithTotal": "Zeigt: {from} - {to} von {total}"
   },
+  "language": {
+    "all": "Verfügbare Sprachen",
+    "preferred": "Bevorzugte Sprachen",
+    "selectPlaceholder": "Sprache auswählen"
+  },
   "builder": {
     "repeater": {
       "label": "Repeater",

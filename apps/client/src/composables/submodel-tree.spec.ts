@@ -1,6 +1,8 @@
+import type { SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { describe, expect, it } from "vitest";
 import { useSubmodelTree } from "./submodel-tree";
+import type { LanguageTextDto } from "@open-dpp/dto";
 
 function createElement(idShort: string, children: SubmodelTreeElement[] = []): SubmodelTreeElement {
   return {
@@ -9,6 +11,47 @@ function createElement(idShort: string, children: SubmodelTreeElement[] = []): S
     children,
     submodelElements: [],
   };
+}
+
+function createSubmodel(
+  idShort: string,
+  displayName: LanguageTextDto[] = [],
+  submodelElements: SubmodelElementResponseDto[] = [],
+): SubmodelResponseDto {
+  return {
+    id: idShort,
+    idShort,
+    displayName,
+    description: [],
+    submodelElements,
+    extensions: [],
+    supplementalSemanticIds: [],
+    qualifiers: [],
+    embeddedDataSpecifications: [],
+    semanticId: null,
+    category: null,
+    kind: null,
+    administration: null,
+  } as SubmodelResponseDto;
+}
+
+function createProperty(
+  idShort: string,
+  displayName: LanguageTextDto[] = [],
+): SubmodelElementResponseDto {
+  return {
+    modelType: "Property",
+    idShort,
+    displayName,
+    description: [],
+    supplementalSemanticIds: [],
+    qualifiers: [],
+    embeddedDataSpecifications: [],
+    semanticId: null,
+    category: null,
+    valueType: "xs:string",
+    value: null,
+  } as SubmodelElementResponseDto;
 }
 
 describe("getSubmodelTreeElementsBefore", () => {
@@ -36,5 +79,52 @@ describe("getSubmodelTreeElementsBefore", () => {
     const result = getSubmodelTreeElementsBefore(tree, "UNKNOWN");
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("languageTags", () => {
+  it("returns an empty set when no displayNames are set", () => {
+    const { languageTags } = useSubmodelTree([createSubmodel("S1")]);
+    expect(languageTags.value.size).toBe(0);
+  });
+
+  it("collects language tags from submodel displayNames", () => {
+    const { languageTags } = useSubmodelTree([
+      createSubmodel("S1", [{ language: "en", text: "My Submodel" }]),
+    ]);
+    expect(languageTags.value).toEqual(new Set(["en"]));
+  });
+
+  it("collects language tags from submodelElement displayNames", () => {
+    const { languageTags } = useSubmodelTree([
+      createSubmodel(
+        "S1",
+        [],
+        [createProperty("Prop1", [{ language: "de", text: "Eigenschaft" }])],
+      ),
+    ]);
+    expect(languageTags.value).toEqual(new Set(["de"]));
+  });
+
+  it("deduplicates language tags across multiple sources", () => {
+    const { languageTags } = useSubmodelTree([
+      createSubmodel(
+        "S1",
+        [{ language: "en", text: "Submodel" }],
+        [
+          createProperty("Prop1", [{ language: "en", text: "Property" }]),
+          createProperty("Prop2", [{ language: "de", text: "Eigenschaft" }]),
+        ],
+      ),
+    ]);
+    expect(languageTags.value).toEqual(new Set(["en", "de"]));
+  });
+
+  it("collects language tags from multiple submodels", () => {
+    const { languageTags } = useSubmodelTree([
+      createSubmodel("S1", [{ language: "en", text: "English" }]),
+      createSubmodel("S2", [{ language: "fr", text: "Français" }]),
+    ]);
+    expect(languageTags.value).toEqual(new Set(["en", "fr"]));
   });
 });
