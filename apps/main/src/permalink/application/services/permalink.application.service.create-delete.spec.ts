@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "@jest/globals";
+import { beforeAll, describe, expect, it } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
 import { ConflictException } from "@nestjs/common";
 import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";
@@ -59,6 +59,13 @@ describe("PermalinkApplicationService.createOpenDppPermalink", () => {
     PermalinkRepository,
     SubjectAttributes.create({ userRole: UserRole.USER }),
   );
+
+  beforeAll(async () => {
+    await ctx
+      .getModuleRef()
+      .get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name))
+      .syncIndexes();
+  });
 
   async function seedPassport(options?: { published?: boolean }) {
     const passport = Passport.create({

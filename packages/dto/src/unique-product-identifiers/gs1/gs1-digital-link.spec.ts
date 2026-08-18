@@ -116,9 +116,9 @@ describe("RFC 3986 canonical encoding", () => {
 
 describe("buildGs1DigitalLinkPath", () => {
   it("builds the base-less canonical path with normalization and encoding", () => {
-    expect(
-      buildGs1DigitalLinkPath({ gtin: "4006381333931", batch: "LOT/1", serial: "SN-1" }),
-    ).toBe("01/04006381333931/10/LOT%2F1/21/SN-1");
+    expect(buildGs1DigitalLinkPath({ gtin: "4006381333931", batch: "LOT/1", serial: "SN-1" })).toBe(
+      "01/04006381333931/10/LOT%2F1/21/SN-1",
+    );
   });
 
   it("matches the path portion of buildGs1DigitalLink", () => {

@@ -745,37 +745,12 @@ describe("PermalinkRepository", () => {
     });
   });
 
-  describe("kind backfill", () => {
+  describe("legacy kind handling", () => {
     function permalinkCollection() {
       return module.get<Model<PermalinkDoc>>(getModelToken(PermalinkDoc.name)).collection;
     }
 
-    async function seedRowWithoutKind(presentationConfigurationId: string) {
-      const id = randomUUID();
-      await permalinkCollection().insertOne({
-        _id: id as any,
-        _schemaVersion: "1.2.0",
-        presentationConfigurationId,
-        organizationId: randomUUID(),
-        slug: null,
-        baseUrl: null,
-        publishedUrl: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any);
-      return id;
-    }
-
-    it("stamps kind='open-dpp' on rows written before the field existed", async () => {
-      const id = await seedRowWithoutKind(randomUUID());
-
-      await repository.onApplicationBootstrap();
-
-      const raw = await permalinkCollection().findOne({ _id: id as any });
-      expect(raw?.kind).toBe(PermalinkKind.OPEN_DPP);
-    });
-
-    it("leaves already-stamped legacy 'presentation' rows untouched in storage", async () => {
+    it("leaves legacy 'presentation' rows untouched in storage", async () => {
       const id = randomUUID();
       await permalinkCollection().insertOne({
         _id: id as any,

@@ -313,9 +313,7 @@ describe("uniqueProductIdentifierRepository", () => {
       serial: "7",
     });
     await uniqueProductIdentifierRepository.save(batchOnly);
-    await expect(
-      uniqueProductIdentifierRepository.save(batchAndSerial),
-    ).resolves.toBeDefined();
+    await expect(uniqueProductIdentifierRepository.save(batchAndSerial)).resolves.toBeDefined();
 
     const found = await uniqueProductIdentifierRepository.findByGs1Key({
       gtin,

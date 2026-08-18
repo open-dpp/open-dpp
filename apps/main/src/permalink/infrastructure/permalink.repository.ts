@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { DigitalProductDocumentTypes, PermalinkKind } from "@open-dpp/dto";
+import { DigitalProductDocumentTypes, LEGACY_PERMALINK_KIND, PermalinkKind } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import type { Model as MongooseModel } from "mongoose";
 import { DbSessionOptions } from "../../database/query-options";
@@ -43,7 +43,19 @@ export class PermalinkRepository implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap(): Promise<void> {
+    await this.dropRetiredConfigUniqueIndex();
     await this.backfillOrganizationIds();
+  }
+
+  private async dropRetiredConfigUniqueIndex(): Promise<void> {
+    try {
+      await this.permalinkDoc.collection.dropIndex("presentationConfigurationId_1");
+      this.logger.log("Dropped retired unique index presentationConfigurationId_1");
+    } catch (error: any) {
+      if (error?.codeName !== "IndexNotFound" && error?.codeName !== "NamespaceNotFound") {
+        throw error;
+      }
+    }
   }
 
   private async backfillOrganizationIds(): Promise<void> {
@@ -130,6 +142,9 @@ export class PermalinkRepository implements OnApplicationBootstrap {
     }
     if (typeof migrated.passportId !== "string") {
       migrated = { ...migrated, passportId: await this.resolveLegacyPassportId(migrated) };
+    }
+    if (!migrated.kind || migrated.kind === LEGACY_PERMALINK_KIND) {
+      migrated = { ...migrated, kind: PermalinkKind.OPEN_DPP };
     }
     return this.fromPlain(migrated);
   }
