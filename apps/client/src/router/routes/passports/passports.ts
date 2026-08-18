@@ -1,6 +1,8 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
 import { localizedBreadcrumb } from "../../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../../stores/layout";
+import { PASSPORT_PERMALINKS_LIST } from "../permalinks.ts";
+import { PASSPORT_UNIQUE_PRODUCT_IDENTIFIERS_LIST } from "../unique-product-identifiers/unique-product-identifiers.ts";
 
 export const PASSPORTS_LIST: RouteRecordRaw = {
   path: "",
@@ -65,7 +67,12 @@ export async function passportBreadcrumbs(to: RouteLocationNormalizedGeneric) {
 
 const PASSPORT_PARENT: RouteRecordRaw = {
   path: ":passportId",
-  children: [PASSPORT, PASSPORT_ACTIVITY_HISTORY],
+  children: [
+    PASSPORT,
+    PASSPORT_ACTIVITY_HISTORY,
+    PASSPORT_PERMALINKS_LIST,
+    PASSPORT_UNIQUE_PRODUCT_IDENTIFIERS_LIST,
+  ],
 };
 
 export const ORGANIZATION_PASSPORTS_PARENT: RouteRecordRaw = {

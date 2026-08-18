@@ -49,6 +49,20 @@ describe("getGs1AiDescription", () => {
     }
   });
 
+  it("accepts BCP 47 tags and casing variants (primary subtag wins)", () => {
+    expect(getGs1AiDescription("17", "de-DE")).toBe("Verfallsdatum (JJMMTT)");
+    expect(getGs1AiDescription("17", "DE")).toBe("Verfallsdatum (JJMMTT)");
+    expect(getGs1AiDescription("17", "de-CH")).toBe("Verfallsdatum (JJMMTT)");
+  });
+
+  it("falls back to English for languages not vendored", () => {
+    expect(getGs1AiDescription("17", "fr")).toBe("Expiration date (YYMMDD)");
+    expect(getGs1AiDescription("17", "fr-FR")).toBe("Expiration date (YYMMDD)");
+    expect(getGs1AiDescription("17", "")).toBe("Expiration date (YYMMDD)");
+    // Prototype names must not leak object internals as a "translation".
+    expect(getGs1AiDescription("17", "constructor")).toBe("Expiration date (YYMMDD)");
+  });
+
   it("returns undefined for unknown or non-AI input", () => {
     expect(getGs1AiDescription("0000", "en")).toBeUndefined();
     expect(getGs1AiDescription("", "en")).toBeUndefined();

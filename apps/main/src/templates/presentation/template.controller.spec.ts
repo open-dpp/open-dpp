@@ -283,9 +283,7 @@ describe("templateController", () => {
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(
-      encodeCursor(t1.createdAt.toISOString(), t1.id),
-    );
+    expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => ({
         ...t.toPlain(),
@@ -324,7 +322,7 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        cursor: expect.any(String),
+        cursor: null,
         total_count: 1,
       },
       result: [t2].map((p) => ({

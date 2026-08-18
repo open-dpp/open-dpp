@@ -1,7 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import { ConsoleLogger, Logger, ValidationPipe, VersioningType } from "@nestjs/common";
+import {
+  ConsoleLogger,
+  Logger,
+  RequestMethod,
+  ValidationPipe,
+  VersioningType,
+} from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -20,6 +26,11 @@ import { AllApiVersions, ApiVersionsDto } from "@open-dpp/dto";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
+
+function isPublicBackendRoute(pathOrUrl: string): boolean {
+  const path = pathOrUrl.split("?")[0];
+  return /^\/01\/[^/]+(?:\/10\/[^/]+)?(?:\/21\/[^/]+)?\/?$/.test(path);
+}
 
 async function bootstrap() {
   if (process.argv[2] && process.argv[2] === EXPORT_API_DOC_FLAG) {
@@ -66,7 +77,7 @@ async function bootstrap() {
     });
 
     app.use((req: Request, res: Response, next: NextFunction) => {
-      if (!req.path.startsWith("/api")) {
+      if (!req.path.startsWith("/api") && !isPublicBackendRoute(req.path)) {
         proxy.web(req, res, { target: "http://localhost:5173" });
       } else {
         next();
@@ -74,7 +85,7 @@ async function bootstrap() {
     });
 
     httpServer.on("upgrade", (req, socket, head) => {
-      if (req.url && !req.url.startsWith("/api")) {
+      if (req.url && !req.url.startsWith("/api") && !isPublicBackendRoute(req.url)) {
         proxy.ws(req, socket, head, { target: "http://localhost:5173" });
       }
     });
@@ -91,7 +102,14 @@ async function bootstrap() {
     next();
   });
 
-  app.setGlobalPrefix("api");
+  app.setGlobalPrefix("api", {
+    exclude: [
+      { path: "01/:gtin", method: RequestMethod.GET },
+      { path: "01/:gtin/10/:batch", method: RequestMethod.GET },
+      { path: "01/:gtin/21/:serial", method: RequestMethod.GET },
+      { path: "01/:gtin/10/:batch/21/:serial", method: RequestMethod.GET },
+    ],
+  });
   app.enableVersioning({
     type: VersioningType.URI,
     // header: "X-API-VERSION",

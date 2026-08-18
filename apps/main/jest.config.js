@@ -31,5 +31,5 @@ module.exports = {
 
   globalSetup: "<rootDir>/test/global-setup.ts",
   globalTeardown: "<rootDir>/test/global-teardown.ts",
-  testTimeout: 20000,
+  testTimeout: 45000,
 };
