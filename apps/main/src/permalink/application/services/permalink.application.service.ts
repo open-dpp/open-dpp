@@ -14,7 +14,7 @@ import { z } from "zod/v4";
 import { Branding } from "../../../branding/domain/branding";
 import { BrandingRepository } from "../../../branding/infrastructure/branding.repository";
 import { DbSessionOptions } from "../../../database/query-options";
-import type { MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
+import { MembersService } from "../../../identity/organizations/application/services/members.service";
 import { isDuplicateKeyErrorOnField } from "../../../lib/mongo-errors";
 import { Pagination } from "../../../pagination/pagination";
 import { Passport } from "../../../passports/domain/passport";
@@ -29,8 +29,7 @@ import { UniqueProductIdentifierRepository } from "../../../unique-product-ident
 import { BaseUrlResolver, resolveFallbackBaseUrl } from "./base-url-resolver.service";
 
 export interface PermalinkAccessContext {
-  organizationId?: string;
-  memberRole?: MemberRoleType;
+  userId?: string;
 }
 
 export interface PermalinkUpdate {
@@ -76,7 +75,18 @@ export class PermalinkApplicationService {
     private readonly brandingRepository: BrandingRepository,
     private readonly baseUrlResolver: BaseUrlResolver,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
+    private readonly membersService: MembersService,
   ) {}
+
+  async isMemberOfPassportOrg(
+    passport: Passport,
+    access: PermalinkAccessContext | undefined,
+  ): Promise<boolean> {
+    if (!access?.userId) {
+      return false;
+    }
+    return await this.membersService.isMemberOfOrganization(access.userId, passport.organizationId);
+  }
 
   async resolvePermalink(idOrSlug: string): Promise<Permalink> {
     if (z.uuid().safeParse(idOrSlug).success) {
@@ -95,7 +105,7 @@ export class PermalinkApplicationService {
   }> {
     const permalink = await this.resolvePermalink(idOrSlug);
     const passport = await this.passportRepository.findOneOrFail(permalink.passportId);
-    if (!passport.isPublished() && !isMemberOfPassportOrg(passport, access)) {
+    if (!passport.isPublished() && !(await this.isMemberOfPassportOrg(passport, access))) {
       throw new NotFoundException(`Permalink ${permalink.id} not found`);
     }
     const presentationConfiguration =
@@ -499,15 +509,6 @@ export class PermalinkApplicationService {
       ]),
     );
   }
-}
-
-export function isMemberOfPassportOrg(
-  passport: Passport,
-  access: PermalinkAccessContext | undefined,
-): boolean {
-  if (!access) return false;
-  if (access.memberRole === undefined) return false;
-  return access.organizationId === passport.organizationId;
 }
 
 export function resolvePublicUrl(

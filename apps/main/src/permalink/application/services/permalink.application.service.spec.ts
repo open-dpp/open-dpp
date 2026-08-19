@@ -483,10 +483,10 @@ describe("PermalinkApplicationService.resolveToPassport (passport-first)", () =>
     SubjectAttributes.create({ userRole: UserRole.USER }),
   );
 
-  async function seedPassport(options?: { published?: boolean }) {
+  async function seedPassport(options?: { published?: boolean; organizationId?: string }) {
     const passport = Passport.create({
       id: randomUUID(),
-      organizationId: randomUUID(),
+      organizationId: options?.organizationId ?? randomUUID(),
       environment: Environment.create({
         assetAdministrationShells: [],
         submodels: [],
@@ -582,16 +582,28 @@ describe("PermalinkApplicationService.resolveToPassport (passport-first)", () =>
   });
 
   it("resolves for an org member when the passport is unpublished", async () => {
+    const { org, user } = await ctx
+      .globals()
+      .betterAuthHelper.createOrganizationAndUserWithCookie();
+    const passport = await seedPassport({ published: false, organizationId: org.id });
+    const permalink = Permalink.create({ passportId: passport.id });
+    await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
+    const service = ctx.getModuleRef().get(PermalinkApplicationService);
+
+    const result = await service.resolveToPassport(permalink.id, { userId: user.id });
+
+    expect(result.passport.id).toBe(passport.id);
+  });
+
+  it("throws NotFoundException for a user who is not a member of the passport's org", async () => {
+    const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
     const passport = await seedPassport({ published: false });
     const permalink = Permalink.create({ passportId: passport.id });
     await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
-    const result = await service.resolveToPassport(permalink.id, {
-      organizationId: passport.organizationId,
-      memberRole: "member" as never,
-    });
-
-    expect(result.passport.id).toBe(passport.id);
+    await expect(
+      service.resolveToPassport(permalink.id, { userId: outsider.user.id }),
+    ).rejects.toThrow(NotFoundException);
   });
 });

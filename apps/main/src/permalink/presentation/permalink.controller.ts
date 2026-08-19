@@ -8,7 +8,6 @@ import {
   Delete,
   ForbiddenException,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   Logger,
@@ -62,12 +61,11 @@ import {
 } from "../../aas/presentation/aas.decorators";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { isDuplicateKeyError } from "../../lib/mongo-errors";
+import type { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
-import {
-  ORGANIZATION_ID_HEADER,
-  OrganizationId,
-} from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
@@ -76,7 +74,6 @@ import { PassportRepository } from "../../passports/infrastructure/passport.repo
 import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import {
-  isMemberOfPassportOrg,
   PermalinkApplicationService,
   type PermalinkUpdate,
 } from "../application/services/permalink.application.service";
@@ -107,12 +104,13 @@ export class PermalinkController {
   @Get("/p")
   async getByPassport(
     @PassportIdQueryParam() passportId: string,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @AuthSession() session: Session | undefined,
   ) {
     const passport = await this.passportRepository.findOne(passportId);
     const isMember = passport
-      ? isMemberOfPassportOrg(passport, { organizationId, memberRole })
+      ? await this.permalinkApplicationService.isMemberOfPassportOrg(passport, {
+          userId: session?.userId,
+        })
       : false;
     if (!passport || (!passport.isPublished() && !isMember)) {
       return PermalinkListDtoSchema.parse([]);
@@ -141,13 +139,11 @@ export class PermalinkController {
   @Get("/p/:id")
   async getById(
     @IdOrSlugParam() id: string,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @AuthSession() session: Session | undefined,
   ): Promise<PassportPermalinkBundleDto> {
     const { permalink, passport, presentationConfiguration } =
       await this.permalinkApplicationService.resolveToPassport(id, {
-        organizationId,
-        memberRole,
+        userId: session?.userId,
       });
     const branding = await this.resolveBranding(passport.organizationId);
     const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
@@ -171,13 +167,13 @@ export class PermalinkController {
     body: PermalinkUpdateRequest,
     @OrganizationId() organizationId: string,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @AuthSession() session: Session | undefined,
   ) {
     if (memberRole === undefined) {
       throw new ForbiddenException();
     }
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     if (passport.organizationId !== organizationId) {
       throw new ForbiddenException();
@@ -475,11 +471,10 @@ export class PermalinkController {
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
@@ -498,12 +493,11 @@ export class PermalinkController {
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
@@ -522,12 +516,11 @@ export class PermalinkController {
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelById(
@@ -545,12 +538,11 @@ export class PermalinkController {
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelValue(
@@ -570,12 +562,11 @@ export class PermalinkController {
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
@@ -596,12 +587,11 @@ export class PermalinkController {
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelElementById(
@@ -621,12 +611,11 @@ export class PermalinkController {
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelElementValue(

@@ -3,6 +3,7 @@ import { type Gs1IdentityResponse, UniqueProductIdentifierType } from "@open-dpp
 import { BaseUrlResolver } from "../../../permalink/application/services/base-url-resolver.service";
 import {
   PermalinkApplicationService,
+  type PermalinkAccessContext,
   resolvePresentationViewUrl,
 } from "../../../permalink/application/services/permalink.application.service";
 import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
@@ -38,7 +39,10 @@ export class Gs1IdentityService {
     return this.toResponse(upi, organizationId);
   }
 
-  async resolveGs1KeyToPublicUrl(key: Gs1KeyInput): Promise<string> {
+  async resolveGs1KeyToPublicUrl(
+    key: Gs1KeyInput,
+    access?: PermalinkAccessContext,
+  ): Promise<string> {
     const upi = await this.uniqueProductIdentifierRepository.findByGs1Key({
       gtin: key.gtin,
       batch: key.batch ?? null,
@@ -55,7 +59,7 @@ export class Gs1IdentityService {
 
     const { passport } = await this.permalinkApplicationService.resolveToPassport(
       gs1LinkPermalink.id,
-      undefined,
+      access,
     );
     const branding = await this.baseUrlResolver.loadBrandingOrNull(passport.organizationId);
     const fallbackEnvUrl = await this.permalinkApplicationService.getPermalinkBaseUrl();

@@ -65,6 +65,20 @@ test("a scanned key on an unpublished passport stays hidden", async ({ page, con
   });
   expect(response.status(), "a draft passport must not be reachable by scan").toBe(404);
   await anonymous.close();
+
+  const memberScan = await page.request.get(scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}`), {
+    maxRedirects: 0,
+  });
+  expect(memberScan.status(), "a member of the owning org should be redirected").toBe(302);
+  expect(memberScan.headers()["location"]).toContain("/p/");
+
+  const viewer = await context.newPage();
+  const viewerResponse = await viewer.goto(scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}`));
+  expect(viewerResponse?.status(), "the draft presentation view should render for a member").toBe(
+    200,
+  );
+  expect(viewer.url()).toMatch(/\/p\//);
+  await viewer.close();
 });
 
 test("unknown and malformed keys answer 404", async ({ page, context }) => {
