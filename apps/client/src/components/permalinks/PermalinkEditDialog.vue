@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PermalinkPublicDto, PresentationConfigurationDto } from "@open-dpp/dto";
+import type { PermalinkPublicDto } from "@open-dpp/dto";
 import { PermalinkKind } from "@open-dpp/dto";
 import { isAxiosError } from "axios";
 import { computed, ref, watch } from "vue";
@@ -26,8 +26,6 @@ const notificationStore = useNotificationStore();
 
 const slug = ref<string>("");
 const baseUrl = ref<string>("");
-const selectedConfigId = ref<string | undefined>(undefined);
-const configs = ref<PresentationConfigurationDto[]>([]);
 const gs1DataAttributes = ref<Record<string, string>>({});
 const gs1AttributesValid = ref(true);
 
@@ -51,32 +49,11 @@ watch(
   (pl) => {
     slug.value = pl.slug ?? "";
     baseUrl.value = pl.baseUrl ?? "";
-    selectedConfigId.value = pl.presentationConfigurationId ?? undefined;
     gs1DataAttributes.value = pl.gs1DataAttributes ?? {};
     slugError.value = null;
   },
   { immediate: true },
 );
-
-watch(
-  model,
-  async (visible) => {
-    if (!visible || isGs1Link.value || locked.value) return;
-    try {
-      const response = await apiClient.dpp.passports.presentationConfiguration.list(
-        props.permalink.passportId,
-      );
-      configs.value = response.data ?? [];
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(t("permalink.edit.saveError"), e);
-    }
-  },
-  { immediate: true },
-);
-
-function configLabel(config: PresentationConfigurationDto): string {
-  return config.label ?? config.id;
-}
 
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();
@@ -95,9 +72,9 @@ async function save() {
             Object.keys(gs1DataAttributes.value).length > 0 ? gs1DataAttributes.value : null,
         }
       : {
+          // ponytail: presentationConfigurationId omitted (#684) — backend preserves existing
           slug: trimToNull(slug.value),
           baseUrl: trimToNull(baseUrl.value),
-          presentationConfigurationId: selectedConfigId.value ?? null,
         };
 
     const result = await apiClient.dpp.permalinks.updateById(props.permalink.id, body);
@@ -161,23 +138,6 @@ function cancel() {
         <small v-if="slugError" data-testid="permalink-edit-slug-error" class="text-red-500">
           {{ slugError }}
         </small>
-      </div>
-
-      <div v-if="!isGs1Link" class="flex flex-col gap-2">
-        <label for="permalink-edit-config" class="text-sm leading-6 font-medium text-gray-900">
-          {{ t("permalink.edit.config.label") }}
-        </label>
-        <Select
-          id="permalink-edit-config"
-          v-model="selectedConfigId"
-          data-testid="permalink-edit-config-select"
-          :options="configs"
-          option-value="id"
-          :option-label="configLabel"
-          :placeholder="t('permalink.edit.config.placeholder')"
-          :disabled="locked || saving"
-          show-clear
-        />
       </div>
 
       <div class="flex flex-col gap-2">
