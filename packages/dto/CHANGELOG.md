@@ -1,5 +1,11 @@
 # @open-dpp/dto
 
+## 3.1.0
+
+### Minor Changes
+
+- [#687](https://github.com/open-dpp/open-dpp/pull/687) [`6f6154f`](https://github.com/open-dpp/open-dpp/commit/6f6154f38b07290ec19595cbbe2eeda6939aa887) Thanks [@florianBieck](https://github.com/florianBieck)! - The GS1 Digital Link resolver moves from the origin root to the `/gs1/v1/` prefix
+
 ## 3.0.0
 
 ### Major Changes
