@@ -1,5 +1,16 @@
 # @open-dpp/main
 
+## 3.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.2
+  - @open-dpp/dto@3.1.2
+  - @open-dpp/env@3.1.2
+  - @open-dpp/exception@3.1.2
+  - @open-dpp/permission@3.1.2
+
 ## 3.1.1
 
 ### Patch Changes
