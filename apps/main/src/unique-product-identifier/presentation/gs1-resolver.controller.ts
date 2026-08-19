@@ -10,11 +10,11 @@ import {
   Res,
   VERSION_NEUTRAL,
 } from "@nestjs/common";
-import { Cset82ComponentSchema, GtinInputSchema } from "@open-dpp/dto";
+import { Cset82ComponentSchema, GS1_RESOLVER_PATH_PREFIX, GtinInputSchema } from "@open-dpp/dto";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { Gs1IdentityService } from "../application/services/gs1-identity.service";
 
-@Controller({ version: VERSION_NEUTRAL })
+@Controller({ path: GS1_RESOLVER_PATH_PREFIX, version: VERSION_NEUTRAL })
 export class Gs1ResolverController {
   private readonly logger = new Logger(Gs1ResolverController.name);
 

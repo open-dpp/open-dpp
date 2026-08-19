@@ -156,13 +156,17 @@ describe("Gs1ResolverController", () => {
     await moduleRef.get(PermalinkRepository).save(presentation);
     await moduleRef.get(UniqueProductIdentifierRepository).save(upi);
 
-    const response = await request(ctx.globals().app.getHttpServer()).get("/01/88000000000909");
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      "/gs1/v1/01/88000000000909",
+    );
     expect(response.status).toBe(404);
   });
 
   it("302-redirects a scanned GTIN to the passport's permalink public URL", async () => {
     const { permalink } = await seedGs1Passport({ gtin: "4006381333931" });
-    const response = await request(ctx.globals().app.getHttpServer()).get("/01/04006381333931");
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      "/gs1/v1/01/04006381333931",
+    );
     expect(response.status).toBe(302);
     expect(response.headers.location).toContain(permalink.id);
   });
@@ -170,61 +174,69 @@ describe("Gs1ResolverController", () => {
   it("forwards the request query string to the redirect target (GS1-conformant resolver §2.12)", async () => {
     const { gtin } = await seedGs1Passport({ gtin: "614141123452" });
     const server = ctx.globals().app.getHttpServer();
-    const bare = await request(server).get(`/01/${gtin}`);
+    const bare = await request(server).get(`/gs1/v1/01/${gtin}`);
     expect(bare.status).toBe(302);
-    const withQuery = await request(server).get(`/01/${gtin}?11=241220&17=270101`);
+    const withQuery = await request(server).get(`/gs1/v1/01/${gtin}?11=241220&17=270101`);
     expect(withQuery.status).toBe(302);
     expect(withQuery.headers.location).toBe(`${bare.headers.location}?11=241220&17=270101`);
   });
 
   it("normalizes a GTIN-13 in the path before resolving", async () => {
     await seedGs1Passport({ gtin: "00012345678905" });
-    const response = await request(ctx.globals().app.getHttpServer()).get("/01/00012345678905");
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      "/gs1/v1/01/00012345678905",
+    );
     expect(response.status).toBe(302);
   });
 
   it("returns 404 for an unknown GTIN", async () => {
-    const response = await request(ctx.globals().app.getHttpServer()).get("/01/00000040170725");
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      "/gs1/v1/01/00000040170725",
+    );
     expect(response.status).toBe(404);
   });
 
   it("returns 404 for a malformed GTIN (bad check digit)", async () => {
-    const response = await request(ctx.globals().app.getHttpServer()).get("/01/4006381333930");
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      "/gs1/v1/01/4006381333930",
+    );
     expect(response.status).toBe(404);
   });
 
   it("keeps an unpublished passport gated (404) for anonymous scans", async () => {
     await seedGs1Passport({ gtin: "00111111111117", published: false });
-    const response = await request(ctx.globals().app.getHttpServer()).get("/01/00111111111117");
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      "/gs1/v1/01/00111111111117",
+    );
     expect(response.status).toBe(404);
   });
 
-  it("302-redirects a serial route /01/{gtin}/21/{serial}", async () => {
+  it("302-redirects a serial route /gs1/v1/01/{gtin}/21/{serial}", async () => {
     const { permalink } = await seedGs1Passport({ gtin: "88000000000107", serial: "SN-001" });
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      "/01/88000000000107/21/SN-001",
+      "/gs1/v1/01/88000000000107/21/SN-001",
     );
     expect(response.status).toBe(302);
     expect(response.headers.location).toContain(permalink.id);
   });
 
-  it("302-redirects a batch route /01/{gtin}/10/{batch}", async () => {
+  it("302-redirects a batch route /gs1/v1/01/{gtin}/10/{batch}", async () => {
     const { permalink } = await seedGs1Passport({ gtin: "88000000000206", batch: "LOT-42" });
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      "/01/88000000000206/10/LOT-42",
+      "/gs1/v1/01/88000000000206/10/LOT-42",
     );
     expect(response.status).toBe(302);
     expect(response.headers.location).toContain(permalink.id);
   });
 
-  it("302-redirects the combined route /01/{gtin}/10/{batch}/21/{serial}", async () => {
+  it("302-redirects the combined route /gs1/v1/01/{gtin}/10/{batch}/21/{serial}", async () => {
     const { permalink } = await seedGs1Passport({
       gtin: "88000000000305",
       batch: "LOT-42",
       serial: "SN-001",
     });
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      "/01/88000000000305/10/LOT-42/21/SN-001",
+      "/gs1/v1/01/88000000000305/10/LOT-42/21/SN-001",
     );
     expect(response.status).toBe(302);
     expect(response.headers.location).toContain(permalink.id);
@@ -236,11 +248,15 @@ describe("Gs1ResolverController", () => {
     const b = await seedGs1Passport({ gtin, serial: "SN-B" });
     expect(a.permalink.id).not.toBe(b.permalink.id);
 
-    const respA = await request(ctx.globals().app.getHttpServer()).get(`/01/${gtin}/21/SN-A`);
+    const respA = await request(ctx.globals().app.getHttpServer()).get(
+      `/gs1/v1/01/${gtin}/21/SN-A`,
+    );
     expect(respA.status).toBe(302);
     expect(respA.headers.location).toContain(a.permalink.id);
 
-    const respB = await request(ctx.globals().app.getHttpServer()).get(`/01/${gtin}/21/SN-B`);
+    const respB = await request(ctx.globals().app.getHttpServer()).get(
+      `/gs1/v1/01/${gtin}/21/SN-B`,
+    );
     expect(respB.status).toBe(302);
     expect(respB.headers.location).toContain(b.permalink.id);
   });
@@ -248,7 +264,7 @@ describe("Gs1ResolverController", () => {
   it("returns 404 for a bare-GTIN scan when only a serialized unit exists", async () => {
     const gtin = "88000000000503";
     await seedGs1Passport({ gtin, serial: "SN-ONLY" });
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/01/${gtin}`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(`/gs1/v1/01/${gtin}`);
     expect(response.status).toBe(404);
   });
 
@@ -256,14 +272,14 @@ describe("Gs1ResolverController", () => {
     const gtin = "88000000000602";
     await seedGs1Passport({ gtin, serial: "SN-REAL" });
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/01/${gtin}/21/SN-MISSING`,
+      `/gs1/v1/01/${gtin}/21/SN-MISSING`,
     );
     expect(response.status).toBe(404);
   });
 
   it("returns 404 for a serial outside CSET-82", async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      "/01/88000000000701/21/bad%20value",
+      "/gs1/v1/01/88000000000701/21/bad%20value",
     );
     expect(response.status).toBe(404);
   });
@@ -271,7 +287,7 @@ describe("Gs1ResolverController", () => {
   it("resolves a serial whose value contains a percent-encoded reserved character", async () => {
     const { permalink } = await seedGs1Passport({ gtin: "88000000000800", serial: "A/B" });
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      "/01/88000000000800/21/A%2FB",
+      "/gs1/v1/01/88000000000800/21/A%2FB",
     );
     expect(response.status).toBe(302);
     expect(response.headers.location).toContain(permalink.id);

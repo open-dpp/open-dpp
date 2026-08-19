@@ -105,7 +105,7 @@ describe("RFC 3986 canonical encoding", () => {
       gtin: "04006381333931",
       serial: "A!'()*B",
     });
-    expect(link).toBe("https://r.example/01/04006381333931/21/A%21%27%28%29%2AB");
+    expect(link).toBe("https://r.example/gs1/v1/01/04006381333931/21/A%21%27%28%29%2AB");
   });
 
   it("percent-encodes !'()* in data-attribute query values", () => {
@@ -121,10 +121,10 @@ describe("buildGs1DigitalLinkPath", () => {
     );
   });
 
-  it("matches the path portion of buildGs1DigitalLink", () => {
+  it("matches the path portion of buildGs1DigitalLink behind the resolver prefix", () => {
     const parts = { gtin: "04006381333931", batch: "B(1)", serial: "S:1" };
     expect(buildGs1DigitalLink("https://r.example", parts)).toBe(
-      `https://r.example/${buildGs1DigitalLinkPath(parts)}`,
+      `https://r.example/gs1/v1/${buildGs1DigitalLinkPath(parts)}`,
     );
   });
 });

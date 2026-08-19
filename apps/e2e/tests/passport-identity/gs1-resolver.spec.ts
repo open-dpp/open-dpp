@@ -30,16 +30,19 @@ test("a scanned key on a published passport redirects to its presentation view",
 
   const anonymous = await context.browser()!.newContext();
 
-  const redirect = await anonymous.request.get(scanUrl(`/01/${GTIN14}/21/${serial}?linkType=all`), {
-    maxRedirects: 0,
-  });
+  const redirect = await anonymous.request.get(
+    scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}?linkType=all`),
+    {
+      maxRedirects: 0,
+    },
+  );
   expect(redirect.status(), "a resolvable scan should redirect").toBe(302);
   const location = redirect.headers()["location"];
   expect(location).toContain("/p/");
   expect(location).toContain("linkType=all");
 
   const viewer = await anonymous.newPage();
-  const response = await viewer.goto(scanUrl(`/01/${GTIN14}/21/${serial}?linkType=all`));
+  const response = await viewer.goto(scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}?linkType=all`));
   expect(response?.status(), "the redirect target should render").toBe(200);
   expect(viewer.url()).toMatch(/\/p\//);
   expect(viewer.url()).toContain("linkType=all");
@@ -57,7 +60,7 @@ test("a scanned key on an unpublished passport stays hidden", async ({ page, con
   await createGs1LinkPermalink(page);
 
   const anonymous = await context.browser()!.newContext();
-  const response = await anonymous.request.get(scanUrl(`/01/${GTIN14}/21/${serial}`), {
+  const response = await anonymous.request.get(scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}`), {
     maxRedirects: 0,
   });
   expect(response.status(), "a draft passport must not be reachable by scan").toBe(404);
@@ -77,9 +80,9 @@ test("unknown and malformed keys answer 404", async ({ page, context }) => {
   const anonymous = await context.browser()!.newContext();
 
   for (const path of [
-    `/01/${GTIN14}/21/${uniqueSerial("nosuch")}`,
-    `/01/${GTIN14}/10/${uniqueSerial("nobatch")}/21/${serial}`,
-    "/01/123",
+    `/gs1/v1/01/${GTIN14}/21/${uniqueSerial("nosuch")}`,
+    `/gs1/v1/01/${GTIN14}/10/${uniqueSerial("nobatch")}/21/${serial}`,
+    "/gs1/v1/01/123",
   ]) {
     const response = await anonymous.request.get(scanUrl(path), { maxRedirects: 0 });
     expect(response.status(), `${path} should not resolve`).toBe(404);

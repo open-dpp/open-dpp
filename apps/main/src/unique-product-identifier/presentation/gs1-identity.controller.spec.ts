@@ -187,7 +187,7 @@ describe("Gs1IdentityController", () => {
       .send();
 
     expect(response.status).toEqual(200);
-    expect(response.body.digitalLink).toEqual(`https://id.override.example/01/${gtin}`);
+    expect(response.body.digitalLink).toEqual(`https://id.override.example/gs1/v1/01/${gtin}`);
   });
 
   it("PUT /:id/gs1-identity → 404 (write route retired in Slice 44)", async () => {

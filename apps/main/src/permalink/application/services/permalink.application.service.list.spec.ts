@@ -127,7 +127,7 @@ describe("PermalinkApplicationService.listByOrganization", () => {
     const result = await service.listByOrganization(organizationId);
 
     const entry = result.items.find((e) => e.permalink.id === permalink.id);
-    expect(entry?.publicUrl).toBe("https://id.example.com/01/00036000291452");
+    expect(entry?.publicUrl).toBe("https://id.example.com/gs1/v1/01/00036000291452");
   });
 
   it("batch-loads UPI identities — one findByIds query per page, no N+1", async () => {
@@ -268,7 +268,7 @@ describe("PermalinkApplicationService.getPermalinkSummariesByUpiIds", () => {
 
     const result = await service.getPermalinkSummariesByUpiIds([upi.uuid], organizationId);
 
-    expect(result.get(upi.uuid)?.publicUrl).toBe("https://id.example.com/01/88000000000206");
+    expect(result.get(upi.uuid)?.publicUrl).toBe("https://id.example.com/gs1/v1/01/88000000000206");
   });
 });
 
@@ -394,6 +394,6 @@ describe("PermalinkApplicationService.listByPassport", () => {
     const result = await service.listByPassport(passport.id);
 
     const entry = result.items.find((e) => e.permalink.id === link.id);
-    expect(entry?.publicUrl).toBe("https://id.example.com/01/88000000000305");
+    expect(entry?.publicUrl).toBe("https://id.example.com/gs1/v1/01/88000000000305");
   });
 });

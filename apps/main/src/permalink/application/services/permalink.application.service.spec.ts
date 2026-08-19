@@ -265,7 +265,9 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     await service.freezeAllForPassport(passport);
 
     const frozen = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(gs1Link.id);
-    expect(frozen.publishedUrl).toBe(`https://id.example.com/01/00012345678905/21/${serial}`);
+    expect(frozen.publishedUrl).toBe(
+      `https://id.example.com/gs1/v1/01/00012345678905/21/${serial}`,
+    );
   });
 
   it("freezeAllForPassport leaves an already-frozen permalink untouched (idempotent)", async () => {
@@ -364,7 +366,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
       "http://localhost:3000/p",
     );
 
-    expect(publicUrl).toBe("https://id.example.com/01/00012345678905");
+    expect(publicUrl).toBe("https://id.example.com/gs1/v1/01/00012345678905");
     expect(unchanged.publishedUrl).toBeNull();
   });
 
@@ -423,9 +425,9 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
 
     const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
 
-    expect(frozen.publishedUrl).toBe("https://id.example.com/01/04006381333931");
+    expect(frozen.publishedUrl).toBe("https://id.example.com/gs1/v1/01/04006381333931");
     const persisted = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(permalink.id);
-    expect(persisted.publishedUrl).toBe("https://id.example.com/01/04006381333931");
+    expect(persisted.publishedUrl).toBe("https://id.example.com/gs1/v1/01/04006381333931");
   });
 
   it("freezePermalink threads batch, serial and gs1DataAttributes into the frozen GS1 URL", async () => {
@@ -451,7 +453,7 @@ describe("PermalinkApplicationService.ensureDefaultForPassport", () => {
     const frozen = await service.freezePermalink(permalink, null, "http://localhost:3000/p");
 
     expect(frozen.publishedUrl).toBe(
-      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-001?3103=000750",
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-001?3103=000750",
     );
   });
 });

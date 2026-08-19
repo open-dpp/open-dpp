@@ -243,7 +243,7 @@ describe("useGs1LinkPreview", () => {
       uniqueProductIdentifierId: upiId,
       slug: null,
       gs1DataAttributes: null,
-      publicUrl: "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1",
+      publicUrl: "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
       fallbackBaseUrl: "https://id.example.com",
       fallbackBaseUrlSource: "instance",
       ...overrides,
@@ -258,24 +258,24 @@ describe("useGs1LinkPreview", () => {
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
     expect(preview.previewUrl.value).toBe(
-      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1",
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
     );
 
     attrs.value = { "3103": "000750" };
     expect(preview.previewUrl.value).toBe(
-      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1?3103=000750",
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1?3103=000750",
     );
 
     attrs.value = { "3103": "000750", "17": "251231" };
     expect(preview.previewUrl.value).toBe(
-      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1?17=251231&3103=000750",
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1?17=251231&3103=000750",
     );
   });
 
   it("drops the query already present on publicUrl and rebuilds it from the edited attrs", () => {
     const permalink = ref<PermalinkPublicDto | undefined>(
       makeGs1Permalink({
-        publicUrl: "https://id.example.com/01/04006381333931?3103=000750",
+        publicUrl: "https://id.example.com/gs1/v1/01/04006381333931?3103=000750",
       }),
     );
     const baseUrl = ref("");
@@ -283,7 +283,9 @@ describe("useGs1LinkPreview", () => {
 
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
-    expect(preview.previewUrl.value).toBe("https://id.example.com/01/04006381333931?17=251231");
+    expect(preview.previewUrl.value).toBe(
+      "https://id.example.com/gs1/v1/01/04006381333931?17=251231",
+    );
   });
 
   it("reduces a path-carrying base override to its origin (GS1 resolves at the root)", () => {
@@ -294,7 +296,7 @@ describe("useGs1LinkPreview", () => {
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
     expect(preview.previewUrl.value).toBe(
-      "https://brand.example.com/01/04006381333931/10/LOT-42/21/SN-1",
+      "https://brand.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
     );
   });
 
@@ -311,12 +313,12 @@ describe("useGs1LinkPreview", () => {
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
     expect(preview.previewUrl.value).toBe(
-      "https://branding.example.com/01/04006381333931/10/LOT-42/21/SN-1",
+      "https://branding.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
     );
   });
 
   it("shows the frozen publishedUrl verbatim once locked, ignoring live edits", () => {
-    const frozen = "https://frozen.example.com/01/04006381333931?3103=000750";
+    const frozen = "https://frozen.example.com/gs1/v1/01/04006381333931?3103=000750";
     const permalink = ref<PermalinkPublicDto | undefined>(
       makeGs1Permalink({ publishedUrl: frozen }),
     );
@@ -337,7 +339,7 @@ describe("useGs1LinkPreview", () => {
     const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
 
     expect(preview.previewUrl.value).toBe(
-      "https://id.example.com/01/04006381333931/10/LOT-42/21/SN-1",
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
     );
   });
 
