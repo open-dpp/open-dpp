@@ -1,5 +1,18 @@
 # @open-dpp/main
 
+## 3.1.1
+
+### Patch Changes
+
+- [#689](https://github.com/open-dpp/open-dpp/pull/689) [`fc43933`](https://github.com/open-dpp/open-dpp/commit/fc4393362f0aaba2be0de3fa57d5d16fa4fd68b8) Thanks [@florianBieck](https://github.com/florianBieck)! - Passthrough optional authentication in GS1 resolver endpoints
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.1
+  - @open-dpp/dto@3.1.1
+  - @open-dpp/env@3.1.1
+  - @open-dpp/exception@3.1.1
+  - @open-dpp/permission@3.1.1
+
 ## 3.1.0
 
 ### Minor Changes
