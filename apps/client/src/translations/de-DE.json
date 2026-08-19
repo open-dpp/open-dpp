@@ -874,8 +874,6 @@
       "selectUpi": "Produktidentifikator (optional)",
       "selectUpiPlaceholder": "Kein Produktidentifikator — Pass direkt verlinken",
       "kindHint": "Erstellt einen {kind} Permalink.",
-      "selectConfig": "Präsentationskonfiguration (optional)",
-      "selectConfigPlaceholder": "Standardansicht",
       "loadFailed": "Die Formulardaten konnten nicht geladen werden. Bitte erneut versuchen.",
       "slug": {
         "label": "Kurzname (optional)",
@@ -897,10 +895,6 @@
         "label": "Typ",
         "presentation": "open-dpp",
         "gs1Link": "GS1 Digital Link"
-      },
-      "config": {
-        "label": "Präsentationskonfiguration",
-        "placeholder": "Standardansicht"
       },
       "saveSuccess": "Permalink gespeichert.",
       "saveError": "Permalink konnte nicht gespeichert werden.",

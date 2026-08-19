@@ -29,7 +29,6 @@ const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 
 const selectedUpiId = ref<string | undefined>(props.preselectedUpiId);
-const selectedConfigId = ref<string | undefined>(undefined);
 const slug = ref<string>("");
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
@@ -56,10 +55,6 @@ function upiLabel(upi: UniqueProductIdentifierListItemDto): string {
     return parts.length > 0 ? parts.join(" / ") : upi.uuid;
   }
   return upi.uuid;
-}
-
-function configLabel(config: PresentationConfigurationDto): string {
-  return config.label ?? config.id;
 }
 
 watch(
@@ -93,7 +88,8 @@ async function submit() {
           kind: PermalinkKind.OPEN_DPP,
           passportId: props.passportId,
           uniqueProductIdentifierId: selectedUpiId.value ?? null,
-          presentationConfigurationId: selectedConfigId.value ?? null,
+          // ponytail: config select hidden (#684) — auto-target last created config
+          presentationConfigurationId: props.configs.at(-1)?.id ?? null,
           slug: trimToNull(slug.value),
           baseUrl: trimToNull(baseUrl.value),
         };
@@ -118,7 +114,6 @@ async function submit() {
 
 function resetForm() {
   selectedUpiId.value = undefined;
-  selectedConfigId.value = undefined;
   slug.value = "";
   baseUrl.value = "";
   gs1DataAttributes.value = {};
@@ -180,23 +175,6 @@ function cancel() {
             :placeholder="t('permalink.create.slug.placeholder')"
             :disabled="busy"
             autocomplete="off"
-          />
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <label for="permalink-create-config" class="text-sm leading-6 font-medium text-gray-900">
-            {{ t("permalink.create.selectConfig") }}
-          </label>
-          <Select
-            id="permalink-create-config"
-            v-model="selectedConfigId"
-            data-testid="permalink-create-config-select"
-            :options="props.configs"
-            option-value="id"
-            :option-label="configLabel"
-            :placeholder="t('permalink.create.selectConfigPlaceholder')"
-            :disabled="busy"
-            show-clear
           />
         </div>
       </template>

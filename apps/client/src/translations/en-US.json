@@ -874,8 +874,6 @@
       "selectUpi": "Product Identifier (optional)",
       "selectUpiPlaceholder": "No product identifier — link the passport directly",
       "kindHint": "Creates a {kind} permalink.",
-      "selectConfig": "Presentation configuration (optional)",
-      "selectConfigPlaceholder": "Standard view",
       "loadFailed": "The form data could not be loaded. Please try again.",
       "slug": {
         "label": "Short name (optional)",
@@ -897,10 +895,6 @@
         "label": "Type",
         "presentation": "open-dpp",
         "gs1Link": "GS1 Digital Link"
-      },
-      "config": {
-        "label": "Presentation configuration",
-        "placeholder": "Standard view"
       },
       "saveSuccess": "Permalink saved.",
       "saveError": "Could not save permalink.",
