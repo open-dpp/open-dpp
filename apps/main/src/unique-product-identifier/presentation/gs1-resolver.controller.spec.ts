@@ -81,6 +81,7 @@ describe("Gs1ResolverController", () => {
     batch?: string;
     serial?: string;
     published?: boolean;
+    organizationId?: string;
   }) {
     const { aas, submodels } = ctx.getAasObjects();
     const environment = Environment.create({
@@ -88,7 +89,7 @@ describe("Gs1ResolverController", () => {
       submodels: submodels.map((s) => s.id),
       conceptDescriptions: [],
     });
-    const organizationId = randomUUID();
+    const organizationId = options.organizationId ?? randomUUID();
     const lastStatusChange =
       options.published === false
         ? DigitalProductDocumentStatusChange.create({})
@@ -208,6 +209,29 @@ describe("Gs1ResolverController", () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
       "/gs1/v1/01/00111111111117",
     );
+    expect(response.status).toBe(404);
+  });
+
+  it("302-redirects an unpublished passport scan for a member of the passport's organization", async () => {
+    const { org, userCookie } = await ctx.globals().getOrganizationAndUserWithCookie();
+    const { permalink } = await seedGs1Passport({
+      gtin: "88000000001005",
+      published: false,
+      organizationId: org!.id,
+    });
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get("/gs1/v1/01/88000000001005")
+      .set("Cookie", userCookie);
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toContain(permalink.id);
+  });
+
+  it("keeps an unpublished passport gated (404) for an authenticated member of another org", async () => {
+    const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+    await seedGs1Passport({ gtin: "88000000001104", published: false });
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get("/gs1/v1/01/88000000001104")
+      .set("Cookie", outsider.userCookie);
     expect(response.status).toBe(404);
   });
 

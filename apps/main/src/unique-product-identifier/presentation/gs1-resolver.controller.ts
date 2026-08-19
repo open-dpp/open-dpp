@@ -11,6 +11,8 @@ import {
   VERSION_NEUTRAL,
 } from "@nestjs/common";
 import { Cset82ComponentSchema, GS1_RESOLVER_PATH_PREFIX, GtinInputSchema } from "@open-dpp/dto";
+import type { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { Gs1IdentityService } from "../application/services/gs1-identity.service";
 
@@ -24,10 +26,11 @@ export class Gs1ResolverController {
   @Get("01/:gtin")
   async resolveGtin(
     @Param("gtin") gtin: string,
+    @AuthSession() session: Session | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    await this.resolve({ gtin }, req, res);
+    await this.resolve({ gtin }, session, req, res);
   }
 
   @OptionalAuth()
@@ -35,10 +38,11 @@ export class Gs1ResolverController {
   async resolveGtinBatch(
     @Param("gtin") gtin: string,
     @Param("batch") batch: string,
+    @AuthSession() session: Session | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    await this.resolve({ gtin, batch }, req, res);
+    await this.resolve({ gtin, batch }, session, req, res);
   }
 
   @OptionalAuth()
@@ -46,10 +50,11 @@ export class Gs1ResolverController {
   async resolveGtinSerial(
     @Param("gtin") gtin: string,
     @Param("serial") serial: string,
+    @AuthSession() session: Session | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    await this.resolve({ gtin, serial }, req, res);
+    await this.resolve({ gtin, serial }, session, req, res);
   }
 
   @OptionalAuth()
@@ -58,14 +63,16 @@ export class Gs1ResolverController {
     @Param("gtin") gtin: string,
     @Param("batch") batch: string,
     @Param("serial") serial: string,
+    @AuthSession() session: Session | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    await this.resolve({ gtin, batch, serial }, req, res);
+    await this.resolve({ gtin, batch, serial }, session, req, res);
   }
 
   private async resolve(
     raw: { gtin: string; batch?: string; serial?: string },
+    session: Session | undefined,
     req: Request,
     res: Response,
   ): Promise<void> {
@@ -77,7 +84,9 @@ export class Gs1ResolverController {
     const serial = this.parseComponentOr404(raw.serial, "serial");
 
     const key = { gtin: parsedGtin.data, batch, serial };
-    const publicUrl = await this.gs1IdentityService.resolveGs1KeyToPublicUrl(key);
+    const publicUrl = await this.gs1IdentityService.resolveGs1KeyToPublicUrl(key, {
+      userId: session?.userId,
+    });
     const target = this.withForwardedQuery(publicUrl, req);
     this.logger.debug(`Resolved GS1 Digital Link ${this.describeKey(key)} → ${target}`);
     res.redirect(HttpStatus.FOUND, target);

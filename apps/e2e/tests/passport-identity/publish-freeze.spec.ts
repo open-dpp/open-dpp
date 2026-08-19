@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ApiBase } from "../config";
+import { newAnonymousContext } from "../helpers/anonymous";
 import {
   createBlankPassport,
   createGs1Upi,
@@ -38,7 +39,7 @@ test("publishing freezes the permalink and opens it to anonymous visitors", asyn
   await expect(page.getByTestId("permalink-frozen-info")).toHaveCount(0);
 
   const slug = publicUrl.split("/p/")[1];
-  const anonymous = await context.browser()!.newContext();
+  const anonymous = await newAnonymousContext(context.browser()!);
   const beforePublish = await anonymous.request.get(`${ApiBase}/p/${slug}`);
   expect(beforePublish.status(), "a draft passport stays hidden from anonymous visitors").toBe(404);
 

@@ -518,6 +518,39 @@ describe("PermalinkController", () => {
       expect(response.body.passport.id).toEqual(passport.id);
     });
 
+    it("returns 200 to a member of the owning org for a draft passport without the organization header", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: org.id,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
+        .set("Cookie", userCookie);
+
+      expect(response.status).toEqual(200);
+      expect(response.body.passport.id).toEqual(passport.id);
+    });
+
     it("returns 404 to a member of a different org for a draft passport", async () => {
       const { org: ownerOrg } = await ctx
         .globals()
