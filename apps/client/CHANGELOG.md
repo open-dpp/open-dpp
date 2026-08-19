@@ -1,5 +1,15 @@
 # @open-dpp/client
 
+## 3.1.2
+
+### Patch Changes
+
+- [#692](https://github.com/open-dpp/open-dpp/pull/692) [`318aa1c`](https://github.com/open-dpp/open-dpp/commit/318aa1c959cd31403b8da64c18f6c2969984c8ca) Thanks [@florianBieck](https://github.com/florianBieck)! - Removed select field for presentation configuration on permalinks as presentation configurations canot be managed at the moment.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.2
+  - @open-dpp/dto@3.1.2
+
 ## 3.1.1
 
 ### Patch Changes
