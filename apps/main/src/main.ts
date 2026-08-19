@@ -27,9 +27,13 @@ import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
 
+const GS1_RESOLVER_ROUTE_REGEX = new RegExp(
+  `^/${GS1_RESOLVER_PATH_PREFIX}/01/[^/]+(?:/10/[^/]+)?(?:/21/[^/]+)?/?$`,
+);
+
 function isPublicBackendRoute(pathOrUrl: string): boolean {
   const path = pathOrUrl.split("?")[0];
-  return /^\/01\/[^/]+(?:\/10\/[^/]+)?(?:\/21\/[^/]+)?\/?$/.test(path);
+  return GS1_RESOLVER_ROUTE_REGEX.test(path);
 }
 
 async function bootstrap() {
