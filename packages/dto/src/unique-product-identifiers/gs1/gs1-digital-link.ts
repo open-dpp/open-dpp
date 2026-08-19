@@ -312,20 +312,28 @@ function normalizeOptionalComponent(
 }
 
 /**
+ * Path prefix (no leading/trailing slash) under which the GS1 resolver endpoint
+ * is mounted, between the resolver base and the `01/...` identity path.
+ * Must match the `Gs1ResolverController` route mounting in the backend.
+ */
+export const GS1_RESOLVER_PATH_PREFIX = "gs1/v1";
+
+/**
  * Build the uncompressed, canonical GS1 Digital Link for a GS1 identity.
  *
- * Emits the GTIN path and, when present, appends the batch (AI `10`) and serial
- * (AI `21`) segments in canonical GS1 order `01 -> 10 -> 21`. A blank batch/serial
- * is treated as absent. The resolver base is canonicalised (host lowercased,
- * trailing slash dropped) and any path it carries is preserved; batch/serial
- * values are percent-encoded for the path.
+ * Emits the resolver prefix (`gs1/v1`) followed by the GTIN path and, when
+ * present, the batch (AI `10`) and serial (AI `21`) segments in canonical GS1
+ * order `01 -> 10 -> 21`. A blank batch/serial is treated as absent. The
+ * resolver base is canonicalised (host lowercased, trailing slash dropped) and
+ * any path it carries is preserved; batch/serial values are percent-encoded
+ * for the path.
  *
  * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 /
  *   length / the dot-segment rule.
  */
 export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkParts): string {
   const base = canonicaliseBaseUrl(resolverBase);
-  let url = `${base}/${buildGs1DigitalLinkPath(parts)}`;
+  let url = `${base}/${GS1_RESOLVER_PATH_PREFIX}/${buildGs1DigitalLinkPath(parts)}`;
   url += buildGs1DataAttributeQuery(parts.dataAttributes);
   return url;
 }

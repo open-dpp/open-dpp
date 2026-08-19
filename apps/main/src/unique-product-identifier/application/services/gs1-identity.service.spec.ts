@@ -112,7 +112,7 @@ describe("Gs1IdentityService.getIdentity", () => {
       gtin: VALID_GTIN13_AS_14,
       batch: "LOT-42",
       serial: "SN-001",
-      digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
     });
   });
 
@@ -136,7 +136,9 @@ describe("Gs1IdentityService.getIdentity", () => {
 
     const result = await service.getIdentity(referenceId, organizationId);
 
-    expect(result?.digitalLink).toBe(`https://id.instance.example.com/01/${VALID_GTIN13_AS_14}`);
+    expect(result?.digitalLink).toBe(
+      `https://id.instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
+    );
     expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
@@ -169,7 +171,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -200,7 +202,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -250,7 +252,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -282,7 +284,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -311,7 +313,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://qr.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://qr.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
       baseUrlResolver: {
@@ -341,7 +343,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -396,7 +398,7 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/01/${VALID_GTIN13_AS_14}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });

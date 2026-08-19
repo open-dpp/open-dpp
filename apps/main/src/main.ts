@@ -22,14 +22,18 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
-import { AllApiVersions, ApiVersionsDto } from "@open-dpp/dto";
+import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-dpp/dto";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
 
+const GS1_RESOLVER_ROUTE_REGEX = new RegExp(
+  `^/${GS1_RESOLVER_PATH_PREFIX}/01/[^/]+(?:/10/[^/]+)?(?:/21/[^/]+)?/?$`,
+);
+
 function isPublicBackendRoute(pathOrUrl: string): boolean {
   const path = pathOrUrl.split("?")[0];
-  return /^\/01\/[^/]+(?:\/10\/[^/]+)?(?:\/21\/[^/]+)?\/?$/.test(path);
+  return GS1_RESOLVER_ROUTE_REGEX.test(path);
 }
 
 async function bootstrap() {
@@ -104,10 +108,13 @@ async function bootstrap() {
 
   app.setGlobalPrefix("api", {
     exclude: [
-      { path: "01/:gtin", method: RequestMethod.GET },
-      { path: "01/:gtin/10/:batch", method: RequestMethod.GET },
-      { path: "01/:gtin/21/:serial", method: RequestMethod.GET },
-      { path: "01/:gtin/10/:batch/21/:serial", method: RequestMethod.GET },
+      { path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin`, method: RequestMethod.GET },
+      { path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin/10/:batch`, method: RequestMethod.GET },
+      { path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin/21/:serial`, method: RequestMethod.GET },
+      {
+        path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin/10/:batch/21/:serial`,
+        method: RequestMethod.GET,
+      },
     ],
   });
   app.enableVersioning({

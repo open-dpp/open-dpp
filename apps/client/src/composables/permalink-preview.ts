@@ -3,6 +3,7 @@ import {
   baseUrlOrigin,
   buildGs1DataAttributeQuery,
   canonicaliseBaseUrl,
+  GS1_RESOLVER_PATH_PREFIX,
   PERMALINK_RESERVED_SLUGS,
   PermalinkBaseUrlSchema,
   PermalinkSlugSchema,
@@ -120,10 +121,12 @@ export function usePermalinkPreview(
   return { effectiveBase, effectiveSlug, previewUrl, previewSource, previewValid, locked };
 }
 
+const GS1_IDENTITY_PATH_MARKER = `/${GS1_RESOLVER_PATH_PREFIX}/01/`;
+
 function deriveGs1IdentityPath(publicUrl: string): string {
   try {
     const url = new URL(publicUrl);
-    const idx = url.pathname.indexOf("/01/");
+    const idx = url.pathname.indexOf(GS1_IDENTITY_PATH_MARKER);
     return idx === -1 ? "" : url.pathname.slice(idx);
   } catch {
     return "";

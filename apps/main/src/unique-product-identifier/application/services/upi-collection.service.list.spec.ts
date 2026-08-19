@@ -145,7 +145,7 @@ describe("UpiCollectionService.list", () => {
     expect(gs1Item!.uuid).toBe(gs1Upi.uuid);
     expect(gs1Item!.referenceId).toBe(passportDraftId);
     expect(gs1Item!.gtin).toBe(VALID_GTIN13_AS_14);
-    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
+    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`);
 
     expect(systemItem).toBeDefined();
     expect(systemItem!.uuid).toBe(systemUpi.uuid);
@@ -377,7 +377,7 @@ describe("UpiCollectionService.listByPassport", () => {
     expect(gs1Item!.uuid).toBe(gs1Upi.uuid);
     expect(gs1Item!.referenceId).toBe(referenceId);
     expect(gs1Item!.gtin).toBe(VALID_GTIN13_AS_14);
-    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
+    expect(gs1Item!.digitalLink).toBe(`${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`);
     expect(systemItem!.digitalLink).toBeNull();
   });
 

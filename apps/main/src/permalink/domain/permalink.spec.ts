@@ -503,7 +503,7 @@ describe("Permalink", () => {
       });
 
     const makePublishedGs1Link = () =>
-      makeGs1Link().withPublishedUrl("https://id.example.com/01/04006381333931");
+      makeGs1Link().withPublishedUrl("https://id.example.com/gs1/v1/01/04006381333931");
 
     it("withGs1DataAttributes sets valid attributes on a gs1-link", () => {
       const gs1Attributes = gs1DataAttributesPlainFactory.build();

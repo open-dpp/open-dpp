@@ -125,7 +125,7 @@ describe("UpiCollectionService.create", () => {
     expect(savedArg.gs1?.gtin).toBe(VALID_GTIN13_AS_14);
     expect(result.referenceId).toBe(referenceId);
     expect(result.gtin).toBe(VALID_GTIN13_AS_14);
-    expect(result.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
+    expect(result.digitalLink).toBe(`${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`);
     expect(result.type).toBe(UniqueProductIdentifierType.GS1);
     expect(result.passportPublished).toBe(false);
     expect(result.permalink).toBeNull();
@@ -154,7 +154,7 @@ describe("UpiCollectionService.create", () => {
     expect(result.batch).toBe("LOT-42");
     expect(result.serial).toBe("SN-001");
     expect(result.digitalLink).toBe(
-      `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
     );
   });
 

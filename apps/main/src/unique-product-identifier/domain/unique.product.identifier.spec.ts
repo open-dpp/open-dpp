@@ -104,7 +104,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       gtin: VALID_GTIN13,
     });
     expect(upi.buildDigitalLink("https://id.example.com/p")).toBe(
-      `https://id.example.com/01/${VALID_GTIN13_AS_14}`,
+      `https://id.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
     );
   });
 
@@ -126,7 +126,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13_AS_14,
         batch: null,
         serial: null,
-        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`,
       });
     });
 
@@ -143,7 +143,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: null,
-        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42`,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42`,
       });
     });
 
@@ -161,7 +161,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
-        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
       });
     });
 
@@ -324,7 +324,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         serial: "SN-001",
       });
       expect(upi.buildDigitalLink("https://id.example.com")).toBe(
-        `https://id.example.com/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        `https://id.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
       );
     });
   });
@@ -401,7 +401,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         batch: "LOT-42",
         serial: "SN-001",
         granularity: "item",
-        digitalLink: `${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
         passportPublished: false,
         permalink: null,
       });
@@ -424,7 +424,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
       const item = upi.toListItem({ resolverBase: RESOLVER_BASE, passportPublished: true });
       expect(item.granularity).toBe("model");
-      expect(item.digitalLink).toBe(`${RESOLVER_ORIGIN}/01/${VALID_GTIN13_AS_14}`);
+      expect(item.digitalLink).toBe(`${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`);
       expect(item.passportPublished).toBe(true);
     });
 

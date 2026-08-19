@@ -544,7 +544,7 @@ describe("PermalinkApplicationService.deletePermalink", () => {
       uniqueProductIdentifierId: randomUUID(),
       presentationConfigurationId: null,
     });
-    gs1Link = gs1Link.withPublishedUrl("https://id.example.com/01/04006381333931");
+    gs1Link = gs1Link.withPublishedUrl("https://id.example.com/gs1/v1/01/04006381333931");
     await ctx.getModuleRef().get(PermalinkRepository).save(gs1Link);
     const service = ctx.getModuleRef().get(PermalinkApplicationService);
 
