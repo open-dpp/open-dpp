@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { EnvConfig } from "../config";
+import { newAnonymousContext } from "../helpers/anonymous";
 import {
   createBlankPassport,
   createGs1LinkPermalink,
@@ -28,7 +29,7 @@ test("a scanned key on a published passport redirects to its presentation view",
   await createGs1LinkPermalink(page);
   await publishPassport(page, ids);
 
-  const anonymous = await context.browser()!.newContext();
+  const anonymous = await newAnonymousContext(context.browser()!);
 
   const redirect = await anonymous.request.get(
     scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}?linkType=all`),
@@ -59,7 +60,7 @@ test("a scanned key on an unpublished passport stays hidden", async ({ page, con
   await gotoPermalinkList(page, ids);
   await createGs1LinkPermalink(page);
 
-  const anonymous = await context.browser()!.newContext();
+  const anonymous = await newAnonymousContext(context.browser()!);
   const response = await anonymous.request.get(scanUrl(`/gs1/v1/01/${GTIN14}/21/${serial}`), {
     maxRedirects: 0,
   });
@@ -91,7 +92,7 @@ test("unknown and malformed keys answer 404", async ({ page, context }) => {
   await createGs1LinkPermalink(page);
   await publishPassport(page, ids);
 
-  const anonymous = await context.browser()!.newContext();
+  const anonymous = await newAnonymousContext(context.browser()!);
 
   for (const path of [
     `/gs1/v1/01/${GTIN14}/21/${uniqueSerial("nosuch")}`,

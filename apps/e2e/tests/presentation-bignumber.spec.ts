@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { v4 as uuid4 } from "uuid";
 import { EnvConfig } from "./config";
+import { newAnonymousContext } from "./helpers/anonymous";
 
 const TEMPLATE_NAME = `BigNumber-Template-${uuid4().slice(0, 8)}`;
 const SUBMODEL_ID_SHORT = "Metrics";
@@ -148,7 +149,7 @@ test.fixme("template → BigNumber assignment → passport → viewer renders Bi
   expect(permalinks.length, "passport should have a permalink").toBeGreaterThan(0);
   const { id: permalinkId, slug: permalinkSlug } = permalinks[0];
 
-  const anonymous = await context.browser()!.newContext();
+  const anonymous = await newAnonymousContext(context.browser()!);
   const viewerPage = await anonymous.newPage();
   await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/p/${permalinkSlug ?? permalinkId}`);
   const bigNumber = viewerPage.locator('[data-cy="bignumber"]');
@@ -246,7 +247,7 @@ test.fixme("BigNumber on a Property nested inside a SubmodelElementCollection", 
   expect(permalinks.length).toBeGreaterThan(0);
   const { id: permalinkId, slug: permalinkSlug } = permalinks[0];
 
-  const anonymous = await context.browser()!.newContext();
+  const anonymous = await newAnonymousContext(context.browser()!);
   const viewerPage = await anonymous.newPage();
   await viewerPage.goto(`${EnvConfig.OPEN_DPP_URL}/p/${permalinkSlug ?? permalinkId}`);
 
