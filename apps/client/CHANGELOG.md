@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 3.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.1
+  - @open-dpp/dto@3.1.1
+
 ## 3.1.0
 
 ### Minor Changes
