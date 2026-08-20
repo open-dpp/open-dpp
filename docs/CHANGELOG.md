@@ -1,5 +1,11 @@
 # @open-dpp/docs
 
+## 3.1.3
+
+### Patch Changes
+
+- [#694](https://github.com/open-dpp/open-dpp/pull/694) [`28fc7e9`](https://github.com/open-dpp/open-dpp/commit/28fc7e9479259b56aebdca3ca8db9eb6f4d3f961) Thanks [@florianBieck](https://github.com/florianBieck)! - Remove generated OpenAPI documentation pages from the docs app. The docs build ran out of memory rendering the full spec; the REST API is documented via the online Swagger UI at https://cloud.open-dpp.de/api, which remains linked in the navigation.
+
 ## 3.1.2
 
 ## 3.1.1
