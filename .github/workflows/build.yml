@@ -173,6 +173,38 @@ jobs:
             type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
+      # `steps.meta.outputs.version` is the primary *Docker tag*, which is the
+      # branch name on a `main` push and `sha-<short-sha>` on a pull request.
+      # Baking that into the image made the UI show "vmain" instead of a
+      # version, so derive the application version from the package instead.
+      - name: Resolve application version
+        id: app_version
+        run: |
+          set -euo pipefail
+
+          package_version=$(jq -r '.version' apps/main/package.json)
+          if [ -z "$package_version" ] || [ "$package_version" = "null" ]; then
+            echo "::error::Could not read .version from apps/main/package.json" >&2
+            exit 1
+          fi
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            # A release build: the tag it was dispatched for is authoritative.
+            version="${{ github.ref_name }}"
+            version="${version#v}"
+            if [ "$version" != "$package_version" ]; then
+              echo "::warning::Tag ${{ github.ref_name }} does not match apps/main/package.json version $package_version; using $version"
+            fi
+          else
+            # Not a release: mark it with the commit so a :latest or PR image is
+            # distinguishable from the released version. `+` starts semver build
+            # metadata, so this stays a valid semantic version.
+            version="${package_version}+sha.${GITHUB_SHA:0:7}"
+          fi
+
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          echo "Resolved APP_VERSION=$version"
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
@@ -183,7 +215,7 @@ jobs:
           target: ${{ matrix.target }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            APP_VERSION=${{ steps.meta.outputs.version }}
+            APP_VERSION=${{ steps.app_version.outputs.value }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
           cache-to: type=registry,mode=max,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }},push-by-digest=true,name-canonical=true,push=true
