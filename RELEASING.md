@@ -157,6 +157,19 @@ To give each Changesets release a corresponding version-tagged Docker image (e.g
 | Docker `:<version>`                 | `build.yml` (dispatched at `v<version>` ref) | Pinnable Docker image for the release.                                                      |
 | Docker `:latest`, `:main`, `:sha-*` | `build.yml` (every push to main)             | Rolling tags; unchanged by this flow.                                                       |
 
+### The version reported by the running app
+
+The version the app shows in its UI (sign-in page and sidebar footer, served by `GET /api/status`) is **not** derived from the Docker tag. `build.yml` resolves it in its `Resolve application version` step and passes it to the image as the `APP_VERSION` build argument:
+
+| Build                   | `APP_VERSION`                                      |
+| ----------------------- | -------------------------------------------------- |
+| `v<version>` tag ref    | `<version>` (from the tag)                         |
+| push to `main`, or a PR | `<apps/main/package.json version>+sha.<short-sha>` |
+
+The `+sha.<short-sha>` suffix is semver build metadata, so a rolling `:latest` image is distinguishable from the released `:<version>` image that shares its commit.
+
+If `APP_VERSION` is not passed at build time, the backend falls back to the `package.json` bundled in the image, so a plain `docker build .` still reports the right version. `APP_VERSION` values that are not valid semantic versions — Docker tag names such as `main` or `sha-abc1234`, or a `v`-prefixed `v3.1.3` (the UI renders the `v` itself) — are ignored with a warning in the logs rather than shown to users.
+
 If you run the **manual / local release** escape hatch, remember to create the `v<version>` tag yourself after `pnpm release`:
 
 ```bash
