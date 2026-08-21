@@ -12,10 +12,17 @@ export function isValidAppVersion(candidate: string | null | undefined): boolean
   if (!candidate) {
     return false;
   }
+  const trimmed = candidate.trim();
+  // `semver.valid()` tolerates a leading "v" ("v1.2.3" -> "1.2.3"), but the
+  // prefix is not part of a semantic version and the UI renders one of its own,
+  // so accepting "v1.2.3" here would show up as "vv1.2.3".
+  if (trimmed.startsWith("v")) {
+    return false;
+  }
   // Predicate only: `semver.valid()` strips build metadata
   // ("3.1.3+sha.abc1234" -> "3.1.3"), so its return value must never be used
   // as the version itself.
-  return semver.valid(candidate.trim()) !== null;
+  return semver.valid(trimmed) !== null;
 }
 
 /**

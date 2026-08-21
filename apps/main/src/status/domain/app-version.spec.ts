@@ -16,6 +16,14 @@ describe("isValidAppVersion", () => {
     },
   );
 
+  // `semver.valid()` accepts these, but the UI adds its own "v" prefix.
+  it.each(["v1.2.3", "v3.1.3+sha.abc1234", " v0.1.0 "])(
+    "rejects the v-prefixed version %p",
+    (candidate) => {
+      expect(isValidAppVersion(candidate)).toBe(false);
+    },
+  );
+
   it("rejects undefined and null", () => {
     expect(isValidAppVersion(undefined)).toBe(false);
     expect(isValidAppVersion(null)).toBe(false);
@@ -33,6 +41,10 @@ describe("resolveAppVersion", () => {
 
   it("trims the resolved version", () => {
     expect(resolveAppVersion([" 3.1.3 "])).toBe("3.1.3");
+  });
+
+  it("skips a v-prefixed candidate", () => {
+    expect(resolveAppVersion(["v1.2.3", "3.1.3"])).toBe("3.1.3");
   });
 
   it("returns unknown when no candidate is a semantic version", () => {

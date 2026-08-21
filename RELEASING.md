@@ -168,7 +168,7 @@ The version the app shows in its UI (sign-in page and sidebar footer, served by 
 
 The `+sha.<short-sha>` suffix is semver build metadata, so a rolling `:latest` image is distinguishable from the released `:<version>` image that shares its commit.
 
-If `APP_VERSION` is not passed at build time, the backend falls back to the `package.json` bundled in the image, so a plain `docker build .` still reports the right version. `APP_VERSION` values that are not valid semantic versions — Docker tag names such as `main` or `sha-abc1234` — are ignored with a warning in the logs rather than shown to users.
+If `APP_VERSION` is not passed at build time, the backend falls back to the `package.json` bundled in the image, so a plain `docker build .` still reports the right version. `APP_VERSION` values that are not valid semantic versions — Docker tag names such as `main` or `sha-abc1234`, or a `v`-prefixed `v3.1.3` (the UI renders the `v` itself) — are ignored with a warning in the logs rather than shown to users.
 
 If you run the **manual / local release** escape hatch, remember to create the `v<version>` tag yourself after `pnpm release`:
 

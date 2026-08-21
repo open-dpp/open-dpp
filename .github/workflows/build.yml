@@ -179,6 +179,12 @@ jobs:
       # version, so derive the application version from the package instead.
       - name: Resolve application version
         id: app_version
+        # A ref name may contain shell metacharacters, so both values reach the
+        # script through the environment rather than through `${{ }}` expansion,
+        # which would splice a crafted tag name into this shell.
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
 
@@ -188,12 +194,13 @@ jobs:
             exit 1
           fi
 
-          if [ "${{ github.ref_type }}" = "tag" ]; then
+          if [ "$REF_TYPE" = "tag" ]; then
             # A release build: the tag it was dispatched for is authoritative.
-            version="${{ github.ref_name }}"
+            version="$REF_NAME"
             version="${version#v}"
             if [ "$version" != "$package_version" ]; then
-              echo "::warning::Tag ${{ github.ref_name }} does not match apps/main/package.json version $package_version; using $version"
+              printf '::warning::Tag %s does not match apps/main/package.json version %s; using %s\n' \
+                "$REF_NAME" "$package_version" "$version"
             fi
           else
             # Not a release: mark it with the commit so a :latest or PR image is
@@ -202,8 +209,8 @@ jobs:
             version="${package_version}+sha.${GITHUB_SHA:0:7}"
           fi
 
-          echo "value=$version" >> "$GITHUB_OUTPUT"
-          echo "Resolved APP_VERSION=$version"
+          printf 'value=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          printf 'Resolved APP_VERSION=%s\n' "$version"
 
       - name: Build and push by digest
         id: build
