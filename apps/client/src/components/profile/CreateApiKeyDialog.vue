@@ -113,7 +113,7 @@ function close() {
         </Message>
         <div class="flex items-center gap-2">
           <code
-            class="grow overflow-x-auto rounded bg-surface-100 p-2 text-sm dark:bg-surface-800"
+            class="bg-surface-100 dark:bg-surface-800 grow overflow-x-auto rounded p-2 text-sm"
             data-testid="api-key-created-value"
           >
             {{ createdKey.key }}
@@ -139,12 +139,7 @@ function close() {
           @click="submit"
         />
       </template>
-      <Button
-        v-else
-        :label="t('common.close')"
-        data-testid="api-key-created-done"
-        @click="close"
-      />
+      <Button v-else :label="t('common.close')" data-testid="api-key-created-done" @click="close" />
     </template>
   </Dialog>
 </template>

@@ -1,4 +1,7 @@
-import { ConvertToPlainOptions, IConvertableToPlain } from "../../../aas/domain/convertable-to-plain";
+import {
+  ConvertToPlainOptions,
+  IConvertableToPlain,
+} from "../../../aas/domain/convertable-to-plain";
 
 export interface ApiKeyDbProps {
   id: string;

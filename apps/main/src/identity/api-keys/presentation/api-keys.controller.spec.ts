@@ -80,10 +80,7 @@ describe("ApiKeysController", () => {
   }
 
   function createKey(cookie: string, body: Record<string, unknown>) {
-    return request(app.getHttpServer())
-      .post("/users/me/api-keys")
-      .set("Cookie", cookie)
-      .send(body);
+    return request(app.getHttpServer()).post("/users/me/api-keys").set("Cookie", cookie).send(body);
   }
 
   describe("POST /users/me/api-keys", () => {
@@ -142,10 +139,7 @@ describe("ApiKeysController", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.result).toHaveLength(2);
-      expect(response.body.result.map((k: any) => k.id)).toEqual([
-        second.body.id,
-        first.body.id,
-      ]);
+      expect(response.body.result.map((k: any) => k.id)).toEqual([second.body.id, first.body.id]);
       for (const item of response.body.result) {
         expect(item.key).toBeUndefined();
         expect(item.start).toMatch(/^opendpp_/);

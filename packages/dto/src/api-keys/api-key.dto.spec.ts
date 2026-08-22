@@ -51,7 +51,9 @@ describe("CreateApiKeyDtoSchema", () => {
       );
     }
     expect(() => CreateApiKeyDtoSchema.parse({ name: "k", expiresInDays: 7 })).toThrow();
-    expect(CreateApiKeyDtoSchema.parse({ name: "k", expiresInDays: null }).expiresInDays).toBeNull();
+    expect(
+      CreateApiKeyDtoSchema.parse({ name: "k", expiresInDays: null }).expiresInDays,
+    ).toBeNull();
   });
 });
 

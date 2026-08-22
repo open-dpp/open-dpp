@@ -72,3 +72,6 @@ auth-db
 /apps/client/components.d.ts
 # manual export-api-doc output, no longer committed (#690)
 /docs/api-docs.json
+
+.postman
+/postman

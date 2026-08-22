@@ -51,13 +51,20 @@ async function fetchCallback(pagingParams: PagingParamsDto) {
   }
 }
 
-const { hasPrevious, hasNext, currentPage, previousPage, resetCursor, nextPage, reloadCurrentPage } =
-  usePagination({
-    initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-    limit: 10,
-    fetchCallback,
-    changeQueryParams,
-  });
+const {
+  hasPrevious,
+  hasNext,
+  currentPage,
+  previousPage,
+  resetCursor,
+  nextPage,
+  reloadCurrentPage,
+} = usePagination({
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  limit: 10,
+  fetchCallback,
+  changeQueryParams,
+});
 
 function maskedKey(apiKey: ApiKeyDto): string {
   return apiKey.start ? `${apiKey.start}…` : "•••••";
