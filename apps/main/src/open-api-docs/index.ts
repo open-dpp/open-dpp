@@ -61,6 +61,12 @@ const document = createDocument({
         name: "x-api-key",
         description: "API Key passed in the x-api-key header",
       },
+      sessionAuth: {
+        type: "apiKey",
+        in: "cookie",
+        name: "better-auth.session_token",
+        description: "Browser session cookie issued by better-auth",
+      },
     },
   },
 });

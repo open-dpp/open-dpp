@@ -18,15 +18,37 @@ export interface ApiKeyDbProps {
  * (hashed storage, show-once); this entity only models the managed metadata.
  */
 export class ApiKey implements IConvertableToPlain {
+  private readonly _expiresAt: Date | null;
+  private readonly _lastUsedAt: Date | null;
+  private readonly _createdAt: Date;
+
   private constructor(
     public readonly id: string,
     public readonly name: string,
     public readonly userId: string,
     public readonly start: string | null,
-    public readonly expiresAt: Date | null,
-    public readonly lastUsedAt: Date | null,
-    public readonly createdAt: Date,
-  ) {}
+    expiresAt: Date | null,
+    lastUsedAt: Date | null,
+    createdAt: Date,
+  ) {
+    // Dates are cloned on store and on read so callers can never mutate the
+    // entity through a shared Date reference.
+    this._expiresAt = expiresAt ? new Date(expiresAt.getTime()) : null;
+    this._lastUsedAt = lastUsedAt ? new Date(lastUsedAt.getTime()) : null;
+    this._createdAt = new Date(createdAt.getTime());
+  }
+
+  public get expiresAt(): Date | null {
+    return this._expiresAt ? new Date(this._expiresAt.getTime()) : null;
+  }
+
+  public get lastUsedAt(): Date | null {
+    return this._lastUsedAt ? new Date(this._lastUsedAt.getTime()) : null;
+  }
+
+  public get createdAt(): Date {
+    return new Date(this._createdAt.getTime());
+  }
 
   public static loadFromDb(data: ApiKeyDbProps): ApiKey {
     return new ApiKey(

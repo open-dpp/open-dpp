@@ -168,8 +168,7 @@ describe("ApiKeysView", () => {
     expect(wrapper.text()).toContain("CI pipeline");
     const masked = wrapper.find('[data-testid="api-key-masked-key-1"]');
     expect(masked.exists()).toBe(true);
-    expect(masked.text()).toContain("opendpp_ab");
-    expect(masked.text()).not.toContain("opendpp_ab1234");
+    expect(masked.text()).toBe("opendpp_ab…");
     expect(wrapper.text()).toContain("Never");
     expect(wrapper.text()).toContain("No expiry");
   });

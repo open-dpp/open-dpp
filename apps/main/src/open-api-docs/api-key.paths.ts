@@ -12,7 +12,8 @@ import { ContentType } from "./content.types";
 import { HTTPCode } from "./http.codes";
 
 const tag = "api-keys";
-const security = [{ apiKeyAuth: [] }];
+// Key management deliberately rejects x-api-key auth (403); browser session only.
+const security = [{ sessionAuth: [] }];
 
 const apiKeyIdParamSchema = z.string().meta({
   description: "The api key id",

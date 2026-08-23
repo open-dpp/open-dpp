@@ -1,7 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import type { Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { findPageByCursor } from "../../../lib/repositories";
@@ -38,12 +37,12 @@ export class ApiKeysRepository {
   }
 
   async findOneByIdAndUserId(id: string, userId: string): Promise<ApiKey | null> {
-    const rawDoc = await this.apiKeyModel.collection.findOne({
+    const doc = await this.apiKeyModel.findOne({
       _id: idFilter(id),
       referenceId: idFilter(userId),
-    } as unknown as Filter<Document>);
-    if (!rawDoc) return null;
-    return ApiKeyMapper.toDomain(rawDoc as RawApiKey);
+    });
+    if (!doc) return null;
+    return ApiKeyMapper.toDomain(doc.toObject() as RawApiKey);
   }
 
   // Writes go through better-auth so key generation, hashing and the

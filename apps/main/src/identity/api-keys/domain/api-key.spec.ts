@@ -34,4 +34,21 @@ describe("ApiKey", () => {
   it("toPlain returns all props", () => {
     expect(ApiKey.loadFromDb(dbProps).toPlain()).toEqual(dbProps);
   });
+
+  it("cannot be mutated through Date references", () => {
+    const input = {
+      ...dbProps,
+      expiresAt: new Date("2027-01-01T00:00:00.000Z"),
+      createdAt: new Date("2026-08-21T00:00:00.000Z"),
+    };
+    const apiKey = ApiKey.loadFromDb(input);
+
+    input.expiresAt.setFullYear(1999);
+    apiKey.expiresAt!.setFullYear(1999);
+    apiKey.createdAt.setFullYear(1999);
+    (apiKey.toPlain().expiresAt as Date).setFullYear(1999);
+
+    expect(apiKey.expiresAt).toEqual(new Date("2027-01-01T00:00:00.000Z"));
+    expect(apiKey.createdAt).toEqual(new Date("2026-08-21T00:00:00.000Z"));
+  });
 });

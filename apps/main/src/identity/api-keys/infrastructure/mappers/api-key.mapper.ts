@@ -17,9 +17,9 @@ export interface RawApiKey {
 }
 
 function toDateOrNull(value: unknown): Date | null {
-  if (value instanceof Date) return value;
-  if (typeof value === "string") return new Date(value);
-  return null;
+  if (!(value instanceof Date) && typeof value !== "string") return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export class ApiKeyMapper {
