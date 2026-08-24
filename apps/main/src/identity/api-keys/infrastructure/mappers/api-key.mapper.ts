@@ -1,4 +1,5 @@
 import type { ApiKeyDto } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { ApiKey } from "../../domain/api-key";
 
 /**
@@ -26,7 +27,7 @@ export class ApiKeyMapper {
   static toDomain(raw: RawApiKey): ApiKey {
     const createdAt = toDateOrNull(raw.createdAt);
     if (!createdAt) {
-      throw new Error("Api key document is missing createdAt");
+      throw new ValueError("Api key document is missing createdAt");
     }
     return ApiKey.loadFromDb({
       id: String(raw.id ?? raw._id),
