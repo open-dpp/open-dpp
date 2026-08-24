@@ -183,7 +183,11 @@ export class PassportService {
                 txOptions,
               ),
             ];
-      await this.permalinkApplicationService.createPermalinksForConfigs(configs, txOptions);
+      await this.permalinkApplicationService.createPermalinksForConfigs(
+        configs,
+        organizationId,
+        txOptions,
+      );
       return persisted;
     };
 

@@ -4,7 +4,7 @@ import type { TreeNode } from "primevue/treenode";
 import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
-import { resolveLanguageTexts } from "./language-text.ts";
+import { resolveLanguageTexts } from "./language.ts";
 
 const SCALAR_LEAF_MODEL_TYPES: string[] = [
   AasSubmodelElements.Property,
