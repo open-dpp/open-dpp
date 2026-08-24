@@ -111,21 +111,19 @@ function close() {
         <Message severity="warn" data-testid="api-key-show-once-hint">
           {{ t("user.apiKeys.createdHint") }}
         </Message>
-        <div class="flex items-center gap-2">
-          <code
-            class="bg-surface-100 dark:bg-surface-800 grow overflow-x-auto rounded p-2 text-sm"
-            data-testid="api-key-created-value"
-          >
-            {{ createdKey.key }}
-          </code>
-          <Button
-            icon="pi pi-copy"
-            :aria-label="t('common.copy')"
-            :title="t('common.copy')"
-            data-testid="api-key-copy-btn"
-            @click="copyKey"
-          />
-        </div>
+        <InputGroup>
+          <InputText readonly :value="createdKey.key" data-testid="api-key-created-value" />
+          <InputGroupAddon>
+            <Button
+              icon="pi pi-copy"
+              severity="secondary"
+              :aria-label="t('common.copy')"
+              :title="t('common.copy')"
+              data-testid="api-key-copy-btn"
+              @click="copyKey"
+            />
+          </InputGroupAddon>
+        </InputGroup>
       </div>
     </template>
     <template #footer>
