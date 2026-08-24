@@ -352,7 +352,6 @@
       "addMapping": "Zuordnung hinzufügen",
       "configDetails": "Konfigurationsdetails",
       "configName": "Konfigurationsname",
-      "idFieldLabel": "Id-Feld",
       "idFieldHelp": "Das Feld, welches jedes Produkt eindeutig identifiziert, um den passenden Produktpass zu erstellen oder zu aktualisieren.",
       "previous": "Zurück",
       "next": "Weiter",

@@ -22,7 +22,7 @@ const { t } = useI18n();
       <JsonPathSelect
         :row="props.fileUpload.firstRow.value"
         v-model="props.configDetails.idField.value"
-        :label="t('integrations.bulkImport.idFieldLabel')"
+        :label="t('integrations.bulkImport.idField')"
       />
       <span class="text-surface-500 dark:text-surface-400 text-sm">{{
         t("integrations.bulkImport.idFieldHelp")

@@ -139,7 +139,7 @@ defineExpose({ open });
         <JsonPathSelect
           :row="currentConfig?.inputSample ?? {}"
           v-model="configDetails.idField.value"
-          :label="t('integrations.bulkImport.idFieldLabel')"
+          :label="t('integrations.bulkImport.idField')"
         />
         <span class="text-surface-500 dark:text-surface-400 text-sm">{{
           t("integrations.bulkImport.idFieldHelp")
