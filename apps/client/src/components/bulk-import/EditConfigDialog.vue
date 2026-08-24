@@ -9,8 +9,7 @@ import { useBulkImportMapping } from "../../composables/bulk-import/bulk-import-
 import IdShortPathSelect from "../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../json/JsonPathSelect.vue";
 import MappingsDataTable from "./MappingsDataTable.vue";
-import { cloneDeep, unset } from "lodash";
-import { removeMappingsFromRow } from "../../lib/bulk-import.ts";
+import { removeMappingsFromRow, removeMappingsFromSubmodels } from "../../lib/bulk-import.ts";
 
 const emit = defineEmits<{ (e: "saved", config: BulkImportConfigDto): void }>();
 
@@ -122,6 +121,10 @@ const rowJsonSelect = computed(() =>
   removeMappingsFromRow(currentConfig.value?.inputSample ?? {}, mapping.mappings),
 );
 
+const submodelsIdShortPathSelect = computed(() =>
+  removeMappingsFromSubmodels(mapping.submodels, mapping.mappings),
+);
+
 defineExpose({ open });
 </script>
 
@@ -166,7 +169,7 @@ defineExpose({ open });
           </label>
           <label class="flex flex-1 flex-col gap-2">
             <IdShortPathSelect
-              :submodels="mapping.submodels.value"
+              :submodels="submodelsIdShortPathSelect"
               :exclude-model-types="excludedTargetModelTypes"
               v-model="mapping.draftTarget.value"
               :label="t('integrations.bulkImport.targetField')"
