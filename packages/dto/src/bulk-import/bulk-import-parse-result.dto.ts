@@ -4,7 +4,7 @@ import { z } from "zod";
  * Schema for a single row in the parsed file.
  * Keys are column headers from the first row, values are strings or null.
  */
-export const BulkImportRowDtoSchema = z.record(z.string(), z.string().nullable());
+export const BulkImportRowDtoSchema = z.record(z.string(), z.any());
 export type BulkImportRowDto = z.infer<typeof BulkImportRowDtoSchema>;
 
 /**

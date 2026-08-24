@@ -10,7 +10,7 @@ import type {
   BulkImportRunPaginationDto,
   PagingParamsDto,
 } from "@open-dpp/dto";
-import type { AxiosInstance } from "axios";
+import type { AxiosInstance, AxiosResponse } from "axios";
 
 export class BulkImportNamespace {
   private readonly configEndpoint = "/bulk-import/configs";
@@ -61,7 +61,7 @@ export class BulkImportNamespace {
     );
   }
 
-  public async parseFile(file: File | Blob) {
+  public async parseFile(file: File | Blob): Promise<AxiosResponse<BulkImportParseResultDto>> {
     const formData = new FormData();
     formData.append("file", file);
     return await this.axiosInstance.post<BulkImportParseResultDto>(

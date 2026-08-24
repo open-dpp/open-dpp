@@ -92,8 +92,13 @@ export abstract class FileParser {
     return rows.map((row) => {
       const transformed: BulkImportRowDto = {};
       for (const [key, value] of Object.entries(row)) {
-        transformed[key.trim()] =
-          value === undefined || value === null || value === "" ? null : String(value).trim();
+        if (value === undefined || value === null || value === "") {
+          transformed[key.trim()] = null;
+        } else if (typeof value === "object") {
+          transformed[key.trim()] = value;
+        } else {
+          transformed[key.trim()] = String(value).trim();
+        }
       }
       return transformed;
     });

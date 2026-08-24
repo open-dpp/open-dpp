@@ -8,16 +8,16 @@ describe("JsonParser", () => {
     it("parses a valid JSON array of objects", () => {
       const buffer = Buffer.from(
         JSON.stringify([
-          { sku: "A001", name: "Product 1" },
-          { sku: "A002", name: "Product 2" },
+          { sku: "A001", name: "Product 1", nest1: { a: 2 } },
+          { sku: "A002", name: "Product 2", nest1: { a: 9 } },
         ]),
       );
 
       const result = parser.parse(buffer);
 
       expect(result.rows).toHaveLength(2);
-      expect(result.rows[0]).toEqual({ sku: "A001", name: "Product 1" });
-      expect(result.rows[1]).toEqual({ sku: "A002", name: "Product 2" });
+      expect(result.rows[0]).toEqual({ sku: "A001", name: "Product 1", nest1: { a: 2 } });
+      expect(result.rows[1]).toEqual({ sku: "A002", name: "Product 2", nest1: { a: 9 } });
     });
 
     it("parses a single row JSON array", () => {
