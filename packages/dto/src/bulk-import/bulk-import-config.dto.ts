@@ -23,7 +23,7 @@ export const BulkImportConfigDtoSchema = z.object({
   name: z.string(),
   idField: z.string(),
   submodelMappings: SubmodelFieldMappingDtoSchema.array(),
-  inputSample: z.record(z.string(), z.unknown()).nullish(),
+  inputSample: z.record(z.string(), z.any()).nullish(),
   createdAt: DateTimeSchema,
   updatedAt: DateTimeSchema,
 });

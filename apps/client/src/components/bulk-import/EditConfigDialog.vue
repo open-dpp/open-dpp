@@ -9,6 +9,8 @@ import { useBulkImportMapping } from "../../composables/bulk-import/bulk-import-
 import IdShortPathSelect from "../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../json/JsonPathSelect.vue";
 import MappingsDataTable from "./MappingsDataTable.vue";
+import { cloneDeep, unset } from "lodash";
+import { removeMappingsFromRow } from "../../lib/bulk-import.ts";
 
 const emit = defineEmits<{ (e: "saved", config: BulkImportConfigDto): void }>();
 
@@ -116,6 +118,10 @@ async function save() {
   }
 }
 
+const rowJsonSelect = computed(() =>
+  removeMappingsFromRow(currentConfig.value?.inputSample ?? {}, mapping.mappings),
+);
+
 defineExpose({ open });
 </script>
 
@@ -153,7 +159,7 @@ defineExpose({ open });
         <div class="flex items-end gap-2">
           <label class="flex flex-1 flex-col gap-2">
             <JsonPathSelect
-              :row="currentConfig?.inputSample ?? {}"
+              :row="rowJsonSelect"
               :label="t('integrations.bulkImport.inputField')"
               v-model="mapping.draftInput.value"
             />

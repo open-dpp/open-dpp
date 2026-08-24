@@ -6,6 +6,8 @@ import type { useBulkImportMapping } from "../../../composables/bulk-import/bulk
 import IdShortPathSelect from "../../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../../json/JsonPathSelect.vue";
 import MappingsDataTable from "../MappingsDataTable.vue";
+import { computed } from "vue";
+import { removeMappingsFromRow } from "../../../lib/bulk-import.ts";
 
 const props = defineProps<{
   fileUpload: ReturnType<typeof useBulkImportFileUpload>;
@@ -20,6 +22,10 @@ const excludedTargetModelTypes = [
   AasSubmodelElements.File,
   AasSubmodelElements.SubmodelElementList,
 ];
+
+const rowJsonSelect = computed(() =>
+  removeMappingsFromRow(props.fileUpload.firstRow, props.mapping.mappings.value),
+);
 </script>
 
 <template>
@@ -27,7 +33,7 @@ const excludedTargetModelTypes = [
     <div class="flex items-end gap-2">
       <label class="flex flex-1 flex-col gap-2">
         <JsonPathSelect
-          :row="props.fileUpload.firstRow.value"
+          :row="rowJsonSelect"
           v-model="props.mapping.draftInput.value"
           :label="t('integrations.bulkImport.inputField')"
         />
