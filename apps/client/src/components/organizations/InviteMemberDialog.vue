@@ -76,9 +76,6 @@ defineExpose({
         <EnvelopeIcon aria-hidden="true" class="size-6 text-green-600" />
       </div>
       <div class="mt-3 text-center sm:mt-5">
-        <DialogTitle as="h3" class="text-base font-semibold text-gray-900">
-          {{ t("organizations.inviteUser") }}
-        </DialogTitle>
         <div v-if="success" class="mt-3">
           <div class="text-sm text-green-600">
             {{ t("organizations.inviteUserSuccess") }}
