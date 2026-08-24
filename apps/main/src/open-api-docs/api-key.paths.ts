@@ -15,6 +15,13 @@ const tag = "api-keys";
 // Key management deliberately rejects x-api-key auth (403); browser session only.
 const security = [{ sessionAuth: [] }];
 
+const forbiddenResponse = {
+  [HTTPCode.FORBIDDEN]: {
+    description:
+      "Api key authentication is rejected; managing api keys requires a browser session.",
+  },
+};
+
 const apiKeyIdParamSchema = z.string().meta({
   description: "The api key id",
   param: { in: "path", name: "id" },
@@ -33,6 +40,7 @@ export const apiKeyPaths = {
             [ContentType.JSON]: { schema: ApiKeyPaginationDtoSchema },
           },
         },
+        ...forbiddenResponse,
       },
       security,
     },
@@ -52,6 +60,7 @@ export const apiKeyPaths = {
             [ContentType.JSON]: { schema: CreatedApiKeyDtoSchema },
           },
         },
+        ...forbiddenResponse,
       },
       security,
     },
@@ -72,6 +81,7 @@ export const apiKeyPaths = {
             [ContentType.JSON]: { schema: ApiKeyDtoSchema },
           },
         },
+        ...forbiddenResponse,
       },
       security,
     },
@@ -83,6 +93,7 @@ export const apiKeyPaths = {
         [HTTPCode.NO_CONTENT]: {
           description: "The api key was revoked",
         },
+        ...forbiddenResponse,
       },
       security,
     },

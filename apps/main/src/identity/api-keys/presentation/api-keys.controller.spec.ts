@@ -244,12 +244,46 @@ describe("ApiKeysController", () => {
       expect(response.status).toBe(403);
     });
 
+    it("cannot list keys", async () => {
+      const { cookie } = await signedInUser();
+      const created = await createKey(cookie, { name: "No self-listing" });
+
+      const response = await request(app.getHttpServer())
+        .get("/users/me/api-keys")
+        .set("x-api-key", created.body.key);
+
+      expect(response.status).toBe(403);
+    });
+
+    it("cannot rename keys", async () => {
+      const { cookie } = await signedInUser();
+      const created = await createKey(cookie, { name: "No self-renaming" });
+
+      const response = await request(app.getHttpServer())
+        .patch(`/users/me/api-keys/${created.body.id}`)
+        .set("x-api-key", created.body.key)
+        .send({ name: "Renamed by a key" });
+
+      expect(response.status).toBe(403);
+    });
+
+    it("cannot revoke keys", async () => {
+      const { cookie } = await signedInUser();
+      const created = await createKey(cookie, { name: "No self-revoking" });
+
+      const response = await request(app.getHttpServer())
+        .delete(`/users/me/api-keys/${created.body.id}`)
+        .set("x-api-key", created.body.key);
+
+      expect(response.status).toBe(403);
+    });
+
     it("authenticates via x-api-key and surfaces lastUsedAt", async () => {
       const { cookie } = await signedInUser();
       const created = await createKey(cookie, { name: "Round trip" });
 
       const meResponse = await request(app.getHttpServer())
-        .get("/users/me/api-keys")
+        .get("/users/me")
         .set("x-api-key", created.body.key);
       expect(meResponse.status).toBe(200);
 

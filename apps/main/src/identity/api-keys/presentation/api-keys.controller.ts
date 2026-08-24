@@ -29,9 +29,12 @@ import { Pagination } from "../../../pagination/pagination";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import type { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
+import { DenyApiKeyAuth } from "../../auth/presentation/decorators/deny-api-key-auth.decorator";
 import { ApiKeysService } from "../application/services/api-keys.service";
 import { ApiKeyMapper } from "../infrastructure/mappers/api-key.mapper";
 
+// A leaked api key must not be able to inspect, mint or revoke keys.
+@DenyApiKeyAuth()
 @Controller("users/me/api-keys")
 export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
