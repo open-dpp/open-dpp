@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from "@headlessui/vue";
 import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
@@ -10,24 +9,23 @@ import { z } from "zod";
 import apiClient from "../../lib/api-client.ts";
 import RingLoader from "../navigation/RingLoader.vue";
 
-const props = defineProps<{
-  organizationId: string;
-}>();
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "invitedUser"): void;
+  (e: "success"): void;
 }>();
+
 const { t } = useI18n();
-const loading = ref<boolean>(false);
+const visible = ref(false);
+const loading = ref(false);
 const errors = ref<Array<string>>([]);
-const success = ref<boolean>(false);
+const success = ref(false);
+const organizationId = ref<string | null>(null);
 const email = ref("");
 const emailError = ref("");
 
 async function inviteUser() {
-  success.value = false;
-  errors.value = [];
-  emailError.value = "";
+  if (!organizationId.value) {
+    return;
+  }
 
   const emailSchema = z.email();
   const result = emailSchema.safeParse(email.value);
@@ -41,139 +39,93 @@ async function inviteUser() {
     loading.value = true;
     const response = await apiClient.dpp.organizations.inviteUser(
       email.value,
-      props.organizationId,
+      organizationId.value,
     );
     loading.value = false;
     if (response.status === 201) {
       success.value = true;
-      emit("invitedUser");
-      email.value = ""; // Reset form
+      emit("success");
+      visible.value = false;
     } else {
       errors.value.push("Ein Fehler ist aufgetreten.");
     }
   } catch (error) {
-    console.error(error);
     errors.value.push("Ein Fehler ist aufgetreten.");
     loading.value = false;
   }
 }
+
+async function openDialog(orgaId: string) {
+  organizationId.value = orgaId;
+  email.value = "";
+  success.value = false;
+  visible.value = true;
+  errors.value = [];
+  emailError.value = "";
+}
+
+defineExpose({
+  openDialog,
+});
 </script>
 
 <template>
-  <TransitionRoot :show="true" as="oldTemplate">
-    <Dialog class="relative z-10" @close="emit('close')">
-      <TransitionChild
-        as="oldTemplate"
-        enter="ease-out duration-300"
-        enter-from="opacity-0"
-        enter-to="opacity-100"
-        leave="ease-in duration-200"
-        leave-from="opacity-100"
-        leave-to="opacity-0"
-      >
-        <div class="fixed inset-0 bg-gray-500/75 transition-opacity" />
-      </TransitionChild>
-
-      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div
-          class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
-        >
-          <TransitionChild
-            as="oldTemplate"
-            enter="ease-out duration-300"
-            enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            enter-to="opacity-100 translate-y-0 sm:scale-100"
-            leave="ease-in duration-200"
-            leave-from="opacity-100 translate-y-0 sm:scale-100"
-            leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+  <Dialog modal v-model:visible="visible" :header="t('organizations.inviteUser')">
+    <div>
+      <div class="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100">
+        <EnvelopeIcon aria-hidden="true" class="size-6 text-green-600" />
+      </div>
+      <div class="mt-3 text-center sm:mt-5">
+        <DialogTitle as="h3" class="text-base font-semibold text-gray-900">
+          {{ t("organizations.inviteUser") }}
+        </DialogTitle>
+        <div v-if="success" class="mt-3">
+          <div class="text-sm text-green-600">
+            {{ t("organizations.inviteUserSuccess") }}
+          </div>
+          <button
+            class="mt-3 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-hidden"
+            type="button"
+            @click="visible = false"
           >
-            <DialogPanel
-              class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6"
-            >
-              <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                <button
-                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
-                  type="button"
-                  @click="emit('close')"
-                >
-                  <span class="sr-only">{{ t("common.close") }}</span>
-                  <XMarkIcon aria-hidden="true" class="size-6" />
-                </button>
-              </div>
-              <div>
-                <div
-                  class="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100"
-                >
-                  <EnvelopeIcon aria-hidden="true" class="size-6 text-green-600" />
-                </div>
-                <div class="mt-3 text-center sm:mt-5">
-                  <DialogTitle as="h3" class="text-base font-semibold text-gray-900">
-                    {{ t("organizations.inviteUser") }}
-                  </DialogTitle>
-                  <div v-if="success" class="mt-3">
-                    <div class="text-sm text-green-600">
-                      {{ t("organizations.inviteUserSuccess") }}
-                    </div>
-                    <button
-                      class="mt-3 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-hidden"
-                      type="button"
-                      @click="emit('close')"
-                    >
-                      {{ t("common.close") }}
-                    </button>
-                  </div>
-                  <div v-else class="mt-3">
-                    <form
-                      v-show="!loading"
-                      class="flex flex-col gap-4"
-                      @submit.prevent="inviteUser"
-                    >
-                      <div v-if="errors.length" class="flex flex-col gap-1">
-                        <Message
-                          v-for="error in errors"
-                          :key="error"
-                          severity="error"
-                          :closable="false"
-                        >
-                          {{ error }}
-                        </Message>
-                      </div>
+            {{ t("common.close") }}
+          </button>
+        </div>
+        <div v-else class="mt-3">
+          <form v-show="!loading" class="flex flex-col gap-4" @submit.prevent="inviteUser">
+            <div v-if="errors.length" class="flex flex-col gap-1">
+              <Message v-for="error in errors" :key="error" severity="error" :closable="false">
+                {{ error }}
+              </Message>
+            </div>
 
-                      <div class="flex flex-col gap-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700">
-                          {{ t("common.form.email.label") }}
-                        </label>
-                        <InputText
-                          id="email"
-                          v-model="email"
-                          type="text"
-                          :invalid="!!emailError"
-                          class="w-full"
-                          :aria-describedby="emailError ? 'email-error' : 'email-help'"
-                        />
-                        <small v-if="emailError" id="email-error" class="text-red-600">{{
-                          emailError
-                        }}</small>
-                        <small v-else id="email-help" class="text-gray-500">
-                          {{ t("common.form.email.help") }}
-                        </small>
-                      </div>
+            <div class="flex flex-col gap-2">
+              <label for="email" class="block text-sm font-medium text-gray-700">
+                {{ t("common.form.email.label") }}
+              </label>
+              <InputText
+                id="email"
+                v-model="email"
+                type="text"
+                :invalid="!!emailError"
+                class="w-full"
+                :aria-describedby="emailError ? 'email-error' : 'email-help'"
+              />
+              <small v-if="emailError" id="email-error" class="text-red-600">{{
+                emailError
+              }}</small>
+            </div>
 
-                      <Button
-                        :label="t('organizations.invite')"
-                        type="submit"
-                        :loading="loading"
-                        class="w-full"
-                      />
-                    </form>
-                    <RingLoader v-show="loading" class="mx-auto w-fit" />
-                  </div>
-                </div>
-              </div>
-            </DialogPanel>
-          </TransitionChild>
+            <Button
+              :label="t('organizations.invite')"
+              type="submit"
+              :loading="loading"
+              class="w-full"
+            />
+          </form>
+          <RingLoader v-show="loading" class="mx-auto w-fit" />
         </div>
       </div>
-    </Dialog>
-  </TransitionRoot>
+    </div>
+  </Dialog>
 </template>
