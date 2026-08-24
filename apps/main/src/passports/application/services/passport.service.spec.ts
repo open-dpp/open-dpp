@@ -31,6 +31,7 @@ import { PermalinkModule } from "../../../permalink/permalink.module";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { PresentationConfigurationsModule } from "../../../presentation-configurations/presentation-configurations.module";
+import { UniqueProductIdentifier } from "../../../unique-product-identifier/domain/unique.product.identifier";
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierDoc,
@@ -41,6 +42,8 @@ import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { EmailService } from "../../../email/email.service";
+import { jest } from "@jest/globals";
 import { Template } from "../../../templates/domain/template";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
@@ -85,7 +88,12 @@ describe("passportService", () => {
         UniqueProductIdentifierRepository,
         TemplateRepository,
       ],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     service = module.get<PassportService>(PassportService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
@@ -188,6 +196,7 @@ describe("passportService", () => {
       .create({ organizationId });
     const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
     const permalink = Permalink.create({
+      passportId: passport.id,
       presentationConfigurationId: config.id,
       slug: "frozen-on-publish",
     });
@@ -221,7 +230,10 @@ describe("passportService", () => {
     });
     await presentationConfigurationRepository.save(config);
     const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
-    const permalink = Permalink.create({ presentationConfigurationId: config.id });
+    const permalink = Permalink.create({
+      passportId: passport.id,
+      presentationConfigurationId: config.id,
+    });
     await permalinkRepository.save(permalink);
 
     await service.modifyPassportStatus(
@@ -403,6 +415,44 @@ describe("passportService", () => {
       referenceId: draft.id,
     });
     expect(after).toEqual([]);
+  });
+
+  it("deletePassport cascades the gs1-link permalinks of the passport's UPIs (no orphans)", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const draft = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(draft);
+
+    const upiRepository = module.get<UniqueProductIdentifierRepository>(
+      UniqueProductIdentifierRepository,
+    );
+    const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
+
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: draft.id,
+      gtin: "04006381333931",
+      organizationId,
+    });
+    await upiRepository.save(upi);
+    const gs1Link = Permalink.create({
+      kind: "gs1-link",
+      passportId: draft.id,
+      uniqueProductIdentifierId: upi.uuid,
+      presentationConfigurationId: null,
+      organizationId,
+    });
+    await permalinkRepository.save(gs1Link);
+
+    await service.deletePassport(draft.id, organizationId, subject);
+
+    expect(await permalinkRepository.findOne(gs1Link.id)).toBeUndefined();
+    expect(await upiRepository.findOne(upi.uuid)).toBeUndefined();
   });
 
   it("seeds exactly one PresentationConfiguration row across multiple expansions", async () => {

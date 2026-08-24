@@ -1091,7 +1091,11 @@ export class PassportController
           importedConfigs.length > 0
             ? importedConfigs
             : [await this.presentationConfigurationService.ensureDefaultForPassport(p, options)];
-        await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
+        await this.permalinkApplicationService.createPermalinksForConfigs(
+          configs,
+          organizationId,
+          options,
+        );
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());

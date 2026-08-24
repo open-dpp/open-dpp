@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -19,6 +19,7 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateDocVersion, TemplateSchema } from "./template.schema";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { EmailService } from "../../email/email.service";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;
@@ -47,7 +48,12 @@ describe("templateRepository", () => {
         ActivityHistoryModule,
       ],
       providers: [TemplateRepository],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
     await module.init();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
@@ -226,10 +232,7 @@ describe("templateRepository", () => {
 
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(t1.createdAt.toISOString(), t1.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [t5, t4, t3, t1],
         totalCount: 4,
       }),
@@ -243,10 +246,7 @@ describe("templateRepository", () => {
 
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(t5.createdAt.toISOString(), t5.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [t5],
         totalCount: 1,
       }),
@@ -260,10 +260,7 @@ describe("templateRepository", () => {
 
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [t5, t4],
         totalCount: 2,
       }),
@@ -277,7 +274,7 @@ describe("templateRepository", () => {
     });
     expect(foundTemplates).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
+        pagination: Pagination.create({}),
         items: [t3, t1],
         totalCount: 4,
       }),

@@ -1,20 +1,26 @@
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
-  Headers,
+  HttpCode,
+  HttpStatus,
   Logger,
+  NotFoundException,
   Param,
   Patch,
+  Post,
 } from "@nestjs/common";
 import type {
   ApiVersionsDtoType,
   AssetAdministrationShellPaginationResponseDto,
   PassportPermalinkBundleDto,
+  PermalinkCreateRequest,
   PermalinkUpdateRequest,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -22,20 +28,21 @@ import type {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-
 import {
   AllApiVersions,
   PassportPermalinkBundleDtoSchema,
+  PermalinkCreateRequestSchema,
+  PermalinkKind,
   PermalinkListDtoSchema,
+  PermalinkPaginationDtoSchema,
   PermalinkPublicDtoSchema,
   PermalinkUpdateRequestSchema,
   DigitalProductDocumentTypes,
+  UniqueProductIdentifierType,
 } from "@open-dpp/dto";
-import { ZodValidationPipe } from "@open-dpp/exception";
+import { ValueError, ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { Environment } from "../../aas/domain/environment";
-import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ApiGetShells,
@@ -54,28 +61,28 @@ import {
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { TransactionService } from "../../database/transaction.service";
 import { isDuplicateKeyError } from "../../lib/mongo-errors";
+import type { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
-import {
-  ORGANIZATION_ID_HEADER,
-  OrganizationId,
-} from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
-import {
-  PresentationConfigurationService,
-  PresentationReferenceHolder,
-} from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { Permalink } from "../domain/permalink";
 import { PermalinkRepository } from "../infrastructure/permalink.repository";
 import {
-  isMemberOfPassportOrg,
   PermalinkApplicationService,
-  resolveFallbackBaseUrl,
+  type PermalinkUpdate,
 } from "../application/services/permalink.application.service";
+import {
+  BaseUrlResolver,
+  resolveFallbackBaseUrl,
+} from "../application/services/base-url-resolver.service";
 import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
+import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
 @Controller({ version: AllApiVersions })
@@ -84,23 +91,26 @@ export class PermalinkController {
 
   constructor(
     private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly baseUrlResolver: BaseUrlResolver,
     private readonly permalinkRepository: PermalinkRepository,
     private readonly environmentService: EnvironmentService,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly passportRepository: PassportRepository,
     private readonly transactionService: TransactionService,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
   @OptionalAuth()
   @Get("/p")
   async getByPassport(
     @PassportIdQueryParam() passportId: string,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @AuthSession() session: Session | undefined,
   ) {
     const passport = await this.passportRepository.findOne(passportId);
     const isMember = passport
-      ? isMemberOfPassportOrg(passport, { organizationId, memberRole })
+      ? await this.permalinkApplicationService.isMemberOfPassportOrg(passport, {
+          userId: session?.userId,
+        })
       : false;
     if (!passport || (!passport.isPublished() && !isMember)) {
       return PermalinkListDtoSchema.parse([]);
@@ -129,20 +139,12 @@ export class PermalinkController {
   @Get("/p/:id")
   async getById(
     @IdOrSlugParam() id: string,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
-    @UserRoleDecorator() userRole: UserRoleType,
-    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @AuthSession() session: Session | undefined,
   ): Promise<PassportPermalinkBundleDto> {
-    const { permalink, passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
-    });
-    const subject = SubjectAttributes.create({ userRole, memberRole });
-    const ability = await this.buildAbility(passport.environment, subject);
-    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
-      passportToHolder(passport),
-      ability,
-    );
+    const { permalink, passport, presentationConfiguration } =
+      await this.permalinkApplicationService.resolveToPassport(id, {
+        userId: session?.userId,
+      });
     const branding = await this.resolveBranding(passport.organizationId);
     const { publicUrl } = await this.permalinkApplicationService.resolvePublicUrlWithFreeze(
       permalink,
@@ -153,18 +155,9 @@ export class PermalinkController {
     return PassportPermalinkBundleDtoSchema.parse({
       passport: passport.toPlain(),
       branding: branding.display.toPlain(),
-      presentationConfiguration: presentationConfiguration.toPlain(),
+      presentationConfiguration: presentationConfiguration?.toPlain() ?? null,
       publicUrl,
     });
-  }
-
-  private async buildAbility(
-    environment: Environment,
-    subject: SubjectAttributes,
-  ): Promise<AasAbility | undefined> {
-    const expanded = await this.environmentService.loadExpandedEnvironment(environment);
-    if (expanded.shells.length === 0) return undefined;
-    return expanded.shells[0].security.defineAbilityForSubject(subject);
   }
 
   @Patch("/p/:id")
@@ -174,13 +167,13 @@ export class PermalinkController {
     body: PermalinkUpdateRequest,
     @OrganizationId() organizationId: string,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @AuthSession() session: Session | undefined,
   ) {
     if (memberRole === undefined) {
       throw new ForbiddenException();
     }
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     if (passport.organizationId !== organizationId) {
       throw new ForbiddenException();
@@ -203,16 +196,8 @@ export class PermalinkController {
   private async resolveBranding(
     organizationId: string,
   ): Promise<{ display: Branding; forPin: Branding | null }> {
-    try {
-      const branding = await this.permalinkApplicationService.loadBranding(organizationId);
-      return { display: branding, forPin: branding };
-    } catch (error) {
-      this.logger.warn(
-        `Branding load failed for organizationId=${organizationId}; serving default branding and skipping permalink URL pinning`,
-        error instanceof Error ? error.stack : String(error),
-      );
-      return { display: Branding.getDefault(), forPin: null };
-    }
+    const forPin = await this.baseUrlResolver.loadBrandingOrNull(organizationId);
+    return { display: forPin ?? Branding.getDefault(), forPin };
   }
 
   private async toPublicDto(
@@ -236,6 +221,248 @@ export class PermalinkController {
     };
   }
 
+  @Get("/permalinks")
+  async listByOrganization(
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const pagination = Pagination.create({ limit, cursor });
+    const { items, cursor: nextCursor } = await this.permalinkApplicationService.listByOrganization(
+      organizationId,
+      pagination,
+    );
+    return PermalinkPaginationDtoSchema.parse({
+      paging_metadata: { cursor: nextCursor },
+      result: items.map(({ permalink, publicUrl, fallbackBaseUrl, fallbackBaseUrlSource }) => ({
+        ...permalink.toPlain(),
+        publicUrl,
+        fallbackBaseUrl,
+        fallbackBaseUrlSource,
+      })),
+    });
+  }
+
+  @Get("/passports/:id/permalinks")
+  async listByPassport(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const passport = await this.passportRepository.findOne(id);
+    if (!passport) {
+      throw new NotFoundException(`Passport ${id} not found`);
+    }
+    if (passport.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    const pagination = Pagination.create({ limit, cursor });
+    const { items, cursor: nextCursor } = await this.permalinkApplicationService.listByPassport(
+      id,
+      pagination,
+    );
+    return PermalinkPaginationDtoSchema.parse({
+      paging_metadata: { cursor: nextCursor },
+      result: items.map(({ permalink, publicUrl, fallbackBaseUrl, fallbackBaseUrlSource }) => ({
+        ...permalink.toPlain(),
+        publicUrl,
+        fallbackBaseUrl,
+        fallbackBaseUrlSource,
+      })),
+    });
+  }
+
+  @Post("/permalinks")
+  @HttpCode(HttpStatus.CREATED)
+  async createPermalink(
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Body(new ZodValidationPipe(PermalinkCreateRequestSchema))
+    body: PermalinkCreateRequest,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+
+    const passport = await this.passportRepository.findOne(body.passportId);
+    if (!passport) {
+      throw new NotFoundException(`Passport ${body.passportId} not found`);
+    }
+    if (passport.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    const presentationConfigurationId = await this.validateConfigRef(
+      body.presentationConfigurationId ?? null,
+      passport,
+      organizationId,
+    );
+
+    let created: Permalink;
+    if (body.kind === PermalinkKind.GS1_LINK) {
+      await this.validateUpiRef(body.uniqueProductIdentifierId, passport, [
+        UniqueProductIdentifierType.GS1,
+      ]);
+      created = await this.permalinkApplicationService.createGs1LinkPermalink({
+        passportId: passport.id,
+        uniqueProductIdentifierId: body.uniqueProductIdentifierId,
+        organizationId: passport.organizationId,
+        presentationConfigurationId,
+        gs1DataAttributes: body.gs1DataAttributes ?? null,
+        slug: body.slug ?? null,
+        baseUrl: body.baseUrl ?? null,
+      });
+    } else {
+      if (body.uniqueProductIdentifierId != null) {
+        await this.validateUpiRef(body.uniqueProductIdentifierId, passport, [
+          UniqueProductIdentifierType.OPEN_DPP_UUID,
+        ]);
+      }
+      created = await this.permalinkApplicationService.createOpenDppPermalink({
+        passportId: passport.id,
+        organizationId: passport.organizationId,
+        presentationConfigurationId,
+        uniqueProductIdentifierId: body.uniqueProductIdentifierId ?? null,
+        slug: body.slug ?? null,
+        baseUrl: body.baseUrl ?? null,
+      });
+    }
+
+    const branding = await this.resolveBranding(passport.organizationId);
+    return PermalinkPublicDtoSchema.parse(await this.toPublicDto(created, branding, passport));
+  }
+
+  private async validateConfigRef(
+    presentationConfigurationId: string | null,
+    passport: Passport,
+    organizationId: string,
+  ): Promise<string | null> {
+    if (presentationConfigurationId == null) {
+      return null;
+    }
+    const config = await this.presentationConfigurationRepository.findOne(
+      presentationConfigurationId,
+    );
+    if (!config) {
+      throw new NotFoundException(
+        `PresentationConfiguration ${presentationConfigurationId} not found`,
+      );
+    }
+    if (config.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    if (
+      config.referenceType !== DigitalProductDocumentTypes.Passport ||
+      config.referenceId !== passport.id
+    ) {
+      throw new BadRequestException(
+        `PresentationConfiguration ${presentationConfigurationId} does not belong to passport ${passport.id}`,
+      );
+    }
+    return config.id;
+  }
+
+  private async validateUpiRef(
+    uniqueProductIdentifierId: string,
+    passport: Passport,
+    allowedTypes: readonly string[],
+  ): Promise<void> {
+    const upi = await this.uniqueProductIdentifierRepository.findOne(uniqueProductIdentifierId);
+    if (!upi) {
+      throw new NotFoundException(`UniqueProductIdentifier ${uniqueProductIdentifierId} not found`);
+    }
+    if (upi.referenceId !== passport.id) {
+      throw new BadRequestException(
+        `UniqueProductIdentifier ${upi.uuid} does not belong to passport ${passport.id}`,
+      );
+    }
+    if (!allowedTypes.includes(upi.type)) {
+      throw new BadRequestException(
+        `UniqueProductIdentifier ${upi.uuid} is of type ${upi.type} and cannot back this permalink kind`,
+      );
+    }
+  }
+
+  @Patch("/permalinks/:id")
+  async updatePermalink(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(PermalinkUpdateRequestSchema))
+    body: PermalinkUpdateRequest,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ) {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const permalink = await this.permalinkRepository.findOneOrFail(id);
+    if (permalink.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    const passport = await this.resolvePassportForPermalink(permalink);
+    try {
+      const update: PermalinkUpdate = {};
+      if (body.slug !== undefined) update.slug = body.slug;
+      if (body.baseUrl !== undefined) update.baseUrl = body.baseUrl;
+      if (body.gs1DataAttributes !== undefined) update.gs1DataAttributes = body.gs1DataAttributes;
+      if (body.presentationConfigurationId !== undefined) {
+        update.presentationConfigurationId = await this.validateConfigRef(
+          body.presentationConfigurationId ?? null,
+          passport,
+          organizationId,
+        );
+      }
+      const next = await this.permalinkApplicationService.updatePermalink(id, update);
+      const branding = await this.resolveBranding(organizationId);
+      return PermalinkPublicDtoSchema.parse(await this.toPublicDto(next, branding, passport));
+    } catch (error) {
+      if (isDuplicateKeyError(error)) {
+        throw new ConflictException("Slug is already taken");
+      }
+      if (
+        error instanceof ValueError &&
+        error.message.includes("Cannot modify a published permalink")
+      ) {
+        throw new ConflictException(
+          "Permalink is published and its slug/baseUrl/configuration are locked",
+        );
+      }
+      throw error;
+    }
+  }
+
+  @Delete("/permalinks/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePermalink(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<void> {
+    if (memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    const permalink = await this.permalinkRepository.findOneOrFail(id);
+    if (permalink.organizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    await this.permalinkApplicationService.deletePermalink(id);
+  }
+
+  private async resolvePassportForPermalink(permalink: Permalink): Promise<Passport> {
+    const passport = await this.passportRepository.findOne(permalink.passportId);
+    if (!passport) {
+      throw new NotFoundException(`Passport ${permalink.passportId} not found`);
+    }
+    return passport;
+  }
+
   @OptionalAuth()
   @ApiGetShells("p")
   async getShells(
@@ -244,11 +471,10 @@ export class PermalinkController {
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
@@ -267,12 +493,11 @@ export class PermalinkController {
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
@@ -291,12 +516,11 @@ export class PermalinkController {
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelById(
@@ -314,12 +538,11 @@ export class PermalinkController {
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelValue(
@@ -339,12 +562,11 @@ export class PermalinkController {
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
@@ -365,12 +587,11 @@ export class PermalinkController {
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelElementById(
@@ -390,12 +611,11 @@ export class PermalinkController {
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
-    @Headers(ORGANIZATION_ID_HEADER) organizationId: string | undefined,
+    @AuthSession() session: Session | undefined,
     @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const { passport } = await this.permalinkApplicationService.resolveToPassport(id, {
-      organizationId,
-      memberRole,
+      userId: session?.userId,
     });
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.environmentService.getSubmodelElementValue(
@@ -406,12 +626,4 @@ export class PermalinkController {
       version,
     );
   }
-}
-
-function passportToHolder(passport: Passport): PresentationReferenceHolder {
-  return {
-    id: passport.id,
-    organizationId: passport.organizationId,
-    referenceType: DigitalProductDocumentTypes.Passport,
-  };
 }

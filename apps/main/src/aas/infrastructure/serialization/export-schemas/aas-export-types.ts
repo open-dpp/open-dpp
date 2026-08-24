@@ -3,15 +3,17 @@ import { aasExportSchemaJsonV1_0 } from "./aas-export-v1.schema";
 import { aasExportSchemaJsonV2_0 } from "./aas-export-v2.schema";
 import { aasExportSchemaJsonV3_0 } from "./aas-export-v3.schema";
 import { aasExportSchemaJsonV4_0 } from "./aas-export-v4.schema";
+import { aasExportSchemaJsonV5_0 } from "./aas-export-v5.schema";
 
 export const AasExportSchemas = z.discriminatedUnion("version", [
   aasExportSchemaJsonV1_0,
   aasExportSchemaJsonV2_0,
   aasExportSchemaJsonV3_0,
   aasExportSchemaJsonV4_0,
+  aasExportSchemaJsonV5_0,
 ]);
 
 export type AasExport = z.infer<typeof AasExportSchemas>;
 
-export const aasExportSchemaJsonLatest = aasExportSchemaJsonV4_0;
+export const aasExportSchemaJsonLatest = aasExportSchemaJsonV5_0;
 export type AasExportLatestVersion = z.infer<typeof aasExportSchemaJsonLatest>;

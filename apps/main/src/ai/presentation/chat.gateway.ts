@@ -42,10 +42,7 @@ export class ChatGateway {
     try {
       const { passport } = await this.permalinkApplicationService.resolveToPassport(
         message.permalink,
-        {
-          organizationId: client.data.member?.organizationId,
-          memberRole: client.data.member?.role,
-        },
+        { userId: client.data.user?.id },
       );
       const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(passport.id);
       if (!upi) {

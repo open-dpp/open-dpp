@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { Language, LanguageType } from "@open-dpp/dto";
 import { UserRole, UserRoleType } from "./user-role.enum";
+import { DisplayLanguage, DisplayLanguageType } from "@open-dpp/dto";
 
 export interface UserCreateProps {
   email: string;
@@ -13,7 +13,7 @@ export interface UserCreateProps {
   banned?: boolean;
   banReason?: string | null;
   banExpires?: Date | null;
-  preferredLanguage?: LanguageType;
+  preferredLanguage?: DisplayLanguageType;
 }
 
 export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
@@ -23,7 +23,7 @@ export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
   createdAt: Date;
   updatedAt: Date;
   role: UserRoleType;
-  preferredLanguage: LanguageType;
+  preferredLanguage: DisplayLanguageType;
 };
 
 export class User {
@@ -40,7 +40,7 @@ export class User {
   public readonly banned: boolean;
   public readonly banReason: string | null;
   public readonly banExpires: Date | null;
-  public readonly preferredLanguage: LanguageType;
+  public readonly preferredLanguage: DisplayLanguageType;
 
   private constructor(
     id: string,
@@ -55,7 +55,7 @@ export class User {
     banned: boolean,
     banReason: string | null,
     banExpires: Date | null,
-    preferredLanguage: LanguageType,
+    preferredLanguage: DisplayLanguageType,
   ) {
     this.id = id;
     this.email = email;
@@ -89,7 +89,7 @@ export class User {
       !!data.banned,
       data.banReason ?? null,
       data.banExpires ?? null,
-      data.preferredLanguage ?? Language.en,
+      data.preferredLanguage ?? DisplayLanguage.en,
     );
   }
 
@@ -126,7 +126,7 @@ export class User {
     return this.copyWith({ firstName, lastName });
   }
 
-  public withPreferredLanguage(preferredLanguage: LanguageType): User {
+  public withPreferredLanguage(preferredLanguage: DisplayLanguageType): User {
     if (preferredLanguage === this.preferredLanguage) {
       return this;
     }
@@ -147,7 +147,7 @@ export class User {
       data.banned ?? false,
       data.banReason ?? null,
       data.banExpires ?? null,
-      data.preferredLanguage ?? Language.en,
+      data.preferredLanguage ?? DisplayLanguage.en,
     );
   }
 }

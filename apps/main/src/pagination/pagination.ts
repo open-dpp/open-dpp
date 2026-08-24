@@ -14,7 +14,7 @@ export class Pagination {
     return this._cursor;
   }
 
-  setCursor(cursor: string) {
+  setCursor(cursor: string | null) {
     this._cursor = cursor;
   }
 

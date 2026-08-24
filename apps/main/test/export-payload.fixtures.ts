@@ -1,4 +1,11 @@
+import { MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
+import {
+  allPermissionsPlainAllow,
+  securityPlainFactory,
+  SecurityPlainTransientParams,
+} from "@open-dpp/testing";
 import { randomUUID } from "node:crypto";
+import { Security } from "../src/aas/domain/security/security";
 
 export function baseElement() {
   return {
@@ -50,6 +57,7 @@ export function buildEmptyExportPayload(assetKind: "Type" | "Instance" = "Type")
           },
         },
       ],
+
       submodels: [],
       conceptDescriptions: [],
     },
@@ -65,10 +73,27 @@ export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") 
       ? "A template with all element types"
       : "A passport with all element types";
 
+  const transientParams: SecurityPlainTransientParams = {
+    policies: [
+      {
+        subject: {
+          userRole: UserRoleDto.USER,
+          memberRole: MemberRoleDto.OWNER,
+        },
+        object: { idShortPath: "rich-submodel" },
+        permissions: allPermissionsPlainAllow,
+      },
+    ],
+  };
+
+  const sec = Security.fromPlain(
+    securityPlainFactory.build(undefined, { transient: transientParams }),
+  );
+
   return {
     id: randomUUID(),
     format: "open-dpp:json",
-    version: "1.0",
+    version: "5.0",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     environment: {
@@ -91,6 +116,7 @@ export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") 
             assetType: null,
             defaultThumbnails: [],
           },
+          security: sec.toPlain(),
         },
       ],
       submodels: [
@@ -156,7 +182,13 @@ export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") 
               ],
               valueId: null,
             },
-            { ...base, modelType: "ReferenceElement", idShort: "refElement", value: ref },
+            {
+              ...base,
+              modelType: "Property",
+              idShort: "linkElement",
+              valueType: "AnyUri",
+              value: "urn:example:ref",
+            },
             {
               ...base,
               modelType: "RelationshipElement",

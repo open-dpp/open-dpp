@@ -215,11 +215,17 @@ export class PassportService {
       throw new ForbiddenException('Only passports with the status "Draft" can be deleted');
     }
 
+    const upis = await this.uniqueProductIdentifierRepository.findAllByReferencedId(passport.id);
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.environmentService.deleteEnvironment(passport.getEnvironment(), session);
         await this.passportRepository.deleteById(passport.id, { session });
+        await this.permalinkRepository.deleteGs1LinksByUpiIds(
+          upis.map((upi) => upi.uuid),
+          { session },
+        );
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
         await this.activityRepository.deleteByAggregateId(passport.id, { session });
         await this.permalinkRepository.deleteAllByPassportId(passport.id, { session });

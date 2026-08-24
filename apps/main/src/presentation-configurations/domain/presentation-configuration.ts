@@ -9,8 +9,7 @@ import {
   DigitalProductDocumentTypes,
   DigitalProductDocumentTypesType,
 } from "@open-dpp/dto";
-import { ForbiddenError, ValueError } from "@open-dpp/exception";
-import { z } from "zod/v4";
+import { ForbiddenError, parseOrThrow } from "@open-dpp/exception";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { AasAbility } from "../../aas/domain/security/aas-ability";
 import { IPersistable } from "../../aas/domain/persistable";
@@ -72,22 +71,16 @@ export class PresentationConfiguration implements IPersistable, HasCreatedAt {
     updatedAt?: Date;
   }): PresentationConfiguration {
     const label = data.label ?? null;
-    try {
-      PresentationConfigurationInvariantsSchema.parse({
+    parseOrThrow(
+      PresentationConfigurationInvariantsSchema,
+      {
         organizationId: data.organizationId,
         referenceId: data.referenceId,
         referenceType: data.referenceType,
         label,
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-        throw new ValueError(`Invalid PresentationConfiguration: ${details.join("; ")}`, {
-          cause: error,
-        });
-      }
-      throw error;
-    }
+      },
+      "PresentationConfiguration",
+    );
     const now = DateTime.now();
     return new PresentationConfiguration(
       data.id ?? randomUUID(),

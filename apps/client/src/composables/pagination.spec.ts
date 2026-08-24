@@ -97,6 +97,41 @@ describe("pagination", () => {
     expect(hasPrevious.value).toBeFalsy();
   });
 
+  async function fetchCallbackNullOnLastPage(
+    params: PagingParamsDto,
+    items: number[],
+  ): Promise<PagingResult> {
+    const fromIndex = params.cursor ? Number(params.cursor) + 1 : 0;
+    const result = items.slice(fromIndex, fromIndex + params.limit!);
+    const hasNextPage = fromIndex + result.length < items.length;
+    const last = result[result.length - 1];
+    return {
+      paging_metadata: { cursor: hasNextPage ? String(last) : null },
+      result,
+    };
+  }
+
+  it("stops on an exactly-full last page when the server sends a null cursor", async () => {
+    const items = [0, 1, 2, 3];
+
+    const { hasNext, nextPage, currentPage } = usePagination({
+      limit: 2,
+      fetchCallback: (params) => fetchCallbackNullOnLastPage(params, items),
+      changeQueryParams,
+    });
+
+    await nextPage();
+    expect(currentPage.value).toEqual({ cursor: null, itemCount: 2, from: 0, to: 1 });
+    expect(hasNext.value).toBeTruthy();
+
+    await nextPage();
+    expect(currentPage.value).toEqual({ cursor: "1", itemCount: 2, from: 2, to: 3 });
+    expect(hasNext.value).toBeFalsy();
+
+    await nextPage();
+    expect(currentPage.value).toEqual({ cursor: "1", itemCount: 2, from: 2, to: 3 });
+  });
+
   it("should navigate from initial cursor onwards", async () => {
     const items = [0, 1, 2, 3, 4, 5, 6];
 

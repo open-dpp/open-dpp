@@ -15,12 +15,13 @@ import { useIndexStore } from "./stores";
 import { useLanguageStore } from "./stores/language.ts";
 import { useOrganizationsStore } from "./stores/organizations";
 import { useUserStore } from "./stores/user.ts";
-import { convertLanguageToLocale, i18n } from "./translations/i18n.ts";
+import { i18n } from "./translations/i18n.ts";
 import "./index.css";
 import "primeicons/primeicons.css";
 import "dayjs/locale/de";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import { convertLanguageToLocale } from "./translations/util.ts";
 
 dayjs.extend(localizedFormat);
 
