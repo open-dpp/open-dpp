@@ -19,7 +19,7 @@ test("api key happy path: create, shown once, masked list, revoke", async ({
   // Shown exactly once
   const createdValue = page.getByTestId("api-key-created-value");
   await expect(createdValue).toBeVisible();
-  const plainKey = (await createdValue.textContent())?.trim() ?? "";
+  const plainKey = (await createdValue.inputValue()).trim();
   expect(plainKey).toMatch(/^opendpp_/);
   await expect(page.getByTestId("api-key-show-once-hint")).toBeVisible();
   await page.getByTestId("api-key-created-done").click();
