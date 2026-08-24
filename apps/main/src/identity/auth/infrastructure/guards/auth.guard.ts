@@ -5,7 +5,7 @@ import { EnvService } from "@open-dpp/env";
 import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
-import { Session } from "../../domain/session";
+import { AuthMethod, Session } from "../../domain/session";
 import { DENY_API_KEY_AUTH } from "../../presentation/decorators/deny-api-key-auth.decorator";
 import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decorator";
 import { randomUUID } from "node:crypto";
@@ -49,7 +49,7 @@ export class AuthGuard implements CanActivate {
           session = Session.create({
             userId: verifiedKey.userId,
             token: "api-key",
-            authMethod: "api-key",
+            authMethod: AuthMethod.API_KEY,
           });
         }
       } catch {
@@ -107,7 +107,7 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (denyApiKeyAuth && session.authMethod === "api-key") {
+    if (denyApiKeyAuth && session.authMethod === AuthMethod.API_KEY) {
       throw new ForbiddenException({
         code: "FORBIDDEN",
         message: "This endpoint requires a browser session",

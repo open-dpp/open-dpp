@@ -1,6 +1,9 @@
 import { randomBytes } from "node:crypto";
 
-export type AuthMethod = "session" | "api-key";
+export enum AuthMethod {
+  SESSION = "session",
+  API_KEY = "api-key",
+}
 
 export interface SessionCreateProps {
   userId: string;
@@ -78,7 +81,7 @@ export class Session {
       generate24CharId(),
       data.userId,
       data.token,
-      data.authMethod ?? "session",
+      data.authMethod ?? AuthMethod.SESSION,
       data.expiresAt ?? defaultExpiresAt,
       now,
       now,
@@ -96,7 +99,7 @@ export class Session {
       data.id,
       data.userId,
       data.token,
-      "session",
+      AuthMethod.SESSION,
       data.expiresAt,
       data.createdAt,
       data.updatedAt,

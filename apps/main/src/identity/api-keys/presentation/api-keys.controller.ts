@@ -33,7 +33,6 @@ import { DenyApiKeyAuth } from "../../auth/presentation/decorators/deny-api-key-
 import { ApiKeysService } from "../application/services/api-keys.service";
 import { ApiKeyMapper } from "../infrastructure/mappers/api-key.mapper";
 
-// A leaked api key must not be able to inspect, mint or revoke keys.
 @DenyApiKeyAuth()
 @Controller("users/me/api-keys")
 export class ApiKeysController {
@@ -62,8 +61,6 @@ export class ApiKeysController {
       body,
       extractBetterAuthHeaders(headers),
     );
-    // The plain key is returned exactly once; afterwards only the hashed
-    // value exists and the list shows the stored `start` characters.
     return { ...ApiKeyMapper.toDto(apiKey), key };
   }
 

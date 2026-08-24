@@ -1,23 +1,16 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { findPageByCursor } from "../../../lib/repositories";
 import { Pagination } from "../../../pagination/pagination";
 import { PagingResult } from "../../../pagination/paging-result";
 import type { BetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { AUTH } from "../../auth/auth.provider";
+import { idFilter } from "../../lib/better-auth-id";
 import { ApiKey } from "../domain/api-key";
 import { ApiKeyMapper, RawApiKey } from "./mappers/api-key.mapper";
 import { ApiKeyDoc } from "./schemas/api-key.schema";
-
-// Better-auth stores string ids while its MongoDB adapter may store reference
-// fields as ObjectId; this filter matches both forms and the `$eq` wrapper
-// guards against NoSQL operator injection (see invitations.repository.ts).
-function idFilter(value: string) {
-  return ObjectId.isValid(value) ? { $in: [value, new ObjectId(value)] } : { $eq: value };
-}
 
 @Injectable()
 export class ApiKeysRepository {
