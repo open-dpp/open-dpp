@@ -1,5 +1,13 @@
 # @open-dpp/testing
 
+## 3.2.0
+
+### Patch Changes
+
+- Updated dependencies [[`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b)]:
+  - @open-dpp/dto@3.2.0
+  - @open-dpp/env@3.2.0
+
 ## 3.1.4
 
 ### Patch Changes

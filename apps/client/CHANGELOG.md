@@ -1,5 +1,19 @@
 # @open-dpp/client
 
+## 3.2.0
+
+### Minor Changes
+
+- [#671](https://github.com/open-dpp/open-dpp/pull/671) [`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b) Thanks [@mr42](https://github.com/mr42)! - Add bulk import feature such that a REO user can create up to 1000 passports at once.
+
+### Patch Changes
+
+- [#700](https://github.com/open-dpp/open-dpp/pull/700) [`115b3af`](https://github.com/open-dpp/open-dpp/commit/115b3af6a71ad46bc89cf53b16393f9d0dd26a2f) Thanks [@Hentra](https://github.com/Hentra)! - Remove Headless UI components
+
+- Updated dependencies [[`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b)]:
+  - @open-dpp/api-client@3.2.0
+  - @open-dpp/dto@3.2.0
+
 ## 3.1.4
 
 ### Patch Changes

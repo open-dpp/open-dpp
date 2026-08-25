@@ -2,13 +2,13 @@ import {
   Body,
   Controller,
   Delete,
+  forwardRef,
   Get,
   HttpCode,
   Inject,
   Param,
   Patch,
   Post,
-  forwardRef,
 } from "@nestjs/common";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
