@@ -1,13 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import type { CreateApiKeyDto } from "@open-dpp/dto";
 import { NotFoundError } from "@open-dpp/exception";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 import { Pagination } from "../../../../pagination/pagination";
 import { PagingResult } from "../../../../pagination/paging-result";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { ApiKey } from "../../domain/api-key";
 import { ApiKeysRepository } from "../../infrastructure/api-keys.repository";
 
-const SECONDS_PER_DAY = 24 * 60 * 60;
+dayjs.extend(duration);
 
 @Injectable()
 export class ApiKeysService {
@@ -24,7 +26,9 @@ export class ApiKeysService {
     return this.apiKeysRepository.create(
       {
         name: data.name,
-        expiresInSeconds: data.expiresInDays ? data.expiresInDays * SECONDS_PER_DAY : null,
+        expiresInSeconds: data.expiresInDays
+          ? dayjs.duration(data.expiresInDays, "days").asSeconds()
+          : null,
       },
       headers,
     );
