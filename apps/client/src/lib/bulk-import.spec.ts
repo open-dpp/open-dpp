@@ -52,11 +52,7 @@ function submodel(
   } as unknown as SubmodelResponseDto;
 }
 
-function mappingRow(
-  input: string,
-  submodelIdShort: string,
-  output: string,
-): MappingRow {
+function mappingRow(input: string, submodelIdShort: string, output: string): MappingRow {
   return { input, submodelIdShort, output };
 }
 
