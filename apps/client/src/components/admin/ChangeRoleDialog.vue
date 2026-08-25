@@ -6,7 +6,6 @@ import Message from "primevue/message";
 import Select from "primevue/select";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import apiClient from "../../lib/api-client.ts";
 import RingLoader from "../navigation/RingLoader.vue";
 
 interface Props {
@@ -79,7 +78,6 @@ async function changeRole() {
 
     success.value = true;
   } catch (error) {
-    console.error(error);
     if (isAxiosError(error)) {
       const status = error.response?.status;
       if (status === 403 || status === 401) {
