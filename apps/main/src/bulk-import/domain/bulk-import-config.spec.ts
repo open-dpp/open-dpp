@@ -47,6 +47,21 @@ describe("BulkImportConfig", () => {
     expect(await config.extractIdValue({ sku: "  " })).toBeUndefined();
   });
 
+  it("extracts the id value for a raw column name containing a hyphen", async () => {
+    // Column headers like "Produkt-ID" are not valid bare JSONata identifiers - unquoted,
+    // JSONata would otherwise parse the hyphen as subtraction ("Produkt" minus "ID") instead of
+    // a field lookup. extractIdValue must quote the path internally so callers can pass the raw
+    // column name as-is.
+    const config = BulkImportConfig.create({
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      name: "ERP export",
+      idField: "Produkt-ID",
+      submodelMappings: new Map(),
+    });
+    expect(await config.extractIdValue({ "Produkt-ID": "4711" })).toEqual("4711");
+  });
+
   it("updateMapping mutates the config in place", () => {
     const config = buildConfig();
     const id = config.id;

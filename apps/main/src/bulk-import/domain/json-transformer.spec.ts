@@ -51,4 +51,18 @@ describe("JsonTransformer", () => {
     });
     expect(value).toEqual("value1");
   });
+
+  it("evaluatePath should resolve a raw field name that isn't a valid bare JSONata identifier", async () => {
+    // Unquoted, JSONata would parse "Produkt-ID" as the subtraction "Produkt - ID".
+    const value = await JsonTransformer.evaluatePath("Produkt-ID", { "Produkt-ID": "4711" });
+    expect(value).toEqual("4711");
+  });
+
+  it("applies a field mapping whose input path isn't a valid bare JSONata identifier", async () => {
+    const transformer = JsonTransformer.create({});
+    transformer.addFieldMapping(FieldMapping.create({ input: "Produkt-ID", output: "sku" }));
+
+    const output = await transformer.apply({ "Produkt-ID": "4711" });
+    expect(output).toEqual({ sku: "4711" });
+  });
 });

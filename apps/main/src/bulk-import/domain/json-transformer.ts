@@ -7,6 +7,17 @@ export const JsonTransformerSchema = z.object({
   fieldMappings: FieldMappingSchema.array(),
 });
 
+// Backtick-quote every dot-separated segment so a raw path (e.g. "Produkt-ID", from a column
+// name that isn't a valid bare JSONata identifier) resolves as a literal field lookup instead of
+// being parsed as an expression - unquoted, JSONata would read "Produkt-ID" as the subtraction
+// "Produkt - ID".
+function quoteJsonataPath(path: string): string {
+  return path
+    .split(".")
+    .map((segment) => `\`${segment}\``)
+    .join(".");
+}
+
 export class JsonTransformer {
   private constructor(private fieldMappings: FieldMapping[]) {}
   static create(data: { fieldMappings?: FieldMapping[] }) {
@@ -36,7 +47,7 @@ export class JsonTransformer {
   }
 
   static async evaluatePath(path: string, input: unknown): Promise<unknown> {
-    return await jsonata(path).evaluate(input);
+    return await jsonata(quoteJsonataPath(path)).evaluate(input);
   }
 
   private buildJsonataString(obj: Record<string, any>): string {
@@ -47,7 +58,7 @@ export class JsonTransformer {
       if (typeof value === "object" && value !== null) {
         if (value instanceof UnquotedValue) {
           // Handle unquoted values (e.g., path expressions)
-          return `"${key}": ${value.value}`;
+          return `"${key}": ${quoteJsonataPath(value.value)}`;
         } else {
           // Recursively process nested objects
           return `"${key}": ${this.buildJsonataString(value)}`;
