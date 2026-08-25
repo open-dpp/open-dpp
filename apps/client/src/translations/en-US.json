@@ -370,6 +370,7 @@
       "rowIndex": "Row",
       "passport": "Passport",
       "error": "Error",
+      "inputData": "Input data",
       "runDetailTitle": "Bulk import run",
       "items": "Rows",
       "interrupt": "Interrupt",

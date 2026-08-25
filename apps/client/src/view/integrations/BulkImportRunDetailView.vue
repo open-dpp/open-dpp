@@ -48,6 +48,8 @@ const {
 
 const runItems = computed(() => runItemsPagination.value?.result ?? []);
 
+const expandedRows = ref<Record<string, boolean>>({});
+
 function statusSeverity(status: string): string {
   switch (status) {
     case "completed":
@@ -141,7 +143,7 @@ onMounted(async () => {
     </div>
 
     <div class="flex flex-col gap-4">
-      <DataTable :value="runItems">
+      <DataTable v-model:expanded-rows="expandedRows" :value="runItems" data-key="id">
         <template #header>
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
@@ -161,6 +163,7 @@ onMounted(async () => {
             </div>
           </div>
         </template>
+        <Column expander style="width: 3rem" />
         <Column field="rowIndex" :header="t('integrations.bulkImport.rowIndex')" />
         <Column :header="t('integrations.bulkImport.idField')">
           <template #body="{ data }">
@@ -187,6 +190,14 @@ onMounted(async () => {
           </template>
         </Column>
         <Column field="error" :header="t('integrations.bulkImport.error')" />
+        <template #expansion="{ data }">
+          <div class="p-4">
+            <h3 class="mb-2 font-semibold">{{ t("integrations.bulkImport.inputData") }}</h3>
+            <pre class="max-h-[50vh] overflow-auto rounded bg-gray-50 p-4 text-sm">{{
+              JSON.stringify(data.inputData, null, 2)
+            }}</pre>
+          </div>
+        </template>
       </DataTable>
       <TablePagination
         :current-page="currentPage"

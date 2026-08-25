@@ -55,6 +55,7 @@ describe("BulkImportRunItem", () => {
       runId: randomUUID(),
       rowIndex: 0,
       status: BulkImportRunItemStatusDto.Pending,
+      externalId: null,
       passportId: null,
       error: null,
     });
