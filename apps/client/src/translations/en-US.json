@@ -517,6 +517,12 @@
         "errorLoading": "Error loading settings",
         "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
+    },
+    "removeMemberError": "Error removing member.",
+    "removeMemberDialog": {
+      "header": "Remove member",
+      "message": "Do you really want to remove {email} from this organization?",
+      "remove": "Remove"
     }
   },
   "marketplace": {

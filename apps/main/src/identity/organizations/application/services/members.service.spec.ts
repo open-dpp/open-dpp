@@ -6,6 +6,7 @@ import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
+import { SessionsRepository } from "../../../auth/infrastructure/adapters/sessions.repository";
 import { MembersService } from "./members.service";
 
 describe("MembersService", () => {
@@ -13,6 +14,7 @@ describe("MembersService", () => {
   let mockMembersRepo: any;
   let mockOrganizationsRepo: any;
   let mockUsersRepo: any;
+  let mockSessionsRepo: any;
 
   beforeEach(async () => {
     mockMembersRepo = {
@@ -27,6 +29,9 @@ describe("MembersService", () => {
       findOneById: jest.fn(),
       findAllByIds: jest.fn(),
     };
+    mockSessionsRepo = {
+      clearActiveOrganization: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,6 +39,7 @@ describe("MembersService", () => {
         { provide: MembersRepository, useValue: mockMembersRepo },
         { provide: OrganizationsRepository, useValue: mockOrganizationsRepo },
         { provide: UsersRepository, useValue: mockUsersRepo },
+        { provide: SessionsRepository, useValue: mockSessionsRepo },
       ],
     }).compile();
 

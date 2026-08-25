@@ -23,5 +23,18 @@ export function useOrganizations() {
     }
   }
 
-  return { changeMemberRole };
+  async function removeMember(memberId: string) {
+    const errorMsg = t("organizations.removeMemberError");
+    try {
+      // axios rejects on non-2xx, so reaching this line means success
+      // (the endpoint responds 204 No Content).
+      await apiClient.dpp.organizations.removeMember(memberId);
+      return true;
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(errorMsg, error);
+      return false;
+    }
+  }
+
+  return { changeMemberRole, removeMember };
 }

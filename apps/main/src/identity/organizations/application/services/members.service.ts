@@ -1,11 +1,13 @@
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { ValueError } from "@open-dpp/exception";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberWithUser } from "../../domain/member";
 import { Organization } from "../../domain/organization";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
+import { SessionsRepository } from "../../../auth/infrastructure/adapters/sessions.repository";
 import { MemberRoleType } from "../../domain/member-role.enum";
 
 @Injectable()
@@ -16,6 +18,7 @@ export class MembersService {
     private readonly membersRepository: MembersRepository,
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly sessionsRepository: SessionsRepository,
   ) {}
 
   async isMemberOfOrganization(userId: string, organizationId: string): Promise<boolean> {
@@ -85,5 +88,25 @@ export class MembersService {
 
     memberToUpdate.changeRole(newRole);
     await this.membersRepository.save(memberToUpdate);
+  }
+
+  async removeMember(organizationId: string, memberId: string, actorUserId: string): Promise<void> {
+    const memberToRemove = await this.membersRepository.findOneByIdOrFail(memberId);
+    if (memberToRemove.organizationId !== organizationId) {
+      throw new ForbiddenException("You are not authorized to remove this member");
+    }
+    if (memberToRemove.userId === actorUserId) {
+      throw new ValueError("You cannot remove your own membership.");
+    }
+    if (memberToRemove.isOwner()) {
+      throw new ValueError("Owners cannot be removed. Change their role to member first.");
+    }
+
+    // Clear sessions first: if the second write fails, a cleared active
+    // organization on a still-existing membership is self-healing, while a
+    // deleted membership with a failed session clear leaves a confusing,
+    // non-retryable state.
+    await this.sessionsRepository.clearActiveOrganization(memberToRemove.userId, organizationId);
+    await this.membersRepository.deleteById(memberToRemove.id);
   }
 }
