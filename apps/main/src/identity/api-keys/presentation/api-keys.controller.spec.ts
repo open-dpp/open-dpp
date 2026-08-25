@@ -80,7 +80,10 @@ describe("ApiKeysController", () => {
   }
 
   function createKey(cookie: string, body: Record<string, unknown>) {
-    return request(app.getHttpServer()).post("/users/me/api-keys").set("Cookie", cookie).send(body);
+    return request(app.getHttpServer())
+      .post("/users/me/api-keys")
+      .set("Cookie", cookie)
+      .send({ expiresInDays: 30, ...body });
   }
 
   describe("POST /users/me/api-keys", () => {
@@ -95,13 +98,13 @@ describe("ApiKeysController", () => {
     it("creates a key and returns the plain key exactly once", async () => {
       const { cookie } = await signedInUser();
 
-      const response = await createKey(cookie, { name: "CI pipeline" });
+      const response = await createKey(cookie, { name: "CI pipeline", expiresInDays: 90 });
 
       expect(response.status).toBe(201);
       expect(response.body.name).toBe("CI pipeline");
       expect(response.body.key).toMatch(/^opendpp_/);
       expect(response.body.start).toBe(response.body.key.slice(0, response.body.start.length));
-      expect(response.body.expiresAt).toBeNull();
+      expect(response.body.expiresAt).toEqual(expect.any(String));
       expect(response.body.id).toEqual(expect.any(String));
     });
 
@@ -122,6 +125,18 @@ describe("ApiKeysController", () => {
       expect((await createKey(cookie, { name: "" })).status).toBe(400);
       expect((await createKey(cookie, {})).status).toBe(400);
       expect((await createKey(cookie, { name: "k", expiresInDays: 7 })).status).toBe(400);
+    });
+
+    it("rejects a missing or null expiry", async () => {
+      const { cookie } = await signedInUser();
+
+      const withoutExpiry = await request(app.getHttpServer())
+        .post("/users/me/api-keys")
+        .set("Cookie", cookie)
+        .send({ name: "Immortal" });
+      expect(withoutExpiry.status).toBe(400);
+
+      expect((await createKey(cookie, { name: "Immortal", expiresInDays: null })).status).toBe(400);
     });
   });
 

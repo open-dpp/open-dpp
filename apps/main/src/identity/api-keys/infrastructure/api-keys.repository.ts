@@ -67,7 +67,7 @@ export class ApiKeysRepository {
   // Writes go through better-auth so key generation, hashing and the
   // session-derived ownership checks stay there.
   async create(
-    data: { name: string; expiresInSeconds: number | null },
+    data: { name: string; expiresInSeconds: number },
     headers: BetterAuthHeaders,
   ): Promise<{ apiKey: ApiKey; key: string }> {
     try {

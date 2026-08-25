@@ -17,25 +17,26 @@ const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
 
+const DEFAULT_EXPIRY_DAYS: CreateApiKeyDto["expiresInDays"] = 90;
+
 const name = ref("");
-const expiresInDays = ref<number | null>(null);
+const expiresInDays = ref<CreateApiKeyDto["expiresInDays"]>(DEFAULT_EXPIRY_DAYS);
 const busy = ref(false);
 const createdKey = ref<CreatedApiKeyDto | null>(null);
 
-const expiryOptions = computed(() => [
-  { label: t("user.apiKeys.noExpiry"), value: null },
-  ...ApiKeyExpiryPresetDays.map((days) => ({
+const expiryOptions = computed(() =>
+  ApiKeyExpiryPresetDays.map((days) => ({
     label: t("user.apiKeys.expiryDays", { days }),
     value: days,
   })),
-]);
+);
 
 const canSubmit = computed(() => !busy.value && name.value.trim().length > 0);
 
 watch(model, (visible) => {
   if (visible) {
     name.value = "";
-    expiresInDays.value = null;
+    expiresInDays.value = DEFAULT_EXPIRY_DAYS;
     createdKey.value = null;
   }
 });
@@ -46,7 +47,7 @@ async function submit() {
   try {
     const body: CreateApiKeyDto = {
       name: name.value.trim(),
-      expiresInDays: expiresInDays.value as CreateApiKeyDto["expiresInDays"],
+      expiresInDays: expiresInDays.value,
     };
     const response = await apiClient.dpp.users.createApiKey(body);
     createdKey.value = response.data;

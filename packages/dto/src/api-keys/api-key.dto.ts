@@ -24,7 +24,7 @@ export type CreatedApiKeyDto = z.infer<typeof CreatedApiKeyDtoSchema>;
 
 export const CreateApiKeyDtoSchema = z.object({
   name: z.string().min(1).max(100),
-  expiresInDays: z.literal(ApiKeyExpiryPresetDays).nullish(),
+  expiresInDays: z.literal(ApiKeyExpiryPresetDays),
 });
 
 export type CreateApiKeyDto = z.infer<typeof CreateApiKeyDtoSchema>;

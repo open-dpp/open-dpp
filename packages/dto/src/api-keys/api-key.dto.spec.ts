@@ -40,8 +40,11 @@ describe("ApiKeyDtoSchema", () => {
 
 describe("CreateApiKeyDtoSchema", () => {
   it("requires a non-empty name", () => {
-    expect(() => CreateApiKeyDtoSchema.parse({ name: "" })).toThrow();
-    expect(CreateApiKeyDtoSchema.parse({ name: "My key" })).toEqual({ name: "My key" });
+    expect(() => CreateApiKeyDtoSchema.parse({ name: "", expiresInDays: 30 })).toThrow();
+    expect(CreateApiKeyDtoSchema.parse({ name: "My key", expiresInDays: 30 })).toEqual({
+      name: "My key",
+      expiresInDays: 30,
+    });
   });
 
   it("accepts only the expiry presets", () => {
@@ -51,9 +54,11 @@ describe("CreateApiKeyDtoSchema", () => {
       );
     }
     expect(() => CreateApiKeyDtoSchema.parse({ name: "k", expiresInDays: 7 })).toThrow();
-    expect(
-      CreateApiKeyDtoSchema.parse({ name: "k", expiresInDays: null }).expiresInDays,
-    ).toBeNull();
+  });
+
+  it("rejects a missing or null expiry", () => {
+    expect(() => CreateApiKeyDtoSchema.parse({ name: "k" })).toThrow();
+    expect(() => CreateApiKeyDtoSchema.parse({ name: "k", expiresInDays: null })).toThrow();
   });
 });
 

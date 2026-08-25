@@ -26,9 +26,7 @@ export class ApiKeysService {
     return this.apiKeysRepository.create(
       {
         name: data.name,
-        expiresInSeconds: data.expiresInDays
-          ? dayjs.duration(data.expiresInDays, "days").asSeconds()
-          : null,
+        expiresInSeconds: dayjs.duration(data.expiresInDays, "days").asSeconds(),
       },
       headers,
     );
