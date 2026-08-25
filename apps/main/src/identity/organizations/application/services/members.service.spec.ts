@@ -83,7 +83,9 @@ describe("MembersService", () => {
   });
 
   it("should get members with user info", async () => {
-    mockMembersRepo.findByOrganizationId.mockResolvedValue([{ userId: "user-1", role: "member" }]);
+    mockMembersRepo.findByOrganizationId.mockResolvedValue([
+      Member.create({ userId: "user-1", role: MemberRole.MEMBER, organizationId: "org-1" }),
+    ]);
     mockUsersRepo.findAllByIds.mockResolvedValue([
       { id: "user-1", email: "test@example.com", name: "Test", image: "img.png" },
     ]);

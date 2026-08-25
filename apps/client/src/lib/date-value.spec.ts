@@ -1,12 +1,14 @@
 import { DataTypeDef } from "@open-dpp/dto";
 import { describe, expect, it } from "vitest";
-import {
-  formatDateValueForDisplay,
+import formatDateValueForDisplay, {
   formatDateValueForModel,
   getCurrentTimezone,
   parseDateValueFromModel,
 } from "./date-value.ts";
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
 
+dayjs.extend(localizedFormat);
 describe("date-value helpers", () => {
   describe("formatDateValueForModel", () => {
     it("returns null when the date is null", () => {
@@ -74,14 +76,14 @@ describe("date-value helpers", () => {
 
     it("formats Date values as a localized date with a zone suffix", () => {
       const out = formatDateValueForDisplay("2026-04-10", DataTypeDef.Date, "Europe/Berlin");
-      expect(out).toBe("2026-04-10 Europe/Berlin");
+      expect(out).toBe("04/10/2026 Europe/Berlin");
     });
 
     it("shows the zone label on Date values even though the day itself does not shift", () => {
       const berlin = formatDateValueForDisplay("2026-04-10", DataTypeDef.Date, "Europe/Berlin");
       const tokyo = formatDateValueForDisplay("2026-04-10", DataTypeDef.Date, "Asia/Tokyo");
-      expect(berlin).toBe("2026-04-10 Europe/Berlin");
-      expect(tokyo).toBe("2026-04-10 Asia/Tokyo");
+      expect(berlin).toBe("04/10/2026 Europe/Berlin");
+      expect(tokyo).toBe("04/10/2026 Asia/Tokyo");
     });
 
     it("formats DateTime values in the viewer's timezone and includes a zone label", () => {
@@ -91,8 +93,8 @@ describe("date-value helpers", () => {
         "Europe/Berlin", // +02:00 in April (CEST)
       );
       expect(out).not.toBeNull();
-      // 14:00 UTC → 16:00 Berlin
-      expect(out!).toContain("16:00");
+      // 2 PM UTC → 4 PM Berlin
+      expect(out!).toContain("4:00 PM");
       // zone must be explicit somewhere in the string
       expect(out!.includes("Europe/Berlin") || out!.includes("CEST")).toBe(true);
     });
@@ -108,9 +110,9 @@ describe("date-value helpers", () => {
         DataTypeDef.DateTime,
         "Asia/Tokyo",
       );
-      // 14:00 UTC → 16:00 Berlin, 23:00 Tokyo
-      expect(berlin).toContain("16:00");
-      expect(tokyo).toContain("23:00");
+      // 2 PM UTC → 4 PM Berlin, 11:00 PM Tokyo
+      expect(berlin).toContain("4:00 PM");
+      expect(tokyo).toContain("11:00 PM");
       expect(berlin).not.toBe(tokyo);
     });
 

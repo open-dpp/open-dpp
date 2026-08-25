@@ -1,9 +1,9 @@
 FROM node:26-slim AS build
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+ENV PATH="$PNPM_HOME/bin:$PATH"
 
-RUN npm install --global pnpm@latest-10
+RUN npm install --global pnpm@latest-11
 
 RUN pnpm install -g rimraf
 
@@ -29,7 +29,9 @@ RUN pnpm deploy --filter=@open-dpp/main --prod ./prod/main
 
 FROM node:26-slim AS production
 
-ARG APP_VERSION=unknown
+# Left empty on purpose: an unset APP_VERSION makes the backend fall back to the
+# version of the package.json copied in below, instead of pinning a placeholder.
+ARG APP_VERSION=""
 
 ENV NODE_ENV=production
 ENV APP_VERSION=${APP_VERSION}
@@ -37,6 +39,8 @@ ENV OPEN_DPP_BACKEND_MAIN=/app/dist/main.js
 ENV OPEN_DPP_FRONTEND_ROOT=/app/dist/client/dist
 
 COPY --chown=node:node --from=build /build/prod/main/dist /app/dist
+# Source of the reported application version when APP_VERSION is not passed in.
+COPY --chown=node:node --from=build /build/prod/main/package.json /app/package.json
 COPY --chown=node:node /apps/main/public /app/public
 COPY --chown=node:node --from=build /build/prod/main/node_modules /app/node_modules
 COPY --chown=node:node --from=build /build/apps/client/dist /app/dist/client/dist

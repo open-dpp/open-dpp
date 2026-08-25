@@ -1,7 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import { writeFileSync } from "node:fs";
 import process, { exit } from "node:process";
-import { ConsoleLogger, Logger, ValidationPipe } from "@nestjs/common";
+import {
+  ConsoleLogger,
+  Logger,
+  RequestMethod,
+  ValidationPipe,
+  VersioningType,
+} from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
@@ -16,9 +22,19 @@ import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
 import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
+import { AllApiVersions, ApiVersionsDto, GS1_RESOLVER_PATH_PREFIX } from "@open-dpp/dto";
 
 const EXPORT_API_DOC_FLAG = "--export-api-doc";
 const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
+
+const GS1_RESOLVER_ROUTE_REGEX = new RegExp(
+  `^/${GS1_RESOLVER_PATH_PREFIX}/01/[^/]+(?:/10/[^/]+)?(?:/21/[^/]+)?/?$`,
+);
+
+function isPublicBackendRoute(pathOrUrl: string): boolean {
+  const path = pathOrUrl.split("?")[0];
+  return GS1_RESOLVER_ROUTE_REGEX.test(path);
+}
 
 async function bootstrap() {
   if (process.argv[2] && process.argv[2] === EXPORT_API_DOC_FLAG) {
@@ -65,7 +81,7 @@ async function bootstrap() {
     });
 
     app.use((req: Request, res: Response, next: NextFunction) => {
-      if (!req.path.startsWith("/api")) {
+      if (!req.path.startsWith("/api") && !isPublicBackendRoute(req.path)) {
         proxy.web(req, res, { target: "http://localhost:5173" });
       } else {
         next();
@@ -73,13 +89,39 @@ async function bootstrap() {
     });
 
     httpServer.on("upgrade", (req, socket, head) => {
-      if (req.url && !req.url.startsWith("/api")) {
+      if (req.url && !req.url.startsWith("/api") && !isPublicBackendRoute(req.url)) {
         proxy.ws(req, socket, head, { target: "http://localhost:5173" });
       }
     });
   }
 
-  app.setGlobalPrefix("api");
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (
+      req.url.startsWith("/api/") &&
+      !req.url.startsWith("/api/swagger") &&
+      !req.url.match(/^\/api\/v\d+(\/|$)/)
+    ) {
+      return res.redirect(308, req.url.replace(/^\/api/, `/api/v${ApiVersionsDto.v1}`));
+    }
+    next();
+  });
+
+  app.setGlobalPrefix("api", {
+    exclude: [
+      { path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin`, method: RequestMethod.GET },
+      { path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin/10/:batch`, method: RequestMethod.GET },
+      { path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin/21/:serial`, method: RequestMethod.GET },
+      {
+        path: `${GS1_RESOLVER_PATH_PREFIX}/01/:gtin/10/:batch/21/:serial`,
+        method: RequestMethod.GET,
+      },
+    ],
+  });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    // header: "X-API-VERSION",
+    defaultVersion: AllApiVersions,
+  });
   app.enableCors({
     credentials: true,
     origin: "http://localhost:5173",

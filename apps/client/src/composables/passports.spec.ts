@@ -2,7 +2,7 @@ import { DigitalProductDocumentStatusDto, Language, Populates } from "@open-dpp/
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -49,6 +49,11 @@ describe("passports", () => {
 
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
+  afterEach(() => {
+    mountedWrappers.forEach((wrapper) => wrapper.unmount());
+    mountedWrappers.length = 0;
+  });
+
   function mountHarness() {
     const Harness = defineComponent({
       name: "use-passports-harness",
@@ -87,7 +92,7 @@ describe("passports", () => {
       status: HTTPCode.CREATED,
     });
     mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
-    const displayName = [{ language: Language.en, text: "test" }];
+    const displayName = [{ language: Language["en"], text: "test" }];
     await createPassport({ displayName });
     expect(mocks.createPassport).toHaveBeenCalledWith({
       environment: { assetAdministrationShells: [{ displayName }] },

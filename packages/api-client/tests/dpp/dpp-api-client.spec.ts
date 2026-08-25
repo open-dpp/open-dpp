@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   DigitalProductDocumentStatusDto,
   InvitationStatusDto,
+  MeDtoSchema,
   SubmodelElementSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -31,13 +32,20 @@ import { passport1, passport2 } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
-import { userInvitation } from "./handlers/users";
+import { meResponse, userInvitation } from "./handlers/users";
+import {
+  activity1,
+  activity2,
+  digitalProductDocumentId,
+  periodParams,
+} from "./handlers/digital-product-documents";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("apiClient", () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
-  const baseURL = "https://api.cloud.open-dpp.de";
+  const baseURL = DEFAULT_API_URL;
 
   describe("organizations", () => {
     it("should return organizations", async () => {
@@ -55,6 +63,15 @@ describe("apiClient", () => {
       const response = await sdk.dpp.organizations.getInvitation(orgaInvitation.id);
       expect(response.data).toEqual(orgaInvitation);
     });
+
+    it("should change member role", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      sdk.setActiveOrganizationId(activeOrganization.id);
+      const response = await sdk.dpp.organizations.changeMemberRole(randomUUID(), "owner");
+      expect(response.status).toEqual(200);
+    });
   });
 
   describe("users", () => {
@@ -64,6 +81,54 @@ describe("apiClient", () => {
       });
       const response = await sdk.dpp.users.getInvitations({ status: InvitationStatusDto.PENDING });
       expect(response.data).toEqual([userInvitation]);
+    });
+
+    it("should get the current user via GET /users/me", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.getMe();
+      expect(response.status).toEqual(200);
+      expect(response.data.user.email).toEqual(meResponse.user.email);
+      expect(response.data.pendingEmailChange).toBeNull();
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should update the profile via PATCH /users/me", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.updateProfile({
+        firstName: "Renamed",
+        preferredLanguage: "de",
+      });
+      expect(response.status).toEqual(200);
+      expect(response.data.user.firstName).toEqual("Renamed");
+      expect(response.data.user.preferredLanguage).toEqual("de");
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should request an email change via POST /users/me/email-change", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.requestEmailChange({
+        newEmail: "fresh@example.com",
+        currentPassword: "current-password",
+      });
+      expect(response.status).toEqual(202);
+      expect(response.data.pendingEmailChange?.newEmail).toEqual("fresh@example.com");
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should cancel the pending email change via DELETE /users/me/email-change", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.cancelEmailChange();
+      expect(response.status).toEqual(200);
+      expect(response.data.pendingEmailChange).toBeNull();
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
     });
   });
 
@@ -144,6 +209,40 @@ describe("apiClient", () => {
       );
     });
   });
+
+  describe.each(["templates", "passports"])(
+    "digital product document for %s",
+    (appIdentifiable) => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      it("should get activities", async () => {
+        const response = await sdk.dpp[appIdentifiable].getActivities(digitalProductDocumentId, {
+          pagination: paginationParams,
+        });
+        expect(response.data.result).toEqual(
+          [activity1, activity2].map((a) => ({
+            ...a,
+            header: { ...a.header, createdAt: a.header.createdAt },
+          })),
+        );
+      });
+
+      it("should download activities", async () => {
+        const response = await sdk.dpp[appIdentifiable].downloadActivities(
+          digitalProductDocumentId,
+          {
+            period: periodParams,
+          },
+        );
+        expect(JSON.parse(JSON.stringify(response.headers))).toEqual({
+          "content-disposition": 'attachment; filename="data.zip"',
+          "content-length": "0",
+          "content-type": "application/zip",
+        });
+      });
+    },
+  );
 
   describe.each(["templates", "passports"])("aas for %s", (appIdentifiable) => {
     const sdk = new OpenDppClient({
@@ -314,6 +413,68 @@ describe("apiClient", () => {
       expect(response.data).toEqual(submodelDesignOfProductElement0);
     });
 
+    it("should add column to group in submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.addColumnToGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        propertyModificationPlainFactory.build(),
+        { position: 4 },
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should modify column in group of submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyColumnInGroupOfSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+        propertyModificationPlainFactory.build({ idShort: "column1" }),
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should delete column from group in submodel element list", async () => {
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.deleteColumnFromGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+      );
+      expect(response.status).toEqual(200);
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should move column to group in submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.moveColumnToGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should create a group from an existing column in submodel element list", async () => {
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.createGroupFromColumnInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "column1",
+        propertyModificationPlainFactory.build(),
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
     it("should add row to submodel element list", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.addRowToSubmodelElementList(
         aasWrapperId,
@@ -343,6 +504,15 @@ describe("apiClient", () => {
         propertyModificationPlainFactory.build(),
       );
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
+
+    it("should modify value of submodel", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyValueOfSubmodel(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        { PCFCalculationMethod: "GHG" },
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse);
     });
 
     it("should modify value of submodel element", async () => {

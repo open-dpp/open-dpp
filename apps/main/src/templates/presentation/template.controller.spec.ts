@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 
 import { expect, jest } from "@jest/globals";
 
-import { AssetKind, DigitalProductDocumentStatusModificationMethodDto } from "@open-dpp/dto";
+import {
+  AssetKind,
+  DigitalProductDocumentStatusModificationMethodDto,
+  DigitalProductDocumentTypes,
+} from "@open-dpp/dto";
 import request from "supertest";
 import {
   buildEmptyExportPayload,
@@ -18,13 +22,15 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
-import { AasExportVersion } from "../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
+import { LatestAasExportVersion } from "../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
+import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
@@ -36,11 +42,13 @@ import {
 } from "../../digital-product-document/domain/digital-product-document-status";
 
 describe("templateController", () => {
-  const basePath = "/templates";
+  const basePathV1 = `/v1/templates`;
+  const basePathV2 = `/v2/templates`;
   const ctx = createAasTestContext(
-    basePath,
+    basePathV1,
+    basePathV2,
     {
-      imports: [TemplatesModule],
+      imports: [TemplatesModule, PresentationConfigurationsModule],
       providers: [TemplateRepository, AasSerializationService],
       controllers: [TemplateController],
     },
@@ -87,15 +95,61 @@ describe("templateController", () => {
     await ctx.asserts.getShells(createTemplate);
   });
 
+  it(`/GET shells does not write a PresentationConfiguration row for an uncustomized template`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const template = await createTemplate(org.id);
+    const presentationConfigurationRepository = ctx
+      .getModuleRef()
+      .get(PresentationConfigurationRepository);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
+
+    const firstResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${template.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send();
+    expect(firstResponse.status).toEqual(200);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
+
+    const secondResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${template.id}/shells?limit=1`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send();
+    expect(secondResponse.status).toEqual(200);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Template,
+        referenceId: template.id,
+      }),
+    ).toBeUndefined();
+  });
+
   it(`/PATCH shell`, async () => {
     await ctx.asserts.modifyShell(createTemplate, saveTemplate);
   });
 
   it(`/GET submodels`, async () => {
+    await ctx.asserts.getSubmodelsV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodels(createTemplate);
   });
 
   it(`/POST submodel`, async () => {
+    await ctx.asserts.postSubmodelV1(createTemplate);
     await ctx.asserts.postSubmodel(createTemplate);
   });
 
@@ -111,19 +165,27 @@ describe("templateController", () => {
     await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
 
+  it(`/PATCH submodel value`, async () => {
+    await ctx.asserts.modifyValueOfSubmodel(createTemplate, saveTemplate);
+  });
+
   it(`/GET submodel by id`, async () => {
+    await ctx.asserts.getSubmodelByIdV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelById(createTemplate);
   });
 
   it("/GET submodel value", async () => {
+    await ctx.asserts.getSubmodelValueV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelValue(createTemplate);
   });
 
   it(`/GET submodel elements`, async () => {
+    await ctx.asserts.getSubmodelElementsV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelElements(createTemplate);
   });
 
   it(`/POST submodel element`, async () => {
+    await ctx.asserts.postSubmodelElementV1(createTemplate, saveTemplate);
     await ctx.asserts.postSubmodelElement(createTemplate);
   });
 
@@ -151,6 +213,26 @@ describe("templateController", () => {
     await ctx.asserts.deleteColumn(createTemplate, saveTemplate);
   });
 
+  it("/POST add column to group", async () => {
+    await ctx.asserts.addColumnToGroup(createTemplate, saveTemplate);
+  });
+
+  it("/PATCH modify column in group", async () => {
+    await ctx.asserts.modifyColumnInGroup(createTemplate, saveTemplate);
+  });
+
+  it("/DELETE column from group", async () => {
+    await ctx.asserts.deleteColumnFromGroup(createTemplate, saveTemplate);
+  });
+
+  it("/POST move column to group", async () => {
+    await ctx.asserts.moveColumnToGroup(createTemplate, saveTemplate);
+  });
+
+  it("/POST create group from column", async () => {
+    await ctx.asserts.createGroupFromColumn(createTemplate, saveTemplate);
+  });
+
   it("/POST add row", async () => {
     await ctx.asserts.addRow(createTemplate, saveTemplate);
   });
@@ -160,15 +242,26 @@ describe("templateController", () => {
   });
 
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
+    await ctx.asserts.postSubmodelElementAtIdShortPathV1(createTemplate, saveTemplate);
     await ctx.asserts.postSubmodelElementAtIdShortPath(createTemplate);
   });
 
   it(`/GET submodel element by id`, async () => {
+    await ctx.asserts.getSubmodelElementByIdV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelElementById(createTemplate);
   });
 
   it(`/GET submodel element value`, async () => {
+    await ctx.asserts.getSubmodelElementValueV1(createTemplate, saveTemplate);
     await ctx.asserts.getSubmodelElementValue(createTemplate);
+  });
+
+  it(`/GET activities`, async () => {
+    await ctx.asserts.getActivities(createTemplate);
+  });
+
+  it(`/GET download activities`, async () => {
+    await ctx.asserts.downloadActivities(createTemplate);
   });
 
   it("/GET all templates", async () => {
@@ -185,14 +278,12 @@ describe("templateController", () => {
 
     let response = await request(app.getHttpServer())
       .get(
-        `${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`,
+        `${basePathV2}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`,
       )
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(
-      encodeCursor(t1.createdAt.toISOString(), t1.id),
-    );
+    expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => ({
         ...t.toPlain(),
@@ -211,7 +302,7 @@ describe("templateController", () => {
     );
 
     response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
+      .get(`${basePathV2}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
@@ -224,14 +315,15 @@ describe("templateController", () => {
     );
 
     response = await request(app.getHttpServer())
-      .get(`${basePath}?status=Archived`)
+      .get(`${basePathV2}?status=Archived`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        cursor: expect.any(String),
+        cursor: null,
+        total_count: 1,
       },
       result: [t2].map((p) => ({
         ...p.toPlain(),
@@ -254,7 +346,7 @@ describe("templateController", () => {
       },
     };
     const response = await request(app.getHttpServer())
-      .post(basePath)
+      .post(basePathV2)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(body);
@@ -287,13 +379,13 @@ describe("templateController", () => {
     const template = await createTemplate(org.id);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${template.id}/export`)
+      .get(`${basePathV2}/${template.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
-    expect(response.body.version).toEqual(AasExportVersion.v3_0);
+    expect(response.body.version).toEqual(LatestAasExportVersion);
     expect(response.body.id).toBeDefined();
     expect(response.body.environment).toBeDefined();
     expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
@@ -308,16 +400,20 @@ describe("templateController", () => {
     const template = await createTemplate(org.id);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${template.id}/export`)
+      .get(`${basePathV2}/${template.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
+    console.log(exportResponse.text);
+
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(exportResponse.body);
+
+    console.log(importResponse.body);
 
     expect(importResponse.status).toEqual(201);
     expect(importResponse.body.id).toBeDefined();
@@ -333,7 +429,7 @@ describe("templateController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send({ invalid: "data" });
@@ -348,7 +444,7 @@ describe("templateController", () => {
     const emptyPayload = buildEmptyExportPayload();
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(emptyPayload);
@@ -361,13 +457,13 @@ describe("templateController", () => {
     expect(importResponse.body.environment.conceptDescriptions).toHaveLength(0);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${importResponse.body.id}/export`)
+      .get(`${basePathV2}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
-    expect(exportResponse.body.version).toEqual(AasExportVersion.v3_0);
+    expect(exportResponse.body.version).toEqual(LatestAasExportVersion);
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
@@ -389,7 +485,7 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(template);
 
     const response = await request(app.getHttpServer())
-      .put(`${basePath}/${template.id}/status`)
+      .put(`${basePathV2}/${template.id}/status`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
       .send({
@@ -425,7 +521,7 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(template);
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${template.id}`)
+      .delete(`${basePathV2}/${template.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
 
@@ -447,7 +543,7 @@ describe("templateController", () => {
     await dppIdentifiableRepository.save(publishedTemplate);
 
     const responseForPublishedTemplate = await request(app.getHttpServer())
-      .delete(`${basePath}/${publishedTemplate.id}`)
+      .delete(`${basePathV2}/${publishedTemplate.id}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
 
@@ -458,13 +554,16 @@ describe("templateController", () => {
   });
 
   it("/POST import and /GET export template with all submodel element types", async () => {
-    const { betterAuthHelper, app } = ctx.globals();
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { betterAuthHelper, app, organizationId, userId } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getOrganizationAndUserWithCookie(
+      organizationId,
+      userId,
+    );
 
     const richPayload = buildRichExportPayload();
 
     const importResponse = await request(app.getHttpServer())
-      .post(`${basePath}/import`)
+      .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(richPayload);
@@ -477,7 +576,7 @@ describe("templateController", () => {
     expect(importResponse.body.environment.conceptDescriptions).toHaveLength(1);
 
     const exportResponse = await request(app.getHttpServer())
-      .get(`${basePath}/${importResponse.body.id}/export`)
+      .get(`${basePathV2}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -495,8 +594,8 @@ describe("templateController", () => {
       "MultiLanguageProperty",
       "Property",
       "Property",
+      "Property",
       "Range",
-      "ReferenceElement",
       "RelationshipElement",
       "SubmodelElementCollection",
       "SubmodelElementList",

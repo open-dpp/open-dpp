@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { PropertyModificationDto } from "@open-dpp/dto";
-import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
+import { DataTypeDef, type PropertyModificationDto } from "@open-dpp/dto";
 import { Permissions, PropertyModificationSchema } from "@open-dpp/dto";
+import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
+import { EditorMode } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
-import { EditorMode } from "../../composables/aas-drawer.ts";
 
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
@@ -18,9 +18,8 @@ const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModific
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
-  value: z.nullish(z.string()),
+  value: props.data.valueType === DataTypeDef.AnyUri ? z.nullish(z.url()) : z.nullish(z.string()),
 });
-
 const permissionsFormRef = ref<{
   savePermissions: () => Promise<void>;
 } | null>(null);

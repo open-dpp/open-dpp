@@ -1,9 +1,11 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { PermalinkModule } from "../permalink/permalink.module";
+import { PresentationConfigurationsModule } from "../presentation-configurations/presentation-configurations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
@@ -15,6 +17,7 @@ import { PassportService } from "./application/services/passport.service";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
 import { PassportController } from "./presentation/passport.controller";
+import { ActivityHistoryModule } from "../activity-history/activity-history.module";
 
 @Module({
   imports: [
@@ -33,8 +36,11 @@ import { PassportController } from "./presentation/passport.controller";
       },
     ]),
     AasModule,
+    ActivityHistoryModule,
     AuthModule,
     OrganizationsModule,
+    PresentationConfigurationsModule,
+    forwardRef(() => PermalinkModule),
   ],
   controllers: [PassportController],
   providers: [

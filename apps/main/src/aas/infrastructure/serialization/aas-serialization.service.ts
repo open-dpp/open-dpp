@@ -1,9 +1,12 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { KeyTypes } from "@open-dpp/dto";
+import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
 import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
+import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../../../templates/domain/template";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { ConceptDescription } from "../../domain/concept-description";
@@ -18,12 +21,12 @@ import {
   mapSubmodels,
 } from "./aas-import.mapper";
 import {
-  AasExport,
   AasExportLatestVersion,
   aasExportSchemaJsonLatest,
-  AasExportSchemas,
 } from "./export-schemas/aas-export-types";
 import { extractMediaIds } from "./extract-media-ids";
+import { ParseWithMigration } from "./export-schemas/aas-export-migration";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 
 export {
   DataTypeDefV1_0,
@@ -35,7 +38,7 @@ interface ImportedEnvironmentData {
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
   conceptDescriptions: ConceptDescription[];
-  schema: AasExport;
+  schema: AasExportLatestVersion;
 }
 
 @Injectable()
@@ -45,6 +48,8 @@ export class AasSerializationService {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly mediaService: MediaService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
   ) {}
 
   async exportPassport(
@@ -54,7 +59,14 @@ export class AasSerializationService {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
       passport.environment,
     );
-    const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      passportToHolder(passport),
+    );
+    const aasExportable = AasExportable.createFromPassport(
+      passport,
+      expandedEnvironment,
+      presentationConfiguration,
+    );
     return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
   }
 
@@ -65,60 +77,74 @@ export class AasSerializationService {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
       template.environment,
     );
-    const aasExportable = AasExportable.createFromTemplate(template, expandedEnvironment);
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      templateToHolder(template),
+    );
+    const aasExportable = AasExportable.createFromTemplate(
+      template,
+      expandedEnvironment,
+      presentationConfiguration,
+    );
+
+    const aasExportablePlain = aasExportable.toExportPlain(subject);
+
+    return aasExportSchemaJsonLatest.parse(aasExportablePlain);
   }
 
   async importPassport(
     data: any,
     organizationId: string,
     savePassport: (passport: Passport, options: DbSessionOptions) => Promise<void>,
+    afterPersist?: (passport: Passport, options: DbSessionOptions) => Promise<void>,
   ): Promise<Passport> {
-    try {
-      const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
-
-      const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
-        await this.nullifyForeignMedia(shells, submodels, organizationId);
-
-      const environment = Environment.create({
-        assetAdministrationShells: sanitizedShells.map((aas) => aas.id),
-        submodels: sanitizedSubmodels.map((s) => s.id),
-        conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
-      });
-
-      const passport = Passport.create({
-        organizationId,
-        environment,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      await this.environmentService.persistImportedEnvironment(
-        sanitizedShells,
-        sanitizedSubmodels,
-        conceptDescriptions,
-        async (options) => {
-          await savePassport(passport, options);
-        },
-      );
-
-      return passport;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-        throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
-      }
-      throw error;
-    }
+    return this.importEntity(
+      data,
+      organizationId,
+      (environment) =>
+        Passport.create({
+          organizationId,
+          environment,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      DigitalProductDocumentTypes.Passport,
+      savePassport,
+      afterPersist,
+    );
   }
 
   async importTemplate(
     data: any,
     organizationId: string,
     saveTemplate: (template: Template, options: DbSessionOptions) => Promise<void>,
+    afterPersist?: (template: Template, options: DbSessionOptions) => Promise<void>,
   ): Promise<Template> {
+    return this.importEntity(
+      data,
+      organizationId,
+      (environment) =>
+        Template.create({
+          organizationId,
+          environment,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      DigitalProductDocumentTypes.Template,
+      saveTemplate,
+      afterPersist,
+    );
+  }
+
+  private async importEntity<T extends { id: string }>(
+    data: unknown,
+    organizationId: string,
+    entityFactory: (environment: Environment) => T,
+    referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
+    saveEntity: (entity: T, options: DbSessionOptions) => Promise<void>,
+    afterPersist?: (entity: T, options: DbSessionOptions) => Promise<void>,
+  ): Promise<T> {
     try {
-      const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
+      const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
 
       const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
         await this.nullifyForeignMedia(shells, submodels, organizationId);
@@ -129,11 +155,13 @@ export class AasSerializationService {
         conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
       });
 
-      const template = Template.create({
+      const entity = entityFactory(environment);
+
+      const presentationConfiguration = buildImportedPresentationConfiguration({
+        schema,
         organizationId,
-        environment,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        referenceId: entity.id,
+        referenceType,
       });
 
       await this.environmentService.persistImportedEnvironment(
@@ -141,16 +169,26 @@ export class AasSerializationService {
         sanitizedSubmodels,
         conceptDescriptions,
         async (options) => {
-          await saveTemplate(template, options);
+          await saveEntity(entity, options);
+          if (presentationConfiguration) {
+            await this.presentationConfigurationRepository.save(presentationConfiguration, options);
+          }
+          if (afterPersist) {
+            await afterPersist(entity, options);
+          }
         },
       );
 
-      return template;
+      return entity;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
         throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
       }
+      this.logger.error(
+        `Failed to import ${referenceType} for organization ${organizationId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw error;
     }
   }
@@ -214,12 +252,9 @@ export class AasSerializationService {
         foreignMediaIds.has(element.value)
       ) {
         result = { ...element, value: null };
-      }
-
-      if (Array.isArray(element.value)) {
+      } else if (Array.isArray(element.value)) {
         const newValue = this.withNullifiedForeignFileValues(element.value, foreignMediaIds);
-        result =
-          result === element ? { ...element, value: newValue } : { ...result, value: newValue };
+        result = { ...element, value: newValue };
       }
 
       return result;
@@ -227,20 +262,50 @@ export class AasSerializationService {
   }
 
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
-    const schema = AasExportSchemas.parse(data);
+    const schema = ParseWithMigration(data);
 
     const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
 
     return {
-      shells: mapAssetAdministrationShells(
-        schema.environment.assetAdministrationShells,
-        idMapping,
-        submodels,
-        schema.version,
-      ),
+      shells: mapAssetAdministrationShells(schema.environment.assetAdministrationShells, idMapping),
       submodels,
       conceptDescriptions: mapConceptDescriptions(schema.environment.conceptDescriptions),
       schema,
     };
   }
+}
+
+function buildImportedPresentationConfiguration(params: {
+  schema: AasExportLatestVersion;
+  organizationId: string;
+  referenceId: string;
+  referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes];
+}): PresentationConfiguration | null {
+  const { schema, organizationId, referenceId, referenceType } = params;
+  if (schema.presentationConfiguration) {
+    return PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType,
+      elementDesign: schema.presentationConfiguration.elementDesign,
+      defaultComponents: schema.presentationConfiguration.defaultComponents,
+    });
+  }
+  return null;
+}
+
+function passportToHolder(passport: Passport): PresentationReferenceHolder {
+  return {
+    id: passport.id,
+    organizationId: passport.organizationId,
+    referenceType: DigitalProductDocumentTypes.Passport,
+  };
+}
+
+function templateToHolder(template: Template): PresentationReferenceHolder {
+  return {
+    id: template.id,
+    organizationId: template.organizationId,
+    referenceType: DigitalProductDocumentTypes.Template,
+  };
 }

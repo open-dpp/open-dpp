@@ -1,43 +1,24 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
-import apiClient from "../../lib/api-client.ts";
 import { useAnalyticsStore } from "../../stores/analytics.ts";
-import { usePassportStore } from "../../stores/passport.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import {
+  PassportLoadError,
+  PassportNotFoundError,
+  usePassportStore,
+} from "../../stores/passport.ts";
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const passportStore = usePassportStore();
 const analyticsStore = useAnalyticsStore();
+const errorHandlingStore = useErrorHandlingStore();
 const passportAvailable = ref(false);
-
-async function loadPassport(id: string): Promise<boolean> {
-  const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
-  if (response.status === 404) {
-    return false;
-  }
-
-  passportStore.productPassport = response.data;
-
-  const submodels = await apiClient.dpp.uniqueProductIdentifiers.aas.getSubmodels(id, {});
-  if (submodels.status !== 200) {
-    console.error("Failed to load submodels");
-    return false;
-  }
-  passportStore.submodels = submodels.data.result || [];
-
-  const aas = await apiClient.dpp.uniqueProductIdentifiers.aas.getShells(id, {});
-  if (aas.status !== 200) {
-    console.error("Failed to load shells");
-    return false;
-  }
-  passportStore.shells = aas.data.result || [];
-  await analyticsStore.addPageView();
-
-  return true;
-}
 
 async function pushNotFound(permalink: string) {
   await router.push({
@@ -51,20 +32,30 @@ async function pushNotFound(permalink: string) {
 watch(
   () => String(route.params.permalink ?? ""),
   async (permalink, _prev, onCleanup) => {
-    let cancelled = false;
+    let canceled = false;
     onCleanup(() => {
-      cancelled = true;
+      canceled = true;
     });
 
     passportAvailable.value = false;
     try {
-      passportAvailable.value = await loadPassport(permalink);
-    } catch (e) {
-      console.error(e);
-    }
-
-    if (!cancelled && !passportAvailable.value) {
-      await pushNotFound(permalink);
+      await passportStore.loadPassport(permalink);
+      if (canceled) return;
+      passportAvailable.value = true;
+      await analyticsStore.addPageView();
+    } catch (error) {
+      if (error instanceof PassportNotFoundError) {
+        if (!canceled) {
+          await pushNotFound(permalink);
+        }
+        return;
+      }
+      if (canceled) return;
+      const messageKey =
+        error instanceof PassportLoadError
+          ? error.translationKey
+          : "presentation.loadPassportError";
+      errorHandlingStore.logErrorWithNotification(t(messageKey), error);
     }
   },
   { immediate: true },

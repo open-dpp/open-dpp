@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { AGENT_WEBSOCKET_URL } from "../const";
 import { useIndexStore } from "./index.ts";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 export enum Sender {
   Bot = "Bot",
@@ -35,7 +36,7 @@ export const useAiAgentStore = defineStore("socket", () => {
     if (!socket.value) {
       socket.value = io(AGENT_WEBSOCKET_URL, {
         autoConnect: true,
-        path: "/api/ai-socket",
+        path: `/api/${LatestApiVersionWithPrefixDto}/ai-socket`,
         withCredentials: true,
         auth: {
           organizationId: indexStore.selectedOrganization,
@@ -107,10 +108,13 @@ export const useAiAgentStore = defineStore("socket", () => {
   );
 
   const sendMessage = (msg: string) => {
+    const rawPermalink = route.params.permalink;
+    const permalink = Array.isArray(rawPermalink) ? rawPermalink[0] : rawPermalink;
+    if (typeof permalink !== "string" || permalink === "") return;
     if (socket.value && !isLastMessagePendingFromBot.value) {
       socket.value.emit("userMessage", {
         msg,
-        uniqueProductIdentifierUuid: route.params.permalink,
+        permalink,
       });
       messages.value.push({
         id: Date.now(),

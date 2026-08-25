@@ -9,15 +9,28 @@ import { AccessPermissionRule, AccessPermissionRuleSchema } from "./access-permi
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
+import { PolicyAdded } from "../../../activity-history/domain/change-events/policy-added";
 
 export const AccessControlSchema = z.object({
   accessPermissionRules: AccessPermissionRuleSchema.array(),
 });
 
-export class AccessControl {
+export class AccessControl implements ITrackable {
   private administrator = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+  public tracker = ChangeTracker.create();
 
   private constructor(private _accessPermissionRules: AccessPermissionRule[]) {}
+
+  withTracking(changeTracker?: ChangeTracker) {
+    const result = withTrackingHelper(changeTracker, this);
+    this._accessPermissionRules.forEach((rule) => rule.withTracking(this.tracker));
+    return result;
+  }
 
   get accessPermissionRules(): AccessPermissionRule[] {
     return this._accessPermissionRules;
@@ -91,6 +104,26 @@ export class AccessControl {
     this._accessPermissionRules = keepRules;
   }
 
+  movePolicy(oldObject: IdShortPath, newObject: IdShortPath): void {
+    // Reject if newObject is a child of oldObject
+    if (newObject.isChildOf(oldObject)) {
+      throw new ValueError(
+        `Cannot move ${oldObject.toString()} to ${newObject.toString()}: destination is a child of source`,
+      );
+    }
+
+    // Validate permissions and perform moves for each rule
+    for (const rule of this.accessPermissionRules) {
+      // hasEntriesToMove: Check if this rule has any entries that match oldObject or its descendants
+      if (rule.permissionsPerObject.some((entry) => entry.objectIsEqualOrChildOf(oldObject))) {
+        // Validate permission for this subject
+        this.administratePolicyGuard(rule.targetSubjectAttributes);
+        // Delegate to the rule to perform the move
+        rule.movePolicy(oldObject, newObject, this.tracker);
+      }
+    }
+  }
+
   findRuleOfSubject(subject: SubjectAttributes): AccessPermissionRule | undefined {
     return this.accessPermissionRules.find((rule) => rule.targetSubjectAttributes.isEqual(subject));
   }
@@ -130,6 +163,14 @@ export class AccessControl {
         }),
       );
     }
+    this.tracker.track(
+      PolicyAdded.create({
+        userRole: subject.userRole,
+        memberRole: subject.memberRole,
+        object: permissionPerObject.object,
+        value: permissions,
+      }),
+    );
   }
 
   private administratePolicyGuard(subject: SubjectAttributes) {

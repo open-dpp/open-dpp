@@ -6,9 +6,11 @@ import { InstanceSettingsNamespace } from "./instance-settings/instance-settings
 import { AasIntegrationNamespace } from "./integrations/aas-integration.namespace";
 import { OrganizationsNamespace } from "./organizations/organizations.namespace";
 import { PassportNamespace } from "./passport/passports.namespace";
+import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
 import { TemplatesNamespace } from "./templates/templates.namespace";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { UsersNamespace } from "./users/users.namespace";
+import { DEFAULT_API_URL } from "../urls";
 
 export class DppApiClient implements IApiClient {
   public organizations!: OrganizationsNamespace;
@@ -16,6 +18,7 @@ export class DppApiClient implements IApiClient {
   public passports!: PassportNamespace;
   public branding!: BrandingNamespace;
 
+  public permalinks!: PermalinksNamespace;
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace;
   public aasIntegration!: AasIntegrationNamespace;
   public users!: UsersNamespace;
@@ -39,7 +42,7 @@ export class DppApiClient implements IApiClient {
   }
 
   private createNewAxiosInstance() {
-    this.axiosInstance = createAxiosClient(this.options, "https://api.cloud.open-dpp.de");
+    this.axiosInstance = createAxiosClient(this.options, DEFAULT_API_URL);
     this.organizations = new OrganizationsNamespace(this.axiosInstance);
 
     this.templates = new TemplatesNamespace(this.axiosInstance);
@@ -47,6 +50,7 @@ export class DppApiClient implements IApiClient {
     this.branding = new BrandingNamespace(this.axiosInstance);
     this.aasIntegration = new AasIntegrationNamespace(this.axiosInstance);
 
+    this.permalinks = new PermalinksNamespace(this.axiosInstance);
     this.uniqueProductIdentifiers = new UniqueProductIdentifiersNamespace(this.axiosInstance);
     this.users = new UsersNamespace(this.axiosInstance);
     this.instanceSettings = new InstanceSettingsNamespace(this.axiosInstance);

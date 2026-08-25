@@ -33,6 +33,10 @@ export class Permission {
     return Permission.fromPlain(this.toPlain());
   }
 
+  equals(other: Permission): boolean {
+    return this.permission === other.permission && this.kindOfPermission === other.kindOfPermission;
+  }
+
   toPlain(): Record<string, any> {
     return {
       permission: this.permission,

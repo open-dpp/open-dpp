@@ -1,28 +1,49 @@
-import type { BrandingDto, PassportDto } from "@open-dpp/dto";
 import type { AxiosInstance } from "axios";
-import type { UniqueProductIdentifierDto } from "./unique-product-identifiers.dtos";
-import { AasNamespace } from "../aas/aasNamespace";
+import type {
+  UniqueProductIdentifierListItemDto,
+  UniqueProductIdentifierPaginationDto,
+  CreateGs1UniqueProductIdentifierRequest,
+  CreateInternalUniqueProductIdentifierRequest,
+  UpdateGs1UniqueProductIdentifierRequest,
+} from "./unique-product-identifiers.dtos";
+import type { CursorListParams } from "../cursor-list-params";
 
 export class UniqueProductIdentifiersNamespace {
-  public aas!: AasNamespace;
+  private readonly endpoint = "/unique-product-identifiers";
 
-  constructor(private readonly axiosInstance: AxiosInstance) {
-    this.aas = new AasNamespace(this.axiosInstance, "unique-product-identifiers");
+  constructor(private readonly axiosInstance: AxiosInstance) {}
+
+  public async list(params?: CursorListParams) {
+    return this.axiosInstance.get<UniqueProductIdentifierPaginationDto>(this.endpoint, {
+      params,
+    });
   }
 
-  public async getByReference(reference: string) {
-    return this.axiosInstance.get<UniqueProductIdentifierDto[]>(
-      `/unique-product-identifiers?reference=${reference}`,
+  public async getByUuid(uuid: string) {
+    return this.axiosInstance.get<UniqueProductIdentifierListItemDto>(
+      `${this.endpoint}/${encodeURIComponent(uuid)}`,
     );
   }
 
-  public async getPassport(uuid: string) {
-    return this.axiosInstance.get<PassportDto>(`/unique-product-identifiers/${uuid}/passport`);
+  public async create(data: CreateGs1UniqueProductIdentifierRequest) {
+    return this.axiosInstance.post<UniqueProductIdentifierListItemDto>(this.endpoint, data);
   }
 
-  public async getBranding(uuid: string) {
-    return await this.axiosInstance.get<BrandingDto>(
-      `/unique-product-identifiers/${uuid}/branding`,
+  public async createInternal(data: CreateInternalUniqueProductIdentifierRequest) {
+    return this.axiosInstance.post<UniqueProductIdentifierListItemDto>(
+      `${this.endpoint}/internal`,
+      data,
     );
+  }
+
+  public async update(uuid: string, data: UpdateGs1UniqueProductIdentifierRequest) {
+    return this.axiosInstance.patch<UniqueProductIdentifierListItemDto>(
+      `${this.endpoint}/${encodeURIComponent(uuid)}`,
+      data,
+    );
+  }
+
+  public async delete(uuid: string) {
+    return this.axiosInstance.delete<void>(`${this.endpoint}/${encodeURIComponent(uuid)}`);
   }
 }

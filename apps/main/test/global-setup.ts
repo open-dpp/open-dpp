@@ -12,6 +12,7 @@ export default async () => {
 
   process.env.NODE_ENV = "test";
   process.env.OPEN_DPP_URL = "http://localhost:3000";
+  process.env.OPEN_DPP_PERMALINK_BASE_URL = "http://localhost:3000/p";
   process.env.OPEN_DPP_MONGODB_USER = "admin";
   process.env.OPEN_DPP_MONGODB_PASSWORD = "admin";
   process.env.OPEN_DPP_MONGODB_DATABASE = "test";

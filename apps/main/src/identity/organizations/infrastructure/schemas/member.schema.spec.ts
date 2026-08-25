@@ -46,7 +46,7 @@ describe("memberSchema", () => {
 
   it("should create a member document", async () => {
     const memberData = {
-      _id: "member-123",
+      _id: new Types.ObjectId().toHexString(),
       userId: new Types.ObjectId(),
       organizationId: new Types.ObjectId(),
       role: MemberRole.MEMBER,
@@ -56,7 +56,7 @@ describe("memberSchema", () => {
     const member = new MemberModel(memberData);
     const savedMember = await member.save();
 
-    expect(savedMember._id).toBe(memberData._id);
+    expect(savedMember._id.toString()).toEqual(memberData._id.toString());
     expect(savedMember.userId).toEqual(memberData.userId);
     expect(savedMember.organizationId).toEqual(memberData.organizationId);
     expect(savedMember.role).toBe(memberData.role);
@@ -64,7 +64,7 @@ describe("memberSchema", () => {
 
   it("should create a member document with string userId", async () => {
     const memberData = {
-      _id: "member-456",
+      _id: new Types.ObjectId().toHexString(),
       userId: "string-user-id", // String ID
       organizationId: new Types.ObjectId(),
       role: MemberRole.MEMBER,
@@ -74,7 +74,7 @@ describe("memberSchema", () => {
     const member = new MemberModel(memberData);
     const savedMember = await member.save();
 
-    expect(savedMember._id).toBe(memberData._id);
+    expect(savedMember._id.toString()).toBe(memberData._id.toString());
     expect(savedMember.userId).toBe(memberData.userId);
     expect(typeof savedMember.userId).toBe("string");
     expect(savedMember.organizationId).toEqual(memberData.organizationId);

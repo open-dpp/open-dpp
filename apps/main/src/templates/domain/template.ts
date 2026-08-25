@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
-import { ExpandedEnvironmentPlain } from "../../aas/domain/expanded-environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import {
   archiveDpp,
@@ -14,20 +13,26 @@ import {
 import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
-
-export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
-  environment: ExpandedEnvironmentPlain;
-};
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
+import { DigitalProductDocumentTypes, DigitalProductDocumentTypesType } from "@open-dpp/dto";
 
 const TemplateSchema = DigitalProductDocumentSchema;
 
 export class Template
   implements
     IPersistable,
-    IDigitalProductPassportIdentifiable,
+    IDigitalProductDocument,
     HasCreatedAt,
-    IDigitalProductDocumentStatusChangeable
+    IDigitalProductDocumentStatusChangeable,
+    ITrackable
 {
+  readonly tracker = ChangeTracker.create();
+
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,
@@ -68,13 +73,19 @@ export class Template
     );
   }
 
+  withTracking(changeTracker?: ChangeTracker): this {
+    const result = withTrackingHelper(changeTracker, this);
+    this.environment.withTracking(this.tracker);
+    return result;
+  }
+
   toPlain() {
     return {
       id: this.id,
       organizationId: this.organizationId,
       environment: this.environment.toPlain(),
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
       lastStatusChange: this.lastStatusChange.toPlain(),
     };
   }
@@ -86,20 +97,40 @@ export class Template
     return this.environment;
   }
 
+  getType(): DigitalProductDocumentTypesType {
+    return DigitalProductDocumentTypes.Template;
+  }
+
   getOrganizationId(): string {
     return this.organizationId;
   }
 
+  private withLastStatusChange(newChange: DigitalProductDocumentStatusChange): Template {
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: newChange,
+      }),
+    );
+    return new Template(
+      this.id,
+      this.organizationId,
+      this.environment,
+      this.createdAt,
+      DateTime.now(),
+      newChange,
+    );
+  }
+
   publish() {
-    this.lastStatusChange = publishDpp(this.lastStatusChange);
+    this.setLastStatusChange(publishDpp(this.lastStatusChange));
   }
 
   archive() {
-    this.lastStatusChange = archiveDpp(this.lastStatusChange);
+    this.setLastStatusChange(archiveDpp(this.lastStatusChange));
   }
 
   restore() {
-    this.lastStatusChange = restoreDpp(this.lastStatusChange);
+    this.setLastStatusChange(restoreDpp(this.lastStatusChange));
   }
 
   isPublished(): boolean {
@@ -112,5 +143,14 @@ export class Template
 
   isDraft(): boolean {
     return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
+  }
+
+  private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
+    this.lastStatusChange = lastStatusChange;
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: lastStatusChange,
+      }),
+    );
   }
 }

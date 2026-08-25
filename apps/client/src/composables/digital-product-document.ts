@@ -1,7 +1,9 @@
 import {
+  type DigitalProductDocumentDto,
   type DigitalProductDocumentStatusModificationDto,
   DigitalProductDocumentStatusModificationMethodDto,
 } from "@open-dpp/dto";
+import { isAxiosError } from "axios";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { useI18n } from "vue-i18n";
@@ -14,10 +16,7 @@ import {
 import apiClient from "../lib/api-client.ts";
 
 export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) {
-  const digitalProductDocNamespace =
-    type === DigitalProductDocumentType.Passport
-      ? apiClient.dpp.passports
-      : apiClient.dpp.templates;
+  const digitalProductDocNamespace = getDigitalProductDocNamespace(type);
   const errorHandlingStore = useErrorHandlingStore();
   const prefix = type === DigitalProductDocumentType.Passport ? "passports" : "templates";
   const { t } = useI18n();
@@ -34,18 +33,20 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     }
   }
 
-  async function fetchById(id: string) {
+  async function fetchById(id: string): Promise<DigitalProductDocumentDto | null> {
     const errorMessage = t(`${prefix}.errorFetch`);
     try {
       const response = await digitalProductDocNamespace.getById(id);
-      if (response.status === HTTPCode.OK) {
-        return response.data;
-      } else {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
+      if (response.status !== HTTPCode.OK) {
+        throw new Error(`Unexpected status ${response.status}`);
       }
+      return response.data;
     } catch (e) {
+      if (isAxiosError(e) && e.response?.status === 404) {
+        return null;
+      }
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
-      return undefined;
+      throw e;
     }
   }
 
@@ -106,4 +107,10 @@ export function useDigitalProductDocument(type: DigitalProductDocumentTypeType) 
     restore,
     deleteDPD,
   };
+}
+
+export function getDigitalProductDocNamespace(type: DigitalProductDocumentTypeType) {
+  return type === DigitalProductDocumentType.Passport
+    ? apiClient.dpp.passports
+    : apiClient.dpp.templates;
 }

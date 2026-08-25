@@ -104,6 +104,14 @@ export function aasHandlers(basePath: string) {
         });
       },
     ),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/$value`,
+      async () => {
+        return HttpResponse.json(submodelCarbonFootprintResponse, {
+          status: 200,
+        });
+      },
+    ),
     http.get(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`,
       async () => {
@@ -182,6 +190,53 @@ export function aasHandlers(basePath: string) {
     ),
     http.delete(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/columns/column1`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups/group1/columns`,
+      async ({ request }) => {
+        const errorResponse = checkQueryParameters(request, {
+          position: tableModificationParams.position.toFixed(),
+        });
+
+        return (
+          errorResponse ||
+          HttpResponse.json(submodelDesignOfProductElement0, {
+            status: 200,
+          })
+        );
+      },
+    ),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups/group1/columns/column1`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        });
+      },
+    ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups/group1/columns/column1`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups/group1/columns/column1/move`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups`,
       async () => {
         return HttpResponse.json(submodelDesignOfProductElement0, {
           status: 200,

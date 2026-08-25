@@ -1,0 +1,394 @@
+import { randomUUID } from "node:crypto";
+import { ForbiddenException } from "@nestjs/common";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import type { Model } from "mongoose";
+import { AasModule } from "../../../aas/aas.module";
+import { BrandingDoc } from "../../../branding/infrastructure/branding.schema";
+import { Environment } from "../../../aas/domain/environment";
+import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
+import {
+  DigitalProductDocumentStatus,
+  DigitalProductDocumentStatusChange,
+} from "../../../digital-product-document/domain/digital-product-document-status";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import {
+  AssetAdministrationShellDoc,
+  AssetAdministrationShellSchema,
+} from "../../../aas/infrastructure/schemas/asset-administration-shell.schema";
+import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas/submodel.schema";
+import { generateMongoConfig } from "../../../database/config";
+import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { UsersModule } from "../../../identity/users/users.module";
+import { Permalink } from "../../../permalink/domain/permalink";
+import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
+import { PermalinkModule } from "../../../permalink/permalink.module";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
+import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
+import { PresentationConfigurationsModule } from "../../../presentation-configurations/presentation-configurations.module";
+import { UniqueProductIdentifier } from "../../../unique-product-identifier/domain/unique.product.identifier";
+import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { Passport } from "../../domain/passport";
+import { PassportRepository } from "../../infrastructure/passport.repository";
+import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
+import { PassportService } from "./passport.service";
+import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { EmailService } from "../../../email/email.service";
+import { jest } from "@jest/globals";
+
+describe("passportService", () => {
+  let service: PassportService;
+  let passportRepository: PassportRepository;
+  let presentationConfigurationRepository: PresentationConfigurationRepository;
+  let module: TestingModule;
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: PassportDoc.name, schema: PassportSchema },
+          { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
+          { name: SubmodelDoc.name, schema: SubmodelSchema },
+          { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+        ]),
+        ActivityHistoryModule,
+        AasModule,
+        UsersModule,
+        OrganizationsModule,
+        PresentationConfigurationsModule,
+        PermalinkModule,
+      ],
+      providers: [PassportService, PassportRepository, UniqueProductIdentifierRepository],
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
+
+    service = module.get<PassportService>(PassportService);
+    passportRepository = module.get<PassportRepository>(PassportRepository);
+    presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
+      PresentationConfigurationRepository,
+    );
+  });
+
+  afterAll(async () => {
+    await module.close();
+  });
+
+  it("should be defined", () => {
+    expect(service).toBeDefined();
+  });
+
+  it("modifyPassportStatus Publish freezes the passport's permalinks", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const passport = Passport.create({ organizationId, environment: Environment.create({}) });
+    await passportRepository.save(passport);
+    const config = PresentationConfiguration.createForPassport({
+      organizationId,
+      referenceId: passport.id,
+    });
+    await presentationConfigurationRepository.save(config);
+    await module
+      .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name), { strict: false })
+      .create({ organizationId });
+    const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
+    const permalink = Permalink.create({
+      passportId: passport.id,
+      presentationConfigurationId: config.id,
+      slug: "frozen-on-publish",
+    });
+    await permalinkRepository.save(permalink);
+
+    await service.modifyPassportStatus(
+      randomUUID(),
+      organizationId,
+      passport.id,
+      {
+        method: "Publish",
+      },
+      { subject, userId: randomUUID() },
+    );
+
+    const frozen = await permalinkRepository.findOneOrFail(permalink.id);
+    expect(frozen.publishedUrl).toBe("http://localhost:3000/p/frozen-on-publish");
+  });
+
+  it("modifyPassportStatus Archive (from draft) does not freeze permalinks", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const passport = Passport.create({ organizationId, environment: Environment.create({}) });
+    await passportRepository.save(passport);
+    const config = PresentationConfiguration.createForPassport({
+      organizationId,
+      referenceId: passport.id,
+    });
+    await presentationConfigurationRepository.save(config);
+    const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
+    const permalink = Permalink.create({
+      passportId: passport.id,
+      presentationConfigurationId: config.id,
+    });
+    await permalinkRepository.save(permalink);
+
+    await service.modifyPassportStatus(
+      randomUUID(),
+      organizationId,
+      passport.id,
+      {
+        method: "Archive",
+      },
+      { subject, userId: randomUUID() },
+    );
+
+    const stillDynamic = await permalinkRepository.findOneOrFail(permalink.id);
+    expect(stillDynamic.publishedUrl).toBeNull();
+  });
+
+  it("threads the stored presentationConfiguration into the exported passport", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(passport);
+
+    await presentationConfigurationRepository.save(
+      PresentationConfiguration.create({
+        organizationId,
+        referenceId: passport.id,
+        referenceType: DigitalProductDocumentTypes.Passport,
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { [KeyTypes.Property]: "BigNumber" },
+      }),
+    );
+
+    const exportable = await service.getExpandedProductPassport(passport.id);
+    const exported = exportable.toExportPlain(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+    );
+
+    expect(exported).toMatchObject({
+      presentationConfiguration: {
+        elementDesign: { "submodel-1.prop-1": "BigNumber" },
+        defaultComponents: { [KeyTypes.Property]: "BigNumber" },
+      },
+    });
+  });
+
+  it("seeds a default PresentationConfiguration row on first access when none exists", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(passport);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeUndefined();
+
+    const exportable = await service.getExpandedProductPassport(passport.id);
+    const exported = exportable.toExportPlain(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+    );
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeDefined();
+    expect(exported).toMatchObject({
+      presentationConfiguration: {
+        elementDesign: {},
+        defaultComponents: {},
+      },
+    });
+  });
+
+  it("deletePassport rejects non-draft passports", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+
+    const published = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      }),
+    });
+    await passportRepository.save(published);
+
+    await expect(service.deletePassport(published.id, organizationId, subject)).rejects.toThrow(
+      ForbiddenException,
+    );
+
+    const archived = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      }),
+    });
+    await passportRepository.save(archived);
+
+    await expect(service.deletePassport(archived.id, organizationId, subject)).rejects.toThrow(
+      ForbiddenException,
+    );
+
+    expect(await passportRepository.findOne(published.id)).toBeDefined();
+    expect(await passportRepository.findOne(archived.id)).toBeDefined();
+  });
+
+  it("deletePassport allows deletion when status is Draft", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const draft = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(draft);
+
+    await expect(
+      service.deletePassport(draft.id, organizationId, subject),
+    ).resolves.toBeUndefined();
+
+    expect(await passportRepository.findOne(draft.id)).toBeUndefined();
+  });
+
+  it("deletePassport removes all presentation configs when a passport has multiple configs", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const draft = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(draft);
+
+    await presentationConfigurationRepository.save(
+      PresentationConfiguration.create({
+        organizationId,
+        referenceId: draft.id,
+        referenceType: DigitalProductDocumentTypes.Passport,
+        label: null,
+      }),
+    );
+    await presentationConfigurationRepository.save(
+      PresentationConfiguration.create({
+        organizationId,
+        referenceId: draft.id,
+        referenceType: DigitalProductDocumentTypes.Passport,
+        label: "Variant A",
+      }),
+    );
+
+    const before = await presentationConfigurationRepository.findManyByReference({
+      referenceType: DigitalProductDocumentTypes.Passport,
+      referenceId: draft.id,
+    });
+    expect(before).toHaveLength(2);
+
+    await service.deletePassport(draft.id, organizationId, subject);
+
+    const after = await presentationConfigurationRepository.findManyByReference({
+      referenceType: DigitalProductDocumentTypes.Passport,
+      referenceId: draft.id,
+    });
+    expect(after).toEqual([]);
+  });
+
+  it("deletePassport cascades the gs1-link permalinks of the passport's UPIs (no orphans)", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const draft = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(draft);
+
+    const upiRepository = module.get<UniqueProductIdentifierRepository>(
+      UniqueProductIdentifierRepository,
+    );
+    const permalinkRepository = module.get<PermalinkRepository>(PermalinkRepository);
+
+    const upi = UniqueProductIdentifier.createGs1({
+      referenceId: draft.id,
+      gtin: "04006381333931",
+      organizationId,
+    });
+    await upiRepository.save(upi);
+    const gs1Link = Permalink.create({
+      kind: "gs1-link",
+      passportId: draft.id,
+      uniqueProductIdentifierId: upi.uuid,
+      presentationConfigurationId: null,
+      organizationId,
+    });
+    await permalinkRepository.save(gs1Link);
+
+    await service.deletePassport(draft.id, organizationId, subject);
+
+    expect(await permalinkRepository.findOne(gs1Link.id)).toBeUndefined();
+    expect(await upiRepository.findOne(upi.uuid)).toBeUndefined();
+  });
+
+  it("seeds exactly one PresentationConfiguration row across multiple expansions", async () => {
+    const organizationId = randomUUID();
+    const passport = Passport.create({
+      organizationId,
+      environment: Environment.create({}),
+    });
+    await passportRepository.save(passport);
+
+    await service.getExpandedProductPassport(passport.id);
+    await service.getExpandedProductPassport(passport.id);
+
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeDefined();
+  });
+});

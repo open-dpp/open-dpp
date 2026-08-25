@@ -1,28 +1,43 @@
 import type { INestApplication } from "@nestjs/common";
 import { OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { createDocument } from "zod-openapi";
-import { aasPaths } from "./aas.paths";
+import { digitalProductDocumentPaths } from "./digital-product-document.paths";
 import { brandingPaths } from "./branding.path";
 import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
+import { presentationConfigurationPaths } from "./presentation-configuration.paths";
+import { permalinkPaths } from "./permalink.paths";
+import { uniqueProductIdentifierPaths } from "./unique-product-identifier.paths";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 const document = createDocument({
   openapi: "3.1.0",
   info: {
     title: "open-dpp API",
-    version: "1.0.0",
+    version: LatestApiVersionWithPrefixDto,
   },
   servers: [
     {
-      url: "http://localhost:3000/api",
-      description: "Local test server",
+      url: `https://cloud.open-dpp.de/api/${LatestApiVersionWithPrefixDto}`,
+      description: "Production server",
+    },
+    {
+      url: `https://demo.open-dpp.de/api/${LatestApiVersionWithPrefixDto}`,
+      description: "Test server",
+    },
+    {
+      url: `http://localhost:3000/api/${LatestApiVersionWithPrefixDto}`,
+      description: "Local development server",
     },
   ],
   paths: {
-    ...aasPaths,
+    ...digitalProductDocumentPaths,
     ...brandingPaths,
     ...userPaths,
     ...organizationsPaths,
+    ...presentationConfigurationPaths,
+    ...permalinkPaths,
+    ...uniqueProductIdentifierPaths,
   },
   components: {
     parameters: {
@@ -33,6 +48,7 @@ const document = createDocument({
         schema: {
           type: "string",
         },
+        example: "690cf22459cdae7ce188c1f8",
         description: "Organization identifier",
       },
     },
@@ -52,5 +68,5 @@ export function buildOpenApiDocumentation(): OpenAPIObject {
 }
 
 export function addSwaggerToApp(app: INestApplication, openApiDoc: OpenAPIObject) {
-  SwaggerModule.setup("api", app, openApiDoc);
+  SwaggerModule.setup("api", app, openApiDoc, { jsonDocumentUrl: "api.json" });
 }

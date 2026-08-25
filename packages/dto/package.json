@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/dto",
-  "version": "0.4.4",
+  "version": "3.1.4",
   "description": "",
   "keywords": [],
   "homepage": "https://github.com/open-dpp/open-dpp#readme",
@@ -37,17 +37,19 @@
     "test": "jest"
   },
   "dependencies": {
-    "uuid": "^13.0.0",
-    "zod": "^4.3.6"
+    "uuid": "^13.0.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.24",
+    "@jest/globals": "^30.3.0",
+    "@swc/core": "^1.15.41",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/jest": "^30.0.0",
-    "jest": "^30.3.0",
+    "@types/node": "^22.0.0",
+    "jest": "^30.4.2",
     "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@11.6.0"
 }

@@ -1,10 +1,10 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
 import { ConvertToPlainOptions } from "../convertable-to-plain";
-import { Submodel } from "../submodel-base/submodel";
 import { AasAbility } from "./aas-ability";
 import { createAasObject } from "./aas-object";
 import { AccessControl, AccessControlSchema } from "./access-control";
@@ -12,13 +12,26 @@ import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
 import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
+import { SubmodelSecurityContext } from "./submodel-security-context";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../../activity-history/domain/change-tracker";
 
 export const SecuritySchema = z.object({
   localAccessControl: AccessControlSchema,
 });
 
-export class Security {
+export class Security implements ITrackable {
+  public tracker = ChangeTracker.create();
   private constructor(public readonly localAccessControl: AccessControl) {}
+
+  withTracking(changeTracker?: ChangeTracker) {
+    const result = withTrackingHelper(changeTracker, this);
+    this.localAccessControl.withTracking(this.tracker);
+    return result;
+  }
 
   static create(data: { localAccessControl?: AccessControl }): Security {
     return new Security(data.localAccessControl ?? AccessControl.create({}));
@@ -51,6 +64,10 @@ export class Security {
     );
   }
 
+  movePolicy(oldObject: IdShortPath, newObject: IdShortPath): void {
+    this.localAccessControl.movePolicy(oldObject, newObject);
+  }
+
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
     const rule = this.localAccessControl.findRuleOfSubject(subject);
     return (
@@ -77,7 +94,10 @@ export class Security {
     this.localAccessControl.modifyPolicy(subject, object, permissions);
   }
 
-  applyModifiedRules(modifications: AccessPermissionRule[]): void {
+  applyModifiedRules(
+    modifications: AccessPermissionRule[],
+    submodelSecurityContext?: SubmodelSecurityContext,
+  ): void {
     for (const modification of modifications) {
       for (const permissionsPerObject of modification.permissionsPerObject) {
         const policy = {
@@ -85,6 +105,15 @@ export class Security {
           object: IdShortPath.create({ path: permissionsPerObject.object.idShort }),
           permissions: permissionsPerObject.permissions,
         };
+
+        const validity = submodelSecurityContext?.checkPolicyTarget(policy.object);
+        if (validity?.isInvalid) {
+          throw new ValueError(validity.reason);
+        }
+        if (validity?.isUnresolvable) {
+          continue;
+        }
+
         if (this.hasPolicy(policy.subject, policy.object, policy.permissions)) {
           this.modifyPolicy(policy.subject, policy.object, policy.permissions);
         } else {
@@ -123,11 +152,11 @@ export class Security {
     }
   }
 
-  addDefaultPolicyForSubmodelIfNoExists(submodel: Submodel): void {
+  addDefaultPolicyForSubmodelIfNoExists(submodel: { idShort: string }): void {
     this.addDefaultPolicyForObjectIfNoExists(IdShortPath.create({ path: submodel.idShort }));
   }
 
-  defineAbilityForSubject(subject: SubjectAttributes): AasAbility {
-    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject });
+  defineAbilityForSubject(subject: SubjectAttributes, userId?: string): AasAbility {
+    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject, userId });
   }
 }

@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { z } from "zod";
-import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import {
+  DigitalProductDocumentTypes,
+  DigitalProductDocumentTypesType,
+  PassportDtoSchema,
+} from "@open-dpp/dto";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import {
@@ -11,24 +15,26 @@ import {
   publishDpp,
   restoreDpp,
 } from "../../digital-product-document/domain/digital-product-document-status";
-import { DigitalProductDocumentSchema } from "../../digital-product-document/domain/digital-product-document.schema";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
-
-const PassportSchema = DigitalProductDocumentSchema.extend({
-  templateId: z.string().nullable(),
-  /** UPI uuid for presentation/chat links; set when listing passports */
-  uniqueProductIdentifierUuid: z.uuid().optional(),
-});
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
 
 export class Passport
   implements
     IPersistable,
-    IDigitalProductPassportIdentifiable,
+    IDigitalProductDocument,
     HasCreatedAt,
-    IDigitalProductDocumentStatusChangeable
+    IDigitalProductDocumentStatusChangeable,
+    ITrackable
 {
+  readonly tracker = ChangeTracker.create();
+
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,
@@ -62,7 +68,7 @@ export class Passport
   }
 
   static fromPlain(data: unknown) {
-    const parsed = PassportSchema.parse(data);
+    const parsed = PassportDtoSchema.parse(data);
     return new Passport(
       parsed.id,
       parsed.organizationId,
@@ -74,20 +80,30 @@ export class Passport
     );
   }
 
+  withTracking(changeTracker?: ChangeTracker) {
+    const result = withTrackingHelper(changeTracker, this);
+    this.environment.withTracking(result.tracker);
+    return result;
+  }
+
   toPlain() {
     return {
       id: this.id,
       organizationId: this.organizationId,
       environment: this.environment.toPlain(),
       templateId: this.templateId,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
       lastStatusChange: this.lastStatusChange.toPlain(),
     };
   }
 
   getEnvironment(): Environment {
     return this.environment;
+  }
+
+  getType(): DigitalProductDocumentTypesType {
+    return DigitalProductDocumentTypes.Passport;
   }
 
   getOrganizationId(): string {
@@ -104,16 +120,34 @@ export class Passport
     return this.lastStatusChange;
   }
 
+  private withLastStatusChange(newChange: DigitalProductDocumentStatusChange): Passport {
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: newChange,
+      }),
+    );
+
+    return new Passport(
+      this.id,
+      this.organizationId,
+      this.templateId,
+      this.environment,
+      this.createdAt,
+      this.updatedAt,
+      newChange,
+    );
+  }
+
   publish() {
-    this.lastStatusChange = publishDpp(this.lastStatusChange);
+    this.setLastStatusChange(publishDpp(this.lastStatusChange));
   }
 
   archive() {
-    this.lastStatusChange = archiveDpp(this.lastStatusChange);
+    this.setLastStatusChange(archiveDpp(this.lastStatusChange));
   }
 
   restore() {
-    this.lastStatusChange = restoreDpp(this.lastStatusChange);
+    this.setLastStatusChange(restoreDpp(this.lastStatusChange));
   }
 
   isPublished(): boolean {
@@ -126,5 +160,14 @@ export class Passport
 
   isDraft(): boolean {
     return this.lastStatusChange.currentStatus === DigitalProductDocumentStatus.Draft;
+  }
+
+  private setLastStatusChange(lastStatusChange: DigitalProductDocumentStatusChange) {
+    this.lastStatusChange = lastStatusChange;
+    this.tracker.track(
+      DigitalProductDocumentStatusChanged.create({
+        digitalProductDocumentStatusChange: lastStatusChange,
+      }),
+    );
   }
 }

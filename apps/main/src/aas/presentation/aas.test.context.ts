@@ -1,4 +1,4 @@
-import type { INestApplication } from "@nestjs/common";
+import { INestApplication, VersioningType } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
@@ -9,8 +9,10 @@ import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
   AasSubmodelElements,
+  AllApiVersions,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKind,
+  DataTypeDef,
   KeyTypes,
   MemberRoleDto,
   PermissionKind,
@@ -19,11 +21,19 @@ import {
   SubmodelElementSchema,
   SubmodelJsonSchema,
   SubmodelPaginationResponseDtoSchema,
+  SubmodelResponseDto,
   UserRoleDto,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
+  ForbiddenExceptionFilter,
+  NotFoundExceptionFilter,
+  NotFoundInDatabaseExceptionFilter,
+  ValueErrorFilter,
+} from "@open-dpp/exception";
+import {
   aasPlainFactory,
+  allPermissionsPlainAllow,
   propertyInputPlainFactory,
   securityPlainFactory,
   SecurityPlainTransientParams,
@@ -60,17 +70,17 @@ import { IdShortPath } from "../domain/common/id-short-path";
 import { Key } from "../domain/common/key";
 import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
-import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
+import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { IPersistable } from "../domain/persistable";
 import { AasAbility } from "../domain/security/aas-ability";
 import { Permission } from "../domain/security/permission";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
-import { Submodel } from "../domain/submodel-base/submodel";
+import { Submodel, submodelToReference } from "../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
-import { TableExtension } from "../domain/submodel-base/table-extension";
+import { TableExtension } from "../domain/submodel-base/table/table-extension";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import {
@@ -79,9 +89,17 @@ import {
 } from "../infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
+import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
+import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
+import { CorrelationIdService } from "../../common/middleware/correlation-id.service";
+import { SubmodelElementModifiedActivity } from "../../activity-history/domain/activities/submodel-element-modified.activity";
+import { ChangeTracker } from "../../activity-history/domain/change-tracker";
+import { DisplayNameChanged } from "../../activity-history/domain/change-events/language-text-collection-changed";
+import { HttpStatusCode } from "axios";
 
 export function createAasTestContext<T>(
-  basePath: string,
+  basePathV1: string,
+  basePathV2: string,
   metadataTestingModule: ModuleMetadata,
   mongooseModels: ModelDefinition[],
   EntityRepositoryClass: new (...args: any[]) => T,
@@ -93,6 +111,7 @@ export function createAasTestContext<T>(
   let aasRepository: AasRepository;
   let moduleRef: TestingModule;
   let uniqueProductIdentifierRepository: UniqueProductIdentifierRepository;
+  let activityRepository: ActivityRepository;
 
   const betterAuthHelper = new BetterAuthHelper();
   let aas: AssetAdministrationShell;
@@ -121,6 +140,7 @@ export function createAasTestContext<T>(
           },
           ...mongooseModels,
         ]),
+        ActivityHistoryModule,
         AasModule,
         AuthModule,
         OrganizationsModule,
@@ -129,6 +149,7 @@ export function createAasTestContext<T>(
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
+        CorrelationIdService,
         AasRepository,
         SubmodelRepository,
         ConceptDescriptionRepository,
@@ -151,13 +172,25 @@ export function createAasTestContext<T>(
     betterAuthHelper.init(userService, moduleRef.get<Auth>(AUTH));
 
     app = moduleRef.createNestApplication();
+    app.useGlobalFilters(
+      new NotFoundInDatabaseExceptionFilter(),
+      new NotFoundExceptionFilter(),
+      new ValueErrorFilter(),
+      new ForbiddenExceptionFilter(),
+    );
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: AllApiVersions,
+    });
     await app.init();
+
     dppIdentifiableRepository = moduleRef.get<T>(EntityRepositoryClass);
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
     uniqueProductIdentifierRepository = moduleRef.get<UniqueProductIdentifierRepository>(
       UniqueProductIdentifierRepository,
     );
+    activityRepository = moduleRef.get<ActivityRepository>(ActivityRepository);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel1 = Submodel.fromPlain(
@@ -192,7 +225,7 @@ export function createAasTestContext<T>(
       ]);
     });
 
-    ability = security.defineAbilityForSubject(subject);
+    ability = security.defineAbilityForSubject(subject, user1data.user.id);
 
     // { userRole: user, memberRole: owner }
     aas = AssetAdministrationShell.fromPlain(
@@ -206,10 +239,8 @@ export function createAasTestContext<T>(
     }
   });
 
-  type CreateEntity = (
-    orgaId?: string,
-  ) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
-  type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
+  type CreateEntity = (orgaId?: string) => Promise<IPersistable & IDigitalProductDocument>;
+  type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductDocument>;
 
   async function getOrganizationAndUserWithCookie() {
     return orga1
@@ -217,12 +248,239 @@ export function createAasTestContext<T>(
       : { ...(await betterAuthHelper.getUserWithCookie(user1data.user.id)), org: undefined };
   }
 
+  async function addPolicy(
+    subject: SubjectAttributes,
+    object: IdShortPath,
+    permissions: Permission[],
+  ) {
+    if (!aas.security.hasPolicy(subject, object, permissions)) {
+      aas.security.addPolicy(subject, object, permissions);
+    }
+    await aasRepository.save(aas);
+  }
+
+  async function createSubmodelWithReferenceElement(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const submodel = Submodel.create({
+      idShort: "testSubmodel",
+      submodelElements: [
+        Property.create({
+          idShort: "link",
+          valueType: DataTypeDef.AnyUri,
+          value: "https://example.com",
+        }),
+      ],
+    });
+    return await createSubmodel(submodel, createEntity, saveEntity);
+  }
+
+  async function createSubmodel(
+    submodel: Submodel,
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const passport = await createEntity(org!.id);
+    await addPolicy(
+      subject,
+      IdShortPath.create({ path: submodel.idShort }),
+      allPermissionsPlainAllow.map(Permission.fromPlain),
+    );
+    passport.getEnvironment().addSubmodel(submodel);
+    await submodelRepository.save(submodel);
+    await saveEntity(passport);
+    return { org, userCookie, passport, submodel };
+  }
+
+  async function assertGetSubmodelByIdV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    expect(responseV1.body.submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(responseV1.body.submodelElements[0].value.keys[0].value).toEqual("https://example.com");
+  }
+
+  async function assertGetSubmodelElementsV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    const submodelElements = responseV1.body.result;
+    expect(submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(submodelElements[0].value.keys[0].value).toEqual("https://example.com");
+  }
+
+  async function assertGetSubmodelsV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    const submodelWithLink = responseV1.body.result.find(
+      (s: SubmodelResponseDto) => s.id === submodel.id,
+    )!;
+    expect(submodelWithLink.submodelElements[0].modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(submodelWithLink.submodelElements[0].value.keys[0].value).toEqual("https://example.com");
+  }
+
+  async function assertGetSubmodelValueV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}/$value`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    expect(responseV1.body.link.keys[0].value).toEqual("https://example.com");
+  }
+
+  function createReferenceElementRequestDto() {
+    return {
+      modelType: KeyTypes.ReferenceElement,
+      idShort: "link",
+      value: {
+        type: ReferenceTypes.ExternalReference,
+        keys: [
+          {
+            type: KeyTypes.GlobalReference,
+            value: "https://example.com",
+          },
+        ],
+      },
+    };
+  }
+
+  async function assertPostSubmodelV1(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const passport = await createEntity(org!.id);
+    const refElement = createReferenceElementRequestDto();
+    const body = {
+      idShort: "testSubmodel",
+      submodelElements: [refElement],
+    };
+
+    const responseV1 = await request(app.getHttpServer())
+      .post(`${basePathV1}/${passport.id}/submodels`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(body);
+
+    expect(responseV1.status).toEqual(HttpStatusCode.Created);
+    expect(responseV1.body.submodelElements).toContainEqual(expect.objectContaining(refElement));
+  }
+  async function assertPostSubmodelElementV1(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, passport, submodel } = await createSubmodel(
+      Submodel.create({ idShort: "testSubmodel" }),
+      createEntity,
+      saveEntity,
+    );
+    const refElement = createReferenceElementRequestDto();
+
+    const responseV1 = await request(app.getHttpServer())
+      .post(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(refElement);
+
+    expect(responseV1.status).toEqual(HttpStatusCode.Created);
+    expect(responseV1.body).toMatchObject(refElement);
+  }
+
+  async function assertPostSubmodelElementAtIdShortPathV1(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie, passport, submodel } = await createSubmodel(
+      Submodel.create({
+        idShort: "testSubmodel",
+        submodelElements: [SubmodelElementCollection.create({ idShort: "subSection" })],
+      }),
+      createEntity,
+      saveEntity,
+    );
+    const refElement = createReferenceElementRequestDto();
+
+    const responseV1 = await request(app.getHttpServer())
+      .post(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements/subSection`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(refElement);
+
+    expect(responseV1.status).toEqual(HttpStatusCode.Created);
+    expect(responseV1.body).toMatchObject(refElement);
+  }
+
+  async function assertGetSubmodelElementByIdV1(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements/link`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    expect(responseV1.body.modelType).toEqual(KeyTypes.ReferenceElement);
+    expect(responseV1.body.value.keys[0].value).toEqual("https://example.com");
+  }
+
+  async function assertGetSubmodelElementValueV1(
+    createEntity: CreateEntity,
+    saveEntity: SaveEntity,
+  ) {
+    const { org, userCookie, passport, submodel } = await createSubmodelWithReferenceElement(
+      createEntity,
+      saveEntity,
+    );
+
+    const responseV1 = await request(app.getHttpServer())
+      .get(`${basePathV1}/${passport.id}/submodels/${submodel.id}/submodel-elements/link/$value`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id);
+
+    expect(responseV1.status).toEqual(200);
+    expect(responseV1.body.keys[0].value).toEqual("https://example.com");
+  }
+
   async function assertGetShells(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createEntity(org?.id);
 
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .get(`${basePathV2}/${passport.id}/shells?limit=1`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -239,13 +497,18 @@ export function createAasTestContext<T>(
   }
 
   async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const entity = await createEntity(org.id);
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
     const newAas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
     });
+    const submodel = Submodel.create({ idShort: "section1" });
+    await submodelRepository.save(submodel);
+    newAas.addSubmodelReference(submodelToReference(submodel));
+
     await aasRepository.save(newAas);
     entity.getEnvironment().addAssetAdministrationShell(newAas);
+    entity.getEnvironment().addSubmodel(submodel);
     await saveEntity(entity);
 
     const transientParams: SecurityPlainTransientParams = {
@@ -281,9 +544,9 @@ export function createAasTestContext<T>(
       security: securityPlainFactory.build(undefined, { transient: transientParams }),
     };
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/shells/${btoa(newAas.id)}`)
+      .patch(`${basePathV2}/${entity.id}/shells/${btoa(newAas.id)}`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(body);
     expect(response.status).toEqual(200);
     expect(response.body.displayName).toEqual(newDisplayName);
@@ -305,7 +568,7 @@ export function createAasTestContext<T>(
       object: "section1",
     };
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${passport.id}/security/policies`)
+      .delete(`${basePathV2}/${passport.id}/security/policies`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(body);
@@ -320,7 +583,7 @@ export function createAasTestContext<T>(
     const passport = await createEntity(org?.id);
 
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/submodels?limit=2`)
+      .get(`${basePathV2}/${passport.id}/submodels?limit=2`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -339,7 +602,7 @@ export function createAasTestContext<T>(
     const passport = await createEntity(org?.id);
 
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/submodels/${btoa(submodels[1].id)}`)
+      .get(`${basePathV2}/${passport.id}/submodels/${btoa(submodels[1].id)}`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -360,7 +623,7 @@ export function createAasTestContext<T>(
     });
 
     const req = request(app.getHttpServer())
-      .post(`${basePath}/${passport.id}/submodels`)
+      .post(`${basePathV2}/${passport.id}/submodels`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -378,7 +641,7 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .get(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
       .set("Cookie", userCookie);
 
     if (org?.id) {
@@ -388,10 +651,12 @@ export function createAasTestContext<T>(
 
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(
-      submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort,
+      submodels[1].getSubmodelElements()[submodels[1].getSubmodelElements().length - 1].idShort,
     );
     expect(response.body.result).toEqual(
-      SubmodelElementSchema.array().parse(submodels[1].submodelElements.map((s) => s.toPlain())),
+      SubmodelElementSchema.array().parse(
+        submodels[1].getSubmodelElements().map((s) => s.toPlain()),
+      ),
     );
   }
 
@@ -401,7 +666,7 @@ export function createAasTestContext<T>(
     const submodelElementJson = propertyInputPlainFactory.build();
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .post(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(submodelElementJson);
@@ -422,7 +687,7 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
       .get(
-        `${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`,
       )
       .set("Cookie", userCookie);
 
@@ -466,7 +731,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .post(
-        `${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -488,7 +753,7 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/$value`)
+      .get(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/$value`)
       .set("Cookie", userCookie)
       .send();
 
@@ -503,15 +768,7 @@ export function createAasTestContext<T>(
       ProductCarbonFootprint_A1A3: {
         PCFCO2eq: "2.6300",
         PCFCalculationMethod: "GHG Protocol",
-        PCFFactSheet: {
-          type: "ExternalReference",
-          keys: [
-            {
-              type: "GlobalReference",
-              value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-            },
-          ],
-        },
+        PCFFactSheet: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
         PCFGoodsAddressHandover: {
           CityTown: "Kaiserslautern",
           Country: "Germany",
@@ -568,7 +825,7 @@ export function createAasTestContext<T>(
     const entity = await createEntity(org?.id);
     const req = request(app.getHttpServer())
       .get(
-        `${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`,
       )
       .set("Cookie", userCookie)
       .send();
@@ -582,15 +839,7 @@ export function createAasTestContext<T>(
     expect(response.body).toEqual({
       PCFCO2eq: "2.6300",
       PCFCalculationMethod: "GHG Protocol",
-      PCFFactSheet: {
-        type: "ExternalReference",
-        keys: [
-          {
-            type: "GlobalReference",
-            value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-          },
-        ],
-      },
+      PCFFactSheet: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
       PCFGoodsAddressHandover: {
         CityTown: "Kaiserslautern",
         Country: "Germany",
@@ -628,7 +877,7 @@ export function createAasTestContext<T>(
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .patch(`${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
@@ -638,6 +887,33 @@ export function createAasTestContext<T>(
       displayName: response.body.displayName,
       description: response.body.description,
     }).toEqual(modificationBody);
+  }
+
+  async function assertModifyValueOfSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const submodel = Submodel.create({
+      idShort: submodelBillOfMaterialPlainFactory.build().idShort!,
+    });
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(property, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+
+    await saveEntity(entity);
+
+    const modificationBody = {
+      Property01: "value new",
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePathV2}/${entity.id}/submodels/${submodel.id}/$value`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    expect((foundSubmodel.getSubmodelElements()[0] as Property).value).toEqual("value new");
   }
 
   async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -661,7 +937,9 @@ export function createAasTestContext<T>(
     };
 
     const response = await request(app.getHttpServer())
-      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`)
+      .patch(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`,
+      )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(modificationBody);
@@ -671,6 +949,106 @@ export function createAasTestContext<T>(
       displayName: response.body.displayName,
       description: response.body.description,
     }).toEqual(modificationBody);
+  }
+
+  async function assertGetActivities(createEntity: CreateEntity) {
+    const { org, userCookie, user } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+
+    const activity1 = SubmodelElementModifiedActivity.create({
+      digitalProductDocumentId: entity.id,
+      userId: user.id,
+      submodel: submodels[0].withTracking(
+        ChangeTracker.fromChanges([
+          DisplayNameChanged.create({
+            path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+            oldValue: [],
+            newValue: [LanguageText.create({ language: "en", text: "Author" })],
+          }),
+        ]),
+      ),
+      correlationId: "correlationId1",
+      createdAt: date1,
+    });
+
+    const activity2 = SubmodelElementModifiedActivity.create({
+      digitalProductDocumentId: entity.id,
+      userId: user.id,
+      submodel: submodels[0].withTracking(
+        ChangeTracker.fromChanges([
+          DisplayNameChanged.create({
+            path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+            oldValue: [],
+            newValue: [LanguageText.create({ language: "en", text: "Model" })],
+          }),
+        ]),
+      ),
+      correlationId: "correlationId1",
+      createdAt: date2,
+    });
+    const activities = [activity1, activity2];
+    await activityRepository.createMany(activities);
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/activities`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body.result).toEqual([activity2.toPlain(), activity1.toPlain()]);
+  }
+
+  async function assertDownloadActivities(createEntity: CreateEntity) {
+    const { org, userCookie, user } = await getOrganizationAndUserWithCookie();
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-02-01T00:00:00.000Z");
+    const entity = await createEntity(org!.id);
+
+    const activity1 = SubmodelElementModifiedActivity.create({
+      digitalProductDocumentId: entity.id,
+      userId: user.id,
+      submodel: submodels[0].withTracking(
+        ChangeTracker.fromChanges([
+          DisplayNameChanged.create({
+            path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Author` }),
+            oldValue: [],
+            newValue: [LanguageText.create({ language: "en", text: "Author" })],
+          }),
+        ]),
+      ),
+      correlationId: "correlationId1",
+      createdAt: date1,
+    });
+
+    const activity2 = SubmodelElementModifiedActivity.create({
+      digitalProductDocumentId: entity.id,
+      userId: user.id,
+      submodel: submodels[0].withTracking(
+        ChangeTracker.fromChanges([
+          DisplayNameChanged.create({
+            path: IdShortPath.create({ path: `${submodels[0].idShort}.Design_V01.Model` }),
+            oldValue: [],
+            newValue: [LanguageText.create({ language: "en", text: "Model" })],
+          }),
+        ]),
+      ),
+      correlationId: "correlationId1",
+      createdAt: date2,
+    });
+
+    const activities = [activity1, activity2];
+    await activityRepository.createMany(activities);
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/activities/download`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.header["content-type"]).toEqual("application/zip");
+    expect(response.header["content-disposition"]).toEqual('attachment; filename="activities.zip"');
   }
 
   async function assertModifySubmodelElementValue(
@@ -685,12 +1063,16 @@ export function createAasTestContext<T>(
       submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
-    submodel.addSubmodelElement(submodelElementCollection, { ability });
+    submodel.addSubmodelElement(submodelElementCollection, {
+      ability,
+    });
     const property = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }),
     );
 
-    submodelElementCollection.addSubmodelElement(property, { ability });
+    submodelElementCollection.addSubmodelElement(property, {
+      ability,
+    });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -702,7 +1084,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .patch(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -728,10 +1110,10 @@ export function createAasTestContext<T>(
     });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
-    submodelElementList.addSubmodelElement(row0, {
+    submodel.addSubmodelElement(submodelElementList, {
       ability,
     });
+    submodelElementList.addSubmodelElement(row0, { ability });
 
     row0.addSubmodelElement(col1, { ability });
 
@@ -743,7 +1125,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .post(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -770,7 +1152,9 @@ export function createAasTestContext<T>(
     });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+    });
     submodelElementList.addSubmodelElement(row0, { ability });
 
     row0.addSubmodelElement(col1, { ability });
@@ -792,7 +1176,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .patch(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -819,7 +1203,9 @@ export function createAasTestContext<T>(
     });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+    });
     submodelElementList.addSubmodelElement(row0, { ability });
 
     row0.addSubmodelElement(col1, { ability });
@@ -830,7 +1216,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .delete(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -860,7 +1246,9 @@ export function createAasTestContext<T>(
     });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+    });
     submodelElementList.addSubmodelElement(row1, { ability });
 
     row1.addSubmodelElement(col1, { ability });
@@ -871,7 +1259,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .post(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
@@ -899,7 +1287,9 @@ export function createAasTestContext<T>(
     });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodel.addSubmodelElement(submodelElementList, {
+      ability,
+    });
     submodelElementList.addSubmodelElement(row1, { ability });
 
     row1.addSubmodelElement(col1, { ability });
@@ -910,7 +1300,7 @@ export function createAasTestContext<T>(
 
     const response = await request(app.getHttpServer())
       .delete(
-        `${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`,
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`,
       )
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -952,7 +1342,7 @@ export function createAasTestContext<T>(
     ).toBeTruthy();
 
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .delete(`${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -960,6 +1350,183 @@ export function createAasTestContext<T>(
     const foundAas = await aasRepository.findOneOrFail(aasId);
     expect(foundAas.submodels.some((s) => s.keys.some((k) => k.value === submodel.id))).toBeFalsy();
     expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
+  }
+
+  async function createTableWithGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const group1 = SubmodelElementCollection.create({ idShort: "group1" });
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
+    row0.addSubmodelElement(group1, { ability });
+    group1.addSubmodelElement(col1, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+    return { org, userCookie, entity, submodel, col1 };
+  }
+
+  async function createEmpytTable(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "tableList",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    return {
+      org,
+      userCookie,
+      entity,
+      submodel,
+      submodelElementList,
+    };
+  }
+
+  async function createTableWithColumnAndGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, submodel, submodelElementList, entity } =
+      await createEmpytTable(createEntity);
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    const group1 = SubmodelElementCollection.create({ idShort: "group1" });
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
+    row0.addSubmodelElement(col1, { ability });
+    row0.addSubmodelElement(group1, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+    return { org, userCookie, entity, submodel, col1 };
+  }
+
+  async function assertAddColumnToGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, entity, submodel } = await createTableWithGroup(
+      createEntity,
+      saveEntity,
+    );
+    const col0Body = propertyInputPlainFactory.build({ idShort: "column0" });
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/groups/group1/columns?position=0`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(col0Body);
+    expect(response.status).toEqual(201);
+    const bodyGroup1 = response.body.value[0].value[0];
+    expect(bodyGroup1.idShort).toEqual("group1");
+    expect(bodyGroup1.value[0].idShort).toEqual("column0");
+    expect(bodyGroup1.value[1].idShort).toEqual("column1");
+  }
+
+  async function assertModifyColumnInGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, entity, submodel, col1 } = await createTableWithGroup(
+      createEntity,
+      saveEntity,
+    );
+    const newDisplayNames = [{ language: "de", text: "Neuer Spaltenname" }];
+    const response = await request(app.getHttpServer())
+      .patch(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/groups/group1/columns/${col1.idShort}`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ idShort: col1.idShort, displayName: newDisplayNames });
+    expect(response.status).toEqual(200);
+    const bodyGroup1 = response.body.value[0].value[0];
+    expect(bodyGroup1.idShort).toEqual("group1");
+    expect(bodyGroup1.value[0].idShort).toEqual(col1.idShort);
+    expect(bodyGroup1.value[0].displayName).toEqual(newDisplayNames);
+  }
+
+  async function assertDeleteColumnFromGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, entity, submodel, col1 } = await createTableWithGroup(
+      createEntity,
+      saveEntity,
+    );
+    const response = await request(app.getHttpServer())
+      .delete(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/groups/group1/columns/${col1.idShort}`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(response.status).toEqual(200);
+    const [bodyRow0, _] = response.body.value;
+    // After deleting column1 from group1, group1 is empty and therefore deleted. That's why only column1 is left.
+    expect(bodyRow0.value.map((col: any) => col.idShort)).toEqual(["column1"]);
+  }
+
+  async function assertMoveColumnToGroup(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, entity, submodel, col1 } = await createTableWithColumnAndGroup(
+      createEntity,
+      saveEntity,
+    );
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/groups/group1/columns/${col1.idShort}/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(response.status).toEqual(201);
+    const bodyRow0 = response.body.value[0];
+    expect(bodyRow0.value).toHaveLength(1);
+    const bodyGroup1 = bodyRow0.value[0];
+    expect(bodyGroup1.idShort).toEqual("group1");
+    expect(bodyGroup1.value[0].idShort).toEqual(col1.idShort);
+  }
+
+  async function assertCreateGroupFromColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, submodel, submodelElementList, entity } =
+      await createEmpytTable(createEntity);
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
+    row0.addSubmodelElement(col1, { ability });
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/groups`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({
+        columnIdShort: col1.idShort,
+        group: {
+          idShort: "group1",
+          modelType: KeyTypes.SubmodelElementCollection,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
+      });
+    expect(response.status).toEqual(201);
+    const bodyRow0 = response.body.value[0];
+    expect(bodyRow0.value.map((col: any) => col.idShort)).toEqual(["group1"]);
+    const bodyGroup1 = bodyRow0.value[0];
+    expect(bodyGroup1.value.map((col: any) => col.idShort)).toEqual([col1.idShort]);
   }
 
   async function assertDeleteSubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -982,7 +1549,7 @@ export function createAasTestContext<T>(
 
     await submodelRepository.save(submodel);
     const response = await request(app.getHttpServer())
-      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/${path}`)
+      .delete(`${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/${path}`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org!.id)
       .send();
@@ -1009,33 +1576,51 @@ export function createAasTestContext<T>(
       dppIdentifiableRepository,
       aasRepository,
       submodelRepository,
-      uniqueProductIdentifierService: uniqueProductIdentifierRepository,
+      uniqueProductIdentifierRepository,
+      activityRepository,
     }),
     getAasObjects: () => ({ aas, submodels }),
     getModuleRef: () => moduleRef,
     asserts: {
       getShells: assertGetShells,
-      modifyShell: assertModifyShell,
+      getSubmodelsV1: assertGetSubmodelsV1,
       getSubmodels: assertGetSubmodels,
+      getSubmodelByIdV1: assertGetSubmodelByIdV1,
       getSubmodelById: assertGetSubmodelById,
+      getSubmodelValueV1: assertGetSubmodelValueV1,
+      getSubmodelValue: assertGetSubmodelValue,
+      getSubmodelElementsV1: assertGetSubmodelElementsV1,
+      getSubmodelElements: assertGetSubmodelElements,
+      getSubmodelElementByIdV1: assertGetSubmodelElementByIdV1,
+      getSubmodelElementById: assertGetSubmodelElementById,
+      getSubmodelElementValueV1: assertGetSubmodelElementValueV1,
+      getSubmodelElementValue: assertGetSubmodelElementValue,
+      getActivities: assertGetActivities,
+      modifyShell: assertModifyShell,
+      postSubmodelV1: assertPostSubmodelV1,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
+      modifyValueOfSubmodel: assertModifyValueOfSubmodel,
       modifySubmodelElement: assertModifySubmodelElement,
       modifySubmodelElementValue: assertModifySubmodelElementValue,
       addColumn: assertAddColumn,
       modifyColumn: assertModifyColumn,
       deleteColumn: assertDeleteColumn,
+      addColumnToGroup: assertAddColumnToGroup,
+      modifyColumnInGroup: assertModifyColumnInGroup,
+      deleteColumnFromGroup: assertDeleteColumnFromGroup,
+      moveColumnToGroup: assertMoveColumnToGroup,
+      createGroupFromColumn: assertCreateGroupFromColumn,
       addRow: assertAddRow,
       deletePolicy: assertDeletePolicy,
       deleteRow: assertDeleteRow,
       deleteSubmodel: assertDeleteSubmodel,
       deleteSubmodelElement: assertDeleteSubmodelElement,
-      getSubmodelValue: assertGetSubmodelValue,
-      getSubmodelElements: assertGetSubmodelElements,
+      postSubmodelElementV1: assertPostSubmodelElementV1,
       postSubmodelElement: assertPostSubmodelElement,
+      postSubmodelElementAtIdShortPathV1: assertPostSubmodelElementAtIdShortPathV1,
       postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
-      getSubmodelElementById: assertGetSubmodelElementById,
-      getSubmodelElementValue: assertGetSubmodelElementValue,
+      downloadActivities: assertDownloadActivities,
     },
   };
 }

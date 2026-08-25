@@ -4,10 +4,12 @@ import { ref, watch } from "vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
 import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores/index";
+import { useUserStore } from "../../stores/user";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const members = ref<Array<MemberDto>>([]);
 const indexStore = useIndexStore();
+const userStore = useUserStore();
 
 async function fetchMembers() {
   if (!indexStore.selectedOrganization) return;
@@ -20,6 +22,10 @@ async function fetchMembers() {
   }
 }
 
+async function onRefresh() {
+  await fetchMembers();
+}
+
 watch(() => indexStore.selectedOrganization, fetchMembers, { immediate: true });
 </script>
 
@@ -29,6 +35,7 @@ watch(() => indexStore.selectedOrganization, fetchMembers, { immediate: true });
       v-if="indexStore.selectedOrganization"
       :members="members"
       :organization-id="indexStore.selectedOrganization"
+      @refresh="onRefresh"
     />
   </ContentViewWrapper>
 </template>

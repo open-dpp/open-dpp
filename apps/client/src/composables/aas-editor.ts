@@ -12,6 +12,7 @@ import {
   type DigitalProductDocumentStatusDtoType,
   type FileRequestDto,
   KeyTypes,
+  KeyTypesEnum,
   type LanguageTextDto,
   type LanguageType,
   type PagingParamsDto,
@@ -19,7 +20,6 @@ import {
   type PermissionType,
   PropertyJsonSchema,
   type PropertyRequestDto,
-  type ReferenceElementRequestDto,
   type SubmodelElementCollectionRequestDto,
   type SubmodelElementListRequestDto,
   type SubmodelElementModificationDto,
@@ -48,6 +48,7 @@ import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
+import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -250,7 +251,6 @@ export function useAasEditor({
       response.status === HTTPCode.CREATED ||
       response.status === HTTPCode.NO_CONTENT
     ) {
-      await pagination.reloadCurrentPage();
       drawer.hideDrawer();
     }
   }
@@ -361,37 +361,11 @@ export function useAasEditor({
   }
 
   function getVisualType(submodelBase: SubmodelElementSharedResponseDto): string {
-    if (submodelBase.modelType === KeyTypes.Submodel) {
-      return translate(`${translatePrefix}.submodel`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.Property) {
-      const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
-      if (valueType === DataTypeDef.String) {
-        return translate(`${translatePrefix}.textField`);
-      }
-      if (valueType === DataTypeDef.Double) {
-        return translate(`${translatePrefix}.numberField`);
-      }
-      if (valueType === DataTypeDef.Date) {
-        return translate(`${translatePrefix}.dateField`);
-      }
-      if (valueType === DataTypeDef.DateTime) {
-        return translate(`${translatePrefix}.dateTimeField`);
-      }
-    }
-    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
-      return translate(`${translatePrefix}.submodelElementList`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.ReferenceElement) {
-      return translate(`${translatePrefix}.link`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.File) {
-      return translate(`${translatePrefix}.file`);
-    }
-    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
-      return translate(`${translatePrefix}.submodelElementCollection`);
-    }
-    return submodelBase.modelType;
+    const valueType =
+      submodelBase.modelType === AasSubmodelElements.Property
+        ? PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase).valueType
+        : undefined;
+    return getVisualTypeHelper(KeyTypesEnum.parse(submodelBase.modelType), valueType, translate);
   }
 
   function submodelElementCanHaveChildren(
@@ -503,6 +477,11 @@ export function useAasEditor({
         DataTypeDef.Double,
       ),
       buildPropertyEntry(
+        translate(`${translatePrefix}.booleanField`),
+        "pi pi-check-square",
+        DataTypeDef.Boolean,
+      ),
+      buildPropertyEntry(
         translate(`${translatePrefix}.dateField`),
         "pi pi-calendar",
         DataTypeDef.Date,
@@ -512,6 +491,7 @@ export function useAasEditor({
         "pi pi-calendar-clock",
         DataTypeDef.DateTime,
       ),
+      buildPropertyEntry(translate(`${translatePrefix}.link`), "pi pi-link", DataTypeDef.AnyUri),
       {
         label: translate(`${translatePrefix}.file`),
         icon: "pi pi-file-plus",
@@ -523,20 +503,6 @@ export function useAasEditor({
             title: translate(`${translatePrefix}.file`),
             path,
             callback: async (data: FileRequestDto) => createFile(path, data),
-          });
-        },
-      },
-      {
-        label: translate(`${translatePrefix}.link`),
-        icon: "pi pi-link",
-        command: (_event: MenuItemCommandEvent) => {
-          drawer.openDrawer({
-            type: AasSubmodelElements.ReferenceElement,
-            data: {},
-            mode: EditorMode.CREATE,
-            title: translate(`${translatePrefix}.link`),
-            path,
-            callback: async (data: any) => createLink(path, data),
           });
         },
       },
@@ -557,7 +523,7 @@ export function useAasEditor({
       },
       {
         label: translate(`${translatePrefix}.submodelElementList`),
-        icon: "pi pi-list",
+        icon: "pi pi-table",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementList,
@@ -615,6 +581,7 @@ export function useAasEditor({
               path.idShortPath,
             );
             await finalizeApiRequest({ status: response.status });
+            await pagination.reloadCurrentPage();
           }
         } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
@@ -647,6 +614,7 @@ export function useAasEditor({
         try {
           const response = await aasNamespace.deleteSubmodelById(id, submodelId);
           await finalizeApiRequest({ status: response.status });
+          await pagination.reloadCurrentPage();
         } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
             translate(`${translatePrefix}.errorRemoveSubmodel`),
@@ -677,14 +645,6 @@ export function useAasEditor({
       path,
       { modelType: AasSubmodelElements.SubmodelElementCollection, ...data },
       "submodelElementCollection",
-    );
-  }
-
-  async function createLink(path: AasEditorPath, data: ReferenceElementRequestDto) {
-    await createSubmodelElement(
-      path,
-      { ...data, modelType: AasSubmodelElements.ReferenceElement },
-      "link",
     );
   }
 
@@ -721,6 +681,7 @@ export function useAasEditor({
         await finalizeApiRequest(response);
 
         if (selectSubmodelElementAfterCreation) {
+          await pagination.reloadCurrentPage();
           const submodelIdShort =
             submodels.value.find((n) => n.key === path.submodelId)?.data.plain.idShort ?? "";
           const key = path.idShortPath

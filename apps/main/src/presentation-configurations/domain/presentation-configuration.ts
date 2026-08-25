@@ -1,0 +1,326 @@
+import { randomUUID } from "node:crypto";
+import {
+  KeyTypesType,
+  Permissions,
+  PresentationComponentNameType,
+  PresentationConfigurationDtoSchema,
+  PresentationConfigurationInvariantsSchema,
+  PresentationConfigurationPatchDto,
+  DigitalProductDocumentTypes,
+  DigitalProductDocumentTypesType,
+} from "@open-dpp/dto";
+import { ForbiddenError, parseOrThrow } from "@open-dpp/exception";
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
+import { AasAbility } from "../../aas/domain/security/aas-ability";
+import { IPersistable } from "../../aas/domain/persistable";
+import { DateTime } from "../../lib/date-time";
+import { HasCreatedAt } from "../../lib/has-created-at";
+
+export type PresentationComponentName = PresentationComponentNameType;
+
+/**
+ * Immutable domain entity for a presentation configuration.
+ *
+ * **Copy-on-write pattern (not a GoF builder)**
+ * All fields are `readonly` and the constructor is private.  State changes are
+ * expressed through the `withX()` / `withoutX()` / `withPatch()` family of
+ * methods, each of which delegates to the private `copyWith()` helper.
+ * `copyWith()` constructs a brand-new `PresentationConfiguration` instance,
+ * forwarding unchanged fields from `this` and stamping `updatedAt` with the
+ * current instant.  Callers that chain multiple updates therefore accumulate
+ * immutable snapshots:
+ *
+ * ```ts
+ * let next = config;
+ * next = next.withElementDesign(path, component);
+ * next = next.withDefaultComponent(type, component);
+ * await repository.update(next); // persist the final snapshot only
+ * ```
+ *
+ * This satisfies the immutability requirement in CLAUDE.md and is the reason
+ * reviewer comment #3323059001 ("convert to a mutable builder") was declined —
+ * a mutable builder would break the `readonly` contracts, bypass invariant
+ * validation in `create()`, and render `updatedAt` incorrect.
+ */
+export class PresentationConfiguration implements IPersistable, HasCreatedAt {
+  private constructor(
+    public readonly id: string,
+    public readonly organizationId: string,
+    public readonly referenceId: string,
+    public readonly referenceType: DigitalProductDocumentTypesType,
+    public readonly label: string | null,
+    public readonly elementDesign: ReadonlyMap<string, PresentationComponentName>,
+    public readonly defaultComponents: ReadonlyMap<KeyTypesType, PresentationComponentName>,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date,
+  ) {}
+
+  static create(data: {
+    id?: string;
+    organizationId: string;
+    referenceId: string;
+    referenceType: DigitalProductDocumentTypesType;
+    label?: string | null;
+    elementDesign?:
+      | ReadonlyMap<string, PresentationComponentName>
+      | Record<string, PresentationComponentName>;
+    defaultComponents?:
+      | ReadonlyMap<KeyTypesType, PresentationComponentName>
+      | Partial<Record<KeyTypesType, PresentationComponentName>>;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }): PresentationConfiguration {
+    const label = data.label ?? null;
+    parseOrThrow(
+      PresentationConfigurationInvariantsSchema,
+      {
+        organizationId: data.organizationId,
+        referenceId: data.referenceId,
+        referenceType: data.referenceType,
+        label,
+      },
+      "PresentationConfiguration",
+    );
+    const now = DateTime.now();
+    return new PresentationConfiguration(
+      data.id ?? randomUUID(),
+      data.organizationId,
+      data.referenceId,
+      data.referenceType,
+      label,
+      toStringMap(data.elementDesign),
+      toKeyTypesMap(data.defaultComponents),
+      data.createdAt ?? now,
+      data.updatedAt ?? now,
+    );
+  }
+
+  static createForPassport(data: {
+    organizationId: string;
+    referenceId: string;
+  }): PresentationConfiguration {
+    return PresentationConfiguration.create({
+      organizationId: data.organizationId,
+      referenceId: data.referenceId,
+      referenceType: DigitalProductDocumentTypes.Passport,
+    });
+  }
+
+  static fromPlain(data: unknown): PresentationConfiguration {
+    const parsed = PresentationConfigurationDtoSchema.parse(data);
+    return new PresentationConfiguration(
+      parsed.id,
+      parsed.organizationId,
+      parsed.referenceId,
+      parsed.referenceType,
+      parsed.label,
+      toStringMap(parsed.elementDesign),
+      toKeyTypesMap(parsed.defaultComponents),
+      new Date(parsed.createdAt),
+      new Date(parsed.updatedAt),
+    );
+  }
+
+  toPlain() {
+    return {
+      id: this.id,
+      organizationId: this.organizationId,
+      referenceId: this.referenceId,
+      referenceType: this.referenceType,
+      label: this.label,
+      elementDesign: Object.fromEntries(this.elementDesign),
+      defaultComponents: Object.fromEntries(this.defaultComponents) as Partial<
+        Record<KeyTypesType, string>
+      >,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
+  }
+
+  withElementDesign(path: string, component: PresentationComponentName): PresentationConfiguration {
+    if (this.elementDesign.get(path) === component) {
+      return this;
+    }
+    const next = new Map(this.elementDesign);
+    next.set(path, component);
+    return this.copyWith({ elementDesign: next });
+  }
+
+  withoutElementDesign(path: string): PresentationConfiguration {
+    if (!this.elementDesign.has(path)) {
+      return this;
+    }
+    const next = new Map(this.elementDesign);
+    next.delete(path);
+    return this.copyWith({ elementDesign: next });
+  }
+
+  withDefaultComponent(
+    type: KeyTypesType,
+    component: PresentationComponentName,
+  ): PresentationConfiguration {
+    if (this.defaultComponents.get(type) === component) {
+      return this;
+    }
+    const next = new Map(this.defaultComponents);
+    next.set(type, component);
+    return this.copyWith({ defaultComponents: next });
+  }
+
+  withoutDefaultComponent(type: KeyTypesType): PresentationConfiguration {
+    if (!this.defaultComponents.has(type)) {
+      return this;
+    }
+    const next = new Map(this.defaultComponents);
+    next.delete(type);
+    return this.copyWith({ defaultComponents: next });
+  }
+
+  /**
+   * Returns a new PresentationConfiguration with the element design entry at `oldPath`
+   * and all its descendants moved to `newPath`.
+   *
+   * For example, if elementDesign has keys "A.B" and "A.B.C", moving "A.B" to "A.D"
+   * will result in keys "A.D" and "A.D.C".
+   *
+   * If oldPath equals newPath, returns this instance unchanged.
+   */
+  moveElementDesign(oldPath: string, newPath: string): PresentationConfiguration {
+    if (oldPath === newPath) {
+      return this;
+    }
+    const next = new Map<string, PresentationComponentName>();
+    let hasChanges = false;
+    const oldPrefix = `${oldPath}.`;
+
+    for (const [key, value] of this.elementDesign) {
+      if (key === oldPath) {
+        next.set(newPath, value);
+        hasChanges = true;
+      } else if (key.startsWith(oldPrefix)) {
+        const suffix = key.slice(oldPrefix.length);
+        next.set(`${newPath}.${suffix}`, value);
+        hasChanges = true;
+      } else {
+        next.set(key, value);
+      }
+    }
+
+    if (!hasChanges) {
+      return this;
+    }
+    return this.copyWith({ elementDesign: next });
+  }
+
+  /**
+   * Returns a new PresentationConfiguration with the element design entry at `path`
+   * and all its descendants removed.
+   *
+   * For example, if elementDesign has keys "A.B", "A.B.C", and "A.BC",
+   * deleting "A.B" will remove "A.B" and "A.B.C" but keep "A.BC".
+   */
+  deleteElementDesign(path: string): PresentationConfiguration {
+    const next = new Map<string, PresentationComponentName>();
+    let hasChanges = false;
+    const prefix = `${path}.`;
+
+    for (const [key, value] of this.elementDesign) {
+      if (key === path || key.startsWith(prefix)) {
+        hasChanges = true;
+      } else {
+        next.set(key, value);
+      }
+    }
+
+    if (!hasChanges) {
+      return this;
+    }
+    return this.copyWith({ elementDesign: next });
+  }
+
+  withLabel(label: string | null): PresentationConfiguration {
+    if (this.label === label) return this;
+    return this.copyWith({ label });
+  }
+
+  withPatch(
+    patch: PresentationConfigurationPatchDto,
+    ability?: AasAbility,
+  ): PresentationConfiguration {
+    if (ability && patch.elementDesign) {
+      const denied: string[] = [];
+      for (const path of Object.keys(patch.elementDesign)) {
+        if (!ability.can(Permissions.Edit, IdShortPath.create({ path }))) {
+          denied.push(path);
+        }
+      }
+      if (denied.length > 0) {
+        throw new ForbiddenError(
+          `Missing edit permission for presentation paths: ${denied.join(", ")}`,
+        );
+      }
+    }
+
+    let next: PresentationConfiguration | undefined;
+    if (patch.elementDesign) {
+      for (const [path, value] of Object.entries(patch.elementDesign)) {
+        const base = next ?? this;
+        next =
+          value === null ? base.withoutElementDesign(path) : base.withElementDesign(path, value);
+      }
+    }
+    if (patch.defaultComponents) {
+      for (const [type, value] of Object.entries(patch.defaultComponents) as [
+        KeyTypesType,
+        PresentationComponentNameType | null,
+      ][]) {
+        const base = next ?? this;
+        next =
+          value === null
+            ? base.withoutDefaultComponent(type)
+            : base.withDefaultComponent(type, value);
+      }
+    }
+    return next ?? this;
+  }
+
+  private copyWith(changes: {
+    label?: string | null;
+    elementDesign?: ReadonlyMap<string, PresentationComponentName>;
+    defaultComponents?: ReadonlyMap<KeyTypesType, PresentationComponentName>;
+  }): PresentationConfiguration {
+    return new PresentationConfiguration(
+      this.id,
+      this.organizationId,
+      this.referenceId,
+      this.referenceType,
+      changes.label !== undefined ? changes.label : this.label,
+      changes.elementDesign ?? this.elementDesign,
+      changes.defaultComponents ?? this.defaultComponents,
+      this.createdAt,
+      DateTime.now(),
+    );
+  }
+}
+
+function toStringMap(
+  input:
+    | ReadonlyMap<string, PresentationComponentName>
+    | Record<string, PresentationComponentName>
+    | undefined,
+): ReadonlyMap<string, PresentationComponentName> {
+  if (!input) return new Map();
+  if (input instanceof Map) return new Map(input);
+  return new Map(Object.entries(input));
+}
+
+function toKeyTypesMap(
+  input:
+    | ReadonlyMap<KeyTypesType, PresentationComponentName>
+    | Partial<Record<KeyTypesType, PresentationComponentName>>
+    | undefined,
+): ReadonlyMap<KeyTypesType, PresentationComponentName> {
+  if (!input) return new Map();
+  if (input instanceof Map) return new Map(input);
+  return new Map(Object.entries(input) as [KeyTypesType, PresentationComponentName][]);
+}

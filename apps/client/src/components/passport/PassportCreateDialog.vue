@@ -11,7 +11,7 @@ import { useRoute } from "vue-router";
 import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassports } from "../../composables/passports";
 import { useTemplates } from "../../composables/templates";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import { usePagination } from "../../composables/pagination.ts";
 
 const route = useRoute();
@@ -35,7 +35,7 @@ const { hasNext, nextPage } = usePagination({
 
 const { createPassport } = usePassports();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 type TemplateOption = TemplateDto & { label: string; status: string };
 const templateList = ref<TemplateOption[]>([]);
 
@@ -89,17 +89,19 @@ onMounted(async () => {
   }
 });
 
-const { parseDisplayNameFromEnvironment } = useAasUtils({
-  translate: t,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-});
+const { parseDisplayNameFromEnvironment } = useAasUtils();
 
 function constructTemplateOptions({ result }: TemplatePaginationDto) {
-  return result.map((template) => ({
-    ...template,
-    label: getOptionLabel(template),
-    status: getOptionStatus(template),
-  }));
+  return result
+    .filter(
+      (template) =>
+        template.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived,
+    )
+    .map((template) => ({
+      ...template,
+      label: getOptionLabel(template),
+      status: getOptionStatus(template),
+    }));
 }
 
 function getOptionStatus(option: TemplateDto): string {

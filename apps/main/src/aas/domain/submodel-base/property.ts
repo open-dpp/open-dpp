@@ -3,6 +3,8 @@ import {
   AasSubmodelElementsType,
   DataTypeDef,
   DataTypeDefType,
+  KeyTypes,
+  KeyTypesType,
   PropertyJsonSchema,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -16,13 +18,22 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  copySubmodelElement,
+  ISubmodelElement,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
+import { Pointer } from "./pointer";
+import { parse as parseUri } from "uri-js";
+import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class Property implements ISubmodelElement {
   private _value: string | null = null;
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly valueType: DataTypeDefType,
@@ -43,14 +54,28 @@ export class Property implements ISubmodelElement {
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.Property;
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -103,6 +128,7 @@ export class Property implements ISubmodelElement {
         );
       }
     }
+
     if (value !== null) {
       if ([DataTypeDef.Double, DataTypeDef.Float].find((n) => n === valueType)) {
         parse(z.coerce.number());
@@ -111,6 +137,17 @@ export class Property implements ISubmodelElement {
         // represents an unambiguous instant. A naive "2026-04-10T14:00:00"
         // would render differently for users in different timezones.
         parse(z.iso.datetime({ offset: true }));
+      } else if (valueType === DataTypeDef.Boolean) {
+        parse(z.union([z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")]));
+      } else if (valueType === DataTypeDef.AnyUri) {
+        parse(
+          z
+            .string()
+            .min(1)
+            .refine((value) => !parseUri(value).error, {
+              message: parseUri(value).error,
+            }),
+        );
       } else {
         parse(z.string());
       }
@@ -154,6 +191,12 @@ export class Property implements ISubmodelElement {
     return this.accept(jsonVisitor, options?.context);
   }
 
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    return copySubmodelElement(this, options);
+  }
+
+  setSubmodelElements(_submodelElements: Array<ISubmodelElement>): void {}
+
   getSubmodelElements(): ISubmodelElement[] {
     return [];
   }
@@ -162,7 +205,7 @@ export class Property implements ISubmodelElement {
     throw new ValueError("Property cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("Property does not support to delete submodel elements");
   }
 

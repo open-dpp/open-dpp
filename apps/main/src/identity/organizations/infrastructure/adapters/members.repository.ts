@@ -4,6 +4,8 @@ import { Model, Types } from "mongoose";
 import { Member } from "../../domain/member";
 import { MemberMapper } from "../mappers/member.mapper";
 import { Member as MemberSchema } from "../schemas/member.schema";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { ObjectId } from "mongodb";
 
 @Injectable()
 export class MembersRepository {
@@ -25,16 +27,32 @@ export class MembersRepository {
     return MemberMapper.toDomain(document);
   }
 
+  async findOneByIdOrFail(id: string): Promise<Member> {
+    const member = await this.findOneById(id);
+    if (!member) {
+      throw new NotFoundInDatabaseException(Member.name);
+    }
+    return member;
+  }
+
   async findOneById(id: string): Promise<Member | null> {
-    const document = await this.memberModel.findById(id);
+    if (!ObjectId.isValid(id)) {
+      return null;
+    }
+    const document = await this.memberModel.findOne({ _id: new ObjectId(id) });
     if (!document) return null;
     return MemberMapper.toDomain(document);
   }
 
   async findByOrganizationId(organizationId: string): Promise<Member[]> {
+    // The schema types organizationId as ObjectId, so a non-ObjectId id can never
+    // match — return early instead of letting Mongoose throw a CastError.
+    if (!Types.ObjectId.isValid(organizationId)) {
+      return [];
+    }
     // Better Auth stores organizationId as ObjectId
     const filter = {
-      organizationId: this.toObjectIdIfValid(organizationId),
+      organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
     };
     const documents = await this.memberModel.find(filter as any);
     return documents.map((doc) => MemberMapper.toDomain(doc));
@@ -43,7 +61,7 @@ export class MembersRepository {
   async findByUserId(userId: string): Promise<Member[]> {
     // Better Auth stores userId as ObjectId
     const filter = {
-      userId: this.toObjectIdIfValid(userId),
+      userId: { $eq: this.toObjectIdIfValid(userId) },
     };
     const documents = await this.memberModel.find(filter as any);
     return documents.map((doc) => MemberMapper.toDomain(doc));
@@ -53,11 +71,16 @@ export class MembersRepository {
     userId: string,
     organizationId: string,
   ): Promise<Member | null> {
+    // The schema types organizationId as ObjectId, so a non-ObjectId id can never
+    // match — return early instead of letting Mongoose throw a CastError.
+    if (!Types.ObjectId.isValid(organizationId)) {
+      return null;
+    }
     // Better Auth stores userId and organizationId as ObjectIds, so we need to convert
     // the string query parameters to ObjectIds for the query to match
     const filter = {
-      userId: this.toObjectIdIfValid(userId),
-      organizationId: this.toObjectIdIfValid(organizationId),
+      userId: { $eq: this.toObjectIdIfValid(userId) },
+      organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
     };
 
     const document = await this.memberModel.findOne(filter as any);

@@ -1,0 +1,363 @@
+import type { PermalinkPublicDto } from "@open-dpp/dto";
+import { describe, expect, it } from "vitest";
+import { ref } from "vue";
+import { useGs1LinkPreview, usePermalinkPreview } from "./permalink-preview.ts";
+
+const permalinkId = "11111111-1111-4111-8111-111111111111";
+const configId = "22222222-2222-4222-8222-222222222222";
+const isoNow = "2026-05-12T00:00:00.000Z";
+
+function makePermalink(overrides: Partial<PermalinkPublicDto> = {}): PermalinkPublicDto {
+  return {
+    id: permalinkId,
+    kind: "open-dpp",
+    passportId: "33333333-3333-4333-8333-333333333333",
+    slug: null,
+    baseUrl: null,
+    presentationConfigurationId: configId,
+    uniqueProductIdentifierId: null,
+    gs1DataAttributes: null,
+    createdAt: isoNow,
+    updatedAt: isoNow,
+    publicUrl: `https://instance.example.com/p/${permalinkId}`,
+    fallbackBaseUrl: "https://branding.example.com",
+    fallbackBaseUrlSource: "branding",
+    ...overrides,
+  };
+}
+
+describe("usePermalinkPreview", () => {
+  it("derives preview from typed inputs (source = 'permalink')", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("https://override.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveBase.value).toBe("https://override.example.com");
+    expect(preview.effectiveSlug.value).toBe("acme-widget");
+    expect(preview.previewUrl.value).toBe("https://override.example.com/acme-widget");
+    expect(preview.previewSource.value).toBe("permalink");
+    expect(preview.previewValid.value).toBe(true);
+  });
+
+  it("falls back to the org branding when base URL input is empty", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makePermalink({
+        fallbackBaseUrl: "https://branding.example.com",
+        fallbackBaseUrlSource: "branding",
+      }),
+    );
+    const slug = ref("acme-widget");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveBase.value).toBe("https://branding.example.com");
+    expect(preview.previewUrl.value).toBe("https://branding.example.com/acme-widget");
+    expect(preview.previewSource.value).toBe("branding");
+    expect(preview.previewValid.value).toBe(true);
+  });
+
+  it("falls back to the instance default when branding has no permalinkBaseUrl", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makePermalink({
+        fallbackBaseUrl: "https://instance.example.com",
+        fallbackBaseUrlSource: "instance",
+      }),
+    );
+    const slug = ref("acme-widget");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveBase.value).toBe("https://instance.example.com");
+    expect(preview.previewSource.value).toBe("instance");
+    expect(preview.previewValid.value).toBe(true);
+  });
+
+  it("falls back to permalink.id when slug input is empty", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("");
+    const baseUrl = ref("https://override.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveSlug.value).toBe(permalinkId);
+    expect(preview.previewUrl.value).toBe(`https://override.example.com/${permalinkId}`);
+  });
+
+  it("treats whitespace-only input as empty (trim semantics)", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("   ");
+    const baseUrl = ref("   ");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveBase.value).toBe(permalink.value!.fallbackBaseUrl);
+    expect(preview.effectiveSlug.value).toBe(permalinkId);
+    expect(preview.previewSource.value).toBe("branding");
+  });
+
+  it("reacts to slug input changes", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewUrl.value).toBe(`${permalink.value!.fallbackBaseUrl}/${permalinkId}`);
+
+    slug.value = "new-slug";
+    expect(preview.previewUrl.value).toBe(`${permalink.value!.fallbackBaseUrl}/new-slug`);
+  });
+
+  it("reacts to base URL input changes (and switches source)", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewSource.value).toBe("branding");
+
+    baseUrl.value = "https://override.example.com";
+    expect(preview.previewSource.value).toBe("permalink");
+    expect(preview.effectiveBase.value).toBe("https://override.example.com");
+  });
+
+  it("canonicalises a base URL input with trailing slash to its origin", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("https://Override.Example.com/");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveBase.value).toBe("https://override.example.com");
+  });
+
+  it("marks the preview invalid when the base URL input has a query string", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("https://example.com?q=1");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewValid.value).toBe(false);
+  });
+
+  it("marks the preview invalid for a non-http(s) scheme", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("ftp://example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewValid.value).toBe(false);
+  });
+
+  it("marks the preview invalid for a slug with disallowed characters", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("BAD SLUG");
+    const baseUrl = ref("https://override.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewValid.value).toBe(false);
+  });
+
+  it("marks the preview invalid for a reserved slug", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("new");
+    const baseUrl = ref("https://override.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewValid.value).toBe(false);
+  });
+
+  it("marks the preview invalid when the permalink hasn't loaded yet", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(undefined);
+    const slug = ref("acme-widget");
+    const baseUrl = ref("https://override.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.previewValid.value).toBe(false);
+  });
+
+  it("locks and shows the frozen publishedUrl verbatim, ignoring input edits", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makePermalink({
+        slug: "acme-widget",
+        publishedUrl: "https://passports.example.com/p/acme-widget",
+      }),
+    );
+    const slug = ref("changed-after-publish");
+    const baseUrl = ref("https://changed.example.com");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.locked.value).toBe(true);
+    expect(preview.previewUrl.value).toBe("https://passports.example.com/p/acme-widget");
+    expect(preview.previewValid.value).toBe(true);
+    // effectiveBase must be the slug-less base only (no double-slug in preview template)
+    expect(preview.effectiveBase.value).toBe("https://passports.example.com/p");
+    // effectiveSlug must be the slug portion only
+    expect(preview.effectiveSlug.value).toBe("acme-widget");
+  });
+
+  it("is not locked when publishedUrl is absent", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makePermalink());
+    const slug = ref("acme-widget");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.locked.value).toBe(false);
+  });
+
+  it("degrades gracefully when the server response lacks fallbackBaseUrl (older backend)", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makePermalink({
+        fallbackBaseUrl: undefined as unknown as string,
+        publicUrl: `https://instance.example.com/p/${permalinkId}`,
+      }),
+    );
+    const slug = ref("");
+    const baseUrl = ref("");
+
+    const preview = usePermalinkPreview(permalink, slug, baseUrl);
+
+    expect(preview.effectiveBase.value).toBe("https://instance.example.com/p");
+    expect(preview.previewValid.value).toBe(true);
+  });
+});
+
+describe("useGs1LinkPreview", () => {
+  const upiId = "44444444-4444-4444-8444-444444444444";
+  function makeGs1Permalink(overrides: Partial<PermalinkPublicDto> = {}): PermalinkPublicDto {
+    return makePermalink({
+      kind: "gs1-link",
+      presentationConfigurationId: null,
+      uniqueProductIdentifierId: upiId,
+      slug: null,
+      gs1DataAttributes: null,
+      publicUrl: "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
+      fallbackBaseUrl: "https://id.example.com",
+      fallbackBaseUrlSource: "instance",
+      ...overrides,
+    });
+  }
+
+  it("keeps the identity path and appends the live attrs query as attrs change", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makeGs1Permalink());
+    const baseUrl = ref("");
+    const attrs = ref<Record<string, string>>({});
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.previewUrl.value).toBe(
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
+    );
+
+    attrs.value = { "3103": "000750" };
+    expect(preview.previewUrl.value).toBe(
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1?3103=000750",
+    );
+
+    attrs.value = { "3103": "000750", "17": "251231" };
+    expect(preview.previewUrl.value).toBe(
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1?17=251231&3103=000750",
+    );
+  });
+
+  it("drops the query already present on publicUrl and rebuilds it from the edited attrs", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makeGs1Permalink({
+        publicUrl: "https://id.example.com/gs1/v1/01/04006381333931?3103=000750",
+      }),
+    );
+    const baseUrl = ref("");
+    const attrs = ref<Record<string, string>>({ "17": "251231" });
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.previewUrl.value).toBe(
+      "https://id.example.com/gs1/v1/01/04006381333931?17=251231",
+    );
+  });
+
+  it("reduces a path-carrying base override to its origin (GS1 resolves at the root)", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makeGs1Permalink());
+    const baseUrl = ref("https://brand.example.com/r");
+    const attrs = ref<Record<string, string>>({});
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.previewUrl.value).toBe(
+      "https://brand.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
+    );
+  });
+
+  it("falls back to the permalink fallbackBaseUrl when no override is typed", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makeGs1Permalink({
+        fallbackBaseUrl: "https://branding.example.com",
+        fallbackBaseUrlSource: "branding",
+      }),
+    );
+    const baseUrl = ref("");
+    const attrs = ref<Record<string, string>>({});
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.previewUrl.value).toBe(
+      "https://branding.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
+    );
+  });
+
+  it("shows the frozen publishedUrl verbatim once locked, ignoring live edits", () => {
+    const frozen = "https://frozen.example.com/gs1/v1/01/04006381333931?3103=000750";
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makeGs1Permalink({ publishedUrl: frozen }),
+    );
+    const baseUrl = ref("https://ignored.example.com");
+    const attrs = ref<Record<string, string>>({ "17": "251231" });
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.locked.value).toBe(true);
+    expect(preview.previewUrl.value).toBe(frozen);
+  });
+
+  it("never throws on an invalid attr pair mid-edit — degrades to a query-less preview", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(makeGs1Permalink());
+    const baseUrl = ref("");
+    const attrs = ref<Record<string, string>>({ "99zz": "not-an-ai" });
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.previewUrl.value).toBe(
+      "https://id.example.com/gs1/v1/01/04006381333931/10/LOT-42/21/SN-1",
+    );
+  });
+
+  it("degrades to the base alone when publicUrl carries no GS1 identity path (UPI deleted fallback)", () => {
+    const permalink = ref<PermalinkPublicDto | undefined>(
+      makeGs1Permalink({
+        publicUrl: "https://id.example.com/p/orphaned-slug",
+        fallbackBaseUrl: "https://id.example.com",
+      }),
+    );
+    const baseUrl = ref("");
+    const attrs = ref<Record<string, string>>({});
+
+    const preview = useGs1LinkPreview(permalink, baseUrl, attrs);
+
+    expect(preview.previewUrl.value).toBe("https://id.example.com");
+
+    attrs.value = { "3103": "000750" };
+    expect(preview.previewUrl.value).toBe("https://id.example.com");
+  });
+});

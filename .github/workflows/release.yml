@@ -36,6 +36,51 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Guard against burned npm versions
+        run: |
+          set -euo pipefail
+
+          # Fetch `npm view <name> <field> --json` and echo the JSON. A clean
+          # E404 (package not published yet — e.g. a new package's first
+          # release) yields `{}`, so it contributes no burned versions. Any
+          # other failure (network, auth, registry/parse error) aborts the
+          # step rather than being silently treated as "no burned versions",
+          # which would let a burned target slip through to a failed publish.
+          npm_meta() {
+            local out
+            if out=$(npm view "$1" "$2" --json 2>&1); then
+              printf '%s' "$out"
+            elif grep -qi 'E404' <<<"$out"; then
+              printf '{}'
+            else
+              echo "::error::npm view $1 $2 failed: $out" >&2
+              return 1
+            fi
+          }
+
+          fail=0
+          while IFS= read -r pkg_json; do
+            [ "$(jq -r '.private // false' "$pkg_json")" = "true" ] && continue
+            name=$(jq -r '.name' "$pkg_json")
+            version=$(jq -r '.version' "$pkg_json")
+            ever=$(npm_meta "$name" time \
+              | jq -r 'try (keys[]) catch empty | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+"))' \
+              | sort -u)
+            live=$(npm_meta "$name" versions \
+              | jq -r 'if type=="array" then .[] elif type=="string" then . else empty end' \
+              | sort -u)
+            burned=$(comm -23 <(printf '%s\n' "$ever") <(printf '%s\n' "$live") | sed '/^$/d')
+            if printf '%s\n' "$burned" | grep -qxF "$version"; then
+              echo "::error::$name@$version is a burned npm version (published then unpublished; npm permanently reserves the number). Bump the fixed group past the burned range — see docs/adr/0001." >&2
+              fail=1
+            fi
+          done < <(find apps packages docs -maxdepth 2 -name package.json -not -path '*/node_modules/*')
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Refusing to publish: one or more target versions are burned on npm." >&2
+            exit 1
+          fi
+          echo "No burned target versions detected; safe to publish."
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
@@ -47,18 +92,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Push a repo-wide `v<version>` git tag so the release is reachable by
-      # tag name in git. Every `@open-dpp/*` package is in the `fixed` group
-      # in `.changeset/config.json`, so the first published package carries
-      # the canonical release version for the whole repo.
-      #
-      # Note: this tag push is made with `GITHUB_TOKEN`, which (by design)
-      # does not trigger other workflow runs. That's why the next step
-      # explicitly dispatches `build.yml` with the tag as its ref — it would
-      # otherwise never run for the versioned Docker image.
-      #
-      # PUBLISHED_PACKAGES is passed through an env var (not inlined via
-      # ${{ }}) to avoid script injection via workflow expression expansion.
       - name: Push repo-wide version tag
         id: version-tag
         if: steps.changesets.outputs.published == 'true'
@@ -86,10 +119,6 @@ jobs:
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      # Trigger `build.yml` at the tag ref so `docker/metadata-action` picks
-      # up the tag via `type=semver,pattern={{version}}` and publishes a
-      # version-tagged Docker image. RELEASE_TAG is read from the previous
-      # step's output via env var to avoid inlining `${{ }}` into `run:`.
       - name: Trigger versioned Docker build
         if: steps.changesets.outputs.published == 'true'
         env:

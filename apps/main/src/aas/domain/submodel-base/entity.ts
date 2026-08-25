@@ -3,6 +3,8 @@ import {
   AasSubmodelElementsType,
   EntityTypeJsonSchema,
   EntityTypeType,
+  KeyTypes,
+  KeyTypesType,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -17,19 +19,22 @@ import { IVisitor } from "../visitor";
 import {
   AddOptions,
   addSubmodelElementOrFail,
+  copySubmodelElement,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
+import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class Entity implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly entityType: EntityTypeType,
@@ -42,7 +47,7 @@ export class Entity implements ISubmodelElement {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly statements: Array<ISubmodelElement>,
+    private statements: Array<ISubmodelElement>,
     public readonly globalAssetId: string | null = null,
     public readonly specificAssetIds: Array<SpecificAssetId>,
   ) {
@@ -50,15 +55,29 @@ export class Entity implements ISubmodelElement {
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
-    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.Entity;
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -129,9 +148,20 @@ export class Entity implements ISubmodelElement {
     return visitor.visitEntity(this, context);
   }
 
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    return copySubmodelElement(this, options);
+  }
+
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.statements = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
   }
 
   getSubmodelElements(): ISubmodelElement[] {
@@ -142,8 +172,8 @@ export class Entity implements ISubmodelElement {
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.statements, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.statements, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

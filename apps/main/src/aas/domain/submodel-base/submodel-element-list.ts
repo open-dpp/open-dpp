@@ -2,6 +2,8 @@ import {
   AasSubmodelElements,
   AasSubmodelElementsType,
   DataTypeDefType,
+  KeyTypes,
+  KeyTypesType,
   SubmodelElementListJsonSchema,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
@@ -16,19 +18,22 @@ import { IVisitor } from "../visitor";
 import {
   AddOptions,
   addSubmodelElementOrFail,
+  copySubmodelElement,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
+import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class SubmodelElementList implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly typeValueListElement: AasSubmodelElementsType,
@@ -44,10 +49,11 @@ export class SubmodelElementList implements ISubmodelElement {
     public readonly orderRelevant: boolean | null = null,
     public readonly semanticIdListElement: Reference | null = null,
     public readonly valueTypeListElement: DataTypeDefType | null = null,
-    public readonly value: Array<ISubmodelElement>,
+    private value: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -116,19 +122,37 @@ export class SubmodelElementList implements ISubmodelElement {
     );
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
-    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.SubmodelElementList;
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitSubmodelElementList(this, context);
+  }
+
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    return copySubmodelElement(this, options);
   }
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
@@ -140,18 +164,29 @@ export class SubmodelElementList implements ISubmodelElement {
     return this.value;
   }
 
+  hasParentList(): boolean {
+    return (
+      this.getReference().constructIdShortPathsForType(KeyTypes.SubmodelElementList).length > 1
+    );
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.value = submodelElements;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
     if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
       throw new Error(
         `Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`,
       );
     }
-    submodelElement.setParentIdShortPath(this.getIdShortPath());
+    submodelElement.setParentPointer(this.getPointer());
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.value, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.value, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

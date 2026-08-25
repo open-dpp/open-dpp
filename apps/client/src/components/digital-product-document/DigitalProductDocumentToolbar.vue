@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { DigitalProductDocumentStatusDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
 import { useRouterUtils } from "../../composables/router-utils.ts";
+import { useRoute, useRouter } from "vue-router";
 
 const { t } = useI18n();
 
@@ -18,12 +19,16 @@ const props = defineProps<{
 }>();
 const { goToParent } = useRouterUtils();
 const { publish, archive, restore, deleteDPD, fetchById } = useDigitalProductDocument(props.type);
+const route = useRoute();
+const router = useRouter();
 
 async function fetchDPD(id: string) {
-  const response = await fetchById(id);
-  if (response) {
-    model.value = response;
-  }
+  try {
+    const data = await fetchById(id);
+    if (data) {
+      model.value = data;
+    }
+  } catch {}
 }
 
 const qrCodeDialogVisible = ref<boolean>(false);
@@ -49,7 +54,39 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await fetchDPD(item.id);
 }
 
+async function navigateToActivityHistory() {
+  await router.push(`${route.path}/activities`);
+}
+
+async function navigateTo(routeName: string, passportId: string) {
+  await router.push({
+    name: routeName,
+    params: { organizationId: route.params.organizationId, passportId },
+  });
+}
+
 const status = computed(() => model.value?.lastStatusChange.currentStatus);
+
+const permalinkActions = computed(() => [
+  {
+    label: t("permalink.list.label", 2),
+    icon: "pi pi-link",
+    command: () => {
+      if (model.value?.id) {
+        navigateTo("passportPermalinks", model.value.id);
+      }
+    },
+  },
+  {
+    label: t("uniqueProductIdentifiers.label", 2),
+    icon: "pi pi-barcode",
+    command: () => {
+      if (model.value?.id) {
+        navigateTo("passportUniqueProductIdentifiers", model.value.id);
+      }
+    },
+  },
+]);
 </script>
 
 <template>
@@ -96,6 +133,14 @@ const status = computed(() => model.value?.lastStatusChange.currentStatus);
             v-tooltip.bottom="t('status.publish')"
             @click="onPublishButtonClicked(model)"
           />
+          <Button
+            icon="pi pi-history"
+            text
+            severity="secondary"
+            :aria-label="t('activityHistory.label')"
+            v-tooltip.bottom="t('activityHistory.label')"
+            @click="navigateToActivityHistory"
+          />
         </div>
       </template>
       <template #center>
@@ -105,11 +150,12 @@ const status = computed(() => model.value?.lastStatusChange.currentStatus);
       </template>
       <template #end>
         <div class="flex items-center gap-2">
-          <Button
+          <SplitButton
             v-if="type === DigitalProductDocumentType.Passport"
             icon="pi pi-qrcode"
             severity="primary"
             :label="t('common.qrCode')"
+            :model="permalinkActions"
             @click="qrCodeDialogVisible = true"
           />
           <Tag v-if="type === DigitalProductDocumentType.Template" severity="contrast">{{
@@ -123,7 +169,7 @@ const status = computed(() => model.value?.lastStatusChange.currentStatus);
     v-if="type === DigitalProductDocumentType.Passport && model"
     v-model:visible="qrCodeDialogVisible"
     :passportId="model.id"
+    :status="status"
+    @publish="onPublishButtonClicked(model)"
   />
 </template>
-
-<style scoped></style>

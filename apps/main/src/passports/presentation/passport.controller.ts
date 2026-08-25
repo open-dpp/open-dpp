@@ -1,19 +1,38 @@
 import type {
+  ActivityPaginationDto,
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
+  CreateGroupFromColumnDto,
   DeletePolicyDto,
+  DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
+  SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
   SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
   SubmodelRequestDto,
+  SubmodelResponseDto,
   ValueRequestDto,
-  DigitalProductDocumentStatusDtoType,
+  ValueResponseDto,
+} from "@open-dpp/dto";
+import {
+  AllApiVersions,
+  DigitalProductDocumentStatusModificationDtoSchema,
+  PassportDtoSchema,
+  PassportPaginationDtoSchema,
+  PassportRequestCreateDtoSchema,
+  Populates,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import { type Response } from "express";
 
 import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import {
@@ -22,28 +41,17 @@ import {
   Controller,
   Delete,
   ForbiddenException,
+  forwardRef,
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Post,
   Put,
+  Res,
 } from "@nestjs/common";
-import {
-  AssetAdministrationShellPaginationResponseDto,
-  AssetAdministrationShellResponseDto,
-  PassportDtoSchema,
-  PassportPaginationDtoSchema,
-  PassportRequestCreateDtoSchema,
-  DigitalProductDocumentStatusModificationDtoSchema,
-  Populates,
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementResponseDto,
-  SubmodelPaginationResponseDto,
-  SubmodelResponseDto,
-  ValueResponseDto,
-} from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { match, P } from "ts-pattern";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
@@ -51,7 +59,9 @@ import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
+  ApiCreateGroupFromColumn,
   ApiDeleteColumn,
+  ApiDeleteColumnFromGroup,
   ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
@@ -63,12 +73,16 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiMoveColumnToGroup,
   ApiPatchColumn,
+  ApiPatchColumnInGroup,
   ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
+  ApiPatchSubmodelValue,
   ApiPostColumn,
+  ApiPostColumnToGroup,
   ApiPostRow,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
@@ -76,19 +90,20 @@ import {
   AssetAdministrationShellIdParam,
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
+  CreateGroupFromColumnRequestBody,
   CursorQueryParam,
   DeletePolicyRequestBody,
+  GroupIdShortParam,
   IdParam,
   IdShortPathParam,
-  LimitQueryParam,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
-  SubmodelElementValueModificationRequestBody,
   SubmodelIdParam,
   SubmodelModificationRequestBody,
   SubmodelRequestBody,
+  ValueModificationRequestBody,
 } from "../../aas/presentation/aas.decorators";
 import {
   IAasCreateEndpoints,
@@ -100,8 +115,10 @@ import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
@@ -109,11 +126,22 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
+  ActivityPathQueryParam,
+  ActivityTypeQueryParam,
+  ApiDownloadActivities,
+  ApiGetActivities,
+  EndDateQueryParam,
+  LimitQueryParam,
   PopulateQueryParam,
+  StartDateQueryParam,
   StatusQueryParam,
 } from "../../digital-product-document/presentation/digital-product-document-decorators";
+import { UserIdDecorator } from "../../identity/auth/presentation/decorators/user-id.decorator";
+import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
+import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller("/passports")
+@Controller({ path: "/passports", version: AllApiVersions })
 export class PassportController
   implements
     IAasReadEndpointsWithOrganizationId,
@@ -125,9 +153,12 @@ export class PassportController
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
+    private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
+    @Inject(forwardRef(() => PermalinkApplicationService))
+    private readonly permalinkApplicationService: PermalinkApplicationService,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @Get()
@@ -164,10 +195,11 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @Param("id") id: string,
   ): Promise<PassportDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
       await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
         id,
-        SubjectAttributes.create({ userRole, memberRole }),
+        subject,
         organizationId,
       );
     return PassportDtoSchema.parse(passport.toPlain());
@@ -186,7 +218,7 @@ export class PassportController
       subject,
       organizationId,
     );
-    const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(id);
+    const upi = await this.uniqueProductIdentifierRepository.findOneByReferencedId(id);
     if (!upi) {
       throw new NotFoundException(`No UniqueProductIdentifier found for passport ${id}`);
     }
@@ -208,15 +240,20 @@ export class PassportController
   // REST action pattern like https://blog.ivankahl.com/practical-guide-to-modeling-business-processes-in-rest-apis/.
   @Put(":id/status")
   async modifyPassportStatus(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
     @Body(new ZodValidationPipe(DigitalProductDocumentStatusModificationDtoSchema))
     body: DigitalProductDocumentStatusModificationDto,
   ): Promise<PassportDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    return this.passportService.modifyPassportStatus(id, organizationId, subject, body);
+    return this.passportService.modifyPassportStatus(correlationId, organizationId, id, body, {
+      subject,
+      userId,
+    });
   }
 
   @Post()
@@ -273,9 +310,33 @@ export class PassportController
     });
 
     const upid = passport.createUniqueProductIdentifier();
-    await this.uniqueProductIdentifierService.save(upid);
 
-    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
+    const saved = await this.environmentService.withTransaction(async (options) => {
+      await this.uniqueProductIdentifierRepository.save(upid, options);
+      const persisted = await this.passportRepository.save(passport, options);
+      const snapshotConfigs =
+        await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
+          persisted,
+          options,
+        );
+      const configs =
+        snapshotConfigs.length > 0
+          ? snapshotConfigs
+          : [
+              await this.presentationConfigurationService.ensureDefaultForPassport(
+                persisted,
+                options,
+              ),
+            ];
+      await this.permalinkApplicationService.createPermalinksForConfigs(
+        configs,
+        organizationId,
+        options,
+      );
+      return persisted;
+    });
+
+    return PassportDtoSchema.parse(saved.toPlain());
   }
 
   @ApiGetShells()
@@ -304,6 +365,7 @@ export class PassportController
 
   @ApiPatchShell()
   async modifyShell(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @AssetAdministrationShellIdParam() aasId: string,
@@ -311,14 +373,16 @@ export class PassportController
     body: AssetAdministrationShellModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<AssetAdministrationShellResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyShell(
+      correlationId,
       organizationId,
       id,
       aasId,
       body,
-      subject,
+      { subject, userId },
     );
   }
 
@@ -330,6 +394,7 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -343,76 +408,117 @@ export class PassportController
       passport.getEnvironment(),
       pagination,
       subject,
+      version,
     );
   }
 
   @ApiPostSubmodel()
   async createSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelRequestBody() body: SubmodelRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodel(
+      correlationId,
       organizationId,
       id,
       body,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiDeletePolicy()
   async deletePolicyBySubjectAndObject(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @DeletePolicyRequestBody() body: DeletePolicyDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<void> {
-    const administrator = SubjectAttributes.create({ userRole, memberRole });
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.deletePolicyBySubjectAndObject(
+      correlationId,
       organizationId,
       id,
       body,
-      administrator,
+      { subject, userId },
     );
   }
 
   @ApiDeleteSubmodelById()
   async deleteSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.deleteSubmodel(
+      correlationId,
       organizationId,
       id,
       submodelId,
-      subject,
+      { subject, userId },
     );
   }
 
   @ApiPatchSubmodel()
   async modifySubmodel(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @SubmodelModificationRequestBody() body: SubmodelModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodel(
+      correlationId,
       organizationId,
       id,
       submodelId,
       body,
-      subject,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPatchSubmodelValue()
+  async modifyValueOfSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @ValueModificationRequestBody() body: ValueRequestDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.modifyValueOfSubmodel(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      body,
+      { subject, userId },
+      version,
     );
   }
 
@@ -423,6 +529,7 @@ export class PassportController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -435,6 +542,7 @@ export class PassportController
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -445,6 +553,7 @@ export class PassportController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -457,11 +566,13 @@ export class PassportController
       passport.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
   @ApiPostColumn()
   async addColumnToSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -470,21 +581,26 @@ export class PassportController
     @PositionQueryParam() position: number | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.addColumnToSubmodelElementList(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       body,
       position,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiPatchColumn()
   async modifyColumnOfSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -493,21 +609,26 @@ export class PassportController
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       idShortOfColumn,
       body,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiDeleteColumn()
   async deleteColumnFromSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -515,20 +636,168 @@ export class PassportController
     @ColumnParam() idShortOfColumn: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       idShortOfColumn,
-      subject,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPostColumnToGroup()
+  async addColumnToGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @PositionQueryParam() position: number | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.addColumnToGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      body,
+      position,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPatchColumnInGroup()
+  async modifyColumnInGroupOfSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() idShortOfColumn: string,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.modifyColumnInGroupOfSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiDeleteColumnFromGroup()
+  async deleteColumnFromGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() idShortOfColumn: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.deleteColumnFromGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveColumnToGroup()
+  async moveColumnToGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() columnIdShort: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.moveColumnToGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      columnIdShort,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiCreateGroupFromColumn()
+  async createGroupFromColumnInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @CreateGroupFromColumnRequestBody() body: CreateGroupFromColumnDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.createGroupFromColumnInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body.columnIdShort,
+      body.group,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiPostRow()
   async addRowToSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -536,20 +805,25 @@ export class PassportController
     @PositionQueryParam() position: number | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.addRowToSubmodelElementList(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       position,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiDeleteRow()
   async deleteRowFromSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -557,58 +831,71 @@ export class PassportController
     @RowParam() idShortOfRow: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       idShortOfRow,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiPostSubmodelElement()
   async createSubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodelElement(
+      correlationId,
       organizationId,
       id,
       submodelId,
       body,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiDeleteSubmodelElementById()
   async deleteSubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     await this.passportService.digitalProductDocumentService.deleteSubmodelElement(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
-      subject,
+      { subject, userId },
     );
   }
 
   @ApiPatchSubmodelElement()
   async modifySubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -616,36 +903,45 @@ export class PassportController
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodelElement(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
   @ApiPatchSubmodelElementValue()
   async modifySubmodelElementValue(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
-    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @ValueModificationRequestBody() body: ValueRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.modifySubmodelElementValue(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
@@ -658,6 +954,7 @@ export class PassportController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -672,6 +969,7 @@ export class PassportController
       submodelId,
       pagination,
       subject,
+      version,
     );
   }
 
@@ -683,6 +981,7 @@ export class PassportController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -696,11 +995,13 @@ export class PassportController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 
   @ApiPostSubmodelElementAtIdShortPath()
   async createSubmodelElementAtIdShortPath(
+    @CorrelationIdDecorator() correlationId: string,
     @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -708,15 +1009,19 @@ export class PassportController
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.passportService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
+      correlationId,
       organizationId,
       id,
       submodelId,
       idShortPath,
       body,
-      subject,
+      { subject, userId },
+      version,
     );
   }
 
@@ -728,6 +1033,7 @@ export class PassportController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport =
@@ -741,6 +1047,55 @@ export class PassportController
       submodelId,
       idShortPath,
       subject,
+      version,
+    );
+  }
+
+  @ApiGetActivities()
+  async getActivities(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @ActivityTypeQueryParam() activityType: ActivityTypesType[] | undefined,
+    @ActivityPathQueryParam() dppPathFilter: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<ActivityPaginationDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.passportService.digitalProductDocumentService.getActivities(
+      organizationId,
+      id,
+      subject,
+      startDate,
+      endDate,
+      limit,
+      cursor,
+      activityType,
+      dppPathFilter,
+    );
+  }
+
+  @ApiDownloadActivities()
+  async downloadActivities(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @StartDateQueryParam() startDate: string | undefined,
+    @EndDateQueryParam() endDate: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    await this.passportService.digitalProductDocumentService.downloadActivities(
+      res,
+      organizationId,
+      id,
+      subject,
+      startDate,
+      endDate,
     );
   }
 
@@ -772,7 +1127,22 @@ export class PassportController
       async (p, options) => {
         await this.passportRepository.save(p, options);
         const upid = p.createUniqueProductIdentifier();
-        await this.uniqueProductIdentifierService.save(upid, options);
+        await this.uniqueProductIdentifierRepository.save(upid, options);
+      },
+      async (p, options) => {
+        const importedConfigs = await this.presentationConfigurationService.findExistingForPassport(
+          p,
+          options,
+        );
+        const configs =
+          importedConfigs.length > 0
+            ? importedConfigs
+            : [await this.presentationConfigurationService.ensureDefaultForPassport(p, options)];
+        await this.permalinkApplicationService.createPermalinksForConfigs(
+          configs,
+          organizationId,
+          options,
+        );
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());

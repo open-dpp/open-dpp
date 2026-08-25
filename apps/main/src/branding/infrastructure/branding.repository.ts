@@ -38,6 +38,18 @@ export class BrandingRepository {
     return Branding.fromDb(brandingDoc.toObject());
   }
 
+  async findOneByOrganizationIdOrNull(organizationId: string): Promise<Branding | null> {
+    try {
+      return await this.findOneByOrganizationId(organizationId);
+    } catch (error) {
+      this.logger.warn(
+        `Branding load failed for organizationId=${organizationId}; resolving without the per-org override`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      return null;
+    }
+  }
+
   getDefaultBranding(): Branding {
     return Branding.getDefault();
   }
@@ -54,7 +66,7 @@ export class BrandingRepository {
         throw new NotFoundException("Organization not found");
       }
 
-      brandingDoc = new this.BrandingDoc({ _schemaVersion: BrandingDocVersion.v1_0_0 });
+      brandingDoc = new this.BrandingDoc({ _schemaVersion: BrandingDocVersion.v1_1_0 });
 
       if (activeOrganization.logo) {
         this.logger.debug("migrating old to new logo");
@@ -64,6 +76,7 @@ export class BrandingRepository {
 
     const plain = branding.toPlain();
     brandingDoc.set({
+      _schemaVersion: BrandingDocVersion.v1_1_0,
       ...plain,
       logo: plain.logo ?? orgLogoFallback,
     });

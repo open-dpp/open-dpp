@@ -88,7 +88,7 @@ describe("usePresentationMenu", () => {
 
       menuItems.value[0]!.command();
 
-      expect(mocks.routerPush).toHaveBeenCalledWith("/presentation/my-product");
+      expect(mocks.routerPush).toHaveBeenCalledWith("/p/my-product");
     });
 
     it("chatWithAI command navigates to chat view", () => {
@@ -96,7 +96,7 @@ describe("usePresentationMenu", () => {
 
       menuItems.value[1]!.command();
 
-      expect(mocks.routerPush).toHaveBeenCalledWith("/presentation/my-product/chat");
+      expect(mocks.routerPush).toHaveBeenCalledWith("/p/my-product/chat");
     });
 
     it("backToApp command navigates to root", () => {
@@ -116,7 +116,7 @@ describe("usePresentationMenu", () => {
 
       navigateToAiChat();
 
-      expect(mocks.routerPush).toHaveBeenCalledWith("/presentation/my-product/chat");
+      expect(mocks.routerPush).toHaveBeenCalledWith("/p/my-product/chat");
     });
   });
 });

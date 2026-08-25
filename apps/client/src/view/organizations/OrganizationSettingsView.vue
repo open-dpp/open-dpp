@@ -13,7 +13,7 @@ import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 import { useOrganizationsStore } from "../../stores/organizations";
 import ContentViewWrapper from "../ContentViewWrapper.vue";
-import { createColorPalette } from "../../lib/color";
+import { createColorPalette, isValidHexColor } from "../../lib/color";
 
 const defaultColor = "6bad87";
 
@@ -28,11 +28,28 @@ const branding = ref<BrandingDto | null>(null);
 const nameInvalid = ref(false);
 const { applyBranding } = useBranding();
 
-const colorPalette = computed(() => {
-  return createColorPalette(branding.value?.primaryColor ?? defaultColor);
+const colorInvalid = computed(() => {
+  const value = branding.value?.primaryColor?.trim();
+  return value != null && value.length > 0 && !isValidHexColor(value);
 });
 
+const colorPalette = computed(() => {
+  const value = branding.value?.primaryColor;
+  const hex = value && isValidHexColor(value) ? value : defaultColor;
+  return createColorPalette(hex);
+});
+
+function trimToNull(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
 async function save() {
+  if (colorInvalid.value) {
+    notificationStore.addErrorNotification(t("organizations.form.color.error"));
+    return;
+  }
   try {
     let updatedSettings = false;
     if (organization.value && indexStore.selectedOrganization) {
@@ -50,7 +67,8 @@ async function save() {
     if (branding.value) {
       const brandingResult = await apiClient.dpp.branding.set({
         logo: branding.value.logo,
-        primaryColor: branding.value.primaryColor,
+        primaryColor: trimToNull(branding.value.primaryColor),
+        permalinkBaseUrl: trimToNull(branding.value.permalinkBaseUrl),
       });
 
       branding.value = brandingResult.data;
@@ -110,7 +128,7 @@ onMounted(async () => {
               id="color"
               v-model="branding.primaryColor"
               :default-color="defaultColor"
-              :invalid="nameInvalid"
+              :invalid="colorInvalid"
             />
             <InputGroup>
               <InputGroupAddon>#</InputGroupAddon>
@@ -120,7 +138,7 @@ onMounted(async () => {
                 maxlength="6"
                 inputmode="text"
                 :placeholder="defaultColor"
-                :invalid="nameInvalid"
+                :invalid="colorInvalid"
               />
             </InputGroup>
             <Button
@@ -131,6 +149,9 @@ onMounted(async () => {
               {{ t("common.reset") }}
             </Button>
           </div>
+          <small v-if="colorInvalid" class="text-red-500">{{
+            t("organizations.form.color.error")
+          }}</small>
         </div>
         <div class="flex flex-col gap-2">
           <label for="color" class="block text-sm leading-6 font-medium text-gray-900">{{
@@ -143,6 +164,22 @@ onMounted(async () => {
               :style="{ backgroundColor: color }"
             ></div>
           </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label for="permalinkBaseUrl" class="block text-sm leading-6 font-medium text-gray-900">{{
+            t("organizations.form.permalinkBaseUrl.label")
+          }}</label>
+          <small class="text-gray-700">{{
+            t("organizations.form.permalinkBaseUrl.description")
+          }}</small>
+          <InputText
+            id="permalinkBaseUrl"
+            v-model="branding.permalinkBaseUrl"
+            placeholder="https://passports.example.com"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+          />
         </div>
       </form>
 

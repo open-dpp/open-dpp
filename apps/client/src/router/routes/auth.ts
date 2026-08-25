@@ -18,4 +18,40 @@ export const LOGOUT: RouteRecordRaw = {
   component: () => import("../../view/Logout.vue"),
 };
 
-export const AUTH_ROUTES = [PROFILE, LOGOUT];
+export const EMAIL_CHANGE_REVOKE_CONFIRM: RouteRecordRaw = {
+  path: "/account/email-change-revoke",
+  name: "EmailChangeRevokeConfirm",
+  component: () => import("../../view/auth/EmailChangeRevokeConfirmView.vue"),
+  meta: {
+    layout: "none",
+    public: true,
+  },
+};
+
+export const EMAIL_CHANGE_REVOKED: RouteRecordRaw = {
+  path: "/account/email-change-revoked",
+  name: "EmailChangeRevoked",
+  component: () => import("../../view/auth/EmailChangeRevokedView.vue"),
+  meta: {
+    layout: "none",
+    public: true,
+  },
+};
+
+export const EMAIL_VERIFIED: RouteRecordRaw = {
+  path: "/email-verified",
+  name: "EmailVerified",
+  component: () => import("../../view/auth/EmailVerifiedView.vue"),
+  meta: {
+    layout: "none",
+    public: true,
+  },
+};
+
+export const AUTH_ROUTES = [
+  PROFILE,
+  LOGOUT,
+  EMAIL_CHANGE_REVOKE_CONFIRM,
+  EMAIL_CHANGE_REVOKED,
+  EMAIL_VERIFIED,
+];

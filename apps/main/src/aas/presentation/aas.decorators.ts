@@ -13,6 +13,7 @@ import {
 
 import {
   AssetAdministrationShellModificationSchema,
+  CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
@@ -82,6 +83,10 @@ export function ApiGetSubmodelValue(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiGetSubmodelValuePath, prefix)));
 }
 
+export function ApiPatchSubmodelValue() {
+  return applyDecorators(Patch(ApiGetSubmodelValuePath));
+}
+
 export const ApiSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
 export function ApiGetSubmodelElements(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiSubmodelElementsPath, prefix)));
@@ -124,6 +129,43 @@ export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)));
 }
 
+export const ApiCreateGroupFromColumnPath = `${ApiGetSubmodelElementByIdPath}/groups`;
+
+export function ApiCreateGroupFromColumn(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiCreateGroupFromColumnPath, prefix)));
+}
+
+export const ApiPostColumnToGroupPath = `${ApiGetSubmodelElementByIdPath}/groups/:groupIdShort/columns`;
+
+export function ApiPostColumnToGroup(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiPostColumnToGroupPath, prefix)));
+}
+
+export const ApiGetColumnInGroupByIdShortPath = `${ApiPostColumnToGroupPath}/:idShortOfColumn`;
+
+export function ApiDeleteColumnFromGroup(prefix?: string) {
+  return applyDecorators(Delete(withPrefix(ApiGetColumnInGroupByIdShortPath, prefix)));
+}
+
+export function ApiPatchColumnInGroup(prefix?: string) {
+  return applyDecorators(Patch(withPrefix(ApiGetColumnInGroupByIdShortPath, prefix)));
+}
+
+export const ApiMoveColumnToGroupPath = `${ApiPostColumnToGroupPath}/:idShortOfColumn/move`;
+
+export function ApiMoveColumnToGroup(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiMoveColumnToGroupPath, prefix)));
+}
+
+export const GroupIdShortParamSchema = z.string().meta({
+  description: "IdShort of the group column.",
+  example: "Group1",
+  param: { in: "path", name: "groupIdShort" },
+});
+
+export const GroupIdShortParam = () =>
+  Param("groupIdShort", new ZodValidationPipe(GroupIdShortParamSchema));
+
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
 export function ApiPostRow(prefix?: string) {
@@ -165,6 +207,28 @@ export const IdParamSchema = IdBaseSchema.meta({
 });
 
 export const IdParam = () => Param("id", new ZodValidationPipe(IdParamSchema));
+
+const SlugShape = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+export const IdOrSlugParamSchema = z
+  .string()
+  .transform((v, ctx) => {
+    const uuid = z.uuid().safeParse(v);
+    if (uuid.success) return uuid.data;
+    if (v.length >= 2 && v.length <= 64 && SlugShape.test(v)) return v;
+    ctx.addIssue({
+      code: "custom",
+      message: "Must be a UUID or a kebab-case slug (2-64 chars, lowercase alphanumerics)",
+    });
+    return z.NEVER;
+  })
+  .meta({
+    description: "A Permalink id (UUID) or slug",
+    example: "958b741c-c2ef-4366-a134-fafd30210ed4",
+    param: { in: "path", name: "id" },
+  });
+
+export const IdOrSlugParam = () => Param("id", new ZodValidationPipe(IdOrSlugParamSchema));
 
 export const SubmodelIdParamSchema = IdBaseSchema.meta({
   description: "The submodel id",
@@ -213,24 +277,12 @@ export const RowParam = () => Param("idShortOfRow", new ZodValidationPipe(RowPar
 
 export const RequestParam = () => Req();
 
-export const LimitQueryParamSchema = z.coerce
-  .number()
-  .optional()
-  .meta({
-    description: "The maximum number of elements in the response array",
-    example: 10,
-    param: { in: "query", name: "limit" },
-  });
-
-export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(LimitQueryParamSchema));
-
 export const CursorQueryParamSchema = z
   .string()
   .optional()
   .meta({
     description:
       "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
-    example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
     param: { in: "query", name: "cursor" },
   });
 
@@ -247,6 +299,15 @@ export const PositionQueryParamSchema = z.coerce
 export const PositionQueryParam = () =>
   Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
+export const PassportIdQueryParamSchema = z.uuid().meta({
+  description: "The passport id (UUID)",
+  example: "958b741c-c2ef-4366-a134-fafd30210ed4",
+  param: { in: "query", name: "passportId" },
+});
+
+export const PassportIdQueryParam = () =>
+  Query("passportId", new ZodValidationPipe(PassportIdQueryParamSchema));
+
 export const CursorQueryParam = () =>
   Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
 
@@ -260,7 +321,8 @@ export const SubmodelModificationRequestBody = () =>
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
-export const SubmodelElementValueModificationRequestBody = () =>
-  Body(new ZodValidationPipe(ValueSchema));
+export const CreateGroupFromColumnRequestBody = () =>
+  Body(new ZodValidationPipe(CreateGroupFromColumnSchema));
+export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

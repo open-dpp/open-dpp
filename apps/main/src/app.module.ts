@@ -16,18 +16,23 @@ import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
+import { EmailChangeRequestsModule } from "./identity/email-change-requests/email-change-requests.module";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
 import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
 import { PassportsModule } from "./passports/passports.module";
+import { PermalinkModule } from "./permalink/permalink.module";
 import { PolicyModule } from "./policy/policy.module";
 import { PolicyGuard } from "./policy/presentation/policy.guard";
+import { PresentationConfigurationsModule } from "./presentation-configurations/presentation-configurations.module";
 import { StatusModule } from "./status/status.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
+import { CorrelationIdService } from "./common/middleware/correlation-id.service";
+import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 
 @Module({
   imports: [
@@ -46,6 +51,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     PassportsModule,
     OrganizationsModule,
     UsersModule,
+    EmailChangeRequestsModule,
     HttpModule,
     TraceabilityEventsModule,
     ServeStaticModule.forRoot({
@@ -64,10 +70,13 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     EmailModule,
     InstanceSettingsModule,
     PolicyModule,
+    PresentationConfigurationsModule,
+    PermalinkModule,
     StatusModule,
   ],
   controllers: [],
   providers: [
+    CorrelationIdService,
     ChatGateway,
     {
       provide: APP_GUARD,
@@ -81,6 +90,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
     consumer.apply(LoggerMiddleware).forRoutes("*");
   }
 }

@@ -8,27 +8,27 @@ import { Template } from "./template";
 
 describe("template", () => {
   it("should be published", () => {
-    const passport = Template.create({
+    const template = Template.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
     });
-    expect(passport.isPublished()).toBeFalsy();
-    passport.publish();
-    expect(passport.isPublished()).toBeTruthy();
+    expect(template.isPublished()).toBeFalsy();
+    template.publish();
+    expect(template.isPublished()).toBeTruthy();
   });
 
   it("should be archived", () => {
-    const passport = Template.create({
+    const template = Template.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
     });
-    expect(passport.isArchived()).toBeFalsy();
-    passport.archive();
-    expect(passport.isArchived()).toBeTruthy();
+    expect(template.isArchived()).toBeFalsy();
+    template.archive();
+    expect(template.isArchived()).toBeTruthy();
   });
 
   it("should be restored", () => {
-    const passport = Template.create({
+    const template = Template.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
       lastStatusChange: DigitalProductDocumentStatusChange.create({
@@ -36,9 +36,8 @@ describe("template", () => {
         currentStatus: DigitalProductDocumentStatus.Archived,
       }),
     });
-    expect(passport.isArchived()).toBeTruthy();
-    passport.restore();
-    expect(passport.isArchived()).toBeFalsy();
-    expect(passport.isDraft()).toBeTruthy();
+    expect(template.isArchived()).toBeTruthy();
+    template.restore();
+    expect(template.isDraft()).toBeTruthy();
   });
 });

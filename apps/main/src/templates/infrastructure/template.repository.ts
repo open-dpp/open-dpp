@@ -33,6 +33,7 @@ export class TemplateRepository implements IDigitalProductDocumentRepository<Tem
     return {
       ...plain,
       lastStatusChange: {
+        ...plain.lastStatusChange,
         currentStatus: DigitalProductDocumentStatus.Draft,
       },
       _schemaVersion: TemplateDocVersion.v1_1_0,
@@ -41,7 +42,10 @@ export class TemplateRepository implements IDigitalProductDocumentRepository<Tem
 
   async fromPlainWithMigration(plain: any): Promise<Template> {
     let migratedVersion = plain;
-    if (migratedVersion._schemaVersion === TemplateDocVersion.v1_0_0) {
+    if (
+      !migratedVersion._schemaVersion ||
+      migratedVersion._schemaVersion === TemplateDocVersion.v1_0_0
+    ) {
       migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
     }
     return this.fromPlain(migratedVersion);

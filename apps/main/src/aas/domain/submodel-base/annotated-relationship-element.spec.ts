@@ -31,10 +31,14 @@ describe("annotatedRelationshipElement", () => {
     });
     const ability = security.defineAbilityForSubject(member);
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
-    annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability });
+    annotatedRelationshipElement.addSubmodelElement(submodelElement, {
+      ability,
+    });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement]);
     expect(() =>
-      annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability }),
+      annotatedRelationshipElement.addSubmodelElement(submodelElement, {
+        ability,
+      }),
     ).toThrow(new ValueError("Submodel element with idShort prop1 already exists"));
   });
 
@@ -95,9 +99,13 @@ describe("annotatedRelationshipElement", () => {
     ]);
     const ability = security.defineAbilityForSubject(member);
     const submodelElement0 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
-    annotatedRelationshipElement.addSubmodelElement(submodelElement0, { ability });
+    annotatedRelationshipElement.addSubmodelElement(submodelElement0, {
+      ability,
+    });
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
-    annotatedRelationshipElement.addSubmodelElement(submodelElement1, { ability });
+    annotatedRelationshipElement.addSubmodelElement(submodelElement1, {
+      ability,
+    });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([
       submodelElement0,
       submodelElement1,
@@ -110,7 +118,10 @@ describe("annotatedRelationshipElement", () => {
     expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);
     expect(() =>
-      annotatedRelationshipElement.deleteSubmodelElement("unknown", { ability, onDelete }),
+      annotatedRelationshipElement.deleteSubmodelElement("unknown", {
+        ability,
+        onDelete,
+      }),
     ).toThrow(ValueError);
     expect(onDelete).toHaveBeenCalledTimes(1);
   });

@@ -1,5 +1,11 @@
 import { Buffer } from "node:buffer";
-import { AasSubmodelElements, AasSubmodelElementsType, BlobJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  BlobJsonSchema,
+  KeyTypes,
+  KeyTypesType,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -10,12 +16,20 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  copySubmodelElement,
+  ISubmodelElement,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
+import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class Blob implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   private constructor(
     public readonly contentType: string,
@@ -34,14 +48,28 @@ export class Blob implements ISubmodelElement {
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
+  setParentPointer(parentPointer: Pointer) {
+    this._parentPointer = parentPointer;
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.Blob;
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -111,6 +139,12 @@ export class Blob implements ISubmodelElement {
     return this.accept(jsonVisitor, options?.context);
   }
 
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    return copySubmodelElement(this, options);
+  }
+
+  setSubmodelElements(_submodelElements: Array<ISubmodelElement>): void {}
+
   getSubmodelElements(): ISubmodelElement[] {
     return [];
   }
@@ -119,7 +153,7 @@ export class Blob implements ISubmodelElement {
     throw new ValueError("Blob cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("Blob does not support to delete submodel elements");
   }
 

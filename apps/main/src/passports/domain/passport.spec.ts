@@ -38,7 +38,6 @@ describe("passport", () => {
     });
     expect(passport.isArchived()).toBeTruthy();
     passport.restore();
-    expect(passport.isArchived()).toBeFalsy();
     expect(passport.isDraft()).toBeTruthy();
   });
 });

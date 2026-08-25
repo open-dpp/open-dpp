@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import dayjs from "dayjs";
-import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { useI18n } from "vue-i18n";
 import { useInvitations } from "../../composables/invitation.ts";
@@ -10,7 +9,6 @@ import { onMounted } from "vue";
 import { InvitationStatusDto } from "@open-dpp/dto";
 
 dayjs.extend(utc);
-dayjs.extend(localizedFormat);
 dayjs.extend(isSameOrBefore);
 
 const { t } = useI18n();

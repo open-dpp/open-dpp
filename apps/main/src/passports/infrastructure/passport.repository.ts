@@ -6,6 +6,7 @@ import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
 import {
   findAllByOrganizationId,
+  findByIds,
   findOne,
   findOneOrFail,
   FindOptions,
@@ -35,6 +36,7 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     return {
       ...plain,
       lastStatusChange: {
+        ...plain.lastStatusChange,
         currentStatus: DigitalProductDocumentStatus.Draft,
       },
       _schemaVersion: PassportDocVersion.v1_1_0,
@@ -43,7 +45,10 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
 
   async fromPlainWithMigration(plain: any): Promise<Passport> {
     let migratedVersion = plain;
-    if (migratedVersion._schemaVersion === PassportDocVersion.v1_0_0) {
+    if (
+      !migratedVersion._schemaVersion ||
+      migratedVersion._schemaVersion === PassportDocVersion.v1_0_0
+    ) {
       migratedVersion = this.migrate1_0_0To1_1_0(migratedVersion);
     }
     return this.fromPlain(migratedVersion);
@@ -78,6 +83,10 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
       organizationId,
       options,
     );
+  }
+
+  async findByIds(ids: string[]): Promise<Map<string, Passport>> {
+    return await findByIds(ids, this.passportDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {

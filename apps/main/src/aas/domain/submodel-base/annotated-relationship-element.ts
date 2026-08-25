@@ -2,6 +2,8 @@ import {
   AasSubmodelElements,
   AasSubmodelElementsType,
   AnnotatedRelationshipElementJsonSchema,
+  KeyTypes,
+  KeyTypesType,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -16,19 +18,22 @@ import { IRelationshipElement } from "./relationship-element";
 import {
   AddOptions,
   addSubmodelElementOrFail,
+  copySubmodelElement,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
+import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class AnnotatedRelationshipElement implements ISubmodelElement, IRelationshipElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer: Pointer = Pointer.create({});
 
   protected constructor(
     public readonly first: Reference,
@@ -42,21 +47,36 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly annotations: Array<ISubmodelElement>,
+    private annotations: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
-    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.AnnotatedRelationshipElement;
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -124,9 +144,20 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return visitor.visitAnnotatedRelationshipElement(this, context);
   }
 
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    return copySubmodelElement(this, options);
+  }
+
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor, options?.context);
+  }
+
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.annotations = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
   }
 
   getSubmodelElements(): ISubmodelElement[] {
@@ -137,8 +168,8 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
-    deleteSubmodelElementOrFail(this.annotations, idShort, options);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions): ISubmodelElement {
+    return deleteSubmodelElementOrFail(this.annotations, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

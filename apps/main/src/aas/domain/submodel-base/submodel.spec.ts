@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect, jest } from "@jest/globals";
+import { beforeAll, describe, expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
@@ -21,7 +21,8 @@ import { registerSubmodelElementClasses } from "./register-submodel-element-clas
 import { Submodel } from "./submodel";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableExtension } from "./table-extension";
+import { TableExtension } from "./table/table-extension";
+import { AccessResult } from "../security/access-allowed";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -103,7 +104,10 @@ describe("submodel", () => {
     const submodelElement0 = Property.fromPlain(
       propertyInputPlainFactory.build({ idShort: "submodelElement0" }),
     );
-    submodel.addSubmodelElement(submodelElement0, { position: 0, ability });
+    submodel.addSubmodelElement(submodelElement0, {
+      position: 0,
+      ability,
+    });
     expect(submodel.getSubmodelElements()[0]).toEqual(submodelElement0);
 
     expect(() => submodel.addSubmodelElement(submodelElement, { ability })).toThrow(
@@ -119,7 +123,9 @@ describe("submodel", () => {
     });
 
     expect(() =>
-      submodel.addSubmodelElement(newSubmodelElement, { ability: anonymousAbility }),
+      submodel.addSubmodelElement(newSubmodelElement, {
+        ability: anonymousAbility,
+      }),
     ).toThrow(new ForbiddenError(`${prefixCreateMessage} ${submodel.idShort}.`));
   });
 
@@ -144,7 +150,7 @@ describe("submodel", () => {
       ability,
     });
     const row0 = submodelElementList.getSubmodelElements()[0];
-    col1.setParentIdShortPath(row0.getIdShortPath());
+    col1.setParentPointer(row0.getPointer());
     expect(row0.getSubmodelElements()).toEqual([col1]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -201,9 +207,9 @@ describe("submodel", () => {
       { displayName: newDisplayNames },
       { ability },
     );
-    expect(list.value[0].getSubmodelElements()[0].displayName).toEqual(
-      newDisplayNames.map(LanguageText.fromPlain),
-    );
+    expect(
+      (list as SubmodelElementList).getSubmodelElements()[0].getSubmodelElements()[0].displayName,
+    ).toEqual(newDisplayNames.map(LanguageText.fromPlain));
   });
 
   it("should delete column", () => {
@@ -231,7 +237,7 @@ describe("submodel", () => {
       ability,
     });
     let tableExtension = new TableExtension(submodelElementList);
-    col1.setParentIdShortPath(tableExtension.rows[0].getIdShortPath());
+    col1.setParentPointer(tableExtension.rows[0].getPointer());
     expect(tableExtension.columns).toEqual([col1]);
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -279,8 +285,12 @@ describe("submodel", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
     submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+    });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+    });
     expect(new TableExtension(submodelElementList).rows).toHaveLength(2);
   });
 
@@ -304,8 +314,12 @@ describe("submodel", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
     });
     submodel.addSubmodelElement(submodelElementList, { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
-    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), { ability });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+    });
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }), {
+      ability,
+    });
     let tableExtension = new TableExtension(submodelElementList);
     const [row0, row1] = tableExtension.rows;
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
@@ -420,7 +434,10 @@ describe("submodel", () => {
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
     const onDelete = jest.fn();
     expect(() =>
-      submodel.deleteSubmodelElement(path, { ability: anonymousAbility, onDelete }),
+      submodel.deleteSubmodelElement(path, {
+        ability: anonymousAbility,
+        onDelete,
+      }),
     ).toThrow(
       new ForbiddenError(
         `${prefixDeleteMessage} ${submodel.idShort}.ProductCarbonFootprint_A1A3.${submodelElement.idShort}.`,
@@ -512,15 +529,7 @@ describe("submodel", () => {
       idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFFactSheet" }),
       options: { ability },
     });
-    expect(element).toEqual({
-      type: "ExternalReference",
-      keys: [
-        {
-          type: "GlobalReference",
-          value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
-        },
-      ],
-    });
+    expect(element).toEqual("http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf");
   });
 
   it("should get values readable by specified subject", () => {
@@ -579,14 +588,14 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop1, { ability });
     submodel.addSubmodelElement(prop2, { ability });
 
-    expect(submodel.copy({ ability }).submodelElements).toEqual([prop1]);
+    expect(submodel.copy({ ability }).value.getSubmodelElements()).toEqual([prop1]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability })).toEqual(undefined);
+    expect(submodel.copy({ ability })).toEqual(AccessResult.denied());
     security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
     ]);
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodel.copy({ ability }).submodelElements).toEqual([prop2]);
+    expect(submodel.copy({ ability }).value.getSubmodelElements()).toEqual([prop2]);
   });
 
   it("should get value representation for bill of material", () => {
@@ -697,11 +706,11 @@ describe("submodel", () => {
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
 
-    const copy = submodel.copy();
-    expect(copy).toEqual(
+    const copy = submodel.copy().value;
+    expect(copy.tracker).toEqual(
       Submodel.fromPlain(
         submodelDesignOfProductPlainFactory.build({ id: copy.id }, { transient: { iriDomain } }),
-      ),
+      ).tracker,
     );
   });
 

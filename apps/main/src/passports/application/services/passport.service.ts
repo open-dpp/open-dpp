@@ -5,13 +5,27 @@ import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
-import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { EnvironmentService, UserContext } from "../../../aas/presentation/environment.service";
+import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
+import { PermalinkRepository } from "../../../permalink/infrastructure/permalink.repository";
+import {
+  PresentationConfigurationService,
+  PresentationReferenceHolder,
+} from "../../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { UniqueProductIdentifierRepository } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
-import { DigitalProductDocumentStatusModificationDto, PassportDtoSchema } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusModificationDto,
+  DigitalProductDocumentStatusModificationMethodDto,
+  PassportDtoSchema,
+  DigitalProductDocumentTypes,
+} from "@open-dpp/dto";
 import { handleDppStatusChangeRequest } from "../../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
+import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
+import { DigitalProductDocumentStatusChangedActivity } from "../../../activity-history/domain/activities/digital-product-document-status-changed.activity";
 
 @Injectable()
 export class PassportService {
@@ -19,13 +33,20 @@ export class PassportService {
   public readonly digitalProductDocumentService: DigitalProductDocumentService<Passport>;
   constructor(
     private readonly passportRepository: PassportRepository,
+    private readonly activityRepository: ActivityRepository,
     private readonly environmentService: EnvironmentService,
     @InjectConnection() private connection: Connection,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
+    private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
+    private readonly permalinkRepository: PermalinkRepository,
+    private readonly permalinkApplicationService: PermalinkApplicationService,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
       this.passportRepository,
+      this.activityRepository,
+      this.presentationConfigurationService,
     );
   }
 
@@ -34,6 +55,9 @@ export class PassportService {
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
+    const presentationConfiguration = await this.presentationConfigurationService.getEffective(
+      passportToHolder(passport),
+    );
 
     if (!passport.environment) {
       this.logger.warn(
@@ -48,6 +72,7 @@ export class PassportService {
           new Map(),
           new Map(),
         ),
+        presentationConfiguration,
       );
     }
 
@@ -55,23 +80,45 @@ export class PassportService {
       passport.environment,
     );
 
-    return AasExportable.createFromPassport(passport, expandedEnvironment);
+    return AasExportable.createFromPassport(
+      passport,
+      expandedEnvironment,
+      presentationConfiguration,
+    );
   }
 
   async modifyPassportStatus(
-    id: string,
+    correlationId: string,
     organizationId: string,
-    subject: SubjectAttributes,
+    id: string,
     body: DigitalProductDocumentStatusModificationDto,
+    userContext: UserContext,
   ) {
     const passport =
       await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
         id,
-        subject,
+        userContext.subject,
         organizationId,
       );
     handleDppStatusChangeRequest(passport, body);
-    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
+    const activity = DigitalProductDocumentStatusChangedActivity.create({
+      correlationId,
+      userId: userContext.userId,
+      digitalProductDocumentId: id,
+      item: passport,
+    });
+
+    const saved = await this.environmentService.withTransaction(async (options) => {
+      const persisted = await this.passportRepository.save(passport, options);
+      if (body.method === DigitalProductDocumentStatusModificationMethodDto.Publish) {
+        await this.permalinkApplicationService.freezeAllForPassport(persisted, options);
+      }
+      if (!activity.isNoop()) {
+        await this.activityRepository.createMany([activity], options);
+      }
+      return persisted;
+    });
+    return PassportDtoSchema.parse(saved.toPlain());
   }
 
   async deletePassport(id: string, organizationId: string, subject: SubjectAttributes) {
@@ -85,15 +132,35 @@ export class PassportService {
       throw new ForbiddenException('Only passports with the status "Draft" can be deleted');
     }
 
+    const upis = await this.uniqueProductIdentifierRepository.findAllByReferencedId(passport.id);
+
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         await this.environmentService.deleteEnvironment(passport.getEnvironment(), session);
         await this.passportRepository.deleteById(passport.id, { session });
+        await this.permalinkRepository.deleteGs1LinksByUpiIds(
+          upis.map((upi) => upi.uuid),
+          { session },
+        );
         await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
+        await this.activityRepository.deleteByAggregateId(passport.id, { session });
+        await this.permalinkRepository.deleteAllByPassportId(passport.id, { session });
+        await this.presentationConfigurationRepository.deleteByReference(
+          { referenceType: DigitalProductDocumentTypes.Passport, referenceId: passport.id },
+          { session },
+        );
       });
     } finally {
       await session.endSession();
     }
   }
+}
+
+function passportToHolder(passport: Passport): PresentationReferenceHolder {
+  return {
+    id: passport.id,
+    organizationId: passport.organizationId,
+    referenceType: DigitalProductDocumentTypes.Passport,
+  };
 }

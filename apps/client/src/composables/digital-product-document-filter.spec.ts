@@ -61,4 +61,10 @@ describe("useDppFilter", () => {
     });
     expect(status.value).toEqual(DigitalProductDocumentStatusDto.Published);
   });
+
+  it("should derive status from URL query", () => {
+    mocks.query.mockReturnValue({ status: DigitalProductDocumentStatusDto.Published });
+    const { status } = mountHarness();
+    expect(status.value).toEqual(DigitalProductDocumentStatusDto.Published);
+  });
 });

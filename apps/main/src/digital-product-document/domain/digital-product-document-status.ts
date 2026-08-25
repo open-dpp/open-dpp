@@ -1,16 +1,16 @@
+import {
+  DigitalProductDocumentStatusChangeDtoSchema,
+  DigitalProductDocumentStatusDto,
+  DigitalProductDocumentStatusDtoEnum,
+  DigitalProductDocumentStatusDtoType,
+  DigitalProductDocumentStatusModificationDto,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { z } from "zod";
-import { BadRequestException } from "@nestjs/common";
-import { DigitalProductDocumentStatusModificationDto } from "@open-dpp/dto";
 
-export const DigitalProductDocumentStatus = {
-  Draft: "Draft",
-  Published: "Published",
-  Archived: "Archived",
-} as const;
-
-export const DigitalProductDocumentStatusEnum = z.enum(DigitalProductDocumentStatus);
-export type DigitalProductDocumentStatusType = z.infer<typeof DigitalProductDocumentStatusEnum>;
+export const DigitalProductDocumentStatus = DigitalProductDocumentStatusDto;
+export const DigitalProductDocumentStatusEnum = DigitalProductDocumentStatusDtoEnum;
+export type DigitalProductDocumentStatusType = DigitalProductDocumentStatusDtoType;
+export const DigitalProductDocumentStatusChangeSchema = DigitalProductDocumentStatusChangeDtoSchema;
 
 export interface IDigitalProductDocumentStatusChangeable {
   publish: () => void;
@@ -20,11 +20,6 @@ export interface IDigitalProductDocumentStatusChangeable {
   isPublished: () => boolean;
   isArchived: () => boolean;
 }
-
-export const DigitalProductDocumentStatusChangeSchema = z.object({
-  previousStatus: DigitalProductDocumentStatusEnum.nullish(),
-  currentStatus: DigitalProductDocumentStatusEnum,
-});
 
 export function publishDpp(lastStatusChange: DigitalProductDocumentStatusChange) {
   if (lastStatusChange.currentStatus !== DigitalProductDocumentStatus.Draft) {
@@ -38,7 +33,7 @@ export function publishDpp(lastStatusChange: DigitalProductDocumentStatusChange)
 
 export function archiveDpp(lastStatusChange: DigitalProductDocumentStatusChange) {
   if (lastStatusChange.currentStatus === DigitalProductDocumentStatus.Archived) {
-    throw new ValueError("A dpp can only archived once.");
+    throw new ValueError("A dpp can only be archived once.");
   }
   return DigitalProductDocumentStatusChange.create({
     previousStatus: lastStatusChange.currentStatus,
@@ -62,18 +57,24 @@ export function restoreDpp(lastStatusChange: DigitalProductDocumentStatusChange)
   });
 }
 
-export function handleDppStatusChangeRequest(
-  changeable: IDigitalProductDocumentStatusChangeable,
+export function handleDppStatusChangeRequest<T extends IDigitalProductDocumentStatusChangeable>(
+  changeable: T,
   body: DigitalProductDocumentStatusModificationDto,
-) {
-  if (body.method === "Publish") {
-    changeable.publish();
-  } else if (body.method === "Archive") {
-    changeable.archive();
-  } else if (body.method === "Restore") {
-    changeable.restore();
-  } else {
-    throw new BadRequestException("Invalid method");
+): void {
+  switch (body.method) {
+    case "Publish":
+      changeable.publish();
+      break;
+    case "Archive":
+      changeable.archive();
+      break;
+    case "Restore":
+      changeable.restore();
+      break;
+    default: {
+      const exhaustiveCheck: never = body.method;
+      throw new ValueError(`Invalid status modification method: ${String(exhaustiveCheck)}`);
+    }
   }
 }
 

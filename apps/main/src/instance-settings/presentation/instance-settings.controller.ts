@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Patch } from "@nestjs/common";
+import { EnvService } from "@open-dpp/env";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { UserHasRole } from "../../identity/auth/presentation/decorators/user-has-role.decorator";
@@ -13,16 +14,23 @@ import {
   type PublicInstanceSettingsDto,
   PublicInstanceSettingsDtoSchema,
 } from "@open-dpp/dto";
+import { computePermalinkBaseUrlFallback } from "../../lib/permalink-fallback";
 
 @Controller("instance-settings")
 export class InstanceSettingsController {
-  constructor(private readonly instanceSettingsService: InstanceSettingsService) {}
+  constructor(
+    private readonly instanceSettingsService: InstanceSettingsService,
+    private readonly envService: EnvService,
+  ) {}
 
   @Get()
   @UserHasRole([UserRole.ADMIN])
   async getSettings(): Promise<InstanceSettingsDto> {
     const settings = await this.instanceSettingsService.getSettings();
-    return InstanceSettingsDtoSchema.parse(settings.toResponse());
+    return InstanceSettingsDtoSchema.parse({
+      ...settings.toResponse(),
+      effectiveFallback: this.computeEffectiveFallback(),
+    });
   }
 
   @Patch()
@@ -31,7 +39,14 @@ export class InstanceSettingsController {
     @Body(new ZodValidationPipe(InstanceSettingsUpdateDtoSchema)) body: InstanceSettingsUpdateDto,
   ): Promise<InstanceSettingsDto> {
     const settings = await this.instanceSettingsService.updateSettings(body);
-    return InstanceSettingsDtoSchema.parse(settings.toResponse());
+    return InstanceSettingsDtoSchema.parse({
+      ...settings.toResponse(),
+      effectiveFallback: this.computeEffectiveFallback(),
+    });
+  }
+
+  private computeEffectiveFallback(): string {
+    return computePermalinkBaseUrlFallback(this.envService.get("OPEN_DPP_URL"));
   }
 
   @Get("public")

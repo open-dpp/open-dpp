@@ -1,13 +1,15 @@
-import type { PassportPageViewDto } from "./dto/passport-page-view.dto";
+import type { PassportPageViewDto } from "@open-dpp/dto";
 import { Body, Controller, Get, Logger, Post, Query } from "@nestjs/common";
+import { PassportPageViewSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import type { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
-import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
+import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricQuerySchema } from "./dto/passport-metric-query.dto";
-import { PassportPageViewSchema } from "./dto/passport-page-view.dto";
 
 @Controller()
 export class PassportMetricController {
@@ -15,19 +17,20 @@ export class PassportMetricController {
 
   constructor(
     private passportMetricService: PassportMetricService,
-    private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    private permalinkApplicationService: PermalinkApplicationService,
   ) {}
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @Post("/passport-metrics/page-views")
   async handlePassportPageViewed(
     @Body(new ZodValidationPipe(PassportPageViewSchema))
     passportPageViewDto: PassportPageViewDto,
+    @AuthSession() session: Session | undefined,
   ) {
-    const passportMetadata =
-      await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOrFail(
-        passportPageViewDto.uuid,
-      );
+    const passportMetadata = await this.permalinkApplicationService.getMetadataByPermalink(
+      passportPageViewDto.permalink,
+      { userId: session?.userId },
+    );
 
     const passportMetric = PassportMetric.createPageView({
       source: {

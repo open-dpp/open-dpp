@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
-import { DataTypeDef } from "@open-dpp/dto";
+import { DataTypeDef, isIntegerDataType, isNumericDataType } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { formatDateValueForModel, parseDateValueFromModel } from "../../lib/date-value.ts";
+import TextFieldWithValidation from "../basics/TextFieldWithValidation.vue";
 
 const props = defineProps<{
   id: string;
@@ -14,6 +15,7 @@ const props = defineProps<{
   disabled?: boolean;
   ariaDescribedby?: string;
   ariaInvalid?: "true" | "false" | undefined;
+  withinList?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -22,38 +24,15 @@ const emit = defineEmits<{
 
 const { locale } = useI18n();
 
-const INTEGER_TYPES = new Set<DataTypeDefType>([
-  DataTypeDef.Int,
-  DataTypeDef.Long,
-  DataTypeDef.Integer,
-  DataTypeDef.Short,
-  DataTypeDef.Byte,
-  DataTypeDef.NonPositiveInteger,
-  DataTypeDef.PositiveInteger,
-  DataTypeDef.NegativeInteger,
-  DataTypeDef.NonNegativeInteger,
-  DataTypeDef.UnsignedShort,
-  DataTypeDef.UnsignedInt,
-  DataTypeDef.UnsignedLong,
-  DataTypeDef.UnsignedByte,
-]);
-
-const NUMERIC_TYPES = new Set<DataTypeDefType>([
-  ...INTEGER_TYPES,
-  DataTypeDef.Double,
-  DataTypeDef.Float,
-  DataTypeDef.Decimal,
-]);
-
-const isNumeric = computed(() => (props.valueType ? NUMERIC_TYPES.has(props.valueType) : false));
-
+const isNumeric = computed(() => isNumericDataType(props.valueType));
+const isBoolean = computed(() => props.valueType === DataTypeDef.Boolean);
 const isDate = computed(() => props.valueType === DataTypeDef.Date);
 
 const isDateTime = computed(() => props.valueType === DataTypeDef.DateTime);
 
-const maxFractionDigits = computed(() =>
-  props.valueType && INTEGER_TYPES.has(props.valueType) ? 0 : 5,
-);
+const isLink = computed(() => props.valueType === DataTypeDef.AnyUri);
+
+const maxFractionDigits = computed(() => (isIntegerDataType(props.valueType) ? 0 : 5));
 
 const numericValue = computed({
   get: () => {
@@ -64,6 +43,11 @@ const numericValue = computed({
     }
   },
   set: (v) => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+});
+
+const booleanValue = computed({
+  get: () => props.modelValue === "true",
+  set: (v) => emit("update:modelValue", v ? "true" : "false"),
 });
 
 const dateValue = computed({
@@ -99,6 +83,16 @@ const textValue = computed({
     :aria-invalid="props.ariaInvalid"
     show-buttons
   />
+  <Checkbox
+    v-else-if="isBoolean"
+    :id="props.id"
+    v-model="booleanValue"
+    :disabled="props.disabled"
+    :invalid="props.invalid"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
+    binary
+  />
   <DatePicker
     v-else-if="isDate || isDateTime"
     :id="props.id"
@@ -113,6 +107,23 @@ const textValue = computed({
     icon-display="input"
     fluid
   />
+  <InputText
+    v-else-if="isLink && !props.withinList"
+    :invalid="props.invalid"
+    :id="props.id"
+    v-model="textValue"
+    :disabled="props.disabled"
+    :aria-describedby="props.ariaDescribedby"
+    :aria-invalid="props.ariaInvalid"
+    :treat-empty-string-as-null="true"
+  />
+  <LinkCellField
+    v-else-if="isLink && props.withinList"
+    :id="props.id"
+    :modelValue="props.modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+  </LinkCellField>
   <Textarea
     v-else
     :id="props.id"

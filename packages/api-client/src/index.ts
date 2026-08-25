@@ -16,6 +16,8 @@ export type {
 export { PassportMetricNamespace } from "./analytics/passport-metric/passport-metric.namespace";
 export { AasNamespace } from "./dpp/aas/aasNamespace";
 export { BrandingNamespace } from "./dpp/branding/branding.namespace";
+export { PresentationConfigurationNamespace } from "./dpp/presentation-configurations/presentation-configuration.namespace";
+export type { PresentationConfigurationScope } from "./dpp/presentation-configurations/presentation-configuration.namespace";
 export { DataFieldType } from "./dpp/data-modelling/data-field.dto";
 export type { DataFieldDto } from "./dpp/data-modelling/data-field.dto";
 export { GranularityLevel } from "./dpp/data-modelling/granularity-level";
@@ -42,9 +44,19 @@ export { OrganizationsNamespace } from "./dpp/organizations/organizations.namesp
 export { TemplatesNamespace } from "./dpp/templates/templates.namespace";
 
 export type {
-  UniqueProductIdentifierDto,
-  UniqueProductIdentifierMetadataDto,
-  UniqueProductIdentifierReferenceDto,
+  PermalinkCreateRequest,
+  PermalinkDto,
+  PermalinkListDto,
+  PermalinkMetadataDto,
+  PermalinkPublicDto,
+  PermalinkUpdateRequest,
+} from "./dpp/permalinks/permalinks.dtos";
+export { PermalinksNamespace } from "./dpp/permalinks/permalinks.namespace";
+export type {
+  UniqueProductIdentifierListDto,
+  UniqueProductIdentifierListItemDto,
+  CreateGs1UniqueProductIdentifierRequest,
+  UpdateGs1UniqueProductIdentifierRequest,
 } from "./dpp/unique-product-identifiers/unique-product-identifiers.dtos";
 export { UniqueProductIdentifiersNamespace } from "./dpp/unique-product-identifiers/unique-product-identifiers.namespace";
 export type { CreateUserDto, UserDto } from "./dpp/users/user.dtos";

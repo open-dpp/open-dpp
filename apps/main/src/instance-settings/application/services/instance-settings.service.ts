@@ -4,6 +4,7 @@ import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance
 import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
+import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
 
 @Injectable()
 export class InstanceSettingsService {
@@ -40,10 +41,12 @@ export class InstanceSettingsService {
     const envOrganizationCreationEnabled = this.envService.get(
       OrganizationCreationEnabledSetting.ENV_NAME,
     );
+    const envPermalinkBaseUrl = this.envService.get(PermalinkBaseUrlSetting.ENV_NAME);
 
     return settings.withEnvOverrides({
       signupEnabled: enforcedSignup,
       organizationCreationEnabled: envOrganizationCreationEnabled,
+      permalinkBaseUrl: envPermalinkBaseUrl,
     });
   }
 }

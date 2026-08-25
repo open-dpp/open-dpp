@@ -1,15 +1,19 @@
-import type { SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
-import type { DisplayName } from "./display-name";
-import { computed } from "vue";
+import type {
+  LanguageTextDto,
+  LanguageType,
+  SubmodelElementResponseDto,
+  SubmodelResponseDto,
+} from "@open-dpp/dto";
+import { computed, toValue, type MaybeRefOrGetter } from "vue";
 
 export interface SubmodelTreeElement {
   idShort: string;
-  name: DisplayName[];
+  name: LanguageTextDto[];
   children: SubmodelTreeElement[];
   submodelElements: SubmodelElementResponseDto[];
 }
 
-export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
+export function useSubmodelTree(submodels: MaybeRefOrGetter<SubmodelResponseDto[]>) {
   const submodelTree = computed<SubmodelTreeElement[]>(() => {
     const treeMapping = (submodels: SubmodelElementResponseDto[]): SubmodelTreeElement[] => {
       return submodels
@@ -26,7 +30,7 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
         });
     };
 
-    return submodels.map((submodel) => {
+    return toValue(submodels).map((submodel) => {
       return {
         idShort: submodel.idShort,
         name: submodel.displayName,
@@ -114,6 +118,28 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
     return targetFound ? elementsBeforeTarget : [];
   };
 
+  const traverseTreeElements = (
+    elements: SubmodelTreeElement[],
+    callback: (element: SubmodelTreeElement) => void,
+  ): void => {
+    for (const element of elements) {
+      callback(element);
+      traverseTreeElements(element.children, callback);
+    }
+  };
+
+  const languageTags = computed<Set<LanguageType>>(() => {
+    const languages = new Set<LanguageType>();
+
+    traverseTreeElements(submodelTree.value, (element) => {
+      element.name.forEach((lt) => languages.add(lt.language));
+      element.submodelElements.forEach((se) => {
+        se.displayName.forEach((lt) => languages.add(lt.language));
+      });
+    });
+    return languages;
+  });
+
   const getParent = (
     elements: SubmodelTreeElement[],
     targetId: string,
@@ -151,6 +177,7 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
     findTreeElementById,
     mapTreeElementsToSubmodels,
     getSubmodelTreeElementsBefore,
+    languageTags,
     getParent,
   };
 }

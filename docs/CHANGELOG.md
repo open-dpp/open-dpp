@@ -1,5 +1,61 @@
 # @open-dpp/docs
 
+## 3.1.4
+
+## 3.1.3
+
+### Patch Changes
+
+- [#694](https://github.com/open-dpp/open-dpp/pull/694) [`28fc7e9`](https://github.com/open-dpp/open-dpp/commit/28fc7e9479259b56aebdca3ca8db9eb6f4d3f961) Thanks [@florianBieck](https://github.com/florianBieck)! - Remove generated OpenAPI documentation pages from the docs app. The docs build ran out of memory rendering the full spec; the REST API is documented via the online Swagger UI at https://cloud.open-dpp.de/api, which remains linked in the navigation.
+
+## 3.1.2
+
+## 3.1.1
+
+## 3.1.0
+
+## 3.0.0
+
+## 2.10.0
+
+## 2.9.0
+
+## 2.8.0
+
+## 2.7.0
+
+### Minor Changes
+
+- [#601](https://github.com/open-dpp/open-dpp/pull/601) [`403f74e`](https://github.com/open-dpp/open-dpp/commit/403f74ef849fe2fcb5d5fd0771783584fb801928) Thanks [@mr42](https://github.com/mr42)! - Represent links as Property with valueType AnyUri instead of using ReferenceElement. Add api versioning to REST-API.
+
+## 2.6.0
+
+## 2.5.0
+
+## 2.4.0
+
+### Minor Changes
+
+- [#580](https://github.com/open-dpp/open-dpp/pull/580) [`d5f0b69`](https://github.com/open-dpp/open-dpp/commit/d5f0b69cdd15f8d13b5bfe7f9c7e66534b79d2da) Thanks [@mr42](https://github.com/mr42)! - Add activity history to passports and templates.
+
+## 1.0.0
+
+### Major Changes
+
+- [#520](https://github.com/open-dpp/open-dpp/pull/520) [`cf7dbd0`](https://github.com/open-dpp/open-dpp/commit/cf7dbd0d01313e50d4eec39a65944d98f417ba88) Thanks [@florianBieck](https://github.com/florianBieck)! - Added granular passport UI customization capabilities and refactored presentation layer into permalink structure.
+
+## 0.6.0
+
+### Minor Changes
+
+- [#575](https://github.com/open-dpp/open-dpp/pull/575) [`9e62648`](https://github.com/open-dpp/open-dpp/commit/9e62648707401f6d50dc54bbb1fd4f892a49dad6) Thanks [@mr42](https://github.com/mr42)! - Use swagger documentation instead of vitest open api documentation. Correct parameter syntax in open api documentation from :id to {id}.
+
+## 0.5.0
+
+### Minor Changes
+
+- [#572](https://github.com/open-dpp/open-dpp/pull/572) [`4d5c918`](https://github.com/open-dpp/open-dpp/commit/4d5c9182459b9d46793b88fbd6193c512a1c3b9c) Thanks [@mr42](https://github.com/mr42)! - Add endpoint to modify value of submodel.
+
 ## 0.4.4
 
 ### Patch Changes

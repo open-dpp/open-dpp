@@ -15,6 +15,16 @@ import { IPersistable } from "./persistable";
 import { Security } from "./security/security";
 import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
+import { DeleteOptions } from "./submodel-base/submodel-base";
+import { IdShortPath } from "./common/id-short-path";
+import { SubjectAttributes } from "./security/subject-attributes";
+import { SubmodelReferenceAdded } from "../../activity-history/domain/change-events/submodel-reference-added";
+import {
+  ChangeTracker,
+  ITrackable,
+  withTrackingHelper,
+} from "../../activity-history/domain/change-tracker";
+import { SubmodelReferenceDeleted } from "../../activity-history/domain/change-events/submodel-reference-deleted";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
@@ -32,10 +42,12 @@ export interface AssetAdministrationShellCreateProps {
 }
 
 export class AssetAdministrationShell
-  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable, ITrackable
 {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  readonly tracker;
+
   private constructor(
     public readonly id: string,
     public readonly assetInformation: AssetInformation,
@@ -44,7 +56,7 @@ export class AssetAdministrationShell
     public readonly idShort: string | null = null,
     displayName: Array<LanguageText>,
     description: Array<LanguageText>,
-    public readonly administration: AdministrativeInformation | null = null,
+    public readonly administration: AdministrativeInformation,
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
@@ -52,6 +64,9 @@ export class AssetAdministrationShell
   ) {
     this.displayName = displayName;
     this.description = description;
+    this.tracker = ChangeTracker.create({
+      onStopCallback: () => this.administration.increaseVersion(),
+    });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -70,6 +85,10 @@ export class AssetAdministrationShell
 
   get description(): Array<LanguageText> {
     return this._description;
+  }
+
+  getIdShortPath(): IdShortPath {
+    return IdShortPath.create({ path: this.idShort ?? this.id });
   }
 
   static create(data: AssetAdministrationShellCreateProps) {
@@ -92,8 +111,15 @@ export class AssetAdministrationShell
     );
   }
 
+  withTracking(changeTracker?: ChangeTracker): this {
+    const result = withTrackingHelper(changeTracker, this);
+    this.security.withTracking(this.tracker);
+    return result;
+  }
+
   modify(data: unknown, options: ModifierVisitorOptions) {
-    this.accept(new ModifierVisitor(options), { data });
+    const modifier = new ModifierVisitor(options).withTracking(this.tracker);
+    this.accept(modifier, { data });
   }
 
   addSubmodelReference(reference: Reference) {
@@ -102,11 +128,21 @@ export class AssetAdministrationShell
 
   addSubmodel(submodel: Submodel): Reference {
     const reference = submodelToReference(submodel);
-
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
+    this.tracker.track(SubmodelReferenceAdded.create({ submodelRef: reference }));
 
     return reference;
+  }
+
+  deletePolicyBySubjectAndObject(
+    object: IdShortPath,
+    subject: SubjectAttributes,
+    options: Pick<DeleteOptions, "ability">,
+  ): void {
+    this.security
+      .withAdministrator(options.ability.getSubject())
+      .deletePolicyBySubjectAndObject(subject, object);
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
@@ -168,7 +204,9 @@ export class AssetAdministrationShell
       parsed.idShort,
       parsed.displayName.map(LanguageText.fromPlain),
       parsed.description.map(LanguageText.fromPlain),
-      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.administration
+        ? AdministrativeInformation.fromPlain(parsed.administration)
+        : AdministrativeInformation.create({ version: "1", revision: "0" }),
       parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),
@@ -181,7 +219,9 @@ export class AssetAdministrationShell
       sm.keys.some((k) => k.value === submodel.id),
     );
     if (foundSubmodelIndex > -1) {
-      this.submodels.splice(foundSubmodelIndex, 1);
+      const [deletedRef] = this.submodels.splice(foundSubmodelIndex, 1);
+      this.tracker.track(SubmodelReferenceDeleted.create({ submodelRef: deletedRef }));
+
       this.security.deletePoliciesByObjectPath(submodel.getIdShortPath());
     }
   }

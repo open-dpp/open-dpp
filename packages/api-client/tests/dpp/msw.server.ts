@@ -6,6 +6,7 @@ import { passportsHandlers } from "./handlers/passports";
 import { templatesHandlers } from "./handlers/templates";
 import { uniqueProductIdentifierHandlers } from "./handlers/unique-product-identifiers";
 import { userHandlers } from "./handlers/users";
+import { digitalProductDocumentHandlers } from "./handlers/digital-product-documents";
 
 const handlers = [
   ...uniqueProductIdentifierHandlers,
@@ -14,6 +15,8 @@ const handlers = [
   ...aasIntegrationHandlers,
   ...aasHandlers("templates"),
   ...aasHandlers("passports"),
+  ...digitalProductDocumentHandlers("templates"),
+  ...digitalProductDocumentHandlers("passports"),
   ...templatesHandlers(),
   ...passportsHandlers(),
 ];

@@ -49,7 +49,7 @@ describe("dppStatus", () => {
           currentStatus: DigitalProductDocumentStatus.Archived,
         }),
       ),
-    ).toThrow("A dpp can only archived once.");
+    ).toThrow("A dpp can only be archived once.");
   });
 
   it("should be restored", () => {

@@ -70,7 +70,7 @@ export class BetterAuthHelper {
     return cookie;
   }
 
-  async createUser(userData?: { role?: UserRoleType; email?: string }) {
+  async createUser(userData?: { role?: UserRoleType; email?: string; preferredLanguage?: string }) {
     const userEmail = userData?.email ?? `${randomUUID()}@test.test`;
     if (!this.auth) {
       throw new Error("No auth setup");
@@ -81,6 +81,9 @@ export class BetterAuthHelper {
       name: "First Last",
       email: userEmail,
       password: this.defaultPassword,
+      ...(userData?.preferredLanguage !== undefined
+        ? { preferredLanguage: userData.preferredLanguage }
+        : {}),
     } as any;
     const data = await this.auth.api.signUpEmail({
       body,

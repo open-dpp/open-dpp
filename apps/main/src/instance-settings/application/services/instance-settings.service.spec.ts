@@ -7,6 +7,7 @@ import { InstanceSettingsRepository } from "../../infrastructure/adapters/instan
 import { InstanceSettingsService } from "./instance-settings.service";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
+import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
 
 describe("InstanceSettingsService", () => {
   let service: InstanceSettingsService;
@@ -98,6 +99,29 @@ describe("InstanceSettingsService", () => {
 
       expect(result.signupEnabled.locked).toBe(true);
       expect(result.organizationCreationEnabled.locked).toBe(true);
+    });
+
+    it("should apply OPEN_DPP_PERMALINK_BASE_URL env override and lock the setting", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      mockEnvService.get.mockImplementation((key: string) => {
+        if (key === PermalinkBaseUrlSetting.ENV_NAME) return "https://env.example.com/p";
+        return undefined;
+      });
+
+      const result = await service.getSettings();
+
+      expect(result.permalinkBaseUrl.value).toBe("https://env.example.com/p");
+      expect(result.permalinkBaseUrl.locked).toBe(true);
+    });
+
+    it("should leave permalinkBaseUrl unlocked when env is not set", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      mockEnvService.get.mockReturnValue(undefined);
+
+      const result = await service.getSettings();
+
+      expect(result.permalinkBaseUrl.value).toBeNull();
+      expect(result.permalinkBaseUrl.locked).toBeUndefined();
     });
   });
 

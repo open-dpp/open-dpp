@@ -1,6 +1,8 @@
 import {
   AasSubmodelElements,
   AasSubmodelElementsType,
+  KeyTypes,
+  KeyTypesType,
   RelationshipElementJsonSchema,
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -13,7 +15,15 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  copySubmodelElement,
+  ISubmodelElement,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
+import { Pointer } from "./pointer";
+import { ICopyOptions } from "../copy-options";
+import { AccessResult } from "../security/access-allowed";
 
 export class IRelationshipElement {
   first: Reference;
@@ -23,7 +33,7 @@ export class IRelationshipElement {
 export class RelationshipElement implements ISubmodelElement, IRelationshipElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  private _parentIdShortPath: IdShortPath | undefined;
+  private _parentPointer = Pointer.create({});
 
   constructor(
     public readonly first: Reference,
@@ -42,14 +52,32 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     this.description = description;
   }
 
-  setParentIdShortPath(parentIdShortPath: IdShortPath) {
-    this._parentIdShortPath = parentIdShortPath;
+  setParentPointer(parentPointer: Pointer): void {
+    this._parentPointer = parentPointer;
+  }
+
+  getParentPointer(): Pointer {
+    return this._parentPointer;
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath
-      ? this._parentIdShortPath.addPathSegment(this.idShort)
-      : IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
+  }
+
+  getKeyType(): KeyTypesType {
+    return KeyTypes.RelationshipElement;
+  }
+
+  copy(options?: ICopyOptions): AccessResult<ISubmodelElement> {
+    return copySubmodelElement(this, options);
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -119,6 +147,8 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     return this.accept(jsonVisitor, options?.context);
   }
 
+  setSubmodelElements(_submodelElements: Array<ISubmodelElement>): void {}
+
   getSubmodelElements(): ISubmodelElement[] {
     return [];
   }
@@ -127,7 +157,7 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     throw new ValueError("RelationshipElement cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): ISubmodelElement {
     throw new ValueError("RelationshipElement does not support to delete submodel elements");
   }
 

@@ -36,6 +36,14 @@ describe("StatusService", () => {
     expect(status.version).toBe("9.9.9-app-version");
   });
 
+  it("keeps build metadata in APP_VERSION", () => {
+    process.env.APP_VERSION = "3.1.3+sha.abc1234";
+
+    const status = service.getStatus();
+
+    expect(status.version).toBe("3.1.3+sha.abc1234");
+  });
+
   it("falls back to npm_package_version when APP_VERSION is not set", () => {
     delete process.env.APP_VERSION;
     process.env.npm_package_version = "7.7.7-npm-version";
@@ -45,12 +53,36 @@ describe("StatusService", () => {
     expect(status.version).toBe("7.7.7-npm-version");
   });
 
-  it("returns 'unknown' when neither env var is set", () => {
+  // Regression: CI passed the primary Docker tag as APP_VERSION, so images
+  // built from main reported "main" as the application version.
+  it.each(["main", "latest", "sha-abc1234", "unknown"])(
+    "ignores the non-semver APP_VERSION %p",
+    (appVersion) => {
+      process.env.APP_VERSION = appVersion;
+      process.env.npm_package_version = "7.7.7-npm-version";
+
+      const status = service.getStatus();
+
+      expect(status.version).toBe("7.7.7-npm-version");
+    },
+  );
+
+  it("ignores an empty APP_VERSION", () => {
+    process.env.APP_VERSION = "";
+    process.env.npm_package_version = "7.7.7-npm-version";
+
+    const status = service.getStatus();
+
+    expect(status.version).toBe("7.7.7-npm-version");
+  });
+
+  it("falls back to the bundled package version when no env var is set", () => {
     delete process.env.APP_VERSION;
     delete process.env.npm_package_version;
 
     const status = service.getStatus();
 
-    expect(status.version).toBe("unknown");
+    // Asserting the shape, not the value, so releases do not break this test.
+    expect(status.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 });
