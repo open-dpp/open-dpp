@@ -69,6 +69,7 @@ const mockRunItem: BulkImportRunItemDto = {
   inputData: { sku: "4711" },
   status: "created",
   passportId: "passport-1",
+  externalId: "4711",
   error: null,
 };
 

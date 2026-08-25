@@ -18,7 +18,12 @@ describe("BulkImportRun", () => {
   }
 
   function buildRunItem(runId: string, rowIndex: number) {
-    return BulkImportRunItem.create({ runId, rowIndex, inputData: { sku: "4711" } });
+    return BulkImportRunItem.create({
+      runId,
+      rowIndex,
+      inputData: { sku: "4711" },
+      externalId: "4711",
+    });
   }
 
   it("starts as pending", () => {

@@ -38,8 +38,18 @@ describe("bulkImportRunItemRepository", () => {
 
   it("creates many items for a run in one call and lists them sorted by rowIndex", async () => {
     const runId = randomUUID();
-    const item0 = BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "1" } });
-    const item1 = BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "2" } });
+    const item0 = BulkImportRunItem.create({
+      runId,
+      rowIndex: 0,
+      inputData: { sku: "1" },
+      externalId: "1",
+    });
+    const item1 = BulkImportRunItem.create({
+      runId,
+      rowIndex: 1,
+      inputData: { sku: "2" },
+      externalId: "2",
+    });
 
     await repository.createMany([item1, item0]);
 
@@ -56,6 +66,7 @@ describe("bulkImportRunItemRepository", () => {
       runId: randomUUID(),
       rowIndex: 0,
       inputData: { sku: "1" },
+      externalId: "1",
     });
     await repository.createMany([item]);
 
@@ -72,9 +83,24 @@ describe("bulkImportRunItemRepository", () => {
     const otherRunId = randomUUID();
     // deliberately empty inputData: Mongoose drops empty-object Mixed fields to undefined on read,
     // exercising the default({}) fallback in BulkImportRunItemSchema.
-    const item1 = BulkImportRunItem.create({ runId: runId1, rowIndex: 0, inputData: {} });
-    const item2 = BulkImportRunItem.create({ runId: runId2, rowIndex: 0, inputData: {} });
-    const otherItem = BulkImportRunItem.create({ runId: otherRunId, rowIndex: 0, inputData: {} });
+    const item1 = BulkImportRunItem.create({
+      runId: runId1,
+      rowIndex: 0,
+      inputData: {},
+      externalId: null,
+    });
+    const item2 = BulkImportRunItem.create({
+      runId: runId2,
+      rowIndex: 0,
+      inputData: {},
+      externalId: null,
+    });
+    const otherItem = BulkImportRunItem.create({
+      runId: otherRunId,
+      rowIndex: 0,
+      inputData: {},
+      externalId: null,
+    });
     await repository.createMany([item1, item2, otherItem]);
 
     await repository.deleteAllByRunIds([runId1, runId2]);
@@ -92,9 +118,9 @@ describe("bulkImportRunItemRepository", () => {
     it("returns paginated results with cursor", async () => {
       const runId = randomUUID();
       const items = [
-        BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "0" } }),
-        BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "1" } }),
-        BulkImportRunItem.create({ runId, rowIndex: 2, inputData: { sku: "2" } }),
+        BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "0" }, externalId: "0" }),
+        BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "1" }, externalId: "1" }),
+        BulkImportRunItem.create({ runId, rowIndex: 2, inputData: { sku: "2" }, externalId: "2" }),
       ];
       await repository.createMany(items);
 
@@ -114,9 +140,9 @@ describe("bulkImportRunItemRepository", () => {
     it("returns all items when no pagination is provided", async () => {
       const runId = randomUUID();
       const items = [
-        BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "0" } }),
-        BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "1" } }),
-        BulkImportRunItem.create({ runId, rowIndex: 2, inputData: { sku: "2" } }),
+        BulkImportRunItem.create({ runId, rowIndex: 0, inputData: { sku: "0" }, externalId: "0" }),
+        BulkImportRunItem.create({ runId, rowIndex: 1, inputData: { sku: "1" }, externalId: "1" }),
+        BulkImportRunItem.create({ runId, rowIndex: 2, inputData: { sku: "2" }, externalId: "2" }),
       ];
       await repository.createMany(items);
 

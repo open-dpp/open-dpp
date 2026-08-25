@@ -9,6 +9,7 @@ describe("BulkImportRunItem", () => {
       runId: randomUUID(),
       rowIndex: 0,
       inputData: { sku: "4711" },
+      externalId: "4711",
     });
   }
 

@@ -164,10 +164,41 @@ describe("BulkImportRunService", () => {
     expect(runRepository.save).toHaveBeenCalledWith(run);
     expect(runItemRepository.createMany).toHaveBeenCalledWith(
       expect.arrayContaining([
-        expect.objectContaining({ rowIndex: 0, inputData: rows[0] }),
-        expect.objectContaining({ rowIndex: 1, inputData: rows[1] }),
+        expect.objectContaining({ rowIndex: 0, inputData: rows[0], externalId: "1" }),
+        expect.objectContaining({ rowIndex: 1, inputData: rows[1], externalId: "2" }),
       ]),
     );
+  });
+
+  it("createRun stores externalId as null for a row whose id field can't be evaluated", async () => {
+    const { service, runRepository, runItemRepository, configRepository } = buildFakes();
+    const config = BulkImportConfig.create({
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      name: "Broken id field",
+      // Backtick-quoting can't rescue an embedded backtick, so this reliably throws on evaluate.
+      idField: "a`b",
+      submodelMappings: new Map(),
+    });
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER });
+    const rows = [{ sku: "1" }];
+
+    const savedRuns = new Map<string, BulkImportRun>();
+    runRepository.save.mockImplementation(async (run: BulkImportRun) => {
+      savedRuns.set(run.id, run);
+      return run;
+    });
+    runRepository.findOneOrFail.mockImplementation(async (id: string) => savedRuns.get(id)!);
+    configRepository.findOneOrFail.mockResolvedValue(config);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [] }),
+    );
+
+    await service.createRun(config, rows, subject, randomUUID());
+
+    expect(runItemRepository.createMany).toHaveBeenCalledWith([
+      expect.objectContaining({ rowIndex: 0, externalId: null }),
+    ]);
   });
 
   it("processRun creates a new passport and product link atomically when no link exists yet", async () => {
@@ -192,6 +223,7 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 0,
       inputData: { sku: "4711", weightKg: 12 },
+      externalId: "4711",
     });
 
     configRepository.findOneOrFail.mockResolvedValue(config);
@@ -203,9 +235,12 @@ describe("BulkImportRunService", () => {
     passportService.createPassportFromTemplate.mockResolvedValue({
       id: "passport-1",
     } as Passport);
+    const extractIdValueSpy = jest.spyOn(config, "extractIdValue");
 
     await (service as any).processRun(run.id);
 
+    // Processing must reuse the item's already-extracted externalId, not recompute it.
+    expect(extractIdValueSpy).not.toHaveBeenCalled();
     expect(transactionService.withTransaction).toHaveBeenCalledTimes(1);
     expect(passportService.createPassportFromTemplate).toHaveBeenCalledWith(
       run.organizationId,
@@ -263,6 +298,7 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 0,
       inputData: { sku: "4711", weightKg: 12 },
+      externalId: "4711",
     });
     const existingLink = BulkImportProductLink.create({
       organizationId: run.organizationId,
@@ -308,11 +344,13 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 0,
       inputData: { weightKg: 12 },
+      externalId: null,
     });
     const okItem = BulkImportRunItem.create({
       runId: run.id,
       rowIndex: 1,
       inputData: { sku: "4711", weightKg: 12 },
+      externalId: "4711",
     });
 
     configRepository.findOneOrFail.mockResolvedValue(config);
@@ -354,6 +392,7 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 0,
       inputData: { sku: "4711", weightKg: 12 },
+      externalId: "4711",
     });
 
     configRepository.findOneOrFail.mockResolvedValue(config);
@@ -394,11 +433,13 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 0,
       inputData: { sku: "bad", weightKg: 1 },
+      externalId: "bad",
     });
     const okItem = BulkImportRunItem.create({
       runId: run.id,
       rowIndex: 1,
       inputData: { sku: "good", weightKg: 2 },
+      externalId: "good",
     });
 
     configRepository.findOneOrFail.mockResolvedValue(config);
@@ -445,6 +486,7 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 0,
       inputData: { sku: "done", weightKg: 1 },
+      externalId: "done",
     });
     alreadyCreatedItem.markCreated("passport-already-done");
     // ...and one row that never got started.
@@ -452,6 +494,7 @@ describe("BulkImportRunService", () => {
       runId: run.id,
       rowIndex: 1,
       inputData: { sku: "todo", weightKg: 2 },
+      externalId: "todo",
     });
 
     configRepository.findOneOrFail.mockResolvedValue(config);
@@ -507,6 +550,7 @@ describe("BulkImportRunService", () => {
         runId: run.id,
         rowIndex: i,
         inputData: { sku: String(i), weightKg: i },
+        externalId: String(i),
       }),
     );
 
@@ -587,7 +631,12 @@ describe("BulkImportRunService", () => {
       userId: randomUUID(),
       totalCount: 1,
     });
-    const item = BulkImportRunItem.create({ runId: run.id, rowIndex: 0, inputData: { sku: "1" } });
+    const item = BulkImportRunItem.create({
+      runId: run.id,
+      rowIndex: 0,
+      inputData: { sku: "1" },
+      externalId: "1",
+    });
     runRepository.findOneOrFail.mockResolvedValue(run);
     runItemRepository.findAllByRunId.mockResolvedValue(
       PagingResult.create({ pagination: Pagination.create({}), items: [item] }),

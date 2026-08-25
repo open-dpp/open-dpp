@@ -33,6 +33,9 @@ export class BulkImportRunItemDoc extends Document<string> {
   status: BulkImportRunItemStatusDtoType;
 
   @Prop({ type: String, default: null })
+  externalId: string | null;
+
+  @Prop({ type: String, default: null })
   passportId: string | null;
 
   @Prop({ type: String, default: null })
@@ -41,3 +44,4 @@ export class BulkImportRunItemDoc extends Document<string> {
 
 export const BulkImportRunItemSchema = SchemaFactory.createForClass(BulkImportRunItemDoc);
 BulkImportRunItemSchema.index({ runId: 1, rowIndex: 1 });
+BulkImportRunItemSchema.index({ runId: 1, externalId: 1 });

@@ -14,6 +14,8 @@ export const BulkImportRunItemSchema = z.object({
   // Mongoose drops an empty-object Mixed field to `undefined` on read, so default it back.
   inputData: z.record(z.string(), z.unknown()).default({}),
   status: BulkImportRunItemStatusDtoEnum,
+  // Nullish so documents written before this field existed still parse.
+  externalId: z.string().nullable(),
   passportId: z.string().nullish(),
   error: z.string().nullish(),
 });
@@ -24,6 +26,7 @@ export class BulkImportRunItem implements IPersistable {
     public readonly runId: string,
     public readonly rowIndex: number,
     public readonly inputData: Record<string, unknown>,
+    public readonly externalId: string | null,
     private _status: BulkImportRunItemStatusDtoType,
     private _passportId: string | null,
     private _error: string | null,
@@ -34,12 +37,14 @@ export class BulkImportRunItem implements IPersistable {
     runId: string;
     rowIndex: number;
     inputData: Record<string, unknown>;
+    externalId: string | null;
   }): BulkImportRunItem {
     return new BulkImportRunItem(
       data.id ?? randomUUID(),
       data.runId,
       data.rowIndex,
       data.inputData,
+      data.externalId,
       BulkImportRunItemStatusDto.Pending,
       null,
       null,
@@ -53,6 +58,7 @@ export class BulkImportRunItem implements IPersistable {
       parsed.runId,
       parsed.rowIndex,
       parsed.inputData,
+      parsed.externalId,
       parsed.status,
       parsed.passportId ?? null,
       parsed.error ?? null,
@@ -65,6 +71,7 @@ export class BulkImportRunItem implements IPersistable {
       runId: this.runId,
       rowIndex: this.rowIndex,
       inputData: this.inputData,
+      externalId: this.externalId,
       status: this._status,
       passportId: this._passportId,
       error: this._error,

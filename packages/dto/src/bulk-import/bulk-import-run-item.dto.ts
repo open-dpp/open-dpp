@@ -17,6 +17,7 @@ export const BulkImportRunItemDtoSchema = z.object({
   rowIndex: z.number(),
   inputData: z.record(z.string(), z.unknown()),
   status: BulkImportRunItemStatusDtoEnum,
+  externalId: z.string().nullable(),
   passportId: z.string().nullish(),
   error: z.string().nullish(),
 });

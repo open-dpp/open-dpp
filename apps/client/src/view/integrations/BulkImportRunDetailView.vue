@@ -162,6 +162,11 @@ onMounted(async () => {
           </div>
         </template>
         <Column field="rowIndex" :header="t('integrations.bulkImport.rowIndex')" />
+        <Column :header="t('integrations.bulkImport.idField')">
+          <template #body="{ data }">
+            {{ data.externalId ?? "–" }}
+          </template>
+        </Column>
         <Column field="status" :header="t('common.actions')">
           <template #body="{ data }">
             <Tag

@@ -13,6 +13,7 @@ import { BulkImportConfigRepository } from "../../infrastructure/bulk-import-con
 import { BulkImportProductLinkRepository } from "../../infrastructure/bulk-import-product-link.repository";
 import { BulkImportRunItemRepository } from "../../infrastructure/bulk-import-run-item.repository";
 import { BulkImportRunRepository } from "../../infrastructure/bulk-import-run.repository";
+import { ValueError } from "@open-dpp/exception";
 
 @Injectable()
 export class BulkImportRunService implements OnApplicationBootstrap {
@@ -61,8 +62,15 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     });
     await this.bulkImportRunRepository.save(run);
 
-    const items = rows.map((row, rowIndex) =>
-      BulkImportRunItem.create({ runId: run.id, rowIndex, inputData: row }),
+    const items = await Promise.all(
+      rows.map(async (row, rowIndex) =>
+        BulkImportRunItem.create({
+          runId: run.id,
+          rowIndex,
+          inputData: row,
+          externalId: await this.extractExternalId(config, row),
+        }),
+      ),
     );
     await this.bulkImportRunItemRepository.createMany(items);
 
@@ -72,6 +80,18 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     });
 
     return run;
+  }
+
+  /** One bad row's id expression shouldn't stop the rest of the rows from being created. */
+  private async extractExternalId(
+    config: BulkImportConfig,
+    row: Record<string, unknown>,
+  ): Promise<string | null> {
+    try {
+      return (await config.extractIdValue(row)) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /** Caller is expected to have already checked ownership of the owning config. */
@@ -169,9 +189,9 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     config: BulkImportConfig,
     item: BulkImportRunItem,
   ): Promise<void> {
-    const idValue = await config.extractIdValue(item.inputData);
+    const idValue = item.externalId;
     if (!idValue) {
-      throw new Error(`Row is missing a value for id field "${config.idField}".`);
+      throw new ValueError(`Row is missing a value for id field "${config.idField}".`);
     }
 
     const existingLink = await this.bulkImportProductLinkRepository.findOne(
