@@ -61,15 +61,15 @@ export class InvitationsRepository {
   }
 
   async save(invitation: Invitation, headers?: BetterAuthHeaders): Promise<string> {
-    return (
-      await (this.auth.api as any).createInvitation({
-        headers,
-        body: {
-          email: invitation.email,
-          role: invitation.role,
-          organizationId: invitation.organizationId,
-        },
-      })
-    ).id;
+    const betterAuthInvitation = await (this.auth.api as any).createInvitation({
+      headers,
+      body: {
+        email: invitation.email,
+        role: invitation.role,
+        organizationId: invitation.organizationId,
+      },
+    });
+
+    return betterAuthInvitation.id;
   }
 }
