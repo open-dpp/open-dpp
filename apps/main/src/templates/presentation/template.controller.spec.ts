@@ -405,15 +405,11 @@ describe("templateController", () => {
       .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
-    console.log(exportResponse.text);
-
     const importResponse = await request(app.getHttpServer())
       .post(`${basePathV2}/import`)
       .set("Cookie", userCookie)
       .set(ORGANIZATION_ID_HEADER, org.id)
       .send(exportResponse.body);
-
-    console.log(importResponse.body);
 
     expect(importResponse.status).toEqual(201);
     expect(importResponse.body.id).toBeDefined();

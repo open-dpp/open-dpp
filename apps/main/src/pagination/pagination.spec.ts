@@ -1,4 +1,10 @@
-import { decodeCursor, encodeCursor, Pagination } from "./pagination";
+import {
+  decodeCursor,
+  decodeRowIndexCursor,
+  encodeCursor,
+  encodeRowIndexCursor,
+  Pagination,
+} from "./pagination";
 
 describe("pagination", () => {
   const pages = ["1", "2", "3", "4"];
@@ -50,5 +56,29 @@ describe("pagination", () => {
     const encodedCursor = encodeCursor(createdAt, uuid);
     const decodedCursor = decodeCursor(encodedCursor);
     expect(decodedCursor).toEqual({ createdAt, id: uuid });
+  });
+
+  it("should encode and decode row index cursor by using rowIndex and id", () => {
+    const rowIndex = 42;
+    const uuid = "123e4567-e89b-12d3-a456-426655440000";
+    const encodedCursor = encodeRowIndexCursor(rowIndex, uuid);
+    const decodedCursor = decodeRowIndexCursor(encodedCursor);
+    expect(decodedCursor).toEqual({ rowIndex, id: uuid });
+  });
+
+  it("should handle rowIndex of 0 in cursor encoding", () => {
+    const rowIndex = 0;
+    const uuid = "123e4567-e89b-12d3-a456-426655440000";
+    const encodedCursor = encodeRowIndexCursor(rowIndex, uuid);
+    const decodedCursor = decodeRowIndexCursor(encodedCursor);
+    expect(decodedCursor).toEqual({ rowIndex: 0, id: uuid });
+  });
+
+  it("should handle large rowIndex values in cursor encoding", () => {
+    const rowIndex = 999999;
+    const uuid = "123e4567-e89b-12d3-a456-426655440000";
+    const encodedCursor = encodeRowIndexCursor(rowIndex, uuid);
+    const decodedCursor = decodeRowIndexCursor(encodedCursor);
+    expect(decodedCursor).toEqual({ rowIndex: 999999, id: uuid });
   });
 });

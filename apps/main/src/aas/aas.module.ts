@@ -19,6 +19,7 @@ import { SubmodelRepository } from "./infrastructure/submodel.repository";
 import { EnvironmentService } from "./presentation/environment.service";
 import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-initializer";
 import { ActivityHistoryModule } from "../activity-history/activity-history.module";
+import { DatabaseModule } from "../database/database.module";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ActivityHistoryModule } from "../activity-history/activity-history.modu
     MediaModule,
     forwardRef(() => PresentationConfigurationsModule),
     ActivityHistoryModule,
+    DatabaseModule,
   ],
   providers: [
     SubmodelRegistryInitializer,

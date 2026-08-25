@@ -1,43 +1,12 @@
 <script lang="ts" setup>
-import {
-  DigitalProductDocumentStatusDto,
-  type PagingParamsDto,
-  type TemplateDto,
-  type TemplatePaginationDto,
-} from "@open-dpp/dto";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
-import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassports } from "../../composables/passports";
-import { useTemplates } from "../../composables/templates";
-import { convertLocaleToLanguage } from "../../translations/util.ts";
-import { usePagination } from "../../composables/pagination.ts";
-
-const route = useRoute();
-
-function changeQueryParams(_: Record<string, string | undefined>) {}
-
-const { templates, loading, fetchTemplates } = useTemplates();
-
-function fetchCallback(pagingParams: PagingParamsDto) {
-  return fetchTemplates(pagingParams, {
-    status: [DigitalProductDocumentStatusDto.Draft, DigitalProductDocumentStatusDto.Published],
-  });
-}
-
-const { hasNext, nextPage } = usePagination({
-  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-  limit: 10,
-  fetchCallback,
-  changeQueryParams,
-});
+import TemplateSelect from "../template/TemplateSelect.vue";
 
 const { createPassport } = usePassports();
 
 const { t } = useI18n();
-type TemplateOption = TemplateDto & { label: string; status: string };
-const templateList = ref<TemplateOption[]>([]);
 
 const visible = ref(false);
 const mode = ref<"blank" | "template">("blank");
@@ -59,21 +28,6 @@ async function newPassport() {
   }
 }
 
-async function loadMoreTemplates() {
-  if (hasNext.value) {
-    await nextPage();
-    if (templates.value) {
-      templateList.value.push(...constructTemplateOptions(templates.value));
-    }
-  }
-}
-
-async function onTemplateLazyLoad(e: { last: number }) {
-  if (e.last >= templateList.value.length - 1) {
-    await loadMoreTemplates();
-  }
-}
-
 async function close() {
   visible.value = false;
 }
@@ -81,37 +35,6 @@ async function close() {
 defineExpose({
   open,
 });
-
-onMounted(async () => {
-  await nextPage();
-  if (templates.value) {
-    templateList.value.push(...constructTemplateOptions(templates.value));
-  }
-});
-
-const { parseDisplayNameFromEnvironment } = useAasUtils();
-
-function constructTemplateOptions({ result }: TemplatePaginationDto) {
-  return result
-    .filter(
-      (template) =>
-        template.lastStatusChange.currentStatus !== DigitalProductDocumentStatusDto.Archived,
-    )
-    .map((template) => ({
-      ...template,
-      label: getOptionLabel(template),
-      status: getOptionStatus(template),
-    }));
-}
-
-function getOptionStatus(option: TemplateDto): string {
-  return t(`status.${option.lastStatusChange.currentStatus.toLowerCase()}`);
-}
-
-function getOptionLabel(option: TemplateDto): string {
-  const displayName = parseDisplayNameFromEnvironment(option.environment);
-  return displayName !== t("common.untitled") ? displayName : option.id;
-}
 </script>
 
 <template>
@@ -129,36 +52,13 @@ function getOptionLabel(option: TemplateDto): string {
           </span>
         </label>
       </div>
-      <Select
-        v-model="template"
-        class="w-96"
-        :options="templateList"
-        option-value="id"
-        option-label="label"
-        :virtual-scroller-options="{
-          itemSize: 40,
-          lazy: true,
-          onLazyLoad: onTemplateLazyLoad,
-        }"
-        :placeholder="t('passports.selectTemplate')"
-        :disabled="loading || mode === 'blank'"
-      >
-        <template #option="slotProps">
-          <div class="flex items-center gap-2">
-            <div class="text-xl">{{ slotProps.option.label }}</div>
-            <Tag severity="secondary" :value="slotProps.option.status" />
-          </div>
-        </template>
-      </Select>
+      <TemplateSelect v-model="template" class="w-96" :disabled="mode === 'blank'" />
     </div>
     <div class="flex justify-end gap-2">
       <Button type="button" severity="secondary" @click="close">
         {{ t("common.cancel") }}
       </Button>
-      <Button
-        :disabled="loading || (mode === 'template' && template === null)"
-        @click="newPassport"
-      >
+      <Button :disabled="mode === 'template' && template === null" @click="newPassport">
         {{ t("common.create") }}
       </Button>
     </div>

@@ -55,6 +55,7 @@ import {
 } from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { TransactionService } from "../../../database/transaction.service";
 import { EmailService } from "../../../email/email.service";
 
 const adminPlain = {
@@ -329,6 +330,7 @@ describe("aasSerializationService", () => {
         OrganizationsModule,
       ],
       providers: [
+        TransactionService,
         EnvironmentService,
         PassportRepository,
         TemplateRepository,

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
+import { DatabaseModule } from "../database/database.module";
 
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
@@ -38,6 +39,7 @@ import { ActivityHistoryModule } from "../activity-history/activity-history.modu
     AasModule,
     ActivityHistoryModule,
     AuthModule,
+    DatabaseModule,
     OrganizationsModule,
     PresentationConfigurationsModule,
     forwardRef(() => PermalinkModule),

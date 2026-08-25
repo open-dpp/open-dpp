@@ -3,6 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
 import { AasModule } from "../aas/aas.module";
 import { BrandingModule } from "../branding/branding.module";
+import { DatabaseModule } from "../database/database.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { InstanceSettingsModule } from "../instance-settings/instance-settings.module";
@@ -26,6 +27,7 @@ import { PermalinkController } from "./presentation/permalink.controller";
       { name: PresentationConfigurationDoc.name, schema: PresentationConfigurationSchema },
     ]),
     AasModule,
+    DatabaseModule,
     EnvModule,
     OrganizationsModule,
     UsersModule,
