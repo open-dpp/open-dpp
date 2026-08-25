@@ -381,7 +381,11 @@ describe("OrganizationsController", () => {
   });
 
   it("should reset the removed user's active organization on their sessions", async () => {
-    const { org, user: owner, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const {
+      org,
+      user: owner,
+      userCookie,
+    } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const { user: otherUser } = await betterAuthHelper.createUser({
       email: `member-${randomUUID()}@example.com`,
     });
@@ -403,7 +407,9 @@ describe("OrganizationsController", () => {
     const sessionUserIdFilter = (userId: string) => ({
       userId: { $in: [userId, new Types.ObjectId(userId)] } as any,
     });
-    const sessionsBefore = await sessionCollection.find(sessionUserIdFilter(otherUser.id)).toArray();
+    const sessionsBefore = await sessionCollection
+      .find(sessionUserIdFilter(otherUser.id))
+      .toArray();
     expect(sessionsBefore.some((s) => s.activeOrganizationId === org.id)).toBe(true);
 
     // A session of the removed user pointing at a DIFFERENT organization must

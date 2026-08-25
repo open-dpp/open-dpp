@@ -124,7 +124,9 @@ describe("OrganizationMembersList", () => {
     await removeButtons(wrapper)[0]!.trigger("click");
     expect(mocks.confirmRequire).toHaveBeenCalledOnce();
 
-    const confirmOptions = mocks.confirmRequire.mock.calls[0]![0] as { accept: () => Promise<void> };
+    const confirmOptions = mocks.confirmRequire.mock.calls[0]![0] as {
+      accept: () => Promise<void>;
+    };
     await confirmOptions.accept();
 
     expect(mocks.removeMember).toHaveBeenCalledWith("m-other");
