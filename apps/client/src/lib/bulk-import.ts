@@ -8,6 +8,7 @@ import type {
 import { AasSubmodelElements, SubmodelElementSharedSchema } from "@open-dpp/dto";
 import { type MaybeRefOrGetter, toValue } from "vue";
 import { z } from "zod";
+import { idShortPathRoot, type IdShortPath } from "./id-short-path.ts";
 
 const CONTAINER_MODEL_TYPES: string[] = [
   AasSubmodelElements.SubmodelElementCollection,
@@ -33,23 +34,16 @@ export function removeMappingsFromRow(
 
 function filterMappedElements(
   elements: SubmodelElementSharedResponseDto[],
-  parentIdShortPath: string | undefined,
+  path: IdShortPath,
   mappedPaths: Set<string>,
 ): SubmodelElementSharedResponseDto[] {
   return elements
-    .filter((element) => {
-      const idShortPath = parentIdShortPath
-        ? `${parentIdShortPath}.${element.idShort}`
-        : element.idShort;
-      return !mappedPaths.has(idShortPath);
-    })
+    .filter((element) => !mappedPaths.has(path.addPathSegment(element.idShort).toString()))
     .map((element) => {
       if (!CONTAINER_MODEL_TYPES.includes(element.modelType)) return element;
-      const idShortPath = parentIdShortPath
-        ? `${parentIdShortPath}.${element.idShort}`
-        : element.idShort;
       const children = ContainerChildrenSchema.parse(element).value;
-      return { ...element, value: filterMappedElements(children, idShortPath, mappedPaths) };
+      const childPath = path.addPathSegment(element.idShort);
+      return { ...element, value: filterMappedElements(children, childPath, mappedPaths) };
     });
 }
 
@@ -73,7 +67,11 @@ export function removeMappingsFromSubmodels(
     if (!mappedPaths) return submodel;
     return {
       ...submodel,
-      submodelElements: filterMappedElements(submodel.submodelElements, undefined, mappedPaths),
+      submodelElements: filterMappedElements(
+        submodel.submodelElements,
+        idShortPathRoot,
+        mappedPaths,
+      ),
     };
   });
 }

@@ -5,6 +5,7 @@ import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { resolveLanguageTexts } from "./language.ts";
+import { idShortPathRoot, type IdShortPath } from "../lib/id-short-path.ts";
 
 const SCALAR_LEAF_MODEL_TYPES: string[] = [
   AasSubmodelElements.Property,
@@ -58,19 +59,20 @@ export function useIdShortPathSelectTree(
 
     const buildElementNode = (
       submodelIdShort: string,
-      parentIdShortPath: string | undefined,
+      path: IdShortPath,
       element: SubmodelElementSharedResponseDto,
     ): TreeNode | null => {
       if (excludedModelTypes.has(element.modelType)) return null;
 
-      const idShortPath = parentIdShortPath
-        ? `${parentIdShortPath}.${element.idShort}`
-        : element.idShort;
-      const key = elementNodeKey(submodelIdShort, idShortPath);
+      const idShortPath = path.addPathSegment(element.idShort);
+      const key = elementNodeKey(submodelIdShort, idShortPath.toString());
       const label = resolveLanguageTexts(element.displayName, locale.value, element.idShort);
 
       if (SCALAR_LEAF_MODEL_TYPES.includes(element.modelType)) {
-        const node: IdShortPathNode = { submodelIdShort: submodelIdShort, output: idShortPath };
+        const node: IdShortPathNode = {
+          submodelIdShort: submodelIdShort,
+          output: idShortPath.toString(),
+        };
         nodesByKey.set(key, node);
         keysByNode.set(nodeToKey(node), key);
         return { key, label };
@@ -90,7 +92,7 @@ export function useIdShortPathSelectTree(
     const treeNodes: TreeNode[] = [];
     for (const submodel of toValue(submodels)) {
       const children = submodel.submodelElements
-        .map((element) => buildElementNode(submodel.id, undefined, element))
+        .map((element) => buildElementNode(submodel.id, idShortPathRoot, element))
         .filter((node): node is TreeNode => node !== null);
       if (children.length === 0) continue;
 
