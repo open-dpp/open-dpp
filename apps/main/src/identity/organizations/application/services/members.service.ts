@@ -102,10 +102,6 @@ export class MembersService {
       throw new ValueError("Owners cannot be removed. Change their role to member first.");
     }
 
-    // Clear sessions first: if the second write fails, a cleared active
-    // organization on a still-existing membership is self-healing, while a
-    // deleted membership with a failed session clear leaves a confusing,
-    // non-retryable state.
     await this.sessionsRepository.clearActiveOrganization(memberToRemove.userId, organizationId);
     await this.membersRepository.deleteById(memberToRemove.id);
   }
