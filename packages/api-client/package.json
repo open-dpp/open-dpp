@@ -55,7 +55,7 @@
     "jest": "^30.4.2",
     "msw": "^2.14.6",
     "rollup": "^4.61.1",
-    "rollup-plugin-dts": "^6.4.1",
+    "rollup-plugin-dts": "^6.5.1",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
