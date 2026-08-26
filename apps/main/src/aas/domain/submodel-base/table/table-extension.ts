@@ -64,7 +64,7 @@ export class TableExtension implements ITableExtendable {
   ): SubmodelElementCollection {
     const group = row.getSubmodelElements().find((el) => el.idShort === groupIdShort);
     if (!group) {
-      throw new NotFoundError("ColumnGroup", groupIdShort);
+      throw new NotFoundError(`Column group with id ${groupIdShort} not found.`);
     }
     if (!(group instanceof SubmodelElementCollection)) {
       throw new ValueError(
@@ -375,7 +375,7 @@ export class TableExtension implements ITableExtendable {
       .getSubmodelElements()
       .find((el) => el.idShort === idShortOfColumn);
     if (!existingColumn) {
-      throw new NotFoundError("Column", idShortOfColumn);
+      throw new NotFoundError(`Column with id ${idShortOfColumn} not found.`);
     }
     if (!options.ability.can(Permissions.Edit, existingColumn.getIdShortPath())) {
       throw new ForbiddenError(
@@ -447,7 +447,7 @@ export class TableExtension implements ITableExtendable {
   getColumnOrFail(idShort: string) {
     const column = this.columns.find((column) => column.idShort === idShort);
     if (!column) {
-      throw new NotFoundError("Column", idShort);
+      throw new NotFoundError(`Column with id ${idShort} not found.`);
     }
     return column;
   }

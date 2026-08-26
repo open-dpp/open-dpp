@@ -369,9 +369,15 @@ describe("tableExtension", () => {
 
   it("should reorder a top-level column and keep every row positionally in sync", () => {
     const { table, ability, submodelElementList } = createTable();
-    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
-    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
-    const col3 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col3", value: "3" }));
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "1" }),
+    );
+    const col2 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col2", value: "2" }),
+    );
+    const col3 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col3", value: "3" }),
+    );
     table.addColumn(col1, { ability });
     table.addColumn(col2, { ability });
     table.addColumn(col3, { ability });
@@ -394,8 +400,12 @@ describe("tableExtension", () => {
 
   it("should keep the reordered order after the header row is deleted and a data row is promoted", () => {
     const { table, ability } = createTable();
-    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
-    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "1" }),
+    );
+    const col2 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col2", value: "2" }),
+    );
     table.addColumn(col1, { ability });
     table.addColumn(col2, { ability });
     table.addRow({ ability });
@@ -412,8 +422,12 @@ describe("tableExtension", () => {
 
   it("should reorder a column within a group and keep rows in sync", () => {
     const { table, ability } = createTable();
-    const sub1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "sub1", value: "a" }));
-    const sub2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "sub2", value: "b" }));
+    const sub1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "sub1", value: "a" }),
+    );
+    const sub2 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "sub2", value: "b" }),
+    );
     const group = SubmodelElementCollection.create({ idShort: "group1", value: [sub1, sub2] });
     table.addColumn(group, { ability });
     table.addRow({ ability });
@@ -428,7 +442,9 @@ describe("tableExtension", () => {
 
   it("should throw NotFoundError when reordering a non-existent column", () => {
     const { table, ability } = createTable();
-    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "1" }),
+    );
     table.addColumn(col1, { ability });
 
     expect(() => table.reorderColumn("missing", undefined, 0, { ability })).toThrow(NotFoundError);
@@ -436,17 +452,21 @@ describe("tableExtension", () => {
 
   it("should reject reordering a column without permission", () => {
     const { table, ability } = createTable();
-    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "1" }));
-    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2", value: "2" }));
+    const col1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col1", value: "1" }),
+    );
+    const col2 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "col2", value: "2" }),
+    );
     table.addColumn(col1, { ability });
     table.addColumn(col2, { ability });
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = Security.create({}).defineAbilityForSubject(anonymous);
 
-    expect(() =>
-      table.reorderColumn("col2", undefined, 0, { ability: anonymousAbility }),
-    ).toThrow(ForbiddenError);
+    expect(() => table.reorderColumn("col2", undefined, 0, { ability: anonymousAbility })).toThrow(
+      ForbiddenError,
+    );
     expect(table.columns.map((c) => c.idShort)).toEqual(["col1", "col2"]);
   });
 
