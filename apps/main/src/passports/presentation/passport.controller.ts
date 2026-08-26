@@ -43,7 +43,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   forwardRef,
   Get,
   HttpCode,
@@ -58,7 +57,6 @@ import {
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { match, P } from "ts-pattern";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
-import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
@@ -129,11 +127,8 @@ import { PermalinkApplicationService } from "../../permalink/application/service
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
-import { Template } from "../../templates/domain/template";
-import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { PassportService } from "../application/services/passport.service";
-import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import {
   ActivityPathQueryParam,
@@ -162,7 +157,6 @@ export class PassportController
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
-    private readonly templateRepository: TemplateRepository,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
     private readonly passportService: PassportService,
     private readonly aasSerializationService: AasSerializationService,
@@ -274,37 +268,31 @@ export class PassportController
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    const { environment, templateId } = await match(body)
-      .returnType<
-        Promise<{
-          environment: Environment;
-          templateId?: string;
-        }>
-      >()
+
+    return await match(body)
+      .returnType<Promise<PassportDto>>()
       .with({ templateId: P.string }, async ({ templateId }) => {
-        const template = await this.loadTemplateAndCheckOwnership(
+        const passport = await this.passportService.createPassportFromTemplate(
+          organizationId,
           templateId,
           subject,
-          organizationId,
         );
-        if (template.isArchived()) {
-          throw new BadRequestException(
-            `Template ${templateId} is archived and cannot be used to create a passport`,
-          );
-        }
-        return {
-          environment: await this.environmentService.copyEnvironment(template.environment),
-          templateId,
-        };
+        return PassportDtoSchema.parse(passport.toPlain());
       })
       .with(
         {
           environment: { assetAdministrationShells: P.array() },
         },
         async ({ environment: localEnvironment }) => {
-          return {
-            environment: await this.environmentService.createEnvironment(localEnvironment, false),
-          };
+          const environment = await this.environmentService.createEnvironment(
+            localEnvironment,
+            false,
+          );
+          const passport = await this.passportService.createAndPersistPassport(
+            organizationId,
+            environment,
+          );
+          return PassportDtoSchema.parse(passport.toPlain());
         },
       )
       .otherwise(() => {
@@ -312,37 +300,6 @@ export class PassportController
           "Either templateId or environment.assetAdministrationShells must be provided",
         );
       });
-
-    const passport = Passport.create({
-      organizationId,
-      templateId,
-      environment,
-    });
-
-    const upid = passport.createUniqueProductIdentifier();
-
-    const saved = await this.environmentService.withTransaction(async (options) => {
-      await this.uniqueProductIdentifierRepository.save(upid, options);
-      const persisted = await this.passportRepository.save(passport, options);
-      const snapshotConfigs =
-        await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(
-          persisted,
-          options,
-        );
-      const configs =
-        snapshotConfigs.length > 0
-          ? snapshotConfigs
-          : [
-              await this.presentationConfigurationService.ensureDefaultForPassport(
-                persisted,
-                options,
-              ),
-            ];
-      await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
-      return persisted;
-    });
-
-    return PassportDtoSchema.parse(saved.toPlain());
   }
 
   @ApiGetShells()
@@ -1224,21 +1181,13 @@ export class PassportController
           importedConfigs.length > 0
             ? importedConfigs
             : [await this.presentationConfigurationService.ensureDefaultForPassport(p, options)];
-        await this.permalinkApplicationService.createPermalinksForConfigs(configs, options);
+        await this.permalinkApplicationService.createPermalinksForConfigs(
+          configs,
+          organizationId,
+          options,
+        );
       },
     );
     return PassportDtoSchema.parse(passport.toPlain());
-  }
-
-  private async loadTemplateAndCheckOwnership(
-    id: string,
-    subject: SubjectAttributes,
-    organizationId: string,
-  ): Promise<Template> {
-    const template = await this.templateRepository.findOneOrFail(id);
-    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
-      throw new ForbiddenException();
-    }
-    return template;
   }
 }

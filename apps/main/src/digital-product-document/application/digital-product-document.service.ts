@@ -21,7 +21,6 @@ import type {
   SubmodelResponseDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-
 import { ActivityPaginationDtoSchema } from "@open-dpp/dto";
 
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
@@ -294,6 +293,39 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       item.getEnvironment(),
       submodelId,
       SubmodelModificationRequest.create({ body, version }),
+      userContext,
+    );
+  }
+
+  async modifyValueOfMultipleSubmodels(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    body: Record<string, ValueRequestDto>,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ) {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    const valueModificationRequests = new Map<string, ValueModificationRequest>();
+    for (const [submodelId, value] of Object.entries(body)) {
+      if (valueModificationRequests.has(submodelId)) {
+        throw new ValueError(`Multiple values for submodel ${submodelId} are not allowed.`);
+      }
+      valueModificationRequests.set(
+        submodelId,
+        ValueModificationRequest.create({ body: value, version }),
+      );
+    }
+    await this.environmentService.modifyValueOfMultipleSubmodels(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      valueModificationRequests,
       userContext,
     );
   }

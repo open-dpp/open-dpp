@@ -6,10 +6,13 @@ import type {
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
+  PermalinkPaginationDto,
+  UniqueProductIdentifierPaginationDto,
 } from "@open-dpp/dto";
 import type { AxiosInstance, AxiosResponse } from "axios";
 
 import { AasNamespace } from "../aas/aasNamespace";
+import type { CursorListParams } from "../cursor-list-params";
 import {
   parseGetAllActivitiesParams,
   parseGetAllParams,
@@ -50,10 +53,14 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data);
   }
 
-  public async getUniqueProductIdentifierOfPassport(passportId: string) {
-    return await this.axiosInstance.get<{ uuid: string }>(
-      `${this.passportEndpoint}/${passportId}/unique-product-identifier`,
-    );
+  public async getPermalinks(passportId: string, params?: CursorListParams) {
+    const url = `${this.passportEndpoint}/${encodeURIComponent(passportId)}/permalinks`;
+    return await this.axiosInstance.get<PermalinkPaginationDto>(url, { params });
+  }
+
+  public async getUniqueProductIdentifiers(passportId: string, params?: CursorListParams) {
+    const url = `${this.passportEndpoint}/${encodeURIComponent(passportId)}/unique-product-identifiers`;
+    return await this.axiosInstance.get<UniqueProductIdentifierPaginationDto>(url, { params });
   }
 
   public async deleteById(id: string) {

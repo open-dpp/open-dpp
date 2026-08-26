@@ -1,6 +1,9 @@
 import type { PermalinkFallbackBaseUrlSource, PermalinkPublicDto } from "@open-dpp/dto";
 import {
+  baseUrlOrigin,
+  buildGs1DataAttributeQuery,
   canonicaliseBaseUrl,
+  GS1_RESOLVER_PATH_PREFIX,
   PERMALINK_RESERVED_SLUGS,
   PermalinkBaseUrlSchema,
   PermalinkSlugSchema,
@@ -116,4 +119,57 @@ export function usePermalinkPreview(
   });
 
   return { effectiveBase, effectiveSlug, previewUrl, previewSource, previewValid, locked };
+}
+
+const GS1_IDENTITY_PATH_MARKER = `/${GS1_RESOLVER_PATH_PREFIX}/01/`;
+
+function deriveGs1IdentityPath(publicUrl: string): string {
+  try {
+    const url = new URL(publicUrl);
+    const idx = url.pathname.indexOf(GS1_IDENTITY_PATH_MARKER);
+    return idx === -1 ? "" : url.pathname.slice(idx);
+  } catch {
+    return "";
+  }
+}
+
+export interface Gs1LinkPreview {
+  previewUrl: ComputedRef<string>;
+  locked: ComputedRef<boolean>;
+}
+
+export function useGs1LinkPreview(
+  permalink: Ref<PermalinkPublicDto | undefined>,
+  baseUrlInput: Ref<string>,
+  gs1DataAttributes: Ref<Record<string, string>>,
+): Gs1LinkPreview {
+  const trimmedBase = computed(() => trimToNull(baseUrlInput.value));
+  const locked = computed(() => Boolean(permalink.value?.publishedUrl));
+
+  const effectiveBase = computed(() => {
+    const base =
+      trimmedBase.value !== null
+        ? canonicaliseBaseUrl(trimmedBase.value)
+        : permalink.value
+          ? deriveFallbackBaseUrl(permalink.value)
+          : "";
+    return base ? baseUrlOrigin(base) : "";
+  });
+
+  const previewUrl = computed(() => {
+    if (!permalink.value) return "";
+    if (locked.value && permalink.value.publishedUrl) return permalink.value.publishedUrl;
+
+    const identityPath = deriveGs1IdentityPath(permalink.value.publicUrl);
+    if (!identityPath) return effectiveBase.value;
+    let query = "";
+    try {
+      query = buildGs1DataAttributeQuery(gs1DataAttributes.value);
+    } catch {
+      query = "";
+    }
+    return `${effectiveBase.value}${identityPath}${query}`;
+  });
+
+  return { previewUrl, locked };
 }

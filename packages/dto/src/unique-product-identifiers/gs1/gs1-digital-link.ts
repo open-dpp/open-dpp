@@ -312,32 +312,56 @@ function normalizeOptionalComponent(
 }
 
 /**
+ * Path prefix (no leading/trailing slash) under which the GS1 resolver endpoint
+ * is mounted, between the resolver base and the `01/...` identity path.
+ * Must match the `Gs1ResolverController` route mounting in the backend.
+ */
+export const GS1_RESOLVER_PATH_PREFIX = "gs1/v1";
+
+/**
  * Build the uncompressed, canonical GS1 Digital Link for a GS1 identity.
  *
- * Emits the GTIN path and, when present, appends the batch (AI `10`) and serial
- * (AI `21`) segments in canonical GS1 order `01 -> 10 -> 21`. A blank batch/serial
- * is treated as absent. The resolver base is canonicalised (host lowercased,
- * trailing slash dropped) and any path it carries is preserved; batch/serial
- * values are percent-encoded for the path.
+ * Emits the resolver prefix (`gs1/v1`) followed by the GTIN path and, when
+ * present, the batch (AI `10`) and serial (AI `21`) segments in canonical GS1
+ * order `01 -> 10 -> 21`. A blank batch/serial is treated as absent. The
+ * resolver base is canonicalised (host lowercased, trailing slash dropped) and
+ * any path it carries is preserved; batch/serial values are percent-encoded
+ * for the path.
  *
  * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 /
  *   length / the dot-segment rule.
  */
 export function buildGs1DigitalLink(resolverBase: string, parts: Gs1DigitalLinkParts): string {
+  const base = canonicaliseBaseUrl(resolverBase);
+  let url = `${base}/${GS1_RESOLVER_PATH_PREFIX}/${buildGs1DigitalLinkPath(parts)}`;
+  url += buildGs1DataAttributeQuery(parts.dataAttributes);
+  return url;
+}
+
+/**
+ * Build the base-less canonical GS1 Digital Link path
+ * `01/{gtin14}[/10/{batch}][/21/{serial}]` (no leading slash, no query string).
+ * Same normalization, validation, and percent-encoding as `buildGs1DigitalLink`;
+ * usable as an exact-match canonical value for a GS1 identity.
+ *
+ * @throws Error when the GTIN is invalid or a batch/serial violates CSET-82 /
+ *   length / the dot-segment rule.
+ */
+export function buildGs1DigitalLinkPath(
+  parts: Omit<Gs1DigitalLinkParts, "dataAttributes">,
+): string {
   const gtin14 = normalizeToGtin14(parts.gtin);
   const batch = normalizeOptionalComponent(parts.batch, "Batch");
   const serial = normalizeOptionalComponent(parts.serial, "Serial");
-  const base = canonicaliseBaseUrl(resolverBase);
 
-  let url = `${base}/${GS1_AI_GTIN}/${gtin14}`;
+  let path = `${GS1_AI_GTIN}/${gtin14}`;
   if (batch !== undefined) {
-    url += `/${GS1_AI_BATCH}/${encodeRfc3986(batch)}`;
+    path += `/${GS1_AI_BATCH}/${encodeRfc3986(batch)}`;
   }
   if (serial !== undefined) {
-    url += `/${GS1_AI_SERIAL}/${encodeRfc3986(serial)}`;
+    path += `/${GS1_AI_SERIAL}/${encodeRfc3986(serial)}`;
   }
-  url += buildGs1DataAttributeQuery(parts.dataAttributes);
-  return url;
+  return path;
 }
 
 /**

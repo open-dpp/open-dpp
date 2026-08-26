@@ -60,7 +60,10 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
   const fromPlain = async (plain: any) => Permalink.fromPlain(plain);
 
   it("findOne returns the matching doc for a valid string _id", async () => {
-    const permalink = Permalink.create({ presentationConfigurationId: randomUUID() });
+    const permalink = Permalink.create({
+      passportId: randomUUID(),
+      presentationConfigurationId: randomUUID(),
+    });
     await repository.save(permalink);
 
     const found = await findOne(permalink.id, permalinkModel, fromPlain);
@@ -80,8 +83,12 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
     [{ $regex: ".*" }, "$regex .*"],
     [{ $in: ["x", "y"] }, "$in array"],
   ])("findOne refuses to match documents for an operator object (%s)", async (payload) => {
-    await repository.save(Permalink.create({ presentationConfigurationId: randomUUID() }));
-    await repository.save(Permalink.create({ presentationConfigurationId: randomUUID() }));
+    await repository.save(
+      Permalink.create({ passportId: randomUUID(), presentationConfigurationId: randomUUID() }),
+    );
+    await repository.save(
+      Permalink.create({ passportId: randomUUID(), presentationConfigurationId: randomUUID() }),
+    );
 
     await expect(
       findOne(payload as unknown as string, permalinkModel, fromPlain),
@@ -89,7 +96,9 @@ describe("repositories generic helpers — NoSQL injection hardening", () => {
   });
 
   it("findOneOrFail refuses to leak documents for an operator object", async () => {
-    await repository.save(Permalink.create({ presentationConfigurationId: randomUUID() }));
+    await repository.save(
+      Permalink.create({ passportId: randomUUID(), presentationConfigurationId: randomUUID() }),
+    );
 
     await expect(
       findOneOrFail({ $gt: "" } as unknown as string, permalinkModel, fromPlain),

@@ -118,6 +118,24 @@ describe("useIdShortPathSelectTree", () => {
     expect(treeNodes.value).toEqual([]);
   });
 
+  it("skips excluded model types entirely, both as leaves and as containers", () => {
+    const submodels = [
+      submodel("sm-1", [
+        collection("technicalData", [property("keep"), file("attachment")]),
+        list("measurements", [property("insideList")]),
+      ]),
+    ];
+
+    const { treeNodes } = useIdShortPathSelectTree(submodels, {
+      excludeModelTypes: () => ["File", "SubmodelElementList"],
+    });
+
+    expect(treeNodes.value).toHaveLength(1);
+    const technicalData = treeNodes.value[0]!.children!.find((n) => n.label === "technicalData")!;
+    expect(technicalData.children!.map((n) => n.label)).toEqual(["keep"]);
+    expect(treeNodes.value[0]!.children!.find((n) => n.label === "measurements")).toBeUndefined();
+  });
+
   it("returns an empty list for no submodels", () => {
     const { treeNodes } = useIdShortPathSelectTree([]);
 

@@ -2,6 +2,7 @@ export * from "./domain.errors";
 export * from "./exception.handler";
 export * from "./exception.module";
 export * from "./exception.service";
+export * from "./parse-or-throw";
 export * from "./service.exceptions";
 export * from "./websocket-exception.filter";
 export * from "./zod-validation.pipeline";
