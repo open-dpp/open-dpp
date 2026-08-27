@@ -158,4 +158,5 @@ export function makeIdShortPathNode(source: IdShortPathNodeSource) {
     key,
     toValue,
     toTreeNode,
-  });}
+  });
+}

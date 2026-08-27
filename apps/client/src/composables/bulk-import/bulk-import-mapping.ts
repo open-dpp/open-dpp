@@ -59,7 +59,7 @@ export function useBulkImportMapping() {
     mappings.value.push({
       input: draftInput.value,
       submodelIdShort,
-      output: draftTarget.value.output,
+      output: draftTarget.value.idShortPath,
     });
     draftInput.value = null;
     draftTarget.value = null;

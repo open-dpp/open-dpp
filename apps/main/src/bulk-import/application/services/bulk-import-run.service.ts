@@ -203,6 +203,7 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     const passportId = existingLink
       ? existingLink.passportId
       : await this.createPassportAndLink(run, config, idValue);
+    item.assignPassport(passportId);
 
     const valueRepresentations = await config.applyToRow(item.inputData);
     await this.passportService.digitalProductDocumentService.modifyValueOfMultipleSubmodels(
@@ -215,9 +216,9 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     );
 
     if (existingLink) {
-      item.markUpdated(passportId);
+      item.markUpdated();
     } else {
-      item.markCreated(passportId);
+      item.markCreated();
     }
   }
 

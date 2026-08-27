@@ -1,49 +1,53 @@
-import type { SubmodelElementSharedResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
-import { AasSubmodelElements, SubmodelElementSharedSchema } from "@open-dpp/dto";
+import type { SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
 import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { z } from "zod";
-import { resolveLanguageTexts } from "./language.ts";
-import { idShortPathRoot, type IdShortPath } from "../lib/id-short-path.ts";
+import {
+  type ClassifyIdShortPathNode,
+  CONTAINER_MODEL_TYPES,
+  type IdShortPathPointer,
+  makeIdShortPathNode,
+  SCALAR_LEAF_MODEL_TYPES,
+  SUBMODEL_MODEL_TYPE,
+  type TreeBuildContext,
+} from "../lib/id-short-path-select.ts";
 
-const SCALAR_LEAF_MODEL_TYPES: string[] = [
-  AasSubmodelElements.Property,
-  AasSubmodelElements.MultiLanguageProperty,
-  AasSubmodelElements.ReferenceElement,
-  AasSubmodelElements.File,
-];
-
-// Both SubmodelElementCollection *and* SubmodelElementList can hold scalar leaves - unlike the
-// existing tree composables (submodel-tree.ts, aas-editor.ts), which only recurse into
-// SubmodelElementCollection and would silently skip fields nested inside a list/table.
-const CONTAINER_MODEL_TYPES: string[] = [
-  AasSubmodelElements.SubmodelElementCollection,
-  AasSubmodelElements.SubmodelElementList,
-];
-
-const ContainerChildrenSchema = z.object({ value: SubmodelElementSharedSchema.array() });
-
-export interface IdShortPathNode {
-  submodelIdShort: string;
-  output: string;
+/**
+ * Convenience builder for the common "classify purely by model type" case. Every
+ * concern this composable used to expose as its own option — leaf-picking,
+ * container-picking, excluding types — is just a different `classify` function;
+ * this builder covers the type-based ones. Anything else (permission checks,
+ * excluding a specific subtree so an element can't be moved into itself, …) is a
+ * few lines of custom `classify` at the call site — see this file's spec for
+ * worked examples.
+ */
+export function classifyByModelType(config: {
+  /** Defaults to the scalar leaf types (Property, MultiLanguageProperty, ReferenceElement, File). */
+  selectable?: string[];
+  /** Model types to drop entirely, whether they'd otherwise be a leaf or a container. */
+  hidden?: string[];
+}): ClassifyIdShortPathNode {
+  const selectable = new Set(config.selectable ?? SCALAR_LEAF_MODEL_TYPES);
+  const hidden = new Set(config.hidden ?? []);
+  return (_node, modelType) => {
+    if (hidden.has(modelType)) return "hidden";
+    if (selectable.has(modelType)) return "selectable";
+    if (CONTAINER_MODEL_TYPES.includes(modelType) || modelType === SUBMODEL_MODEL_TYPE) {
+      return "visible";
+    }
+    return "hidden";
+  };
 }
 
-function submodelNodeKey(submodelIdShort: string): string {
-  return `sm:${submodelIdShort}`;
-}
+const defaultClassify = classifyByModelType({});
 
-function elementNodeKey(submodelIdShort: string, idShortPath: string): string {
-  return `sm:${submodelIdShort}:${idShortPath}`;
-}
-function nodeToKey(node: IdShortPathNode): string {
-  return `${node.submodelIdShort}::${node.output}`;
-
+function nodePointerToKey(pointer: IdShortPathPointer): string {
+  return `${pointer.submodelIdShort}::${pointer.idShortPath}`;
 }
 
 export interface UseIdShortPathSelectTreeOptions {
-  /** Model types to skip entirely, whether they appear as a leaf or a container. */
-  excludeModelTypes?: MaybeRefOrGetter<string[]>;
+  /** Defaults to picking scalar leaf fields (the original behavior). See `classifyByModelType`. */
+  classify?: ClassifyIdShortPathNode;
 }
 
 export function useIdShortPathSelectTree(
@@ -51,60 +55,30 @@ export function useIdShortPathSelectTree(
   options: UseIdShortPathSelectTreeOptions = {},
 ) {
   const { locale } = useI18n();
+  const classify = options.classify ?? defaultClassify;
 
   const treeState = computed(() => {
-    const excludedModelTypes = new Set(toValue(options.excludeModelTypes) ?? []);
-    const nodesByKey = new Map<string, IdShortPathNode>();
-    const keysByNode = new Map<string, string>();
-
-    const buildElementNode = (
-      submodelIdShort: string,
-      path: IdShortPath,
-      element: SubmodelElementSharedResponseDto,
-    ): TreeNode | null => {
-      if (excludedModelTypes.has(element.modelType)) return null;
-
-      const idShortPath = path.addPathSegment(element.idShort);
-      const key = elementNodeKey(submodelIdShort, idShortPath.toString());
-      const label = resolveLanguageTexts(element.displayName, locale.value, element.idShort);
-
-      if (SCALAR_LEAF_MODEL_TYPES.includes(element.modelType)) {
-        const node: IdShortPathNode = {
-          submodelIdShort: submodelIdShort,
-          output: idShortPath.toString(),
-        };
-        nodesByKey.set(key, node);
-        keysByNode.set(nodeToKey(node), key);
-        return { key, label };
-      }
-
-      if (CONTAINER_MODEL_TYPES.includes(element.modelType)) {
-        const children = ContainerChildrenSchema.parse(element)
-          .value.map((child) => buildElementNode(submodelIdShort, idShortPath, child))
-          .filter((node): node is TreeNode => node !== null);
-        if (children.length === 0) return null;
-        return { key, label, selectable: false, children };
-      }
-
-      return null;
+    const nodePointersByKey = new Map<string, IdShortPathPointer>();
+    const keysByNodePointer = new Map<string, string>();
+    const ctx: TreeBuildContext = {
+      classify,
+      register: (key, node) => {
+        nodePointersByKey.set(key, node);
+        keysByNodePointer.set(nodePointerToKey(node), key);
+      },
     };
 
-    const treeNodes: TreeNode[] = [];
-    for (const submodel of toValue(submodels)) {
-      const children = submodel.submodelElements
-        .map((element) => buildElementNode(submodel.id, idShortPathRoot, element))
-        .filter((node): node is TreeNode => node !== null);
-      if (children.length === 0) continue;
+    const treeNodes = toValue(submodels)
+      .map((submodel) =>
+        makeIdShortPathNode({
+          kind: "submodel",
+          submodelIdShort: submodel.idShort,
+          submodel,
+        }).toTreeNode(ctx, locale.value),
+      )
+      .filter((node): node is TreeNode => node !== null);
 
-      treeNodes.push({
-        key: submodelNodeKey(submodel.id),
-        label: resolveLanguageTexts(submodel.displayName, locale.value, submodel.idShort),
-        selectable: false,
-        children,
-      });
-    }
-
-    return { treeNodes, targetsByKey: nodesByKey, keysByTarget: keysByNode };
+    return { treeNodes, nodePointersByKey, keysByNodePointer };
   });
 
   const treeNodes = computed(() => treeState.value.treeNodes);
@@ -118,15 +92,15 @@ export function useIdShortPathSelectTree(
     { immediate: true },
   );
 
-  function resolveNode(key: string | undefined): IdShortPathNode | null {
+  function resolveNodePointer(key: string | undefined): IdShortPathPointer | null {
     if (!key) return null;
-    return treeState.value.targetsByKey.get(key) ?? null;
+    return treeState.value.nodePointersByKey.get(key) ?? null;
   }
 
-  function resolveKey(target: IdShortPathNode | null | undefined): string | null {
+  function resolveKey(target: IdShortPathPointer | null | undefined): string | null {
     if (!target) return null;
-    return treeState.value.keysByTarget.get(nodeToKey(target)) ?? null;
+    return treeState.value.keysByNodePointer.get(nodePointerToKey(target)) ?? null;
   }
 
-  return { treeNodes, expandedKeys, resolveNode, resolveKey };
+  return { treeNodes, expandedKeys, resolveNodePointer, resolveKey };
 }
