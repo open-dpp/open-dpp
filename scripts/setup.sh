@@ -4,8 +4,7 @@
 #
 # Works from a repo checkout (./scripts/setup.sh) or standalone in an empty
 # directory (missing files are downloaded from the main branch):
-#   curl -fsSL -o setup.sh https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh
-#   bash setup.sh
+#   curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
 #
 # Idempotent: re-running never overwrites existing files, it just restarts
 # the stack.
@@ -18,9 +17,12 @@ die() {
   exit 1
 }
 
-# run from the repo root when invoked from a checkout, otherwise from cwd
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-if [ -f "${script_dir}/../docker-compose.yml" ]; then
+main() {
+
+# run from the repo root when invoked from a checkout ($0 is "bash" when the
+# script is piped in, so only trust it when it points into a scripts/ dir)
+script_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+if [[ "${script_dir}" == */scripts && -f "${script_dir}/../docker-compose.yml" ]]; then
   cd "${script_dir}/.."
 fi
 
@@ -80,3 +82,9 @@ open-dpp is up. Open:
 
 Restart the stack later with `docker compose up -d` (or re-run this script).
 EOF
+
+}
+
+# the main() wrapper ensures nothing executes from a partially downloaded
+# script when piped through bash
+main "$@"

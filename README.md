@@ -9,8 +9,7 @@ To get up and running quickly, start with the [Getting Started guide](https://do
 ## Try it locally
 
 ```bash
-curl -fsSL -o setup.sh https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh
-bash setup.sh
+curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
 ```
 
 This downloads the example deployment files, generates local secrets, and starts the full stack with Docker Compose. Then open <http://app.open-dpp.localhost:20080>.

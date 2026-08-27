@@ -16,8 +16,7 @@ This guide describes a basic self-hosted setup of open-dpp.
 The setup script downloads the deployment files, generates local secrets and the MongoDB key file, and starts the stack:
 
 ```bash
-curl -fsSL -o setup.sh https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh
-bash setup.sh
+curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
 ```
 
 In a cloned repository, run `./scripts/setup.sh` instead.
