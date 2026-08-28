@@ -607,6 +607,7 @@
     "label": "Activity history",
     "createdAt": "Date",
     "position": "Position",
+    "oldPosition": "Old position",
     "name": "Name",
     "group": "Group",
     "type": "Type",
@@ -614,6 +615,11 @@
     "oldValue": "Old value",
     "newValue": "New value",
     "userId": "User ID",
+    "movedFrom": "Moved from",
+    "movedTo": "Moved to",
+    "viewHistoryBeforeMove": "View history before move",
+    "live": "Live",
+    "beforeMove": "Before move to {path}",
     "languageOps": {
       "replace": "modified",
       "add": "added",
@@ -648,7 +654,9 @@
       "DigitalProductDocumentStatusChanged": "Status changed",
       "PolicyModified": "Permission modified",
       "FileValueChanged": "File changed",
-      "ReferenceElementValueChanged": "Reference changed"
+      "ReferenceElementValueChanged": "Reference changed",
+      "SubmodelElementMoved": "Element moved",
+      "SubmodelMoved": "Section moved"
     }
   },
   "passports": {

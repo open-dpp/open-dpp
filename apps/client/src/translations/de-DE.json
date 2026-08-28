@@ -636,6 +636,7 @@
     "label": "Aktivitätsverlauf",
     "createdAt": "Datum",
     "position": "Position",
+    "oldPosition": "Alte Position",
     "name": "Name",
     "group": "Gruppe",
     "type": "Typ",
@@ -644,6 +645,11 @@
     "newValue": "Neuer Wert",
     "userId": "Benutzer ID",
     "path": "Pfad",
+    "movedFrom": "Verschoben von",
+    "movedTo": "Verschoben nach",
+    "viewHistoryBeforeMove": "Verlauf vor der Verschiebung anzeigen",
+    "live": "Aktuell",
+    "beforeMove": "Vor Verschiebung nach {path}",
     "languageOps": {
       "replace": "geändert",
       "add": "hinzugefügt",
@@ -678,7 +684,9 @@
       "SubmodelDeleted": "Abschnitt gelöscht",
       "DigitalProductDocumentStatusChanged": "Status geändert",
       "FileValueChanged": "Datei geändert",
-      "ReferenceElementValueChanged": "Referenz geändert"
+      "ReferenceElementValueChanged": "Referenz geändert",
+      "SubmodelElementMoved": "Element verschoben",
+      "SubmodelMoved": "Abschnitt verschoben"
     }
   },
   "passports": {
