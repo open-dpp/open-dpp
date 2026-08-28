@@ -1,5 +1,4 @@
 import {
-  AasSubmodelElements,
   type SubmodelElementSharedResponseDto,
   SubmodelElementSharedSchema,
   type SubmodelResponseDto,
@@ -7,25 +6,13 @@ import {
 import type { TreeNode } from "primevue/treenode";
 import { z } from "zod";
 import { resolveLanguageTexts } from "../composables/language.ts";
+import { makeSubmodelElement } from "./submodel-element.ts";
 
 export interface IdShortPathOption {
   submodelIdShort: string;
   idShortPath: string;
 }
 
-export const SCALAR_LEAF_MODEL_TYPES: string[] = [
-  AasSubmodelElements.Property,
-  AasSubmodelElements.MultiLanguageProperty,
-  AasSubmodelElements.ReferenceElement,
-  AasSubmodelElements.File,
-];
-// Both SubmodelElementCollection *and* SubmodelElementList can hold scalar leaves - unlike the
-// existing tree composables (submodel-tree.ts, aas-editor.ts), which only recurse into
-// SubmodelElementCollection and would silently skip fields nested inside a list/table.
-export const CONTAINER_MODEL_TYPES: string[] = [
-  AasSubmodelElements.SubmodelElementCollection,
-  AasSubmodelElements.SubmodelElementList,
-];
 /** Sentinel modelType passed to `classify` for the submodel root itself (a Submodel isn't a submodel element, so it has no real modelType). */
 export const SUBMODEL_MODEL_TYPE = "Submodel";
 const ContainerChildrenSchema = z.object({ value: SubmodelElementSharedSchema.array() });
@@ -91,7 +78,7 @@ export function makeIdShortPathNode(source: IdShortPathNodeSource) {
   }
 
   function canHaveChildren(): boolean {
-    return source.kind === "submodel" || CONTAINER_MODEL_TYPES.includes(source.element.modelType);
+    return source.kind === "submodel" || makeSubmodelElement(source.element).isContainer();
   }
 
   function getChildren() {

@@ -4,13 +4,12 @@ import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   type ClassifyIdShortPathNode,
-  CONTAINER_MODEL_TYPES,
   type IdShortPathPointer,
   makeIdShortPathNode,
-  SCALAR_LEAF_MODEL_TYPES,
   SUBMODEL_MODEL_TYPE,
   type TreeBuildContext,
 } from "../lib/id-short-path-select.ts";
+import { SCALAR_LEAF_MODEL_TYPES, CONTAINER_MODEL_TYPES } from "../lib/submodel-element.ts";
 
 /**
  * Convenience builder for the common "classify purely by model type" case. Every
