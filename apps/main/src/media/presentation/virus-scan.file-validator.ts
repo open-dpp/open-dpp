@@ -1,5 +1,4 @@
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
-import process from "node:process";
 import { HttpService } from "@nestjs/axios";
 import { FileValidator } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -16,14 +15,15 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
   private readonly configService = new EnvService(new ConfigService());
 
   async isValid(file?: Express.Multer.File): Promise<boolean> {
-    const clamAvUrl = `${this.configService.get("OPEN_DPP_CLAMAV_URL")}:${this.configService.get("OPEN_DPP_CLAMAV_PORT")}`;
+    if (!file) {
+      return false;
+    }
+    const clamAvUrl = this.configService.get("OPEN_DPP_CLAMAV_URL");
+    if (!clamAvUrl) {
+      return true; // virus scanning disabled (see docs/guides/production.md)
+    }
     try {
       const form = new FormData();
-
-      if (!file) {
-        return false;
-      }
-
       const fileContent =
         this.validationOptions.storageType === "disk"
           ? readFileSync(file.path)
@@ -31,22 +31,12 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
       form.append("file", fileContent, file.originalname);
 
       try {
-        const result = (await firstValueFrom(this.httpService.post(`${clamAvUrl}/scan`, form)))
-          .status;
-        if (result === 200) {
+        const { status } = await firstValueFrom(this.httpService.post(`${clamAvUrl}/scan`, form));
+        if (status === 200) {
           return true;
         }
       } catch (err: unknown) {
         console.error("Error during virus scan:", err);
-        if (
-          typeof err === "object" &&
-          err !== null &&
-          "syscall" in err &&
-          err.syscall === "getaddrinfo" &&
-          process.env.NODE_ENV === "LOCAL"
-        ) {
-          return true; // ignore if in LOCAL env and clamav is not available
-        }
       }
 
       if (this.validationOptions.storageType === "disk" && existsSync(file.path)) {

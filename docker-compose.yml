@@ -115,9 +115,6 @@ services:
       exit 0;
       "
 
-  clamav-rest:
-    image: ajilaag/clamav-rest
-
 volumes:
   caddy_data:
   caddy_config:

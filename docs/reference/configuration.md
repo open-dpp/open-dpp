@@ -48,10 +48,9 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## ClamAV
 
-| Variable               | Type   | Required | Default | Description                  |
-| ---------------------- | ------ | -------- | ------- | ---------------------------- |
-| `OPEN_DPP_CLAMAV_URL`  | string | Yes      | –       | ClamAV service host/address. |
-| `OPEN_DPP_CLAMAV_PORT` | number | Yes      | –       | ClamAV service port.         |
+| Variable              | Type       | Required | Default | Description                                                                                                                                                                                                                                           |
+| --------------------- | ---------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_CLAMAV_URL` | URL (http) | No       | –       | clamav-rest endpoint incl. port, e.g. `http://clamav-rest:9000`. Unset or empty disables virus scanning: uploads are accepted **unscanned** and a warning is logged at startup. See the [Production guide](/guides/production#virus-scanning-clamav). |
 
 ## Mail
 

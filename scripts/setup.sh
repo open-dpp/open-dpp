@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # One-command local setup of the example deployment stack (docker-compose.yml):
-# caddy + open-dpp + MongoDB + MinIO + Mailpit + ClamAV.
+# caddy + open-dpp + MongoDB + MinIO + Mailpit (no virus scanning, see
+# https://docs.open-dpp.de/guides/production to add ClamAV).
 #
 # Works from a repo checkout (./scripts/setup.sh) or standalone in an empty
 # directory (missing files are downloaded from the main branch):
@@ -54,6 +55,7 @@ else
     .env.example > .env
   echo "  generated MongoDB password and auth secret; enabled signup and organization creation"
   echo "  note: AI features additionally need real values for OPEN_DPP_MISTRAL_API_KEY / OPEN_DPP_OLLAMA_URL"
+  echo "  note: uploads are not virus-scanned; set OPEN_DPP_CLAMAV_URL to enable (https://docs.open-dpp.de/guides/production)"
 fi
 
 if [ -f docker/mongo_keyfile ]; then

@@ -42,9 +42,6 @@ jobs:
       OPEN_DPP_S3_SECRET_KEY: "test-minio-password"
       OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
       OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
-      # ClamAV. docker-compose.dev.yml maps ${OPEN_DPP_CLAMAV_PORT} -> 9000.
-      OPEN_DPP_CLAMAV_URL: "http://localhost"
-      OPEN_DPP_CLAMAV_PORT: "20006"
       # Mail. The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ
       # mail from Mailpit's HTTP API on 8025 (the MAILPIT_URL default).
       OPEN_DPP_MAIL_HOST: "localhost"

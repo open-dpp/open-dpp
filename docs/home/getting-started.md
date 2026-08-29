@@ -33,7 +33,7 @@ curl -fsSL -o Caddyfile https://raw.githubusercontent.com/open-dpp/open-dpp/main
 curl -fsSL -o .env https://raw.githubusercontent.com/open-dpp/open-dpp/main/.env.example
 ```
 
-Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_MONGODB_PASSWORD` and `OPEN_DPP_AUTH_SECRET` to secure values. For a complete list of settings, see [configuration options](/reference/configuration).
+Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_MONGODB_PASSWORD` and `OPEN_DPP_AUTH_SECRET` to secure values. For a complete list of settings, see [configuration options](/reference/configuration). This example stack does not virus-scan uploads; see the [Production guide](/guides/production#virus-scanning-clamav) to add ClamAV.
 
 Then create the MongoDB key file (MongoDB runs as a single-node replica set, which requires one):
 
