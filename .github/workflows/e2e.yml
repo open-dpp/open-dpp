@@ -45,8 +45,11 @@ jobs:
       # ClamAV. docker-compose.dev.yml maps ${OPEN_DPP_CLAMAV_PORT} -> 9000.
       OPEN_DPP_CLAMAV_URL: "http://localhost"
       OPEN_DPP_CLAMAV_PORT: "20006"
-      # Mail. The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ
-      # mail from Mailpit's HTTP API on 8025 (the MAILPIT_URL default).
+      # Mail. Mailpit sits behind the `mail` compose profile (mail is optional);
+      # the suite reads verification mails from it, so the profile is on here.
+      # The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ mail
+      # from Mailpit's HTTP API on 8025 (the MAILPIT_URL default).
+      COMPOSE_PROFILES: "mail"
       OPEN_DPP_MAIL_HOST: "localhost"
       OPEN_DPP_MAIL_PORT: "8026"
       OPEN_DPP_MAIL_USER: "admin"

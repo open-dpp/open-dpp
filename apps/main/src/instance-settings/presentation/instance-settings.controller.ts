@@ -61,6 +61,7 @@ export class InstanceSettingsController {
         : {};
     return PublicInstanceSettingsDtoSchema.parse({
       signupEnabled: settings.signupEnabled.value,
+      mailEnabled: settings.mailEnabled.value,
       ...settingsVisibleToRegisteredUsers,
     });
   }

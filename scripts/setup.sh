@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # One-command local setup of the example deployment stack (docker-compose.yml):
-# caddy + open-dpp + MongoDB + MinIO + Mailpit + ClamAV.
+# caddy + open-dpp + MongoDB + MinIO + ClamAV. Mail is off (links are logged);
+# see docs/guides/production.md to configure SMTP.
 #
 # Works from a repo checkout (./scripts/setup.sh) or standalone in an empty
 # directory (missing files are downloaded from the main branch):
@@ -75,10 +76,12 @@ cat <<'EOF'
 
 open-dpp is up. Open:
 
-  app:     http://app.open-dpp.localhost:20080
-  Mailpit: http://localhost:8025
+  app: http://app.open-dpp.localhost:20080
 
-(If you changed SERVICE_* hosts or ports in .env, adjust the URLs accordingly.)
+(If you changed SERVICE_* hosts or ports in .env, adjust the URL accordingly.)
+
+No SMTP server is configured, so verification and password-reset links are
+written to the app log instead of being mailed: `docker compose logs -f open-dpp`
 
 Restart the stack later with `docker compose up -d` (or re-run this script).
 EOF

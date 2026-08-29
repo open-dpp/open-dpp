@@ -7,6 +7,11 @@ const asStrictBoolean = z
   })
   .transform((val) => val.toLowerCase() === "true");
 
+// "" in an env file means "not configured" (compose passes unset vars through as
+// empty strings), so it is treated like an unset variable.
+const emptyToUndefined = (val: unknown) => (val === "" ? undefined : val);
+const optionalString = z.preprocess(emptyToUndefined, z.string().optional());
+
 export const envSchema = z
   .object({
     // Misc
@@ -55,14 +60,15 @@ export const envSchema = z
     OPEN_DPP_BUILD_API_DOC: asStrictBoolean.optional().default(false),
     OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce.string().or(z.number()).optional().default("10mb"),
     OPEN_DPP_JSON_LIMIT_INTEGRATION: z.coerce.string().or(z.number()).optional().default("50mb"),
-    // Mail
-    OPEN_DPP_MAIL_HOST: z.coerce.string(),
-    OPEN_DPP_MAIL_PORT: z.coerce.number().max(65535).min(0),
-    OPEN_DPP_MAIL_USER: z.coerce.string(),
-    OPEN_DPP_MAIL_PASSWORD: z.coerce.string(),
-    OPEN_DPP_MAIL_SENDER_ADDRESS: z.coerce.string(),
-    OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: z.coerce.string().optional(),
-    OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: z.coerce.string().optional(),
+    // Mail (optional: unset host = mail disabled, links are logged instead)
+    OPEN_DPP_MAIL_HOST: optionalString,
+    OPEN_DPP_MAIL_PORT: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().max(65535).min(0).optional().default(587),
+    ),
+    OPEN_DPP_MAIL_USER: optionalString,
+    OPEN_DPP_MAIL_PASSWORD: optionalString,
+    OPEN_DPP_MAIL_SENDER_ADDRESS: optionalString,
     // Auth
     OPEN_DPP_AUTH_SECRET: z.coerce.string(),
     OPEN_DPP_AUTH_CLOUD_ENABLED: asStrictBoolean.optional().default(false),
@@ -75,6 +81,7 @@ export const envSchema = z
     // Instance Settings
     OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),
     OPEN_DPP_INSTANCE_ORGANIZATION_CREATION_ENABLED: asStrictBoolean.optional(),
+    OPEN_DPP_INSTANCE_MAIL_ENABLED: asStrictBoolean.optional(),
     // Default Caps
     OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
     OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),
@@ -116,6 +123,13 @@ export const envSchema = z
           ],
         });
       }
+    }
+    if (val.OPEN_DPP_MAIL_HOST && !val.OPEN_DPP_MAIL_SENDER_ADDRESS) {
+      ctx.addIssue({
+        code: "custom",
+        message: "OPEN_DPP_MAIL_SENDER_ADDRESS is required when OPEN_DPP_MAIL_HOST is set.",
+        path: ["OPEN_DPP_MAIL_SENDER_ADDRESS"],
+      });
     }
     const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;
     const hasAuthAdminPassword = !!val.OPEN_DPP_AUTH_ADMIN_PASSWORD;

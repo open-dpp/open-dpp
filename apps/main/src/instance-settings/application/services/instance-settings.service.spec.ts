@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
@@ -8,6 +8,9 @@ import { InstanceSettingsService } from "./instance-settings.service";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
 import { OrganizationCreationEnabledSetting } from "../../domain/organization-creation-enabled-setting";
 import { PermalinkBaseUrlSetting } from "../../domain/permalink-base-url-setting";
+import { MailEnabledSetting } from "../../domain/mail-enabled-setting";
+
+const SMTP_HOST = "smtp.example.com";
 
 describe("InstanceSettingsService", () => {
   let service: InstanceSettingsService;
@@ -35,6 +38,135 @@ describe("InstanceSettingsService", () => {
     }).compile();
 
     service = module.get<InstanceSettingsService>(InstanceSettingsService);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe("mailEnabled precedence", () => {
+    const envWith = (values: Record<string, unknown>) =>
+      mockEnvService.get.mockImplementation((key: string) => values[key]);
+
+    it("is forced off and locked when no SMTP host is configured, even if the env lock says on", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ [MailEnabledSetting.ENV_NAME]: true });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBe(true);
+    });
+
+    it("is forced off and locked when the SMTP host is an empty string", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: "" });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBe(true);
+    });
+
+    it("is locked to OPEN_DPP_INSTANCE_MAIL_ENABLED when the host is set", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST, [MailEnabledSetting.ENV_NAME]: false });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBe(true);
+    });
+
+    it("uses the stored value when the host is set and no env lock exists", async () => {
+      mockRepository.findOne.mockResolvedValue(
+        InstanceSettings.create({ mailEnabled: { value: false } }),
+      );
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(result.mailEnabled.locked).toBeUndefined();
+    });
+
+    it("defaults to on when the host is set and nothing is stored", async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST });
+
+      const result = await service.getSettings();
+
+      expect(result.mailEnabled.value).toBe(true);
+      expect(result.mailEnabled.locked).toBeUndefined();
+    });
+
+    it("rejects updating a locked mailEnabled", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({});
+
+      await expect(service.updateSettings({ mailEnabled: true })).rejects.toThrow(
+        `Cannot override mailEnabled when ${MailEnabledSetting.ENV_NAME} is set`,
+      );
+    });
+
+    it("can be toggled off by an admin when unlocked", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST });
+
+      const result = await service.updateSettings({ mailEnabled: false });
+
+      expect(result.mailEnabled.value).toBe(false);
+      expect(mockRepository.save).toHaveBeenCalled();
+    });
+
+    it("does not persist the env-forced value when another setting is updated", async () => {
+      // No SMTP host → mail forced off. Turning signup off must not write that
+      // forced `false` into the DB, or mail stays off once SMTP gets configured.
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({});
+
+      await service.updateSettings({ signupEnabled: false });
+
+      const persisted = mockRepository.save.mock.calls[0][0] as InstanceSettings;
+      expect(persisted.mailEnabled.value).toBe(true);
+      expect(persisted.signupEnabled.value).toBe(false);
+    });
+  });
+
+  describe("cache", () => {
+    it("serves repeated reads from memory", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+
+      await service.getSettings();
+      await service.getSettings();
+
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+    });
+
+    it("reloads after the 60 s TTL", async () => {
+      jest.useFakeTimers();
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+
+      await service.getSettings();
+      jest.advanceTimersByTime(59_000);
+      await service.getSettings();
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(2_000);
+      await service.getSettings();
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
+    });
+
+    it("reflects an update immediately without another DB read", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      await service.getSettings();
+
+      await service.updateSettings({ signupEnabled: false });
+      const result = await service.getSettings();
+
+      expect(result.signupEnabled.value).toBe(false);
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("getSettings — no env vars set", () => {

@@ -575,6 +575,10 @@
           "title": "Öffentliche Erstellung von Organisationen aktiviert",
           "description": "Wenn deaktiviert, können nur Administrator*innen neue Organisationen hinzufügen."
         },
+        "mailEnabled": {
+          "title": "E-Mail-Versand aktiviert",
+          "description": "Wenn deaktiviert, werden keine E-Mails gesendet. Verifizierungs-, Passwort-Zurücksetzen-, E-Mail-Änderungs- und Einladungslinks werden stattdessen ins Server-Log geschrieben."
+        },
         "permalinkBaseUrl": {
           "title": "Produktpass URL",
           "description": "URL, unter der permanente Links zu veröffentlichten Produktpässen bereitgestellt werden.",

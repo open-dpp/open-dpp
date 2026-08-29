@@ -50,4 +50,14 @@ describe("InstanceSettingsRepository", () => {
     expect(found).not.toBeNull();
     expect(found!.permalinkBaseUrl.value).toBe("https://id.acme.com");
   });
+
+  it("round-trips mailEnabled=false through MongoDB", async () => {
+    // settings are a singleton: update the document the previous test created
+    const existing = (await repository.findOne()) ?? InstanceSettings.create();
+
+    await repository.save(existing.update({ mailEnabled: false }));
+    const found = await repository.findOne();
+
+    expect(found!.mailEnabled.value).toBe(false);
+  });
 });

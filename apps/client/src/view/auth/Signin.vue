@@ -23,6 +23,7 @@ const toast = useToast();
 const rememberMe = ref<boolean>(false);
 const loading = ref<boolean>(false);
 const signupEnabled = ref<boolean>(false);
+const mailEnabled = ref<boolean>(true);
 const checkingSettings = ref<boolean>(true);
 
 const { handleSubmit, errors, submitCount, defineField, resetField } = useForm({
@@ -45,6 +46,7 @@ onMounted(async () => {
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
     signupEnabled.value = res.data.signupEnabled;
+    mailEnabled.value = res.data.mailEnabled;
   } catch {
     signupEnabled.value = false;
   } finally {
@@ -181,7 +183,7 @@ const signin = handleSubmit(async (values) => {
                 }}</label>
               </div>
 
-              <div class="text-sm/6">
+              <div v-if="mailEnabled" class="text-sm/6">
                 <router-link
                   to="/password-reset-request"
                   class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
