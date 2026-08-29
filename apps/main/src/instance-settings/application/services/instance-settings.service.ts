@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
+import { ValueError } from "@open-dpp/exception";
 import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
 import { InstanceSettingsRepository } from "../../infrastructure/adapters/instance-settings.repository";
 import { SignupEnabledSetting } from "../../domain/signup-enabled-setting";
@@ -25,7 +26,12 @@ export class InstanceSettingsService {
   }
 
   async updateSettings(updates: Partial<InstanceSettingsDbProps>): Promise<InstanceSettings> {
-    const stored = await this.loadStored();
+    if (updates.mailEnabled !== undefined && !this.isSmtpConfigured()) {
+      throw new ValueError("Cannot change mailEnabled: OPEN_DPP_MAIL_HOST is not set, mail is off");
+    }
+    // save() replaces the whole singleton document, so the write must start from
+    // the DB, not from a possibly stale cache of another replica's state
+    const stored = await this.loadStored({ fresh: true });
     // enforce env locks against the effective settings, but persist the update
     // on the stored ones so env-forced values never end up in the DB
     this.applyEnvOverrides(stored).update(updates);
@@ -34,9 +40,11 @@ export class InstanceSettingsService {
     return this.applyEnvOverrides(saved);
   }
 
-  private async loadStored(): Promise<InstanceSettings> {
-    if (this.cache && Date.now() - this.cache.loadedAt < INSTANCE_SETTINGS_CACHE_TTL_MS) {
-      return this.cache.stored;
+  private async loadStored(options?: { fresh: boolean }): Promise<InstanceSettings> {
+    const cacheIsValid =
+      this.cache && Date.now() - this.cache.loadedAt < INSTANCE_SETTINGS_CACHE_TTL_MS;
+    if (cacheIsValid && !options?.fresh) {
+      return this.cache!.stored;
     }
     const stored =
       (await this.repository.findOne()) ??
@@ -49,6 +57,10 @@ export class InstanceSettingsService {
     this.cache = { stored, loadedAt: Date.now() };
   }
 
+  private isSmtpConfigured(): boolean {
+    return !!this.envService.get("OPEN_DPP_MAIL_HOST");
+  }
+
   private applyEnvOverrides(settings: InstanceSettings): InstanceSettings {
     const enforcedSignup = this.envService.get(SignupEnabledSetting.ENV_NAME);
     const envOrganizationCreationEnabled = this.envService.get(
@@ -56,7 +68,7 @@ export class InstanceSettingsService {
     );
     const envPermalinkBaseUrl = this.envService.get(PermalinkBaseUrlSetting.ENV_NAME);
     // no SMTP host ⇒ mail is off no matter what; otherwise the env lock (if any)
-    const envMailEnabled = this.envService.get("OPEN_DPP_MAIL_HOST")
+    const envMailEnabled = this.isSmtpConfigured()
       ? this.envService.get(MailEnabledSetting.ENV_NAME)
       : false;
 

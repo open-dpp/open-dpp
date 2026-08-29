@@ -1,10 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Model } from "mongoose";
 import { generateMongoConfig } from "../../../database/config";
 import { InstanceSettings } from "../../domain/instance-settings";
 import {
+  InstanceSettingsDocument,
+  InstanceSettingsDocVersion,
   InstanceSettingsMongooseSchema,
   InstanceSettingsSchema,
 } from "../schemas/instance-settings.schema";
@@ -59,5 +62,16 @@ describe("InstanceSettingsRepository", () => {
     const found = await repository.findOne();
 
     expect(found!.mailEnabled.value).toBe(false);
+  });
+
+  it("persists documents with schema version 1.4.0", async () => {
+    await repository.save(InstanceSettings.create());
+    const model = module.get<Model<InstanceSettingsDocument>>(
+      getModelToken(InstanceSettingsSchema.name),
+    );
+
+    const raw = await model.findOne().lean();
+
+    expect(raw?._schemaVersion).toBe(InstanceSettingsDocVersion.v1_4_0);
   });
 });

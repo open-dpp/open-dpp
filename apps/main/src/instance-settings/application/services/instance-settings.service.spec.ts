@@ -100,11 +100,20 @@ describe("InstanceSettingsService", () => {
       expect(result.mailEnabled.locked).toBeUndefined();
     });
 
-    it("rejects updating a locked mailEnabled", async () => {
+    it("rejects updating mailEnabled with a message naming the missing host", async () => {
       mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
       envWith({});
 
       await expect(service.updateSettings({ mailEnabled: true })).rejects.toThrow(
+        /OPEN_DPP_MAIL_HOST is not set/,
+      );
+    });
+
+    it("rejects updating mailEnabled locked by the env variable", async () => {
+      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+      envWith({ OPEN_DPP_MAIL_HOST: SMTP_HOST, [MailEnabledSetting.ENV_NAME]: true });
+
+      await expect(service.updateSettings({ mailEnabled: false })).rejects.toThrow(
         `Cannot override mailEnabled when ${MailEnabledSetting.ENV_NAME} is set`,
       );
     });
@@ -157,15 +166,19 @@ describe("InstanceSettingsService", () => {
       expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
     });
 
-    it("reflects an update immediately without another DB read", async () => {
-      mockRepository.findOne.mockResolvedValue(InstanceSettings.create());
+    it("writes on top of a fresh DB read, then serves the update from memory", async () => {
+      // another replica may have changed the singleton since this one cached it
+      const cached = InstanceSettings.create();
+      const fromOtherReplica = cached.update({ organizationCreationEnabled: false });
+      mockRepository.findOne.mockResolvedValueOnce(cached).mockResolvedValueOnce(fromOtherReplica);
       await service.getSettings();
 
       await service.updateSettings({ signupEnabled: false });
       const result = await service.getSettings();
 
       expect(result.signupEnabled.value).toBe(false);
-      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(result.organizationCreationEnabled.value).toBe(false);
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
     });
   });
 

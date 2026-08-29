@@ -6,7 +6,7 @@ All environment variables are listed in the [configuration reference](/reference
 
 ## Mail (SMTP)
 
-open-dpp sends mail for signup verification, password resets, email changes and organization invitations. Neither the example nor the development stack includes a mail server; connect your SMTP relay through these variables:
+open-dpp sends mail for signup verification, password resets, email changes and organization invitations. The example deployment ships without a mail server (the development stack can start Mailpit behind the `mail` compose profile); connect your SMTP relay through these variables:
 
 ```
 OPEN_DPP_MAIL_HOST="smtp.example.com"
@@ -18,6 +18,7 @@ OPEN_DPP_MAIL_SENDER_ADDRESS="open-dpp <noreply@example.com>"
 
 - `OPEN_DPP_MAIL_SENDER_ADDRESS` is required as soon as `OPEN_DPP_MAIL_HOST` is set; startup fails otherwise.
 - Port `587` (the default) connects in plain text and upgrades to TLS via STARTTLS when the server offers it. Port `465` uses implicit TLS from the first byte. Leave `OPEN_DPP_MAIL_USER` unset to send without an `AUTH` handshake.
+- With credentials on port `587`, make sure the relay advertises STARTTLS: the upgrade is opportunistic, so against a relay without it the password is sent in plain text. Use `465` when in doubt.
 
 ### Disabled mode
 

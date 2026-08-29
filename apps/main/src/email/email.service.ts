@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import Handlebars from "handlebars";
 import mjml2html from "mjml";
@@ -10,10 +10,10 @@ import { BaseEmail } from "./domain/base-email";
 import { buildSmtpOptions } from "./smtp-options";
 
 @Injectable()
-export class EmailService implements OnApplicationBootstrap {
+export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
-  // set by setupTransporter() when OPEN_DPP_MAIL_HOST is configured
+  // only when OPEN_DPP_MAIL_HOST is configured
   private smtpTransporter?: Transporter;
   // sink used while mail is off: builds the message but sends nothing
   private readonly logTransporter: Transporter = createTransport({ jsonTransport: true });
@@ -28,6 +28,9 @@ export class EmailService implements OnApplicationBootstrap {
     this.logoUrl = `${this.configService.get("OPEN_DPP_URL")}/api/branding/instance/logo`;
     this.registerPartial("emailHead", "_head.mjml");
     this.registerPartial("emailHeader", "_header.mjml");
+    // createTransport() does not connect, so this is safe at construction and
+    // guarantees send() never runs before the transporter exists
+    this.setupTransporter();
   }
 
   private registerPartial(name: string, file: string) {
@@ -35,7 +38,7 @@ export class EmailService implements OnApplicationBootstrap {
     Handlebars.registerPartial(name, content);
   }
 
-  async setupTransporter() {
+  private setupTransporter(): void {
     const host = this.configService.get("OPEN_DPP_MAIL_HOST");
     if (!host) {
       this.logger.warn(
@@ -86,10 +89,6 @@ export class EmailService implements OnApplicationBootstrap {
         `Mail not sent (mail disabled): type=${mail.type} to=${mail.to} subject="${mail.subject}" links=${linksOf(mail).join(" ") || "-"}`,
       );
     }
-  }
-
-  async onApplicationBootstrap() {
-    await this.setupTransporter();
   }
 }
 
