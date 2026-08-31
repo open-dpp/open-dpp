@@ -91,19 +91,24 @@ describe("DescriptionForm", () => {
   });
 
   it("adds a second row in a different language and removes rows individually", async () => {
+    // The locale's own language seeds the first row; with no other browser-preferred
+    // language available under jsdom, the next row falls back to the first unused one.
+    const nextUnusedLanguage = Object.values(Language).find((l) => l !== Language.en);
     const add = () => wrapper.find('[data-cy="add-description"]').trigger("click");
     await add();
     await add();
 
     expect((wrapper.vm as any).values.description).toEqual([
       { language: Language.en, text: "" },
-      { language: Language.de, text: "" },
+      { language: nextUnusedLanguage, text: "" },
     ]);
     expect(wrapper.find('[data-cy="remove-description-1"]').exists()).toBe(true);
 
     await wrapper.find('[data-cy="remove-description-0"]').trigger("click");
 
-    expect((wrapper.vm as any).values.description).toEqual([{ language: Language.de, text: "" }]);
+    expect((wrapper.vm as any).values.description).toEqual([
+      { language: nextUnusedLanguage, text: "" },
+    ]);
   });
 
   it("does not touch the displayName field array", async () => {

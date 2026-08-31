@@ -11,10 +11,7 @@ const { element, parentPath } = defineProps<{
 }>();
 
 const { name: elementName } = useLanguageTextList(element.displayName);
-
-// Resolve the description with an empty fallback so nothing renders when the field
-// has no description (unlike the name, which falls back to a placeholder).
-const { name: descriptionText } = useLanguageTextList(element.description)
+const { name: descriptionText } = useLanguageTextList(() => element.description, "");
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),

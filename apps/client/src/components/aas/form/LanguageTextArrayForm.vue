@@ -4,7 +4,7 @@ import { Language, LanguageEnum } from "@open-dpp/dto";
 import { useFieldArray } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { convertLocaleToLanguage } from "../../../translations/i18n.ts";
+import { useLanguageSelect } from "../../../composables/language.ts";
 import LanguageTextArrayRow from "./LanguageTextArrayRow.vue";
 
 const props = defineProps<{
@@ -19,7 +19,8 @@ const props = defineProps<{
   disabled?: boolean;
 }>();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const { nextLanguage } = useLanguageSelect();
 const {
   fields,
   push: pushRow,
@@ -32,11 +33,10 @@ const remainingLanguages = computed(() =>
   ),
 );
 
-function nextLanguage(): LanguageType {
-  const bestMatch = remainingLanguages.value.find(
-    (l) => l === convertLocaleToLanguage(locale.value),
-  );
-  return LanguageEnum.parse(bestMatch ?? remainingLanguages.value[0]);
+// The add button is disabled once every language is taken, so there is always a
+// remaining language here; the fallback only satisfies the non-optional row type.
+function nextRowLanguage(): LanguageType {
+  return nextLanguage(remainingLanguages.value) ?? LanguageEnum.parse(Object.keys(Language)[0]);
 }
 
 function ignoreOptions(language: LanguageType): LanguageType[] {
@@ -72,7 +72,7 @@ function ignoreOptions(language: LanguageType): LanguageType[] {
         @click="
           pushRow({
             text: '',
-            language: nextLanguage(),
+            language: nextRowLanguage(),
           })
         "
       ></Button>
