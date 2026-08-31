@@ -8,6 +8,7 @@ function createElement(idShort: string, children: SubmodelTreeElement[] = []): S
   return {
     idShort,
     name: [],
+    description: [],
     children,
     submodelElements: [],
   };
@@ -17,12 +18,13 @@ function createSubmodel(
   idShort: string,
   displayName: LanguageTextDto[] = [],
   submodelElements: SubmodelElementResponseDto[] = [],
+  description: LanguageTextDto[] = [],
 ): SubmodelResponseDto {
   return {
     id: idShort,
     idShort,
     displayName,
-    description: [],
+    description,
     submodelElements,
     extensions: [],
     supplementalSemanticIds: [],
@@ -38,12 +40,13 @@ function createSubmodel(
 function createProperty(
   idShort: string,
   displayName: LanguageTextDto[] = [],
+  description: LanguageTextDto[] = [],
 ): SubmodelElementResponseDto {
   return {
     modelType: "Property",
     idShort,
     displayName,
-    description: [],
+    description,
     supplementalSemanticIds: [],
     qualifiers: [],
     embeddedDataSpecifications: [],
@@ -118,6 +121,24 @@ describe("languageTags", () => {
       ),
     ]);
     expect(languageTags.value).toEqual(new Set(["en", "de"]));
+  });
+
+  it("collects language tags from submodel descriptions", () => {
+    const { languageTags } = useSubmodelTree([
+      createSubmodel("S1", [], [], [{ language: "de", text: "Beschreibung" }]),
+    ]);
+    expect(languageTags.value).toEqual(new Set(["de"]));
+  });
+
+  it("collects language tags from submodelElement descriptions", () => {
+    const { languageTags } = useSubmodelTree([
+      createSubmodel(
+        "S1",
+        [],
+        [createProperty("Prop1", [], [{ language: "fr", text: "Description" }])],
+      ),
+    ]);
+    expect(languageTags.value).toEqual(new Set(["fr"]));
   });
 
   it("collects language tags from multiple submodels", () => {

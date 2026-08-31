@@ -7,6 +7,11 @@ import LanguageSelect from "../../basics/LanguageSelect.vue";
 import TextFieldWithValidation from "../../basics/TextFieldWithValidation.vue";
 
 const props = defineProps<{
+  // Name of the vee-validate field array this row belongs to (e.g. "displayName",
+  // "description"). Drives the bound field paths and the DOM id / data-cy prefixes.
+  fieldName: string;
+  dataCyPrefix: string;
+  rowLabel: string;
   index: number;
   fieldKey: string | number;
   submitAttempted: boolean;
@@ -19,8 +24,8 @@ const emit = defineEmits<{ remove: [] }>();
 const { t } = useI18n();
 
 const indexRef = toRef(props, "index");
-const textPath = computed(() => `displayName[${indexRef.value}].text`);
-const languagePath = computed(() => `displayName[${indexRef.value}].language`);
+const textPath = computed(() => `${props.fieldName}[${indexRef.value}].text`);
+const languagePath = computed(() => `${props.fieldName}[${indexRef.value}].language`);
 
 const {
   value: text,
@@ -46,9 +51,9 @@ const showError = computed(() => textMeta.touched || props.submitAttempted);
       :ignore-options="props.ignoreLanguageOptions"
     />
     <TextFieldWithValidation
-      :id="`displayName-${fieldKey}`"
+      :id="`${props.fieldName}-${fieldKey}`"
       v-model="text"
-      :label="t('aasEditor.formLabels.name')"
+      :label="t(props.rowLabel)"
       :show-errors="showError"
       :error="textError"
       :disabled="props.disabled"
@@ -56,7 +61,7 @@ const showError = computed(() => textMeta.touched || props.submitAttempted);
       @blur="handleTextBlur"
     />
     <Button
-      :data-cy="`remove-display-name-${index}`"
+      :data-cy="`remove-${props.dataCyPrefix}-${index}`"
       :aria-label="t('common.remove')"
       icon="pi pi-trash"
       severity="danger"
