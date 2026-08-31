@@ -1,14 +1,14 @@
 # ⚠️  EXAMPLE DEPLOYMENT - NOT FOR PRODUCTION USE
 #
 # This Docker Compose configuration is designed for local development and
-# testing purposes only. For a production setup use authorization for your 
+# testing purposes only. For a production setup use authorization for your
 # database.
 
 services:
   open-dpp:
     restart: unless-stopped
     image: ghcr.io/open-dpp/open-dpp:${VERSION:-latest}
-    ports: 
+    ports:
       - "3000:${OPEN_DPP_PORT}"
     env_file:
       - .env

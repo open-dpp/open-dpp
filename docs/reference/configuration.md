@@ -65,12 +65,11 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Authentication
 
-| Variable                            | Type                    | Required    | Default | Description                              |
-| ----------------------------------- | ----------------------- | ----------- | ------- | ---------------------------------------- |
-| `OPEN_DPP_AUTH_SECRET`              | string                  | Yes         | –       | Authentication secret.                   |
-| `OPEN_DPP_AUTH_ADMIN_USERNAME`      | string                  | Conditional | –       | Optional admin bootstrap username.       |
-| `OPEN_DPP_AUTH_ADMIN_PASSWORD`      | string                  | Conditional | –       | Optional admin bootstrap password.       |
-
+| Variable                       | Type   | Required    | Default | Description                        |
+| ------------------------------ | ------ | ----------- | ------- | ---------------------------------- |
+| `OPEN_DPP_AUTH_SECRET`         | string | Yes         | –       | Authentication secret.             |
+| `OPEN_DPP_AUTH_ADMIN_USERNAME` | string | Conditional | –       | Optional admin bootstrap username. |
+| `OPEN_DPP_AUTH_ADMIN_PASSWORD` | string | Conditional | –       | Optional admin bootstrap password. |
 
 > `OPEN_DPP_AUTH_ADMIN_USERNAME` and `OPEN_DPP_AUTH_ADMIN_PASSWORD` must be provided together (both set or both omitted).
 

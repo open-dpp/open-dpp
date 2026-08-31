@@ -22,6 +22,6 @@ describe("generateMongoConfig", () => {
     const config = generateMongoConfig(mockConfigService);
 
     expect(config.dbName).not.toContain("existing-db");
-    expect(config.dbName).toMatch(/^test-[a-f0-9-]+/)
+    expect(config.dbName).toMatch(/^test-[a-f0-9-]+/);
   });
 });

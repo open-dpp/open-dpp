@@ -45,4 +45,3 @@ For more details, see [configuration options](/reference/configuration) and the 
 
 > [!WARNING]
 > The Docker Compose configuration used in this guide is intended for local evaluation only and is not suitable for production use. For guidance on setting up a production environment, see the [Production setup](/guides/production-setup) guide.
-

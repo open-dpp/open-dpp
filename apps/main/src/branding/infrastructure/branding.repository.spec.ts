@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -9,7 +9,6 @@ import { Organization } from "../../identity/organizations/domain/organization";
 import { Branding } from "../domain/branding";
 import { BrandingRepository } from "./branding.repository";
 import { BrandingDoc, BrandingSchema } from "./branding.schema";
-import { Connection } from "mongoose";
 
 describe("brandingRepository", () => {
   let brandingRepository: BrandingRepository;
@@ -49,7 +48,6 @@ describe("brandingRepository", () => {
     brandingRepository = module.get<BrandingRepository>(BrandingRepository);
     organizationService = module.get<OrganizationsService>(OrganizationsService);
   });
-
 
   afterEach(() => {
     jest.clearAllMocks();

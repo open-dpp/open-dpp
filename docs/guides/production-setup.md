@@ -25,13 +25,13 @@ OPEN_DPP_MONGODB_URI=mongodb://user:password@host1:27017,host2:27017,host3:27017
 
 Alternatively, if you are connecting to a single-host replica set, you may use the individual host variables instead:
 
-| Variable                    | Description                        |
-| --------------------------- | ---------------------------------- |
-| `OPEN_DPP_MONGODB_HOST`     | MongoDB host                       |
-| `OPEN_DPP_MONGODB_PORT`     | MongoDB port                       |
-| `OPEN_DPP_MONGODB_USER`     | MongoDB username                   |
-| `OPEN_DPP_MONGODB_PASSWORD` | MongoDB password                   |
-| `OPEN_DPP_MONGODB_DATABASE` | Database name                      |
+| Variable                    | Description      |
+| --------------------------- | ---------------- |
+| `OPEN_DPP_MONGODB_HOST`     | MongoDB host     |
+| `OPEN_DPP_MONGODB_PORT`     | MongoDB port     |
+| `OPEN_DPP_MONGODB_USER`     | MongoDB username |
+| `OPEN_DPP_MONGODB_PASSWORD` | MongoDB password |
+| `OPEN_DPP_MONGODB_DATABASE` | Database name    |
 
 Either `OPEN_DPP_MONGODB_URI` or the combination of `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_USER`, `OPEN_DPP_MONGODB_PASSWORD`, and `OPEN_DPP_MONGODB_DATABASE` are always required.
 
@@ -74,7 +74,7 @@ services:
 After first startup, the replica set must be initiated once via `mongosh`:
 
 ```js
-rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongodb:27017" }] })
+rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongodb:27017" }] });
 ```
 
 This step is required only once. On subsequent restarts the replica set configuration is persisted in the data volume.
@@ -95,15 +95,15 @@ open-dpp sends transactional email for account management and notifications. Con
 
 open-dpp stores file uploads (passport attachments, profile pictures) in an S3-compatible object storage service. Both self-hosted solutions (such as MinIO) and managed services (AWS S3, Cloudflare R2, Hetzner Object Storage) are supported.
 
-| Variable                             | Description                                                        |
-| ------------------------------------ | ------------------------------------------------------------------ |
-| `OPEN_DPP_S3_ENDPOINT`               | Hostname or IP address of the S3 endpoint                          |
-| `OPEN_DPP_S3_PORT`                   | Port of the S3 endpoint                                            |
-| `OPEN_DPP_S3_SSL`                    | Set to `"true"` to enable TLS; required for any public endpoint    |
-| `OPEN_DPP_S3_ACCESS_KEY`             | S3 access key                                                      |
-| `OPEN_DPP_S3_SECRET_KEY`             | S3 secret key                                                      |
-| `OPEN_DPP_S3_DEFAULT_BUCKET`         | Bucket for passport files (default: `open-dpp`)                    |
+| Variable                     | Description                                                     |
+| ---------------------------- | --------------------------------------------------------------- |
+| `OPEN_DPP_S3_ENDPOINT`       | Hostname or IP address of the S3 endpoint                       |
+| `OPEN_DPP_S3_PORT`           | Port of the S3 endpoint                                         |
+| `OPEN_DPP_S3_SSL`            | Set to `"true"` to enable TLS; required for any public endpoint |
+| `OPEN_DPP_S3_ACCESS_KEY`     | S3 access key                                                   |
+| `OPEN_DPP_S3_SECRET_KEY`     | S3 secret key                                                   |
+| `OPEN_DPP_S3_DEFAULT_BUCKET` | Bucket for passport files (default: `open-dpp`)                 |
 
-The bucket must exist before starting the application. 
+The bucket must exist before starting the application.
 
 Ensure that `OPEN_DPP_S3_SSL` is set to `"true"` whenever the storage endpoint is reachable over the public internet.

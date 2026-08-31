@@ -81,7 +81,11 @@ export const envSchema = z
   })
   .superRefine((val, ctx) => {
     const hasUri = !!val.OPEN_DPP_MONGODB_URI;
-    const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT && !!val.OPEN_DPP_MONGODB_USER && !!val.OPEN_DPP_MONGODB_PASSWORD;
+    const hasHostPort =
+      !!val.OPEN_DPP_MONGODB_HOST &&
+      !!val.OPEN_DPP_MONGODB_PORT &&
+      !!val.OPEN_DPP_MONGODB_USER &&
+      !!val.OPEN_DPP_MONGODB_PASSWORD;
     if (!hasUri && !hasHostPort) {
       ctx.addIssue({
         code: "custom",

@@ -14,11 +14,11 @@ export class AiService {
   }
 
   getLLM(aiModel: AiProvider_TYPE, model: string) {
-      return new ChatMistralAI({
-        model,
-        temperature: 0,
-        apiKey: this.configService.get("OPEN_DPP_MISTRAL_API_KEY"),
-      });
+    return new ChatMistralAI({
+      model,
+      temperature: 0,
+      apiKey: this.configService.get("OPEN_DPP_MISTRAL_API_KEY"),
+    });
   }
 
   getAgent({ llm, tools }: { llm: ChatMistralAI; tools: StructuredToolInterface[] }) {
