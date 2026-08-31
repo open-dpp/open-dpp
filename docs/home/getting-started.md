@@ -39,7 +39,7 @@ docker compose logs -f
 
 ## Explore the features
 
-After startup, open `OPEN_DPP_URL` in your browser and explore the platform ([http://localhost:3000](http://localhost:3000) by default). If your setup uses a custom port, include it in the URL. The docker compose project also includes a mailpit instance on [http://localhost:8025](http://localhost:8025) which allows you to receive emails from you open-dpp instance.
+After startup, open `OPEN_DPP_URL` in your browser and explore the platform ([http://localhost:3000](http://localhost:3000) by default). If your setup uses a custom port, include it in the URL. The docker compose project also includes a mailpit instance on [http://localhost:8025](http://localhost:8025) which allows you to receive emails from your open-dpp instance.
 
 For more details, see [configuration options](/reference/configuration) and the [guides](/guides/branding).
 

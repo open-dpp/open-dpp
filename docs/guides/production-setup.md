@@ -19,7 +19,7 @@ open-dpp relies on multi-document transactions, which require MongoDB to be runn
 
 Use `OPEN_DPP_MONGODB_URI` to supply a full connection URI. This is the recommended approach when connecting to a replica set, as the URI can encode the replica set name and all member hosts directly:
 
-```
+```dotenv
 OPEN_DPP_MONGODB_URI=mongodb://user:password@host1:27017,host2:27017,host3:27017/open-dpp?replicaSet=rs0&authSource=admin
 ```
 
@@ -33,7 +33,7 @@ Alternatively, if you are connecting to a single-host replica set, you may use t
 | `OPEN_DPP_MONGODB_PASSWORD` | MongoDB password |
 | `OPEN_DPP_MONGODB_DATABASE` | Database name    |
 
-Either `OPEN_DPP_MONGODB_URI` or the combination of `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_USER`, `OPEN_DPP_MONGODB_PASSWORD`, and `OPEN_DPP_MONGODB_DATABASE` are always required.
+Either `OPEN_DPP_MONGODB_URI` or the combination of `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_USER` and `OPEN_DPP_MONGODB_PASSWORD` are always required.
 
 ### MongoDB single-host replica set
 

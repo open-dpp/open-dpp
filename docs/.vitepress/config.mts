@@ -30,7 +30,6 @@ export default defineConfig({
             items: [
               { text: "About", link: "/home/about" },
               { text: "Getting started", link: "/home/getting-started" },
-              { text: "Production setup", link: "/home/production-setup" },
             ],
           },
           {
@@ -45,6 +44,7 @@ export default defineConfig({
               { text: "Branding", link: "/guides/branding" },
               { text: "AI Integration", link: "/guides/ai" },
               { text: "Development", link: "/guides/development" },
+              { text: "Production setup", link: "/guides/production-setup" },
             ],
           },
         ],

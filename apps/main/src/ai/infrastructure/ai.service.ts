@@ -3,7 +3,10 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { Injectable } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { AiProvider_TYPE } from "../ai-configuration/domain/ai-configuration";
+import { AiProvider, AiProvider_TYPE } from "../ai-configuration/domain/ai-configuration";
+
+/** Union of the chat models `getLLM` can return. Widen when a provider is added. */
+export type AiLlm = ChatMistralAI;
 
 @Injectable()
 export class AiService {
@@ -13,15 +16,20 @@ export class AiService {
     this.configService = configService;
   }
 
-  getLLM(aiModel: AiProvider_TYPE, model: string) {
-    return new ChatMistralAI({
-      model,
-      temperature: 0,
-      apiKey: this.configService.get("OPEN_DPP_MISTRAL_API_KEY"),
-    });
+  getLLM(provider: AiProvider_TYPE, model: string): AiLlm {
+    switch (provider) {
+      case AiProvider.Mistral:
+        return new ChatMistralAI({
+          model,
+          temperature: 0,
+          apiKey: this.configService.get("OPEN_DPP_MISTRAL_API_KEY"),
+        });
+      default:
+        throw new Error(`Unsupported AI provider: ${provider}`);
+    }
   }
 
-  getAgent({ llm, tools }: { llm: ChatMistralAI; tools: StructuredToolInterface[] }) {
+  getAgent({ llm, tools }: { llm: AiLlm; tools: StructuredToolInterface[] }) {
     return createReactAgent({
       llm,
       tools,
