@@ -3,6 +3,7 @@ import { useI18n } from "vue-i18n";
 import { useBrandingAnonymous } from "../../composables/branding.ts";
 import { usePresentationMenu } from "../../composables/presentation-menu.ts";
 import BrandingLogo from "../media/BrandingLogo.vue";
+import PresentationLanguageSelect from "./PresentationLanguageSelect.vue";
 
 const props = defineProps<{
   drawerVisible: boolean;
@@ -42,6 +43,7 @@ const { src } = useBrandingAnonymous(permalink);
     </template>
     <template #end>
       <div class="flex items-center gap-2">
+        <PresentationLanguageSelect />
         <Button
           icon="pi pi-comments"
           size="large"

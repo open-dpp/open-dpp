@@ -2,6 +2,7 @@ import { setupServer } from "msw/node";
 import { organizationHandlers } from "./handlers/organization";
 import { aasHandlers } from "./handlers/aas";
 import { aasIntegrationHandlers } from "./handlers/aas-integration";
+import { bulkImportHandlers } from "./handlers/bulk-import";
 import { passportsHandlers } from "./handlers/passports";
 import { templatesHandlers } from "./handlers/templates";
 import { uniqueProductIdentifierHandlers } from "./handlers/unique-product-identifiers";
@@ -19,6 +20,7 @@ const handlers = [
   ...digitalProductDocumentHandlers("passports"),
   ...templatesHandlers(),
   ...passportsHandlers(),
+  ...bulkImportHandlers(),
 ];
 
 export const server = setupServer(...handlers);

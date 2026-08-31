@@ -45,6 +45,11 @@ export class MembersRepository {
   }
 
   async findByOrganizationId(organizationId: string): Promise<Member[]> {
+    // The schema types organizationId as ObjectId, so a non-ObjectId id can never
+    // match — return early instead of letting Mongoose throw a CastError.
+    if (!Types.ObjectId.isValid(organizationId)) {
+      return [];
+    }
     // Better Auth stores organizationId as ObjectId
     const filter = {
       organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
@@ -66,6 +71,11 @@ export class MembersRepository {
     userId: string,
     organizationId: string,
   ): Promise<Member | null> {
+    // The schema types organizationId as ObjectId, so a non-ObjectId id can never
+    // match — return early instead of letting Mongoose throw a CastError.
+    if (!Types.ObjectId.isValid(organizationId)) {
+      return null;
+    }
     // Better Auth stores userId and organizationId as ObjectIds, so we need to convert
     // the string query parameters to ObjectIds for the query to match
     const filter = {

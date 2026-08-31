@@ -48,9 +48,15 @@ import {
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
-import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
+import {
+  AasExportVersion,
+  AasExportVersionType,
+  LatestAasExportVersion,
+} from "./export-schemas/aas-export-shared";
 import { DigitalProductDocumentStatus } from "../../../digital-product-document/domain/digital-product-document-status";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { TransactionService } from "../../../database/transaction.service";
+import { EmailService } from "../../../email/email.service";
 
 const adminPlain = {
   subjectAttribute: [
@@ -324,6 +330,7 @@ describe("aasSerializationService", () => {
         OrganizationsModule,
       ],
       providers: [
+        TransactionService,
         EnvironmentService,
         PassportRepository,
         TemplateRepository,
@@ -338,7 +345,12 @@ describe("aasSerializationService", () => {
           useValue: mockMediaService,
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     aasSerializationService = module.get<AasSerializationService>(AasSerializationService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
@@ -369,7 +381,7 @@ describe("aasSerializationService", () => {
     const exportResult = await aasSerializationService.exportPassport(foundAas, subject);
     expect(exportResult).toBeDefined();
     expect(exportResult.format).toBe("open-dpp:json");
-    expect(exportResult.version).toBe(AasExportVersion.v4_0);
+    expect(exportResult.version).toBe(LatestAasExportVersion);
   });
 
   describe("importPassport - media ownership validation", () => {
@@ -811,7 +823,7 @@ describe("aasSerializationService", () => {
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const exported = await aasSerializationService.exportPassport(loaded, admin);
     expect(exported.environment.submodels[0].submodelElements[0].modelType).toEqual("Property");
-    expect(exported.version).toEqual(AasExportVersion.v4_0);
+    expect(exported.version).toEqual(LatestAasExportVersion);
   });
 
   describe("presentation configuration", () => {
@@ -842,7 +854,7 @@ describe("aasSerializationService", () => {
       const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
       const exportResult = await aasSerializationService.exportPassport(passport, subject);
 
-      expect(exportResult.version).toBe(AasExportVersion.v4_0);
+      expect(exportResult.version).toBe(LatestAasExportVersion);
       expect(
         await presentationConfigurationRepository.findByReference({
           referenceType: "passport",

@@ -35,7 +35,7 @@ watch(
 
 const toast = useToast();
 
-const link = computed(() => permalinks.value?.[0]?.publicUrl);
+const link = computed(() => permalinks.value?.at(-1)?.publicUrl);
 
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { copy } = useClipboard();

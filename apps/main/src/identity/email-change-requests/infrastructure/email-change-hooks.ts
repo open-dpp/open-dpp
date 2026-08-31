@@ -1,5 +1,4 @@
 import type { Logger } from "@nestjs/common";
-import { LanguageType } from "@open-dpp/dto";
 import type { Db } from "mongodb";
 import { z } from "zod";
 import { EmailChangeCompletedMail } from "../../../email/domain/email-change-completed-mail";
@@ -8,9 +7,10 @@ import {
   deletePendingEmailChangeForUser,
   findPendingEmailChangeForUser,
 } from "./email-change-gate";
+import { DisplayLanguageType } from "@open-dpp/dto";
 
 // Localized like the mjml template siblings (see EmailTemplate.localizedName).
-const COMPLETED_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+const COMPLETED_SUBJECT_BY_LANGUAGE: Record<DisplayLanguageType, string> = {
   en: "Your email address was changed",
   de: "E-Mail-Adresse erfolgreich geändert",
 };
@@ -33,7 +33,7 @@ export interface EmailChangeUser {
   preferredLanguage?: unknown;
 }
 
-export function resolveUserLanguage(user: unknown): LanguageType {
+export function resolveUserLanguage(user: unknown): DisplayLanguageType {
   const preferred = (user as { preferredLanguage?: unknown } | null | undefined)?.preferredLanguage;
   return preferred === "de" ? "de" : "en";
 }

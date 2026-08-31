@@ -12,6 +12,14 @@ export function canonicaliseBaseUrl(s: string): string {
   }
 }
 
+export function baseUrlOrigin(s: string): string {
+  try {
+    return new URL(s).origin;
+  } catch {
+    return s;
+  }
+}
+
 export const PermalinkBaseUrlSchema = z
   .string()
   .min(8)

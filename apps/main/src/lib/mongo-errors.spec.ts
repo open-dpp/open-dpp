@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { isDuplicateKeyError } from "./mongo-errors";
+import { isDuplicateKeyError, isDuplicateKeyErrorOnField } from "./mongo-errors";
 
 describe("isDuplicateKeyError", () => {
   it("detects a duplicate-key error nested at a non-first writeErrors index", () => {
@@ -41,4 +41,40 @@ describe("isDuplicateKeyError", () => {
       expect(isDuplicateKeyError(input)).toBe(false);
     },
   );
+});
+
+describe("isDuplicateKeyErrorOnField", () => {
+  it("matches when keyPattern names the field", () => {
+    const error = { code: 11000, keyPattern: { uniqueProductIdentifierId: 1 } };
+    expect(isDuplicateKeyErrorOnField(error, "uniqueProductIdentifierId")).toBe(true);
+  });
+
+  it("rejects a duplicate on a DIFFERENT index (the misattribution bug)", () => {
+    const error = { code: 11000, keyPattern: { presentationConfigurationId: 1 } };
+    expect(isDuplicateKeyErrorOnField(error, "uniqueProductIdentifierId")).toBe(false);
+  });
+
+  it("matches keyPattern nested in cause (transactional save)", () => {
+    const error = { cause: { code: 11000, keyPattern: { slug: 1 } } };
+    expect(isDuplicateKeyErrorOnField(error, "slug")).toBe(true);
+  });
+
+  it("falls back to the index name in the message when keyPattern is absent", () => {
+    const error = {
+      code: 11000,
+      message:
+        "E11000 duplicate key error collection: management.permalinks index: uniqueProductIdentifierId_1 dup key: { uniqueProductIdentifierId: null }",
+    };
+    expect(isDuplicateKeyErrorOnField(error, "uniqueProductIdentifierId")).toBe(true);
+    expect(isDuplicateKeyErrorOnField(error, "presentationConfigurationId")).toBe(false);
+  });
+
+  it("returns false for a non-duplicate error even when keyPattern matches", () => {
+    const error = { code: 121, keyPattern: { slug: 1 } };
+    expect(isDuplicateKeyErrorOnField(error, "slug")).toBe(false);
+  });
+
+  it("returns false when neither keyPattern nor message identifies the index", () => {
+    expect(isDuplicateKeyErrorOnField({ code: 11000 }, "slug")).toBe(false);
+  });
 });

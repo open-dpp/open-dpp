@@ -4,6 +4,7 @@ import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
+import { BulkImportConfigService } from "../../bulk-import/application/services/bulk-import-config.service";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -29,6 +30,7 @@ export class TemplateService {
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     @InjectConnection() private readonly connection: Connection,
     presentationConfigurationService: PresentationConfigurationService,
+    private readonly bulkImportConfigService: BulkImportConfigService,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
@@ -93,6 +95,7 @@ export class TemplateService {
           { referenceType: DigitalProductDocumentTypes.Template, referenceId: template.id },
           { session },
         );
+        await this.bulkImportConfigService.deleteAllByTemplateId(template.id, { session });
       });
     } finally {
       await session.endSession();

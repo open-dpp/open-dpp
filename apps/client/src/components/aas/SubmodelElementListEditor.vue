@@ -19,7 +19,7 @@ import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import FileField from "./form/FileField.vue";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyValue from "./PropertyValue.vue";

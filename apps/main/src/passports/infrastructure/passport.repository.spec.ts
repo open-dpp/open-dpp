@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 
 import { Test } from "@nestjs/testing";
@@ -21,6 +21,7 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "./passport.repository";
 import { PassportDoc, PassportDocVersion, PassportSchema } from "./passport.schema";
+import { EmailService } from "../../email/email.service";
 
 describe("passportRepository", () => {
   let passportRepository: PassportRepository;
@@ -47,7 +48,12 @@ describe("passportRepository", () => {
         AasModule,
       ],
       providers: [PassportRepository],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
     PassportDocument = module.get<Model<PassportDoc>>(getModelToken(PassportDoc.name));
@@ -225,11 +231,9 @@ describe("passportRepository", () => {
 
     expect(foundPassports).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(p1.createdAt.toISOString(), p1.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [p5, p4, p3, p1],
+        totalCount: 4,
       }),
     );
 
@@ -241,11 +245,9 @@ describe("passportRepository", () => {
 
     expect(foundPassports).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({
-          cursor: encodeCursor(p5.createdAt.toISOString(), p5.id),
-          limit: 100,
-        }),
+        pagination: Pagination.create({ limit: 100 }),
         items: [p5],
+        totalCount: 1,
       }),
     );
 
@@ -257,8 +259,9 @@ describe("passportRepository", () => {
     });
     expect(foundPassports).toEqual(
       PagingResult.create({
-        pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
+        pagination: Pagination.create({}),
         items: [p3, p1],
+        totalCount: 4,
       }),
     );
     pagination = Pagination.create({
@@ -275,8 +278,142 @@ describe("passportRepository", () => {
           limit: 1,
         }),
         items: [p3],
+        totalCount: 4,
       }),
     );
+  });
+
+  it("handles identical createdAt timestamps via _id tiebreaker (no overlap, no loss)", async () => {
+    const organizationId = randomUUID();
+    const sharedDate = new Date("2024-01-15T12:00:00.000Z");
+    const makePassport = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({
+          assetAdministrationShells: [randomUUID()],
+        }),
+        createdAt,
+      });
+
+    const pFirst = makePassport(sharedDate);
+    const pSecond = makePassport(sharedDate);
+    const pThird = makePassport(new Date("2024-01-14T12:00:00.000Z"));
+    await passportRepository.save(pFirst);
+    await passportRepository.save(pSecond);
+    await passportRepository.save(pThird);
+
+    const page1 = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1 }),
+    });
+    expect(page1.items).toHaveLength(1);
+    expect(page1.pagination.cursor).not.toBeNull();
+
+    const page2 = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1, cursor: page1.pagination.cursor! }),
+    });
+    expect(page2.items).toHaveLength(1);
+    expect(page2.pagination.cursor).not.toBeNull();
+
+    const page3 = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1, cursor: page2.pagination.cursor! }),
+    });
+    expect(page3.items).toHaveLength(1);
+
+    const allIds = [page1.items[0].id, page2.items[0].id, page3.items[0].id].sort();
+    expect(allIds).toEqual([pFirst.id, pSecond.id, pThird.id].sort());
+  });
+
+  it("findByIds — returns a Map keyed by passport id for all matching ids", async () => {
+    const orgId = randomUUID();
+    const p1 = Passport.create({
+      id: randomUUID(),
+      organizationId: orgId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [randomUUID()],
+        conceptDescriptions: [],
+      }),
+    });
+    const p2 = Passport.create({
+      id: randomUUID(),
+      organizationId: orgId,
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [],
+        conceptDescriptions: [],
+      }),
+    });
+    await passportRepository.save(p1);
+    await passportRepository.save(p2);
+
+    const result = await passportRepository.findByIds([p1.id, p2.id]);
+
+    expect(result.size).toBe(2);
+    expect(result.get(p1.id)).toEqual(p1);
+    expect(result.get(p2.id)).toEqual(p2);
+  });
+
+  it("findByIds — returns empty map when ids list is empty", async () => {
+    const result = await passportRepository.findByIds([]);
+    expect(result.size).toBe(0);
+  });
+
+  it("findByIds — ignores ids that do not exist in the DB", async () => {
+    const missingId = randomUUID();
+    const result = await passportRepository.findByIds([missingId]);
+    expect(result.size).toBe(0);
+  });
+
+  it("keeps the status filter when paginating with a cursor", async () => {
+    const organizationId = randomUUID();
+    const archived = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Archived,
+        }),
+      });
+    const published = (createdAt: Date) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId,
+        environment: Environment.create({ assetAdministrationShells: [randomUUID()] }),
+        createdAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          previousStatus: DigitalProductDocumentStatus.Draft,
+          currentStatus: DigitalProductDocumentStatus.Published,
+        }),
+      });
+
+    const a1 = archived(new Date("2022-01-01T00:00:00.000Z"));
+    const p1 = published(new Date("2022-01-02T00:00:00.000Z"));
+    const a2 = archived(new Date("2022-01-03T00:00:00.000Z"));
+    const p2 = published(new Date("2022-01-04T00:00:00.000Z"));
+    for (const passport of [a1, p1, a2, p2]) {
+      await passportRepository.save(passport);
+    }
+
+    // First page: newest archived passport only, total counts every archived doc (not the page).
+    const firstPage = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ limit: 1 }),
+      filter: { status: [DigitalProductDocumentStatus.Archived] },
+    });
+    expect(firstPage.items.map((p) => p.id)).toEqual([a2.id]);
+    expect(firstPage.totalCount).toBe(2);
+
+    // Second page must stay within the Archived filter — before the fix the cursor $or
+    // overwrote the status $or and this returned the published p1.
+    const secondPage = await passportRepository.findAllByOrganizationId(organizationId, {
+      pagination: Pagination.create({ cursor: firstPage.pagination.cursor ?? undefined, limit: 1 }),
+      filter: { status: [DigitalProductDocumentStatus.Archived] },
+    });
+    expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);
+    expect(secondPage.totalCount).toBe(2);
   });
 
   afterAll(async () => {

@@ -20,12 +20,13 @@ import {
 } from "../email-change-requests/infrastructure/email-change-hooks";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
-import { LanguageEnum, LanguageType, LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
+import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
 export const AUTH = "auth";
 
 // Localized like the mjml template siblings (see EmailTemplate.localizedName).
-const VERIFICATION_SUBJECT_BY_LANGUAGE: Record<LanguageType, string> = {
+const VERIFICATION_SUBJECT_BY_LANGUAGE: Record<DisplayLanguageType, string> = {
   en: "Confirm your new email address",
   de: "Neue E-Mail-Adresse bestätigen",
 };
@@ -181,7 +182,7 @@ export const AuthProvider: Provider = {
             required: false,
             input: true,
             defaultValue: "en",
-            validator: { input: LanguageEnum },
+            validator: { input: DisplayLanguageEnum },
           },
         },
         changeEmail: {

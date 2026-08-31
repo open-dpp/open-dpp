@@ -4,6 +4,44 @@ export function isDuplicateKeyError(error: unknown): boolean {
   return extractMongoErrorCode(error) === MONGO_DUPLICATE_KEY_ERROR_CODE;
 }
 
+export function isDuplicateKeyErrorOnField(error: unknown, field: string): boolean {
+  if (!isDuplicateKeyError(error)) return false;
+  const keyPatterns = extractKeyPatterns(error);
+  if (keyPatterns.length > 0) {
+    return keyPatterns.some((pattern) => field in pattern);
+  }
+  const message = extractMessage(error);
+  return message !== undefined && message.includes(`index: ${field}`);
+}
+
+function extractKeyPatterns(error: unknown): Record<string, unknown>[] {
+  if (typeof error !== "object" || error === null) return [];
+  const asRecord = error as {
+    keyPattern?: unknown;
+    cause?: { keyPattern?: unknown };
+    writeErrors?: ReadonlyArray<{ keyPattern?: unknown }>;
+  };
+  const candidates = [
+    asRecord.keyPattern,
+    asRecord.cause?.keyPattern,
+    ...(asRecord.writeErrors ?? []).map((w) => w.keyPattern),
+  ];
+  return candidates.filter(
+    (c): c is Record<string, unknown> => typeof c === "object" && c !== null,
+  );
+}
+
+function extractMessage(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  const asRecord = error as { message?: unknown; errmsg?: unknown; cause?: unknown };
+  if (typeof asRecord.message === "string") return asRecord.message;
+  if (typeof asRecord.errmsg === "string") return asRecord.errmsg;
+  if (typeof asRecord.cause === "object" && asRecord.cause !== null) {
+    return extractMessage(asRecord.cause);
+  }
+  return undefined;
+}
+
 export function extractMongoErrorCode(error: unknown): number | undefined {
   if (typeof error !== "object" || error === null) return undefined;
   const asRecord = error as {

@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
-import { useI18n } from "vue-i18n";
-import { resolveLanguageTexts, useLanguageTexts } from "../../composables/language-text.ts";
+import { useLanguageTextList } from "../../composables/language.ts";
 import { usePresentationDispatch } from "../../lib/presentation/presentation-dispatch.ts";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
@@ -11,12 +10,11 @@ const { element, parentPath } = defineProps<{
   parentPath?: string;
 }>();
 
-const { locale } = useI18n();
-const { text: elementName } = useLanguageTexts(element.displayName);
+const { name: elementName } = useLanguageTextList(element.displayName);
 
 // Resolve the description with an empty fallback so nothing renders when the field
 // has no description (unlike the name, which falls back to a placeholder).
-const descriptionText = computed(() => resolveLanguageTexts(element.description, locale.value, ""));
+const { name: descriptionText } = useLanguageTextList(element.description)
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),

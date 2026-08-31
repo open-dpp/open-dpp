@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import {
+  type BulkImportConfigDto,
   type DigitalProductDocumentStatusDtoType,
   type PagingParamsDto,
   type DigitalProductDocumentDto,
@@ -10,6 +11,8 @@ import { useToast } from "primevue/usetoast";
 import { onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import BulkImportLaunchDialog from "../../components/bulk-import/BulkImportLaunchDialog.vue";
+import BulkImportWizard from "../../components/bulk-import/BulkImportWizard.vue";
 import DigitalProductDocumentTable from "../../components/digital-product-document/DigitalProductDocumentTable.vue";
 import PassportCreateDialog from "../../components/passport/PassportCreateDialog.vue";
 import { useExportImport } from "../../composables/export-import";
@@ -57,6 +60,7 @@ const {
   resetCursor,
   nextPage,
   reloadCurrentPage,
+  totalCount,
 } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
@@ -94,6 +98,25 @@ const {
 
 function newPassport() {
   createDialog.value?.open();
+}
+
+const bulkImportLaunchDialog = useTemplateRef("bulkImportLaunchDialog");
+const bulkImportWizard = useTemplateRef("bulkImportWizard");
+
+function openBulkImportLaunch() {
+  bulkImportLaunchDialog.value?.open();
+}
+
+function onUseExistingBulkImportConfig(config: BulkImportConfigDto) {
+  bulkImportWizard.value?.open(config);
+}
+
+function onUseNewBulkImportConfig() {
+  bulkImportWizard.value?.open();
+}
+
+async function onBulkImportRunTriggered(runId: string) {
+  await router.push({ name: "bulkImportRun", params: { runId } });
 }
 
 const qrCodeDialogItem = ref<DigitalProductDocumentDto | null>(null);
@@ -173,6 +196,7 @@ onMounted(async () => {
     :has-previous="hasPrevious"
     :has-next="hasNext"
     :current-page="currentPage"
+    :total-count="totalCount"
     :items="passports ? passports.result : []"
     :loading="loading"
     :title="t('passports.label', 2)"
@@ -192,6 +216,11 @@ onMounted(async () => {
         :disabled="importing"
         custom-upload
         @select="onPassportFileSelect"
+      />
+      <Button
+        :label="t('integrations.bulkImport.label')"
+        severity="secondary"
+        @click="openBulkImportLaunch"
       />
     </template>
     <template #actions="{ item, goToItem }">
@@ -235,6 +264,12 @@ onMounted(async () => {
     </template>
   </DigitalProductDocumentTable>
   <PassportCreateDialog ref="createDialog" />
+  <BulkImportLaunchDialog
+    ref="bulkImportLaunchDialog"
+    @use-existing="onUseExistingBulkImportConfig"
+    @use-new="onUseNewBulkImportConfig"
+  />
+  <BulkImportWizard ref="bulkImportWizard" @run-triggered="onBulkImportRunTriggered" />
   <PassportQrCodeDialog
     v-if="qrCodeDialogItem"
     v-model:visible="qrCodeDialogVisible"

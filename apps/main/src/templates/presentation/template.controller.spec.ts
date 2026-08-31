@@ -22,7 +22,7 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
-import { AasExportVersion } from "../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
+import { LatestAasExportVersion } from "../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
@@ -283,9 +283,7 @@ describe("templateController", () => {
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(
-      encodeCursor(t1.createdAt.toISOString(), t1.id),
-    );
+    expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => ({
         ...t.toPlain(),
@@ -324,7 +322,8 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
-        cursor: expect.any(String),
+        cursor: null,
+        total_count: 1,
       },
       result: [t2].map((p) => ({
         ...p.toPlain(),
@@ -386,7 +385,7 @@ describe("templateController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
-    expect(response.body.version).toEqual(AasExportVersion.v4_0);
+    expect(response.body.version).toEqual(LatestAasExportVersion);
     expect(response.body.id).toBeDefined();
     expect(response.body.environment).toBeDefined();
     expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
@@ -460,7 +459,7 @@ describe("templateController", () => {
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
-    expect(exportResponse.body.version).toEqual(AasExportVersion.v4_0);
+    expect(exportResponse.body.version).toEqual(LatestAasExportVersion);
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
@@ -551,8 +550,11 @@ describe("templateController", () => {
   });
 
   it("/POST import and /GET export template with all submodel element types", async () => {
-    const { betterAuthHelper, app } = ctx.globals();
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { betterAuthHelper, app, organizationId, userId } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getOrganizationAndUserWithCookie(
+      organizationId,
+      userId,
+    );
 
     const richPayload = buildRichExportPayload();
 

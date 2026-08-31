@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { ValueError } from "@open-dpp/exception";
+import { gs1DataAttributesPlainFactory } from "@open-dpp/testing";
 import { ZodError } from "zod";
 import { Permalink } from "./permalink";
 
 describe("Permalink", () => {
   const baseInput = () => ({
+    kind: "open-dpp" as const,
+    passportId: randomUUID(),
     presentationConfigurationId: randomUUID(),
   });
 
@@ -24,9 +27,42 @@ describe("Permalink", () => {
     expect(permalink.id).toBe(id);
   });
 
+  it("defaults kind to open-dpp when omitted", () => {
+    const permalink = Permalink.create({ passportId: randomUUID() });
+    expect(permalink.kind).toBe("open-dpp");
+  });
+
+  it("creates a bare open-dpp permalink (no config, no UPI)", () => {
+    const passportId = randomUUID();
+    const permalink = Permalink.create({ kind: "open-dpp", passportId });
+    expect(permalink.passportId).toBe(passportId);
+    expect(permalink.presentationConfigurationId).toBeNull();
+    expect(permalink.uniqueProductIdentifierId).toBeNull();
+  });
+
+  it("creates an open-dpp permalink bound to a UPI", () => {
+    const upiId = randomUUID();
+    const permalink = Permalink.create({
+      kind: "open-dpp",
+      passportId: randomUUID(),
+      uniqueProductIdentifierId: upiId,
+    });
+    expect(permalink.uniqueProductIdentifierId).toBe(upiId);
+    expect(permalink.gs1DataAttributes).toBeNull();
+  });
+
+  it("rejects a missing passportId with ValueError", () => {
+    expect(() =>
+      Permalink.create({ kind: "open-dpp", presentationConfigurationId: randomUUID() } as never),
+    ).toThrow(ValueError);
+  });
+
   it("rejects a non-uuid presentationConfigurationId with ValueError", () => {
     try {
-      Permalink.create({ presentationConfigurationId: "not-a-uuid" });
+      Permalink.create({
+        passportId: randomUUID(),
+        presentationConfigurationId: "not-a-uuid",
+      });
       throw new Error("expected create() to throw ValueError");
     } catch (error) {
       expect(error).toBeInstanceOf(ValueError);
@@ -64,7 +100,7 @@ describe("Permalink", () => {
     ["123"],
     ["new"],
     ["edit"],
-    ["bidi\u202etext"],
+    ["bidi‮text"],
   ])("rejects invalid slug %p with ValueError", (bad) => {
     expect(() => Permalink.create({ ...baseInput(), slug: bad })).toThrow(ValueError);
   });
@@ -86,6 +122,7 @@ describe("Permalink", () => {
 
     expect(restored.id).toBe(original.id);
     expect(restored.slug).toBe(original.slug);
+    expect(restored.passportId).toBe(original.passportId);
     expect(restored.presentationConfigurationId).toBe(original.presentationConfigurationId);
     expect(restored.createdAt.getTime()).toBe(original.createdAt.getTime());
     expect(restored.updatedAt.getTime()).toBe(original.updatedAt.getTime());
@@ -128,14 +165,27 @@ describe("Permalink", () => {
     }
   });
 
-  it("fromPlain rehydrates legacy DB documents that lack baseUrl", () => {
+  it("fromPlain rejects a plain object lacking passportId", () => {
+    const isoNow = new Date().toISOString();
+    expect(() =>
+      Permalink.fromPlain({
+        id: randomUUID(),
+        slug: null,
+        presentationConfigurationId: randomUUID(),
+        createdAt: isoNow,
+        updatedAt: isoNow,
+      }),
+    ).toThrow(ValueError);
+  });
+
+  it("fromPlain rehydrates documents that lack baseUrl", () => {
     const id = randomUUID();
-    const presentationConfigurationId = randomUUID();
     const isoNow = new Date().toISOString();
     const restored = Permalink.fromPlain({
       id,
+      passportId: randomUUID(),
       slug: null,
-      presentationConfigurationId,
+      presentationConfigurationId: randomUUID(),
       createdAt: isoNow,
       updatedAt: isoNow,
     });
@@ -257,16 +307,297 @@ describe("Permalink", () => {
     expect(restored.publishedUrl).toBe(original.publishedUrl);
   });
 
-  it("fromPlain rehydrates legacy DB documents that lack publishedUrl as null", () => {
-    const isoNow = new Date().toISOString();
-    const restored = Permalink.fromPlain({
-      id: randomUUID(),
-      slug: null,
-      presentationConfigurationId: randomUUID(),
-      createdAt: isoNow,
-      updatedAt: isoNow,
+  describe("polymorphism", () => {
+    const upiId = randomUUID();
+    const configId = randomUUID();
+
+    it("create for an open-dpp permalink defaults optional fields correctly", () => {
+      const permalink = Permalink.create(baseInput());
+      expect(permalink.kind).toBe("open-dpp");
+      expect(permalink.uniqueProductIdentifierId).toBeNull();
+      expect(permalink.gs1DataAttributes).toBeNull();
     });
 
-    expect(restored.publishedUrl).toBeNull();
+    it("create for a gs1-link permalink succeeds and exposes readonly fields", () => {
+      const passportId = randomUUID();
+      const permalink = Permalink.create({
+        kind: "gs1-link",
+        passportId,
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+      });
+      expect(permalink.kind).toBe("gs1-link");
+      expect(permalink.passportId).toBe(passportId);
+      expect(permalink.uniqueProductIdentifierId).toBe(upiId);
+      expect(permalink.presentationConfigurationId).toBeNull();
+      expect(permalink.gs1DataAttributes).toBeNull();
+    });
+
+    it("create throws ValueError when gs1-link lacks uniqueProductIdentifierId", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "gs1-link",
+          passportId: randomUUID(),
+          presentationConfigurationId: null,
+          uniqueProductIdentifierId: undefined as unknown as string,
+        }),
+      ).toThrow(ValueError);
+    });
+
+    it("create throws ValueError when gs1-link lacks passportId", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "gs1-link",
+          uniqueProductIdentifierId: upiId,
+          presentationConfigurationId: null,
+        } as never),
+      ).toThrow(ValueError);
+    });
+
+    it("create throws ValueError when an open-dpp permalink is given gs1DataAttributes", () => {
+      expect(() =>
+        Permalink.create({
+          kind: "open-dpp",
+          passportId: randomUUID(),
+          presentationConfigurationId: configId,
+          gs1DataAttributes: gs1DataAttributesPlainFactory.build(),
+        } as Parameters<typeof Permalink.create>[0]),
+      ).toThrow(ValueError);
+    });
+
+    it("toPlain includes all fields and round-trips through fromPlain for open-dpp kind", () => {
+      const original = Permalink.create({
+        kind: "open-dpp",
+        passportId: randomUUID(),
+        presentationConfigurationId: configId,
+        slug: "my-product",
+      });
+      const plain = original.toPlain();
+      expect(plain.kind).toBe("open-dpp");
+      expect(plain.passportId).toBe(original.passportId);
+      expect(plain.uniqueProductIdentifierId).toBeNull();
+      expect(plain.gs1DataAttributes).toBeNull();
+      expect("primary" in plain).toBe(false);
+
+      const restored = Permalink.fromPlain({
+        ...plain,
+        createdAt: plain.createdAt.toISOString(),
+        updatedAt: plain.updatedAt.toISOString(),
+      });
+      expect(restored.kind).toBe("open-dpp");
+      expect(restored.passportId).toBe(original.passportId);
+      expect(restored.uniqueProductIdentifierId).toBeNull();
+      expect(restored.gs1DataAttributes).toBeNull();
+    });
+
+    it("toPlain includes all fields and round-trips through fromPlain for gs1-link kind", () => {
+      const gs1Attributes = gs1DataAttributesPlainFactory.build();
+      const original = Permalink.create({
+        kind: "gs1-link",
+        passportId: randomUUID(),
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+        gs1DataAttributes: gs1Attributes,
+      });
+      const plain = original.toPlain();
+      expect(plain.kind).toBe("gs1-link");
+      expect(plain.uniqueProductIdentifierId).toBe(upiId);
+      expect(plain.gs1DataAttributes).toEqual(gs1Attributes);
+
+      const restored = Permalink.fromPlain({
+        ...plain,
+        createdAt: plain.createdAt.toISOString(),
+        updatedAt: plain.updatedAt.toISOString(),
+      });
+      expect(restored.kind).toBe("gs1-link");
+      expect(restored.passportId).toBe(original.passportId);
+      expect(restored.uniqueProductIdentifierId).toBe(upiId);
+      expect(restored.gs1DataAttributes).toEqual(gs1Attributes);
+    });
+
+    it("fromPlain defaults kind to open-dpp on docs lacking kind", () => {
+      const isoNow = new Date().toISOString();
+      const restored = Permalink.fromPlain({
+        id: randomUUID(),
+        passportId: randomUUID(),
+        slug: null,
+        presentationConfigurationId: configId,
+        createdAt: isoNow,
+        updatedAt: isoNow,
+      });
+      expect(restored.kind).toBe("open-dpp");
+      expect(restored.uniqueProductIdentifierId).toBeNull();
+      expect(restored.gs1DataAttributes).toBeNull();
+    });
+
+    it("has no primary field on the domain object", () => {
+      const permalink = Permalink.create(baseInput());
+      expect("primary" in permalink).toBe(false);
+      expect("withPrimary" in permalink).toBe(false);
+    });
+  });
+
+  describe("withPresentationConfigurationId (config rebind)", () => {
+    const makeOpenDpp = () =>
+      Permalink.create({
+        kind: "open-dpp",
+        passportId: randomUUID(),
+        presentationConfigurationId: randomUUID(),
+        slug: "my-product",
+      });
+
+    it("rebinds to a new config and returns a new instance", () => {
+      const original = makeOpenDpp();
+      const newConfigId = randomUUID();
+      const next = original.withPresentationConfigurationId(newConfigId);
+      expect(next).not.toBe(original);
+      expect(next.presentationConfigurationId).toBe(newConfigId);
+      expect(next.passportId).toBe(original.passportId);
+    });
+
+    it("rebinds to null (falls back to standard view)", () => {
+      const original = makeOpenDpp();
+      const next = original.withPresentationConfigurationId(null);
+      expect(next.presentationConfigurationId).toBeNull();
+    });
+
+    it("throws ValueError on a non-uuid config id", () => {
+      const original = makeOpenDpp();
+      expect(() => original.withPresentationConfigurationId("not-a-uuid")).toThrow(ValueError);
+    });
+
+    it("throws ValueError once published (config locked with the frozen URL)", () => {
+      const frozen = makeOpenDpp().withPublishedUrl("https://passports.example.com/p/my-product");
+      expect(() => frozen.withPresentationConfigurationId(randomUUID())).toThrow(ValueError);
+    });
+
+    it("is allowed on a gs1-link permalink pre-freeze (config override rebind)", () => {
+      const original = Permalink.create({
+        kind: "gs1-link",
+        passportId: randomUUID(),
+        uniqueProductIdentifierId: randomUUID(),
+        presentationConfigurationId: null,
+      });
+      const configId = randomUUID();
+      const next = original.withPresentationConfigurationId(configId);
+      expect(next.presentationConfigurationId).toBe(configId);
+    });
+  });
+
+  describe("gs1 data attribute mutators", () => {
+    const upiId = randomUUID();
+
+    const makeOpenDpp = () =>
+      Permalink.create({
+        kind: "open-dpp",
+        passportId: randomUUID(),
+        presentationConfigurationId: randomUUID(),
+      });
+
+    const makeGs1Link = () =>
+      Permalink.create({
+        kind: "gs1-link",
+        passportId: randomUUID(),
+        uniqueProductIdentifierId: upiId,
+        presentationConfigurationId: null,
+      });
+
+    const makePublishedGs1Link = () =>
+      makeGs1Link().withPublishedUrl("https://id.example.com/gs1/v1/01/04006381333931");
+
+    it("withGs1DataAttributes sets valid attributes on a gs1-link", () => {
+      const gs1Attributes = gs1DataAttributesPlainFactory.build();
+      const original = makeGs1Link();
+      const next = original.withGs1DataAttributes(gs1Attributes);
+      expect(next).not.toBe(original);
+      expect(next.gs1DataAttributes).toEqual(gs1Attributes);
+    });
+
+    it("withGs1DataAttributes(null) clears the data attributes", () => {
+      const original = makeGs1Link().withGs1DataAttributes(gs1DataAttributesPlainFactory.build());
+      const next = original.withGs1DataAttributes(null);
+      expect(next.gs1DataAttributes).toBeNull();
+    });
+
+    it("withGs1DataAttributes throws ValueError on an invalid AI map", () => {
+      const original = makeGs1Link();
+      const invalid: Record<string, string> = { "01": "04006381333931" };
+      expect(() => original.withGs1DataAttributes(invalid)).toThrow(ValueError);
+    });
+
+    it("withGs1DataAttributes throws ValueError on an open-dpp permalink", () => {
+      const original = makeOpenDpp();
+      expect(() => original.withGs1DataAttributes(gs1DataAttributesPlainFactory.build())).toThrow(
+        ValueError,
+      );
+    });
+
+    it("withGs1DataAttributes throws ValueError once published", () => {
+      const frozen = makePublishedGs1Link();
+      expect(() => frozen.withGs1DataAttributes(gs1DataAttributesPlainFactory.build())).toThrow(
+        ValueError,
+      );
+    });
+
+    it("withGs1DataAttributes preserves id, slug, baseUrl, publishedUrl, kind, passportId, uniqueProductIdentifierId", () => {
+      const original = makeGs1Link();
+      const next = original.withGs1DataAttributes(gs1DataAttributesPlainFactory.build());
+      expect(next.id).toBe(original.id);
+      expect(next.slug).toBe(original.slug);
+      expect(next.baseUrl).toBe(original.baseUrl);
+      expect(next.publishedUrl).toBe(original.publishedUrl);
+      expect(next.kind).toBe(original.kind);
+      expect(next.passportId).toBe(original.passportId);
+      expect(next.uniqueProductIdentifierId).toBe(original.uniqueProductIdentifierId);
+    });
+  });
+
+  describe("copy() semantics", () => {
+    const fullyPopulated = () =>
+      Permalink.create({
+        kind: "gs1-link",
+        passportId: randomUUID(),
+        uniqueProductIdentifierId: randomUUID(),
+        presentationConfigurationId: randomUUID(),
+        slug: "packed-product",
+        baseUrl: "https://passports.example.com",
+        gs1DataAttributes: gs1DataAttributesPlainFactory.build(),
+        organizationId: randomUUID(),
+      });
+
+    it("preserves every field except the one overridden", () => {
+      const original = fullyPopulated();
+      const newConfigId = randomUUID();
+      const next = original.withPresentationConfigurationId(newConfigId);
+
+      expect(next).not.toBe(original);
+      expect(next.presentationConfigurationId).toBe(newConfigId);
+      expect(next.id).toBe(original.id);
+      expect(next.slug).toBe(original.slug);
+      expect(next.baseUrl).toBe(original.baseUrl);
+      expect(next.publishedUrl).toBe(original.publishedUrl);
+      expect(next.kind).toBe(original.kind);
+      expect(next.passportId).toBe(original.passportId);
+      expect(next.uniqueProductIdentifierId).toBe(original.uniqueProductIdentifierId);
+      expect(next.gs1DataAttributes).toEqual(original.gs1DataAttributes);
+      expect(next.organizationId).toBe(original.organizationId);
+      expect(next.createdAt.getTime()).toBe(original.createdAt.getTime());
+    });
+
+    it("advances updatedAt", () => {
+      const original = fullyPopulated();
+      const next = original.withPresentationConfigurationId(randomUUID());
+      expect(next.updatedAt).toBeInstanceOf(Date);
+      expect(next.updatedAt.getTime()).toBeGreaterThanOrEqual(original.updatedAt.getTime());
+    });
+
+    it("does not mutate the receiver", () => {
+      const original = fullyPopulated();
+      const originalConfigId = original.presentationConfigurationId;
+      const originalUpdatedAt = original.updatedAt.getTime();
+      original.withPresentationConfigurationId(randomUUID());
+      expect(original.presentationConfigurationId).toBe(originalConfigId);
+      expect(original.updatedAt.getTime()).toBe(originalUpdatedAt);
+    });
   });
 });

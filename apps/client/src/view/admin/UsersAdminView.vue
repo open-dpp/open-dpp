@@ -1,23 +1,26 @@
 <script lang="ts" setup>
 import type { UserWithRole } from "better-auth/plugins";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { authClient } from "../../auth-client.ts";
 import AdminUsersList from "../../components/admin/AdminUsersList.vue";
 import ChangeUserRoleDialog from "../../components/admin/ChangeUserRoleDialog.vue";
 import InviteToOrganizationDialog from "../../components/admin/InviteToOrganizationDialog.vue";
 import InviteUserDialog from "../../components/admin/InviteUserDialog.vue";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
-import { ModalType, useLayoutStore } from "../../stores/layout.ts";
+import { useUsersRepo } from "../../composables/users-repo.ts";
 
-const layoutStore = useLayoutStore();
 const errorHandlingStore = useErrorHandlingStore();
 
 const session = authClient.useSession();
 const currentUserRole = computed(() => session.value.data?.user.role ?? "user");
+const currentUserId = computed(() => session.value.data?.user.id);
+const { resendPasswordReset, resendVerificationEmail } = useUsersRepo();
 
 const users = ref<UserWithRole[]>([]);
-const inviteToOrgEmail = ref<string | null>(null);
-const changeRoleUser = ref<{ id: string; email: string; role: string } | null>(null);
+
+const inviteToOrganizationDialog = useTemplateRef("inviteToOrganizationDialog");
+const inviteUserDialog = useTemplateRef("inviteUserDialog");
+const changeRoleDialog = useTemplateRef("changeUserRoleDialog");
 
 async function fetchUsers() {
   try {
@@ -33,36 +36,6 @@ async function fetchUsers() {
   }
 }
 
-async function onAdd() {
-  layoutStore.openModal(ModalType.INVITE_USER_MODAL);
-}
-
-async function onInviteSuccess() {
-  await fetchUsers();
-  layoutStore.closeModal();
-}
-
-function onInviteToOrg(email: string) {
-  inviteToOrgEmail.value = email;
-}
-
-function onInviteToOrgClose() {
-  inviteToOrgEmail.value = null;
-}
-
-function onChangeRole(userId: string, email: string, role: string) {
-  changeRoleUser.value = { id: userId, email, role };
-}
-
-async function onChangeRoleSuccess() {
-  await fetchUsers();
-  changeRoleUser.value = null;
-}
-
-function onChangeRoleClose() {
-  changeRoleUser.value = null;
-}
-
 onMounted(async () => {
   await fetchUsers();
 });
@@ -71,31 +44,18 @@ onMounted(async () => {
 <template>
   <section>
     <div class="flex flex-col gap-3 p-3">
-      <InviteUserDialog
-        v-if="layoutStore.modalOpen === ModalType.INVITE_USER_MODAL"
-        @close="layoutStore.closeModal()"
-        @success="onInviteSuccess"
-      />
-      <InviteToOrganizationDialog
-        v-if="inviteToOrgEmail"
-        :user-email="inviteToOrgEmail"
-        @close="onInviteToOrgClose"
-        @success="onInviteToOrgClose"
-      />
-      <ChangeUserRoleDialog
-        v-if="changeRoleUser"
-        :user-id="changeRoleUser.id"
-        :user-email="changeRoleUser.email"
-        :current-role="changeRoleUser.role"
-        @close="onChangeRoleClose"
-        @success="onChangeRoleSuccess"
-      />
+      <InviteUserDialog ref="inviteUserDialog" @success="fetchUsers" />
+      <InviteToOrganizationDialog ref="inviteToOrganizationDialog" />
+      <ChangeUserRoleDialog ref="changeUserRoleDialog" @success="fetchUsers" />
       <AdminUsersList
         :users="users"
         :current-user-role="currentUserRole"
-        @add="onAdd"
-        @invite-to-org="onInviteToOrg"
-        @change-role="onChangeRole"
+        :current-user-id="currentUserId"
+        @add="inviteUserDialog?.openInviteDialog"
+        @invite-to-org="inviteToOrganizationDialog?.openInviteDialog"
+        @change-role="changeRoleDialog?.openDialog"
+        @resend-password-reset="resendPasswordReset"
+        @resend-verification-email="resendVerificationEmail"
       />
     </div>
   </section>

@@ -1,8 +1,9 @@
-import { Language, LanguageEnum, LanguageType, UserDto } from "@open-dpp/dto";
+import { UserDto } from "@open-dpp/dto";
 import { Logger } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 import { User, UserDbProps } from "../../domain/user";
 import { UserDocument, User as UserSchema } from "../schemas/user.schema";
+import { DisplayLanguage, DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
 export class UserMapper {
   private static readonly logger = new Logger(UserMapper.name);
@@ -64,16 +65,16 @@ export class UserMapper {
     } as UserSchema;
   }
 
-  private static parsePreferredLanguage(value: unknown, userId?: string): LanguageType {
-    const parsed = LanguageEnum.safeParse(value);
+  private static parsePreferredLanguage(value: unknown, userId?: string): DisplayLanguageType {
+    const parsed = DisplayLanguageEnum.safeParse(value);
     if (parsed.success) {
       return parsed.data;
     }
     if (value !== undefined && value !== null) {
       UserMapper.logger.warn(
-        `Unsupported preferredLanguage "${String(value)}" for user ${userId ?? "(unknown)"}; falling back to ${Language.en}`,
+        `Unsupported preferredLanguage "${String(value)}" for user ${userId ?? "(unknown)"}; falling back to ${DisplayLanguage.en}`,
       );
     }
-    return Language.en;
+    return DisplayLanguage.en;
   }
 }

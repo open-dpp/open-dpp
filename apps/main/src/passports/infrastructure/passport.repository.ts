@@ -6,6 +6,7 @@ import { DbSessionOptions } from "../../database/query-options";
 import { DigitalProductDocumentStatus } from "../../digital-product-document/domain/digital-product-document-status";
 import {
   findAllByOrganizationId,
+  findByIds,
   findOne,
   findOneOrFail,
   FindOptions,
@@ -82,6 +83,10 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
       organizationId,
       options,
     );
+  }
+
+  async findByIds(ids: string[]): Promise<Map<string, Passport>> {
+    return await findByIds(ids, this.passportDoc, this.fromPlainWithMigration.bind(this));
   }
 
   async deleteById(id: string, options?: DbSessionOptions): Promise<void> {

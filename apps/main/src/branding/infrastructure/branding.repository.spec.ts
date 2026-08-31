@@ -121,4 +121,33 @@ describe("brandingRepository", () => {
     expect(foundBranding).toEqual(migratedBranding);
     expect(organizationService.getOrganization).toHaveBeenCalledTimes(1);
   });
+
+  describe("findOneByOrganizationIdOrNull", () => {
+    it("returns null when the organization is not found (tolerates the throw)", async () => {
+      const orgId = randomUUID();
+      jest
+        .spyOn(organizationService, "getOrganization")
+        .mockResolvedValue(null as unknown as Organization);
+
+      const result = await brandingRepository.findOneByOrganizationIdOrNull(orgId);
+
+      expect(result).toBeNull();
+      expect(organizationService.getOrganization).toHaveBeenCalledWith(orgId);
+    });
+
+    it("returns the branding when it resolves", async () => {
+      const orgId = randomUUID();
+      jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+        Organization.create({
+          name: "acme",
+          slug: `acme-${randomUUID()}`,
+        }),
+      );
+
+      const result = await brandingRepository.findOneByOrganizationIdOrNull(orgId);
+
+      expect(result).not.toBeNull();
+      expect(result?.organizationId).toBe(orgId);
+    });
+  });
 });

@@ -1,5 +1,5 @@
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { Document, Model as MongooseModel } from "mongoose";
+import { ClientSession, Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { IPersistable } from "../aas/domain/persistable";
@@ -108,6 +108,50 @@ function buildStatusFilter(statuses: ReadonlyArray<DigitalProductDocumentStatusT
   };
 }
 
+export type CursorPageOptions = {
+  pagination?: Pagination;
+  session?: ClientSession | null;
+  withTotalCount?: boolean;
+};
+
+export async function findPageByCursor<V extends IConvertableToPlain>(
+  docModel: MongooseModel<any>,
+  filter: Record<string, unknown>,
+  convert: (doc: any) => V | Promise<V>,
+  options?: CursorPageOptions,
+): Promise<PagingResult<V>> {
+  const pagination = options?.pagination ?? Pagination.create({ limit: 100 });
+  const cursor = pagination.cursor ? decodeCursor(pagination.cursor) : null;
+  const cursorFilter = cursor
+    ? {
+        $or: [
+          { createdAt: { $lt: cursor.createdAt } },
+          { createdAt: cursor.createdAt, _id: { $lt: cursor.id } },
+        ],
+      }
+    : null;
+  const limit = pagination.limit ?? 100;
+  const fetched = await docModel
+    .find(cursorFilter ? { $and: [filter, cursorFilter] } : filter)
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(limit + 1)
+    .session(options?.session ?? null)
+    .exec();
+  const hasNextPage = fetched.length > limit;
+  const docs = hasNextPage ? fetched.slice(0, limit) : fetched;
+  const items = await Promise.all(docs.map((doc) => convert(doc)));
+  const last = docs[docs.length - 1];
+  pagination.setCursor(
+    hasNextPage && last
+      ? encodeCursor((last.get("createdAt") as Date).toISOString(), String(last._id))
+      : null,
+  );
+  const totalCount = options?.withTotalCount
+    ? await docModel.countDocuments(filter).session(options?.session ?? null)
+    : undefined;
+  return PagingResult.create<V>({ pagination, items, totalCount });
+}
+
 export async function findAllByOrganizationId<
   T extends Document<string>,
   V extends IPersistable & HasCreatedAt & IConvertableToPlain,
@@ -117,29 +161,13 @@ export async function findAllByOrganizationId<
   organizationId: string,
   options?: FindOptions,
 ) {
-  const tmpPagination = options?.pagination ?? Pagination.create({ limit: 100 });
   const statuses = options?.filter?.status;
-  const docs = await docModel
-    .find({
-      organizationId,
-      ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
-      ...(tmpPagination.cursor && {
-        $or: [
-          { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
-          {
-            createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-            id: { $lt: decodeCursor(tmpPagination.cursor).id },
-          },
-        ],
-      }),
-    })
-    .sort({ createdAt: -1, id: -1 })
-    .limit(tmpPagination.limit ?? 100)
-    .exec();
-  const domainObjects = await Promise.all(docs.map((d) => convertToDomain(d, fromPlain)));
-  if (domainObjects.length > 0) {
-    const lastObject = domainObjects[domainObjects.length - 1];
-    tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));
-  }
-  return PagingResult.create<V>({ pagination: tmpPagination, items: domainObjects });
+  const filter = {
+    organizationId,
+    ...(statuses && statuses.length > 0 ? buildStatusFilter(statuses) : {}),
+  };
+  return findPageByCursor<V>(docModel, filter, (d) => convertToDomain(d, fromPlain), {
+    pagination: options?.pagination,
+    withTotalCount: true,
+  });
 }

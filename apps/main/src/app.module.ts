@@ -11,6 +11,7 @@ import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { BrandingModule } from "./branding/branding.module";
+import { BulkImportModule } from "./bulk-import/bulk-import.module";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
@@ -47,6 +48,7 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     AasModule,
     UniqueProductIdentifierModule,
     BrandingModule,
+    BulkImportModule,
     TemplatesModule,
     PassportsModule,
     OrganizationsModule,

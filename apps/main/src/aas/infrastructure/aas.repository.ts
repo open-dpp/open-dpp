@@ -61,6 +61,7 @@ export class AasRepository {
 
     return {
       ...aas,
+      _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_2_0,
       security: security.toPlain(),
     };
   }

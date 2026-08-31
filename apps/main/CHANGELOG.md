@@ -1,5 +1,147 @@
 # @open-dpp/main
 
+## 3.2.0
+
+### Minor Changes
+
+- [#671](https://github.com/open-dpp/open-dpp/pull/671) [`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b) Thanks [@mr42](https://github.com/mr42)! - Add bulk import feature such that a REO user can create up to 1000 passports at once.
+
+### Patch Changes
+
+- [#700](https://github.com/open-dpp/open-dpp/pull/700) [`115b3af`](https://github.com/open-dpp/open-dpp/commit/115b3af6a71ad46bc89cf53b16393f9d0dd26a2f) Thanks [@Hentra](https://github.com/Hentra)! - Remove Headless UI components
+
+- Updated dependencies [[`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b)]:
+  - @open-dpp/api-client@3.2.0
+  - @open-dpp/dto@3.2.0
+  - @open-dpp/env@3.2.0
+  - @open-dpp/exception@3.2.0
+  - @open-dpp/permission@3.2.0
+
+## 3.1.4
+
+### Patch Changes
+
+- [#696](https://github.com/open-dpp/open-dpp/pull/696) [`e92191f`](https://github.com/open-dpp/open-dpp/commit/e92191f74a0e6abbe78a5017f810178399264196) Thanks [@murphylan](https://github.com/murphylan)! - Report the real application version again. CI passed the primary Docker tag as `APP_VERSION`, so images built from `main` reported the branch name — the UI rendered `vmain` instead of a version. The version is now derived from the package version (with `+sha.<short-sha>` on non-release builds), the backend falls back to the `package.json` bundled in the image when `APP_VERSION` is absent, and a non-semver `APP_VERSION` is ignored with a warning instead of being shown to users.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.4
+  - @open-dpp/dto@3.1.4
+  - @open-dpp/env@3.1.4
+  - @open-dpp/exception@3.1.4
+  - @open-dpp/permission@3.1.4
+
+## 3.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.3
+  - @open-dpp/dto@3.1.3
+  - @open-dpp/env@3.1.3
+  - @open-dpp/exception@3.1.3
+  - @open-dpp/permission@3.1.3
+
+## 3.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.2
+  - @open-dpp/dto@3.1.2
+  - @open-dpp/env@3.1.2
+  - @open-dpp/exception@3.1.2
+  - @open-dpp/permission@3.1.2
+
+## 3.1.1
+
+### Patch Changes
+
+- [#689](https://github.com/open-dpp/open-dpp/pull/689) [`fc43933`](https://github.com/open-dpp/open-dpp/commit/fc4393362f0aaba2be0de3fa57d5d16fa4fd68b8) Thanks [@florianBieck](https://github.com/florianBieck)! - Passthrough optional authentication in GS1 resolver endpoints
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.1
+  - @open-dpp/dto@3.1.1
+  - @open-dpp/env@3.1.1
+  - @open-dpp/exception@3.1.1
+  - @open-dpp/permission@3.1.1
+
+## 3.1.0
+
+### Minor Changes
+
+- [#687](https://github.com/open-dpp/open-dpp/pull/687) [`6f6154f`](https://github.com/open-dpp/open-dpp/commit/6f6154f38b07290ec19595cbbe2eeda6939aa887) Thanks [@florianBieck](https://github.com/florianBieck)! - The GS1 Digital Link resolver moves from the origin root to the `/gs1/v1/` prefix
+
+### Patch Changes
+
+- Updated dependencies [[`6f6154f`](https://github.com/open-dpp/open-dpp/commit/6f6154f38b07290ec19595cbbe2eeda6939aa887)]:
+  - @open-dpp/dto@3.1.0
+  - @open-dpp/api-client@3.1.0
+  - @open-dpp/env@3.1.0
+  - @open-dpp/exception@3.1.0
+  - @open-dpp/permission@3.1.0
+
+## 3.0.0
+
+### Minor Changes
+
+- [#615](https://github.com/open-dpp/open-dpp/pull/615) [`ff5d0a2`](https://github.com/open-dpp/open-dpp/commit/ff5d0a2a8458b8d66a4fc8a706aad4dc6001feaa) Thanks [@florianBieck](https://github.com/florianBieck)! - Passport-first permalinks: the "Create GS1 link" flow becomes "Create Permalink" and open-dpp unique product identifiers can now carry permalinks.
+
+  - The `presentation` permalink kind is renamed to `open-dpp` (wire-level; legacy documents are migrated on read).
+  - Every permalink now carries a required `passportId`; `presentationConfigurationId` and `uniqueProductIdentifierId` are both optional on the open-dpp kind — a bare passport-bound permalink is valid.
+  - Strict kind matching: `gs1-link` permalinks require a GS1 identifier, `open-dpp` permalinks may bind an OPEN_DPP_UUID identifier; an open-dpp identifier may carry any number of permalinks (gs1-links stay one-per-identifier).
+  - `/p/{slug ?? id}` renders the permalink's own bound presentation configuration; a null binding renders the built-in standard view (`presentationConfiguration` in the bundle is now nullable, no config is auto-consulted or seeded on the render path).
+  - The GS1 resolver redirects a scanned Digital Link to the gs1-link permalink's own viewer URL — the primary-permalink concept (including `POST /permalinks/:id/primary`) is removed; the passport editor QR shows the latest-created permalink.
+  - Presentation configurations are shareable across permalinks (config-unique index dropped) and re-bindable pre-freeze via `PATCH /permalinks/:id`; the last-permalink delete guard is gone (the freeze rule remains the only guard).
+
+### Patch Changes
+
+- Updated dependencies [[`ff5d0a2`](https://github.com/open-dpp/open-dpp/commit/ff5d0a2a8458b8d66a4fc8a706aad4dc6001feaa)]:
+  - @open-dpp/dto@3.0.0
+  - @open-dpp/api-client@3.0.0
+  - @open-dpp/env@3.0.0
+  - @open-dpp/exception@3.0.0
+  - @open-dpp/permission@3.0.0
+
+## 2.10.0
+
+### Minor Changes
+
+- [#621](https://github.com/open-dpp/open-dpp/pull/621) [`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756) Thanks [@Hentra](https://github.com/Hentra)! - Add 26 more languages to multilanguage description
+
+### Patch Changes
+
+- [#678](https://github.com/open-dpp/open-dpp/pull/678) [`43ef264`](https://github.com/open-dpp/open-dpp/commit/43ef2641d8bbc722ae7c47592f91be23d85879cb) Thanks [@florianBieck](https://github.com/florianBieck)! - Simplified email footers
+
+- Updated dependencies [[`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756)]:
+  - @open-dpp/api-client@2.10.0
+  - @open-dpp/dto@2.10.0
+  - @open-dpp/env@2.10.0
+  - @open-dpp/exception@2.10.0
+  - @open-dpp/permission@2.10.0
+
+## 2.9.0
+
+### Minor Changes
+
+- [#673](https://github.com/open-dpp/open-dpp/pull/673) [`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6) Thanks [@mr42](https://github.com/mr42)! - Allow admin to resend reset or verification email. Allow users to resend verification email in their profile. Add email verification page to give user feedback about verification success/ error
+
+- [#666](https://github.com/open-dpp/open-dpp/pull/666) [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e) Thanks [@murphylan](https://github.com/murphylan)! - Add total item count to organization-scoped paginated lists
+
+  Passport and template list endpoints now report a `total_count` in their
+  `paging_metadata`, computed with an index-backed `countDocuments` against the
+  same filter used for the page. The passport and template list views surface it
+  in the table footer ("Showing: 1 - 10 of 42"). The field is optional, so other
+  paginated endpoints keep their existing response shape.
+
+### Patch Changes
+
+- Updated dependencies [[`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6), [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e)]:
+  - @open-dpp/api-client@2.9.0
+  - @open-dpp/dto@2.9.0
+  - @open-dpp/env@2.9.0
+  - @open-dpp/exception@2.9.0
+  - @open-dpp/permission@2.9.0
+
 ## 2.8.0
 
 ### Minor Changes

@@ -14,9 +14,18 @@ export class EmailService implements OnApplicationBootstrap {
 
   private transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private configService: EnvService;
+  private readonly logoUrl: string;
 
   constructor(configService: EnvService) {
     this.configService = configService;
+    this.logoUrl = `${this.configService.get("OPEN_DPP_URL")}/api/branding/instance/logo`;
+    this.registerPartial("emailHead", "_head.mjml");
+    this.registerPartial("emailHeader", "_header.mjml");
+  }
+
+  private registerPartial(name: string, file: string) {
+    const content = readFileSync(resolve(__dirname, "templates", file), "utf-8");
+    Handlebars.registerPartial(name, content);
   }
 
   async setupTransporter() {
@@ -46,7 +55,7 @@ export class EmailService implements OnApplicationBootstrap {
     const templatePath = resolve(__dirname, "templates", template);
     const templateContent = readFileSync(templatePath, "utf-8");
     const compiler = Handlebars.compile(templateContent);
-    const compilerData = mail.template.properties ?? {};
+    const compilerData = { ...mail.template.properties, logoUrl: this.logoUrl };
     const compiled = compiler(compilerData);
     const mjml = await this.compileMjml(compiled);
     await this.transporter.sendMail({
