@@ -1,5 +1,13 @@
 # @open-dpp/testing
 
+## 3.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.3.0
+  - @open-dpp/env@3.3.0
+
 ## 3.2.0
 
 ### Patch Changes
