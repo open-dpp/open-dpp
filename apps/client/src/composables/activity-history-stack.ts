@@ -1,9 +1,14 @@
 import { computed, ref } from "vue";
 
 export interface ActivityHistoryStackEntry {
-  queryPath: string;
-  displayPath: string;
-  endDate: string;
+  /**
+   * The path to query for pre-move activities. For a moved container, this is
+   * prefixed "sw:" (starts-with) so the query also picks up its descendants -
+   * it isn't always the bare idShortPath the element moved from.
+   */
+  movedFromPath: string;
+  movedToPath: string;
+  dateOfMove: string;
 }
 
 export interface UseActivityHistoryStackOptions {
@@ -26,7 +31,7 @@ export function useActivityHistoryStack(options: UseActivityHistoryStackOptions)
   const livePeriod = ref<(Date | null)[]>([...options.initialPeriod]);
 
   const currentPath = computed(
-    () => historyStack.value[historyStack.value.length - 1]?.queryPath ?? options.livePath(),
+    () => historyStack.value[historyStack.value.length - 1]?.movedFromPath ?? options.livePath(),
   );
   const selectedIndex = computed(() => historyStack.value.length - 1);
 
@@ -37,13 +42,13 @@ export function useActivityHistoryStack(options: UseActivityHistoryStackOptions)
     } else {
       historyStack.value = historyStack.value.slice(0, index + 1);
       const entry = historyStack.value[index]!;
-      await options.changePeriod([null, new Date(entry.endDate)], { pushToUrl: false });
+      await options.changePeriod([null, new Date(entry.dateOfMove)], { pushToUrl: false });
     }
   }
 
   async function viewHistoryBeforeMove(payload: ActivityHistoryStackEntry) {
     historyStack.value = [...historyStack.value, payload];
-    await options.changePeriod([null, new Date(payload.endDate)], { pushToUrl: false });
+    await options.changePeriod([null, new Date(payload.dateOfMove)], { pushToUrl: false });
   }
 
   function resetToLive(freshPeriod: (Date | null)[]) {

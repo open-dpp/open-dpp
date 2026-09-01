@@ -25,15 +25,15 @@ describe("activity-history-stack", () => {
       useActivityHistoryStack({ livePath, initialPeriod, changePeriod });
 
     await viewHistoryBeforeMove({
-      queryPath: "A",
-      displayPath: "X.A",
-      endDate: "2026-03-01T00:00:00.000Z",
+      movedFromPath: "A",
+      movedToPath: "X.A",
+      dateOfMove: "2026-03-01T00:00:00.000Z",
     });
 
     expect(currentPath.value).toBe("A");
     expect(selectedIndex.value).toBe(0);
     expect(historyStack.value).toEqual([
-      { queryPath: "A", displayPath: "X.A", endDate: "2026-03-01T00:00:00.000Z" },
+      { movedFromPath: "A", movedToPath: "X.A", dateOfMove: "2026-03-01T00:00:00.000Z" },
     ]);
     expect(changePeriod).toHaveBeenCalledWith([null, new Date("2026-03-01T00:00:00.000Z")], {
       pushToUrl: false,
@@ -49,14 +49,14 @@ describe("activity-history-stack", () => {
     });
 
     await viewHistoryBeforeMove({
-      queryPath: "A",
-      displayPath: "X.A",
-      endDate: "2026-03-01T00:00:00.000Z",
+      movedFromPath: "A",
+      movedToPath: "X.A",
+      dateOfMove: "2026-03-01T00:00:00.000Z",
     });
     await viewHistoryBeforeMove({
-      queryPath: "Y.C",
-      displayPath: "A",
-      endDate: "2026-02-01T00:00:00.000Z",
+      movedFromPath: "Y.C",
+      movedToPath: "A",
+      dateOfMove: "2026-02-01T00:00:00.000Z",
     });
 
     expect(currentPath.value).toBe("Y.C");
@@ -72,14 +72,14 @@ describe("activity-history-stack", () => {
       useActivityHistoryStack({ livePath, initialPeriod, changePeriod });
 
     await viewHistoryBeforeMove({
-      queryPath: "A",
-      displayPath: "X.A",
-      endDate: "2026-03-01T00:00:00.000Z",
+      movedFromPath: "A",
+      movedToPath: "X.A",
+      dateOfMove: "2026-03-01T00:00:00.000Z",
     });
     await viewHistoryBeforeMove({
-      queryPath: "Y.C",
-      displayPath: "A",
-      endDate: "2026-02-01T00:00:00.000Z",
+      movedFromPath: "Y.C",
+      movedToPath: "A",
+      dateOfMove: "2026-02-01T00:00:00.000Z",
     });
 
     await goToEntry(0);
@@ -87,7 +87,7 @@ describe("activity-history-stack", () => {
     expect(currentPath.value).toBe("A");
     expect(selectedIndex.value).toBe(0);
     expect(historyStack.value).toEqual([
-      { queryPath: "A", displayPath: "X.A", endDate: "2026-03-01T00:00:00.000Z" },
+      { movedFromPath: "A", movedToPath: "X.A", dateOfMove: "2026-03-01T00:00:00.000Z" },
     ]);
     expect(changePeriod).toHaveBeenLastCalledWith([null, new Date("2026-03-01T00:00:00.000Z")], {
       pushToUrl: false,
@@ -100,9 +100,9 @@ describe("activity-history-stack", () => {
       useActivityHistoryStack({ livePath, initialPeriod, changePeriod });
 
     await viewHistoryBeforeMove({
-      queryPath: "A",
-      displayPath: "X.A",
-      endDate: "2026-03-01T00:00:00.000Z",
+      movedFromPath: "A",
+      movedToPath: "X.A",
+      dateOfMove: "2026-03-01T00:00:00.000Z",
     });
     await goToEntry(-1);
 
@@ -124,9 +124,9 @@ describe("activity-history-stack", () => {
     } = useActivityHistoryStack({ livePath, initialPeriod, changePeriod });
 
     await viewHistoryBeforeMove({
-      queryPath: "A",
-      displayPath: "X.A",
-      endDate: "2026-03-01T00:00:00.000Z",
+      movedFromPath: "A",
+      movedToPath: "X.A",
+      dateOfMove: "2026-03-01T00:00:00.000Z",
     });
 
     const freshPeriod = [new Date("2026-06-01"), new Date("2026-07-01")];

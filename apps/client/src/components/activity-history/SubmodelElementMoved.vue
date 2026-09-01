@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   "view-history-before-move": [
-    payload: { queryPath: string; displayPath: string; endDate: string },
+    payload: { movedFromPath: string; movedToPath: string; dateOfMove: string },
   ];
 }>();
 
@@ -27,9 +27,9 @@ const pathChanged = computed(() => props.oldPath !== props.path);
 function onViewHistoryBeforeMove() {
   const isContainer = makeSubmodelElement(props.value).isContainer();
   emit("view-history-before-move", {
-    queryPath: isContainer ? `sw:${props.oldPath}` : props.oldPath,
-    displayPath: props.path,
-    endDate: props.activityCreatedAt,
+    movedFromPath: isContainer ? `sw:${props.oldPath}` : props.oldPath,
+    movedToPath: props.path,
+    dateOfMove: props.activityCreatedAt,
   });
 }
 </script>

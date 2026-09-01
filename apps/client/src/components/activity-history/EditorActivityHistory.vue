@@ -75,7 +75,7 @@ const stackOptions = computed(() => [
   { value: -1, label: t("activityHistory.live") },
   ...historyStack.value.map((entry, index) => ({
     value: index,
-    label: t("activityHistory.beforeMove", { path: entry.displayPath }),
+    label: t("activityHistory.beforeMove", { path: entry.movedToPath }),
   })),
 ]);
 
