@@ -41,6 +41,13 @@ export class MembersRepository {
     return MemberMapper.toDomain(document);
   }
 
+  async deleteById(id: string): Promise<void> {
+    if (!ObjectId.isValid(id)) {
+      return;
+    }
+    await this.memberModel.deleteOne({ _id: new ObjectId(id) });
+  }
+
   async findByOrganizationId(organizationId: string): Promise<Member[]> {
     // The schema types organizationId as ObjectId, so a non-ObjectId id can never
     // match — return early instead of letting Mongoose throw a CastError.

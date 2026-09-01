@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { ForbiddenException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import type { Model } from "mongoose";
 import { AasModule } from "../../../aas/aas.module";
+import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { BrandingDoc } from "../../../branding/infrastructure/branding.schema";
 import { Environment } from "../../../aas/domain/environment";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
@@ -20,6 +21,7 @@ import {
 } from "../../../aas/infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas/submodel.schema";
 import { generateMongoConfig } from "../../../database/config";
+import { DatabaseModule } from "../../../database/database.module";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../../identity/users/users.module";
@@ -42,12 +44,17 @@ import { PassportService } from "./passport.service";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
 import { EmailService } from "../../../email/email.service";
 import { jest } from "@jest/globals";
+import { Template } from "../../../templates/domain/template";
+import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
+import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
 
 describe("passportService", () => {
   let service: PassportService;
   let passportRepository: PassportRepository;
   let presentationConfigurationRepository: PresentationConfigurationRepository;
+  let templateRepository: TemplateRepository;
   let module: TestingModule;
+  let environmentService: EnvironmentService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -65,15 +72,22 @@ describe("passportService", () => {
           { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
           { name: SubmodelDoc.name, schema: SubmodelSchema },
           { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+          { name: TemplateDoc.name, schema: TemplateSchema },
         ]),
         ActivityHistoryModule,
         AasModule,
+        DatabaseModule,
         UsersModule,
         OrganizationsModule,
         PresentationConfigurationsModule,
         PermalinkModule,
       ],
-      providers: [PassportService, PassportRepository, UniqueProductIdentifierRepository],
+      providers: [
+        PassportService,
+        PassportRepository,
+        UniqueProductIdentifierRepository,
+        TemplateRepository,
+      ],
     })
       .overrideProvider(EmailService)
       .useValue({
@@ -86,6 +100,8 @@ describe("passportService", () => {
     presentationConfigurationRepository = module.get<PresentationConfigurationRepository>(
       PresentationConfigurationRepository,
     );
+    templateRepository = module.get<TemplateRepository>(TemplateRepository);
+    environmentService = module.get<EnvironmentService>(EnvironmentService);
   });
 
   afterAll(async () => {
@@ -94,6 +110,72 @@ describe("passportService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  it("createPassportFromTemplate copies the template's environment and links it to the passport", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const environment = await environmentService.createEnvironment(
+      { assetAdministrationShells: [{}] },
+      true,
+    );
+    const template = Template.create({
+      organizationId,
+      environment,
+    });
+    await templateRepository.save(template);
+
+    const passport = await service.createPassportFromTemplate(organizationId, template.id, subject);
+
+    expect(passport.templateId).toEqual(template.id);
+    expect(passport.organizationId).toEqual(organizationId);
+    expect(await passportRepository.findOne(passport.id)).toBeDefined();
+    expect(
+      await presentationConfigurationRepository.findByReference({
+        referenceType: DigitalProductDocumentTypes.Passport,
+        referenceId: passport.id,
+      }),
+    ).toBeDefined();
+  });
+
+  it("createPassportFromTemplate rejects an archived template", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const template = Template.create({
+      organizationId,
+      environment: Environment.create({}),
+      lastStatusChange: DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      }),
+    });
+    await templateRepository.save(template);
+
+    await expect(
+      service.createPassportFromTemplate(organizationId, template.id, subject),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it("createPassportFromTemplate rejects a template from another organization", async () => {
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const template = Template.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
+    await templateRepository.save(template);
+
+    await expect(
+      service.createPassportFromTemplate(randomUUID(), template.id, subject),
+    ).rejects.toThrow(ForbiddenException);
   });
 
   it("modifyPassportStatus Publish freezes the passport's permalinks", async () => {

@@ -1,5 +1,15 @@
 # @open-dpp/dto
 
+## 3.4.0
+
+## 3.3.0
+
+## 3.2.0
+
+### Minor Changes
+
+- [#671](https://github.com/open-dpp/open-dpp/pull/671) [`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b) Thanks [@mr42](https://github.com/mr42)! - Add bulk import feature such that a REO user can create up to 1000 passports at once.
+
 ## 3.1.4
 
 ## 3.1.3

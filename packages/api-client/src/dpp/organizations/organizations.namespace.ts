@@ -45,4 +45,8 @@ export class OrganizationsNamespace {
   public async changeMemberRole(memberId: string, role: MemberRoleDtoType) {
     return this.axiosInstance.patch<void>(`${this.basePath}/members/${memberId}/role`, { role });
   }
+
+  public async removeMember(memberId: string) {
+    return this.axiosInstance.delete<void>(`${this.basePath}/members/${memberId}`);
+  }
 }

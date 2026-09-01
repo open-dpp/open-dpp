@@ -2,6 +2,7 @@ import type { AxiosInstance } from "axios";
 import type { ApiClientOptions, IApiClient } from "../api-client";
 import { createAxiosClient } from "../api-client";
 import { BrandingNamespace } from "./branding/branding.namespace";
+import { BulkImportNamespace } from "./bulk-import/bulk-import.namespace";
 import { InstanceSettingsNamespace } from "./instance-settings/instance-settings.namespace";
 import { AasIntegrationNamespace } from "./integrations/aas-integration.namespace";
 import { OrganizationsNamespace } from "./organizations/organizations.namespace";
@@ -17,6 +18,7 @@ export class DppApiClient implements IApiClient {
   public templates!: TemplatesNamespace;
   public passports!: PassportNamespace;
   public branding!: BrandingNamespace;
+  public bulkImport!: BulkImportNamespace;
 
   public permalinks!: PermalinksNamespace;
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace;
@@ -48,6 +50,7 @@ export class DppApiClient implements IApiClient {
     this.templates = new TemplatesNamespace(this.axiosInstance);
     this.passports = new PassportNamespace(this.axiosInstance);
     this.branding = new BrandingNamespace(this.axiosInstance);
+    this.bulkImport = new BulkImportNamespace(this.axiosInstance);
     this.aasIntegration = new AasIntegrationNamespace(this.axiosInstance);
 
     this.permalinks = new PermalinksNamespace(this.axiosInstance);

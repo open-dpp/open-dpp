@@ -25,6 +25,14 @@ const rows = computed(() => [
     actionLinkBuilder: (id: string) =>
       `/organizations/${indexStore.selectedOrganization}/integrations/${id}`,
   },
+  {
+    name: t("integrations.bulkImport.label"),
+    status: "",
+    id: "bulk-import",
+    action: t("common.view"),
+    actionLinkBuilder: () =>
+      `/organizations/${indexStore.selectedOrganization}/integrations/bulk-import`,
+  },
 ]);
 
 async function createApiKey() {
