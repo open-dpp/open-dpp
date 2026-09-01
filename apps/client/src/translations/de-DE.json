@@ -590,6 +590,11 @@
         "errorLoading": "Fehler beim Laden der Einstellungen",
         "lockedByEnv": "Diese Einstellung wird durch eine Umgebungsvariable gesteuert und kann hier nicht geändert werden."
       }
+    },
+    "removeMemberError": "Fehler beim Entfernen des Mitglieds.",
+    "removeMemberDialog": {
+      "header": "Mitglied entfernen",
+      "message": "Möchten Sie {email} wirklich aus dieser Organisation entfernen?"
     }
   },
   "marketplace": {
