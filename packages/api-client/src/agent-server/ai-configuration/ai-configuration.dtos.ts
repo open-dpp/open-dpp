@@ -1,5 +1,4 @@
 export enum AiProvider {
-  Ollama = "ollama",
   Mistral = "mistral",
 }
 

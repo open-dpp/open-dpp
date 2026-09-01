@@ -135,8 +135,8 @@ describe("aiConfigurationController", () => {
     const { id } = await aiConfigurationService.save(configuration);
     const body = {
       isEnabled: false,
-      provider: AiProvider.Ollama,
-      model: "qwen3:0.6b",
+      provider: AiProvider.Mistral,
+      model: "codestral-latest",
     };
     const response = await request(getApp(app))
       .put(`/configurations`)
