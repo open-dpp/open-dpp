@@ -40,7 +40,6 @@ import {
   DigitalProductDocumentTypes,
   UniqueProductIdentifierType,
 } from "@open-dpp/dto";
-import { EnvService } from "@open-dpp/env";
 import { ValueError, ZodValidationPipe } from "@open-dpp/exception";
 import { Branding } from "../../branding/domain/branding";
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
@@ -60,6 +59,7 @@ import {
   SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { TransactionService } from "../../database/transaction.service";
 import { isDuplicateKeyError } from "../../lib/mongo-errors";
 import type { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
@@ -96,7 +96,7 @@ export class PermalinkController {
     private readonly environmentService: EnvironmentService,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
     private readonly passportRepository: PassportRepository,
-    private readonly envService: EnvService,
+    private readonly transactionService: TransactionService,
     private readonly uniqueProductIdentifierRepository: UniqueProductIdentifierRepository,
   ) {}
 
@@ -120,7 +120,7 @@ export class PermalinkController {
       if (!isMember) {
         return PermalinkListDtoSchema.parse([]);
       }
-      const created = await this.environmentService.withTransaction(async (options) => {
+      const created = await this.transactionService.withTransaction(async (options) => {
         return await this.permalinkApplicationService.ensureDefaultForPassport(passport, options);
       });
       this.logger.debug(

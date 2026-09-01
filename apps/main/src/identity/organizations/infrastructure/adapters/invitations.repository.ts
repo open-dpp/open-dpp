@@ -3,9 +3,9 @@ import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import type { Document, Filter } from "mongodb";
-import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
+import { idFilter } from "../../../lib/better-auth-id";
 import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";
@@ -22,7 +22,7 @@ export class InvitationsRepository {
 
   async findOneById(id: string): Promise<Invitation | null> {
     const rawDoc = await this.invitationModel.collection.findOne({
-      _id: ObjectId.isValid(id) ? { $in: [id, new ObjectId(id)] } : { $eq: id }, // supports better-auth 32-char strings and older versions
+      _id: idFilter(id),
     } as unknown as Filter<Document>);
     if (!rawDoc) return null;
     return InvitationMapper.toDomain(rawDoc);
@@ -50,12 +50,9 @@ export class InvitationsRepository {
   ): Promise<Invitation | null> {
     // Query the raw MongoDB collection to bypass Mongoose's String schema casting,
     // since Better Auth's MongoDB adapter stores reference fields as ObjectId
-    const orgIdFilter = ObjectId.isValid(organizationId)
-      ? { $in: [organizationId, new ObjectId(organizationId)] }
-      : organizationId;
     const rawDoc = await this.invitationModel.collection.findOne({
       email: { $eq: email },
-      organizationId: orgIdFilter,
+      organizationId: idFilter(organizationId),
       expiresAt: { $gte: new Date() },
       status: InvitationStatus.PENDING,
     });
@@ -64,15 +61,15 @@ export class InvitationsRepository {
   }
 
   async save(invitation: Invitation, headers?: BetterAuthHeaders): Promise<string> {
-    return (
-      await (this.auth.api as any).createInvitation({
-        headers,
-        body: {
-          email: invitation.email,
-          role: invitation.role,
-          organizationId: invitation.organizationId,
-        },
-      })
-    ).id;
+    const betterAuthInvitation = await (this.auth.api as any).createInvitation({
+      headers,
+      body: {
+        email: invitation.email,
+        role: invitation.role,
+        organizationId: invitation.organizationId,
+      },
+    });
+
+    return betterAuthInvitation.id;
   }
 }

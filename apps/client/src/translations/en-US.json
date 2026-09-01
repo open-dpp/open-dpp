@@ -108,7 +108,8 @@
     "formLabels": {
       "value": "Value",
       "name": "Name",
-      "id": "Identifier"
+      "id": "Identifier",
+      "description": "Description"
     },
     "table": {
       "edit": "Edit table",
@@ -303,6 +304,78 @@
       "errorLoadingConfiguration": "Failed to load configuration: ",
       "savedConfigurationSuccess": "Configuration saved successfully.",
       "modifyConfigurationError": "Failed to modify configuration:"
+    },
+    "bulkImport": {
+      "errorLoadConfigs": "Failed to load bulk import configurations:",
+      "createConfigSuccess": "Bulk import configuration created successfully.",
+      "errorCreateConfig": "Failed to create bulk import configuration:",
+      "updateConfigSuccess": "Bulk import configuration updated successfully.",
+      "errorUpdateConfig": "Failed to update bulk import configuration:",
+      "deleteConfigSuccess": "Bulk import configuration deleted successfully.",
+      "errorDeleteConfig": "Failed to delete bulk import configuration:",
+      "errorLoadRuns": "Failed to load bulk import runs:",
+      "triggerRunSuccess": "Bulk import run started successfully.",
+      "interruptRunSuccess": "Bulk import run interrupted successfully.",
+      "errorTriggerRun": "Failed to start bulk import run:",
+      "errorInterruptRun": "Failed to interrupt bulk import run:",
+      "errorLoadRun": "Failed to load bulk import run:",
+      "errorLoadRunItems": "Failed to load bulk import run items:",
+      "label": "Bulk Import",
+      "newConfig": "New configuration",
+      "editConfig": "Edit configuration",
+      "template": "Template",
+      "idField": "ID field",
+      "runHistory": "Run history",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "total": "Total",
+      "createdAt": "Created at",
+      "delete": "Delete",
+      "noRuns": "No runs yet",
+      "status": {
+        "label": "Status",
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "completed_with_errors": "Completed with errors",
+        "interrupted": "Interrupted"
+      },
+      "configLockedTooltip": "Cannot edit config while imports are pending or running",
+      "errorLoadSubmodels": "Failed to load template fields:",
+      "invalidFile": "The selected file is invalid.",
+      "uploadFile": "Upload file",
+      "chooseFile": "Choose file",
+      "rowsParsed": "{count} rows found in file",
+      "selectTemplate": "Select a template",
+      "mapFields": "Map fields",
+      "inputField": "Input field",
+      "targetField": "Target field",
+      "addMapping": "Add mapping",
+      "configDetails": "Configuration details",
+      "configName": "Configuration name",
+      "idFieldHelp": "The input field that uniquely identifies each product, used to create or update the matching passport.",
+      "previous": "Previous",
+      "next": "Next",
+      "createAndRun": "Create and run",
+      "runNow": "Run",
+      "newOrExisting": "New configuration or existing?",
+      "useExisting": "Use existing configuration",
+      "useNew": "Create new configuration",
+      "selectExistingConfig": "Select a configuration",
+      "itemStatus": {
+        "pending": "Pending",
+        "created": "Created",
+        "updated": "Updated",
+        "failed": "Failed"
+      },
+      "rowIndex": "Row",
+      "passport": "Passport",
+      "error": "Error",
+      "inputData": "Input data",
+      "runDetailTitle": "Bulk import run",
+      "items": "Rows",
+      "interrupt": "Interrupt",
+      "interruptTooltip": "Cannot interrupt run with status '{status}'"
     },
     "connections": {
       "label": "Connection | Connections",
@@ -517,6 +590,11 @@
         "errorLoading": "Error loading settings",
         "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
+    },
+    "removeMemberError": "Error removing member.",
+    "removeMemberDialog": {
+      "header": "Remove member",
+      "message": "Do you really want to remove {email} from this organization?"
     }
   },
   "marketplace": {
@@ -586,8 +664,7 @@
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport status",
     "blank": "Blank",
-    "fromTemplate": "From template",
-    "selectTemplate": "Select template"
+    "fromTemplate": "From template"
   },
   "status": {
     "withStatus": "with status",
@@ -611,7 +688,9 @@
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport template status",
     "createdAt": "Created at",
-    "updatedAt": "Updated at"
+    "updatedAt": "Updated at",
+    "select": "Select template",
+    "errorFetchList": "Failed to load templates"
   },
   "actions": {
     "member": {
@@ -670,7 +749,40 @@
     "emailChangeCurrentPassword": "Current password",
     "emailChangeCurrentPasswordRequired": "Required to confirm this change.",
     "emailChangeCurrentPasswordIncorrect": "The password you entered is incorrect.",
-    "emailChangeRateLimited": "Too many email-change attempts. Please try again in an hour."
+    "emailChangeRateLimited": "Too many email-change attempts. Please try again in an hour.",
+    "tabs": {
+      "profile": "Profile",
+      "invitations": "Invitations",
+      "apiKeys": "API keys"
+    },
+    "apiKeys": {
+      "title": "API keys",
+      "create": "Create API key",
+      "name": "Name",
+      "namePlaceholder": "e.g. CI pipeline",
+      "key": "Key",
+      "createdAt": "Created",
+      "expiresAt": "Expires",
+      "lastUsedAt": "Last used",
+      "neverUsed": "Never",
+      "expiry": "Expiry",
+      "noExpiry": "No expiry",
+      "expiryDays": "{days} days",
+      "createdTitle": "API key created",
+      "createdHint": "Copy this key now. It is only shown once.",
+      "renameTitle": "Rename API key",
+      "renameSuccess": "API key renamed",
+      "renameError": "Could not rename the API key",
+      "revoke": "Revoke",
+      "revokeConfirmHeader": "Revoke API key?",
+      "revokeConfirmMessage": "Applications using this key immediately lose access. This cannot be undone.",
+      "revokeSuccess": "API key revoked",
+      "revokeError": "Could not revoke the API key",
+      "createError": "Could not create the API key",
+      "copyError": "Could not copy the key to the clipboard",
+      "loadError": "Could not load your API keys",
+      "empty": "No API keys yet"
+    }
   },
   "notifications": {
     "success": "Success",

@@ -1,5 +1,52 @@
 # @open-dpp/api-client
 
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
+### Patch Changes
+
+- Updated dependencies [[`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7)]:
+  - @open-dpp/dto@3.6.0
+
+## 3.5.0
+
+### Minor Changes
+
+- [#707](https://github.com/open-dpp/open-dpp/pull/707) [`3372e4f`](https://github.com/open-dpp/open-dpp/commit/3372e4fed94f7217fb3a60036dd044dc8cfe483d) Thanks [@florianBieck](https://github.com/florianBieck)! - Organization owners can remove members. New `DELETE /organizations/members/:id` endpoint (owner-only, cross-organization guarded); owners and the acting user cannot be removed. Removing a member clears the organization from their sessions' active organization. The members list gains a remove button with a confirmation dialog.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.5.0
+
+## 3.4.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.4.0
+
+## 3.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.3.0
+
+## 3.2.0
+
+### Minor Changes
+
+- [#671](https://github.com/open-dpp/open-dpp/pull/671) [`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b) Thanks [@mr42](https://github.com/mr42)! - Add bulk import feature such that a REO user can create up to 1000 passports at once.
+
+### Patch Changes
+
+- Updated dependencies [[`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b)]:
+  - @open-dpp/dto@3.2.0
+
 ## 3.1.4
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/client",
-  "version": "3.1.4",
+  "version": "3.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@better-auth/api-key": "^1.6.17",
-    "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/dto": "workspace:*",

@@ -4,7 +4,10 @@ import { HydratedDocument, InferSchemaType } from "mongoose";
 
 export type SessionDocument = HydratedDocument<Session>;
 
-@Schema({ collection: "session", autoCreate: process.env.NODE_ENV === "test" })
+// Collection is created and named by better-auth; keep in sync with its modelName config.
+export const SESSION_COLLECTION = "session";
+
+@Schema({ collection: SESSION_COLLECTION, autoCreate: process.env.NODE_ENV === "test" })
 export class Session {
   @Prop({ type: String, required: true })
   _id: string;

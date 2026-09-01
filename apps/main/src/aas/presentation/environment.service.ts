@@ -23,7 +23,7 @@ import {
   Permissions,
 } from "@open-dpp/dto";
 
-import { ForbiddenError, ValueError } from "@open-dpp/exception";
+import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
 
 import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
@@ -87,6 +87,8 @@ import {
   MoveSubmodelBaseObserver,
   SecurityMoveObserver,
 } from "./event-bus/move-submodel-base-observer";
+import { TransactionService } from "../../database/transaction.service";
+import { AasAbility } from "../domain/security/aas-ability";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -110,6 +112,7 @@ export class EnvironmentService {
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
     conceptDescriptionRepository: ConceptDescriptionRepository,
+    private transactionService: TransactionService,
     private activityRepository: ActivityRepository,
     @InjectConnection() private connection: Connection,
   ) {
@@ -538,6 +541,37 @@ export class EnvironmentService {
     }
   }
 
+  async modifyValueOfMultipleSubmodels(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    environment: Environment,
+    modificationRequests: Map<string, ValueModificationRequest>,
+    userContext: UserContext,
+  ) {
+    const submodels = [
+      ...(await this.submodelRepository.findByIds(environment.submodels)).values(),
+    ];
+    const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
+    for (const [submodelIdentifier, valueRepresentation] of modificationRequests) {
+      const submodel = submodels.find(
+        (s) => s.idShort === submodelIdentifier || s.id === submodelIdentifier,
+      );
+      if (!submodel) {
+        throw new NotFoundError(
+          `Environment has no submodel with identifier "${submodelIdentifier}".`,
+        );
+      }
+      await this.modifyValueOfSubmodelHelper(
+        correlationId,
+        digitalProductDocumentId,
+        submodel,
+        ability,
+        valueRepresentation,
+        userContext,
+      );
+    }
+  }
+
   async modifyValueOfSubmodel(
     correlationId: string,
     digitalProductDocumentId: string,
@@ -548,31 +582,14 @@ export class EnvironmentService {
   ) {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
-    submodel.modifyValue(modificationRequest.toDomain(), { ability });
-
-    const activity = SubmodelValueModifiedActivity.create({
-      digitalProductDocumentId,
-      userId: userContext.userId,
+    return await this.modifyValueOfSubmodelHelper(
       correlationId,
+      digitalProductDocumentId,
       submodel,
-    });
-
-    const session = await this.connection.startSession();
-    try {
-      await session.withTransaction(async () => {
-        await this.submodelRepository.save(submodel, { session });
-        if (!activity.isNoop()) {
-          await this.activityRepository.createMany([activity], { session });
-        }
-      });
-      return SubmodelResponse.create({
-        submodel,
-        version: modificationRequest.version,
-        ability,
-      }).toJSON();
-    } finally {
-      await session.endSession();
-    }
+      ability,
+      modificationRequest,
+      userContext,
+    );
   }
 
   async modifySubmodelElement(
@@ -1219,19 +1236,6 @@ export class EnvironmentService {
     }
   }
 
-  async withTransaction<T>(work: (options: DbSessionOptions) => Promise<T>): Promise<T> {
-    const session = await this.connection.startSession();
-    try {
-      let result!: T;
-      await session.withTransaction(async () => {
-        result = await work({ session });
-      });
-      return result;
-    } finally {
-      await session.endSession();
-    }
-  }
-
   async populateEnvironmentForPagingResult(
     pagingResult: PagingResult<Passport | Template>,
     populateOptions: PopulateOptions,
@@ -1303,5 +1307,35 @@ export class EnvironmentService {
       throw new ValueError("No asset administration shell for environment.");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
+  }
+
+  private async modifyValueOfSubmodelHelper(
+    correlationId: string,
+    digitalProductDocumentId: string,
+    submodel: Submodel,
+    ability: AasAbility,
+    modificationRequest: ValueModificationRequest,
+    userContext: UserContext,
+  ) {
+    submodel.modifyValue(modificationRequest.toDomain(), { ability });
+
+    const activity = SubmodelValueModifiedActivity.create({
+      digitalProductDocumentId,
+      userId: userContext.userId,
+      correlationId,
+      submodel,
+    });
+
+    return await this.transactionService.withTransaction(async (options) => {
+      await this.submodelRepository.save(submodel, options);
+      if (!activity.isNoop()) {
+        await this.activityRepository.createMany([activity], options);
+      }
+      return SubmodelResponse.create({
+        submodel,
+        version: modificationRequest.version,
+        ability,
+      }).toJSON();
+    });
   }
 }
