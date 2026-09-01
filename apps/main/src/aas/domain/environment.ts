@@ -101,7 +101,14 @@ export class Environment implements IConvertableToPlain, ITrackable {
     }
     this.submodels.splice(oldPosition, 1);
     this.submodels.splice(position, 0, submodel.id);
-    this.tracker.track(SubmodelMoved.create({ submodelId: submodel.id, oldPosition, position }));
+    this.tracker.track(
+      SubmodelMoved.create({
+        submodelId: submodel.id,
+        oldPosition,
+        position,
+        path: submodel.getIdShortPath(),
+      }),
+    );
   }
 
   toPlain(): Record<string, any> {

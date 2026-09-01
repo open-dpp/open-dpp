@@ -1007,6 +1007,37 @@ export function createAasTestContext<T>(
       submodels[1].id,
       submodels[0].id,
     ]);
+
+    const activitiesResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/activities`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(activitiesResponse.status).toEqual(200);
+    const moveActivity = activitiesResponse.body.result.find(
+      (a: any) => a.header.type === "SubmodelMoved",
+    );
+    expect(moveActivity).toBeDefined();
+    expect(moveActivity.payload.changes[0]).toMatchObject({
+      type: "SubmodelMoved",
+      submodelId: submodels[1].id,
+      oldPosition: 1,
+      position: 0,
+      path: submodels[1].idShort,
+    });
+
+    // The move must also surface when the activity history is scoped to the
+    // submodel's own path (e.g. the AAS editor drawer's Activity History tab) -
+    // not just in the unscoped list.
+    const pathFilteredResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/activities?path=sw:${submodels[1].idShort}`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(pathFilteredResponse.status).toEqual(200);
+    expect(
+      pathFilteredResponse.body.result.some((a: any) => a.header.type === "SubmodelMoved"),
+    ).toBe(true);
   }
 
   async function assertModifyValueOfSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
