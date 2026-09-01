@@ -25,6 +25,7 @@ import ColumnInGroupChanged from "./ColumnInGroupChanged.vue";
 import SubmodelElementAddedOrDeleted from "./SubmodelElementAddedOrDeleted.vue";
 import SubmodelElementMoved from "./SubmodelElementMoved.vue";
 import SubmodelMoved from "./SubmodelMoved.vue";
+import ActivityHistoryStackBreadcrumb from "./ActivityHistoryStackBreadcrumb.vue";
 
 import PolicyDeleted from "./PolicyDeleted.vue";
 
@@ -43,7 +44,6 @@ const route = useRoute();
 const {
   historyStack,
   currentPath,
-  selectedIndex,
   goToEntry: goToHistoryEntry,
   viewHistoryBeforeMove,
   resetToLive,
@@ -137,13 +137,7 @@ onMounted(async () => {
         <Button @click="refreshActivities" :aria-label="t('common.refresh')" icon="pi pi-refresh" />
       </template>
       <template v-if="historyStack.length > 0" #end>
-        <Select
-          :model-value="selectedIndex"
-          :options="stackOptions"
-          option-value="value"
-          option-label="label"
-          @update:model-value="goToEntry"
-        />
+        <ActivityHistoryStackBreadcrumb :items="stackOptions" @navigate="goToEntry" />
       </template>
     </Toolbar>
     <Timeline :value="activities" align="left">
