@@ -163,8 +163,20 @@ async function deleteClicked(node: TreeNode) {
           />
         </template>
       </TreeTable>
-      <Menu id="overlay_menu" ref="popover" :model="props.submodelElementsToAdd" :popup="true" position="right" />
-      <Menu id="move_menu" ref="movePopover" :model="props.moveMenuItems" :popup="true" position="right" />
+      <Menu
+        id="overlay_menu"
+        ref="popover"
+        :model="props.submodelElementsToAdd"
+        :popup="true"
+        position="right"
+      />
+      <Menu
+        id="move_menu"
+        ref="movePopover"
+        :model="props.moveMenuItems"
+        :popup="true"
+        position="right"
+      />
       <AasMoveDialog
         v-model:visible="moveToDialogVisible"
         v-model:selected="moveToDialogSelected"

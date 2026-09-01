@@ -202,7 +202,9 @@ function canEditPath(path: string): boolean {
               :translate="t"
               :get-access-permission-rules="props.editorContext.getAccessPermissionRules"
               :modify-shell="props.editorContext.modifyShell"
-              :delete-policy-by-subject-and-object="props.editorContext.deletePolicyBySubjectAndObject"
+              :delete-policy-by-subject-and-object="
+                props.editorContext.deletePolicyBySubjectAndObject
+              "
               :is-archived="props.editorContext.isArchived"
               :hide-drawer="props.hideDrawer"
             />

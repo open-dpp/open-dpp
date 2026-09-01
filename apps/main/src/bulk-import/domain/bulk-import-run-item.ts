@@ -106,7 +106,6 @@ export class BulkImportRunItem implements IPersistable {
     this._error = null;
   }
 
-
   markUpdated(): void {
     this._status = BulkImportRunItemStatusDto.Updated;
     this._error = null;
