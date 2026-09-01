@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ValueError } from "@open-dpp/exception";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Member } from "../../domain/member";
@@ -20,6 +22,8 @@ describe("MembersService", () => {
     mockMembersRepo = {
       findOneByUserIdAndOrganizationId: jest.fn(),
       findByOrganizationId: jest.fn(),
+      findOneByIdOrFail: jest.fn(),
+      deleteById: jest.fn(),
     };
     mockOrganizationsRepo = {
       findManyByMember: jest.fn(),
@@ -104,6 +108,68 @@ describe("MembersService", () => {
       email: "test@example.com",
       name: "Test",
       image: "img.png",
+    });
+  });
+
+  describe("removeMember", () => {
+    it("should remove member and clear their active organization", async () => {
+      const member = Member.create({
+        organizationId: "org-1",
+        userId: "user-1",
+        role: MemberRole.MEMBER,
+      });
+      mockMembersRepo.findOneByIdOrFail.mockResolvedValue(member);
+
+      await service.removeMember("org-1", member.id, "actor-user");
+
+      expect(mockMembersRepo.findOneByIdOrFail).toHaveBeenCalledWith(member.id);
+      expect(mockSessionsRepo.clearActiveOrganization).toHaveBeenCalledWith("user-1", "org-1");
+      expect(mockMembersRepo.deleteById).toHaveBeenCalledWith(member.id);
+    });
+
+    it("should throw ForbiddenException if member belongs to another organization", async () => {
+      const member = Member.create({
+        organizationId: "org-2",
+        userId: "user-1",
+        role: MemberRole.MEMBER,
+      });
+      mockMembersRepo.findOneByIdOrFail.mockResolvedValue(member);
+
+      await expect(service.removeMember("org-1", member.id, "actor-user")).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(mockSessionsRepo.clearActiveOrganization).not.toHaveBeenCalled();
+      expect(mockMembersRepo.deleteById).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValueError when removing own membership", async () => {
+      const member = Member.create({
+        organizationId: "org-1",
+        userId: "user-1",
+        role: MemberRole.MEMBER,
+      });
+      mockMembersRepo.findOneByIdOrFail.mockResolvedValue(member);
+
+      await expect(service.removeMember("org-1", member.id, "user-1")).rejects.toThrow(
+        ValueError,
+      );
+      expect(mockSessionsRepo.clearActiveOrganization).not.toHaveBeenCalled();
+      expect(mockMembersRepo.deleteById).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValueError when removing an owner", async () => {
+      const member = Member.create({
+        organizationId: "org-1",
+        userId: "user-1",
+        role: MemberRole.OWNER,
+      });
+      mockMembersRepo.findOneByIdOrFail.mockResolvedValue(member);
+
+      await expect(service.removeMember("org-1", member.id, "actor-user")).rejects.toThrow(
+        ValueError,
+      );
+      expect(mockSessionsRepo.clearActiveOrganization).not.toHaveBeenCalled();
+      expect(mockMembersRepo.deleteById).not.toHaveBeenCalled();
     });
   });
 });
