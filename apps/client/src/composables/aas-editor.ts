@@ -62,6 +62,10 @@ export interface AasEditorProps {
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
   status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
+  /** Called after a submodel/submodel-element move succeeds. Moves change idShort
+   * paths, which invalidates any data keyed by them (e.g. presentation config)
+   * that isn't part of the reloaded shell/submodel payload and must be refetched. */
+  onAfterMove?: () => Promise<void> | void;
 }
 
 export interface IAasEditor extends IAasDrawer, IPagination, IAasMoveDialog {
@@ -97,6 +101,7 @@ export function useAasEditor({
   translate,
   openConfirm,
   status,
+  onAfterMove,
 }: AasEditorProps): IAasEditor {
   const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
   const displayName = ref<string>("");
@@ -662,7 +667,13 @@ export function useAasEditor({
           options,
         );
         await finalizeApiRequest({ status: response.status });
-        await pagination.reloadCurrentPage();
+        // The move can change idShort paths, so anything keyed by them
+        // (access permission rules, presentation config) must be refetched.
+        await Promise.all([
+          pagination.reloadCurrentPage(),
+          fetchAssetAdministrationShell(),
+          onAfterMove?.(),
+        ]);
       }
     } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(
@@ -676,7 +687,11 @@ export function useAasEditor({
     try {
       const response = await aasNamespace.moveSubmodel(id, submodelId, { position });
       await finalizeApiRequest({ status: response.status });
-      await pagination.reloadCurrentPage();
+      await Promise.all([
+        pagination.reloadCurrentPage(),
+        fetchAssetAdministrationShell(),
+        onAfterMove?.(),
+      ]);
     } catch (error: unknown) {
       errorHandlingStore.logErrorWithNotification(
         translate(`${translatePrefix}.errorMoveSubmodel`),

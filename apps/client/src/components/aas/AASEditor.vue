@@ -52,6 +52,17 @@ const status = computed(() => model.value.lastStatusChange?.currentStatus);
 
 const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
 
+const presentationConfigStore = usePresentationConfigurationStore();
+
+function fetchPresentationConfig() {
+  return presentationConfigStore.fetch({
+    referenceId: model.value.id,
+    namespace: presentationConfigurationNamespace,
+    errorHandlingStore,
+    translate: t,
+  });
+}
+
 const aasEditor = useAasEditor({
   id: model.value.id,
   aasNamespace,
@@ -63,6 +74,7 @@ const aasEditor = useAasEditor({
   translate: t,
   openConfirm: confirm.require,
   status: status,
+  onAfterMove: fetchPresentationConfig,
 });
 
 const {
@@ -103,8 +115,6 @@ const {
   deletePolicyBySubjectAndObject,
 } = aasEditor;
 
-const presentationConfigStore = usePresentationConfigurationStore();
-
 watch(
   () => route.query.config,
   (next) => {
@@ -131,12 +141,7 @@ watch(
 
 onMounted(async () => {
   await init();
-  await presentationConfigStore.fetch({
-    referenceId: model.value.id,
-    namespace: presentationConfigurationNamespace,
-    errorHandlingStore,
-    translate: t,
-  });
+  await fetchPresentationConfig();
 });
 
 onUnmounted(() => {

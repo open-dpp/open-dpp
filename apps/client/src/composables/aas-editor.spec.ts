@@ -1160,6 +1160,48 @@ describe("aasEditor composable", () => {
       );
     });
 
+    it("refetches the shell (security) and invokes onAfterMove (presentation) after a successful move", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
+        status: HTTPCode.OK,
+      });
+      mocks.getShells.mockResolvedValue({
+        data: {
+          paging_metadata: { cursor: null },
+          result: [
+            {
+              ...assetAdministrationShell1,
+              security: securityPlainFactory.build({}, { transient: { policies: [] } }),
+            },
+          ],
+        },
+        status: HTTPCode.OK,
+      });
+      const onAfterMove = vi.fn();
+      const { init, findTreeNodeByKey, buildMoveMenu, moveMenuItems } = mountHarness({
+        id: aasWrapperId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: mockOpenConfirm,
+        translate,
+        status,
+        onAfterMove,
+      });
+      await init();
+      expect(mocks.getShells).toHaveBeenCalledTimes(1); // initial load
+
+      buildMoveMenu(findTreeNodeByKey("Design_V01.Author")!);
+      mocks.moveSubmodelElement.mockResolvedValueOnce({ status: HTTPCode.OK });
+      await (moveMenuItems.value[1]!.command as any)();
+
+      // idShort paths can change as a result of the move, so security (part of
+      // the shell) and presentation (via onAfterMove) must both be refetched.
+      expect(mocks.getShells).toHaveBeenCalledTimes(2);
+      expect(onAfterMove).toHaveBeenCalledTimes(1);
+    });
+
     it("wires the 'Move to...' menu item to open the move dialog", async () => {
       mocks.getSubmodels.mockResolvedValue({
         data: { paging_metadata: { cursor: null }, result: [submodel1, submodel2] },
