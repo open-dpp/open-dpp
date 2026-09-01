@@ -5,6 +5,7 @@ import { UserCircleIcon } from "@heroicons/vue/24/solid";
 import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
+import { useOrganizations } from "../../composables/organizations.ts";
 import ChangeMemberRoleDialog from "./ChangeMemberRoleDialog.vue";
 import InviteMemberDialog from "./InviteMemberDialog.vue";
 import { useUserStore } from "../../stores/user.ts";
@@ -78,6 +79,16 @@ function canChangeRole(member: MemberDto): boolean {
   );
 }
 
+const { removeMember } = useOrganizations();
+
+function canRemoveMember(member: MemberDto): boolean {
+  return canChangeRole(member) && member.role !== MemberRoleDto.OWNER;
+}
+
+function onRemoveMember(member: MemberDto) {
+  removeMember(member, () => emit("refresh"));
+}
+
 onMounted(async () => {
   await loadInvitations();
 });
@@ -149,13 +160,14 @@ onMounted(async () => {
         <Button v-if="isInvited(data)" severity="secondary" @click="cancelInvite(data.id)">
           {{ t("organizations.invitation.cancel") }}
         </Button>
-        <Button
-          v-else-if="canChangeRole(data)"
-          severity="secondary"
-          @click="changeRoleMember = data"
-        >
-          {{ t("organizations.admin.changeRoleDialog.change") }}
-        </Button>
+        <div v-else class="flex gap-2">
+          <Button v-if="canChangeRole(data)" severity="secondary" @click="changeRoleMember = data">
+            {{ t("organizations.admin.changeRoleDialog.change") }}
+          </Button>
+          <Button v-if="canRemoveMember(data)" severity="danger" @click="onRemoveMember(data)">
+            {{ t("common.remove") }}
+          </Button>
+        </div>
       </template>
     </Column>
   </DataTable>

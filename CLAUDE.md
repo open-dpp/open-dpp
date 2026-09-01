@@ -57,7 +57,7 @@ packages/testing/    # Fishery factories for test data
 
 ### Tech Stack
 
-- **Backend**: NestJS v11, Mongoose (MongoDB 7), Better Auth, LangChain + Mistral/Ollama
+- **Backend**: NestJS v11, Mongoose (MongoDB 7), Better Auth, LangChain + Mistral
 - **Frontend**: Vue 3, Pinia, PrimeVue, Tailwind CSS v4, Vite 7
 - **Testing**: Jest + @swc/jest (backend), Vitest (frontend), Cypress (component), Playwright (E2E)
 - **Validation**: Zod everywhere (DTOs, env vars, route params)
