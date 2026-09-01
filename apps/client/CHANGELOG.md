@@ -1,5 +1,17 @@
 # @open-dpp/client
 
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
+### Patch Changes
+
+- Updated dependencies [[`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7)]:
+  - @open-dpp/api-client@3.6.0
+  - @open-dpp/dto@3.6.0
+
 ## 3.5.0
 
 ### Minor Changes
