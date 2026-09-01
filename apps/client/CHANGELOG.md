@@ -1,5 +1,32 @@
 # @open-dpp/client
 
+## 3.4.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.4.0
+  - @open-dpp/dto@3.4.0
+
+## 3.3.0
+
+### Minor Changes
+
+- [#667](https://github.com/open-dpp/open-dpp/pull/667) [`64b4097`](https://github.com/open-dpp/open-dpp/commit/64b40972ce85ef36ce9041118a407f1153d522fd) Thanks [@murphylan](https://github.com/murphylan)! - Add a multi-language description to data fields in the AAS editor. Every submodel
+  element (property, file, collection, list, submodel, shell) can now be given an
+  optional description alongside its display name, and the description is shown as
+  muted helper text under the field name in the presentation view. Section
+  (submodel) descriptions are rendered under the section heading, and languages
+  that only occur in descriptions are offered in the presentation language picker.
+  The display-name editor was generalized into a reusable language-text array
+  editor to back both fields.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.3.0
+  - @open-dpp/dto@3.3.0
+
 ## 3.2.0
 
 ### Minor Changes

@@ -9,10 +9,10 @@ const props = defineProps<{
 
 <template>
   <LanguageTextArrayForm
-    field-name="displayName"
-    heading="aasEditor.formLabels.name"
-    row-label="aasEditor.formLabels.name"
-    data-cy-prefix="display-name"
+    field-name="description"
+    heading="aasEditor.formLabels.description"
+    row-label="aasEditor.formLabels.description"
+    data-cy-prefix="description"
     :submit-attempted="props.submitAttempted"
     :disabled="props.disabled"
   />

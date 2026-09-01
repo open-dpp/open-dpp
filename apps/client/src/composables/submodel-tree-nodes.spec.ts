@@ -20,7 +20,7 @@ function createElement(
   name: LanguageTextDto[] = [],
   children: SubmodelTreeElement[] = [],
 ): SubmodelTreeElement {
-  return { idShort, name, children, submodelElements: [] };
+  return { idShort, name, description: [], children, submodelElements: [] };
 }
 
 describe("useSubmodelTreeNodes", () => {
