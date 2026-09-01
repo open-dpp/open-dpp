@@ -6,6 +6,7 @@ import { MemberMapper } from "../mappers/member.mapper";
 import { Member as MemberSchema } from "../schemas/member.schema";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { ObjectId } from "mongodb";
+import { idFilter } from "../../../lib/better-auth-id";
 
 @Injectable()
 export class MembersRepository {
@@ -13,10 +14,6 @@ export class MembersRepository {
     @InjectModel(MemberSchema.name)
     private readonly memberModel: Model<MemberSchema>,
   ) {}
-
-  private toObjectIdIfValid(id: string): Types.ObjectId | string {
-    return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
-  }
 
   async save(member: Member): Promise<Member> {
     const persistenceModel = MemberMapper.toPersistence(member);
@@ -59,16 +56,15 @@ export class MembersRepository {
     }
     // Better Auth stores organizationId as ObjectId
     const filter = {
-      organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
+      organizationId: { $eq: new Types.ObjectId(organizationId) },
     };
     const documents = await this.memberModel.find(filter as any);
     return documents.map((doc) => MemberMapper.toDomain(doc));
   }
 
   async findByUserId(userId: string): Promise<Member[]> {
-    // Better Auth stores userId as ObjectId
     const filter = {
-      userId: { $eq: this.toObjectIdIfValid(userId) },
+      userId: idFilter(userId),
     };
     const documents = await this.memberModel.find(filter as any);
     return documents.map((doc) => MemberMapper.toDomain(doc));
@@ -83,11 +79,9 @@ export class MembersRepository {
     if (!Types.ObjectId.isValid(organizationId)) {
       return null;
     }
-    // Better Auth stores userId and organizationId as ObjectIds, so we need to convert
-    // the string query parameters to ObjectIds for the query to match
     const filter = {
-      userId: { $eq: this.toObjectIdIfValid(userId) },
-      organizationId: { $eq: this.toObjectIdIfValid(organizationId) },
+      userId: idFilter(userId),
+      organizationId: { $eq: new Types.ObjectId(organizationId) },
     };
 
     const document = await this.memberModel.findOne(filter as any);
