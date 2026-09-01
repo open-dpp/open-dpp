@@ -205,6 +205,8 @@ export class BulkImportRunService implements OnApplicationBootstrap {
       : await this.createPassportAndLink(run, config, idValue);
     item.assignPassport(passportId);
 
+    item.assignPassport(passportId);
+
     const valueRepresentations = await config.applyToRow(item.inputData);
     await this.passportService.digitalProductDocumentService.modifyValueOfMultipleSubmodels(
       run.id,

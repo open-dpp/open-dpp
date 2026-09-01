@@ -4,4 +4,5 @@ export const HTTPCode = {
   ACCEPTED: 202,
   NO_CONTENT: 204,
   BAD_REQUEST: 400,
+  FORBIDDEN: 403,
 } as const;

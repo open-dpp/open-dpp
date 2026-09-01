@@ -1,5 +1,30 @@
 # @open-dpp/api-client
 
+## 3.5.0
+
+### Minor Changes
+
+- [#707](https://github.com/open-dpp/open-dpp/pull/707) [`3372e4f`](https://github.com/open-dpp/open-dpp/commit/3372e4fed94f7217fb3a60036dd044dc8cfe483d) Thanks [@florianBieck](https://github.com/florianBieck)! - Organization owners can remove members. New `DELETE /organizations/members/:id` endpoint (owner-only, cross-organization guarded); owners and the acting user cannot be removed. Removing a member clears the organization from their sessions' active organization. The members list gains a remove button with a confirmation dialog.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.5.0
+
+## 3.4.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.4.0
+
+## 3.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.3.0
+
 ## 3.2.0
 
 ### Minor Changes
