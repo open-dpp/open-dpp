@@ -4,7 +4,6 @@ import type { InvitationStatus } from "better-auth/plugins";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
 import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
-import { useConfirm } from "primevue/useconfirm";
 import { authClient } from "../../auth-client.ts";
 import { useOrganizations } from "../../composables/organizations.ts";
 import ChangeMemberRoleDialog from "./ChangeMemberRoleDialog.vue";
@@ -80,7 +79,6 @@ function canChangeRole(member: MemberDto): boolean {
   );
 }
 
-const confirm = useConfirm();
 const { removeMember } = useOrganizations();
 
 function canRemoveMember(member: MemberDto): boolean {
@@ -88,20 +86,7 @@ function canRemoveMember(member: MemberDto): boolean {
 }
 
 function onRemoveMember(member: MemberDto) {
-  confirm.require({
-    header: t("organizations.removeMemberDialog.header"),
-    message: t("organizations.removeMemberDialog.message", {
-      email: member.user?.email ?? "",
-    }),
-    acceptLabel: t("organizations.removeMemberDialog.remove"),
-    rejectLabel: t("common.cancel"),
-    acceptProps: { severity: "danger" },
-    accept: async () => {
-      if (await removeMember(member.id)) {
-        emit("refresh");
-      }
-    },
-  });
+  removeMember(member, () => emit("refresh"));
 }
 
 onMounted(async () => {
@@ -180,7 +165,7 @@ onMounted(async () => {
             {{ t("organizations.admin.changeRoleDialog.change") }}
           </Button>
           <Button v-if="canRemoveMember(data)" severity="danger" @click="onRemoveMember(data)">
-            {{ t("organizations.removeMemberDialog.remove") }}
+            {{ t("common.remove") }}
           </Button>
         </div>
       </template>

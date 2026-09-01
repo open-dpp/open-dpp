@@ -593,8 +593,7 @@
     "removeMemberError": "Error removing member.",
     "removeMemberDialog": {
       "header": "Remove member",
-      "message": "Do you really want to remove {email} from this organization?",
-      "remove": "Remove"
+      "message": "Do you really want to remove {email} from this organization?"
     }
   },
   "marketplace": {

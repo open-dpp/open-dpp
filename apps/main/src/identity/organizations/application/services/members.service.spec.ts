@@ -150,9 +150,7 @@ describe("MembersService", () => {
       });
       mockMembersRepo.findOneByIdOrFail.mockResolvedValue(member);
 
-      await expect(service.removeMember("org-1", member.id, "user-1")).rejects.toThrow(
-        ValueError,
-      );
+      await expect(service.removeMember("org-1", member.id, "user-1")).rejects.toThrow(ValueError);
       expect(mockSessionsRepo.clearActiveOrganization).not.toHaveBeenCalled();
       expect(mockMembersRepo.deleteById).not.toHaveBeenCalled();
     });

@@ -593,8 +593,7 @@
     "removeMemberError": "Fehler beim Entfernen des Mitglieds.",
     "removeMemberDialog": {
       "header": "Mitglied entfernen",
-      "message": "Möchten Sie {email} wirklich aus dieser Organisation entfernen?",
-      "remove": "Entfernen"
+      "message": "Möchten Sie {email} wirklich aus dieser Organisation entfernen?"
     }
   },
   "marketplace": {

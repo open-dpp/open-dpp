@@ -1,3 +1,5 @@
+import type { MemberDto } from "@open-dpp/api-client";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +10,7 @@ import { useErrorHandlingStore } from "../stores/error.handling.ts";
 const mocks = vi.hoisted(() => {
   return {
     removeMember: vi.fn(),
+    confirm: vi.fn(),
   };
 });
 
@@ -23,9 +26,31 @@ vi.mock("../lib/api-client", () => ({
 
 vi.mock("vue-i18n", () => ({
   useI18n: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, unknown>) =>
+      params ? `${key}:${JSON.stringify(params)}` : key,
   }),
 }));
+
+vi.mock("primevue/useconfirm", () => ({
+  useConfirm: () => ({
+    require: mocks.confirm,
+  }),
+}));
+
+const member: MemberDto = {
+  id: "member-1",
+  organizationId: "org-1",
+  userId: "user-1",
+  role: "member",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  user: {
+    id: "user-1",
+    email: "jane@example.com",
+    name: "Jane",
+    image: null,
+  },
+};
 
 describe("organizations composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
@@ -59,27 +84,49 @@ describe("organizations composable", () => {
     });
   });
 
-  it("removes a member and returns true on success", async () => {
+  it("asks for confirmation including the member email", () => {
+    const { removeMember } = mountHarness();
+    const onRemoved = vi.fn();
+
+    removeMember(member, onRemoved);
+
+    expect(mocks.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        header: "organizations.removeMemberDialog.header",
+        message: 'organizations.removeMemberDialog.message:{"email":"jane@example.com"}',
+        acceptLabel: "common.remove",
+        rejectLabel: "common.cancel",
+      }),
+    );
+    expect(mocks.removeMember).not.toHaveBeenCalled();
+    expect(onRemoved).not.toHaveBeenCalled();
+  });
+
+  it("removes the member and runs onRemoved when confirmed", async () => {
     mocks.removeMember.mockResolvedValueOnce({ status: 204 });
+    mocks.confirm.mockImplementation((options: ConfirmationOptions) => options.accept!());
 
     const { removeMember } = mountHarness();
-    const result = await removeMember("member-1");
+    const onRemoved = vi.fn();
+    removeMember(member, onRemoved);
+    await vi.waitFor(() => expect(onRemoved).toHaveBeenCalled());
 
-    expect(result).toBe(true);
     expect(mocks.removeMember).toHaveBeenCalledWith("member-1");
   });
 
-  it("returns false and notifies when removing a member fails", async () => {
+  it("notifies and skips onRemoved when removal fails after confirmation", async () => {
     const errorHandlingStore = useErrorHandlingStore();
     const logSpy = vi
       .spyOn(errorHandlingStore, "logErrorWithNotification")
       .mockImplementation(() => {});
     mocks.removeMember.mockRejectedValueOnce(new Error("boom"));
+    mocks.confirm.mockImplementation((options: ConfirmationOptions) => options.accept!());
 
     const { removeMember } = mountHarness();
-    const result = await removeMember("member-1");
+    const onRemoved = vi.fn();
+    removeMember(member, onRemoved);
+    await vi.waitFor(() => expect(logSpy).toHaveBeenCalled());
 
-    expect(result).toBe(false);
-    expect(logSpy).toHaveBeenCalled();
+    expect(onRemoved).not.toHaveBeenCalled();
   });
 });
