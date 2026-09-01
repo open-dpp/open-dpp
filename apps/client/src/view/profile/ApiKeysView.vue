@@ -2,7 +2,7 @@
 import type { ApiKeyDto, PagingParamsDto } from "@open-dpp/dto";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfirm } from "primevue/useconfirm";
 import { useRoute, useRouter } from "vue-router";
@@ -66,13 +66,19 @@ const {
   changeQueryParams,
 });
 
-function maskedKey(apiKey: ApiKeyDto): string {
-  return apiKey.start ? `${apiKey.start}…` : "•••••";
-}
-
 function formatDate(value: string | null): string {
   return value ? dayjs(value).format("LLL") : "—";
 }
+
+const rows = computed(() =>
+  apiKeys.value.map((key) => ({
+    ...key,
+    masked: key.start ? `${key.start}…` : "•••••",
+    createdAtFormatted: formatDate(key.createdAt),
+    expiresAtFormatted: key.expiresAt ? formatDate(key.expiresAt) : t("user.apiKeys.noExpiry"),
+    lastUsedAtFormatted: key.lastUsedAt ? formatDate(key.lastUsedAt) : t("user.apiKeys.neverUsed"),
+  })),
+);
 
 async function onCreated() {
   await reloadCurrentPage();
@@ -130,7 +136,7 @@ onMounted(async () => {
   <Card>
     <template #content>
       <DataTable
-        :value="apiKeys"
+        :value="rows"
         :loading="loading"
         data-testid="api-keys-table"
         paginator
@@ -156,25 +162,25 @@ onMounted(async () => {
 
         <Column :header="t('user.apiKeys.key')">
           <template #body="{ data }">
-            <code :data-testid="`api-key-masked-${data.id}`">{{ maskedKey(data) }}</code>
+            <code :data-testid="`api-key-masked-${data.id}`">{{ data.masked }}</code>
           </template>
         </Column>
 
         <Column :header="t('user.apiKeys.createdAt')">
           <template #body="{ data }">
-            {{ formatDate(data.createdAt) }}
+            {{ data.createdAtFormatted }}
           </template>
         </Column>
 
         <Column :header="t('user.apiKeys.expiresAt')">
           <template #body="{ data }">
-            {{ data.expiresAt ? formatDate(data.expiresAt) : t("user.apiKeys.noExpiry") }}
+            {{ data.expiresAtFormatted }}
           </template>
         </Column>
 
         <Column :header="t('user.apiKeys.lastUsedAt')">
           <template #body="{ data }">
-            {{ data.lastUsedAt ? formatDate(data.lastUsedAt) : t("user.apiKeys.neverUsed") }}
+            {{ data.lastUsedAtFormatted }}
           </template>
         </Column>
 
