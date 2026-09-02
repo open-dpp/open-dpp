@@ -9,18 +9,30 @@ This guide describes a basic self-hosted setup of open-dpp.
 ## Prerequisites
 
 - Docker + Docker Compose
-- `openssl` (for generating the MongoDB key file)
+- `openssl` (for generating secrets)
 
-## Prepare files
+## Quick setup
 
-For deployment, you need `docker-compose.yml` and a `.env` file. You can download both files manually from the [repository](https://github.com/open-dpp/open-dpp) or fetch them with `curl`:
+The setup script downloads the deployment files, generates a local auth secret, and starts the stack:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
+```
+
+In a cloned repository, run `./scripts/setup.sh` instead.
+
+If you prefer to prepare everything yourself, follow the manual setup below instead.
+
+## Manual setup
+
+For deployment, you need `docker-compose.yml` and a `.env` file. You can download the files manually from the [repository](https://github.com/open-dpp/open-dpp) or fetch them with `curl`:
 
 ```bash
 curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/open-dpp/open-dpp/main/docker-compose.yml
 curl -fsSL -o .env https://raw.githubusercontent.com/open-dpp/open-dpp/main/.env.example
 ```
 
-Before starting the services, update `.env` with values that match your environment. For a complete list of settings, see [configuration options](/reference/configuration).
+Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration).
 
 ## Start services
 

@@ -1,7 +1,7 @@
 {
-  // Editor/type-check config for the root maintenance scripts (run via tsx,
+  // Editor/type-check config for the gs1-generator script (run via tsx,
   // which does not type-check). No build; check manually with:
-  //   pnpm --filter @open-dpp/dto exec tsc -p ../../scripts/tsconfig.json
+  //   pnpm --filter @open-dpp/dto exec tsc -p ../../scripts/gs1-generator/tsconfig.json
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",

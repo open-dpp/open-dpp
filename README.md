@@ -6,6 +6,16 @@ open-dpp is an open-source platform for managing digital product passports (DPPs
 
 To get up and running quickly, start with the [Getting Started guide](https://docs.open-dpp.de/home/getting-started).
 
+## Try it locally
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
+```
+
+This downloads the example deployment files, generates local secrets, and starts the full stack with Docker Compose. Then open <http://localhost:3000>.
+
+In a cloned repository, run `./scripts/setup.sh` instead.
+
 # Documentation
 
 See the [documentation](https://docs.open-dpp.de) for setup instructions, configuration details, and usage guides.

@@ -8,6 +8,9 @@ services:
   open-dpp:
     restart: unless-stopped
     image: ghcr.io/open-dpp/open-dpp:${VERSION:-latest}
+    depends_on:
+      mongodb:
+        condition: service_healthy
     ports:
       - "3000:${OPEN_DPP_PORT}"
     env_file:
