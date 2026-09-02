@@ -113,8 +113,8 @@ Ensure that `OPEN_DPP_S3_SSL` is set to `"true"` whenever the storage endpoint i
 
 Uploaded files (passport media, organization logos) are scanned when `OPEN_DPP_CLAMAV_URL` points to a [clamav-rest](https://hub.docker.com/r/ajilaag/clamav-rest) endpoint. When the variable is unset, uploads are accepted **unscanned** and the backend logs a warning at startup. The example and development compose files do not include ClamAV.
 
-| Variable              | Description                                                                 |
-| --------------------- | --------------------------------------------------------------------------- |
+| Variable              | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
 | `OPEN_DPP_CLAMAV_URL` | clamav-rest endpoint including the port. Unset or empty disables scanning. |
 
 Add the service to your stack:
