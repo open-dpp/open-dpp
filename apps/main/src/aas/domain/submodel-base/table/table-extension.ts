@@ -368,9 +368,12 @@ export class TableExtension implements ITableExtendable {
     position: number,
     options: { ability: AasAbility },
   ): void {
+    if (this.headerRow === undefined) {
+      throw new NotFoundError(`Column with id ${idShortOfColumn} not found in empty table.`);
+    }
     const headerContainer = groupIdShort
-      ? this.getGroupInRowOrFail(this.headerRow!, groupIdShort)
-      : this.headerRow!;
+      ? this.getGroupInRowOrFail(this.headerRow, groupIdShort)
+      : this.headerRow;
     const existingColumn = headerContainer
       .getSubmodelElements()
       .find((el) => el.idShort === idShortOfColumn);

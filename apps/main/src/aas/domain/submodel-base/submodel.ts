@@ -474,15 +474,18 @@ export class Submodel
       .findIndex((el) => el.idShort === element.idShort);
     const newPath = element.getIdShortPath();
 
-    this.tracker.track(
-      SubmodelElementMoved.create({
-        oldPath,
-        newPath,
-        position: newPosition,
-        value: element,
-      }),
-    );
-    options.onMove(oldPath, newPath);
+    // Track the move and trigger callback if the path or position has changed
+    if (!oldPath.isEqual(newPath) || newPosition !== indexInSource) {
+      this.tracker.track(
+        SubmodelElementMoved.create({
+          oldPath,
+          newPath,
+          position: newPosition,
+          value: element,
+        }),
+      );
+      options.onMove(oldPath, newPath);
+    }
 
     return element;
   }

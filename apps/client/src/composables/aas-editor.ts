@@ -15,6 +15,8 @@ import {
   KeyTypesEnum,
   type LanguageTextDto,
   type LanguageType,
+  type MoveSubmodelElementDto,
+  MoveSubmodelElementSchema,
   type PagingParamsDto,
   Permissions,
   type PermissionType,
@@ -654,17 +656,14 @@ export function useAasEditor({
     return undefined;
   }
 
-  async function moveSubmodelElementTo(
-    path: AasEditorPath,
-    options: { position?: number; targetParentIdShortPath?: string | null },
-  ) {
+  async function moveSubmodelElementTo(path: AasEditorPath, options: MoveSubmodelElementDto) {
     try {
       if (path.submodelId && path.idShortPath) {
         const response = await aasNamespace.moveSubmodelElement(
           id,
           path.submodelId,
           path.idShortPath,
-          options,
+          MoveSubmodelElementSchema.parse(options),
         );
         await finalizeApiRequest({ status: response.status });
         // The move can change idShort paths, so anything keyed by them

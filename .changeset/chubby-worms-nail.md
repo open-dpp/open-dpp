@@ -6,4 +6,4 @@
 "@open-dpp/main": patch
 ---
 
-In the passport/ template editor the sections, subsections and datafields can be moved to a different position/ place.
+In the passport and template editors, sections, subsections, and data fields can be moved.
