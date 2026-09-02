@@ -46,7 +46,7 @@ function filterBy(node: TreeNode): string {
 <template>
   <FloatLabel variant="on">
     <TreeSelect
-      class="w-full"
+      fluid
       v-model="selectionKeys"
       v-model:expanded-keys="expandedKeys"
       :options="treeNodes"

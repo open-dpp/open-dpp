@@ -5,8 +5,10 @@ import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath } from "./aas-drawer.ts";
 import { classifyByModelType } from "./id-short-path-select-tree.ts";
 import {
-  type IdShortPathNodeVisibility,
+  type ClassifyIdShortPathNode,
+  hasSelectableIdShortPathNode,
   type IdShortPathPointer,
+  makeIdShortPathPointer,
   SUBMODEL_MODEL_TYPE,
 } from "../lib/id-short-path-select.ts";
 
@@ -29,10 +31,11 @@ export interface IAasMoveDialog {
   moveToDialogVisible: Ref<boolean>;
   moveToDialogSubmodels: Ref<SubmodelResponseDto[]>;
   moveToDialogSelected: Ref<IdShortPathPointer | null>;
-  moveToDialogClassify: (
-    pointer: IdShortPathPointer,
-    modelType: string,
-  ) => IdShortPathNodeVisibility;
+  moveToDialogClassify: ClassifyIdShortPathNode;
+  /** Whether the "Move to..." picker would offer any target at all for the
+   * element at `path` — lets callers hide the menu item entirely rather than
+   * opening a dialog with nothing pickable in it. */
+  hasMoveToTarget: (path: AasEditorPath) => boolean;
   openMoveToDialog: (path: AasEditorPath) => void;
   confirmMoveTo: () => Promise<void>;
 }
@@ -63,27 +66,48 @@ export function useAasMoveDialog(props: UseAasMoveDialogProps): IAasMoveDialog {
     moveToDialogVisible.value = true;
   }
 
-  function moveToDialogClassify(
-    pointer: IdShortPathPointer,
-    modelType: string,
-  ): IdShortPathNodeVisibility {
-    const source = moveToDialogSourcePointer.value;
-    const isOwnSubtree =
-      !!source &&
-      pointer.submodelIdShort === source.submodelIdShort &&
-      (pointer.idShortPath === source.idShortPath ||
-        pointer.idShortPath.startsWith(`${source.idShortPath}.`));
-    if (isOwnSubtree) return "hidden";
-    // A table (SubmodelElementList), and everything inside it — rows, nested
-    // groups, all of it — is never a valid move target; the backend rejects
-    // the whole subtree. Hiding the table itself is enough: `toTreeNode` never
-    // recurses into a hidden node, so its rows (which are otherwise
-    // indistinguishable from a regular SubmodelElementCollection by modelType
-    // alone) never get built as candidate nodes in the first place.
-    return classifyByModelType({
-      selectable: [AasSubmodelElements.SubmodelElementCollection, SUBMODEL_MODEL_TYPE],
-      hidden: [AasSubmodelElements.SubmodelElementList],
-    })(pointer, modelType);
+  /** The "Move to..." picker's classify rule for moving `source`: hides its own
+   * subtree and any table, and demotes its current parent from selectable to
+   * visible since picking it would be a no-op. Factored out from the dialog's
+   * state so `hasMoveToTarget` can run the same rule before the dialog opens. */
+  function classifyMoveTarget(source: IdShortPathPointer | undefined): ClassifyIdShortPathNode {
+    const sourcePointer = source && makeIdShortPathPointer(source);
+    return (pointer, modelType) => {
+      // The moved element's own subtree — itself and everything beneath it — is
+      // never a valid move target: moving something into itself is nonsensical.
+      if (sourcePointer?.contains(pointer)) return "hidden";
+      // A table (SubmodelElementList), and everything inside it — rows, nested
+      // groups, all of it — is never a valid move target; the backend rejects
+      // the whole subtree. Hiding the table itself is enough: `toTreeNode` never
+      // recurses into a hidden node, so its rows (which are otherwise
+      // indistinguishable from a regular SubmodelElementCollection by modelType
+      // alone) never get built as candidate nodes in the first place.
+      const visibility = classifyByModelType({
+        selectable: [AasSubmodelElements.SubmodelElementCollection, SUBMODEL_MODEL_TYPE],
+        hidden: [AasSubmodelElements.SubmodelElementList],
+      })(pointer, modelType);
+      // The element's current parent would be a no-op move target — demote it
+      // from "selectable" to "visible" so it stays in the tree (still needed to
+      // reach any selectable descendants, e.g. a nested collection inside it)
+      // but can't itself be picked. If it has no such descendants, `toTreeNode`
+      // drops a merely-"visible" childless node entirely, so it simply won't show up.
+      if (visibility === "selectable" && sourcePointer?.isDirectChildOf(pointer)) return "visible";
+      return visibility;
+    };
+  }
+
+  function moveToDialogClassify(pointer: IdShortPathPointer, modelType: string) {
+    return classifyMoveTarget(moveToDialogSourcePointer.value)(pointer, modelType);
+  }
+
+  function hasMoveToTarget(path: AasEditorPath): boolean {
+    const submodel = toValue(props.rawSubmodels).find((s) => s.id === path.submodelId);
+    if (!submodel || !path.idShortPath) return false;
+    const source: IdShortPathPointer = {
+      submodelIdShort: submodel.idShort,
+      idShortPath: path.idShortPath,
+    };
+    return hasSelectableIdShortPathNode(submodel, classifyMoveTarget(source));
   }
 
   async function confirmMoveTo() {
@@ -104,6 +128,7 @@ export function useAasMoveDialog(props: UseAasMoveDialogProps): IAasMoveDialog {
     moveToDialogSubmodels,
     moveToDialogSelected,
     moveToDialogClassify,
+    hasMoveToTarget,
     openMoveToDialog,
     confirmMoveTo,
   };

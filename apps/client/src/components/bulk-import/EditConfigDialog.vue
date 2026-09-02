@@ -160,14 +160,14 @@ defineExpose({ open });
         <span>{{ t("integrations.bulkImport.mapFields") }}</span>
         <!-- Add Mapping Form -->
         <div class="flex items-end gap-2">
-          <label class="flex flex-1 flex-col gap-2">
+          <label class="flex w-3/6 flex-1 flex-col gap-2">
             <JsonPathSelect
               :row="rowJsonSelect"
               :label="t('integrations.bulkImport.inputField')"
               v-model="mapping.draftInput.value"
             />
           </label>
-          <label class="flex flex-1 flex-col gap-2">
+          <label class="flex w-3/6 flex-1 flex-col gap-2">
             <IdShortPathSelect
               :submodels="submodelsIdShortPathSelect"
               :exclude-model-types="excludedTargetModelTypes"
@@ -176,6 +176,7 @@ defineExpose({ open });
             />
           </label>
           <Button
+            class="w-1/6"
             icon="pi pi-plus"
             aria-label="Add Mapping"
             :disabled="!mapping.draftInput.value || !mapping.draftTarget.value"

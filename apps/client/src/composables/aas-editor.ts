@@ -764,13 +764,20 @@ export function useAasEditor({
           await moveSubmodelElementTo(path, { position: index + 1 });
         },
       },
-      {
-        label: translate("common.moveTo"),
-        icon: "pi pi-sign-in",
-        command: () => {
-          moveDialog.openMoveToDialog(path);
-        },
-      },
+      // Omitted rather than disabled when there's nothing to move into (e.g.
+      // the element has no sibling/ancestor containers besides its own
+      // current parent) — a picker with no valid target would be dead weight.
+      ...(moveDialog.hasMoveToTarget(path)
+        ? [
+            {
+              label: translate("common.moveTo"),
+              icon: "pi pi-sign-in",
+              command: () => {
+                moveDialog.openMoveToDialog(path);
+              },
+            },
+          ]
+        : []),
     ];
   }
 

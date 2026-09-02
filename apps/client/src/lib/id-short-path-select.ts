@@ -6,6 +6,7 @@ import {
 import type { TreeNode } from "primevue/treenode";
 import { z } from "zod";
 import { resolveLanguageTexts } from "../composables/language.ts";
+import { makeIdShortPath } from "./id-short-path.ts";
 import { makeSubmodelElement } from "./submodel-element.ts";
 
 export interface IdShortPathOption {
@@ -21,6 +22,28 @@ const ContainerChildrenSchema = z.object({ value: SubmodelElementSharedSchema.ar
 export interface IdShortPathPointer {
   submodelIdShort: string;
   idShortPath: string;
+}
+
+/**
+ * A Crockford-style object wrapping an `IdShortPathPointer` with the
+ * submodel-scoped relations `classify` functions need — otherwise every call
+ * site re-derives "same submodel, and containment/parentage on the
+ * idShortPath" by hand from raw strings. Delegates the idShortPath half of
+ * each check to `id-short-path.ts` rather than re-implementing it.
+ */
+export function makeIdShortPathPointer(pointer: IdShortPathPointer) {
+  const path = makeIdShortPath.fromString(pointer.idShortPath);
+  return Object.freeze({
+    ...pointer,
+    /** Whether `other` is this pointer itself, or nested anywhere beneath it, in the same submodel. */
+    contains: (other: IdShortPathPointer) =>
+      other.submodelIdShort === pointer.submodelIdShort &&
+      path.contains(makeIdShortPath.fromString(other.idShortPath)),
+    /** Whether this pointer is `other`'s immediate child, in the same submodel — i.e. `other` is its current container. */
+    isDirectChildOf: (other: IdShortPathPointer) =>
+      other.submodelIdShort === pointer.submodelIdShort &&
+      path.isDirectChildOf(makeIdShortPath.fromString(other.idShortPath)),
+  });
 }
 
 export type IdShortPathNodeVisibility = "hidden" | "visible" | "selectable";
@@ -146,4 +169,24 @@ export function makeIdShortPathNode(source: IdShortPathNodeSource) {
     toValue,
     toTreeNode,
   });
+}
+
+/**
+ * Whether `classify` makes at least one node in `submodel` selectable — i.e.
+ * whether a picker built from it would offer any target at all. Reuses
+ * `toTreeNode`'s own null-when-nothing-selectable-beneath rule rather than
+ * re-implementing the traversal, so it can never drift out of sync with what
+ * the picker actually renders.
+ */
+export function hasSelectableIdShortPathNode(
+  submodel: SubmodelResponseDto,
+  classify: ClassifyIdShortPathNode,
+): boolean {
+  const ctx: TreeBuildContext = { classify, register: () => {} };
+  const node = makeIdShortPathNode({
+    kind: "submodel",
+    submodelIdShort: submodel.idShort,
+    submodel,
+  });
+  return node.toTreeNode(ctx, "") !== null;
 }

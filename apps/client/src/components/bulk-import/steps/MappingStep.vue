@@ -35,14 +35,14 @@ const submodelsIdShortPathSelect = computed(() =>
 <template>
   <div class="flex flex-col gap-4">
     <div class="flex items-end gap-2">
-      <label class="flex flex-1 flex-col gap-2">
+      <label class="flex w-3/6 flex-1 flex-col gap-2">
         <JsonPathSelect
           :row="rowJsonSelect"
           v-model="props.mapping.draftInput.value"
           :label="t('integrations.bulkImport.inputField')"
         />
       </label>
-      <label class="flex flex-1 flex-col gap-2">
+      <label class="flex w-3/6 flex-1 flex-col gap-2">
         <IdShortPathSelect
           :submodels="submodelsIdShortPathSelect"
           :exclude-model-types="excludedTargetModelTypes"
@@ -51,6 +51,7 @@ const submodelsIdShortPathSelect = computed(() =>
         />
       </label>
       <Button
+        class="w-1/6"
         icon="pi pi-plus"
         :disabled="!props.mapping.draftInput.value || !props.mapping.draftTarget.value"
         @click="props.mapping.addMapping"

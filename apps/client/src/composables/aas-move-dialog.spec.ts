@@ -145,6 +145,100 @@ describe("useAasMoveDialog", () => {
     ).toBe("hidden");
   });
 
+  it("classify demotes the element's current container from selectable to visible, since moving there is a no-op", () => {
+    const { errorHandlingStore, moveSubmodelElementTo } = makeDeps();
+    const moveDialog = useAasMoveDialog({
+      rawSubmodels: [submodel1],
+      errorHandlingStore,
+      translate,
+      moveSubmodelElementTo,
+    });
+    moveDialog.openMoveToDialog({
+      submodelId: submodel1.id,
+      idShortPath: "Design_V01.Author",
+      idShortPathIncludingSubmodel: "DesignOfProduct.Design_V01.Author",
+    });
+
+    // "Design_V01" is Author's current parent — picking it would be a no-op,
+    // so it's downgraded to "visible" (still shown to reach its other
+    // selectable child, AdditionalInformation) rather than "selectable".
+    expect(
+      moveDialog.moveToDialogClassify(
+        { submodelIdShort: submodel1.idShort, idShortPath: "Design_V01" },
+        "SubmodelElementCollection",
+      ),
+    ).toBe("visible");
+
+    // For a top-level element, the current parent is the submodel root itself.
+    moveDialog.openMoveToDialog({
+      submodelId: submodel1.id,
+      idShortPath: "Design_V01",
+      idShortPathIncludingSubmodel: "DesignOfProduct.Design_V01",
+    });
+    expect(
+      moveDialog.moveToDialogClassify(
+        { submodelIdShort: submodel1.idShort, idShortPath: "" },
+        "Submodel",
+      ),
+    ).toBe("visible");
+  });
+
+  it("hasMoveToTarget is true when the picker would offer at least one target", () => {
+    const { errorHandlingStore, moveSubmodelElementTo } = makeDeps();
+    const moveDialog = useAasMoveDialog({
+      rawSubmodels: [submodel1],
+      errorHandlingStore,
+      translate,
+      moveSubmodelElementTo,
+    });
+
+    // "Author" has a sibling container (AdditionalInformation) and the
+    // submodel root to move into.
+    expect(
+      moveDialog.hasMoveToTarget({
+        submodelId: submodel1.id,
+        idShortPath: "Design_V01.Author",
+        idShortPathIncludingSubmodel: "DesignOfProduct.Design_V01.Author",
+      }),
+    ).toBe(true);
+  });
+
+  it("hasMoveToTarget is false when the only reachable target is the element's current container", () => {
+    const { errorHandlingStore, moveSubmodelElementTo } = makeDeps();
+    // A submodel holding a single top-level property: its only "container" is
+    // the submodel root, which is also its current parent — moving it there
+    // would be a no-op, so nothing is left to offer.
+    const submodel3 = submodel("submodel-3-id", "OnlyOneField", [property("OnlyProp")]);
+    const moveDialog = useAasMoveDialog({
+      rawSubmodels: [submodel3],
+      errorHandlingStore,
+      translate,
+      moveSubmodelElementTo,
+    });
+
+    expect(
+      moveDialog.hasMoveToTarget({
+        submodelId: submodel3.id,
+        idShortPath: "OnlyProp",
+        idShortPathIncludingSubmodel: "OnlyOneField.OnlyProp",
+      }),
+    ).toBe(false);
+  });
+
+  it("hasMoveToTarget is false when the submodel or idShortPath can't be resolved", () => {
+    const { errorHandlingStore, moveSubmodelElementTo } = makeDeps();
+    const moveDialog = useAasMoveDialog({
+      rawSubmodels: [submodel1],
+      errorHandlingStore,
+      translate,
+      moveSubmodelElementTo,
+    });
+
+    expect(moveDialog.hasMoveToTarget({ submodelId: "unknown-submodel", idShortPath: "Foo" })).toBe(
+      false,
+    );
+  });
+
   it("confirmMoveTo calls moveSubmodelElementTo with the selected target and closes the dialog", async () => {
     const moveSubmodelElementTo = vi.fn().mockResolvedValue(undefined);
     const { errorHandlingStore } = makeDeps(moveSubmodelElementTo);

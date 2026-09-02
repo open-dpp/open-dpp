@@ -26,6 +26,7 @@ function cancel() {
 <template>
   <Dialog v-model:visible="visible" modal :header="t('common.moveTo')" style="width: 30rem">
     <IdShortPathSelect
+      class="mt-1"
       v-model="selected"
       :submodels="props.submodels"
       :classify="props.classify"
