@@ -16,7 +16,7 @@ This guide describes a basic self-hosted setup of open-dpp.
 The setup script downloads the deployment files, generates a local auth secret, and starts the stack:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
+curl -fsSL https://install.open-dpp.de | bash
 ```
 
 In a cloned repository, run `./scripts/setup.sh` instead.
