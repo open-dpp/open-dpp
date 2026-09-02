@@ -12,7 +12,7 @@ To get up and running quickly, start with the [Getting Started guide](https://do
 curl -fsSL https://raw.githubusercontent.com/open-dpp/open-dpp/main/scripts/setup.sh | bash
 ```
 
-This downloads the example deployment files, generates local secrets, and starts the full stack with Docker Compose. Then open <http://app.open-dpp.localhost:20080>.
+This downloads the example deployment files, generates local secrets, and starts the full stack with Docker Compose. Then open <http://localhost:3000>.
 
 In a cloned repository, run `./scripts/setup.sh` instead.
 
