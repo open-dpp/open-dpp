@@ -17,7 +17,7 @@ services:
       - .env
 
   mongodb:
-    image: mongo:7.0
+    image: mongo:8.3
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     healthcheck:
       test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --port 27017 --quiet
