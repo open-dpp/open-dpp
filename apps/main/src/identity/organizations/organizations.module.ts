@@ -18,6 +18,7 @@ import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
 import { Organization, OrganizationSchema } from "./infrastructure/schemas/organization.schema";
 import { OrganizationsController } from "./presentation/organizations.controller";
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
+import { PolicyModule } from "../../policy/policy.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { InstanceSettingsModule } from "../../instance-settings/instance-setting
     forwardRef(() => UsersModule),
     EmailModule,
     InstanceSettingsModule,
+    forwardRef(() => PolicyModule),
   ],
   controllers: [OrganizationsController],
   providers: [

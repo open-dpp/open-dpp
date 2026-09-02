@@ -91,6 +91,15 @@ export class OrganizationsRepository {
     return documents.map(OrganizationMapper.toDomain);
   }
 
+  /**
+   * Ids of every organization, unbounded and without hydrating the documents —
+   * for maintenance passes that have to touch each organization exactly once.
+   */
+  async findAllIds(): Promise<string[]> {
+    const documents = await this.organizationModel.find({}, { _id: 1 }).lean();
+    return documents.map((document) => document._id.toString());
+  }
+
   async getAllOrganizations() {
     const organizations = await this.organizationModel.find().limit(100);
     return organizations.map((org) => OrganizationMapper.toDomain(org));

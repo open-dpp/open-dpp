@@ -85,6 +85,10 @@ export class PassportRepository implements IDigitalProductDocumentRepository<Pas
     );
   }
 
+  async countByOrganizationId(organizationId: string): Promise<number> {
+    return await this.passportDoc.countDocuments({ organizationId }).exec();
+  }
+
   async findByIds(ids: string[]): Promise<Map<string, Passport>> {
     return await findByIds(ids, this.passportDoc, this.fromPlainWithMigration.bind(this));
   }

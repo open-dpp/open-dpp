@@ -523,6 +523,29 @@
       "title": "Configure organization",
       "branding": "Branding"
     },
+    "usage": {
+      "title": "Usage policies",
+      "setLimitsDialog": {
+        "title": "Set usage limits"
+      },
+      "policy": {
+        "AI_TOKEN_QUOTA": {
+          "title": "AI Token limit",
+          "unit": "Tokens",
+          "description": "Limits how many AI tokens the organization can consume each month before AI features are blocked."
+        },
+        "MEDIA_STORAGE_LIMIT": {
+          "title": "Media storage limit",
+          "unit": "MB",
+          "description": "Limits the total size of media files the organization can store, measured in MB."
+        },
+        "PASSPORT_CREATE_LIMIT": {
+          "title": "Passport limit",
+          "unit": "Pass | Passes",
+          "description": "Limits the total number of passports the organization can create."
+        }
+      }
+    },
     "admin": {
       "title": "Administration",
       "organizations": "All organizations",
@@ -891,8 +914,8 @@
   "api": {
     "error": {
       "limit": {
-        "MODEL_CREATE_CAP": "Model limit of {limit} has been reached.",
-        "MEDIA_STORAGE_CAP": "Storage limit of {limit} MB has been reached.",
+        "PASSPORT_CREATE_LIMIT": "Model limit of {limit} has been reached.",
+        "MEDIA_STORAGE_LIMIT": "Storage limit of {limit} MB has been reached.",
         "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached."
       }
     }

@@ -12,6 +12,7 @@ import { InstanceSettingsService } from "../../../../instance-settings/applicati
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { InstanceSettings } from "../../../../instance-settings/domain/instance-settings";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
+import { PolicyService } from "../../../../policy/infrastructure/policy.service";
 
 describe("OrganizationsService", () => {
   let service: OrganizationsService;
@@ -40,6 +41,10 @@ describe("OrganizationsService", () => {
 
   const mockInvitationsRepository = {};
 
+  const mockPolicyService = {
+    ensureDefaultPolicies: jest.fn<(organizationId: string) => Promise<void>>(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -63,6 +68,10 @@ describe("OrganizationsService", () => {
         {
           provide: InstanceSettingsService,
           useValue: mockInstanceSettingsService,
+        },
+        {
+          provide: PolicyService,
+          useValue: mockPolicyService,
         },
       ],
     }).compile();
@@ -99,6 +108,28 @@ describe("OrganizationsService", () => {
     await service.createOrganization(organization, session, headers, userRole);
 
     expect(mockOrganizationsRepository.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("should seed the default policies for a newly created organization", async () => {
+    mockInstanceSettingsService.getSettings.mockResolvedValue(
+      InstanceSettings.create({ organizationCreationEnabled: { value: true } }),
+    );
+    mockOrganizationsRepository.findOneBySlug.mockResolvedValue(null);
+    const created = Organization.create({
+      name: "Test Organization",
+      slug: "test-organization",
+      metadata: {},
+    });
+    mockOrganizationsRepository.create.mockResolvedValue(created);
+
+    await service.createOrganization(
+      { name: created.name, slug: created.slug, metadata: {} },
+      { userId: "user1" } as Session,
+      {},
+      UserRole.USER,
+    );
+
+    expect(mockPolicyService.ensureDefaultPolicies).toHaveBeenCalledWith(created.id);
   });
 
   it("should throw DuplicateOrganizationSlugError when creating organization with existing slug", async () => {
