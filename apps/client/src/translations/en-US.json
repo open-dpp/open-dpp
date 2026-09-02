@@ -108,7 +108,8 @@
     "formLabels": {
       "value": "Value",
       "name": "Name",
-      "id": "Identifier"
+      "id": "Identifier",
+      "description": "Description"
     },
     "table": {
       "edit": "Edit table",
@@ -589,6 +590,11 @@
         "errorLoading": "Error loading settings",
         "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
+    },
+    "removeMemberError": "Error removing member.",
+    "removeMemberDialog": {
+      "header": "Remove member",
+      "message": "Do you really want to remove {email} from this organization?"
     }
   },
   "marketplace": {
@@ -743,7 +749,40 @@
     "emailChangeCurrentPassword": "Current password",
     "emailChangeCurrentPasswordRequired": "Required to confirm this change.",
     "emailChangeCurrentPasswordIncorrect": "The password you entered is incorrect.",
-    "emailChangeRateLimited": "Too many email-change attempts. Please try again in an hour."
+    "emailChangeRateLimited": "Too many email-change attempts. Please try again in an hour.",
+    "tabs": {
+      "profile": "Profile",
+      "invitations": "Invitations",
+      "apiKeys": "API keys"
+    },
+    "apiKeys": {
+      "title": "API keys",
+      "create": "Create API key",
+      "name": "Name",
+      "namePlaceholder": "e.g. CI pipeline",
+      "key": "Key",
+      "createdAt": "Created",
+      "expiresAt": "Expires",
+      "lastUsedAt": "Last used",
+      "neverUsed": "Never",
+      "expiry": "Expiry",
+      "noExpiry": "No expiry",
+      "expiryDays": "{days} days",
+      "createdTitle": "API key created",
+      "createdHint": "Copy this key now. It is only shown once.",
+      "renameTitle": "Rename API key",
+      "renameSuccess": "API key renamed",
+      "renameError": "Could not rename the API key",
+      "revoke": "Revoke",
+      "revokeConfirmHeader": "Revoke API key?",
+      "revokeConfirmMessage": "Applications using this key immediately lose access. This cannot be undone.",
+      "revokeSuccess": "API key revoked",
+      "revokeError": "Could not revoke the API key",
+      "createError": "Could not create the API key",
+      "copyError": "Could not copy the key to the clipboard",
+      "loadError": "Could not load your API keys",
+      "empty": "No API keys yet"
+    }
   },
   "notifications": {
     "success": "Success",

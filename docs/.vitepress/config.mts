@@ -44,7 +44,7 @@ export default defineConfig({
               { text: "Branding", link: "/guides/branding" },
               { text: "AI Integration", link: "/guides/ai" },
               { text: "Development", link: "/guides/development" },
-              { text: "Production", link: "/guides/production" },
+              { text: "Production setup", link: "/guides/production-setup" },
             ],
           },
         ],

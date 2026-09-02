@@ -31,7 +31,7 @@ Use the project helper:
 make dev
 ```
 
-This starts required services from `docker-compose.dev.yml` (MongoDB, MinIO, and Mailpit). Virus scanning of uploads is disabled in development; see the [Production guide](/guides/production#virus-scanning-clamav) to enable it.
+This starts required services from `docker-compose.dev.yml` (MongoDB, MinIO, and Mailpit). Virus scanning of uploads is disabled in development; see the [Production setup](/guides/production-setup#virus-scanning-clamav) guide to enable it.
 
 ## 5) Start the application
 

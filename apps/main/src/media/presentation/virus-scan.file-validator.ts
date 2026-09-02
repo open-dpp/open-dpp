@@ -20,7 +20,7 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
     }
     const clamAvUrl = this.configService.get("OPEN_DPP_CLAMAV_URL");
     if (!clamAvUrl) {
-      return true; // virus scanning disabled (see docs/guides/production.md)
+      return true; // virus scanning disabled (see docs/guides/production-setup.md)
     }
     try {
       const form = new FormData();

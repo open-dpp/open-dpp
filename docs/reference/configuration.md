@@ -17,16 +17,16 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Database
 
-| Variable                    | Type   | Required    | Default | Description                        |
-| --------------------------- | ------ | ----------- | ------- | ---------------------------------- |
-| `OPEN_DPP_MONGODB_URI`      | string | Conditional | –       | Full MongoDB connection URI.       |
-| `OPEN_DPP_MONGODB_HOST`     | string | Conditional | –       | MongoDB host (when not using URI). |
-| `OPEN_DPP_MONGODB_PORT`     | number | Conditional | –       | MongoDB port (when not using URI). |
-| `OPEN_DPP_MONGODB_USER`     | string | Yes         | –       | MongoDB username.                  |
-| `OPEN_DPP_MONGODB_PASSWORD` | string | Yes         | –       | MongoDB password.                  |
-| `OPEN_DPP_MONGODB_DATABASE` | string | Yes         | –       | MongoDB database name.             |
+| Variable                    | Type   | Required    | Default      | Description                        |
+| --------------------------- | ------ | ----------- | ------------ | ---------------------------------- |
+| `OPEN_DPP_MONGODB_URI`      | string | Conditional | –            | Full MongoDB connection URI.       |
+| `OPEN_DPP_MONGODB_HOST`     | string | Conditional | –            | MongoDB host (when not using URI). |
+| `OPEN_DPP_MONGODB_PORT`     | number | Conditional | –            | MongoDB port (when not using URI). |
+| `OPEN_DPP_MONGODB_USER`     | string | Conditional | –            | MongoDB username.                  |
+| `OPEN_DPP_MONGODB_PASSWORD` | string | Conditional | –            | MongoDB password.                  |
+| `OPEN_DPP_MONGODB_DATABASE` | string | Conditional | `management` | MongoDB database name.             |
 
-> `OPEN_DPP_MONGODB_URI` **or** both `OPEN_DPP_MONGODB_HOST` and `OPEN_DPP_MONGODB_PORT` must be provided.
+> `OPEN_DPP_MONGODB_URI` **or** `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_PASSWORD` and `OPEN_DPP_MONGODB_USER` must be provided.
 
 ## AI Integration
 
@@ -50,7 +50,7 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 | Variable              | Type       | Required | Default | Description                                                                                                                                                                                                                                           |
 | --------------------- | ---------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPEN_DPP_CLAMAV_URL` | URL (http) | No       | –       | clamav-rest endpoint incl. port, e.g. `http://clamav-rest:9000`. Unset or empty disables virus scanning: uploads are accepted **unscanned** and a warning is logged at startup. See the [Production guide](/guides/production#virus-scanning-clamav). |
+| `OPEN_DPP_CLAMAV_URL` | URL (http) | No       | –       | clamav-rest endpoint incl. port, e.g. `http://clamav-rest:9000`. Unset or empty disables virus scanning: uploads are accepted **unscanned** and a warning is logged at startup. See the [Production setup](/guides/production-setup#virus-scanning-clamav) guide. |
 
 ## Mail
 
@@ -64,18 +64,11 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Authentication
 
-| Variable                            | Type                    | Required    | Default | Description                              |
-| ----------------------------------- | ----------------------- | ----------- | ------- | ---------------------------------------- |
-| `OPEN_DPP_AUTH_SECRET`              | string                  | Yes         | –       | Authentication secret.                   |
-| `OPEN_DPP_AUTH_CLOUD_ENABLED`       | boolean (string-parsed) | No          | –       | Enables cloud auth provider integration. |
-| `OPEN_DPP_AUTH_CLOUD_PROVIDER`      | string                  | Conditional | –       | Cloud auth provider identifier.          |
-| `OPEN_DPP_AUTH_CLOUD_CLIENT_ID`     | string                  | Conditional | –       | OAuth/OIDC client ID.                    |
-| `OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET` | string                  | Conditional | –       | OAuth/OIDC client secret.                |
-| `OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL` | string                  | Conditional | –       | Provider discovery URL.                  |
-| `OPEN_DPP_AUTH_ADMIN_USERNAME`      | string                  | Conditional | –       | Optional admin bootstrap username.       |
-| `OPEN_DPP_AUTH_ADMIN_PASSWORD`      | string                  | Conditional | –       | Optional admin bootstrap password.       |
-
-> If `OPEN_DPP_AUTH_CLOUD_ENABLED` is `true`, all of the following must be set: `OPEN_DPP_AUTH_CLOUD_PROVIDER`, `OPEN_DPP_AUTH_CLOUD_CLIENT_ID`, `OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET`, `OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL`
+| Variable                       | Type   | Required    | Default | Description                        |
+| ------------------------------ | ------ | ----------- | ------- | ---------------------------------- |
+| `OPEN_DPP_AUTH_SECRET`         | string | Yes         | –       | Authentication secret.             |
+| `OPEN_DPP_AUTH_ADMIN_USERNAME` | string | Conditional | –       | Optional admin bootstrap username. |
+| `OPEN_DPP_AUTH_ADMIN_PASSWORD` | string | Conditional | –       | Optional admin bootstrap password. |
 
 > `OPEN_DPP_AUTH_ADMIN_USERNAME` and `OPEN_DPP_AUTH_ADMIN_PASSWORD` must be provided together (both set or both omitted).
 

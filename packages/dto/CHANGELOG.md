@@ -1,5 +1,19 @@
 # @open-dpp/dto
 
+## 4.0.0
+
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
+## 3.5.0
+
+## 3.4.0
+
+## 3.3.0
+
 ## 3.2.0
 
 ### Minor Changes

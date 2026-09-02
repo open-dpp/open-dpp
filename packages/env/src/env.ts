@@ -31,12 +31,11 @@ export const envSchema = z
     OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
     OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),
     OPEN_DPP_MONGODB_HOST: z.coerce.string().optional(),
-    OPEN_DPP_MONGODB_USER: z.coerce.string(),
-    OPEN_DPP_MONGODB_PASSWORD: z.coerce.string(),
-    OPEN_DPP_MONGODB_DATABASE: z.coerce.string(),
+    OPEN_DPP_MONGODB_USER: z.coerce.string().optional(),
+    OPEN_DPP_MONGODB_PASSWORD: z.coerce.string().optional(),
+    OPEN_DPP_MONGODB_DATABASE: z.coerce.string().optional().default("management"),
     // AI
     OPEN_DPP_MISTRAL_API_KEY: z.coerce.string().optional(),
-    OPEN_DPP_OLLAMA_URL: z.url().optional(),
     // S3
     OPEN_DPP_S3_ENDPOINT: z.coerce.string(),
     OPEN_DPP_S3_PORT: z.coerce.number().max(65535).min(0),
@@ -84,12 +83,16 @@ export const envSchema = z
   })
   .superRefine((val, ctx) => {
     const hasUri = !!val.OPEN_DPP_MONGODB_URI;
-    const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
+    const hasHostPort =
+      !!val.OPEN_DPP_MONGODB_HOST &&
+      !!val.OPEN_DPP_MONGODB_PORT &&
+      !!val.OPEN_DPP_MONGODB_USER &&
+      !!val.OPEN_DPP_MONGODB_PASSWORD;
     if (!hasUri && !hasHostPort) {
       ctx.addIssue({
         code: "custom",
         message:
-          "Provide either OPEN_DPP_MONGODB_URI or both OPEN_DPP_MONGODB_HOST and OPEN_DPP_MONGODB_PORT.",
+          "Provide either OPEN_DPP_MONGODB_URI or OPEN_DPP_MONGODB_{HOST/PORT/USER/PASSWORD}.",
         path: ["OPEN_DPP_MONGODB_URI"],
       });
     }

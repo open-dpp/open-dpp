@@ -108,7 +108,8 @@
     "formLabels": {
       "value": "Wert",
       "name": "Name",
-      "id": "Identifikator"
+      "id": "Identifikator",
+      "description": "Beschreibung"
     },
     "table": {
       "edit": "Tabelle bearbeiten",
@@ -589,6 +590,11 @@
         "errorLoading": "Fehler beim Laden der Einstellungen",
         "lockedByEnv": "Diese Einstellung wird durch eine Umgebungsvariable gesteuert und kann hier nicht geändert werden."
       }
+    },
+    "removeMemberError": "Fehler beim Entfernen des Mitglieds.",
+    "removeMemberDialog": {
+      "header": "Mitglied entfernen",
+      "message": "Möchten Sie {email} wirklich aus dieser Organisation entfernen?"
     }
   },
   "marketplace": {
@@ -773,7 +779,40 @@
     "emailChangeCurrentPassword": "Aktuelles Passwort",
     "emailChangeCurrentPasswordRequired": "Erforderlich, um diese Änderung zu bestätigen.",
     "emailChangeCurrentPasswordIncorrect": "Das eingegebene Passwort ist falsch.",
-    "emailChangeRateLimited": "Zu viele Versuche zur E-Mail-Änderung. Bitte versuche es in einer Stunde erneut."
+    "emailChangeRateLimited": "Zu viele Versuche zur E-Mail-Änderung. Bitte versuche es in einer Stunde erneut.",
+    "tabs": {
+      "profile": "Profil",
+      "invitations": "Einladungen",
+      "apiKeys": "API-Schlüssel"
+    },
+    "apiKeys": {
+      "title": "API-Schlüssel",
+      "create": "API-Schlüssel erstellen",
+      "name": "Name",
+      "namePlaceholder": "z. B. CI-Pipeline",
+      "key": "Schlüssel",
+      "createdAt": "Erstellt",
+      "expiresAt": "Läuft ab",
+      "lastUsedAt": "Zuletzt verwendet",
+      "neverUsed": "Nie",
+      "expiry": "Ablauf",
+      "noExpiry": "Kein Ablauf",
+      "expiryDays": "{days} Tage",
+      "createdTitle": "API-Schlüssel erstellt",
+      "createdHint": "Kopiere diesen Schlüssel jetzt. Er wird nur einmal angezeigt.",
+      "renameTitle": "API-Schlüssel umbenennen",
+      "renameSuccess": "API-Schlüssel umbenannt",
+      "renameError": "Der API-Schlüssel konnte nicht umbenannt werden",
+      "revoke": "Widerrufen",
+      "revokeConfirmHeader": "API-Schlüssel widerrufen?",
+      "revokeConfirmMessage": "Anwendungen, die diesen Schlüssel verwenden, verlieren sofort den Zugriff. Das kann nicht rückgängig gemacht werden.",
+      "revokeSuccess": "API-Schlüssel widerrufen",
+      "revokeError": "Der API-Schlüssel konnte nicht widerrufen werden",
+      "createError": "Der API-Schlüssel konnte nicht erstellt werden",
+      "copyError": "Der Schlüssel konnte nicht in die Zwischenablage kopiert werden",
+      "loadError": "Deine API-Schlüssel konnten nicht geladen werden",
+      "empty": "Noch keine API-Schlüssel"
+    }
   },
   "notifications": {
     "success": "Erfolg",

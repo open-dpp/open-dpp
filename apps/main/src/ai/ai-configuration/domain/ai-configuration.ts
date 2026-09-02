@@ -2,14 +2,14 @@ import { randomUUID } from "node:crypto";
 import { ValueError } from "@open-dpp/exception";
 
 export const AiProvider = {
-  Ollama: "ollama",
   Mistral: "mistral",
 } as const;
 
 export type AiProvider_TYPE = (typeof AiProvider)[keyof typeof AiProvider];
 
-const mistralModels = ["codestral-latest"];
-const ollamaModels = ["qwen3:0.6b"];
+const modelsByProvider: Record<AiProvider_TYPE, string[]> = {
+  [AiProvider.Mistral]: ["codestral-latest"],
+};
 
 export interface AiConfigurationCreationProps {
   provider: AiProvider_TYPE;
@@ -101,7 +101,7 @@ export class AiConfiguration {
   }
 
   private assertValidModelForProvider(provider: AiProvider_TYPE, model: string) {
-    const valid = provider === AiProvider.Ollama ? ollamaModels : mistralModels;
+    const valid = modelsByProvider[provider] ?? [];
     if (!valid.includes(model)) {
       throw new ValueError(`Invalid model ${model} for provider ${provider}`);
     }
