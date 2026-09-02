@@ -1,21 +1,18 @@
-import { Cap } from "./cap";
-import { PolicyKey } from "./policy";
+import { Policy, PolicyCreateProps } from "./policy";
+import { PolicyKey } from "./policy-rules";
 
 export type QuotaPeriod = "year" | "month" | "day";
 
-export interface QuotaCreateProps {
-  key: PolicyKey;
-  organizationId: string;
-  limit: number;
+export type QuotaCreateProps = PolicyCreateProps & {
   period: QuotaPeriod;
-}
+};
 
 export type QuotaCreateDbProps = QuotaCreateProps & {
   count: number;
   lastSetBack: Date;
 };
 
-export class Quota extends Cap {
+export class Quota extends Policy {
   private period: QuotaPeriod;
   private count: number;
   private lastSetBack: Date;
@@ -49,14 +46,24 @@ export class Quota extends Cap {
     );
   }
 
+  withLimit(limit: number): Quota {
+    Quota.assertValidLimit(limit);
+
+    return new Quota(
+      this.getKey(),
+      limit,
+      this.getOrganizationId(),
+      this.count,
+      this.period,
+      this.lastSetBack,
+    );
+  }
+
   needsReset(): boolean {
     const currentDate = new Date();
     const sameYear = currentDate.getFullYear() === this.lastSetBack.getFullYear();
     const sameMonth = currentDate.getMonth() === this.lastSetBack.getMonth();
-    const sameDay =
-      currentDate.getFullYear() === this.lastSetBack.getFullYear() &&
-      currentDate.getMonth() === this.lastSetBack.getMonth() &&
-      currentDate.getDate() === this.lastSetBack.getDate();
+    const sameDay = sameYear && sameMonth && currentDate.getDate() === this.lastSetBack.getDate();
 
     switch (this.period) {
       case "day":
@@ -93,5 +100,26 @@ export class Quota extends Cap {
 
   getLastReset() {
     return this.lastSetBack;
+  }
+
+  getNextReset(): Date {
+    const nextReset = new Date(this.lastSetBack);
+    nextReset.setHours(0, 0, 0, 0);
+
+    switch (this.period) {
+      case "day":
+        nextReset.setDate(nextReset.getDate() + 1);
+        break;
+      case "month":
+        nextReset.setDate(1);
+        nextReset.setMonth(nextReset.getMonth() + 1);
+        break;
+      case "year":
+        nextReset.setMonth(0, 1);
+        nextReset.setFullYear(nextReset.getFullYear() + 1);
+        break;
+    }
+
+    return nextReset;
   }
 }

@@ -416,6 +416,31 @@ describe("passportRepository", () => {
     expect(secondPage.totalCount).toBe(2);
   });
 
+  it("countByOrganizationId — counts only the passports of the given organization", async () => {
+    const organizationId = randomUUID();
+    const otherOrganizationId = randomUUID();
+
+    const newPassport = (orgId: string) =>
+      Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: Environment.create({
+          assetAdministrationShells: [randomUUID()],
+        }),
+      });
+
+    await passportRepository.save(newPassport(organizationId));
+    await passportRepository.save(newPassport(organizationId));
+    await passportRepository.save(newPassport(otherOrganizationId));
+
+    expect(await passportRepository.countByOrganizationId(organizationId)).toBe(2);
+    expect(await passportRepository.countByOrganizationId(otherOrganizationId)).toBe(1);
+  });
+
+  it("countByOrganizationId — returns 0 for an organization without passports", async () => {
+    expect(await passportRepository.countByOrganizationId(randomUUID())).toBe(0);
+  });
+
   afterAll(async () => {
     await module.close();
   });

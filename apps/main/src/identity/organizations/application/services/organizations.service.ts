@@ -19,6 +19,7 @@ import { InvitationsRepository } from "../../infrastructure/adapters/invitations
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { InstanceSettingsService } from "../../../../instance-settings/application/services/instance-settings.service";
+import { PolicyService } from "../../../../policy/infrastructure/policy.service";
 import { InvitationPopulateDecorator } from "../invitation-populate-decorator";
 import type { InvitationResponseDto, InvitationStatusDtoType } from "@open-dpp/dto";
 
@@ -32,6 +33,7 @@ export class OrganizationsService {
     private readonly usersRepository: UsersRepository,
     private readonly invitationsRepository: InvitationsRepository,
     private readonly instanceSettingsService: InstanceSettingsService,
+    private readonly policyService: PolicyService,
   ) {}
 
   async createOrganization(
@@ -54,6 +56,9 @@ export class OrganizationsService {
     if (!createdOrganization) {
       throw new BadRequestException();
     }
+    // Pin the limits and quotas the organization starts with instead of leaving
+    // them to be derived from the env defaults whenever they are first read.
+    await this.policyService.ensureDefaultPolicies(createdOrganization.id);
     // BetterAuth's createOrganization already adds the authenticated user as owner; do not add again.
     return createdOrganization;
   }

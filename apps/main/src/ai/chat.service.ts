@@ -5,7 +5,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Member } from "../identity/organizations/domain/member";
 import { User } from "../identity/users/domain/user";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
-import { PolicyKey } from "../policy/domain/policy";
+import { PolicyKeyList } from "../policy/domain/policy-rules";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
@@ -60,7 +60,7 @@ export class ChatService {
 
     // Check quota BEFORE processing
     const quotaCheck = await this.policyService.enforce(passport.organizationId, [
-      PolicyKey.AI_TOKEN_QUOTA,
+      PolicyKeyList.AI_TOKEN_QUOTA,
     ]);
 
     if (quotaCheck) {
@@ -131,7 +131,7 @@ export class ChatService {
                 );
                 await this.policyService.incrementQuota(
                   passport.organizationId,
-                  PolicyKey.AI_TOKEN_QUOTA,
+                  PolicyKeyList.AI_TOKEN_QUOTA,
                   usageMetadata.total_tokens,
                 );
               } else {

@@ -10,6 +10,7 @@ import { presentationConfigurationPaths } from "./presentation-configuration.pat
 import { permalinkPaths } from "./permalink.paths";
 import { bulkImportPaths } from "./bulk-import.paths";
 import { uniqueProductIdentifierPaths } from "./unique-product-identifier.paths";
+import { policyPaths } from "./policy.paths";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 
 const document = createDocument({
@@ -42,6 +43,7 @@ const document = createDocument({
     ...permalinkPaths,
     ...bulkImportPaths,
     ...uniqueProductIdentifierPaths,
+    ...policyPaths,
   },
   components: {
     parameters: {

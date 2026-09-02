@@ -10,11 +10,21 @@ const props = defineProps<{
   organizations: Organization[];
 }>();
 
+const emits = defineEmits<{
+  setLimits: [organizationId: string];
+}>();
+
 const { t } = useI18n();
 
-const rowMenuRef = ref();
-const rowMenuItems = ref<MenuItem[]>([]);
 const activeRowId = ref("");
+const rowMenuRef = ref();
+const rowMenuItems = ref<MenuItem[]>([
+  {
+    label: t("organizations.usage.setLimitsDialog.title"),
+    icon: "pi pi-database",
+    command: () => emits("setLimits", activeRowId.value),
+  },
+]);
 
 const rows = computed(() => {
   return props.organizations.map((i) => ({
@@ -31,7 +41,6 @@ function copyId() {
 
 function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   activeRowId.value = row.id;
-  rowMenuItems.value = [];
   rowMenuRef.value.toggle(event);
 }
 </script>
