@@ -9,4 +9,4 @@ Mail is optional. `OPEN_DPP_MAIL_HOST` is no longer required: without it the bac
 
 New admin instance setting `mailEnabled` (third toggle on the Settings page, lockable via `OPEN_DPP_INSTANCE_MAIL_ENABLED`, forced off while no SMTP host is set) and a 60 s per-replica cache for instance settings. The public instance-settings endpoint returns `mailEnabled`; when it is off the sign-in page hides "Forgot password?" and the profile hides change-email, resend-verification and the not-verified badge.
 
-Mailpit was removed from the example deployment and moved behind the `mail` compose profile in the development stack (`COMPOSE_PROFILES=mail` in `.env.dev`). See the new Production guide for SMTP setup and the security note on logged links.
+Mailpit was removed from the example deployment and moved behind the `mail` compose profile in the development stack (`COMPOSE_PROFILES=mail` in `.env.dev`). See the Production setup guide for SMTP setup and the security note on logged links.

@@ -60,7 +60,6 @@ jobs:
       OPEN_DPP_MONGODB_DATABASE: "management"
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
-      OPEN_DPP_OLLAMA_URL: "https://ollama-url"
       # S3
       OPEN_DPP_S3_ENDPOINT: "minio"
       OPEN_DPP_S3_PORT: "9000"

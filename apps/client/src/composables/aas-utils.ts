@@ -41,7 +41,7 @@ export function useAasUtils(): IAasUtils {
     const englishMatch = displayNames.find((d) => baseLanguage(d.language) === "en");
     if (englishMatch) return englishMatch.text;
 
-    return fallback ? fallback : t("common.untitled");
+    return fallback ?? t("common.untitled");
   }
 
   function parseLanguageTextsFromAas(

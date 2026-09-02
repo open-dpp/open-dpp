@@ -1,10 +1,16 @@
 import type {
+  ApiKeyDto,
+  ApiKeyPaginationDto,
+  CreateApiKeyDto,
+  CreatedApiKeyDto,
   CreateUserDto,
   InvitationResponseDto,
   InvitationStatusDtoType,
   MeDto,
+  PagingParamsDto,
   RequestEmailChangeDto,
   SetUserRoleDto,
+  UpdateApiKeyDto,
   UpdateProfileDto,
   UserDto,
 } from "@open-dpp/dto";
@@ -65,5 +71,24 @@ export class UsersNamespace {
 
   public async getInvitations(params?: { status: InvitationStatusDtoType }) {
     return this.axiosInstance.get<InvitationResponseDto[]>("/users/me/invitations", { params });
+  }
+
+  public async listApiKeys(params?: PagingParamsDto) {
+    return this.axiosInstance.get<ApiKeyPaginationDto>("/users/me/api-keys", { params });
+  }
+
+  public async createApiKey(data: CreateApiKeyDto) {
+    return this.axiosInstance.post<CreatedApiKeyDto>("/users/me/api-keys", data);
+  }
+
+  public async updateApiKey(id: string, data: UpdateApiKeyDto) {
+    return this.axiosInstance.patch<ApiKeyDto>(
+      `/users/me/api-keys/${encodeURIComponent(id)}`,
+      data,
+    );
+  }
+
+  public async deleteApiKey(id: string) {
+    return this.axiosInstance.delete<void>(`/users/me/api-keys/${encodeURIComponent(id)}`);
   }
 }

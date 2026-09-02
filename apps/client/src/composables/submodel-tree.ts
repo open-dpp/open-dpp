@@ -9,6 +9,7 @@ import { computed, toValue, type MaybeRefOrGetter } from "vue";
 export interface SubmodelTreeElement {
   idShort: string;
   name: LanguageTextDto[];
+  description: LanguageTextDto[];
   children: SubmodelTreeElement[];
   submodelElements: SubmodelElementResponseDto[];
 }
@@ -24,6 +25,7 @@ export function useSubmodelTree(submodels: MaybeRefOrGetter<SubmodelResponseDto[
           return {
             idShort: element.idShort,
             name: element.displayName,
+            description: element.description,
             children: treeMapping(submodelElements),
             submodelElements,
           };
@@ -34,6 +36,7 @@ export function useSubmodelTree(submodels: MaybeRefOrGetter<SubmodelResponseDto[
       return {
         idShort: submodel.idShort,
         name: submodel.displayName,
+        description: submodel.description,
         children: treeMapping(submodel.submodelElements),
         submodelElements: submodel.submodelElements,
       };
@@ -57,6 +60,7 @@ export function useSubmodelTree(submodels: MaybeRefOrGetter<SubmodelResponseDto[
       return {
         id: element.idShort,
         title: element.name,
+        description: element.description,
         submodelElements: element.submodelElements,
       };
     });
@@ -133,8 +137,10 @@ export function useSubmodelTree(submodels: MaybeRefOrGetter<SubmodelResponseDto[
 
     traverseTreeElements(submodelTree.value, (element) => {
       element.name.forEach((lt) => languages.add(lt.language));
+      element.description.forEach((lt) => languages.add(lt.language));
       element.submodelElements.forEach((se) => {
         se.displayName.forEach((lt) => languages.add(lt.language));
+        se.description.forEach((lt) => languages.add(lt.language));
       });
     });
     return languages;

@@ -27,3 +27,16 @@ _Avoid_: cancel (used interchangeably in UI, but Revoke is the precise term for 
 
 **Preferred Language**:
 The User's chosen UI language, persisted on the User and mirrored to the browser locale on load and on save.
+
+## Organization & Membership
+
+**Member**:
+A User's link to an Organization, carrying a role within it — Owner or Member. A User can be a Member of several Organizations.
+_Not to be confused with_: User (the person) or the "member" role (the non-Owner role a Member can hold).
+
+**Owner**:
+The privileged Member role of an Organization. Only Owners may change other Members' roles or remove Members.
+
+**Member Removal**:
+An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
+_Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).

@@ -1,5 +1,6 @@
 import type { Collection, Db } from "mongodb";
 import { Types } from "mongoose";
+import { idFilter } from "../../lib/better-auth-id";
 
 const MEMBER_COLLECTION = "member";
 
@@ -20,17 +21,16 @@ function collection(db: Db | Collection<MemberRow>): Collection<MemberRow> {
  *
  * Lives here as a free function (not on MembersRepository) because better-auth's
  * session-create hook only has the native mongodb `Db`, not the Nest DI graph.
- * Mirrors email-change-gate. The `$eq` wrapper neutralizes operator-shaped
- * userId injection; the returned id is stringified so it reaches the frontend as
- * a string rather than a Mongo ObjectId Buffer.
+ * Mirrors email-change-gate. `idFilter` matches both id storage forms and
+ * neutralizes operator-shaped userId injection; the returned id is stringified
+ * so it reaches the frontend as a string rather than a Mongo ObjectId Buffer.
  */
 export async function findActiveOrganizationIdForUser(
   db: Db | Collection<MemberRow>,
   userId: string,
 ): Promise<string | undefined> {
-  const userIdQuery = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
   const member = await collection(db).findOne(
-    { userId: { $eq: userIdQuery } },
+    { userId: idFilter(userId) },
     { sort: { createdAt: 1 } },
   );
   return member?.organizationId ? member.organizationId.toString() : undefined;

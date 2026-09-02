@@ -4,7 +4,7 @@ dev:
 test:
 	docker compose -f docker-compose.test.yml up -d
 
-# first-time setup of this stack (creates .env + mongo keyfile): ./scripts/setup.sh
+# first-time setup of this stack (creates .env): ./scripts/setup.sh
 full:
 	docker compose up -d
 

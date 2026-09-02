@@ -22,7 +22,8 @@ describe("BulkImportRunItem", () => {
   it("marks a newly created passport", () => {
     const item = buildItem();
     const passportId = randomUUID();
-    item.markCreated(passportId);
+    item.assignPassport(passportId);
+    item.markCreated();
     expect(item.status).toEqual(BulkImportRunItemStatusDto.Created);
     expect(item.passportId).toEqual(passportId);
   });
@@ -30,7 +31,9 @@ describe("BulkImportRunItem", () => {
   it("marks an updated passport", () => {
     const item = buildItem();
     const passportId = randomUUID();
-    item.markUpdated(passportId);
+    item.assignPassport(passportId);
+
+    item.markUpdated();
     expect(item.status).toEqual(BulkImportRunItemStatusDto.Updated);
     expect(item.passportId).toEqual(passportId);
   });
@@ -44,7 +47,9 @@ describe("BulkImportRunItem", () => {
 
   it("round-trips through toPlain/fromPlain", () => {
     const item = buildItem();
-    item.markCreated(randomUUID());
+    item.assignPassport(randomUUID());
+
+    item.markCreated();
     const restored = BulkImportRunItem.fromPlain(item.toPlain());
     expect(restored.toPlain()).toEqual(item.toPlain());
   });

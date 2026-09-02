@@ -3,6 +3,7 @@ import { OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { createDocument } from "zod-openapi";
 import { digitalProductDocumentPaths } from "./digital-product-document.paths";
 import { brandingPaths } from "./branding.path";
+import { apiKeyPaths } from "./api-key.paths";
 import { userPaths } from "./user.paths";
 import { organizationsPaths } from "./organization.paths";
 import { presentationConfigurationPaths } from "./presentation-configuration.paths";
@@ -35,6 +36,7 @@ const document = createDocument({
     ...digitalProductDocumentPaths,
     ...brandingPaths,
     ...userPaths,
+    ...apiKeyPaths,
     ...organizationsPaths,
     ...presentationConfigurationPaths,
     ...permalinkPaths,
@@ -60,6 +62,12 @@ const document = createDocument({
         in: "header",
         name: "x-api-key",
         description: "API Key passed in the x-api-key header",
+      },
+      sessionAuth: {
+        type: "apiKey",
+        in: "cookie",
+        name: "better-auth.session_token",
+        description: "Browser session cookie issued by better-auth",
       },
     },
   },

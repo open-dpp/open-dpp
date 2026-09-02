@@ -43,8 +43,8 @@ describe("aiIntegrationStore", () => {
     const aiIntegrationStore = useAiIntegrationStore();
     const update: AiConfigurationUpsertDto = {
       isEnabled: false,
-      provider: AiProvider.Ollama,
-      model: "qwen2",
+      provider: AiProvider.Mistral,
+      model: "codestral-latest",
     };
     const configuration = aiConfigurationFactory.build(update);
     mocks.upsert.mockResolvedValue({ data: configuration });

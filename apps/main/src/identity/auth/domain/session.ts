@@ -1,8 +1,14 @@
 import { randomBytes } from "node:crypto";
 
+export enum AuthMethod {
+  SESSION = "session",
+  API_KEY = "api-key",
+}
+
 export interface SessionCreateProps {
   userId: string;
   token: string;
+  authMethod?: AuthMethod;
   ipAddress?: string | null;
   userAgent?: string | null;
   activeOrganizationId?: string | null;
@@ -31,6 +37,7 @@ export class Session {
   public readonly id: string;
   public readonly userId: string;
   public readonly token: string;
+  public readonly authMethod: AuthMethod;
   public readonly expiresAt: Date;
   public readonly ipAddress?: string | null;
   public readonly userAgent?: string | null;
@@ -43,6 +50,7 @@ export class Session {
     id: string,
     userId: string,
     token: string,
+    authMethod: AuthMethod,
     expiresAt: Date,
     createdAt: Date,
     updatedAt: Date,
@@ -54,6 +62,7 @@ export class Session {
     this.id = id;
     this.userId = userId;
     this.token = token;
+    this.authMethod = authMethod;
     this.expiresAt = expiresAt;
     this.ipAddress = ipAddress;
     this.userAgent = userAgent;
@@ -72,6 +81,7 @@ export class Session {
       generate24CharId(),
       data.userId,
       data.token,
+      data.authMethod ?? AuthMethod.SESSION,
       data.expiresAt ?? defaultExpiresAt,
       now,
       now,
@@ -83,10 +93,13 @@ export class Session {
   }
 
   public static loadFromDb(data: SessionDbProps) {
+    // Persisted sessions always originate from browser/bearer login;
+    // api-key sessions are synthesized per-request in the AuthGuard.
     return new Session(
       data.id,
       data.userId,
       data.token,
+      AuthMethod.SESSION,
       data.expiresAt,
       data.createdAt,
       data.updatedAt,

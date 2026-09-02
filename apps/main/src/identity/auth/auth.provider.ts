@@ -25,6 +25,8 @@ import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
 export const AUTH = "auth";
 
+export const API_KEY_PREFIX = "opendpp_";
+
 // Localized like the mjml template siblings (see EmailTemplate.localizedName).
 const VERIFICATION_SUBJECT_BY_LANGUAGE: Record<DisplayLanguageType, string> = {
   en: "Confirm your new email address",
@@ -282,6 +284,13 @@ export const AuthProvider: Provider = {
       plugins: [
         apiKey({
           enableSessionForAPIKeys: false,
+          defaultPrefix: API_KEY_PREFIX,
+          requireName: true,
+          startingCharactersConfig: {
+            shouldStore: true,
+            // full prefix + 4 key characters, so masked keys stay identifiable
+            charactersLength: API_KEY_PREFIX.length + 4,
+          },
           rateLimit: {
             enabled: true,
             timeWindow: 1000 * 60, // 1 minute

@@ -548,7 +548,9 @@ export class EnvironmentService {
     modificationRequests: Map<string, ValueModificationRequest>,
     userContext: UserContext,
   ) {
-    const submodels = (await this.submodelRepository.findByIds(environment.submodels)).values();
+    const submodels = [
+      ...(await this.submodelRepository.findByIds(environment.submodels)).values(),
+    ];
     const ability = await this.loadAbility(environment, userContext.subject, userContext.userId);
     for (const [submodelIdentifier, valueRepresentation] of modificationRequests) {
       const submodel = submodels.find(

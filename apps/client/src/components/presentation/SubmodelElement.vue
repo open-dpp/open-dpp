@@ -11,6 +11,7 @@ const { element, parentPath } = defineProps<{
 }>();
 
 const { name: elementName } = useLanguageTextList(element.displayName);
+const { name: descriptionText } = useLanguageTextList(() => element.description, "");
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),
@@ -39,6 +40,9 @@ const { selfCaptioning } = usePresentationDispatch(
   >
     <dt v-if="!selfCaptioning" class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
+      <p v-if="descriptionText" class="mt-0.5 text-xs font-normal text-gray-400">
+        {{ descriptionText }}
+      </p>
     </dt>
     <SubmodelElementValue :element="element" :path="fullPath" />
   </div>

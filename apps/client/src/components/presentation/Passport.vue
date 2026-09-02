@@ -60,6 +60,7 @@ const parentPathOverride = computed(() => {
           :key="submodel.id"
           :id-short="submodel.id"
           :title="submodel.title"
+          :description="submodel.description"
           :submodel-elements="submodel.submodelElements"
           :parent-path-override="parentPathOverride"
         />

@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
   Patch,
@@ -162,6 +165,17 @@ export class OrganizationsController {
     @OrganizationId() organizationId: string,
   ) {
     return this.membersService.updateMemberRole(organizationId, id, body.role);
+  }
+
+  @MemberHasRole([MemberRole.OWNER])
+  @Delete("members/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeMember(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @AuthSession() session: Session,
+  ) {
+    await this.membersService.removeMember(organizationId, id, session.userId);
   }
 
   @Get(":id/name")

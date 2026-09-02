@@ -50,8 +50,8 @@ describe("aiConfiguration", () => {
   it("is updated", () => {
     const props = aiConfigurationFactory.build({
       isEnabled: true,
-      provider: AiProvider.Ollama,
-      model: "qwen3:0.6b",
+      provider: AiProvider.Mistral,
+      model: "codestral-latest",
     });
     const aiConfiguration = AiConfiguration.loadFromDb(props);
     aiConfiguration.update({

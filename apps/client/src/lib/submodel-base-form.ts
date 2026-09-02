@@ -10,6 +10,9 @@ export const LanguageTextFormSchema = z.object({
 export const SubmodelBaseFormSchema = z.object({
   idShort: z.string().min(1, "IdShort is required"),
   displayName: LanguageTextFormSchema.array(),
+  // Optional multi-language description, mirroring displayName. Defaults to an empty
+  // array (see submodelBaseFormDefaultValues) — the user opts in by adding rows.
+  description: LanguageTextFormSchema.array(),
 });
 
 export function displayNameFormDefaultValues(language: LanguageType) {
@@ -22,5 +25,8 @@ export function submodelBaseFormDefaultValues(language: LanguageType) {
   return {
     idShort: "",
     ...displayNameFormDefaultValues(language),
+    // Description is optional: start empty so a blank, unfilled row can never block
+    // submit (LanguageTextFormSchema requires text.min(1)).
+    description: [],
   };
 }

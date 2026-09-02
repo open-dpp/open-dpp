@@ -488,7 +488,8 @@ describe("BulkImportRunService", () => {
       inputData: { sku: "done", weightKg: 1 },
       externalId: "done",
     });
-    alreadyCreatedItem.markCreated("passport-already-done");
+    alreadyCreatedItem.assignPassport("passport-already-done");
+    alreadyCreatedItem.markCreated();
     // ...and one row that never got started.
     const pendingItem = BulkImportRunItem.create({
       runId: run.id,

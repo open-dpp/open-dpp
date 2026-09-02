@@ -3,6 +3,7 @@ import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { useField } from "vee-validate";
 import { computed } from "vue";
 import { EditorMode } from "../../composables/aas-drawer.ts";
+import DescriptionForm from "./form/DescriptionForm.vue";
 import DisplayNameForm from "./form/DisplayNameForm.vue";
 import IdField from "./form/IdField.vue";
 import { useI18n } from "vue-i18n";
@@ -43,4 +44,5 @@ const showIdShortError = computed(() => idShortMeta.dirty || props.showErrors);
     />
   </div>
   <DisplayNameForm :submit-attempted="props.showErrors" :disabled="props.disabled" />
+  <DescriptionForm :submit-attempted="props.showErrors" :disabled="props.disabled" />
 </template>
