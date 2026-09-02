@@ -1,6 +1,7 @@
 import { DppApiClient } from "./dpp-api-client";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
+import { PoliciesNamespace } from "./policy/policies.namespace";
 
 import {
   UniqueProductIdentifiersNamespace as UpiNsFromIndex,
@@ -35,6 +36,11 @@ describe("DppApiClient", () => {
     it("client.permalinks is an instance of PermalinksNamespace", () => {
       const client = new DppApiClient({});
       expect(client.permalinks).toBeInstanceOf(PermalinksNamespace);
+    });
+
+    it("client.policies is an instance of PoliciesNamespace", () => {
+      const client = new DppApiClient({});
+      expect(client.policies).toBeInstanceOf(PoliciesNamespace);
     });
 
     it("setActiveOrganizationId re-creates namespaces correctly", () => {

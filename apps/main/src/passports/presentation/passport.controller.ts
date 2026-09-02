@@ -116,6 +116,7 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { Policy } from "../../policy/presentation/policy.decorator";
 import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { PassportService } from "../application/services/passport.service";
@@ -135,6 +136,7 @@ import { UserIdDecorator } from "../../identity/auth/presentation/decorators/use
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
+import { PolicyKeyList } from "../../policy/domain/policy-rules";
 
 @Controller({ path: "/passports", version: AllApiVersions })
 export class PassportController
@@ -251,6 +253,7 @@ export class PassportController
   }
 
   @Post()
+  @Policy(PolicyKeyList.PASSPORT_CREATE_LIMIT)
   async createPassport(
     @OrganizationId() organizationId: string,
     @Body(new ZodValidationPipe(PassportRequestCreateDtoSchema)) body: PassportRequestCreateDto,
@@ -1070,6 +1073,7 @@ export class PassportController
   }
 
   @Post("/import")
+  @Policy(PolicyKeyList.PASSPORT_CREATE_LIMIT)
   async importPassport(
     @Body() body: any,
     @OrganizationId() organizationId: string,

@@ -99,3 +99,4 @@ export * from "./unique-product-identifiers/unique-product-identifier-list-item.
 export * from "./unique-product-identifiers/create-unique-product-identifier.dto";
 export * from "./unique-product-identifiers/create-internal-unique-product-identifier.dto";
 export * from "./unique-product-identifiers/update-unique-product-identifier.dto";
+export * from "./policy/policy.dto";

@@ -523,6 +523,30 @@
       "title": "Organisation anpassen",
       "branding": "Branding"
     },
+    "usage": {
+      "title": "Nutzungsregeln",
+      "setLimitsDialog": {
+        "title": "Nutzungslimits setzen",
+        "nullIsUnlimited": "Ein Wert von 0 bedeuted unbegrenzten Zugang."
+      },
+      "policy": {
+        "AI_TOKEN_QUOTA": {
+          "title": "AI Token Limit",
+          "unit": "Token | Tokens",
+          "description": "Begrenzt, wie viele KI-Tokens die Organisation pro Monat verbrauchen kann, bevor KI-Funktionen gesperrt werden."
+        },
+        "MEDIA_STORAGE_LIMIT": {
+          "title": "Mediaspeicher Limit",
+          "unit": "MB",
+          "description": "Begrenzt die Gesamtgröße der Mediendateien, die eine Organisation speichern kann, gemessen in MB."
+        },
+        "PASSPORT_CREATE_LIMIT": {
+          "title": "Produktpass Limit",
+          "unit": "Pass | Pässe",
+          "description": "Begrenzt die Gesamtzahl der Produktpässe, die eine Organisation erstellen kann."
+        }
+      }
+    },
     "admin": {
       "title": "Administration",
       "organizations": "Alle Organisationen",
@@ -891,8 +915,8 @@
   "api": {
     "error": {
       "limit": {
-        "MODEL_CREATE_CAP": "Limit von {limit} Produktpässen ist erreicht.",
-        "MEDIA_STORAGE_CAP": "Limit von {limit}MB Speicherplatz ist erreicht.",
+        "PASSPORT_CREATE_LIMIT": "Limit von {limit} Produktpässen ist erreicht.",
+        "MEDIA_STORAGE_LIMIT": "Limit von {limit}MB Speicherplatz ist erreicht.",
         "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht."
       }
     }

@@ -10,12 +10,12 @@ import {
   Cog6ToothIcon,
   BuildingOfficeIcon,
   UserGroupIcon,
+  CircleStackIcon,
 } from "@heroicons/vue/24/outline";
 import { ChartBarIcon, CloudIcon, LinkIcon } from "@heroicons/vue/16/solid";
 import { computed, onMounted, type FunctionalComponent } from "vue";
 import { authClient } from "../../auth-client";
 import { useStatusStore } from "../../stores/status";
-import { useLayoutStore } from "../../stores/layout";
 import { useOrganizationsStore } from "../../stores/organizations";
 
 const { src } = useBranding();
@@ -92,6 +92,12 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           name: t("organizations.settings.title"),
           to: `/organizations/${indexStore.selectedOrganization}`,
           icon: Cog6ToothIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("organizations.usage.title"),
+          to: `/organizations/${indexStore.selectedOrganization}/usage`,
+          icon: CircleStackIcon,
           show: () => indexStore.selectedOrganization !== null,
         },
       ],
