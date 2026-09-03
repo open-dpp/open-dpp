@@ -1,5 +1,21 @@
 # @open-dpp/testing
 
+## 4.0.0
+
+### Patch Changes
+
+- Updated dependencies [[`e3a23b6`](https://github.com/open-dpp/open-dpp/commit/e3a23b6804ff11fb57fd3471aec790185ef03ae6)]:
+  - @open-dpp/env@4.0.0
+  - @open-dpp/dto@4.0.0
+
+## 3.6.0
+
+### Patch Changes
+
+- Updated dependencies [[`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7)]:
+  - @open-dpp/dto@3.6.0
+  - @open-dpp/env@3.6.0
+
 ## 3.5.0
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @open-dpp/docs
 
+## 4.0.0
+
+### Patch Changes
+
+- [#716](https://github.com/open-dpp/open-dpp/pull/716) [`e3a23b6`](https://github.com/open-dpp/open-dpp/commit/e3a23b6804ff11fb57fd3471aec790185ef03ae6) Thanks [@Hentra](https://github.com/Hentra)! - Simplified installation with breaking configuration changes.
+
+  The Ollama AI provider was removed; Mistral (`codestral-latest`) is now the only supported provider. `OPEN_DPP_OLLAMA_URL` was dropped from the env schema and the `ollama` value was removed from the `AiProvider` enum in the API client. Existing AI configurations using Ollama must be migrated to Mistral (set `OPEN_DPP_MISTRAL_API_KEY`).
+
+  MongoDB configuration now accepts either a connection URI or individual connection settings: provide `OPEN_DPP_MONGODB_URI`, or all of `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_USER` and `OPEN_DPP_MONGODB_PASSWORD`. Host/port setups without credentials no longer pass validation. `OPEN_DPP_MONGODB_USER`, `OPEN_DPP_MONGODB_PASSWORD` and `OPEN_DPP_MONGODB_DATABASE` are optional when using a URI; `OPEN_DPP_MONGODB_DATABASE` defaults to `management`.
+
+  The example deployment was simplified (MongoDB single-node replica set with Mailpit for local development) and a new production setup guide covers MongoDB, SMTP and S3-compatible storage.
+
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
 ## 3.5.0
 
 ## 3.4.0

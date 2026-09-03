@@ -1,59 +1,41 @@
 # ⚠️  EXAMPLE DEPLOYMENT - NOT FOR PRODUCTION USE
 #
 # This Docker Compose configuration is designed for local development and
-# testing purposes only. For production deployments, you must implement High
-# Availability (HA) setup with load balancers and multiple replicas
+# testing purposes only. For a production setup use authorization for your
+# database.
 
 services:
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - ${SERVICE_CADDY_PORT}:${SERVICE_CADDY_PORT}
-    environment:
-      - SERVICE_APP_URL=${SERVICE_APP_URL}
-      - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
-      - SERVICE_MCP_SERVER_URL=${SERVICE_MCP_SERVER_URL}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    restart: unless-stopped
-
   open-dpp:
-    container_name: open-dpp
     restart: unless-stopped
-    image: ghcr.io/open-dpp/open-dpp:local
+    image: ghcr.io/open-dpp/open-dpp:${VERSION:-latest}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "3000:${OPEN_DPP_PORT}"
     env_file:
       - .env
 
-  api-mongo-db:
-    ports:
-      - ${SERVICE_MONGODB_PORT}:27017
-    container_name: api-mongo-db
-    logging:
-      options:
-        max-size: 1g
+  mongodb:
+    image: mongo:7.0
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30
     volumes:
       - mongo_db:/data/db
       - mongo_config:/data/configdb
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${OPEN_DPP_MONGODB_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
-      - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
-    image: mongo:7
 
   mailpit:
-    container_name: mailpit
     image: axllent/mailpit:latest
     ports:
       - "8025:8025"
-      - "8026:1025"
-    environment:
-      - MP_SMTP_AUTH=${OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH}
-      - MP_SMTP_AUTH_ALLOW_INSECURE=${OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE}
 
   minio:
-    container_name: minio
     image: quay.io/minio/minio:latest
     command: minio server /data --console-address ":9001"
     environment:
@@ -62,8 +44,7 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "${OPEN_DPP_S3_PORT}:9000" # MinIO API
-      - "9001:9001" # MinIO Console (Web UI)
+      - "9001:9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -91,8 +72,6 @@ services:
     image: ajilaag/clamav-rest
 
 volumes:
-  caddy_data:
-  caddy_config:
   minio_data:
   mongo_db:
   mongo_config:

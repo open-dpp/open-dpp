@@ -1,5 +1,11 @@
 # e2e
 
+## 1.4.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
 ## 1.3.0
 
 ### Minor Changes

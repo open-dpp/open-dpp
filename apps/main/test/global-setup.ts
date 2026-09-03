@@ -17,7 +17,6 @@ export default async () => {
   process.env.OPEN_DPP_MONGODB_PASSWORD = "admin";
   process.env.OPEN_DPP_MONGODB_DATABASE = "test";
   process.env.OPEN_DPP_MISTRAL_API_KEY = "test-mistral-key";
-  process.env.OPEN_DPP_OLLAMA_URL = "http://localhost:11434";
   process.env.OPEN_DPP_S3_ENDPOINT = "localhost";
   process.env.OPEN_DPP_S3_PORT = "9000";
   process.env.OPEN_DPP_S3_SSL = "false";
