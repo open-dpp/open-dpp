@@ -1,7 +1,8 @@
-import { EnvironmentJsonSchema } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { EnvironmentJsonSchema, Permissions } from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { IConvertableToPlain } from "./convertable-to-plain";
+import { AasAbility } from "./security/aas-ability";
 import { Submodel } from "./submodel-base/submodel";
 import {
   ChangeTracker,
@@ -10,6 +11,7 @@ import {
 } from "../../activity-history/domain/change-tracker";
 import { AddedSubmodelToEnv } from "../../activity-history/domain/change-events/added-submodel-to-env";
 import { DeletedSubmodelFromEnv } from "../../activity-history/domain/change-events/deleted-submodel-from-env";
+import { SubmodelMoved } from "../../activity-history/domain/change-events/submodel-moved";
 
 export class Environment implements IConvertableToPlain, ITrackable {
   readonly tracker = ChangeTracker.create();
@@ -72,16 +74,39 @@ export class Environment implements IConvertableToPlain, ITrackable {
     return submodel;
   }
 
-  deleteSubmodel(submodel: Submodel) {
+  deleteSubmodel(submodel: Submodel, ability: AasAbility) {
     const index = this.submodels.indexOf(submodel.id);
     if (index === -1) {
       throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
+    }
+    if (!ability.can(Permissions.Delete, submodel.getIdShortPath())) {
+      throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
     }
     this.submodels.splice(index, 1);
     this.tracker.track(
       DeletedSubmodelFromEnv.create({
         submodel,
         position: index,
+      }),
+    );
+  }
+
+  moveSubmodel(submodel: Submodel, position: number, ability: AasAbility): void {
+    const oldPosition = this.submodels.indexOf(submodel.id);
+    if (oldPosition === -1) {
+      throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
+    }
+    if (!ability.can(Permissions.Edit, submodel.getIdShortPath())) {
+      throw new ForbiddenError(`Missing permissions to edit submodel ${submodel.idShort}.`);
+    }
+    this.submodels.splice(oldPosition, 1);
+    this.submodels.splice(position, 0, submodel.id);
+    this.tracker.track(
+      SubmodelMoved.create({
+        submodelId: submodel.id,
+        oldPosition,
+        position,
+        path: submodel.getIdShortPath(),
       }),
     );
   }

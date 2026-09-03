@@ -27,6 +27,8 @@ export const ChangeEventDtoTypes = {
   ColumnDeletedFromGroup: "ColumnDeletedFromGroup",
   ColumnModifiedInGroup: "ColumnModifiedInGroup",
   ColumnMovedToGroup: "ColumnMovedToGroup",
+  SubmodelElementMoved: "SubmodelElementMoved",
+  SubmodelMoved: "SubmodelMoved",
 } as const;
 export const ChangeEventDtoTypeEnum = z.enum(ChangeEventDtoTypes);
 export type ChangeEventDtoTypesType = z.infer<typeof ChangeEventDtoTypeEnum>;

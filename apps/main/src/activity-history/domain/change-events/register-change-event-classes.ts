@@ -25,6 +25,8 @@ import { ColumnAddedToGroup } from "./column-added-to-group";
 import { ColumnDeletedFromGroup } from "./column-deleted-from-group";
 import { ColumnModifiedInGroup } from "./column-modified-in-group";
 import { ColumnMovedToGroup } from "./column-moved-to-group";
+import { SubmodelElementMoved } from "./submodel-element-moved";
+import { SubmodelMoved } from "./submodel-moved";
 
 export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);
@@ -56,4 +58,6 @@ export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.ColumnDeletedFromGroup, ColumnDeletedFromGroup);
   registerChangeEvent(ChangeEventTypes.ColumnModifiedInGroup, ColumnModifiedInGroup);
   registerChangeEvent(ChangeEventTypes.ColumnMovedToGroup, ColumnMovedToGroup);
+  registerChangeEvent(ChangeEventTypes.SubmodelElementMoved, SubmodelElementMoved);
+  registerChangeEvent(ChangeEventTypes.SubmodelMoved, SubmodelMoved);
 }

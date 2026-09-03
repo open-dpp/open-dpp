@@ -1,40 +1,21 @@
 <script lang="ts" setup>
-import type { TreeNode } from "primevue/treenode";
-import {
-  type DigitalProductDocumentDto,
-  DigitalProductDocumentStatusDto,
-  isNumericDataType,
-  KeyTypes,
-  Permissions,
-} from "@open-dpp/dto";
+import { type DigitalProductDocumentDto, DigitalProductDocumentStatusDto } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
-import Tabs from "primevue/tabs";
-import TabList from "primevue/tablist";
-import Tab from "primevue/tab";
-import TabPanels from "primevue/tabpanels";
-import TabPanel from "primevue/tabpanel";
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
-import { useAasAbility } from "../../composables/aas-ability.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePresentationConfigurationStore } from "../../stores/presentation-configuration.ts";
 import { convertLocaleToLanguage } from "../../translations/util.ts";
 import ProductImageGalleria from "../media/ProductImageGalleria.vue";
-import TablePagination from "../pagination/TablePagination.vue";
-import ElementPresentationPanel from "./presentation/ElementPresentationPanel.vue";
-import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
-import PropertyEditor from "./PropertyEditor.vue";
-import FileEditor from "./FileEditor.vue";
 import {
   DigitalProductDocumentType,
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
-import SubmodelElementListEditor from "./SubmodelElementListEditor.vue";
-import SubmodelElementCollectionEditor from "./SubmodelElementCollectionEditor.vue";
-import SubmodelEditor from "./SubmodelEditor.vue";
+import AasEditorDrawer, { type AasEditorContext } from "./AasEditorDrawer.vue";
+import AasSubmodelTree from "./AasSubmodelTree.vue";
 
 const model = defineModel<DigitalProductDocumentDto>({ required: true });
 
@@ -43,13 +24,7 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-const componentRef = ref<{
-  submit: () => Promise<void>;
-} | null>(null);
 
-const defaultPosition = "right";
-const fullPosition = "full";
-const position = ref(defaultPosition);
 const { locale, t } = useI18n();
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
@@ -77,6 +52,17 @@ const status = computed(() => model.value.lastStatusChange?.currentStatus);
 
 const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
 
+const presentationConfigStore = usePresentationConfigurationStore();
+
+function fetchPresentationConfig() {
+  return presentationConfigStore.fetch({
+    referenceId: model.value.id,
+    namespace: presentationConfigurationNamespace,
+    errorHandlingStore,
+    translate: t,
+  });
+}
+
 const aasEditor = useAasEditor({
   id: model.value.id,
   aasNamespace,
@@ -88,6 +74,7 @@ const aasEditor = useAasEditor({
   translate: t,
   openConfirm: confirm.require,
   status: status,
+  onAfterMove: fetchPresentationConfig,
 });
 
 const {
@@ -95,6 +82,13 @@ const {
   submodels,
   selectTreeNode,
   buildAddSubmodelElementMenu,
+  buildMoveMenu,
+  moveMenuItems,
+  moveToDialogVisible,
+  moveToDialogSubmodels,
+  moveToDialogClassify,
+  moveToDialogSelected,
+  confirmMoveTo,
   init,
   createSubmodel,
   openAssetAdministrationShellEditor,
@@ -121,8 +115,6 @@ const {
   deletePolicyBySubjectAndObject,
 } = aasEditor;
 
-const presentationConfigStore = usePresentationConfigurationStore();
-
 watch(
   () => route.query.config,
   (next) => {
@@ -140,38 +132,6 @@ watch(
   },
 );
 
-const { can: canForPath } = useAasAbility({ getAccessPermissionRules });
-
-function canEditPath(path: string): boolean {
-  return canForPath(Permissions.Edit, path);
-}
-
-const activeDrawerTab = ref<"data" | "presentation" | "activityHistory">("data");
-
-watch(
-  () => drawerVisible.value,
-  (visible) => {
-    if (visible) {
-      activeDrawerTab.value = "data";
-    }
-  },
-);
-
-const showPresentationTab = computed(() => {
-  if (!editorVNode.value) return false;
-  const editorSupportsPresentationConfiguration =
-    editorVNode.value.component === PropertyEditor &&
-    editorVNode.value.props.data.valueType &&
-    isNumericDataType(editorVNode.value.props.data.valueType);
-  if (!editorSupportsPresentationConfiguration) return false;
-  return Boolean(editorVNode.value?.props?.path?.idShortPathIncludingSubmodel);
-});
-
-const isOnDataTab = computed(() => activeDrawerTab.value === "data");
-const showSaveButton = computed(
-  () => saveButtonIsVisible.value && (!showPresentationTab.value || isOnDataTab.value),
-);
-
 watch(
   () => status.value,
   async () => {
@@ -181,19 +141,12 @@ watch(
 
 onMounted(async () => {
   await init();
-  await presentationConfigStore.fetch({
-    referenceId: model.value.id,
-    namespace: presentationConfigurationNamespace,
-    errorHandlingStore,
-    translate: t,
-  });
+  await fetchPresentationConfig();
 });
 
 onUnmounted(() => {
   presentationConfigStore.$reset();
 });
-
-const popover = ref();
 
 async function onHideDrawer() {
   hideDrawer();
@@ -206,51 +159,17 @@ async function onHideDrawer() {
   await reloadCurrentPage();
 }
 
-function addClicked(event: any, node: TreeNode) {
-  buildAddSubmodelElementMenu(node);
-  popover.value.toggle(event);
-}
-
-async function deleteClicked(node: TreeNode) {
-  if (node.data.modelType === KeyTypes.Submodel) {
-    await deleteSubmodel(node.key);
-  } else {
-    await deleteSubmodelElement(node.data.path);
-  }
-}
-async function onSubmit() {
-  if (componentRef.value) {
-    await componentRef.value.submit();
-  }
-}
-
-const activityHistoryPath = computed(() => {
-  if (
-    !editorVNode.value ||
-    !editorVNode.value.props.path.idShortPathIncludingSubmodel ||
-    !editorVNode.value.component
-  ) {
-    return undefined;
-  }
-  const path = editorVNode.value.props.path.idShortPathIncludingSubmodel;
-
-  const hasChildElements = [
-    SubmodelElementCollectionEditor,
-    SubmodelElementListEditor,
-    SubmodelEditor,
-  ].includes(editorVNode.value.component as any);
-
-  if (hasChildElements) {
-    return `sw:${path}`;
-  }
-  const isLeafEditor = [PropertyEditor, FileEditor].includes(editorVNode.value.component as any);
-  if (isLeafEditor) {
-    return path;
-  }
-  return undefined;
-});
-
-const isFullPosition = computed(() => position.value === fullPosition);
+const editorContext = computed<AasEditorContext>(() => ({
+  id: model.value.id,
+  aasNamespace,
+  errorHandlingStore,
+  isArchived: isArchived.value,
+  type: props.type,
+  openDrawer: aasEditor.openDrawer,
+  getAccessPermissionRules,
+  modifyShell,
+  deletePolicyBySubjectAndObject,
+}));
 </script>
 
 <template>
@@ -296,198 +215,39 @@ const isFullPosition = computed(() => position.value === fullPosition);
         </div>
       </template>
     </Card>
-    <Card v-if="submodels">
-      <template #content>
-        <TreeTable
-          v-model:selection-keys="selectedKeys"
-          selection-mode="single"
-          :value="submodels"
-          table-style="min-width: 50rem"
-          :meta-key-selection="false"
-          paginator
-          :loading="loading"
-          :rows="10"
-          :rows-per-page-options="[10]"
-        >
-          <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <h3 class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</h3>
-              <Button
-                v-if="!isArchived"
-                :label="t('aasEditor.addSubmodel')"
-                @click="createSubmodel"
-              />
-            </div>
-          </template>
-          <Column field="label" header="Name" expander style="width: 34%" />
-          <Column field="type" :header="t('aasEditor.type')" style="width: 33%" />
-          <Column>
-            <template #body="{ node }">
-              <div class="flex w-full justify-end">
-                <div class="flex items-center gap-2 rounded-md">
-                  <Button
-                    v-if="node.data.actions.edit.visible"
-                    v-tooltip.top="node.data.actions.edit.tooltip"
-                    :aria-label="node.data.actions.edit.tooltip"
-                    icon="pi pi-pencil"
-                    severity="primary"
-                    @click="selectTreeNode(node.key)"
-                  />
-                  <Button
-                    v-else
-                    v-tooltip.top="node.data.actions.read.tooltip"
-                    :aria-label="node.data.actions.read.tooltip"
-                    :disabled="!node.data.actions.read.enabled"
-                    icon="pi pi-eye"
-                    severity="primary"
-                    @click="selectTreeNode(node.key)"
-                  />
-                  <Button
-                    v-if="node.data.actions.create.visible"
-                    v-tooltip.top="node.data.actions.create.tooltip"
-                    :aria-label="t('common.add')"
-                    icon="pi pi-plus"
-                    severity="secondary"
-                    :disabled="!node.data.actions.create.enabled"
-                    @click="addClicked($event, node)"
-                  />
-                  <Button
-                    v-if="node.data.actions.delete.visible"
-                    v-tooltip.top="node.data.actions.delete.tooltip"
-                    :aria-label="t('common.remove')"
-                    icon="pi pi-trash"
-                    severity="danger"
-                    :disabled="!node.data.actions.delete.enabled"
-                    @click="deleteClicked(node)"
-                  />
-                </div>
-              </div>
-            </template>
-          </Column>
-          <template #paginatorcontainer>
-            <TablePagination
-              :current-page="currentPage"
-              :has-previous="hasPrevious"
-              :has-next="hasNext"
-              @reset-cursor="resetCursor"
-              @previous-page="previousPage"
-              @next-page="nextPage"
-            />
-          </template>
-        </TreeTable>
-        <Menu
-          id="overlay_menu"
-          ref="popover"
-          :model="submodelElementsToAdd"
-          :popup="true"
-          position="right"
-        />
-      </template>
-    </Card>
-    <Drawer
+    <AasSubmodelTree
+      v-if="submodels"
+      v-model:selected-keys="selectedKeys"
+      v-model:move-to-dialog-visible="moveToDialogVisible"
+      v-model:move-to-dialog-selected="moveToDialogSelected"
+      :submodels="submodels"
+      :loading="loading"
+      :is-archived="isArchived"
+      :select-tree-node="selectTreeNode"
+      :create-submodel="createSubmodel"
+      :delete-submodel="deleteSubmodel"
+      :delete-submodel-element="deleteSubmodelElement"
+      :build-add-submodel-element-menu="buildAddSubmodelElementMenu"
+      :submodel-elements-to-add="submodelElementsToAdd"
+      :build-move-menu="buildMoveMenu"
+      :move-menu-items="moveMenuItems"
+      :move-to-dialog-submodels="moveToDialogSubmodels"
+      :move-to-dialog-classify="moveToDialogClassify"
+      :confirm-move-to="confirmMoveTo"
+      :current-page="currentPage"
+      :has-previous="hasPrevious"
+      :has-next="hasNext"
+      :reset-cursor="resetCursor"
+      :previous-page="previousPage"
+      :next-page="nextPage"
+    />
+    <AasEditorDrawer
       v-model:visible="drawerVisible"
-      :position="position"
-      :class="{
-        'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
-        'w-full!': isFullPosition,
-      }"
-      :pt="{
-        mask: { class: 'aas-editor-drawer-mask' },
-      }"
-      :auto-z-index="false"
-      @hide="onHideDrawer"
-    >
-      <template #header>
-        <div class="flex w-full flex-row items-center justify-between gap-1 pr-2">
-          <h2 class="text-xl font-bold">{{ drawerHeader }}</h2>
-          <div class="flex gap-3">
-            <Button
-              v-if="position === defaultPosition"
-              severity="secondary"
-              variant="text"
-              icon="pi pi-window-maximize"
-              @click="position = fullPosition"
-            />
-            <Button
-              v-else
-              severity="secondary"
-              variant="text"
-              icon="pi pi-window-minimize"
-              @click="position = defaultPosition"
-            />
-            <Button
-              v-if="showSaveButton"
-              :label="
-                editorVNode?.component === SubmodelElementListCreateEditor
-                  ? t('aasEditor.table.saveAndAddEntries')
-                  : t('common.save')
-              "
-              @click="onSubmit"
-            />
-          </div>
-        </div>
-      </template>
-      <template #default>
-        <Tabs :value="activeDrawerTab">
-          <TabList>
-            <Tab data-cy="drawer-tab-data" value="data">{{ t("aasEditor.drawerTabs.data") }}</Tab>
-            <Tab v-if="showPresentationTab" data-cy="drawer-tab-presentation" value="presentation">
-              {{ t("aasEditor.drawerTabs.presentation") }}
-            </Tab>
-            <Tab
-              v-if="activityHistoryPath"
-              value="activityHistory"
-              data-cy="drawer-tab-activityHistory"
-            >
-              {{ t("activityHistory.label") }}
-            </Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel value="data">
-              <component
-                :is="editorVNode.component"
-                v-if="editorVNode"
-                :key="editorVNode.props.path.idShortPathIncludingSubmodel ?? ''"
-                v-bind="editorVNode.props"
-                :id="model.id"
-                ref="componentRef"
-                :aas-namespace="aasNamespace"
-                :open-drawer="aasEditor.openDrawer"
-                :error-handling-store="errorHandlingStore"
-                :translate="t"
-                :get-access-permission-rules="getAccessPermissionRules"
-                :modify-shell="modifyShell"
-                :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
-                :is-archived="isArchived"
-                :hide-drawer="onHideDrawer"
-              />
-            </TabPanel>
-            <TabPanel v-if="showPresentationTab" value="presentation">
-              <ElementPresentationPanel
-                :element="editorVNode!.props.data"
-                :path="editorVNode!.props.path.idShortPathIncludingSubmodel!"
-                :disabled="
-                  isArchived || !canEditPath(editorVNode!.props.path.idShortPathIncludingSubmodel!)
-                "
-              />
-            </TabPanel>
-            <TabPanel v-if="activityHistoryPath" value="activityHistory">
-              <EditorActivityHistory
-                v-if="editorVNode && editorVNode.props.path.idShortPathIncludingSubmodel"
-                :id="model.id"
-                :path="activityHistoryPath"
-                :type="props.type"
-              />
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
-      </template>
-    </Drawer>
+      :editor-v-node="editorVNode"
+      :drawer-header="drawerHeader"
+      :save-button-is-visible="saveButtonIsVisible"
+      :hide-drawer="onHideDrawer"
+      :editor-context="editorContext"
+    />
   </div>
 </template>
-
-<style>
-.aas-editor-drawer-mask {
-  z-index: 51;
-}
-</style>
