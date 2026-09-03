@@ -3,7 +3,10 @@ import type {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelDto,
+  MoveSubmodelElementDto,
   PagingParamsDto,
+  ReorderColumnDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -207,6 +210,20 @@ export class AasNamespace {
   }
 
   /**
+   * Moves a Submodel to a new position among its siblings.
+   * @param id - The identifier of the resource
+   * @param submodelId - The identifier of the Submodel to move
+   * @param data - The new position
+   * @returns A promise resolving to the moved Submodel
+   */
+  public async moveSubmodel(id: string, submodelId: string, data: MoveSubmodelDto) {
+    return this.axiosInstance.post<SubmodelResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/move`,
+      data,
+    );
+  }
+
+  /**
    * Modifies the value of a Submodel.
    * @param id - The identifier of the resource
    * @param submodelId - The identifier of the Submodel
@@ -254,6 +271,27 @@ export class AasNamespace {
   ) {
     return this.axiosInstance.post<SubmodelElementResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`,
+      data,
+    );
+  }
+
+  /**
+   * Moves or reorders a Submodel Element within its Submodel — either to a new
+   * position under its current parent, or to a different parent entirely.
+   * @param id - The identifier of the resource
+   * @param submodelId - The identifier of the Submodel
+   * @param idShortPath - The idShort path to the Submodel Element to move
+   * @param data - The move target (position and/or new parent idShort path)
+   * @returns A promise resolving to the moved Submodel Element
+   */
+  public async moveSubmodelElement(
+    id: string,
+    submodelId: string,
+    idShortPath: string,
+    data: MoveSubmodelElementDto,
+  ) {
+    return this.axiosInstance.post<SubmodelElementResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/move`,
       data,
     );
   }
@@ -411,6 +449,32 @@ export class AasNamespace {
     return this.axiosInstance.post<SubmodelElementListResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/groups/${groupIdShort}/columns/${idShortOfColumn}/move`,
       undefined,
+    );
+  }
+
+  /**
+   * Reorders a column within its current container (the table's top level, or a
+   * group within it) — does not change which group the column lives in.
+   * @param id - The identifier of the resource
+   * @param submodelId - The identifier of the Submodel
+   * @param idShortPath - The idShort path to the Submodel Element List
+   * @param idShortOfColumn - The idShort of the column to reorder
+   * @param data - The new position
+   * @param groupIdShort - The idShort of the group the column currently lives in, if any
+   * @returns A promise resolving to the updated Submodel Element List
+   */
+  public async reorderColumn(
+    id: string,
+    submodelId: string,
+    idShortPath: string,
+    idShortOfColumn: string,
+    data: ReorderColumnDto,
+    groupIdShort?: string,
+  ) {
+    return this.axiosInstance.post<SubmodelElementListResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns/${idShortOfColumn}/reorder`,
+      data,
+      { params: groupIdShort ? { groupIdShort } : undefined },
     );
   }
 

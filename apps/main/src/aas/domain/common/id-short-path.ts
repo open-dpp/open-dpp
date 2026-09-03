@@ -4,7 +4,7 @@ export class IdShortPath {
   constructor(private readonly _segments: Array<string>) {}
 
   static create(data: { path: string }): IdShortPath {
-    return new IdShortPath(data.path.split("."));
+    return new IdShortPath(data.path === "" ? [] : data.path.split("."));
   }
 
   static fromSegments(segments: string[]): IdShortPath {

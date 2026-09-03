@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements } from "@open-dpp/dto";
-import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { AasSubmodelElements, Permissions } from "@open-dpp/dto";
+import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../../modifier-visitor";
+import { AasAbility } from "../../security/aas-ability";
 import { AddOptions, DeleteOptions, ISubmodelElement } from "../submodel-base";
 import { SubmodelElementCollection } from "../submodel-element-collection";
 import { SubmodelElementList } from "../submodel-element-list";
@@ -15,6 +16,7 @@ import { ColumnDeleted } from "../../../../activity-history/domain/change-events
 import { ColumnAddedToGroup } from "../../../../activity-history/domain/change-events/column-added-to-group";
 import { ColumnDeletedFromGroup } from "../../../../activity-history/domain/change-events/column-deleted-from-group";
 import { RowDeleted } from "../../../../activity-history/domain/change-events/row-deleted";
+import { SubmodelElementMoved } from "../../../../activity-history/domain/change-events/submodel-element-moved";
 import { ITableExtendable, MoveOptions } from "./table-extensable";
 import { TableRowCopyVisitor } from "./table-row-copy-visitor";
 
@@ -62,7 +64,7 @@ export class TableExtension implements ITableExtendable {
   ): SubmodelElementCollection {
     const group = row.getSubmodelElements().find((el) => el.idShort === groupIdShort);
     if (!group) {
-      throw new NotFoundError("ColumnGroup", groupIdShort);
+      throw new NotFoundError(`Column group with id ${groupIdShort} not found.`);
     }
     if (!(group instanceof SubmodelElementCollection)) {
       throw new ValueError(
@@ -339,6 +341,63 @@ export class TableExtension implements ITableExtendable {
     this.moveColumnToGroup(columnIdShort, group.idShort, options);
   }
 
+  private applyReorderColumn(idShort: string, position: number, groupIdShort?: string): void {
+    for (const row of this.rows) {
+      const container = this.resolveContainer(row, groupIdShort);
+      const siblings = container.getSubmodelElements();
+      const currentIndex = siblings.findIndex((el) => el.idShort === idShort);
+      if (currentIndex !== -1) {
+        const [column] = siblings.splice(currentIndex, 1);
+        siblings.splice(position, 0, column);
+      }
+    }
+  }
+
+  /**
+   * Reorders a column within its current container (the header row, or a group
+   * within it). This must reposition the column in every row, not just the header:
+   * whichever row sits at index 0 becomes the header (see setHeaderRow/deleteRow), so
+   * a header-only reorder would silently revert itself once that row is deleted. It
+   * would also desync the positional-insert assumption createGroupFromColumn relies on
+   * (it inserts a brand-new, not-yet-existing group at the header's column index into
+   * every row, since there's no idShort to match against yet).
+   */
+  reorderColumn(
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    options: { ability: AasAbility },
+  ): void {
+    if (this.headerRow === undefined) {
+      throw new NotFoundError(`Column with id ${idShortOfColumn} not found in empty table.`);
+    }
+    const headerContainer = groupIdShort
+      ? this.getGroupInRowOrFail(this.headerRow, groupIdShort)
+      : this.headerRow;
+    const existingColumn = headerContainer
+      .getSubmodelElements()
+      .find((el) => el.idShort === idShortOfColumn);
+    if (!existingColumn) {
+      throw new NotFoundError(`Column with id ${idShortOfColumn} not found.`);
+    }
+    if (!options.ability.can(Permissions.Edit, existingColumn.getIdShortPath())) {
+      throw new ForbiddenError(
+        `Missing permissions to edit column ${existingColumn.getIdShortPath().toString()}.`,
+      );
+    }
+
+    this.applyReorderColumn(idShortOfColumn, position, groupIdShort);
+
+    const newPosition = headerContainer
+      .getSubmodelElements()
+      .findIndex((el) => el.idShort === idShortOfColumn);
+    const value = headerContainer.getSubmodelElements()[newPosition];
+    const path = value.getIdShortPath();
+    this.tracker.track(
+      SubmodelElementMoved.create({ oldPath: path, newPath: path, position: newPosition, value }),
+    );
+  }
+
   private generateRowIdShort() {
     return `row_${randomUUID()}`;
   }
@@ -391,7 +450,7 @@ export class TableExtension implements ITableExtendable {
   getColumnOrFail(idShort: string) {
     const column = this.columns.find((column) => column.idShort === idShort);
     if (!column) {
-      throw new NotFoundError("Column", idShort);
+      throw new NotFoundError(`Column with id ${idShort} not found.`);
     }
     return column;
   }

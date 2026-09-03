@@ -489,6 +489,10 @@ describe("passportController", () => {
     await ctx.asserts.modifySubmodel(createPassport, savePassport);
   });
 
+  it("/POST move submodel", async () => {
+    await ctx.asserts.moveSubmodel(createPassport);
+  });
+
   it(`/PATCH submodel value`, async () => {
     await ctx.asserts.modifyValueOfSubmodel(createPassport, savePassport);
   });
@@ -553,6 +557,10 @@ describe("passportController", () => {
     await ctx.asserts.moveColumnToGroup(createPassport, savePassport);
   });
 
+  it("/POST reorder column", async () => {
+    await ctx.asserts.reorderColumn(createPassport, savePassport);
+  });
+
   it("/POST create group from column", async () => {
     await ctx.asserts.createGroupFromColumn(createPassport, savePassport);
   });
@@ -568,6 +576,10 @@ describe("passportController", () => {
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
     await ctx.asserts.postSubmodelElementAtIdShortPathV1(createPassport, savePassport);
     await ctx.asserts.postSubmodelElementAtIdShortPath(createPassport);
+  });
+
+  it("/POST move submodel element", async () => {
+    await ctx.asserts.moveSubmodelElement(createPassport, savePassport);
   });
 
   it(`/GET submodel element by id`, async () => {

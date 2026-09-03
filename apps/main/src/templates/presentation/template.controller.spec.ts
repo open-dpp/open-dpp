@@ -165,6 +165,10 @@ describe("templateController", () => {
     await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
 
+  it("/POST move submodel", async () => {
+    await ctx.asserts.moveSubmodel(createTemplate);
+  });
+
   it(`/PATCH submodel value`, async () => {
     await ctx.asserts.modifyValueOfSubmodel(createTemplate, saveTemplate);
   });
@@ -229,6 +233,10 @@ describe("templateController", () => {
     await ctx.asserts.moveColumnToGroup(createTemplate, saveTemplate);
   });
 
+  it("/POST reorder column", async () => {
+    await ctx.asserts.reorderColumn(createTemplate, saveTemplate);
+  });
+
   it("/POST create group from column", async () => {
     await ctx.asserts.createGroupFromColumn(createTemplate, saveTemplate);
   });
@@ -244,6 +252,10 @@ describe("templateController", () => {
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
     await ctx.asserts.postSubmodelElementAtIdShortPathV1(createTemplate, saveTemplate);
     await ctx.asserts.postSubmodelElementAtIdShortPath(createTemplate);
+  });
+
+  it("/POST move submodel element", async () => {
+    await ctx.asserts.moveSubmodelElement(createTemplate, saveTemplate);
   });
 
   it(`/GET submodel element by id`, async () => {
