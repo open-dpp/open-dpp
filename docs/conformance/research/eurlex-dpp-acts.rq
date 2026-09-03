@@ -1,0 +1,12 @@
+PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
+SELECT DISTINCT ?celex ?date ?title WHERE {
+  ?work cdm:resource_legal_id_celex ?celex .
+  ?work cdm:work_date_document ?date .
+  ?exp cdm:expression_belongs_to_work ?work ;
+       cdm:expression_title ?title ;
+       cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG> .
+  FILTER(?date >= "2024-06-01"^^xsd:date)
+  FILTER(REGEX(STR(?title), "product passport|battery passport|passport registry|Regulation \\(EU\\) 2024/1781|Regulation \\(EU\\) 2023/1542|ecodesign", "i"))
+}
+ORDER BY ?date
+LIMIT 300
