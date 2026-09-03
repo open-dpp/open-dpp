@@ -75,3 +75,5 @@ auth-db
 
 .postman
 /postman
+# Conformance Review: local copies of standard texts (copyrighted / gated), see docs/conformance
+/standards/
