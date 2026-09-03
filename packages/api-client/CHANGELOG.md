@@ -1,5 +1,14 @@
 # @open-dpp/api-client
 
+## 4.0.1
+
+### Patch Changes
+
+- [#725](https://github.com/open-dpp/open-dpp/pull/725) [`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25) Thanks [@mr42](https://github.com/mr42)! - In the passport and template editors, sections, subsections, and data fields can be moved.
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/dto@4.0.1
+
 ## 4.0.0
 
 ### Major Changes
