@@ -66,6 +66,11 @@ describe("makeIdShortPath", () => {
     );
   });
 
+  it("converts empty string to empty segments", () => {
+    const path = makeIdShortPath.fromString("");
+    expect(path.segments).toEqual([]);
+  });
+
   it("isChildOf is true for an ancestor at any depth, including itself and the root", () => {
     const width = makeIdShortPath(["Dimensions", "SubDimensions", "Width"]);
     expect(width.isChildOf(makeIdShortPath(["Dimensions", "SubDimensions"]))).toBe(true);

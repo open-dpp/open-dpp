@@ -66,6 +66,6 @@ export function makeIdShortPath(segments: readonly string[]): IdShortPath {
   };
 }
 
-makeIdShortPath.fromString = (path: string) => makeIdShortPath(path.split("."));
+makeIdShortPath.fromString = (path: string) => makeIdShortPath(path === "" ? [] : path.split("."));
 
 export const idShortPathRoot = makeIdShortPath([]);

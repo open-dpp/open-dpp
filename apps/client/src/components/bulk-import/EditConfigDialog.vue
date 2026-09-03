@@ -10,6 +10,7 @@ import IdShortPathSelect from "../aas/IdShortPathSelect.vue";
 import JsonPathSelect from "../json/JsonPathSelect.vue";
 import MappingsDataTable from "./MappingsDataTable.vue";
 import { removeMappingsFromRow, removeMappingsFromSubmodels } from "../../lib/bulk-import.ts";
+import FieldMapping from "./FieldMapping.vue";
 
 const emit = defineEmits<{ (e: "saved", config: BulkImportConfigDto): void }>();
 
@@ -22,12 +23,6 @@ const mapping = useBulkImportMapping();
 const visible = ref(false);
 const loading = ref(false);
 const currentConfig = ref<BulkImportConfigDto | null>(null);
-
-// Exclude same model types as MappingStep
-const excludedTargetModelTypes = [
-  AasSubmodelElements.File,
-  AasSubmodelElements.SubmodelElementList,
-];
 
 const canSave = computed(() => {
   return (
@@ -154,40 +149,17 @@ defineExpose({ open });
           t("integrations.bulkImport.idFieldHelp")
         }}</span>
       </label>
-
-      <!-- Field Mappings -->
-      <div class="flex flex-col gap-2">
-        <span>{{ t("integrations.bulkImport.mapFields") }}</span>
-        <!-- Add Mapping Form -->
-        <div class="flex items-end gap-2">
-          <label class="flex w-3/6 flex-1 flex-col gap-2">
-            <JsonPathSelect
-              :row="rowJsonSelect"
-              :label="t('integrations.bulkImport.inputField')"
-              v-model="mapping.draftInput.value"
-            />
-          </label>
-          <label class="flex w-3/6 flex-1 flex-col gap-2">
-            <IdShortPathSelect
-              :submodels="submodelsIdShortPathSelect"
-              :exclude-model-types="excludedTargetModelTypes"
-              v-model="mapping.draftTarget.value"
-              :label="t('integrations.bulkImport.targetField')"
-            />
-          </label>
-          <Button
-            class="w-1/6"
-            icon="pi pi-plus"
-            aria-label="Add Mapping"
-            :disabled="!mapping.draftInput.value || !mapping.draftTarget.value"
-            @click="mapping.addMapping"
-          />
-        </div>
-        <MappingsDataTable
-          :mappings="mapping.mappings.value"
-          :on-remove-mapping="mapping.removeMapping"
-        />
-      </div>
+      <FieldMapping
+        :submodels="submodelsIdShortPathSelect"
+        :selected-json-row="rowJsonSelect"
+        v-model:selected-input-field="mapping.draftInput.value"
+        v-model:selected-target-field="mapping.draftTarget.value"
+        @on-add-mapping="mapping.addMapping"
+      />
+      <MappingsDataTable
+        :mappings="mapping.mappings.value"
+        :on-remove-mapping="mapping.removeMapping"
+      />
     </div>
 
     <div class="mt-6 flex justify-end gap-2">
