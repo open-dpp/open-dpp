@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { HttpService } from "@nestjs/axios";
-import { FileValidator } from "@nestjs/common";
+import { FileValidator, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { EnvService } from "@open-dpp/env";
 import FormData from "form-data";
@@ -11,6 +11,7 @@ interface VirusScanValidatorOptions {
 }
 
 export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOptions> {
+  private readonly logger = new Logger(VirusScanFileValidator.name);
   private readonly httpService = new HttpService();
   private readonly configService = new EnvService(new ConfigService());
 
@@ -36,7 +37,7 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
           return true;
         }
       } catch (err: unknown) {
-        console.error("Error during virus scan:", err);
+        this.logger.error("Error during virus scan", err);
       }
 
       if (this.validationOptions.storageType === "disk" && existsSync(file.path)) {
@@ -44,7 +45,7 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
       }
       return false;
     } catch (error) {
-      console.error("Error during virus scan:", error);
+      this.logger.error("Error during virus scan", error);
       return false;
     }
   }

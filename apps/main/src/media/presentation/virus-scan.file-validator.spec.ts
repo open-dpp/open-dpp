@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { HttpService } from "@nestjs/axios";
+import { Logger } from "@nestjs/common";
 import { AxiosResponse } from "axios";
 import { of, throwError } from "rxjs";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
@@ -59,10 +60,10 @@ describe("VirusScanFileValidator", () => {
         Object.assign(new Error("getaddrinfo ENOTFOUND"), { syscall: "getaddrinfo" }),
       ),
     );
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
 
     await expect(validator.isValid(file)).resolves.toBe(false);
-    expect(consoleError).toHaveBeenCalled();
-    consoleError.mockRestore();
+    expect(errorSpy).toHaveBeenCalledWith("Error during virus scan", expect.any(Error));
+    errorSpy.mockRestore();
   });
 });
