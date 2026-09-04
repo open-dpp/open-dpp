@@ -1,5 +1,13 @@
 # @open-dpp/env
 
+## 5.0.0
+
+### Major Changes
+
+- [#714](https://github.com/open-dpp/open-dpp/pull/714) [`66b6537`](https://github.com/open-dpp/open-dpp/commit/66b65379357517e67e4266c003f67ccf73274eb7) Thanks [@florianBieck](https://github.com/florianBieck)! - BREAKING: `OPEN_DPP_CLAMAV_PORT` was removed — put the port into `OPEN_DPP_CLAMAV_URL` (e.g. `http://clamav-rest:9000`). Existing deployments must update their `.env`, otherwise scans target the wrong port and every upload is rejected.
+
+  `OPEN_DPP_CLAMAV_URL` is now optional: unset (or empty) disables virus scanning — uploads are accepted unscanned and a warning is logged at startup. The `clamav-rest` service was removed from the example and development compose files; see the Production setup guide (`docs/guides/production-setup.md`) to add it back.
+
 ## 4.0.1
 
 ## 4.0.0
