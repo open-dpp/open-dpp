@@ -19,9 +19,14 @@ import {
   withTrackingHelper,
 } from "../../activity-history/domain/change-tracker";
 import { DigitalProductDocumentStatusChanged } from "../../activity-history/domain/change-events/digital-product-document-status-changed";
+import { PassportLockEnabled } from "../../activity-history/domain/change-events/passport-lock-enabled";
 import { DigitalProductDocumentTypes, DigitalProductDocumentTypesType } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
+import { z } from "zod";
 
-const TemplateSchema = DigitalProductDocumentSchema;
+const TemplateSchema = DigitalProductDocumentSchema.extend({
+  passportLockEnabled: z.boolean().default(false),
+});
 
 export class Template
   implements
@@ -40,6 +45,7 @@ export class Template
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     private lastStatusChange: DigitalProductDocumentStatusChange,
+    private passportLockEnabled: boolean,
   ) {}
 
   static create(data: {
@@ -49,6 +55,7 @@ export class Template
     createdAt?: Date;
     updatedAt?: Date;
     lastStatusChange?: DigitalProductDocumentStatusChange;
+    passportLockEnabled?: boolean;
   }) {
     const now = DateTime.now();
     return new Template(
@@ -58,6 +65,7 @@ export class Template
       data.createdAt ?? now,
       data.updatedAt ?? now,
       data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
+      data.passportLockEnabled ?? false,
     );
   }
 
@@ -70,6 +78,7 @@ export class Template
       new Date(parsed.createdAt),
       new Date(parsed.updatedAt),
       DigitalProductDocumentStatusChange.fromPlain(parsed.lastStatusChange),
+      parsed.passportLockEnabled,
     );
   }
 
@@ -87,10 +96,25 @@ export class Template
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       lastStatusChange: this.lastStatusChange.toPlain(),
+      passportLockEnabled: this.passportLockEnabled,
     };
   }
   getLastStatusChange() {
     return this.lastStatusChange;
+  }
+
+  getPassportLockEnabled(): boolean {
+    return this.passportLockEnabled;
+  }
+
+  enablePassportLock(): void {
+    if (this.passportLockEnabled) {
+      throw new ValueError("Passport lock is already enabled for this template.");
+    }
+    this.tracker.track(
+      PassportLockEnabled.create({ oldValue: this.passportLockEnabled, newValue: true }),
+    );
+    this.passportLockEnabled = true;
   }
 
   getEnvironment(): Environment {
@@ -103,22 +127,6 @@ export class Template
 
   getOrganizationId(): string {
     return this.organizationId;
-  }
-
-  private withLastStatusChange(newChange: DigitalProductDocumentStatusChange): Template {
-    this.tracker.track(
-      DigitalProductDocumentStatusChanged.create({
-        digitalProductDocumentStatusChange: newChange,
-      }),
-    );
-    return new Template(
-      this.id,
-      this.organizationId,
-      this.environment,
-      this.createdAt,
-      DateTime.now(),
-      newChange,
-    );
   }
 
   publish() {

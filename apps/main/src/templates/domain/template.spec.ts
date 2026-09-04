@@ -40,4 +40,25 @@ describe("template", () => {
     template.restore();
     expect(template.isDraft()).toBeTruthy();
   });
+
+  it("should enable passport lock", () => {
+    const template = Template.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
+    expect(template.getPassportLockEnabled()).toBeFalsy();
+    template.enablePassportLock();
+    expect(template.getPassportLockEnabled()).toBeTruthy();
+  });
+
+  it("should not enable passport lock twice", () => {
+    const template = Template.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+      passportLockEnabled: true,
+    });
+    expect(() => template.enablePassportLock()).toThrow(
+      "Passport lock is already enabled for this template.",
+    );
+  });
 });

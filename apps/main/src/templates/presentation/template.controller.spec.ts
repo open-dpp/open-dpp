@@ -285,20 +285,23 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
-      [t2, t1].map((t) => ({
-        ...t.toPlain(),
-        environment: {
-          ...t.environment.toPlain(),
-          assetAdministrationShells: [
-            {
-              id: aas.id,
-              displayName: aas.displayName.map((d) => ({ language: d.language, text: d.text })),
-            },
-          ],
-        },
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-      })),
+      [t2, t1].map((t) => {
+        const { passportLockEnabled: _passportLockEnabled, ...plain } = t.toPlain();
+        return {
+          ...plain,
+          environment: {
+            ...t.environment.toPlain(),
+            assetAdministrationShells: [
+              {
+                id: aas.id,
+                displayName: aas.displayName.map((d) => ({ language: d.language, text: d.text })),
+              },
+            ],
+          },
+          createdAt: t.createdAt.toISOString(),
+          updatedAt: t.updatedAt.toISOString(),
+        };
+      }),
     );
 
     response = await request(app.getHttpServer())
@@ -307,11 +310,14 @@ describe("templateController", () => {
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
     expect(response.body.result).toEqual(
-      [t2, t1].map((t) => ({
-        ...t.toPlain(),
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-      })),
+      [t2, t1].map((t) => {
+        const { passportLockEnabled: _passportLockEnabled, ...plain } = t.toPlain();
+        return {
+          ...plain,
+          createdAt: t.createdAt.toISOString(),
+          updatedAt: t.updatedAt.toISOString(),
+        };
+      }),
     );
 
     response = await request(app.getHttpServer())
@@ -325,11 +331,14 @@ describe("templateController", () => {
         cursor: null,
         total_count: 1,
       },
-      result: [t2].map((p) => ({
-        ...p.toPlain(),
-        createdAt: p.createdAt.toISOString(),
-        updatedAt: p.updatedAt.toISOString(),
-      })),
+      result: [t2].map((p) => {
+        const { passportLockEnabled: _passportLockEnabled, ...plain } = p.toPlain();
+        return {
+          ...plain,
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString(),
+        };
+      }),
     });
   });
 
