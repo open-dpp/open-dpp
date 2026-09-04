@@ -76,5 +76,5 @@
       "node_modules/(?!.*(@open-dpp|uuid))"
     ]
   },
-  "packageManager": "pnpm@11.6.0"
+  "packageManager": "pnpm@11.11.0"
 }
