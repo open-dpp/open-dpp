@@ -45,7 +45,7 @@
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
-    "@rekog/mcp-nest": "^1.9.10",
+    "@rekog/mcp-nest": "^2.0.2",
     "archiver": "^7.0.1",
     "axios": "^1.17.0",
     "better-auth": "^1.6.17",
