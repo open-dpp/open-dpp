@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   DigitalProductDocumentStatusDto,
   InvitationStatusDto,
+  MeDtoSchema,
   SubmodelElementSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -27,23 +28,31 @@ import {
   submodelValueResponse,
 } from "./handlers/aas";
 import { aasPropertiesWithParent, connection, connectionList } from "./handlers/aas-integration";
+import {
+  bulkImportConfig1,
+  bulkImportConfig2,
+  bulkImportRun1,
+  bulkImportRun1Interrupted,
+  bulkImportRunItem1,
+} from "./handlers/bulk-import";
 import { passport1, passport2 } from "./handlers/passports";
 import { template1, template2 } from "./handlers/templates";
 
 import { server } from "./msw.server";
-import { userInvitation } from "./handlers/users";
+import { meResponse, userInvitation } from "./handlers/users";
 import {
   activity1,
   activity2,
   digitalProductDocumentId,
   periodParams,
 } from "./handlers/digital-product-documents";
+import { DEFAULT_API_URL } from "../../src/urls";
 
 describe("apiClient", () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
-  const baseURL = "https://api.cloud.open-dpp.de";
+  const baseURL = DEFAULT_API_URL;
 
   describe("organizations", () => {
     it("should return organizations", async () => {
@@ -79,6 +88,54 @@ describe("apiClient", () => {
       });
       const response = await sdk.dpp.users.getInvitations({ status: InvitationStatusDto.PENDING });
       expect(response.data).toEqual([userInvitation]);
+    });
+
+    it("should get the current user via GET /users/me", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.getMe();
+      expect(response.status).toEqual(200);
+      expect(response.data.user.email).toEqual(meResponse.user.email);
+      expect(response.data.pendingEmailChange).toBeNull();
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should update the profile via PATCH /users/me", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.updateProfile({
+        firstName: "Renamed",
+        preferredLanguage: "de",
+      });
+      expect(response.status).toEqual(200);
+      expect(response.data.user.firstName).toEqual("Renamed");
+      expect(response.data.user.preferredLanguage).toEqual("de");
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should request an email change via POST /users/me/email-change", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.requestEmailChange({
+        newEmail: "fresh@example.com",
+        currentPassword: "current-password",
+      });
+      expect(response.status).toEqual(202);
+      expect(response.data.pendingEmailChange?.newEmail).toEqual("fresh@example.com");
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
+    });
+
+    it("should cancel the pending email change via DELETE /users/me/email-change", async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      });
+      const response = await sdk.dpp.users.cancelEmailChange();
+      expect(response.status).toEqual(200);
+      expect(response.data.pendingEmailChange).toBeNull();
+      expect(MeDtoSchema.safeParse(response.data).success).toBe(true);
     });
   });
 
@@ -185,13 +242,11 @@ describe("apiClient", () => {
             period: periodParams,
           },
         );
-        expect(JSON.stringify(response.headers)).toEqual(
-          JSON.stringify({
-            "content-disposition": 'attachment; filename="data.zip"',
-            "content-length": "0",
-            "content-type": "application/zip",
-          }),
-        );
+        expect(JSON.parse(JSON.stringify(response.headers))).toEqual({
+          "content-disposition": 'attachment; filename="data.zip"',
+          "content-length": "0",
+          "content-type": "application/zip",
+        });
       });
     },
   );
@@ -313,6 +368,15 @@ describe("apiClient", () => {
       expect(response.data).toEqual(submodelCarbonFootprintResponse);
     });
 
+    it("should move submodel", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.moveSubmodel(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        { position: 0 },
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse);
+    });
+
     it("should create submodel element", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.createSubmodelElement(
         aasWrapperId,
@@ -328,6 +392,16 @@ describe("apiClient", () => {
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
         propertyToAdd,
+      );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
+
+    it("should move submodel element", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.moveSubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        { position: 0 },
       );
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
     });
@@ -362,6 +436,79 @@ describe("apiClient", () => {
         "column1",
       );
       expect(response.status).toEqual(200);
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should reorder column of submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.reorderColumn(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "column1",
+        { position: 0 },
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should add column to group in submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.addColumnToGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        propertyModificationPlainFactory.build(),
+        { position: 4 },
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should modify column in group of submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyColumnInGroupOfSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+        propertyModificationPlainFactory.build({ idShort: "column1" }),
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should delete column from group in submodel element list", async () => {
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.deleteColumnFromGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+      );
+      expect(response.status).toEqual(200);
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should move column to group in submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.moveColumnToGroupInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "group1",
+        "column1",
+      );
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should create a group from an existing column in submodel element list", async () => {
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.createGroupFromColumnInSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "column1",
+        propertyModificationPlainFactory.build(),
+      );
       expect(response.data).toEqual(submodelDesignOfProductElement0);
     });
 
@@ -476,6 +623,92 @@ describe("apiClient", () => {
         AssetAdministrationShellType.Truck,
       );
       expect(response.data).toEqual(aasPropertiesWithParent);
+    });
+  });
+
+  describe("bulk-import", () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    });
+    sdk.setActiveOrganizationId(activeOrganization.id);
+
+    it("should create a config", async () => {
+      const response = await sdk.dpp.bulkImport.createConfig({
+        templateId: bulkImportConfig1.templateId,
+        name: bulkImportConfig1.name,
+        idField: bulkImportConfig1.idField,
+        submodelMappings: bulkImportConfig1.submodelMappings,
+        inputSample: bulkImportConfig1.inputSample,
+      });
+      expect(response.data).toEqual(bulkImportConfig1);
+    });
+
+    it("should return all configs", async () => {
+      const response = await sdk.dpp.bulkImport.getConfigs();
+      expect(response.data.result).toEqual([bulkImportConfig1, bulkImportConfig2]);
+    });
+
+    it("should return a config by id", async () => {
+      const response = await sdk.dpp.bulkImport.getConfigById(bulkImportConfig1.id);
+      expect(response.data).toEqual(bulkImportConfig1);
+    });
+
+    it("should update a config", async () => {
+      const response = await sdk.dpp.bulkImport.updateConfig(bulkImportConfig1.id, {
+        name: "Renamed export",
+        idField: bulkImportConfig1.idField,
+        submodelMappings: bulkImportConfig1.submodelMappings,
+      });
+      expect(response.data).toEqual({ ...bulkImportConfig1, name: "Renamed export" });
+    });
+
+    it("should delete a config", async () => {
+      const response = await sdk.dpp.bulkImport.deleteConfig(bulkImportConfig1.id);
+      expect(response.status).toEqual(204);
+    });
+
+    it("should create a run for a config", async () => {
+      const response = await sdk.dpp.bulkImport.createRun(bulkImportConfig1.id, {
+        rows: [{ sku: "4711" }, { sku: "4712" }],
+      });
+      expect(response.data).toEqual(bulkImportRun1);
+    });
+
+    it("should return all runs of a config", async () => {
+      const response = await sdk.dpp.bulkImport.getRunsForConfig(bulkImportConfig1.id);
+      expect(response.data.result).toEqual([bulkImportRun1]);
+    });
+
+    it("should return a run by id", async () => {
+      const response = await sdk.dpp.bulkImport.getRunById(bulkImportRun1.id);
+      expect(response.data).toEqual(bulkImportRun1);
+    });
+
+    it("should return the items of a run with pagination params", async () => {
+      const response = await sdk.dpp.bulkImport.getRunItems(bulkImportRun1.id, {
+        limit: paginationParams.limit,
+      });
+      expect(response.status).toEqual(200);
+      expect(response.data.result).toEqual([bulkImportRunItem1]);
+      expect(response.data.paging_metadata).toBeDefined();
+    });
+
+    it("should parse a file", async () => {
+      const file = new File([], "test.csv", { type: "text/csv" });
+      const response = await sdk.dpp.bulkImport.parseFile(file);
+      expect(response.data.rows).toEqual([{ sku: "4711" }, { sku: "4712" }]);
+    });
+
+    it("should create a run from uploaded file", async () => {
+      const file = new File([], "test.csv", { type: "text/csv" });
+      const response = await sdk.dpp.bulkImport.createRunUpload(bulkImportConfig1.id, file);
+      expect(response.data).toEqual(bulkImportRun1);
+    });
+
+    it("should interrupt a run", async () => {
+      const response = await sdk.dpp.bulkImport.interruptRun(bulkImportRun1.id);
+      expect(response.data).toEqual(bulkImportRun1Interrupted);
+      expect(response.status).toEqual(200);
     });
   });
 });

@@ -15,12 +15,13 @@ import {
   KeyTypesEnum,
   type LanguageTextDto,
   type LanguageType,
+  type MoveSubmodelElementDto,
+  MoveSubmodelElementSchema,
   type PagingParamsDto,
   Permissions,
   type PermissionType,
   PropertyJsonSchema,
   type PropertyRequestDto,
-  type ReferenceElementRequestDto,
   type SubmodelElementCollectionRequestDto,
   type SubmodelElementListRequestDto,
   type SubmodelElementModificationDto,
@@ -37,7 +38,7 @@ import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
-import { computed, type MaybeRefOrGetter, type Ref, ref, toRaw, toValue } from "vue";
+import { computed, type MaybeRefOrGetter, type Ref, ref, shallowRef, toRaw, toValue } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
@@ -50,6 +51,7 @@ import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
 import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
+import { type IAasMoveDialog, useAasMoveDialog } from "./aas-move-dialog.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -62,15 +64,21 @@ export interface AasEditorProps {
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
   status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
+  /** Called after a submodel/submodel-element move succeeds. Moves change idShort
+   * paths, which invalidates any data keyed by them (e.g. presentation config)
+   * that isn't part of the reloaded shell/submodel payload and must be refetched. */
+  onAfterMove?: () => Promise<void> | void;
 }
 
-export interface IAasEditor extends IAasDrawer, IPagination {
+export interface IAasEditor extends IAasDrawer, IPagination, IAasMoveDialog {
   init: () => Promise<void>;
   findTreeNodeByKey: (key: string, children?: TreeNode[]) => TreeNode | undefined;
   displayName: Ref<string>;
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
+  buildMoveMenu: (node: TreeNode) => void;
+  moveMenuItems: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
   deleteSubmodel: (submodelId: string) => Promise<void>;
   deleteSubmodelElement: (path: AasEditorPath) => Promise<void>;
@@ -95,6 +103,7 @@ export function useAasEditor({
   translate,
   openConfirm,
   status,
+  onAfterMove,
 }: AasEditorProps): IAasEditor {
   const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
   const displayName = ref<string>("");
@@ -118,6 +127,8 @@ export function useAasEditor({
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
+  const moveMenuItems = ref<MenuItem[]>([]);
+  const rawSubmodels = shallowRef<SubmodelResponseDto[]>([]);
 
   const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({
     translate,
@@ -130,9 +141,8 @@ export function useAasEditor({
     try {
       const response = await aasNamespace.getSubmodels(id, pagingParams);
       if (response.status === HTTPCode.OK) {
-        submodels.value = convertSubmodelsToTree(
-          SubmodelJsonSchema.array().parse(response.data.result),
-        );
+        rawSubmodels.value = SubmodelJsonSchema.array().parse(response.data.result);
+        submodels.value = convertSubmodelsToTree(rawSubmodels.value);
         return response.data;
       } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
@@ -252,7 +262,6 @@ export function useAasEditor({
       response.status === HTTPCode.CREATED ||
       response.status === HTTPCode.NO_CONTENT
     ) {
-      await pagination.reloadCurrentPage();
       drawer.hideDrawer();
     }
   }
@@ -493,6 +502,7 @@ export function useAasEditor({
         "pi pi-calendar-clock",
         DataTypeDef.DateTime,
       ),
+      buildPropertyEntry(translate(`${translatePrefix}.link`), "pi pi-link", DataTypeDef.AnyUri),
       {
         label: translate(`${translatePrefix}.file`),
         icon: "pi pi-file-plus",
@@ -504,20 +514,6 @@ export function useAasEditor({
             title: translate(`${translatePrefix}.file`),
             path,
             callback: async (data: FileRequestDto) => createFile(path, data),
-          });
-        },
-      },
-      {
-        label: translate(`${translatePrefix}.link`),
-        icon: "pi pi-link",
-        command: (_event: MenuItemCommandEvent) => {
-          drawer.openDrawer({
-            type: AasSubmodelElements.ReferenceElement,
-            data: {},
-            mode: EditorMode.CREATE,
-            title: translate(`${translatePrefix}.link`),
-            path,
-            callback: async (data: any) => createLink(path, data),
           });
         },
       },
@@ -538,7 +534,7 @@ export function useAasEditor({
       },
       {
         label: translate(`${translatePrefix}.submodelElementList`),
-        icon: "pi pi-list",
+        icon: "pi pi-table",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementList,
@@ -596,6 +592,7 @@ export function useAasEditor({
               path.idShortPath,
             );
             await finalizeApiRequest({ status: response.status });
+            await pagination.reloadCurrentPage();
           }
         } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
@@ -628,6 +625,7 @@ export function useAasEditor({
         try {
           const response = await aasNamespace.deleteSubmodelById(id, submodelId);
           await finalizeApiRequest({ status: response.status });
+          await pagination.reloadCurrentPage();
         } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
             translate(`${translatePrefix}.errorRemoveSubmodel`),
@@ -636,6 +634,151 @@ export function useAasEditor({
         }
       },
     });
+  }
+
+  /** Finds the ordered list of siblings a node belongs to, and its index within
+   * them, by walking the tree — the node's own siblings are whichever array
+   * (top-level `submodels`, or some ancestor's `children`) actually contains it. */
+  function findSiblingsAndIndex(
+    key: string,
+    nodes: TreeNode[] = submodels.value,
+  ): { siblings: TreeNode[]; index: number } | undefined {
+    const index = nodes.findIndex((n) => n.key === key);
+    if (index !== -1) {
+      return { siblings: nodes, index };
+    }
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        const found = findSiblingsAndIndex(key, node.children);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  }
+
+  async function moveSubmodelElementTo(path: AasEditorPath, options: MoveSubmodelElementDto) {
+    try {
+      if (path.submodelId && path.idShortPath) {
+        const response = await aasNamespace.moveSubmodelElement(
+          id,
+          path.submodelId,
+          path.idShortPath,
+          MoveSubmodelElementSchema.parse(options),
+        );
+        await finalizeApiRequest({ status: response.status });
+        // The move can change idShort paths, so anything keyed by them
+        // (access permission rules, presentation config) must be refetched.
+        await Promise.all([
+          pagination.reloadCurrentPage(),
+          fetchAssetAdministrationShell(),
+          onAfterMove?.(),
+        ]);
+      }
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(
+        translate(`${translatePrefix}.errorMoveSubmodelElement`),
+        error,
+      );
+    }
+  }
+
+  async function moveSubmodelTo(submodelId: string, position: number) {
+    try {
+      const response = await aasNamespace.moveSubmodel(id, submodelId, { position });
+      await finalizeApiRequest({ status: response.status });
+      await Promise.all([
+        pagination.reloadCurrentPage(),
+        fetchAssetAdministrationShell(),
+        onAfterMove?.(),
+      ]);
+    } catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(
+        translate(`${translatePrefix}.errorMoveSubmodel`),
+        error,
+      );
+    }
+  }
+
+  const moveDialog = useAasMoveDialog({
+    rawSubmodels,
+    errorHandlingStore,
+    translate,
+    moveSubmodelElementTo,
+  });
+
+  function buildMoveMenu(node: TreeNode) {
+    const moveUpLabel = translate("common.moveUp");
+    const moveDownLabel = translate("common.moveDown");
+
+    if (node.data.modelType === KeyTypes.Submodel) {
+      const pageIndex = submodels.value.findIndex((n) => n.key === node.key);
+      if (pageIndex === -1) {
+        moveMenuItems.value = [];
+        return;
+      }
+      const absolutePosition = pagination.currentPage.value.from + pageIndex;
+      const canMoveUp = pageIndex > 0 || pagination.hasPrevious.value;
+      const canMoveDown = pageIndex < submodels.value.length - 1 || pagination.hasNext.value;
+      moveMenuItems.value = [
+        {
+          label: moveUpLabel,
+          icon: "pi pi-arrow-up",
+          disabled: !canMoveUp,
+          command: async () => {
+            await moveSubmodelTo(node.key as string, absolutePosition - 1);
+          },
+        },
+        {
+          label: moveDownLabel,
+          icon: "pi pi-arrow-down",
+          disabled: !canMoveDown,
+          command: async () => {
+            await moveSubmodelTo(node.key as string, absolutePosition + 1);
+          },
+        },
+      ];
+      return;
+    }
+
+    const found = findSiblingsAndIndex(node.key as string);
+    if (!found) {
+      moveMenuItems.value = [];
+      return;
+    }
+    const { siblings, index } = found;
+    const path = toRaw(node.data.path) as AasEditorPath;
+    moveMenuItems.value = [
+      {
+        label: moveUpLabel,
+        icon: "pi pi-arrow-up",
+        disabled: index <= 0,
+        command: async () => {
+          await moveSubmodelElementTo(path, { position: index - 1 });
+        },
+      },
+      {
+        label: moveDownLabel,
+        icon: "pi pi-arrow-down",
+        disabled: index >= siblings.length - 1,
+        command: async () => {
+          await moveSubmodelElementTo(path, { position: index + 1 });
+        },
+      },
+      // Omitted rather than disabled when there's nothing to move into (e.g.
+      // the element has no sibling/ancestor containers besides its own
+      // current parent) — a picker with no valid target would be dead weight.
+      ...(moveDialog.hasMoveToTarget(path)
+        ? [
+            {
+              label: translate("common.moveTo"),
+              icon: "pi pi-sign-in",
+              command: () => {
+                moveDialog.openMoveToDialog(path);
+              },
+            },
+          ]
+        : []),
+    ];
   }
 
   async function createSubmodelElementList(
@@ -658,14 +801,6 @@ export function useAasEditor({
       path,
       { modelType: AasSubmodelElements.SubmodelElementCollection, ...data },
       "submodelElementCollection",
-    );
-  }
-
-  async function createLink(path: AasEditorPath, data: ReferenceElementRequestDto) {
-    await createSubmodelElement(
-      path,
-      { ...data, modelType: AasSubmodelElements.ReferenceElement },
-      "link",
     );
   }
 
@@ -702,6 +837,7 @@ export function useAasEditor({
         await finalizeApiRequest(response);
 
         if (selectSubmodelElementAfterCreation) {
+          await pagination.reloadCurrentPage();
           const submodelIdShort =
             submodels.value.find((n) => n.key === path.submodelId)?.data.plain.idShort ?? "";
           const key = path.idShortPath
@@ -733,6 +869,9 @@ export function useAasEditor({
     submodelElementsToAdd,
     openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
+    buildMoveMenu,
+    moveMenuItems,
+    ...moveDialog,
     createSubmodel,
     deletePolicyBySubjectAndObject,
     deleteSubmodel,

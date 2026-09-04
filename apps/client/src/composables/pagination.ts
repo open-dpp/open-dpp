@@ -13,7 +13,7 @@ export interface Page {
 }
 
 export interface PagingResult {
-  paging_metadata: { cursor: Cursor };
+  paging_metadata: { cursor: Cursor; total_count?: number };
   result: any[];
 }
 
@@ -32,6 +32,8 @@ export interface IPagination {
   previousPage: () => Promise<Page>;
   currentPage: Ref<Page>;
   reloadCurrentPage: () => Promise<void>;
+  // Total number of items across all pages, or null when the endpoint does not report it.
+  totalCount: Ref<number | null>;
 }
 
 export function usePagination({
@@ -43,6 +45,7 @@ export function usePagination({
   const startCursor = ref<string | null>(initialCursor ?? null);
   const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
   const currentPageIndex = ref<number>(0);
+  const totalCount = ref<number | null>(null);
   const currentPage = ref<Page>({
     cursor: startCursor.value,
     from: 0,
@@ -54,7 +57,17 @@ export function usePagination({
     return currentPage.value.cursor !== startCursor.value;
   });
 
+  const isLastPage = ref(false);
+
+  const fetchPage = async (cursor: Cursor): Promise<PagingResult> => {
+    const response = await fetchCallback({ cursor: cursor ?? undefined, limit });
+    isLastPage.value = response.paging_metadata.cursor === null;
+    totalCount.value = response.paging_metadata.total_count ?? null;
+    return response;
+  };
+
   const hasNext = computed(() => {
+    if (isLastPage.value) return false;
     return currentPage.value.itemCount === currentPage.value.to - currentPage.value.from + 1;
   });
 
@@ -95,13 +108,11 @@ export function usePagination({
       nextPage = pages.value[currentPageIndex.value]!;
     }
 
-    const response = await fetchCallback({
-      cursor: nextPage.cursor ?? undefined,
-      limit,
-    });
+    const response = await fetchPage(nextPage.cursor);
     nextPage.itemCount = response.result.length;
-    if (!findPageByCursor(response.paging_metadata.cursor)) {
-      addPage(response.paging_metadata.cursor);
+    const nextCursor = response.paging_metadata.cursor;
+    if (nextCursor !== null && !findPageByCursor(nextCursor)) {
+      addPage(nextCursor);
     }
     await updateCurrentPage();
 
@@ -115,19 +126,16 @@ export function usePagination({
     } else {
       previousPage = currentPage.value;
     }
-    await fetchCallback({ cursor: previousPage.cursor ?? undefined, limit });
+    await fetchPage(previousPage.cursor);
     await updateCurrentPage();
     return previousPage;
   };
 
   const reloadPage = async (page: Page) => {
-    const response = await fetchCallback({
-      cursor: page.cursor ?? undefined,
-      limit,
-    });
+    const response = await fetchPage(page.cursor);
     page.itemCount = response.result.length;
     const nextPage = findNextPage(page);
-    if (nextPage) {
+    if (nextPage && response.paging_metadata.cursor !== null) {
       nextPage.cursor = response.paging_metadata.cursor;
     }
   };
@@ -153,5 +161,6 @@ export function usePagination({
     previousPage,
     currentPage,
     reloadCurrentPage,
+    totalCount,
   };
 }

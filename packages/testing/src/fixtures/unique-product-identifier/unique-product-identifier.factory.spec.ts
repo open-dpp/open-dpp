@@ -80,6 +80,32 @@ describe("uniqueProductIdentifierPlainFactory", () => {
     });
   });
 
+  describe("permalink field", () => {
+    it("defaults to null on system rows", () => {
+      const result = uniqueProductIdentifierPlainFactory.build();
+      expect(result.permalink).toBeNull();
+    });
+
+    it("defaults to null on GS1 rows", () => {
+      const result = uniqueProductIdentifierPlainFactory.build({}, { transient: { gs1: true } });
+      expect(result.permalink).toBeNull();
+    });
+
+    it("accepts a permalink summary override that still parses", () => {
+      const permalink = {
+        id: randomUUID(),
+        kind: "gs1-link" as const,
+        publicUrl: "https://dpp.example.com/my-slug",
+      };
+      const result = uniqueProductIdentifierPlainFactory.build(
+        { permalink },
+        { transient: { gs1: true } },
+      );
+      expect(result.permalink).toEqual(permalink);
+      expect(() => UniqueProductIdentifierListItemDtoSchema.parse(result)).not.toThrow();
+    });
+  });
+
   describe("array of mixed rows parses against UPI list/list-item schema", () => {
     it("builds an array with mixed system and GS1 rows that parses against UniqueProductIdentifierListDtoSchema", () => {
       const systemRow = uniqueProductIdentifierPlainFactory.build();

@@ -2,6 +2,7 @@ import type { AxiosInstance } from "axios";
 import type { ApiClientOptions, IApiClient } from "../api-client";
 import { createAxiosClient } from "../api-client";
 import { BrandingNamespace } from "./branding/branding.namespace";
+import { BulkImportNamespace } from "./bulk-import/bulk-import.namespace";
 import { InstanceSettingsNamespace } from "./instance-settings/instance-settings.namespace";
 import { AasIntegrationNamespace } from "./integrations/aas-integration.namespace";
 import { OrganizationsNamespace } from "./organizations/organizations.namespace";
@@ -10,12 +11,14 @@ import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
 import { TemplatesNamespace } from "./templates/templates.namespace";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { UsersNamespace } from "./users/users.namespace";
+import { DEFAULT_API_URL } from "../urls";
 
 export class DppApiClient implements IApiClient {
   public organizations!: OrganizationsNamespace;
   public templates!: TemplatesNamespace;
   public passports!: PassportNamespace;
   public branding!: BrandingNamespace;
+  public bulkImport!: BulkImportNamespace;
 
   public permalinks!: PermalinksNamespace;
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace;
@@ -41,12 +44,13 @@ export class DppApiClient implements IApiClient {
   }
 
   private createNewAxiosInstance() {
-    this.axiosInstance = createAxiosClient(this.options, "https://api.cloud.open-dpp.de");
+    this.axiosInstance = createAxiosClient(this.options, DEFAULT_API_URL);
     this.organizations = new OrganizationsNamespace(this.axiosInstance);
 
     this.templates = new TemplatesNamespace(this.axiosInstance);
     this.passports = new PassportNamespace(this.axiosInstance);
     this.branding = new BrandingNamespace(this.axiosInstance);
+    this.bulkImport = new BulkImportNamespace(this.axiosInstance);
     this.aasIntegration = new AasIntegrationNamespace(this.axiosInstance);
 
     this.permalinks = new PermalinksNamespace(this.axiosInstance);

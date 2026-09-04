@@ -13,8 +13,6 @@ export class UniqueProductIdentifiersNamespace {
 
   constructor(private readonly axiosInstance: AxiosInstance) {}
 
-  // The server returns the standard cursor envelope ({ paging_metadata, result }),
-  // matching the sibling Permalink backoffice list.
   public async list(params?: CursorListParams) {
     return this.axiosInstance.get<UniqueProductIdentifierPaginationDto>(this.endpoint, {
       params,
@@ -28,11 +26,9 @@ export class UniqueProductIdentifiersNamespace {
   }
 
   public async create(data: CreateGs1UniqueProductIdentifierRequest) {
-    return this.axiosInstance.post(this.endpoint, data);
+    return this.axiosInstance.post<UniqueProductIdentifierListItemDto>(this.endpoint, data);
   }
 
-  // Create an internal (OPEN_DPP_UUID) UPI — the server mints its uuid; no identity
-  // payload. Returns the created list-item snapshot. See ADR 0005.
   public async createInternal(data: CreateInternalUniqueProductIdentifierRequest) {
     return this.axiosInstance.post<UniqueProductIdentifierListItemDto>(
       `${this.endpoint}/internal`,
@@ -41,7 +37,10 @@ export class UniqueProductIdentifiersNamespace {
   }
 
   public async update(uuid: string, data: UpdateGs1UniqueProductIdentifierRequest) {
-    return this.axiosInstance.patch(`${this.endpoint}/${encodeURIComponent(uuid)}`, data);
+    return this.axiosInstance.patch<UniqueProductIdentifierListItemDto>(
+      `${this.endpoint}/${encodeURIComponent(uuid)}`,
+      data,
+    );
   }
 
   public async delete(uuid: string) {

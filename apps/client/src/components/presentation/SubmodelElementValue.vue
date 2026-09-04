@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type {
   PresentationConfigurationDto,
-  ReferenceValue,
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
@@ -11,10 +10,11 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
-import PresentationComponentRenderer from "./components/PresentationComponentRenderer.vue";
-import List from "./List.vue";
-import Reference from "./Reference.vue";
+import PresentationComponentRenderer from "./PresentationComponentRenderer.vue";
+import List from "./Table.vue";
 import SubmodelElementCollection from "./SubmodelElementCollection.vue";
+import { z } from "zod";
+import { isSafeHref } from "../../lib/urls.ts";
 
 const { element, path, config } = defineProps<{
   element: SubmodelElementResponseDto;
@@ -48,14 +48,19 @@ const permalinkIdOrSlug = computed(() => String(route.params.permalink ?? ""));
           binary
         />
       </template>
+      <template v-else-if="element.valueType === DataTypeDef.AnyUri && isSafeHref(element.value)">
+        <a
+          :href="String(element.value)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary-500 mt-1 text-sm/6 hover:underline sm:mt-2"
+          >{{ element.value }}</a
+        >
+      </template>
       <template v-else>
         {{ element.value }}
       </template>
     </dd>
-    <Reference
-      v-else-if="element.modelType === 'ReferenceElement'"
-      :model="element.value as ReferenceValue"
-    />
     <MediaFieldView
       v-else-if="element.modelType === 'File' && typeof element.value === 'string'"
       :media-id="element.value"

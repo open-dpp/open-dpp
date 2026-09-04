@@ -1,45 +1,42 @@
-# open-dpp
+# open-dpp — Domain Language
 
-Open-source platform for managing Digital Product Passports (DPPs) based on the IEC 63278 Asset Administration Shell standard. This glossary captures the project-specific language; it is not a spec.
+Glossary of terms specific to open-dpp. Definitions describe what each term _is_, not how it is implemented. Currently focused on the identity / account-management area; extend as other areas are resolved.
 
-## Language
+## Identity & Account
 
-### Product Identification
+**User**:
+A person who can sign in. Distinct from the Organization(s) they belong to, from their Profile (their editable settings), and from their Account(s) (their links to authentication methods).
+_Not to be confused with_: Account (a User's link to an authentication method) or Member (a User's link to an Organization).
 
-**Unique Product Identifier (UPI)**:
-The first-class record that identifies a product. It carries an identifier _type_ and, for a GS1 UPI, _owns_ the GS1 identity. It references the passport it identifies — the identity lives on the UPI, not on the passport. A passport may have **many** GS1 UPIs (e.g. one per batch/serial); each GS1 key is globally unique.
-_Avoid_: external identifier (that names the type, not the record)
+**Account**:
+A User's link to an authentication method, holding the secret for that method. Today a User authenticates with a password, so each has a single Account holding it; the concept also allows for additional methods (e.g. an external identity provider). The password on the Account is what a User re-enters to re-confirm their identity before a sensitive change (see Email Change Request).
 
-**GS1 UPI**:
-A UPI whose type is `GS1`. It owns a GS1 identity (a GTIN plus its key qualifiers).
+**Profile**:
+The User-editable subset of their own account: name and preferred language. Editing the email address is _not_ part of profile editing — it follows the Email Change flow.
 
-**GS1 Identity**:
-The GTIN plus its key qualifiers carried by a GS1 UPI. It belongs to the UPI; "a passport's GS1 identity" is shorthand for "a GS1 UPI that references that passport" (a passport may have several).
+**Email Change Request**:
+A standing authorization for a User to move to a new email address. The change only completes while this authorization exists; removing it (see Revoke) prevents completion even if the verification link is clicked. At most one is outstanding per User.
+_Avoid_: pending email, shadow row (implementation term).
 
-**GTIN**:
-The GS1 Global Trade Item Number that anchors a GS1 identity. Stored normalized to GTIN-14.
+**Pending Email Change**:
+The user-facing state shown while an Email Change Request is outstanding — the target address and when it was requested.
 
-**Permalink**:
-A public, shareable resolver for a digital product passport. A permalink resolves to a passport's presentation; it may _additionally_ be a GS1 Digital Link by referencing a GS1 UPI and carrying GS1 data attributes. Every permalink has a single base URL (see **Permalink Base URL**) that serves both shapes.
-_Avoid_: short link, public URL (that names the rendered string, not the record)
+**Revoke**:
+Cancelling an outstanding Email Change Request so that completion is _guaranteed_ not to happen, even if the verification link is later clicked. Distinct from the verification token's natural expiry, which merely lets the request lapse on its own.
+_Avoid_: cancel (used interchangeably in UI, but Revoke is the precise term for the guarantee).
 
-**Presentation Permalink**:
-A permalink that resolves to a passport's presentation. A passport may have several; one is its primary. Created automatically and manageable in the permalink list.
+**Preferred Language**:
+The User's chosen UI language, persisted on the User and mirrored to the browser locale on load and on save.
 
-**GS1 Digital Link Permalink**:
-A permalink that represents a GS1 Digital Link: it references a GS1 UPI (at most one such permalink per UPI), carries optional GS1 data attributes, and may also reference a presentation configuration. Created on demand (the "add a GS1 Digital Link?" prompt, or directly). Its resolver base is the permalink's base URL — there is no separate GS1 resolver base.
+## Organization & Membership
 
-**Primary Permalink**:
-The single presentation permalink that provides a passport's canonical public URL; the public resolver falls back to it. Exactly one per passport; it cannot be deleted while it is the passport's last presentation permalink.
+**Member**:
+A User's link to an Organization, carrying a role within it — Owner or Member. A User can be a Member of several Organizations.
+_Not to be confused with_: User (the person) or the "member" role (the non-Owner role a Member can hold).
 
-**GS1 Digital Link**:
-The GS1-standard URL form carried by a QR code and resolved to a passport. Its **base** is the permalink's base URL; its **path** comes from the GS1 UPI's identity (`…/01/{gtin}/10/{batch}/21/{serial}`); its **query string** comes from the permalink's GS1 data attributes (`?17=…&3103=…`). Owned by the permalink, which holds the UPI reference, the base URL, and the data attributes.
+**Owner**:
+The privileged Member role of an Organization. Only Owners may change other Members' roles or remove Members.
 
-**Permalink Base URL**:
-The single host a permalink renders against, for both kinds: the page URL of a presentation permalink (`base/{slug}`) and the resolver base of a GS1 Digital Link (`base/01/{gtin}/…`). Resolved through one cascade — the permalink's own `baseUrl`, then the org's branding base URL, then the instance default. There is no separate GS1 resolver base.
-
-**GS1 Data Attributes**:
-Optional GS1 Application Identifiers appended to a GS1 Digital Link's query string (e.g. expiry `17`, net weight `3103`). A link-level concern carried by the permalink, distinct from the identity's key qualifiers.
-
-**Key Qualifiers**:
-The GS1 Application Identifiers that qualify a GTIN within the identity — batch/lot (`10`) and serial (`21`) today. Part of the GS1 UPI's identity (the digital link path), distinct from GS1 data attributes.
+**Member Removal**:
+An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
+_Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).

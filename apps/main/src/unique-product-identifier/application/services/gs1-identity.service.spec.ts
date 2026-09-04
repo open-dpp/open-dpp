@@ -3,12 +3,14 @@ import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { NotFoundException } from "@nestjs/common";
+import { PermalinkKind } from "@open-dpp/dto";
 import { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
 import { Gs1IdentityService } from "./gs1-identity.service";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
-const RESOLVER_BASE = "https://id.example.com";
+const RESOLVER_BASE = "https://id.example.com/p";
+const RESOLVER_ORIGIN = "https://id.example.com";
 
 function makeService(overrides?: {
   upiRepo?: Partial<{
@@ -22,12 +24,11 @@ function makeService(overrides?: {
     loadBranding: jest.Mock;
   }>;
   permalinkRepo?: Partial<{
-    findAllByPassportId: jest.Mock;
-    findPrimaryByPassportId: jest.Mock;
     findGs1LinkByUpiId: jest.Mock;
   }>;
-  gs1ResolverBaseService?: Partial<{
+  baseUrlResolver?: Partial<{
     getResolverBase: jest.Mock;
+    loadBrandingOrNull: jest.Mock;
   }>;
 }) {
   const upiRepo = {
@@ -43,27 +44,22 @@ function makeService(overrides?: {
     ...overrides?.permalinkService,
   };
   const permalinkRepo = {
-    findAllByPassportId: jest.fn(),
-    findPrimaryByPassportId: jest.fn(),
     findGs1LinkByUpiId: jest.fn(async () => undefined),
     ...overrides?.permalinkRepo,
   };
-  const gs1ResolverBaseService = {
+  const baseUrlResolver = {
     getResolverBase: jest.fn(async () => RESOLVER_BASE),
-    ...overrides?.gs1ResolverBaseService,
+    loadBrandingOrNull: jest.fn(async () => null),
+    ...overrides?.baseUrlResolver,
   };
   const service = new Gs1IdentityService(
     upiRepo as never,
     permalinkService as never,
     permalinkRepo as never,
-    gs1ResolverBaseService as never,
+    baseUrlResolver as never,
   );
-  return { service, upiRepo, permalinkService, permalinkRepo, gs1ResolverBaseService };
+  return { service, upiRepo, permalinkService, permalinkRepo, baseUrlResolver };
 }
-
-// ---------------------------------------------------------------------------
-// Slice 38 — structural assertions: the service must NOT contain write paths
-// ---------------------------------------------------------------------------
 
 describe("Slice 38 — Gs1IdentityService source must not contain write paths", () => {
   const serviceSrc = readFileSync(
@@ -79,7 +75,6 @@ describe("Slice 38 — Gs1IdentityService source must not contain write paths", 
   });
 
   it("does not contain a setIdentity method", () => {
-    // The method name must not appear as a method definition
     expect(serviceSrc).not.toMatch(/\bsetIdentity\b/);
   });
 
@@ -88,27 +83,15 @@ describe("Slice 38 — Gs1IdentityService source must not contain write paths", 
   });
 
   it("does not perform a GS1 write via findByReferenceIdAndType(GS1) — only getIdentity (read) is allowed", () => {
-    // The service is allowed to call findByReferenceIdAndType for getIdentity (read),
-    // but there must be exactly one call site (the getIdentity method) and it must not
-    // be wrapped inside a write (save) path. We check that `save` is no longer called
-    // alongside findByReferenceIdAndType.
-    //
-    // Structural check: no call to repo.save() remains in the service at all
-    // (writes moved to UpiCollectionService).
     expect(serviceSrc).not.toMatch(/\brepo\.save\b|\buniqueProductIdentifierRepository\.save\b/);
   });
 
-  it("delegates getResolverBase to Gs1ResolverBaseService (no duplicate implementation)", () => {
-    // The service must inject Gs1ResolverBaseService; it must NOT define its own
-    // getResolverBase cascade (that lives in Gs1ResolverBaseService now).
+  it("delegates getResolverBase to BaseUrlResolver (no duplicate cascade)", () => {
+    expect(serviceSrc).toContain("baseUrlResolver.getResolverBase");
     expect(serviceSrc).not.toContain("loadOrgResolverOverride");
     expect(serviceSrc).not.toContain("loadInstanceResolverSetting");
   });
 });
-
-// ---------------------------------------------------------------------------
-// getIdentity — still present and working
-// ---------------------------------------------------------------------------
 
 describe("Gs1IdentityService.getIdentity", () => {
   it("returns the GS1 identity with the assembled Digital Link", async () => {
@@ -129,7 +112,7 @@ describe("Gs1IdentityService.getIdentity", () => {
       gtin: VALID_GTIN13_AS_14,
       batch: "LOT-42",
       serial: "SN-001",
-      digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
     });
   });
 
@@ -140,27 +123,25 @@ describe("Gs1IdentityService.getIdentity", () => {
     expect(await service.getIdentity(randomUUID())).toBeNull();
   });
 
-  it("builds the Digital Link against the configured instance resolver base (delegates to Gs1ResolverBaseService)", async () => {
+  it("builds the Digital Link against the configured instance resolver base (delegates to BaseUrlResolver)", async () => {
     const referenceId = randomUUID();
     const organizationId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const { service, gs1ResolverBaseService } = makeService({
+    const { service, baseUrlResolver } = makeService({
       upiRepo: { findByReferenceIdAndType: jest.fn(async () => upi) },
-      gs1ResolverBaseService: {
-        getResolverBase: jest.fn(async () => "https://id.instance.example.com"),
+      baseUrlResolver: {
+        getResolverBase: jest.fn(async () => "https://id.instance.example.com/p"),
       },
     });
 
     const result = await service.getIdentity(referenceId, organizationId);
 
-    expect(result?.digitalLink).toBe(`https://id.instance.example.com/01/${VALID_GTIN13_AS_14}`);
-    expect(gs1ResolverBaseService.getResolverBase).toHaveBeenCalledWith(organizationId);
+    expect(result?.digitalLink).toBe(
+      `https://id.instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
+    );
+    expect(baseUrlResolver.getResolverBase).toHaveBeenCalledWith(organizationId);
   });
 });
-
-// ---------------------------------------------------------------------------
-// resolveGs1KeyToPublicUrl — still present and working
-// ---------------------------------------------------------------------------
 
 describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
   it("404s when no GS1 UPI carries the key", async () => {
@@ -180,18 +161,17 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       batch: "LOT-42",
       serial: "SN-001",
     });
-    const permalink = { id: randomUUID() };
+    const gs1LinkPermalink = { id: randomUUID(), slug: null };
     const passport = { organizationId: randomUUID() };
     const { service, upiRepo } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findPrimaryByPassportId: jest.fn(async () => permalink) },
+      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink, passport })),
+        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => ({ permalinkBaseUrl: null })),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
-          permalink,
-          publicUrl: "https://instance.example.com/p/my-slug",
+          permalink: gs1LinkPermalink,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -209,66 +189,20 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     });
   });
 
-  it("404s when the passport has no primary permalink (findPrimaryByPassportId → undefined)", async () => {
+  it("resolves to the gs1-link's own viewer URL (publish-gated by resolveToPassport)", async () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const { service } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findPrimaryByPassportId: jest.fn(async () => undefined) },
-    });
-    await expect(service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 })).rejects.toThrow(
-      NotFoundException,
-    );
-  });
-
-  it("resolves via the PRIMARY permalink when the passport has two and the non-first is primary", async () => {
-    const referenceId = randomUUID();
-    const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const nonPrimaryPermalink = { id: randomUUID() };
-    const primaryPermalink = { id: randomUUID() };
+    const gs1LinkPermalink = { id: randomUUID(), slug: "my-slug" };
     const passport = { organizationId: randomUUID() };
-    const branding = { permalinkBaseUrl: null };
-    // findPrimaryByPassportId returns the second permalink (primary), not the first
-    const { service, permalinkService, permalinkRepo } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findPrimaryByPassportId: jest.fn(async () => primaryPermalink) },
-      permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: primaryPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => branding),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
-          permalink: primaryPermalink,
-          publicUrl: `https://instance.example.com/p/${primaryPermalink.id}`,
-        })),
-      },
-    });
-
-    const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
-
-    // Resolution went through the PRIMARY (second) permalink, not the first
-    expect(permalinkRepo.findPrimaryByPassportId).toHaveBeenCalledWith(referenceId);
-    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(primaryPermalink.id, undefined);
-    expect(url).toContain(primaryPermalink.id);
-    // The non-primary permalink's id is NOT in the URL
-    expect(url).not.toContain(nonPrimaryPermalink.id);
-  });
-
-  it("resolves to the permalink public URL (publish-gated by resolveToPassport)", async () => {
-    const referenceId = randomUUID();
-    const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const permalink = { id: randomUUID() };
-    const passport = { organizationId: randomUUID() };
-    const branding = { permalinkBaseUrl: null };
     const { service, permalinkService } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findPrimaryByPassportId: jest.fn(async () => permalink) },
+      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink, passport })),
+        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => branding),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
-          permalink,
-          publicUrl: "https://instance.example.com/p/my-slug",
+          permalink: gs1LinkPermalink,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -276,16 +210,16 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
     expect(url).toBe("https://instance.example.com/p/my-slug");
-    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(permalink.id, undefined);
+    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalink.id, undefined);
   });
 
   it("propagates the NotFound gate when the passport is unpublished (anonymous)", async () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const permalink = { id: randomUUID() };
+    const gs1LinkPermalink = { id: randomUUID(), slug: null };
     const { service } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: { findPrimaryByPassportId: jest.fn(async () => permalink) },
+      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
       permalinkService: {
         resolveToPassport: jest.fn(async () => {
           throw new NotFoundException("gated");
@@ -301,91 +235,115 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
     const gs1LinkPermalinkId = randomUUID();
-    const gs1LinkPermalink = { id: gs1LinkPermalinkId, presentationConfigurationId: randomUUID() };
+    const gs1LinkPermalink = {
+      id: gs1LinkPermalinkId,
+      kind: PermalinkKind.GS1_LINK,
+      slug: null,
+      presentationConfigurationId: randomUUID(),
+    };
     const passport = { organizationId: randomUUID() };
-    const branding = { permalinkBaseUrl: null };
     const { service, permalinkRepo, permalinkService } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
       permalinkRepo: {
         findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
-        findPrimaryByPassportId: jest.fn(async () => ({ id: randomUUID() })),
       },
       permalinkService: {
         resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => branding),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/p/${gs1LinkPermalinkId}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
 
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
-    // findGs1LinkByUpiId was called with the UPI's uuid
     expect(permalinkRepo.findGs1LinkByUpiId).toHaveBeenCalledWith(upi.uuid);
-    // resolveToPassport used the gs1-link permalink (not the passport primary)
     expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalinkId, undefined);
-    expect(url).toContain(gs1LinkPermalinkId);
-    // passport primary was NOT consulted
-    expect(permalinkRepo.findPrimaryByPassportId).not.toHaveBeenCalled();
+    expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalinkId}`);
+    expect(url).not.toContain("/01/");
+    expect(permalinkService.resolvePublicUrlWithFreeze).toHaveBeenCalledTimes(1);
   });
 
-  it("(Slice 31-c) falls back to passport primary when gs1-link permalink has null presentationConfigurationId", async () => {
+  it("(M1) uses the gs1-link permalink's slug in the viewer URL when set", async () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const gs1LinkPermalink = { id: randomUUID(), presentationConfigurationId: null };
-    const primaryPermalinkId = randomUUID();
-    const primaryPermalink = { id: primaryPermalinkId };
+    const gs1LinkPermalink = {
+      id: randomUUID(),
+      kind: PermalinkKind.GS1_LINK,
+      slug: "scan-me",
+      presentationConfigurationId: randomUUID(),
+    };
     const passport = { organizationId: randomUUID() };
-    const branding = { permalinkBaseUrl: null };
+    const { service } = makeService({
+      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      permalinkService: {
+        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+          permalink: gs1LinkPermalink,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
+        })),
+      },
+    });
+
+    const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
+
+    expect(url).toBe("https://instance.example.com/p/scan-me");
+  });
+
+  it("(M1) viewer URL uses the branding base and ignores the gs1-link's own baseUrl", async () => {
+    const referenceId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
+    const gs1LinkPermalink = {
+      id: randomUUID(),
+      kind: PermalinkKind.GS1_LINK,
+      slug: null,
+      baseUrl: "https://qr.example.com",
+      presentationConfigurationId: randomUUID(),
+    };
+    const passport = { organizationId: randomUUID() };
+    const { service } = makeService({
+      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
+      permalinkRepo: { findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink) },
+      permalinkService: {
+        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
+        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
+        resolvePublicUrlWithFreeze: jest.fn(async () => ({
+          permalink: gs1LinkPermalink,
+          publicUrl: `https://qr.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
+        })),
+      },
+      baseUrlResolver: {
+        loadBrandingOrNull: jest.fn(async () => ({
+          permalinkBaseUrl: "https://brand.example.com",
+        })),
+      },
+    });
+
+    const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
+
+    expect(url).toBe(`https://brand.example.com/${gs1LinkPermalink.id}`);
+  });
+
+  it("resolves a null-config gs1-link to its OWN viewer URL (standard view, no fallback)", async () => {
+    const referenceId = randomUUID();
+    const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
+    const gs1LinkPermalink = { id: randomUUID(), slug: null, presentationConfigurationId: null };
+    const passport = { organizationId: randomUUID() };
     const { service, permalinkRepo, permalinkService } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
       permalinkRepo: {
         findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
-        findPrimaryByPassportId: jest.fn(async () => primaryPermalink),
       },
       permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: primaryPermalink, passport })),
+        resolveToPassport: jest.fn(async () => ({ permalink: gs1LinkPermalink, passport })),
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => branding),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
-          permalink: primaryPermalink,
-          publicUrl: `https://instance.example.com/p/${primaryPermalinkId}`,
-        })),
-      },
-    });
-
-    const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
-
-    // Fell back to passport primary because gs1-link had null config
-    expect(permalinkRepo.findGs1LinkByUpiId).toHaveBeenCalledWith(upi.uuid);
-    expect(permalinkRepo.findPrimaryByPassportId).toHaveBeenCalledWith(referenceId);
-    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(primaryPermalinkId, undefined);
-    expect(url).toContain(primaryPermalinkId);
-  });
-
-  it("(Slice 31-d) falls back to passport primary when no gs1-link permalink exists", async () => {
-    const referenceId = randomUUID();
-    const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    const primaryPermalinkId = randomUUID();
-    const primaryPermalink = { id: primaryPermalinkId };
-    const passport = { organizationId: randomUUID() };
-    const branding = { permalinkBaseUrl: null };
-    const { service, permalinkRepo, permalinkService } = makeService({
-      upiRepo: { findByGs1Key: jest.fn(async () => upi) },
-      permalinkRepo: {
-        findGs1LinkByUpiId: jest.fn(async () => undefined),
-        findPrimaryByPassportId: jest.fn(async () => primaryPermalink),
-      },
-      permalinkService: {
-        resolveToPassport: jest.fn(async () => ({ permalink: primaryPermalink, passport })),
-        getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => branding),
-        resolvePublicUrlWithFreeze: jest.fn(async () => ({
-          permalink: primaryPermalink,
-          publicUrl: `https://instance.example.com/p/${primaryPermalinkId}`,
+          permalink: gs1LinkPermalink,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
@@ -393,19 +351,17 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
     expect(permalinkRepo.findGs1LinkByUpiId).toHaveBeenCalledWith(upi.uuid);
-    expect(permalinkRepo.findPrimaryByPassportId).toHaveBeenCalledWith(referenceId);
-    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(primaryPermalinkId, undefined);
-    expect(url).toContain(primaryPermalinkId);
+    expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalink.id, undefined);
+    expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalink.id}`);
   });
 
-  it("(Slice 31-e) 404s when no gs1-link and no passport primary exist", async () => {
+  it("404s when the UPI has no gs1-link permalink (no fallback to other permalinks)", async () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
     const { service } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
       permalinkRepo: {
         findGs1LinkByUpiId: jest.fn(async () => undefined),
-        findPrimaryByPassportId: jest.fn(async () => undefined),
       },
     });
 
@@ -422,41 +378,37 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
       gtin: VALID_GTIN13,
     });
     const gs1LinkPermalinkId = randomUUID();
-    // gs1-link references a config from a DIFFERENT passport
     const gs1LinkPermalink = {
       id: gs1LinkPermalinkId,
-      presentationConfigurationId: randomUUID(), // config that belongs to configPassportId
+      kind: PermalinkKind.GS1_LINK,
+      slug: null,
+      presentationConfigurationId: randomUUID(),
     };
-    // config's passport is PUBLISHED — resolveToPassport succeeds (not gated)
     const configPassport = { organizationId: randomUUID() };
-    const branding = { permalinkBaseUrl: null };
     const { service, permalinkService } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
       permalinkRepo: {
         findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
-        findPrimaryByPassportId: jest.fn(async () => ({ id: randomUUID() })),
       },
       permalinkService: {
-        // resolveToPassport resolves the config's passport (published) — does NOT throw
         resolveToPassport: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
           passport: configPassport,
         })),
         getPermalinkBaseUrl: jest.fn(async () => "https://instance.example.com/p"),
-        loadBranding: jest.fn(async () => branding),
         resolvePublicUrlWithFreeze: jest.fn(async () => ({
           permalink: gs1LinkPermalink,
-          publicUrl: `https://instance.example.com/p/${gs1LinkPermalinkId}`,
+          publicUrl: `https://instance.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
         })),
       },
     });
 
     const url = await service.resolveGs1KeyToPublicUrl({ gtin: VALID_GTIN13 });
 
-    // Used the gs1-link permalink (config's passport governs)
     expect(permalinkService.resolveToPassport).toHaveBeenCalledWith(gs1LinkPermalinkId, undefined);
-    expect(url).toContain(gs1LinkPermalinkId);
-    void configPassportId; // referenced above for clarity
+    expect(url).toBe(`https://instance.example.com/p/${gs1LinkPermalinkId}`);
+    expect(url).not.toContain("/01/");
+    void configPassportId;
   });
 
   it("(Slice 31-g) cross-passport own-config: config's passport draft → anonymous scan is gated (404)", async () => {
@@ -467,16 +419,14 @@ describe("Gs1IdentityService.resolveGs1KeyToPublicUrl", () => {
     });
     const gs1LinkPermalink = {
       id: randomUUID(),
-      presentationConfigurationId: randomUUID(), // config that belongs to a DRAFT passport
+      presentationConfigurationId: randomUUID(),
     };
     const { service } = makeService({
       upiRepo: { findByGs1Key: jest.fn(async () => upi) },
       permalinkRepo: {
         findGs1LinkByUpiId: jest.fn(async () => gs1LinkPermalink),
-        findPrimaryByPassportId: jest.fn(async () => ({ id: randomUUID() })),
       },
       permalinkService: {
-        // config's passport is DRAFT → gated for anonymous
         resolveToPassport: jest.fn(async () => {
           throw new NotFoundException("gated: config passport is draft");
         }),

@@ -1,5 +1,211 @@
 # @open-dpp/client
 
+## 4.0.1
+
+### Patch Changes
+
+- [#725](https://github.com/open-dpp/open-dpp/pull/725) [`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25) Thanks [@mr42](https://github.com/mr42)! - In the passport and template editors, sections, subsections, and data fields can be moved.
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/api-client@4.0.1
+  - @open-dpp/dto@4.0.1
+
+## 4.0.0
+
+### Patch Changes
+
+- Updated dependencies [[`e3a23b6`](https://github.com/open-dpp/open-dpp/commit/e3a23b6804ff11fb57fd3471aec790185ef03ae6)]:
+  - @open-dpp/api-client@4.0.0
+  - @open-dpp/dto@4.0.0
+
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
+### Patch Changes
+
+- Updated dependencies [[`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7)]:
+  - @open-dpp/api-client@3.6.0
+  - @open-dpp/dto@3.6.0
+
+## 3.5.0
+
+### Minor Changes
+
+- [#707](https://github.com/open-dpp/open-dpp/pull/707) [`3372e4f`](https://github.com/open-dpp/open-dpp/commit/3372e4fed94f7217fb3a60036dd044dc8cfe483d) Thanks [@florianBieck](https://github.com/florianBieck)! - Organization owners can remove members. New `DELETE /organizations/members/:id` endpoint (owner-only, cross-organization guarded); owners and the acting user cannot be removed. Removing a member clears the organization from their sessions' active organization. The members list gains a remove button with a confirmation dialog.
+
+### Patch Changes
+
+- Updated dependencies [[`3372e4f`](https://github.com/open-dpp/open-dpp/commit/3372e4fed94f7217fb3a60036dd044dc8cfe483d)]:
+  - @open-dpp/api-client@3.5.0
+  - @open-dpp/dto@3.5.0
+
+## 3.4.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.4.0
+  - @open-dpp/dto@3.4.0
+
+## 3.3.0
+
+### Minor Changes
+
+- [#667](https://github.com/open-dpp/open-dpp/pull/667) [`64b4097`](https://github.com/open-dpp/open-dpp/commit/64b40972ce85ef36ce9041118a407f1153d522fd) Thanks [@murphylan](https://github.com/murphylan)! - Add a multi-language description to data fields in the AAS editor. Every submodel
+  element (property, file, collection, list, submodel, shell) can now be given an
+  optional description alongside its display name, and the description is shown as
+  muted helper text under the field name in the presentation view. Section
+  (submodel) descriptions are rendered under the section heading, and languages
+  that only occur in descriptions are offered in the presentation language picker.
+  The display-name editor was generalized into a reusable language-text array
+  editor to back both fields.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.3.0
+  - @open-dpp/dto@3.3.0
+
+## 3.2.0
+
+### Minor Changes
+
+- [#671](https://github.com/open-dpp/open-dpp/pull/671) [`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b) Thanks [@mr42](https://github.com/mr42)! - Add bulk import feature such that a REO user can create up to 1000 passports at once.
+
+### Patch Changes
+
+- [#700](https://github.com/open-dpp/open-dpp/pull/700) [`115b3af`](https://github.com/open-dpp/open-dpp/commit/115b3af6a71ad46bc89cf53b16393f9d0dd26a2f) Thanks [@Hentra](https://github.com/Hentra)! - Remove Headless UI components
+
+- Updated dependencies [[`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b)]:
+  - @open-dpp/api-client@3.2.0
+  - @open-dpp/dto@3.2.0
+
+## 3.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.4
+  - @open-dpp/dto@3.1.4
+
+## 3.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.3
+  - @open-dpp/dto@3.1.3
+
+## 3.1.2
+
+### Patch Changes
+
+- [#692](https://github.com/open-dpp/open-dpp/pull/692) [`318aa1c`](https://github.com/open-dpp/open-dpp/commit/318aa1c959cd31403b8da64c18f6c2969984c8ca) Thanks [@florianBieck](https://github.com/florianBieck)! - Removed select field for presentation configuration on permalinks as presentation configurations canot be managed at the moment.
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.2
+  - @open-dpp/dto@3.1.2
+
+## 3.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@3.1.1
+  - @open-dpp/dto@3.1.1
+
+## 3.1.0
+
+### Minor Changes
+
+- [#687](https://github.com/open-dpp/open-dpp/pull/687) [`6f6154f`](https://github.com/open-dpp/open-dpp/commit/6f6154f38b07290ec19595cbbe2eeda6939aa887) Thanks [@florianBieck](https://github.com/florianBieck)! - The GS1 Digital Link resolver moves from the origin root to the `/gs1/v1/` prefix
+
+### Patch Changes
+
+- Updated dependencies [[`6f6154f`](https://github.com/open-dpp/open-dpp/commit/6f6154f38b07290ec19595cbbe2eeda6939aa887)]:
+  - @open-dpp/dto@3.1.0
+  - @open-dpp/api-client@3.1.0
+
+## 3.0.0
+
+### Minor Changes
+
+- [#615](https://github.com/open-dpp/open-dpp/pull/615) [`ff5d0a2`](https://github.com/open-dpp/open-dpp/commit/ff5d0a2a8458b8d66a4fc8a706aad4dc6001feaa) Thanks [@florianBieck](https://github.com/florianBieck)! - Passport-first permalinks: the "Create GS1 link" flow becomes "Create Permalink" and open-dpp unique product identifiers can now carry permalinks.
+
+  - The `presentation` permalink kind is renamed to `open-dpp` (wire-level; legacy documents are migrated on read).
+  - Every permalink now carries a required `passportId`; `presentationConfigurationId` and `uniqueProductIdentifierId` are both optional on the open-dpp kind — a bare passport-bound permalink is valid.
+  - Strict kind matching: `gs1-link` permalinks require a GS1 identifier, `open-dpp` permalinks may bind an OPEN_DPP_UUID identifier; an open-dpp identifier may carry any number of permalinks (gs1-links stay one-per-identifier).
+  - `/p/{slug ?? id}` renders the permalink's own bound presentation configuration; a null binding renders the built-in standard view (`presentationConfiguration` in the bundle is now nullable, no config is auto-consulted or seeded on the render path).
+  - The GS1 resolver redirects a scanned Digital Link to the gs1-link permalink's own viewer URL — the primary-permalink concept (including `POST /permalinks/:id/primary`) is removed; the passport editor QR shows the latest-created permalink.
+  - Presentation configurations are shareable across permalinks (config-unique index dropped) and re-bindable pre-freeze via `PATCH /permalinks/:id`; the last-permalink delete guard is gone (the freeze rule remains the only guard).
+
+### Patch Changes
+
+- Updated dependencies [[`ff5d0a2`](https://github.com/open-dpp/open-dpp/commit/ff5d0a2a8458b8d66a4fc8a706aad4dc6001feaa)]:
+  - @open-dpp/dto@3.0.0
+  - @open-dpp/api-client@3.0.0
+
+## 2.10.0
+
+### Minor Changes
+
+- [#621](https://github.com/open-dpp/open-dpp/pull/621) [`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756) Thanks [@Hentra](https://github.com/Hentra)! - Add 26 more languages to multilanguage description
+
+### Patch Changes
+
+- Updated dependencies [[`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756)]:
+  - @open-dpp/api-client@2.10.0
+  - @open-dpp/dto@2.10.0
+
+## 2.9.0
+
+### Minor Changes
+
+- [#673](https://github.com/open-dpp/open-dpp/pull/673) [`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6) Thanks [@mr42](https://github.com/mr42)! - Allow admin to resend reset or verification email. Allow users to resend verification email in their profile. Add email verification page to give user feedback about verification success/ error
+
+- [#666](https://github.com/open-dpp/open-dpp/pull/666) [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e) Thanks [@murphylan](https://github.com/murphylan)! - Add total item count to organization-scoped paginated lists
+
+  Passport and template list endpoints now report a `total_count` in their
+  `paging_metadata`, computed with an index-backed `countDocuments` against the
+  same filter used for the page. The passport and template list views surface it
+  in the table footer ("Showing: 1 - 10 of 42"). The field is optional, so other
+  paginated endpoints keep their existing response shape.
+
+### Patch Changes
+
+- [#661](https://github.com/open-dpp/open-dpp/pull/661) [`f5868c6`](https://github.com/open-dpp/open-dpp/commit/f5868c6019d694afd9895fcc6293140afae280c2) Thanks [@murphylan](https://github.com/murphylan)! - Fix blank page when entering an invalid hex value in the organization primary color field. The color palette now falls back to the default color for invalid input, the field shows an inline validation error, and saving is blocked until a valid hex color is entered.
+
+- Updated dependencies [[`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6), [`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e)]:
+  - @open-dpp/api-client@2.9.0
+  - @open-dpp/dto@2.9.0
+
+## 2.8.0
+
+### Minor Changes
+
+- [#632](https://github.com/open-dpp/open-dpp/pull/632) [`b3d58fe`](https://github.com/open-dpp/open-dpp/commit/b3d58fe9ef20e14fa9abbd952e49e51789212800) Thanks [@mr42](https://github.com/mr42)! - Rename list to table. Multiple columns can be grouped. Nested tables are possible now.
+
+### Patch Changes
+
+- Updated dependencies [[`b3d58fe`](https://github.com/open-dpp/open-dpp/commit/b3d58fe9ef20e14fa9abbd952e49e51789212800)]:
+  - @open-dpp/api-client@2.8.0
+  - @open-dpp/dto@2.8.0
+
+## 2.7.0
+
+### Minor Changes
+
+- [#601](https://github.com/open-dpp/open-dpp/pull/601) [`403f74e`](https://github.com/open-dpp/open-dpp/commit/403f74ef849fe2fcb5d5fd0771783584fb801928) Thanks [@mr42](https://github.com/mr42)! - Represent links as Property with valueType AnyUri instead of using ReferenceElement. Add api versioning to REST-API.
+
+### Patch Changes
+
+- Updated dependencies [[`403f74e`](https://github.com/open-dpp/open-dpp/commit/403f74ef849fe2fcb5d5fd0771783584fb801928)]:
+  - @open-dpp/api-client@2.7.0
+  - @open-dpp/dto@2.7.0
+
 ## 2.6.0
 
 ### Minor Changes

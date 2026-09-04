@@ -83,7 +83,6 @@ export const permalinkPaths = {
       security,
     },
   },
-  // Org-scoped backoffice routes
   "/permalinks": {
     get: {
       tags: ["permalinks"],
@@ -161,7 +160,6 @@ export const permalinkPaths = {
       security,
     },
   },
-  // Passport-scoped backoffice route (presentation + gs1-link union)
   "/passports/{id}/permalinks": {
     get: {
       tags: ["permalinks"],

@@ -5,13 +5,10 @@ import { isAxiosError } from "axios";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client";
+import { useGs1LinkPreview } from "../../composables/permalink-preview";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 import Gs1DataAttributesField from "./Gs1DataAttributesField.vue";
-
-// ---------------------------------------------------------------------------
-// Props / emits / model
-// ---------------------------------------------------------------------------
 
 const model = defineModel<boolean>("visible");
 
@@ -23,10 +20,6 @@ const emit = defineEmits<{
   updated: [permalink: PermalinkPublicDto];
 }>();
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
@@ -34,13 +27,10 @@ const notificationStore = useNotificationStore();
 const slug = ref<string>("");
 const baseUrl = ref<string>("");
 const gs1DataAttributes = ref<Record<string, string>>({});
+const gs1AttributesValid = ref(true);
 
 const saving = ref(false);
 const slugError = ref<string | null>(null);
-
-// ---------------------------------------------------------------------------
-// Derived state
-// ---------------------------------------------------------------------------
 
 const isGs1Link = computed(() => props.permalink.kind === PermalinkKind.GS1_LINK);
 const typeLabel = computed(() =>
@@ -48,9 +38,11 @@ const typeLabel = computed(() =>
 );
 const locked = computed(() => Boolean(props.permalink.publishedUrl));
 
-// ---------------------------------------------------------------------------
-// Sync form state when permalink prop changes
-// ---------------------------------------------------------------------------
+const { previewUrl: gs1PreviewUrl } = useGs1LinkPreview(
+  computed(() => props.permalink),
+  baseUrl,
+  gs1DataAttributes,
+);
 
 watch(
   () => props.permalink,
@@ -62,10 +54,6 @@ watch(
   },
   { immediate: true },
 );
-
-// ---------------------------------------------------------------------------
-// Submit
-// ---------------------------------------------------------------------------
 
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();
@@ -79,12 +67,12 @@ async function save() {
   try {
     const body = isGs1Link.value
       ? {
-          // A GS1 Digital Link has no slug ("Short name") — only a custom base URL.
           baseUrl: trimToNull(baseUrl.value),
           gs1DataAttributes:
             Object.keys(gs1DataAttributes.value).length > 0 ? gs1DataAttributes.value : null,
         }
       : {
+          // ponytail: presentationConfigurationId omitted (#684) — backend preserves existing
           slug: trimToNull(slug.value),
           baseUrl: trimToNull(baseUrl.value),
         };
@@ -117,7 +105,6 @@ function cancel() {
     class="w-full md:w-2/3 xl:w-1/2"
   >
     <div class="flex flex-col gap-4">
-      <!-- Type (read-only) -->
       <div class="flex flex-col gap-1" data-testid="permalink-edit-type">
         <span class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.edit.type.label") }}
@@ -127,7 +114,6 @@ function cancel() {
         </span>
       </div>
 
-      <!-- Locked banner -->
       <div
         v-if="locked"
         data-testid="permalink-edit-locked-banner"
@@ -136,7 +122,6 @@ function cancel() {
         {{ t("permalink.edit.locked") }}
       </div>
 
-      <!-- Slug field — presentation only; a GS1 Digital Link has no "Short name" -->
       <div v-if="!isGs1Link" class="flex flex-col gap-2">
         <label for="permalink-edit-slug-input" class="text-sm leading-6 font-medium text-gray-900">
           {{ t("permalink.edit.slug.label") }}
@@ -155,7 +140,6 @@ function cancel() {
         </small>
       </div>
 
-      <!-- Custom base URL — shown for both presentation and GS1 Digital Link permalinks -->
       <div class="flex flex-col gap-2">
         <label
           for="permalink-edit-base-url-input"
@@ -173,9 +157,7 @@ function cancel() {
         />
       </div>
 
-      <!-- GS1-link-only fields -->
       <template v-if="isGs1Link">
-        <!-- GS1 Data Attributes -->
         <div class="flex flex-col gap-2">
           <label class="text-sm leading-6 font-medium text-gray-900">
             {{ t("permalink.edit.gs1DataAttributes") }}
@@ -183,7 +165,20 @@ function cancel() {
           <Gs1DataAttributesField
             v-model="gs1DataAttributes"
             data-testid="permalink-edit-gs1-data-attributes"
+            @update:valid="gs1AttributesValid = $event"
           />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-medium tracking-wider text-gray-500 uppercase">
+            {{ t("permalink.edit.gs1Preview.label") }}
+          </span>
+          <span
+            data-testid="permalink-edit-gs1-preview"
+            class="font-mono text-sm break-all text-blue-600"
+          >
+            {{ gs1PreviewUrl }}
+          </span>
         </div>
       </template>
     </div>
@@ -199,7 +194,7 @@ function cancel() {
       <Button
         :label="t('common.save')"
         data-testid="permalink-edit-save"
-        :disabled="locked || saving"
+        :disabled="locked || saving || (isGs1Link && !gs1AttributesValid)"
         @click="save"
       />
     </template>

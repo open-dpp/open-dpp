@@ -1,5 +1,175 @@
 # @open-dpp/api-client
 
+## 4.0.1
+
+### Patch Changes
+
+- [#725](https://github.com/open-dpp/open-dpp/pull/725) [`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25) Thanks [@mr42](https://github.com/mr42)! - In the passport and template editors, sections, subsections, and data fields can be moved.
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/dto@4.0.1
+
+## 4.0.0
+
+### Major Changes
+
+- [#716](https://github.com/open-dpp/open-dpp/pull/716) [`e3a23b6`](https://github.com/open-dpp/open-dpp/commit/e3a23b6804ff11fb57fd3471aec790185ef03ae6) Thanks [@Hentra](https://github.com/Hentra)! - Simplified installation with breaking configuration changes.
+
+  The Ollama AI provider was removed; Mistral (`codestral-latest`) is now the only supported provider. `OPEN_DPP_OLLAMA_URL` was dropped from the env schema and the `ollama` value was removed from the `AiProvider` enum in the API client. Existing AI configurations using Ollama must be migrated to Mistral (set `OPEN_DPP_MISTRAL_API_KEY`).
+
+  MongoDB configuration now accepts either a connection URI or individual connection settings: provide `OPEN_DPP_MONGODB_URI`, or all of `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_USER` and `OPEN_DPP_MONGODB_PASSWORD`. Host/port setups without credentials no longer pass validation. `OPEN_DPP_MONGODB_USER`, `OPEN_DPP_MONGODB_PASSWORD` and `OPEN_DPP_MONGODB_DATABASE` are optional when using a URI; `OPEN_DPP_MONGODB_DATABASE` defaults to `management`.
+
+  The example deployment was simplified (MongoDB single-node replica set with Mailpit for local development) and a new production setup guide covers MongoDB, SMTP and S3-compatible storage.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@4.0.0
+
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
+### Patch Changes
+
+- Updated dependencies [[`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7)]:
+  - @open-dpp/dto@3.6.0
+
+## 3.5.0
+
+### Minor Changes
+
+- [#707](https://github.com/open-dpp/open-dpp/pull/707) [`3372e4f`](https://github.com/open-dpp/open-dpp/commit/3372e4fed94f7217fb3a60036dd044dc8cfe483d) Thanks [@florianBieck](https://github.com/florianBieck)! - Organization owners can remove members. New `DELETE /organizations/members/:id` endpoint (owner-only, cross-organization guarded); owners and the acting user cannot be removed. Removing a member clears the organization from their sessions' active organization. The members list gains a remove button with a confirmation dialog.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.5.0
+
+## 3.4.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.4.0
+
+## 3.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.3.0
+
+## 3.2.0
+
+### Minor Changes
+
+- [#671](https://github.com/open-dpp/open-dpp/pull/671) [`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b) Thanks [@mr42](https://github.com/mr42)! - Add bulk import feature such that a REO user can create up to 1000 passports at once.
+
+### Patch Changes
+
+- Updated dependencies [[`7b398df`](https://github.com/open-dpp/open-dpp/commit/7b398dfdc15c76e0a2bd8a4691eb6c9c09d94e5b)]:
+  - @open-dpp/dto@3.2.0
+
+## 3.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.1.4
+
+## 3.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.1.3
+
+## 3.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.1.2
+
+## 3.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@3.1.1
+
+## 3.1.0
+
+### Patch Changes
+
+- Updated dependencies [[`6f6154f`](https://github.com/open-dpp/open-dpp/commit/6f6154f38b07290ec19595cbbe2eeda6939aa887)]:
+  - @open-dpp/dto@3.1.0
+
+## 3.0.0
+
+### Major Changes
+
+- [#615](https://github.com/open-dpp/open-dpp/pull/615) [`ff5d0a2`](https://github.com/open-dpp/open-dpp/commit/ff5d0a2a8458b8d66a4fc8a706aad4dc6001feaa) Thanks [@florianBieck](https://github.com/florianBieck)! - Passport-first permalinks: the "Create GS1 link" flow becomes "Create Permalink" and open-dpp unique product identifiers can now carry permalinks.
+
+  - The `presentation` permalink kind is renamed to `open-dpp` (wire-level; legacy documents are migrated on read).
+  - Every permalink now carries a required `passportId`; `presentationConfigurationId` and `uniqueProductIdentifierId` are both optional on the open-dpp kind — a bare passport-bound permalink is valid.
+  - Strict kind matching: `gs1-link` permalinks require a GS1 identifier, `open-dpp` permalinks may bind an OPEN_DPP_UUID identifier; an open-dpp identifier may carry any number of permalinks (gs1-links stay one-per-identifier).
+  - `/p/{slug ?? id}` renders the permalink's own bound presentation configuration; a null binding renders the built-in standard view (`presentationConfiguration` in the bundle is now nullable, no config is auto-consulted or seeded on the render path).
+  - The GS1 resolver redirects a scanned Digital Link to the gs1-link permalink's own viewer URL — the primary-permalink concept (including `POST /permalinks/:id/primary`) is removed; the passport editor QR shows the latest-created permalink.
+  - Presentation configurations are shareable across permalinks (config-unique index dropped) and re-bindable pre-freeze via `PATCH /permalinks/:id`; the last-permalink delete guard is gone (the freeze rule remains the only guard).
+
+### Patch Changes
+
+- Updated dependencies [[`ff5d0a2`](https://github.com/open-dpp/open-dpp/commit/ff5d0a2a8458b8d66a4fc8a706aad4dc6001feaa)]:
+  - @open-dpp/dto@3.0.0
+
+## 2.10.0
+
+### Minor Changes
+
+- [#621](https://github.com/open-dpp/open-dpp/pull/621) [`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756) Thanks [@Hentra](https://github.com/Hentra)! - Add 26 more languages to multilanguage description
+
+### Patch Changes
+
+- Updated dependencies [[`29e3399`](https://github.com/open-dpp/open-dpp/commit/29e3399add99e620140e2d10dd4c33e999f33756)]:
+  - @open-dpp/dto@2.10.0
+
+## 2.9.0
+
+### Minor Changes
+
+- [#673](https://github.com/open-dpp/open-dpp/pull/673) [`3cc4e84`](https://github.com/open-dpp/open-dpp/commit/3cc4e84841d551aa8b15bf2e5ddce08764c7cca6) Thanks [@mr42](https://github.com/mr42)! - Allow admin to resend reset or verification email. Allow users to resend verification email in their profile. Add email verification page to give user feedback about verification success/ error
+
+### Patch Changes
+
+- Updated dependencies [[`2ace889`](https://github.com/open-dpp/open-dpp/commit/2ace8898a659bcdf8112972e2cae8d288fb1150e)]:
+  - @open-dpp/dto@2.9.0
+
+## 2.8.0
+
+### Minor Changes
+
+- [#632](https://github.com/open-dpp/open-dpp/pull/632) [`b3d58fe`](https://github.com/open-dpp/open-dpp/commit/b3d58fe9ef20e14fa9abbd952e49e51789212800) Thanks [@mr42](https://github.com/mr42)! - Rename list to table. Multiple columns can be grouped. Nested tables are possible now.
+
+### Patch Changes
+
+- Updated dependencies [[`b3d58fe`](https://github.com/open-dpp/open-dpp/commit/b3d58fe9ef20e14fa9abbd952e49e51789212800)]:
+  - @open-dpp/dto@2.8.0
+
+## 2.7.0
+
+### Minor Changes
+
+- [#601](https://github.com/open-dpp/open-dpp/pull/601) [`403f74e`](https://github.com/open-dpp/open-dpp/commit/403f74ef849fe2fcb5d5fd0771783584fb801928) Thanks [@mr42](https://github.com/mr42)! - Represent links as Property with valueType AnyUri instead of using ReferenceElement. Add api versioning to REST-API.
+
+### Patch Changes
+
+- Updated dependencies [[`403f74e`](https://github.com/open-dpp/open-dpp/commit/403f74ef849fe2fcb5d5fd0771783584fb801928)]:
+  - @open-dpp/dto@2.7.0
+
 ## 2.6.0
 
 ### Minor Changes

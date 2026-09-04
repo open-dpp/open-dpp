@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { NotFoundError, NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Language } from "@open-dpp/dto";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -25,6 +27,7 @@ describe("UsersService", () => {
     mockAuth = {
       api: {
         requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        sendVerificationEmail: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
     };
 
@@ -48,7 +51,53 @@ describe("UsersService", () => {
     mockRepo.save.mockResolvedValue(savedUser);
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
+    expect(mockAuth.api.requestPasswordReset).toHaveBeenCalledWith({
+      body: { email: "test@example.com", redirectTo: "/password-reset" },
+    });
+    expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+      body: { email: "test@example.com", callbackURL: "/email-verified" },
+    });
     expect(result).toBe(savedUser);
+  });
+
+  it("returns the saved user and logs an error when the password-reset email fails to send", async () => {
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const smtpError = new Error("smtp down");
+    mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+    const result = await service.createUser("test@example.com", "John", "Doe");
+
+    expect(result).toBe(savedUser);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+    expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+
+  it("returns the saved user and logs an error when the verification email fails to send", async () => {
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const smtpError = new Error("smtp down");
+    mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
+    const errorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+
+    const result = await service.createUser("test@example.com", "John", "Doe");
+
+    expect(result).toBe(savedUser);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(savedUser.id), smtpError);
+    expect(mockAuth.api.requestPasswordReset).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
   });
 
   it("should throw if save returns null", async () => {
@@ -56,6 +105,88 @@ describe("UsersService", () => {
     await expect(service.createUser("test@example.com", "John", "Doe")).rejects.toThrow(
       "Failed to save user with email test@example.com",
     );
+  });
+
+  describe("resendPasswordResetEmail", () => {
+    it("resends the password-reset email for the target user", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.resendPasswordResetEmail(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockAuth.api.requestPasswordReset).toHaveBeenCalledWith({
+        body: { email: user.email, redirectTo: "/password-reset" },
+      });
+      expect(result).toBe(user);
+    });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.resendPasswordResetEmail("unknown")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+      expect(mockAuth.api.requestPasswordReset).not.toHaveBeenCalled();
+    });
+
+    it("propagates the error when the password-reset email fails to send", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      const smtpError = new Error("smtp down");
+      mockAuth.api.requestPasswordReset.mockRejectedValueOnce(smtpError);
+
+      await expect(service.resendPasswordResetEmail(user.id)).rejects.toThrow(smtpError);
+    });
+  });
+
+  describe("resendVerificationEmail", () => {
+    it("resends the verification email for the target user", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.resendVerificationEmail(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(mockAuth.api.sendVerificationEmail).toHaveBeenCalledWith({
+        body: { email: user.email, callbackURL: "/email-verified" },
+      });
+      expect(result).toBe(user);
+    });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.resendVerificationEmail("unknown")).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+      expect(mockAuth.api.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it("propagates the error when the verification email fails to send", async () => {
+      const user = User.create({
+        email: "pending@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      const smtpError = new Error("smtp down");
+      mockAuth.api.sendVerificationEmail.mockRejectedValueOnce(smtpError);
+
+      await expect(service.resendVerificationEmail(user.id)).rejects.toThrow(smtpError);
+    });
   });
 
   it("should find one by id", async () => {
@@ -111,7 +242,9 @@ describe("UsersService", () => {
     mockRepo.findOneOrFail.mockResolvedValue(user);
     mockRepo.update.mockResolvedValue(null);
 
-    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(NotFoundError);
+    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(
+      NotFoundInDatabaseException,
+    );
   });
 
   it("should set user email verified via domain method", async () => {
@@ -131,7 +264,7 @@ describe("UsersService", () => {
     mockRepo.findOneByEmail.mockResolvedValue(null);
 
     await expect(service.setUserEmailVerified("nonexistent@example.com", true)).rejects.toThrow(
-      NotFoundError,
+      NotFoundInDatabaseException,
     );
   });
 
@@ -141,7 +274,131 @@ describe("UsersService", () => {
     mockRepo.update.mockResolvedValue(null);
 
     await expect(service.setUserEmailVerified("test@example.com", true)).rejects.toThrow(
-      NotFoundError,
+      NotFoundInDatabaseException,
     );
+  });
+
+  describe("getMe", () => {
+    it("delegates to the repository's findOneOrFail", async () => {
+      const user = User.create({ email: "me@example.com", firstName: "Me", lastName: "Self" });
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.getMe(user.id);
+
+      expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
+      expect(result).toBe(user);
+    });
+
+    it("propagates NotFoundInDatabaseException when the user is missing", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.getMe("unknown")).rejects.toThrow(NotFoundInDatabaseException);
+    });
+  });
+
+  describe("updateProfile", () => {
+    const loadUser = () =>
+      User.create({
+        email: "user@example.com",
+        firstName: "Old",
+        lastName: "Name",
+        preferredLanguage: Language.en,
+      });
+
+    it("propagates not-found errors from the repository", async () => {
+      mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+
+      await expect(service.updateProfile("nonexistent", { firstName: "Anything" })).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
+
+    it("updates firstName while preserving lastName", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { firstName: "New" });
+
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      expect(mockRepo.update.mock.calls[0][0].firstName).toBe("New");
+      expect(mockRepo.update.mock.calls[0][0].lastName).toBe("Name");
+      expect(result.firstName).toBe("New");
+    });
+
+    it("updates lastName while preserving firstName", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { lastName: "Changed" });
+
+      expect(mockRepo.update.mock.calls[0][0].firstName).toBe("Old");
+      expect(mockRepo.update.mock.calls[0][0].lastName).toBe("Changed");
+      expect(result.lastName).toBe("Changed");
+    });
+
+    it("updates preferredLanguage", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      const result = await service.updateProfile(user.id, { preferredLanguage: Language.de });
+
+      expect(mockRepo.update.mock.calls[0][0].preferredLanguage).toBe(Language.de);
+      expect(result.preferredLanguage).toBe(Language.de);
+    });
+
+    it("composes multiple changes into a single update call", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockImplementation(async (u: User) => u);
+
+      await service.updateProfile(user.id, {
+        firstName: "Jane",
+        lastName: "Roe",
+        preferredLanguage: Language.de,
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledTimes(1);
+      const persisted = mockRepo.update.mock.calls[0][0] as User;
+      expect(persisted.firstName).toBe("Jane");
+      expect(persisted.lastName).toBe("Roe");
+      expect(persisted.preferredLanguage).toBe(Language.de);
+    });
+
+    it("short-circuits when the patch is empty", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.updateProfile(user.id, {});
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it("short-circuits when the patch values match the current user (no DB write)", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+
+      const result = await service.updateProfile(user.id, {
+        firstName: user.firstName ?? undefined,
+        lastName: user.lastName ?? undefined,
+        preferredLanguage: user.preferredLanguage,
+      });
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it("throws NotFoundInDatabaseException when the repository update returns null", async () => {
+      const user = loadUser();
+      mockRepo.findOneOrFail.mockResolvedValue(user);
+      mockRepo.update.mockResolvedValue(null);
+
+      await expect(service.updateProfile(user.id, { firstName: "Jane" })).rejects.toThrow(
+        NotFoundInDatabaseException,
+      );
+    });
   });
 });

@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { KeyTypes, PresentationReferenceType } from "@open-dpp/dto";
+import { KeyTypes, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import { PresentationReferenceHolder } from "../../../presentation-configurations/application/services/presentation-configuration.service";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
 import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfigurationService } from "../../../presentation-configurations/application/services/presentation-configuration.service";
-import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 import { PresentationConfigurationRepository } from "../../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../../../templates/domain/template";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
@@ -21,14 +20,13 @@ import {
   mapConceptDescriptions,
   mapSubmodels,
 } from "./aas-import.mapper";
-import { AasExportVersion } from "./export-schemas/aas-export-shared";
 import {
-  AasExport,
   AasExportLatestVersion,
   aasExportSchemaJsonLatest,
-  AasExportSchemas,
 } from "./export-schemas/aas-export-types";
 import { extractMediaIds } from "./extract-media-ids";
+import { ParseWithMigration } from "./export-schemas/aas-export-migration";
+import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
 
 export {
   DataTypeDefV1_0,
@@ -40,7 +38,7 @@ interface ImportedEnvironmentData {
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
   conceptDescriptions: ConceptDescription[];
-  schema: AasExport;
+  schema: AasExportLatestVersion;
 }
 
 @Injectable()
@@ -87,7 +85,10 @@ export class AasSerializationService {
       expandedEnvironment,
       presentationConfiguration,
     );
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
+
+    const aasExportablePlain = aasExportable.toExportPlain(subject);
+
+    return aasExportSchemaJsonLatest.parse(aasExportablePlain);
   }
 
   async importPassport(
@@ -106,7 +107,7 @@ export class AasSerializationService {
           createdAt: new Date(),
           updatedAt: new Date(),
         }),
-      PresentationReferenceType.Passport,
+      DigitalProductDocumentTypes.Passport,
       savePassport,
       afterPersist,
     );
@@ -128,7 +129,7 @@ export class AasSerializationService {
           createdAt: new Date(),
           updatedAt: new Date(),
         }),
-      PresentationReferenceType.Template,
+      DigitalProductDocumentTypes.Template,
       saveTemplate,
       afterPersist,
     );
@@ -138,7 +139,7 @@ export class AasSerializationService {
     data: unknown,
     organizationId: string,
     entityFactory: (environment: Environment) => T,
-    referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType],
+    referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
     saveEntity: (entity: T, options: DbSessionOptions) => Promise<void>,
     afterPersist?: (entity: T, options: DbSessionOptions) => Promise<void>,
   ): Promise<T> {
@@ -251,12 +252,9 @@ export class AasSerializationService {
         foreignMediaIds.has(element.value)
       ) {
         result = { ...element, value: null };
-      }
-
-      if (Array.isArray(element.value)) {
+      } else if (Array.isArray(element.value)) {
         const newValue = this.withNullifiedForeignFileValues(element.value, foreignMediaIds);
-        result =
-          result === element ? { ...element, value: newValue } : { ...result, value: newValue };
+        result = { ...element, value: newValue };
       }
 
       return result;
@@ -264,17 +262,12 @@ export class AasSerializationService {
   }
 
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
-    const schema = AasExportSchemas.parse(data);
+    const schema = ParseWithMigration(data);
 
     const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
 
     return {
-      shells: mapAssetAdministrationShells(
-        schema.environment.assetAdministrationShells,
-        idMapping,
-        submodels,
-        schema.version,
-      ),
+      shells: mapAssetAdministrationShells(schema.environment.assetAdministrationShells, idMapping),
       submodels,
       conceptDescriptions: mapConceptDescriptions(schema.environment.conceptDescriptions),
       schema,
@@ -283,29 +276,29 @@ export class AasSerializationService {
 }
 
 function buildImportedPresentationConfiguration(params: {
-  schema: AasExport;
+  schema: AasExportLatestVersion;
   organizationId: string;
   referenceId: string;
-  referenceType: (typeof PresentationReferenceType)[keyof typeof PresentationReferenceType];
+  referenceType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes];
 }): PresentationConfiguration | null {
   const { schema, organizationId, referenceId, referenceType } = params;
-  if (schema.version !== AasExportVersion.v3_0 || !schema.presentationConfiguration) {
-    return null;
+  if (schema.presentationConfiguration) {
+    return PresentationConfiguration.create({
+      organizationId,
+      referenceId,
+      referenceType,
+      elementDesign: schema.presentationConfiguration.elementDesign,
+      defaultComponents: schema.presentationConfiguration.defaultComponents,
+    });
   }
-  return PresentationConfiguration.create({
-    organizationId,
-    referenceId,
-    referenceType,
-    elementDesign: schema.presentationConfiguration.elementDesign,
-    defaultComponents: schema.presentationConfiguration.defaultComponents,
-  });
+  return null;
 }
 
 function passportToHolder(passport: Passport): PresentationReferenceHolder {
   return {
     id: passport.id,
     organizationId: passport.organizationId,
-    referenceType: PresentationReferenceType.Passport,
+    referenceType: DigitalProductDocumentTypes.Passport,
   };
 }
 
@@ -313,6 +306,6 @@ function templateToHolder(template: Template): PresentationReferenceHolder {
   return {
     id: template.id,
     organizationId: template.organizationId,
-    referenceType: PresentationReferenceType.Template,
+    referenceType: DigitalProductDocumentTypes.Template,
   };
 }

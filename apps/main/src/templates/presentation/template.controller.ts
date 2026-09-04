@@ -1,11 +1,16 @@
 import type {
   ActivityPaginationDto,
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
+  CreateGroupFromColumnDto,
   DeletePolicyDto,
   DigitalProductDocumentStatusDtoType,
   DigitalProductDocumentStatusModificationDto,
+  MoveSubmodelDto,
+  MoveSubmodelElementDto,
+  ReorderColumnDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -21,10 +26,11 @@ import type {
   ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+
 import {
+  AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   Populates,
-  PresentationReferenceType,
   TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
@@ -50,9 +56,11 @@ import { SubjectAttributes } from "../../aas/domain/security/subject-attributes"
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
+  ApiDeleteColumnFromGroup,
   ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
+  ApiCreateGroupFromColumn,
   ApiDeleteSubmodelElementById,
   ApiGetShells,
   ApiGetSubmodelById,
@@ -61,13 +69,19 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiMoveColumnToGroup,
+  ApiMoveSubmodel,
+  ApiMoveSubmodelElement,
   ApiPatchColumn,
+  ApiReorderColumn,
+  ApiPatchColumnInGroup,
   ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
   ApiPatchSubmodelValue,
   ApiPostColumn,
+  ApiPostColumnToGroup,
   ApiPostRow,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
@@ -75,11 +89,17 @@ import {
   AssetAdministrationShellIdParam,
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
+  CreateGroupFromColumnRequestBody,
   CursorQueryParam,
   DeletePolicyRequestBody,
+  GroupIdShortParam,
+  GroupIdShortQueryParam,
   IdParam,
   IdShortPathParam,
+  MoveSubmodelElementRequestBody,
+  MoveSubmodelRequestBody,
   PositionQueryParam,
+  ReorderColumnRequestBody,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -100,7 +120,6 @@ import { OrganizationId } from "../../identity/auth/presentation/decorators/orga
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 import { TemplateService } from "../application/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -119,8 +138,9 @@ import { UserIdDecorator } from "../../identity/auth/presentation/decorators/use
 import type { Response } from "express";
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { ApiVersion } from "../../common/decorators/api-version.decorator";
 
-@Controller("/templates")
+@Controller({ path: "/templates", version: AllApiVersions })
 export class TemplateController
   implements
     IAasReadEndpointsWithOrganizationId,
@@ -133,7 +153,6 @@ export class TemplateController
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
-    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   @ApiGetShells()
@@ -191,6 +210,7 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -204,6 +224,7 @@ export class TemplateController
       template.getEnvironment(),
       pagination,
       subject,
+      version,
     );
   }
 
@@ -216,6 +237,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodel(
@@ -224,6 +246,7 @@ export class TemplateController
       id,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -264,14 +287,6 @@ export class TemplateController
       id,
       submodelId,
       { subject, userId },
-      async (submodelIdShort, options) => {
-        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Template,
-          id,
-          submodelIdShort,
-          options,
-        );
-      },
     );
   }
 
@@ -285,6 +300,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodel(
@@ -294,6 +310,31 @@ export class TemplateController
       submodelId,
       body,
       { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveSubmodel()
+  async moveSubmodel(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @MoveSubmodelRequestBody() body: MoveSubmodelDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveSubmodel(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      body,
+      { subject, userId },
+      version,
     );
   }
 
@@ -307,6 +348,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifyValueOfSubmodel(
@@ -316,6 +358,7 @@ export class TemplateController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -326,6 +369,7 @@ export class TemplateController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -338,6 +382,7 @@ export class TemplateController
       template.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -348,6 +393,7 @@ export class TemplateController
     @SubmodelIdParam() submodelId: string,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -360,6 +406,7 @@ export class TemplateController
       template.getEnvironment(),
       submodelId,
       subject,
+      version,
     );
   }
 
@@ -372,6 +419,7 @@ export class TemplateController
     @CursorQueryParam() cursor: string | undefined,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -386,6 +434,7 @@ export class TemplateController
       submodelId,
       pagination,
       subject,
+      version,
     );
   }
 
@@ -399,6 +448,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElement(
@@ -408,6 +458,7 @@ export class TemplateController
       submodelId,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -430,14 +481,6 @@ export class TemplateController
       submodelId,
       idShortPath,
       { subject, userId },
-      async (idShortPathString, options) => {
-        await this.presentationConfigurationService.removeElementDesignEntriesForPath(
-          PresentationReferenceType.Template,
-          id,
-          idShortPathString,
-          options,
-        );
-      },
     );
   }
 
@@ -453,6 +496,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.addColumnToSubmodelElementList(
@@ -464,6 +508,7 @@ export class TemplateController
       body,
       position,
       { subject, userId },
+      version,
     );
   }
 
@@ -479,6 +524,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifyColumnOfSubmodelElementList(
@@ -490,6 +536,37 @@ export class TemplateController
       idShortOfColumn,
       body,
       { subject, userId },
+      version,
+    );
+  }
+
+  @ApiReorderColumn()
+  async reorderColumn(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @ColumnParam() idShortOfColumn: string,
+    @GroupIdShortQueryParam() groupIdShort: string | undefined,
+    @ReorderColumnRequestBody() body: ReorderColumnDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.reorderColumn(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      groupIdShort,
+      body,
+      { subject, userId },
+      version,
     );
   }
 
@@ -504,6 +581,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.deleteColumnFromSubmodelElementList(
@@ -514,6 +592,150 @@ export class TemplateController
       idShortPath,
       idShortOfColumn,
       { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPostColumnToGroup()
+  async addColumnToGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @PositionQueryParam() position: number | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.addColumnToGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      body,
+      position,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiPatchColumnInGroup()
+  async modifyColumnInGroupOfSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() idShortOfColumn: string,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.modifyColumnInGroupOfSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      body,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiDeleteColumnFromGroup()
+  async deleteColumnFromGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() idShortOfColumn: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.deleteColumnFromGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveColumnToGroup()
+  async moveColumnToGroupInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @GroupIdShortParam() groupIdShort: string,
+    @ColumnParam() columnIdShort: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveColumnToGroupInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      columnIdShort,
+      { subject, userId },
+      version,
+    );
+  }
+
+  @ApiCreateGroupFromColumn()
+  async createGroupFromColumnInSubmodelElementList(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @CreateGroupFromColumnRequestBody() body: CreateGroupFromColumnDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.createGroupFromColumnInSubmodelElementList(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body.columnIdShort,
+      body.group,
+      { subject, userId },
+      version,
     );
   }
 
@@ -528,6 +750,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.addRowToSubmodelElementList(
@@ -538,6 +761,7 @@ export class TemplateController
       idShortPath,
       position,
       { subject, userId },
+      version,
     );
   }
 
@@ -552,6 +776,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.deleteRowFromSubmodelElementList(
@@ -562,6 +787,7 @@ export class TemplateController
       idShortPath,
       idShortOfRow,
       { subject, userId },
+      version,
     );
   }
 
@@ -576,6 +802,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodelElement(
@@ -586,6 +813,7 @@ export class TemplateController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -600,6 +828,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.modifySubmodelElementValue(
@@ -610,6 +839,7 @@ export class TemplateController
       idShortPath,
       body,
       { subject, userId },
+      version,
     );
   }
 
@@ -621,6 +851,7 @@ export class TemplateController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -634,6 +865,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 
@@ -648,6 +880,7 @@ export class TemplateController
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
     @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return await this.templateService.digitalProductDocumentService.createSubmodelElementAtIdShortPath(
@@ -658,6 +891,33 @@ export class TemplateController
       idShortPath,
       body,
       { subject, userId },
+      version,
+    );
+  }
+
+  @ApiMoveSubmodelElement()
+  async moveSubmodelElement(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @MoveSubmodelElementRequestBody() body: MoveSubmodelElementDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @ApiVersion() version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return await this.templateService.digitalProductDocumentService.moveSubmodelElement(
+      correlationId,
+      organizationId,
+      id,
+      submodelId,
+      idShortPath,
+      body,
+      { subject, userId },
+      version,
     );
   }
 
@@ -669,6 +929,7 @@ export class TemplateController
     @IdShortPathParam() idShortPath: IdShortPath,
     @UserRoleDecorator() userRole: UserRoleType,
     @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @ApiVersion() version: ApiVersionsDtoType,
   ): Promise<ValueResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template =
@@ -682,6 +943,7 @@ export class TemplateController
       submodelId,
       idShortPath,
       subject,
+      version,
     );
   }
 
@@ -788,7 +1050,9 @@ export class TemplateController
         subject,
         organizationId,
       );
-    return await this.aasSerializationService.exportTemplate(template, subject);
+    const exportedTemplate = await this.aasSerializationService.exportTemplate(template, subject);
+
+    return exportedTemplate;
   }
 
   @Post("/import")

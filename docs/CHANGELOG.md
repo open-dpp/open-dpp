@@ -1,5 +1,61 @@
 # @open-dpp/docs
 
+## 4.0.1
+
+## 4.0.0
+
+### Patch Changes
+
+- [#716](https://github.com/open-dpp/open-dpp/pull/716) [`e3a23b6`](https://github.com/open-dpp/open-dpp/commit/e3a23b6804ff11fb57fd3471aec790185ef03ae6) Thanks [@Hentra](https://github.com/Hentra)! - Simplified installation with breaking configuration changes.
+
+  The Ollama AI provider was removed; Mistral (`codestral-latest`) is now the only supported provider. `OPEN_DPP_OLLAMA_URL` was dropped from the env schema and the `ollama` value was removed from the `AiProvider` enum in the API client. Existing AI configurations using Ollama must be migrated to Mistral (set `OPEN_DPP_MISTRAL_API_KEY`).
+
+  MongoDB configuration now accepts either a connection URI or individual connection settings: provide `OPEN_DPP_MONGODB_URI`, or all of `OPEN_DPP_MONGODB_HOST`, `OPEN_DPP_MONGODB_PORT`, `OPEN_DPP_MONGODB_USER` and `OPEN_DPP_MONGODB_PASSWORD`. Host/port setups without credentials no longer pass validation. `OPEN_DPP_MONGODB_USER`, `OPEN_DPP_MONGODB_PASSWORD` and `OPEN_DPP_MONGODB_DATABASE` are optional when using a URI; `OPEN_DPP_MONGODB_DATABASE` defaults to `management`.
+
+  The example deployment was simplified (MongoDB single-node replica set with Mailpit for local development) and a new production setup guide covers MongoDB, SMTP and S3-compatible storage.
+
+## 3.6.0
+
+### Minor Changes
+
+- [#722](https://github.com/open-dpp/open-dpp/pull/722) [`3720c86`](https://github.com/open-dpp/open-dpp/commit/3720c8615cf26e57492525cc2b7a7e090990efb7) Thanks [@florianBieck](https://github.com/florianBieck)! - API Keys are now manageable
+
+## 3.5.0
+
+## 3.4.0
+
+## 3.3.0
+
+## 3.2.0
+
+## 3.1.4
+
+## 3.1.3
+
+### Patch Changes
+
+- [#694](https://github.com/open-dpp/open-dpp/pull/694) [`28fc7e9`](https://github.com/open-dpp/open-dpp/commit/28fc7e9479259b56aebdca3ca8db9eb6f4d3f961) Thanks [@florianBieck](https://github.com/florianBieck)! - Remove generated OpenAPI documentation pages from the docs app. The docs build ran out of memory rendering the full spec; the REST API is documented via the online Swagger UI at https://cloud.open-dpp.de/api, which remains linked in the navigation.
+
+## 3.1.2
+
+## 3.1.1
+
+## 3.1.0
+
+## 3.0.0
+
+## 2.10.0
+
+## 2.9.0
+
+## 2.8.0
+
+## 2.7.0
+
+### Minor Changes
+
+- [#601](https://github.com/open-dpp/open-dpp/pull/601) [`403f74e`](https://github.com/open-dpp/open-dpp/commit/403f74ef849fe2fcb5d5fd0771783584fb801928) Thanks [@mr42](https://github.com/mr42)! - Represent links as Property with valueType AnyUri instead of using ReferenceElement. Add api versioning to REST-API.
+
 ## 2.6.0
 
 ## 2.5.0

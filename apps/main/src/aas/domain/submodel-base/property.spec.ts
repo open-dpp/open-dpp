@@ -1,5 +1,5 @@
-import { expect } from "@jest/globals";
-import { DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
+import { beforeAll, expect } from "@jest/globals";
+import { DataTypeDef, KeyTypes, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
@@ -10,8 +10,15 @@ import { Security } from "../security/security";
 import { SubjectAttributes } from "../security/subject-attributes";
 
 import { Property } from "./property";
+import { Pointer } from "./pointer";
+import { Reference } from "../common/reference";
+import { Key } from "../common/key";
+import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 
 describe("property", () => {
+  beforeAll(() => {
+    registerSubmodelElementClasses();
+  });
   it.each([
     {
       value: "blub1",
@@ -27,6 +34,11 @@ describe("property", () => {
       value: "blub1",
       valueType: DataTypeDef.Boolean,
       errorMessage: "Invalid input",
+    },
+    {
+      value: "http://",
+      valueType: DataTypeDef.AnyUri,
+      errorMessage: "HTTP URIs must have a host.",
     },
   ])("should validate value attribute for $valueType", ({ value, valueType, errorMessage }) => {
     expect(() => Property.create({ idShort: "b1", value, valueType })).toThrow(
@@ -104,5 +116,24 @@ describe("property", () => {
     });
     ability = security.defineAbilityForSubject(anonymous);
     expect(property.toPlain({ ability })).toEqual({});
+  });
+
+  it("should copy", () => {
+    const property = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
+    const parentPointer = Pointer.create({
+      parentIdShortPath: IdShortPath.create({ path: "parent" }),
+      parentReference: Reference.create({
+        type: ReferenceTypes.ModelReference,
+        keys: [
+          Key.create({
+            type: KeyTypes.Submodel,
+            value: "parent",
+          }),
+        ],
+      }),
+    });
+    property.setParentPointer(parentPointer);
+    const copy = property.copy();
+    expect(copy.value).toEqual(property);
   });
 });

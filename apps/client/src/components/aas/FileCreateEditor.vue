@@ -14,7 +14,7 @@ import {
   submodelBaseFormDefaultValues,
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 import FileForm from "./FileForm.vue";
 
 const props = defineProps<SharedEditorProps<FileCreateEditorProps, FileRequestDto>>();

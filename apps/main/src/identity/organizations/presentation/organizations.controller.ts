@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
   Patch,
@@ -21,12 +24,11 @@ import { UserRoleDecorator } from "../../auth/presentation/decorators/user-role.
 import { type UserRoleType } from "../../users/domain/user-role.enum";
 import {
   InvitationResponseDto,
-  InvitationResponseSchema,
   type MemberRoleChangeDto,
   MemberRoleChangeDtoSchema,
 } from "@open-dpp/dto";
 import { InvitationsRepository } from "../infrastructure/adapters/invitations.repository";
-import { UsersService } from "../../users/application/services/users.service";
+import { UsersRepository } from "../../users/infrastructure/adapters/users.repository";
 import { UserEmailDecorator } from "../../auth/presentation/decorators/user-email.decorator";
 import { InvitationPopulateDecorator } from "../application/invitation-populate-decorator";
 import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
@@ -43,7 +45,7 @@ export class OrganizationsController {
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly membersService: MembersService,
     private readonly invitationsRepository: InvitationsRepository,
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   @Post()
@@ -137,9 +139,9 @@ export class OrganizationsController {
     const decorator = new InvitationPopulateDecorator(
       foundInvitation,
       this.organizationsRepository,
-      this.usersService,
+      this.usersRepository,
     );
-    return InvitationResponseSchema.parse((await decorator.populate()).toPlain());
+    return (await decorator.populate()).toDto();
   }
 
   @Get(":id/members")
@@ -163,6 +165,17 @@ export class OrganizationsController {
     @OrganizationId() organizationId: string,
   ) {
     return this.membersService.updateMemberRole(organizationId, id, body.role);
+  }
+
+  @MemberHasRole([MemberRole.OWNER])
+  @Delete("members/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeMember(
+    @Param("id") id: string,
+    @OrganizationId() organizationId: string,
+    @AuthSession() session: Session,
+  ) {
+    await this.membersService.removeMember(organizationId, id, session.userId);
   }
 
   @Get(":id/name")

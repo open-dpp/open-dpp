@@ -1,42 +1,64 @@
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
 import ChangeRoleDialog from "./ChangeRoleDialog.vue";
 import { UserRoleDto, UserRoleDtoEnum } from "@open-dpp/dto";
 
-const props = defineProps<{
-  userId: string;
-  userEmail: string;
-  currentRole: string;
-}>();
+const userId = ref("");
+const userEmail = ref("");
+const currentRole = ref("");
 
 const emit = defineEmits<{
-  (e: "close"): void;
   (e: "success"): void;
 }>();
+
+const visible = ref(false);
 
 const { t } = useI18n();
 
 const roleOptions = computed(() => [
-  { label: t("organizations.admin.changeRoleDialog.roleAdmin"), value: UserRoleDto.ADMIN },
-  { label: t("organizations.admin.changeRoleDialog.roleUser"), value: UserRoleDto.USER },
+  {
+    label: t("organizations.admin.changeRoleDialog.roleAdmin"),
+    value: UserRoleDto.ADMIN,
+  },
+  {
+    label: t("organizations.admin.changeRoleDialog.roleUser"),
+    value: UserRoleDto.USER,
+  },
 ]);
 
 async function onSave(role: string) {
-  await apiClient.dpp.users.setRole(props.userId, {
+  await apiClient.dpp.users.setRole(userId.value, {
     role: UserRoleDtoEnum.parse(role),
   });
 }
+
+async function openDialog(id: string, email: string, role: string) {
+  userId.value = id;
+  userEmail.value = email;
+  currentRole.value = role;
+  visible.value = true;
+}
+
+defineExpose({
+  openDialog,
+});
 </script>
 
 <template>
   <ChangeRoleDialog
-    v-bind="props"
+    v-if="visible"
+    :user-id="userId"
+    :user-email="userEmail"
+    :current-role="currentRole"
     :role-options="roleOptions"
     :escalation-role="UserRoleDto.ADMIN"
     :on-save="onSave"
-    @close="emit('close')"
-    @success="emit('success')"
+    @close="visible = false"
+    @success="
+      emit('success');
+      visible = false;
+    "
   />
 </template>

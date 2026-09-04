@@ -2,10 +2,10 @@
 import type { MemberDto } from "@open-dpp/api-client";
 import type { InvitationStatus } from "better-auth/plugins";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
-import { ModalType, useLayoutStore } from "../../stores/layout";
+import { useOrganizations } from "../../composables/organizations.ts";
 import ChangeMemberRoleDialog from "./ChangeMemberRoleDialog.vue";
 import InviteMemberDialog from "./InviteMemberDialog.vue";
 import { useUserStore } from "../../stores/user.ts";
@@ -31,11 +31,11 @@ const { members } = defineProps<{
 }>();
 
 const { t } = useI18n();
-const layoutStore = useLayoutStore();
 const { asSubject, user } = useUserStore();
 
 const invitations = ref<InvitedMember[]>([]);
 const changeRoleMember = ref<MemberDto | null>(null);
+const inviteMemberDialog = useTemplateRef("inviteMemberDialog");
 
 const rows = computed(() =>
   [...members, ...invitations.value].sort((a, b) => a.role.localeCompare(b.role)),
@@ -79,6 +79,16 @@ function canChangeRole(member: MemberDto): boolean {
   );
 }
 
+const { removeMember } = useOrganizations();
+
+function canRemoveMember(member: MemberDto): boolean {
+  return canChangeRole(member) && member.role !== MemberRoleDto.OWNER;
+}
+
+function onRemoveMember(member: MemberDto) {
+  removeMember(member, () => emit("refresh"));
+}
+
 onMounted(async () => {
   await loadInvitations();
 });
@@ -94,12 +104,7 @@ onMounted(async () => {
     @close="onChangeRoleClose"
     @success="onChangeRoleSuccess"
   />
-  <InviteMemberDialog
-    v-if="layoutStore.modalOpen === ModalType.INVITE_MEMBER_MODAL"
-    :organization-id="organizationId"
-    @close="layoutStore.closeModal()"
-    @invited-user="loadInvitations"
-  />
+  <InviteMemberDialog ref="inviteMemberDialog" @success="loadInvitations" />
   <DataTable :value="rows">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -107,7 +112,7 @@ onMounted(async () => {
         <div class="flex items-center gap-2">
           <Button
             :label="t('organizations.inviteUser')"
-            @click="layoutStore.openModal(ModalType.INVITE_MEMBER_MODAL)"
+            @click="inviteMemberDialog?.openDialog(organizationId)"
           />
         </div>
       </div>
@@ -155,13 +160,14 @@ onMounted(async () => {
         <Button v-if="isInvited(data)" severity="secondary" @click="cancelInvite(data.id)">
           {{ t("organizations.invitation.cancel") }}
         </Button>
-        <Button
-          v-else-if="canChangeRole(data)"
-          severity="secondary"
-          @click="changeRoleMember = data"
-        >
-          {{ t("organizations.admin.changeRoleDialog.change") }}
-        </Button>
+        <div v-else class="flex gap-2">
+          <Button v-if="canChangeRole(data)" severity="secondary" @click="changeRoleMember = data">
+            {{ t("organizations.admin.changeRoleDialog.change") }}
+          </Button>
+          <Button v-if="canRemoveMember(data)" severity="danger" @click="onRemoveMember(data)">
+            {{ t("common.remove") }}
+          </Button>
+        </div>
       </template>
     </Column>
   </DataTable>

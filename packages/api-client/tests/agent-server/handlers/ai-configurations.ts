@@ -1,8 +1,8 @@
 import type { AiConfigurationDto } from "../../../src/agent-server/ai-configuration/ai-configuration.dtos";
+import { AiProvider } from "../../../src/agent-server/ai-configuration/ai-configuration.dtos";
 import { randomUUID } from "node:crypto";
 
 import { http, HttpResponse } from "msw";
-import { AiProvider } from "../../../src/agent-server/ai-configuration/ai-configuration.dtos";
 import { agentServerURL } from "./index";
 
 export const nowDate = new Date("2025-01-01T12:00:00Z");

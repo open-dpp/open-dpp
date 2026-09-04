@@ -19,6 +19,8 @@ import { InvitationsRepository } from "../../infrastructure/adapters/invitations
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { InstanceSettingsService } from "../../../../instance-settings/application/services/instance-settings.service";
+import { InvitationPopulateDecorator } from "../invitation-populate-decorator";
+import type { InvitationResponseDto, InvitationStatusDtoType } from "@open-dpp/dto";
 
 @Injectable()
 export class OrganizationsService {
@@ -159,6 +161,26 @@ export class OrganizationsService {
       return null;
     }
     return organization.name;
+  }
+
+  async getInvitationsForEmail(
+    email: string,
+    status?: InvitationStatusDtoType,
+  ): Promise<InvitationResponseDto[]> {
+    const invitations = await this.invitationsRepository.findByEmail(email);
+    const filtered = status
+      ? invitations.filter((invitation) => invitation.status === status)
+      : invitations;
+    return Promise.all(
+      filtered.map(async (invitation) => {
+        const decorator = new InvitationPopulateDecorator(
+          invitation,
+          this.organizationsRepository,
+          this.usersRepository,
+        );
+        return (await decorator.populate()).toDto();
+      }),
+    );
   }
 
   async getAllOrganizations(session: Session) {

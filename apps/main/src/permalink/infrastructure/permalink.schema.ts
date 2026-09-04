@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { PermalinkKind } from "@open-dpp/dto";
 import { Document } from "mongoose";
 
 export const PermalinkDocVersion = {
@@ -23,10 +24,10 @@ export class PermalinkDoc extends Document<string> {
   declare _id: string;
 
   @Prop({ type: String, required: false, default: null })
-  organizationId: string | null;
+  passportId: string | null;
 
-  @Prop({ type: Boolean, required: true, default: false })
-  primary: boolean;
+  @Prop({ type: String, required: false, default: null })
+  organizationId: string | null;
 
   @Prop({ type: String, required: false, default: null })
   slug: string | null;
@@ -37,7 +38,7 @@ export class PermalinkDoc extends Document<string> {
   @Prop({ type: String, required: false, default: null })
   publishedUrl: string | null;
 
-  @Prop({ type: String, required: false, default: "presentation" })
+  @Prop({ type: String, required: false, default: PermalinkKind.OPEN_DPP })
   kind: string;
 
   @Prop({ type: String, required: false, default: null })
@@ -59,24 +60,22 @@ export class PermalinkDoc extends Document<string> {
 export const PermalinkSchema = SchemaFactory.createForClass(PermalinkDoc);
 
 PermalinkSchema.index(
-  { presentationConfigurationId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { presentationConfigurationId: { $type: "string" } },
-  },
-);
-PermalinkSchema.index(
   { slug: 1 },
   {
     unique: true,
     partialFilterExpression: { slug: { $type: "string" } },
   },
 );
+
 PermalinkSchema.index(
   { uniqueProductIdentifierId: 1 },
   {
     unique: true,
-    partialFilterExpression: { uniqueProductIdentifierId: { $type: "string" } },
+    partialFilterExpression: {
+      uniqueProductIdentifierId: { $type: "string" },
+      kind: PermalinkKind.GS1_LINK,
+    },
   },
 );
 PermalinkSchema.index({ organizationId: 1, createdAt: -1, _id: -1 });
+PermalinkSchema.index({ passportId: 1, createdAt: -1, _id: -1 });

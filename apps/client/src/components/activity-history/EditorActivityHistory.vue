@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type DigitalProductDocumentTypeType } from "../../lib/digital-product-document.ts";
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import {
   ActivityDtoTypes,
   type ActivityDtoTypesType,
@@ -10,6 +10,10 @@ import {
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useActivityHistory } from "../../composables/activity-history.ts";
+import {
+  type ActivityHistoryStackEntry,
+  useActivityHistoryStack,
+} from "../../composables/activity-history-stack.ts";
 import { usePagination } from "../../composables/pagination.ts";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
@@ -17,7 +21,11 @@ import PolicyModified from "./PolicyModified.vue";
 import ReferenceElementValueChanged from "./ReferenceElementValueChanged.vue";
 import RowAddedOrDeleted from "./RowAddedOrDeleted.vue";
 import ColumnAddedOrDeleted from "./ColumnAddedOrDeleted.vue";
+import ColumnInGroupChanged from "./ColumnInGroupChanged.vue";
 import SubmodelElementAddedOrDeleted from "./SubmodelElementAddedOrDeleted.vue";
+import SubmodelElementMoved from "./SubmodelElementMoved.vue";
+import SubmodelMoved from "./SubmodelMoved.vue";
+import ActivityHistoryStackBreadcrumb from "./ActivityHistoryStackBreadcrumb.vue";
 
 import PolicyDeleted from "./PolicyDeleted.vue";
 
@@ -29,13 +37,25 @@ const props = defineProps<{
   filterByActivityType?: ActivityDtoTypesType[];
 }>();
 
-const { activities, fetchActivities } = useActivityHistory(props.type);
+const { activities, fetchActivities, changePeriod, period } = useActivityHistory(props.type);
 
 const route = useRoute();
 
+const {
+  historyStack,
+  currentPath,
+  goToEntry: goToHistoryEntry,
+  viewHistoryBeforeMove,
+  resetToLive,
+} = useActivityHistoryStack({
+  livePath: () => props.path,
+  initialPeriod: [...period.value],
+  changePeriod,
+});
+
 async function fetchCallback(pagingParams: PagingParamsDto) {
   const response = await fetchActivities(props.id, pagingParams, {
-    path: props.path,
+    path: currentPath.value,
     type: props.filterByActivityType,
   });
 
@@ -43,7 +63,7 @@ async function fetchCallback(pagingParams: PagingParamsDto) {
   return response;
 }
 
-const { nextPage, reloadCurrentPage } = usePagination({
+const { nextPage, reloadCurrentPage, resetCursor } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
   fetchCallback,
@@ -51,8 +71,29 @@ const { nextPage, reloadCurrentPage } = usePagination({
 });
 const { t } = useI18n();
 
+const stackOptions = computed(() => [
+  { value: -1, label: t("activityHistory.live") },
+  ...historyStack.value.map((entry, index) => ({
+    value: index,
+    label: t("activityHistory.beforeMove", { path: entry.movedToPath }),
+  })),
+]);
+
+async function goToEntry(index: number) {
+  await goToHistoryEntry(index);
+  await resetCursor();
+}
+
+async function onViewHistoryBeforeMove(payload: ActivityHistoryStackEntry) {
+  await viewHistoryBeforeMove(payload);
+  await resetCursor();
+}
+
 function filterChanges(changes: any[], activityType: ActivityDtoTypesType) {
-  if (activityType === ActivityDtoTypes.ColumnModified) {
+  if (
+    activityType === ActivityDtoTypes.ColumnModified ||
+    activityType === ActivityDtoTypes.ColumnModifiedInGroup
+  ) {
     return changes.slice(0, 1);
   }
   if (activityType === ActivityDtoTypes.SubmodelAdded) {
@@ -76,6 +117,14 @@ function filterChanges(changes: any[], activityType: ActivityDtoTypesType) {
   return changes;
 }
 
+function refreshActivities() {
+  const now = dayjs().utc();
+  const freshPeriod = [now.subtract(1, "month").toDate(), now.toDate()];
+  resetToLive(freshPeriod);
+  changePeriod(freshPeriod);
+  reloadCurrentPage();
+}
+
 onMounted(async () => {
   await nextPage();
 });
@@ -85,7 +134,10 @@ onMounted(async () => {
   <div class="flex flex-col gap-4">
     <Toolbar>
       <template #start>
-        <Button @click="reloadCurrentPage" :aria-label="t('common.refresh')" icon="pi pi-refresh" />
+        <Button @click="refreshActivities" :aria-label="t('common.refresh')" icon="pi pi-refresh" />
+      </template>
+      <template v-if="historyStack.length > 0" #end>
+        <ActivityHistoryStackBreadcrumb :items="stackOptions" @navigate="goToEntry" />
       </template>
     </Toolbar>
     <Timeline :value="activities" align="left">
@@ -177,6 +229,17 @@ onMounted(async () => {
                 :position="change.position"
                 :value="change.value"
               />
+              <ColumnInGroupChanged
+                v-else-if="
+                  change.type === ChangeEventDtoTypes.ColumnAddedToGroup ||
+                  change.type === ChangeEventDtoTypes.ColumnDeletedFromGroup ||
+                  change.type === ChangeEventDtoTypes.ColumnModifiedInGroup ||
+                  change.type === ChangeEventDtoTypes.ColumnMovedToGroup
+                "
+                :group-id-short="change.groupIdShort"
+                :position="change.position"
+                :value="change.value"
+              />
               <SubmodelElementAddedOrDeleted
                 v-else-if="
                   change.type === ChangeEventDtoTypes.SubmodelElementAdded ||
@@ -184,6 +247,21 @@ onMounted(async () => {
                 "
                 :id-short="change.value.idShort"
                 :value="change.value"
+              />
+              <SubmodelElementMoved
+                v-else-if="change.type === ChangeEventDtoTypes.SubmodelElementMoved"
+                :old-path="change.oldPath"
+                :path="change.path"
+                :position="change.position"
+                :value="change.value"
+                :activity-created-at="slotProps.item.header.createdAt"
+                @view-history-before-move="onViewHistoryBeforeMove"
+              />
+              <SubmodelMoved
+                v-else-if="change.type === ChangeEventDtoTypes.SubmodelMoved"
+                :submodel-id="change.submodelId"
+                :old-position="change.oldPosition"
+                :position="change.position"
               />
             </TimelineContentItem>
           </template>

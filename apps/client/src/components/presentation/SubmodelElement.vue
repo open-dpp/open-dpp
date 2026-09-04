@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
 import { computed } from "vue";
-import { useDisplayName } from "../../composables/display-name";
-import { usePresentationDispatch } from "./presentation-dispatch";
+import { useLanguageTextList } from "../../composables/language.ts";
+import { usePresentationDispatch } from "../../lib/presentation/presentation-dispatch.ts";
 import SubmodelElementValue from "./SubmodelElementValue.vue";
 
 const { element, parentPath } = defineProps<{
@@ -10,7 +10,8 @@ const { element, parentPath } = defineProps<{
   parentPath?: string;
 }>();
 
-const { description: elementName } = useDisplayName(element.displayName);
+const { name: elementName } = useLanguageTextList(element.displayName);
+const { name: descriptionText } = useLanguageTextList(() => element.description, "");
 
 const isComplexType = computed(() =>
   ["SubmodelElementList", "File", "SubmodelElementCollection"].includes(element.modelType),
@@ -39,6 +40,9 @@ const { selfCaptioning } = usePresentationDispatch(
   >
     <dt v-if="!selfCaptioning" class="shrink-0 text-sm font-medium text-gray-500">
       {{ elementName }}
+      <p v-if="descriptionText" class="mt-0.5 text-xs font-normal text-gray-400">
+        {{ descriptionText }}
+      </p>
     </dt>
     <SubmodelElementValue :element="element" :path="fullPath" />
   </div>

@@ -1,9 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import {
-  ExternalIdentifierType,
-  type ExternalIdentifierTypeValue,
-} from "../presentation/dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierType, type UniqueProductIdentifierTypeValue } from "@open-dpp/dto";
 
 export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
@@ -15,12 +12,18 @@ export const UniqueProductIdentifierSchemaVersion = {
 export type UniqueProductIdentifierSchemaVersion_TYPE =
   (typeof UniqueProductIdentifierSchemaVersion)[keyof typeof UniqueProductIdentifierSchemaVersion];
 
-/**
- * The MongoDB collection name for UPI documents. Exported so other repositories
- * (e.g. the permalink passport-scoped union query) can `$lookup` against it
- * without re-declaring the literal or taking a Mongoose-model DI dependency.
- */
 export const UNIQUE_PRODUCT_IDENTIFIER_COLLECTION = "unique_product_identifiers";
+
+@Schema({ _id: false })
+export class IdentifierPart {
+  @Prop({ required: true })
+  key: string;
+
+  @Prop({ required: true })
+  value: string;
+}
+
+export const IdentifierPartSchema = SchemaFactory.createForClass(IdentifierPart);
 
 @Schema({
   collection: UNIQUE_PRODUCT_IDENTIFIER_COLLECTION,
@@ -38,32 +41,22 @@ export class UniqueProductIdentifierDoc extends Document {
   organizationId?: string | null;
 
   @Prop({
-    default: ExternalIdentifierType.OPEN_DPP_UUID,
-    enum: Object.values(ExternalIdentifierType),
+    default: UniqueProductIdentifierType.OPEN_DPP_UUID,
+    enum: Object.values(UniqueProductIdentifierType),
     type: String,
   })
-  type?: ExternalIdentifierTypeValue;
+  type?: UniqueProductIdentifierTypeValue;
 
-  /**
-   * GS1 identity: GTIN normalized to GTIN-14. Only populated on `type = GS1` rows;
-   * null otherwise. Uniqueness is enforced by a partial compound index (see below).
-   */
-  @Prop({ type: String, required: false, default: null })
-  gtin?: string | null;
+  // Canonical exact-match lookup value (Digital-Link path for GS1, the uuid
+  // otherwise). Optional in the type because legacy pre-parts docs lack it;
+  // every save() writes it.
+  @Prop({ type: String, required: false })
+  value?: string;
 
-  /**
-   * GS1 batch / lot (AI `10`), CSET-82, ≤ 20 chars. Part of the assembled unique
-   * key on `type = GS1` rows; null when absent.
-   */
-  @Prop({ type: String, required: false, default: null })
-  batch?: string | null;
-
-  /**
-   * GS1 serial (AI `21`), CSET-82, ≤ 20 chars. Part of the assembled unique key on
-   * `type = GS1` rows; null when absent.
-   */
-  @Prop({ type: String, required: false, default: null })
-  serial?: string | null;
+  // Component breakdown for composite identifiers (e.g. gtin/batch/serial for
+  // GS1); absent for single-value identifiers such as OPEN_DPP_UUID.
+  @Prop({ type: [IdentifierPartSchema], default: undefined })
+  parts?: IdentifierPart[];
 
   @Prop({
     default: UniqueProductIdentifierSchemaVersion.v1_3_0,
@@ -85,16 +78,13 @@ export const UniqueProductIdentifierSchema = SchemaFactory.createForClass(
 UniqueProductIdentifierSchema.index({ referenceId: 1 });
 UniqueProductIdentifierSchema.index({ type: 1 });
 UniqueProductIdentifierSchema.index({ organizationId: 1, createdAt: -1, _id: -1 });
-// Global uniqueness of the FULL assembled GS1 key (gtin, batch, serial). The
-// partial filter scopes the constraint to GS1 rows (only those carry a string
-// gtin), so OPEN_DPP_UUID rows (gtin = null) are never affected. Because batch
-// and serial are stored as null when absent, a bare GTIN keys as
-// (gtin, null, null) — still one passport per bare GTIN — while serialized units
-// (same gtin, distinct serials) key distinctly and so become distinct passports.
+// Global (not org-scoped) uniqueness: the public GS1 resolver looks up a key
+// with no organization context, so one canonical value must map to exactly one
+// passport. Partial so legacy docs without `value` stay out of the index.
 UniqueProductIdentifierSchema.index(
-  { gtin: 1, batch: 1, serial: 1 },
+  { type: 1, value: 1 },
   {
     unique: true,
-    partialFilterExpression: { gtin: { $type: "string" } },
+    partialFilterExpression: { value: { $type: "string" } },
   },
 );

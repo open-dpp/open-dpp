@@ -7,14 +7,14 @@ import {
   PresentationConfigurationDtoSchema,
   PresentationConfigurationExportSchema,
   PresentationConfigurationPatchSchema,
-  PresentationReferenceType,
 } from "./presentation-configuration.dto";
+import { DigitalProductDocumentTypes } from "../digital-product-document/digital-product-document.dto";
 
 const validBase = () => ({
   id: randomUUID(),
   organizationId: "org-1",
   referenceId: randomUUID(),
-  referenceType: PresentationReferenceType.Template,
+  referenceType: DigitalProductDocumentTypes.Template,
   label: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),

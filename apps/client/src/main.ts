@@ -9,6 +9,7 @@ import Tooltip from "primevue/tooltip";
 import { createApp, toRaw, watch } from "vue";
 import App from "./App.vue";
 import { authClient } from "./auth-client.ts";
+import apiClient from "./lib/api-client.ts";
 import { router } from "./router";
 import { useIndexStore } from "./stores";
 import { useLanguageStore } from "./stores/language.ts";
@@ -20,6 +21,7 @@ import "primeicons/primeicons.css";
 import "dayjs/locale/de";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import { convertLanguageToLocale } from "./translations/util.ts";
 
 dayjs.extend(localizedFormat);
 
@@ -65,6 +67,17 @@ async function startApp() {
   const userStore = useUserStore();
   userStore.updateUserBySession(session);
   if (isSignedIn) {
+    try {
+      const me = await apiClient.dpp.users.getMe();
+      userStore.setMe(me.data.user);
+      if (me.data.user.preferredLanguage) {
+        (i18n.global.locale as unknown as { value: Locale }).value = convertLanguageToLocale(
+          me.data.user.preferredLanguage,
+        );
+      }
+    } catch (error) {
+      console.error("Failed to load preferred language for signed-in user", error);
+    }
     const organizationStore = useOrganizationsStore();
     await organizationStore.fetchOrganizations();
     const indexStore = useIndexStore();

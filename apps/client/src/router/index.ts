@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from "vue-router";
+import type { RouteRecordRaw, RouterScrollBehavior } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
 import { authClient } from "../auth-client.ts";
 
@@ -64,7 +64,6 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       layout: "none",
       public: true,
-      onlyAnonymous: true,
     },
   },
   {
@@ -95,20 +94,28 @@ export const routes: RouteRecordRaw[] = [
   ...ADMIN_ROUTES,
 ];
 
+/** Only scroll to top on a real page change. A navigation that only changes
+ * query params (drawer open/close, pagination cursor, move/edit bookkeeping)
+ * keeps the current scroll position instead of jerking the viewport back up. */
+export const scrollBehavior: RouterScrollBehavior = (to, from, savedPosition) => {
+  if (savedPosition) return savedPosition;
+  if (to.hash) {
+    return { el: to.hash, behavior: "smooth", top: 150 };
+  }
+  if (to.path === from.path) {
+    return false;
+  }
+
+  return { top: 0 };
+};
+
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition;
-    if (to.hash) {
-      return { el: to.hash, behavior: "smooth", top: 150 };
-    }
-
-    return { top: 0 };
-  },
+  scrollBehavior,
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
   const layoutStore = useLayoutStore();
 
   // avoid loading page when only query params changed
@@ -120,18 +127,16 @@ router.beforeEach(async (to, from, next) => {
   const isSignedIn = session !== null;
 
   if (isSignedIn && to.meta?.onlyAnonymous) {
-    next("/");
-    return;
+    return "/";
   }
   if (!isSignedIn && !to.meta?.public) {
     const fullRedirectUrl = encodeURIComponent(window.location.origin + to.fullPath);
-    next({
+    return {
       name: "Signin",
       query: {
         redirect: fullRedirectUrl,
       },
-    });
-    return;
+    };
   }
 
   const { organizations } = useOrganizationsStore();
@@ -140,14 +145,13 @@ router.beforeEach(async (to, from, next) => {
   if (paramOrganizationId && paramOrganizationId !== indexStore.selectedOrganization) {
     const organization = organizations.find((o) => o.id === paramOrganizationId);
     if (!organization) {
-      next("/organizations/create");
       indexStore.selectOrganization(null);
-      return;
+      return "/organizations/create";
     }
     indexStore.selectOrganization(toRaw(organization).id);
   }
 
-  next();
+  // returning undefined continues the navigation
 });
 
 router.afterEach(async (to, from) => {

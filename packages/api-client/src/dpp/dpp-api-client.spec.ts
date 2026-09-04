@@ -2,14 +2,11 @@ import { DppApiClient } from "./dpp-api-client";
 import { UniqueProductIdentifiersNamespace } from "./unique-product-identifiers/unique-product-identifiers.namespace";
 import { PermalinksNamespace } from "./permalinks/permalinks.namespace";
 
-// Pin re-exports from the package index — these must resolve for the spec to import cleanly.
 import {
   UniqueProductIdentifiersNamespace as UpiNsFromIndex,
   PermalinksNamespace as PermalinksNsFromIndex,
 } from "../index";
 
-// Import UPI DTO types + new permalink request types from the package index.
-// These compile-time pins verify the index re-exports resolve under tsc --noEmit.
 import type {
   UniqueProductIdentifierListDto,
   UniqueProductIdentifierListItemDto,
@@ -19,8 +16,6 @@ import type {
   PermalinkUpdateRequest,
 } from "../index";
 
-// Use a declare const to satisfy tsc: the named types must resolve (compile-time
-// only — declare const has no runtime footprint).
 declare const _typePin: [
   UniqueProductIdentifierListDto,
   UniqueProductIdentifierListItemDto,
@@ -52,7 +47,6 @@ describe("DppApiClient", () => {
 
   describe("index re-exports", () => {
     it("UniqueProductIdentifiersNamespace is re-exported from the package index", () => {
-      // If the import above failed, this test wouldn't even run.
       expect(UpiNsFromIndex).toBeDefined();
       expect(UpiNsFromIndex).toBe(UniqueProductIdentifiersNamespace);
     });

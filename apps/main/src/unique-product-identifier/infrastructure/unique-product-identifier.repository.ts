@@ -3,21 +3,41 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
-import { decodeCursor, encodeCursor, Pagination } from "../../pagination/pagination";
+import { findPageByCursor } from "../../lib/repositories";
+import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
+import { canonicalGs1Value, UniqueProductIdentifier } from "../domain/unique.product.identifier";
+import { UniqueProductIdentifierType, type UniqueProductIdentifierTypeValue } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import {
-  ExternalIdentifierType,
-  type ExternalIdentifierTypeValue,
-} from "../presentation/dto/unique-product-identifier-dto.schema";
-import {
+  type IdentifierPart,
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchemaVersion,
 } from "./unique-product-identifier.schema";
 
+const GS1_PART_KEYS = ["gtin", "batch", "serial"] as const;
+
+function toParts(plain: {
+  gtin: string | null;
+  batch: string | null;
+  serial: string | null;
+}): Pick<IdentifierPart, "key" | "value">[] | undefined {
+  if (plain.gtin === null) {
+    return undefined;
+  }
+  return GS1_PART_KEYS.flatMap((key) => {
+    const value = plain[key];
+    return value === null ? [] : [{ key, value }];
+  });
+}
+
+function partValue(parts: IdentifierPart[] | undefined, key: string): string | null {
+  return parts?.find((part) => part.key === key)?.value ?? null;
+}
+
 @Injectable()
 export class UniqueProductIdentifierRepository {
-  private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
+  private readonly uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
 
   constructor(
     @InjectModel(UniqueProductIdentifierDoc.name)
@@ -31,9 +51,9 @@ export class UniqueProductIdentifierRepository {
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
       type: uniqueProductIdentifierDoc.type ?? null,
-      gtin: uniqueProductIdentifierDoc.gtin ?? null,
-      batch: uniqueProductIdentifierDoc.batch ?? null,
-      serial: uniqueProductIdentifierDoc.serial ?? null,
+      gtin: partValue(uniqueProductIdentifierDoc.parts, "gtin"),
+      batch: partValue(uniqueProductIdentifierDoc.parts, "batch"),
+      serial: partValue(uniqueProductIdentifierDoc.parts, "serial"),
       organizationId: uniqueProductIdentifierDoc.organizationId ?? null,
     });
   }
@@ -46,9 +66,8 @@ export class UniqueProductIdentifierRepository {
         _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_3_0,
         referenceId: plain.referenceId,
         type: plain.type,
-        gtin: plain.gtin,
-        batch: plain.batch,
-        serial: plain.serial,
+        value: uniqueProductIdentifier.canonicalValue,
+        parts: toParts(plain),
         organizationId: plain.organizationId,
       },
       {
@@ -80,6 +99,12 @@ export class UniqueProductIdentifierRepository {
     return uniqueProductIdentifier;
   }
 
+  async findByIds(uuids: string[]): Promise<UniqueProductIdentifier[]> {
+    if (uuids.length === 0) return [];
+    const docs = await this.uniqueProductIdentifierDoc.find({ _id: { $in: uuids } });
+    return docs.map((doc) => this.convertToDomain(doc));
+  }
+
   async findOneByReferencedId(referenceId: string) {
     const uniqueProductIdentifierDoc = await this.uniqueProductIdentifierDoc
       .findOne({
@@ -94,18 +119,9 @@ export class UniqueProductIdentifierRepository {
     return this.convertToDomain(uniqueProductIdentifierDoc);
   }
 
-  /**
-   * Resolve the newest UPI for a passport filtered by external identifier type.
-   *
-   * Used by the legacy GS1 1:1 identity service (`findByReferenceIdAndType(.., GS1)`).
-   * The canonical `OPEN_DPP_UUID` lookup was removed in ADR 0006 (media keys on the
-   * passportId; AI chat resolves the passport directly), so this is a plain
-   * type-filtered, newest-first lookup. `_id` is a stable secondary key (matching the
-   * sibling list queries) so the result is deterministic on a `createdAt` tie.
-   */
   async findByReferenceIdAndType(
     referenceId: string,
-    type: ExternalIdentifierTypeValue,
+    type: UniqueProductIdentifierTypeValue,
   ): Promise<UniqueProductIdentifier | undefined> {
     const doc = await this.uniqueProductIdentifierDoc
       .findOne({
@@ -119,26 +135,24 @@ export class UniqueProductIdentifierRepository {
     return this.convertToDomain(doc);
   }
 
-  /**
-   * Resolve the GS1 UPI carrying an EXACT assembled key (gtin + optional batch +
-   * optional serial). Used by the public resolver to turn a scanned
-   * `/01/{gtin}[/10/{batch}][/21/{serial}]` into its passport.
-   *
-   * The match is on the full key: an absent batch/serial maps to a `null` filter,
-   * so a bare-GTIN scan resolves only the bare-GTIN row and never a serialized
-   * sibling that shares the GTIN (and vice versa). This mirrors the
-   * (gtin, batch, serial) compound unique index.
-   */
   async findByGs1Key(key: {
     gtin: string;
     batch?: string | null;
     serial?: string | null;
   }): Promise<UniqueProductIdentifier | undefined> {
+    let canonicalValue: string;
+    try {
+      canonicalValue = canonicalGs1Value(key);
+    } catch (error) {
+      // An unparseable key can never match a stored canonical value.
+      if (error instanceof ValueError) {
+        return undefined;
+      }
+      throw error;
+    }
     const doc = await this.uniqueProductIdentifierDoc.findOne({
-      gtin: { $eq: key.gtin },
-      batch: { $eq: key.batch ?? null },
-      serial: { $eq: key.serial ?? null },
-      type: { $eq: ExternalIdentifierType.GS1 },
+      type: { $eq: UniqueProductIdentifierType.GS1 },
+      value: { $eq: canonicalValue },
     });
     if (!doc) {
       return undefined;
@@ -155,94 +169,37 @@ export class UniqueProductIdentifierRepository {
     return uniqueProductIdentifiers.map((upi) => this.convertToDomain(upi));
   }
 
-  /**
-   * List a single passport's UPIs (OPEN_DPP_UUID + GS1), newest-first, with
-   * cursor-based pagination. Mirrors `findAllByOrganizationId` but scopes by
-   * `referenceId` (the owning passport's uuid) instead of `organizationId`.
-   *
-   * The cursor is built from the doc's `createdAt + _id` (both descending) so the
-   * sort stays stable even when two docs share the same `createdAt` millisecond.
-   */
   async findAllByReferencedIdPaginated(
     referenceId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
   ): Promise<PagingResult<UniqueProductIdentifier>> {
-    const pagination = Pagination.create({
-      limit: options?.pagination?.limit ?? 100,
-      cursor: options?.pagination?.cursor,
-    });
-    const cursorFilter = pagination.cursor
-      ? {
-          $or: [
-            { createdAt: { $lt: decodeCursor(pagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(pagination.cursor).createdAt,
-              _id: { $lt: decodeCursor(pagination.cursor).id },
-            },
-          ],
-        }
-      : {};
-    const docs = await this.uniqueProductIdentifierDoc
-      .find({ referenceId: { $eq: referenceId }, ...cursorFilter })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(pagination.limit ?? 100);
-    const items = docs.map((doc) => this.convertToDomain(doc));
-    if (items.length > 0) {
-      const lastDoc = docs[docs.length - 1];
-      pagination.setCursor(
-        encodeCursor((lastDoc.createdAt as Date).toISOString(), lastDoc._id.toString()),
-      );
-    }
-    return PagingResult.create<UniqueProductIdentifier>({ pagination, items });
+    return this.findPageByFilter({ referenceId: { $eq: referenceId } }, options);
   }
 
-  /**
-   * List all UPIs for an organisation, newest-first, with cursor-based pagination.
-   *
-   * Mirrors `activity.repository.ts findByAggregateId`. The cursor is built from
-   * the doc's `createdAt + _id` (both descending) so that the sort is stable even
-   * when two docs share the same `createdAt` millisecond.
-   */
   async findAllByOrganizationId(
     organizationId: string,
     options?: { pagination?: { limit?: number; cursor?: string } },
   ): Promise<PagingResult<UniqueProductIdentifier>> {
-    const pagination = Pagination.create({
-      limit: options?.pagination?.limit ?? 100,
-      cursor: options?.pagination?.cursor,
-    });
-    const cursorFilter = pagination.cursor
-      ? {
-          $or: [
-            { createdAt: { $lt: decodeCursor(pagination.cursor).createdAt } },
-            {
-              createdAt: decodeCursor(pagination.cursor).createdAt,
-              _id: { $lt: decodeCursor(pagination.cursor).id },
-            },
-          ],
-        }
-      : {};
-    const docs = await this.uniqueProductIdentifierDoc
-      .find({ organizationId: { $eq: organizationId }, ...cursorFilter })
-      .sort({ createdAt: -1, _id: -1 })
-      .limit(pagination.limit ?? 100);
-    const items = docs.map((doc) => this.convertToDomain(doc));
-    if (items.length > 0) {
-      const lastDoc = docs[docs.length - 1];
-      pagination.setCursor(
-        encodeCursor((lastDoc.createdAt as Date).toISOString(), lastDoc._id.toString()),
-      );
-    }
-    return PagingResult.create<UniqueProductIdentifier>({ pagination, items });
+    return this.findPageByFilter({ organizationId: { $eq: organizationId } }, options);
   }
 
-  /**
-   * Delete a single UPI by its uuid.
-   *
-   * Single-id scoped so that deleting one GS1 UPI never touches sibling UPIs
-   * for the same passport (e.g. the canonical OPEN_DPP_UUID row). A no-op for
-   * an unknown uuid.
-   */
+  private findPageByFilter(
+    filter: Record<string, unknown>,
+    options?: { pagination?: { limit?: number; cursor?: string } },
+  ): Promise<PagingResult<UniqueProductIdentifier>> {
+    return findPageByCursor(
+      this.uniqueProductIdentifierDoc,
+      filter,
+      (doc) => this.convertToDomain(doc),
+      {
+        pagination: Pagination.create({
+          limit: options?.pagination?.limit ?? 100,
+          cursor: options?.pagination?.cursor,
+        }),
+      },
+    );
+  }
+
   async deleteById(uuid: string, options?: DbSessionOptions) {
     await this.uniqueProductIdentifierDoc.findByIdAndDelete(uuid, {
       session: options?.session ?? null,

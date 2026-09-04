@@ -1,4 +1,4 @@
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../aas/aas.module";
@@ -37,13 +37,12 @@ import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
-import { DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
+import { ApiVersionsDto, DataTypeDef, KeyTypes, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 
 import { Response } from "express";
 import { Archiver } from "archiver";
 import { ActivityHistoryModule } from "../../activity-history/activity-history.module";
-import type { Connection } from "mongoose";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { Security } from "../../aas/domain/security/security";
@@ -52,6 +51,10 @@ import { SubmodelElementModifiedActivity } from "../../activity-history/domain/a
 import { ChangeTracker } from "../../activity-history/domain/change-tracker";
 import { PropertyValueChanged } from "../../activity-history/domain/change-events/property-value-changed";
 import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
+import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
+import { TransactionService } from "../../database/transaction.service";
+import { EmailService } from "../../email/email.service";
 
 describe("DigitalProductDocumentService", () => {
   let service: DigitalProductDocumentService<Passport>;
@@ -59,7 +62,7 @@ describe("DigitalProductDocumentService", () => {
   let passportRepository: PassportRepository;
   let activityRepository: ActivityRepository;
   let assetAdministrationShellRepository: AasRepository;
-  let connection: Connection;
+  const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -83,26 +86,36 @@ describe("DigitalProductDocumentService", () => {
         AasModule,
         UsersModule,
         OrganizationsModule,
+        PresentationConfigurationsModule,
       ],
       providers: [
+        TransactionService,
         EnvironmentService,
         PassportRepository,
         UniqueProductIdentifierRepository,
         ConceptDescriptionRepository,
+        PresentationConfigurationService,
       ],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
     await module.init();
     passportRepository = module.get<PassportRepository>(PassportRepository);
     const environmentService = module.get<EnvironmentService>(EnvironmentService);
+    const presentationConfigurationService = module.get<PresentationConfigurationService>(
+      PresentationConfigurationService,
+    );
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
     assetAdministrationShellRepository = module.get<AasRepository>(AasRepository);
-    connection = module.get<Connection>(getConnectionToken());
 
     service = new DigitalProductDocumentService(
       environmentService,
       passportRepository,
       activityRepository,
-      connection,
+      presentationConfigurationService,
     );
   });
 
@@ -143,6 +156,7 @@ describe("DigitalProductDocumentService", () => {
         randomUUID(),
         { idShort: "demo" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -156,6 +170,7 @@ describe("DigitalProductDocumentService", () => {
         "col1",
         { idShort: "col1" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -168,6 +183,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "col1" }),
         { idShort: "col1" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -180,6 +196,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "col1" }),
         {},
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -213,6 +230,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "col1",
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -224,6 +242,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "demolist" }),
         "row1",
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -250,6 +269,7 @@ describe("DigitalProductDocumentService", () => {
         passport.id,
         { idShort: "sub" },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -271,6 +291,29 @@ describe("DigitalProductDocumentService", () => {
         },
         undefined,
         userContext,
+        latestVersion,
+      ),
+    ).rejects.toThrow(exception);
+
+    await expect(
+      service.createGroupFromColumnInSubmodelElementList(
+        correlationId,
+        passport.organizationId,
+        passport.id,
+        randomUUID(),
+        IdShortPath.create({ path: "sub" }),
+        "col1",
+        {
+          idShort: "group1",
+          modelType: KeyTypes.SubmodelElementCollection,
+          description: [],
+          displayName: [],
+          embeddedDataSpecifications: [],
+          supplementalSemanticIds: [],
+          qualifiers: [],
+        },
+        userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -283,6 +326,7 @@ describe("DigitalProductDocumentService", () => {
         IdShortPath.create({ path: "sub" }),
         undefined,
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
 
@@ -302,6 +346,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
     await expect(
@@ -321,6 +366,7 @@ describe("DigitalProductDocumentService", () => {
           qualifiers: [],
         },
         userContext,
+        latestVersion,
       ),
     ).rejects.toThrow(exception);
   });

@@ -8,6 +8,7 @@ import {
   ISubmodelElement,
   parseSubmodelElement,
 } from "../../../aas/domain/submodel-base/submodel-base";
+import { Pointer } from "../../../aas/domain/submodel-base/pointer";
 
 const ColumnDeletedSchema = z.object({
   type: z.literal(ChangeEventTypes.ColumnDeleted),
@@ -24,7 +25,9 @@ export class ColumnDeleted implements IChangeEventWithPath {
     public readonly position: number,
     public readonly value: ISubmodelElement,
   ) {
-    value.setParentIdShortPath(this.path.getParentPath());
+    if (!value.getIdShortPath().isEqual(this.path)) {
+      value.setParentPointer(Pointer.create({ parentIdShortPath: this.path.getParentPath() }));
+    }
   }
 
   isNoop(): boolean {

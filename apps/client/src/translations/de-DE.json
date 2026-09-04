@@ -8,6 +8,10 @@
     "noEntries": "Keine Einträge gefunden",
     "moveUp": "Nach oben verschieben",
     "moveDown": "Nach unten verschieben",
+    "moveRight": "Nach rechts verschieben",
+    "moveLeft": "Nach links verschieben",
+    "move": "Verschieben",
+    "moveTo": "Verschieben nach...",
     "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
@@ -71,6 +75,7 @@
     }
   },
   "aasEditor": {
+    "addLanguage": "Sprache hinzufügen",
     "drawerTabs": {
       "data": "Daten",
       "presentation": "Darstellung"
@@ -107,20 +112,26 @@
     "formLabels": {
       "value": "Wert",
       "name": "Name",
-      "id": "Identifikator"
+      "id": "Identifikator",
+      "description": "Beschreibung"
     },
     "table": {
+      "edit": "Tabelle bearbeiten",
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
       "column": "Spalte",
       "row": "Zeile",
+      "rows": "Zeilen",
+      "backToParentTable": "Zurück zur übergeordneten Tabelle",
       "entries": "Einträge",
       "emptyCell": "Bitte ausfüllen",
       "addRowAbove": "@:aasEditor.table.row oberhalb @.lower:common.add",
       "addRowBelow": "@:aasEditor.table.row unterhalb @.lower:common.add",
       "addColumnLeft": "@:aasEditor.table.column links @.lower:common.add",
+      "addColumnRight": "@:aasEditor.table.column rechts @.lower:common.add",
       "addColumnEnd": "@:aasEditor.table.column am Ende @.lower:common.add",
       "editColumn": "@:aasEditor.table.column @.lower:common.edit",
       "removeColumn": "Soll die @:aasEditor.table.column wirklich entfernt werden?",
+      "removeGroupColumn": "Soll die Gruppe zusammen mit all ihren Spalten wirklich entfernt werden?",
       "removeRow": "Soll die @:aasEditor.table.row wirklich entfernt werden?",
       "addFieldAsColumn": "{field} als @:aasEditor.table.column @.lower:common.add",
       "errorEditColumn": "@:common.edit der @:aasEditor.table.column @:common.failed",
@@ -128,7 +139,14 @@
       "errorAddRow": "@:common.add der @:aasEditor.table.row @:common.failed",
       "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed",
       "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed",
-      "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
+      "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed",
+      "addSubColumn": "Unterspalte @.lower:common.add",
+      "moveToGroup": "In Gruppe verschieben",
+      "newGroup": "Neue Gruppe",
+      "removeFromGroup": "Aus Gruppe entfernen",
+      "removeFromGroupConfirm": "Soll die @:aasEditor.table.column wirklich aus der Gruppe entfernt werden?",
+      "errorMoveColumn": "@:common.move der @:aasEditor.table.column in Gruppe @:common.failed",
+      "errorCreateGroup": "Erstellen der Gruppe @:common.failed"
     },
     "data": "Daten",
     "link": "Link",
@@ -140,9 +158,11 @@
     "submodel": "Abschnitt | Abschnitte",
     "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
+    "errorMoveSubmodel": "@:common.move des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",
     "errorRemoveSubmodelElement": "@:common.remove des Elements @:common.failed",
-    "submodelElementList": "Liste",
+    "errorMoveSubmodelElement": "@:common.move des Elements @:common.failed",
+    "submodelElementList": "Tabelle",
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
     "file": "Datei",
@@ -159,7 +179,13 @@
     "german": "Deutsch"
   },
   "pagination": {
-    "footer": "Zeigt: {from} - {to}, Anzahl: {count}"
+    "footer": "Zeigt: {from} - {to}, Anzahl: {count}",
+    "footerWithTotal": "Zeigt: {from} - {to} von {total}"
+  },
+  "language": {
+    "all": "Verfügbare Sprachen",
+    "preferred": "Bevorzugte Sprachen",
+    "selectPlaceholder": "Sprache auswählen"
   },
   "builder": {
     "repeater": {
@@ -285,6 +311,78 @@
       "savedConfigurationSuccess": "Konfiguration erfolgreich gespeichert.",
       "modifyConfigurationError": "Anpassung der Konfiguration fehlgeschlagen:"
     },
+    "bulkImport": {
+      "errorLoadConfigs": "Laden der Massenimport Konfigurationen fehlgeschlagen:",
+      "createConfigSuccess": "Massenimport Konfiguration erfolgreich erstellt.",
+      "errorCreateConfig": "Erstellen der Massenimport Konfiguration fehlgeschlagen:",
+      "updateConfigSuccess": "Massenimport Konfiguration erfolgreich aktualisiert.",
+      "errorUpdateConfig": "Aktualisieren der Massenimport Konfiguration fehlgeschlagen:",
+      "deleteConfigSuccess": "Massenimport Konfiguration erfolgreich gelöscht.",
+      "errorDeleteConfig": "Löschen der Massenimport Konfiguration fehlgeschlagen:",
+      "errorLoadRuns": "Laden der Importläufe fehlgeschlagen:",
+      "triggerRunSuccess": "Importlauf erfolgreich gestartet.",
+      "interruptRunSuccess": "Importlauf erfolgreich unterbrochen.",
+      "errorTriggerRun": "Starten des Importlaufs fehlgeschlagen:",
+      "errorInterruptRun": "Unterbrechen des Importlaufs fehlgeschlagen:",
+      "errorLoadRun": "Laden des Importlaufs fehlgeschlagen:",
+      "errorLoadRunItems": "Laden der Massenimport Zeilen fehlgeschlagen:",
+      "label": "Massenimport",
+      "newConfig": "Neue Konfiguration",
+      "editConfig": "Konfiguration bearbeiten",
+      "template": "Vorlage",
+      "idField": "ID-Feld",
+      "runHistory": "Durchlaufverlauf",
+      "succeeded": "Erfolgreich",
+      "failed": "Fehlgeschlagen",
+      "total": "Gesamt",
+      "createdAt": "Erstellt am",
+      "delete": "Löschen",
+      "noRuns": "Noch keine Importläufe",
+      "status": {
+        "label": "Status",
+        "pending": "Ausstehend",
+        "running": "Läuft",
+        "completed": "Abgeschlossen",
+        "completed_with_errors": "Abgeschlossen mit Fehlern",
+        "interrupted": "Unterbrochen"
+      },
+      "configLockedTooltip": "Konfiguration kann nicht bearbeitet werden, während Importe ausstehen oder ausgeführt werden",
+      "errorLoadSubmodels": "Laden der Vorlagenfelder fehlgeschlagen:",
+      "invalidFile": "Die ausgewählte Datei ist ungültig.",
+      "uploadFile": "Datei hochladen",
+      "chooseFile": "Datei auswählen",
+      "rowsParsed": "{count} Zeilen in der Datei gefunden",
+      "selectTemplate": "Vorlage auswählen",
+      "mapFields": "Felder zuordnen",
+      "inputField": "Eingabefeld",
+      "targetField": "Zielfeld",
+      "addMapping": "Zuordnung hinzufügen",
+      "configDetails": "Konfigurationsdetails",
+      "configName": "Konfigurationsname",
+      "idFieldHelp": "Das Feld, welches jedes Produkt eindeutig identifiziert, um den passenden Produktpass zu erstellen oder zu aktualisieren.",
+      "previous": "Zurück",
+      "next": "Weiter",
+      "createAndRun": "Erstellen und starten",
+      "runNow": "Starten",
+      "newOrExisting": "Neue oder bestehende Konfiguration?",
+      "useExisting": "Bestehende Konfiguration verwenden",
+      "useNew": "Neue Konfiguration erstellen",
+      "selectExistingConfig": "Konfiguration auswählen",
+      "itemStatus": {
+        "pending": "Ausstehend",
+        "created": "Erstellt",
+        "updated": "Aktualisiert",
+        "failed": "Fehlgeschlagen"
+      },
+      "rowIndex": "Zeile",
+      "passport": "Produktpass",
+      "error": "Fehler",
+      "inputData": "Eingabedaten",
+      "runDetailTitle": "Importlauf",
+      "items": "Zeilen",
+      "interrupt": "Unterbrechen",
+      "interruptTooltip": "Importlauf mit Status '{status}' kann nicht unterbrochen werden"
+    },
     "connections": {
       "label": "Verbindung | Verbindungen",
       "info": "Verbindungsinformationen",
@@ -394,7 +492,8 @@
       "color": {
         "label": "Primärfarbe",
         "palette": "Farbpalette",
-        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette."
+        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette.",
+        "error": "Bitte eine gültige Hex-Farbe eingeben (z. B. 6bad87)."
       },
       "permalinkBaseUrl": {
         "label": "Basis-URL für Produktpässe",
@@ -463,6 +562,16 @@
         "errorNotFound": "Dieser Benutzer existiert nicht mehr.",
         "error": "Rolle konnte nicht geändert werden. Bitte erneut versuchen."
       },
+      "resendPasswordReset": {
+        "action": "Passwort-Zurücksetzen-E-Mail erneut senden",
+        "success": "Passwort-Zurücksetzen-E-Mail wurde gesendet.",
+        "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
+      "resendVerificationEmail": {
+        "action": "Verifizierungs-E-Mail erneut senden",
+        "success": "Verifizierungs-E-Mail wurde gesendet.",
+        "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+      },
       "instanceSettings": {
         "title": "Instanz-Einstellungen",
         "signupEnabled": {
@@ -487,6 +596,11 @@
         "errorLoading": "Fehler beim Laden der Einstellungen",
         "lockedByEnv": "Diese Einstellung wird durch eine Umgebungsvariable gesteuert und kann hier nicht geändert werden."
       }
+    },
+    "removeMemberError": "Fehler beim Entfernen des Mitglieds.",
+    "removeMemberDialog": {
+      "header": "Mitglied entfernen",
+      "message": "Möchten Sie {email} wirklich aus dieser Organisation entfernen?"
     }
   },
   "marketplace": {
@@ -528,13 +642,20 @@
     "label": "Aktivitätsverlauf",
     "createdAt": "Datum",
     "position": "Position",
+    "oldPosition": "Alte Position",
     "name": "Name",
+    "group": "Gruppe",
     "type": "Typ",
     "affectedRole": "Betroffene Rolle",
     "oldValue": "Alter Wert",
     "newValue": "Neuer Wert",
     "userId": "Benutzer ID",
     "path": "Pfad",
+    "movedFrom": "Verschoben von",
+    "movedTo": "Verschoben nach",
+    "viewHistoryBeforeMove": "Verlauf vor der Verschiebung anzeigen",
+    "live": "Aktuell",
+    "beforeMove": "Vor Verschiebung nach {path}",
     "languageOps": {
       "replace": "geändert",
       "add": "hinzugefügt",
@@ -553,6 +674,10 @@
       "RowDeleted": "Zeile gelöscht",
       "ColumnAdded": "Spalte hinzugefügt",
       "ColumnDeleted": "Spalte gelöscht",
+      "ColumnAddedToGroup": "Spalte zur Gruppe hinzugefügt",
+      "ColumnDeletedFromGroup": "Spalte aus Gruppe entfernt",
+      "ColumnModifiedInGroup": "Spalte in Gruppe geändert",
+      "ColumnMovedToGroup": "Spalte in Gruppe verschoben",
       "SubmodelAdded": "Abschnitt hinzugefügt",
       "AddedSubmodelToEnv": "Abschnitt zur Umgebung hinzugefügt",
       "SubmodelElementAdded": "Element hinzugefügt",
@@ -565,7 +690,9 @@
       "SubmodelDeleted": "Abschnitt gelöscht",
       "DigitalProductDocumentStatusChanged": "Status geändert",
       "FileValueChanged": "Datei geändert",
-      "ReferenceElementValueChanged": "Referenz geändert"
+      "ReferenceElementValueChanged": "Referenz geändert",
+      "SubmodelElementMoved": "Element verschoben",
+      "SubmodelMoved": "Abschnitt verschoben"
     }
   },
   "passports": {
@@ -581,8 +708,7 @@
     "loading": "Produktpass wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status des Produktpasses",
     "blank": "Leer",
-    "fromTemplate": "Aus Produktpassvorlage",
-    "selectTemplate": "Passvorlage auswählen"
+    "fromTemplate": "Aus Produktpassvorlage"
   },
   "status": {
     "withStatus": "mit Status",
@@ -606,7 +732,9 @@
     "loading": "Passvorlage wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status der Passvorlage",
     "createdAt": "Erstellt am",
-    "updatedAt": "Aktualisiert am"
+    "updatedAt": "Aktualisiert am",
+    "select": "Vorlage auswählen",
+    "errorFetchList": "Laden der Vorlagen fehlgeschlagen"
   },
   "actions": {
     "member": {
@@ -630,7 +758,75 @@
     "displaySettings": "Anzeigeeinstellungen",
     "email": "E-Mail-Adresse",
     "password": "Passwort",
-    "passwordRepeat": "Passwort wiederholen"
+    "passwordRepeat": "Passwort wiederholen",
+    "save": "Änderungen speichern",
+    "profileSaved": "Profil aktualisiert",
+    "profileSaveFailed": "Dein Profil konnte nicht gespeichert werden",
+    "profileLoadFailed": "Dein Profil konnte nicht geladen werden. Bitte lade die Seite neu.",
+    "profileLoadRetry": "Erneut versuchen",
+    "profileSubtitle": "Deine Identität in open-dpp.",
+    "nameHelper": "Sichtbar auf Pässen und in Audit-Protokollen.",
+    "languageHelper": "Wird für die Oberfläche und Benachrichtigungs-Mails verwendet.",
+    "discardChanges": "Änderungen verwerfen",
+    "emailChangeRequested": "Bestätigungs-E-Mail an deine neue Adresse gesendet",
+    "emailChangeHint": "Wir senden einen Bestätigungslink an die neue Adresse. Deine aktuelle E-Mail-Adresse bleibt aktiv, bis du bestätigst.",
+    "emailChangeFailed": "E-Mail-Änderung konnte nicht angefordert werden",
+    "changeEmail": "E-Mail-Adresse ändern",
+    "newEmail": "Neue E-Mail-Adresse",
+    "sendVerification": "Bestätigungslink senden",
+    "cancel": "Abbrechen",
+    "emailPending": "Wartet auf Bestätigung an { email }",
+    "emailNotVerified": "E-Mail nicht verifiziert",
+    "resendVerificationEmail": {
+      "action": "Verifizierungs-E-Mail erneut senden",
+      "success": "Verifizierungs-E-Mail wurde gesendet.",
+      "error": "E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+    },
+    "cancelEmailChange": "Anfrage abbrechen",
+    "emailChangeCancelled": "E-Mail-Änderungsanfrage abgebrochen",
+    "emailChangeCancelFailed": "Die E-Mail-Änderungsanfrage konnte nicht abgebrochen werden",
+    "emailPendingRequestedAt": "Angefordert { time }",
+    "emailChangeConfirmTitle": "Ausstehende E-Mail-Änderung abbrechen?",
+    "emailChangeConfirmMessage": "Du musst von vorne beginnen und die neue Adresse über eine neue E-Mail bestätigen.",
+    "emailChangeConfirmYes": "Änderung abbrechen",
+    "emailChangeConfirmNo": "Ausstehend lassen",
+    "emailChangeCurrentPassword": "Aktuelles Passwort",
+    "emailChangeCurrentPasswordRequired": "Erforderlich, um diese Änderung zu bestätigen.",
+    "emailChangeCurrentPasswordIncorrect": "Das eingegebene Passwort ist falsch.",
+    "emailChangeRateLimited": "Zu viele Versuche zur E-Mail-Änderung. Bitte versuche es in einer Stunde erneut.",
+    "tabs": {
+      "profile": "Profil",
+      "invitations": "Einladungen",
+      "apiKeys": "API-Schlüssel"
+    },
+    "apiKeys": {
+      "title": "API-Schlüssel",
+      "create": "API-Schlüssel erstellen",
+      "name": "Name",
+      "namePlaceholder": "z. B. CI-Pipeline",
+      "key": "Schlüssel",
+      "createdAt": "Erstellt",
+      "expiresAt": "Läuft ab",
+      "lastUsedAt": "Zuletzt verwendet",
+      "neverUsed": "Nie",
+      "expiry": "Ablauf",
+      "noExpiry": "Kein Ablauf",
+      "expiryDays": "{days} Tage",
+      "createdTitle": "API-Schlüssel erstellt",
+      "createdHint": "Kopiere diesen Schlüssel jetzt. Er wird nur einmal angezeigt.",
+      "renameTitle": "API-Schlüssel umbenennen",
+      "renameSuccess": "API-Schlüssel umbenannt",
+      "renameError": "Der API-Schlüssel konnte nicht umbenannt werden",
+      "revoke": "Widerrufen",
+      "revokeConfirmHeader": "API-Schlüssel widerrufen?",
+      "revokeConfirmMessage": "Anwendungen, die diesen Schlüssel verwenden, verlieren sofort den Zugriff. Das kann nicht rückgängig gemacht werden.",
+      "revokeSuccess": "API-Schlüssel widerrufen",
+      "revokeError": "Der API-Schlüssel konnte nicht widerrufen werden",
+      "createError": "Der API-Schlüssel konnte nicht erstellt werden",
+      "copyError": "Der Schlüssel konnte nicht in die Zwischenablage kopiert werden",
+      "loadError": "Deine API-Schlüssel konnten nicht geladen werden",
+      "empty": "Noch keine API-Schlüssel"
+    }
   },
   "notifications": {
     "success": "Erfolg",
@@ -678,6 +874,32 @@
       "button": "Neues Passwort setzen",
       "rememberLogin": "Logindaten wieder eingefallen?",
       "ctaSignIn": "Jetzt anmelden"
+    },
+    "emailChangeRevokeConfirm": {
+      "title": "E-Mail-Änderung abbrechen?",
+      "bodyWithEmail": "Für dein Konto wurde eine E-Mail-Änderung zu {email} angefordert. Wenn du das nicht warst, brich sie jetzt ab, um deine aktuelle Adresse zu behalten.",
+      "body": "Für dein Konto wurde eine E-Mail-Änderung angefordert. Wenn du das nicht warst, brich sie jetzt ab, um deine aktuelle Adresse zu behalten.",
+      "loading": "Anfrage wird geprüft…",
+      "cancelButton": "E-Mail-Änderung abbrechen",
+      "ctaSignIn": "Zur Anmeldung"
+    },
+    "emailChangeRevoked": {
+      "successTitle": "E-Mail-Änderung abgebrochen",
+      "successBody": "Die ausstehende E-Mail-Änderung wurde widerrufen. Deine Konto-E-Mail-Adresse wurde nicht geändert.",
+      "invalidTitle": "Dieser Link ist nicht mehr gültig",
+      "invalidBody": "Der Widerruf-Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Wenn du die Änderung nicht angefordert hast, melde dich an und überprüfe dein Konto.",
+      "errorTitle": "Etwas ist schiefgelaufen",
+      "errorBody": "Die E-Mail-Änderung konnte gerade nicht widerrufen werden. Bitte versuche den Link in einem Moment erneut. Falls es weiterhin fehlschlägt, melde dich an und überprüfe dein Konto.",
+      "ctaSignIn": "Zur Anmeldung"
+    },
+    "emailVerified": {
+      "successTitle": "E-Mail verifiziert",
+      "successBody": "Deine E-Mail-Adresse wurde verifiziert. Du kannst dich jetzt anmelden.",
+      "expiredTitle": "Link abgelaufen",
+      "expiredBody": "Dieser Verifizierungslink ist abgelaufen. Bitte fordere einen neuen über dein Profil an oder bitte einen Administrator, ihn erneut zu senden.",
+      "invalidTitle": "Link ungültig",
+      "invalidBody": "Dieser Verifizierungslink ist ungültig oder wurde bereits verwendet.",
+      "ctaSignIn": "Zur Anmeldung"
     }
   },
   "api": {
@@ -730,7 +952,12 @@
     },
     "missingValue": "Kein Wert gesetzt",
     "passportNotFound": "Produktpass nicht gefunden",
-    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Möglicherweise wurde er noch nicht veröffentlicht oder der Link ist ungültig. Bitte wenden Sie sich an den Produktverantwortlichen oder den Support."
+    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Möglicherweise wurde er noch nicht veröffentlicht oder der Link ist ungültig. Bitte wenden Sie sich an den Produktverantwortlichen oder den Support.",
+    "table": {
+      "viewTable": "Tabelle anzeigen",
+      "rows": "Zeilen",
+      "backToParentTable": "Zurück zur übergeordneten Tabelle"
+    }
   },
   "qrCodeDialog": {
     "draftWarning": "Dieser Produktpass ist ein Entwurf und noch nicht öffentlich zugänglich.",
@@ -768,23 +995,31 @@
         }
       }
     },
-    "createGs1Link": {
-      "title": "GS1 Digital Link erstellen",
-      "selectUpi": "UPI auswählen",
-      "upiAlreadyLinked": "Dieser UPI hat bereits einen GS1 Digital Link Permalink.",
+    "create": {
+      "title": "Permalink erstellen",
+      "selectUpi": "Produktidentifikator (optional)",
+      "selectUpiPlaceholder": "Kein Produktidentifikator — Pass direkt verlinken",
+      "kindHint": "Erstellt einen {kind} Permalink.",
+      "loadFailed": "Die Formulardaten konnten nicht geladen werden. Bitte erneut versuchen.",
+      "slug": {
+        "label": "Kurzname (optional)",
+        "placeholder": "Ende der URL des Passes"
+      },
       "baseUrl": {
         "label": "Produktpass Basis-URL (optional)",
         "placeholder": "z. B. https://id.example.com"
       },
       "gs1DataAttributes": "GS1 Datenattribute (optional)",
-      "conflict": "Ein GS1 Digital Link Permalink für diesen UPI existiert bereits.",
+      "upiConflict": "Ein GS1 Digital Link Permalink für diesen Produktidentifikator existiert bereits.",
+      "slugConflict": "Dieser Kurzname wird bereits von einem anderen Permalink verwendet.",
+      "createFailed": "Der Permalink konnte nicht erstellt werden. Bitte erneut versuchen.",
       "submit": "Erstellen"
     },
     "edit": {
       "title": "Permalink bearbeiten",
       "type": {
         "label": "Typ",
-        "presentation": "Präsentation",
+        "presentation": "open-dpp",
         "gs1Link": "GS1 Digital Link"
       },
       "saveSuccess": "Permalink gespeichert.",
@@ -798,39 +1033,44 @@
       "baseUrl": {
         "label": "Produktpass Basis-URL"
       },
-      "gs1DataAttributes": "GS1 Datenattribute (optional)"
+      "gs1DataAttributes": "GS1 Datenattribute (optional)",
+      "gs1Preview": {
+        "label": "GS1 Digital Link Vorschau"
+      }
     },
     "list": {
-      "setPrimary": "Als primär festlegen",
       "delete": "Löschen",
-      "deletePrimaryTooltip": "Primärer oder letzter Präsentations-Permalink kann nicht gelöscht werden",
       "deletePublishedTooltip": "Veröffentlichter Permalink kann nicht gelöscht werden",
       "deleteConfirmMessage": "Soll dieser Permalink wirklich gelöscht werden?",
       "deleteConfirmHeader": "Permalink löschen",
       "deleteSuccess": "Permalink gelöscht.",
       "deleteError": "Permalink konnte nicht gelöscht werden.",
-      "setPrimarySuccess": "Primärer Permalink aktualisiert.",
-      "setPrimaryError": "Primärer Permalink konnte nicht aktualisiert werden.",
       "label": "Permalink | Permalinks",
       "kind": "Typ",
       "publicUrl": "Öffentliche URL",
-      "primary": "Primär",
-      "published": "Veröffentlicht",
-      "kindPresentation": "Präsentation",
+      "frozenInfo": "Dieser Produktpass wurde veröffentlicht. Die veröffentlichten URLs sind eingefroren und können nicht mehr geändert werden.",
+      "kindPresentation": "open-dpp",
       "kindGs1Link": "GS1 Digital Link",
-      "createGs1Link": "GS1-Link erstellen",
+      "createPermalink": "Permalink erstellen",
       "empty": "Keine Permalinks gefunden.",
       "actions": "Aktionen"
     }
   },
   "uniqueProductIdentifiers": {
-    "label": "Eindeutiger Produktidentifikator | Eindeutige Produktidentifikatoren",
+    "label": "Produktidentifikator | Produktidentifikatoren",
     "list": {
       "type": "Typ",
+      "identity": "Identität",
       "gtin": "GTIN",
       "batch": "Charge / Los",
       "serial": "Seriennummer",
-      "reference": "Produktpass",
+      "createPermalink": "Permalink erstellen",
+      "delete": "Löschen",
+      "deleteLockedTooltip": "Produktidentifikatoren sind gesperrt, sobald der Pass veröffentlicht ist.",
+      "deleteConfirmHeader": "Entfernen",
+      "deleteConfirmMessage": "Möchten Sie diesen Produktidentifikator löschen?",
+      "deleteSuccess": "Produktidentifikator gelöscht.",
+      "deleteError": "Produktidentifikator konnte nicht gelöscht werden.",
       "systemReadOnly": "System (schreibgeschützt)",
       "empty": "Keine eindeutigen Produktidentifikatoren gefunden."
     },
@@ -838,14 +1078,14 @@
       "title": "Eindeutigen Produktidentifikator erstellen",
       "type": "Identifikatortyp",
       "typeGs1": "GS1",
-      "typeInternal": "Intern (open-dpp)",
-      "description": "Identifizieren Sie diesen Produktpass über seine GS1-Schlüssel: eine GTIN und optional eine Charge/Los- und Seriennummer. Beispiel: GTIN 04006381333931, Charge LOT-42, Seriennummer SN-001.",
+      "typeInternal": "open-dpp",
+      "description": "Identifizieren Sie diesen Produktpass über seine GS1-Schlüssel: eine GTIN und optional eine Charge/Los- und Seriennummer.",
       "internalDescription": "Ein interner open-dpp-Identifikator (eine UUID) wird automatisch für diesen Produktpass erzeugt. Er enthält keine GS1-Daten und erfordert keine Eingabe.",
       "gtin": "GTIN",
       "batch": "Charge / Los (optional)",
       "serial": "Seriennummer (optional)",
       "submit": "Erstellen",
-      "passportNotDraft": "Dieser Produktpass ist veröffentlicht. Ein eindeutiger Produktidentifikator kann nur erstellt werden, solange der Pass ein Entwurf ist.",
+      "passportPublishedNote": "Dieser Produktpass ist veröffentlicht. Neue Identifikatoren werden sofort hinzugefügt, können danach aber nicht mehr geändert oder gelöscht werden.",
       "gtinInvalid": "Geben Sie eine gültige GTIN ein (8, 12, 13 oder 14 Ziffern mit korrekter Prüfziffer).",
       "componentInvalid": "Verwenden Sie bis zu 20 GS1-Zeichen (Buchstaben, Ziffern und !\"%&'()*+,-./:;<=>?_).",
       "duplicate": "Diese GS1-Identität (GTIN, Charge und Seriennummer) ist bereits einem anderen Pass zugewiesen.",
@@ -904,15 +1144,16 @@
   },
   "gs1DataAttributes": {
     "addRow": "Zeile hinzufügen",
-    "aiPlaceholder": "AI (z.B. 17)",
+    "aiPlaceholder": "AI auswählen",
     "valuePlaceholder": "Wert",
     "remove": "Entfernen",
     "keyAiBlocked": "AI \"{ai}\" ist ein Primäridentifikator oder Schlüsselqualifikator und kann nicht als Datenattribut verwendet werden.",
     "unknownAi": "Unbekannte AI.",
-    "invalidValue": "Wert entspricht nicht dem Format für AI \"{ai}\"."
+    "invalidValue": "Wert entspricht nicht dem Format für AI \"{ai}\".",
+    "aiRequired": "AI auswählen.",
+    "valueRequired": "Wert ist erforderlich."
   },
-  "gs1LinkQrCode": {
-    "empty": "Kein GS1 Digital Link Permalink.",
+  "permalinkQrCode": {
     "digitalLink": {
       "label": "GS1 Digital Link"
     },

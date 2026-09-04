@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+  LEGACY_PERMALINK_KIND,
   PassportPermalinkBundleDtoSchema,
   PermalinkDtoSchema,
   PermalinkInvariantsSchema,
@@ -58,6 +59,17 @@ describe("PassportPermalinkBundleDtoSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts presentationConfiguration: null (standard view, no customization)", () => {
+    const result = PassportPermalinkBundleDtoSchema.safeParse({
+      ...validBundle,
+      presentationConfiguration: null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.presentationConfiguration).toBeNull();
+    }
+  });
+
   it("rejects a bundle missing the branding key", () => {
     const { branding: _branding, ...rest } = validBundle;
     const result = PassportPermalinkBundleDtoSchema.safeParse(rest);
@@ -87,6 +99,7 @@ const permalinkId = "44444444-4444-4444-8444-444444444444";
 
 const validPublic = {
   id: permalinkId,
+  passportId,
   slug: "acme-widget",
   baseUrl: "https://override.example.com",
   presentationConfigurationId: configId,
@@ -175,6 +188,7 @@ describe("PermalinkPublishedUrlSchema", () => {
 describe("PermalinkDtoSchema publishedUrl", () => {
   const validPermalink = {
     id: permalinkId,
+    passportId,
     slug: "acme-widget",
     baseUrl: null,
     presentationConfigurationId: configId,
@@ -209,18 +223,25 @@ describe("PermalinkDtoSchema publishedUrl", () => {
   });
 });
 
-// UUIDs used in the polymorphism tests
 const upiId = "55555555-5555-4555-8555-555555555555";
 
 describe("PermalinkKind", () => {
-  it("exposes PRESENTATION and GS1_LINK constants", () => {
-    expect(PermalinkKind.PRESENTATION).toBe("presentation");
+  it("exposes OPEN_DPP and GS1_LINK constants", () => {
+    expect(PermalinkKind.OPEN_DPP).toBe("open-dpp");
     expect(PermalinkKind.GS1_LINK).toBe("gs1-link");
   });
 
-  it("PermalinkKindSchema accepts 'presentation' and 'gs1-link'", () => {
-    expect(PermalinkKindSchema.safeParse("presentation").success).toBe(true);
+  it("exposes the legacy wire value for on-read migration", () => {
+    expect(LEGACY_PERMALINK_KIND).toBe("presentation");
+  });
+
+  it("PermalinkKindSchema accepts 'open-dpp' and 'gs1-link'", () => {
+    expect(PermalinkKindSchema.safeParse("open-dpp").success).toBe(true);
     expect(PermalinkKindSchema.safeParse("gs1-link").success).toBe(true);
+  });
+
+  it("PermalinkKindSchema rejects the legacy 'presentation' value (mapped upstream)", () => {
+    expect(PermalinkKindSchema.safeParse("presentation").success).toBe(false);
   });
 
   it("PermalinkKindSchema rejects unknown values", () => {
@@ -232,6 +253,7 @@ describe("PermalinkKind", () => {
 describe("PermalinkDtoSchema polymorphism", () => {
   const base = {
     id: permalinkId,
+    passportId,
     slug: "acme-widget",
     baseUrl: null,
     publishedUrl: null,
@@ -239,33 +261,54 @@ describe("PermalinkDtoSchema polymorphism", () => {
     updatedAt: isoNow,
   };
 
-  // (1) parses a presentation permalink
-  it("parses a presentation permalink with all new fields", () => {
+  it("parses a bare open-dpp permalink (no config, no UPI)", () => {
     const result = PermalinkDtoSchema.safeParse({
       ...base,
-      kind: "presentation",
-      presentationConfigurationId: configId,
+      kind: "open-dpp",
+      presentationConfigurationId: null,
       uniqueProductIdentifierId: null,
-      primary: true,
       gs1DataAttributes: null,
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.kind).toBe("presentation");
-      expect(result.data.primary).toBe(true);
+      expect(result.data.kind).toBe("open-dpp");
+      expect(result.data.passportId).toBe(passportId);
+      expect(result.data.presentationConfigurationId).toBeNull();
       expect(result.data.uniqueProductIdentifierId).toBeNull();
-      expect(result.data.gs1DataAttributes).toBeNull();
     }
   });
 
-  // (2) parses a gs1-link permalink
+  it("parses an open-dpp permalink bound to a UPI", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...base,
+      kind: "open-dpp",
+      presentationConfigurationId: null,
+      uniqueProductIdentifierId: upiId,
+      gs1DataAttributes: null,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.uniqueProductIdentifierId).toBe(upiId);
+    }
+  });
+
+  it("parses an open-dpp permalink bound to a config and a UPI", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...base,
+      kind: "open-dpp",
+      presentationConfigurationId: configId,
+      uniqueProductIdentifierId: upiId,
+      gs1DataAttributes: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("parses a gs1-link permalink", () => {
     const result = PermalinkDtoSchema.safeParse({
       ...base,
       kind: "gs1-link",
       presentationConfigurationId: null,
       uniqueProductIdentifierId: upiId,
-      primary: false,
       gs1DataAttributes: { "17": "251231" },
     });
     expect(result.success).toBe(true);
@@ -276,113 +319,136 @@ describe("PermalinkDtoSchema polymorphism", () => {
     }
   });
 
-  // (3) accepts presentationConfigurationId: null
-  it("accepts presentationConfigurationId: null on a presentation permalink (already covered by gs1-link case)", () => {
-    const result = PermalinkDtoSchema.safeParse({
-      ...base,
-      kind: "gs1-link",
-      presentationConfigurationId: null,
-      uniqueProductIdentifierId: upiId,
-      primary: false,
-      gs1DataAttributes: null,
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.presentationConfigurationId).toBeNull();
-    }
-  });
-
-  // (4) rejects an unknown kind
   it("rejects an unknown kind", () => {
     const result = PermalinkDtoSchema.safeParse({
       ...base,
       kind: "unknown-kind",
       presentationConfigurationId: configId,
       uniqueProductIdentifierId: null,
-      primary: false,
       gs1DataAttributes: null,
     });
     expect(result.success).toBe(false);
   });
 
-  // (5) rejects a gs1-link with uniqueProductIdentifierId: null
+  it("rejects the legacy 'presentation' kind (backend maps it before dto parse)", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...base,
+      kind: "presentation",
+      presentationConfigurationId: configId,
+      uniqueProductIdentifierId: null,
+      gs1DataAttributes: null,
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("rejects a gs1-link with uniqueProductIdentifierId: null", () => {
     const result = PermalinkDtoSchema.safeParse({
       ...base,
       kind: "gs1-link",
       presentationConfigurationId: null,
       uniqueProductIdentifierId: null,
-      primary: false,
       gs1DataAttributes: null,
     });
     expect(result.success).toBe(false);
   });
 
-  // (6a) rejects a presentation permalink with non-null uniqueProductIdentifierId
-  it("rejects a presentation permalink with non-null uniqueProductIdentifierId", () => {
+  it("rejects an open-dpp permalink with non-null gs1DataAttributes", () => {
     const result = PermalinkDtoSchema.safeParse({
       ...base,
-      kind: "presentation",
-      presentationConfigurationId: configId,
-      uniqueProductIdentifierId: upiId,
-      primary: false,
-      gs1DataAttributes: null,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  // (6c) rejects a presentation permalink with non-null gs1DataAttributes
-  it("rejects a presentation permalink with non-null gs1DataAttributes", () => {
-    const result = PermalinkDtoSchema.safeParse({
-      ...base,
-      kind: "presentation",
+      kind: "open-dpp",
       presentationConfigurationId: configId,
       uniqueProductIdentifierId: null,
-      primary: false,
       gs1DataAttributes: { "17": "251231" },
     });
     expect(result.success).toBe(false);
   });
 
-  // (7) parses a legacy doc lacking kind/primary/uniqueProductIdentifierId/gs1* → defaults
-  it("parses a legacy doc lacking kind/primary/uniqueProductIdentifierId/gs1* with defaults", () => {
+  it("rejects a permalink without passportId", () => {
+    const { passportId: _passportId, ...rest } = base;
+    const result = PermalinkDtoSchema.safeParse({
+      ...rest,
+      kind: "open-dpp",
+      presentationConfigurationId: configId,
+      uniqueProductIdentifierId: null,
+      gs1DataAttributes: null,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("defaults kind to 'open-dpp' when missing", () => {
     const result = PermalinkDtoSchema.safeParse({
       ...base,
       presentationConfigurationId: configId,
-      // no kind, no primary, no uniqueProductIdentifierId, no gs1DataAttributes
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.kind).toBe("presentation");
-      expect(result.data.primary).toBe(false);
+      expect(result.data.kind).toBe("open-dpp");
       expect(result.data.uniqueProductIdentifierId).toBeNull();
       expect(result.data.gs1DataAttributes).toBeNull();
     }
   });
 
-  // PermalinkDtoSchema is still a ZodObject (has .extend)
+  it("strips the removed 'primary' field from legacy docs", () => {
+    const result = PermalinkDtoSchema.safeParse({
+      ...base,
+      kind: "open-dpp",
+      presentationConfigurationId: configId,
+      uniqueProductIdentifierId: null,
+      gs1DataAttributes: null,
+      primary: true,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(Object.prototype.hasOwnProperty.call(result.data, "primary")).toBe(false);
+    }
+  });
+
   it("PermalinkDtoSchema is still a ZodObject (has .extend method)", () => {
     expect(typeof (PermalinkDtoSchema as { extend?: unknown }).extend).toBe("function");
   });
 });
 
-// --- Slice 13: PermalinkInvariantsSchema (create-time polymorphic) ---
-
 describe("PermalinkInvariantsSchema", () => {
-  // (1) accepts presentation create
-  it("accepts a presentation create with presentationConfigurationId and null slug", () => {
+  it("accepts a bare open-dpp create (passportId only)", () => {
     const result = PermalinkInvariantsSchema.safeParse({
-      kind: "presentation",
-      presentationConfigurationId: configId,
-      slug: null,
+      kind: "open-dpp",
+      passportId,
     });
     expect(result.success).toBe(true);
   });
 
-  // (2) accepts gs1-link with all nullable gs1 fields
+  it("accepts an open-dpp create with config, UPI, and slug", () => {
+    const result = PermalinkInvariantsSchema.safeParse({
+      kind: "open-dpp",
+      passportId,
+      presentationConfigurationId: configId,
+      uniqueProductIdentifierId: upiId,
+      slug: "my-product",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an open-dpp create without passportId", () => {
+    const result = PermalinkInvariantsSchema.safeParse({
+      kind: "open-dpp",
+      presentationConfigurationId: configId,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an open-dpp create with gs1DataAttributes", () => {
+    const result = PermalinkInvariantsSchema.safeParse({
+      kind: "open-dpp",
+      passportId,
+      gs1DataAttributes: { "17": "251231" },
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("accepts a gs1-link with uniqueProductIdentifierId and null optional fields", () => {
     const result = PermalinkInvariantsSchema.safeParse({
       kind: "gs1-link",
+      passportId,
       uniqueProductIdentifierId: upiId,
       presentationConfigurationId: null,
       gs1DataAttributes: null,
@@ -390,10 +456,10 @@ describe("PermalinkInvariantsSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  // (3) accepts a gs1-link that also sets presentationConfigurationId
   it("accepts a gs1-link that also sets presentationConfigurationId", () => {
     const result = PermalinkInvariantsSchema.safeParse({
       kind: "gs1-link",
+      passportId,
       uniqueProductIdentifierId: upiId,
       presentationConfigurationId: configId,
       gs1DataAttributes: null,
@@ -401,78 +467,72 @@ describe("PermalinkInvariantsSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  // (4) rejects a gs1-link without uniqueProductIdentifierId
   it("rejects a gs1-link without uniqueProductIdentifierId", () => {
     const result = PermalinkInvariantsSchema.safeParse({
       kind: "gs1-link",
+      passportId,
       presentationConfigurationId: null,
       gs1DataAttributes: null,
     });
     expect(result.success).toBe(false);
   });
 
-  // (5) rejects a presentation create with uniqueProductIdentifierId set
-  it("rejects a presentation create with uniqueProductIdentifierId set", () => {
+  it("rejects a gs1-link without passportId", () => {
     const result = PermalinkInvariantsSchema.safeParse({
-      kind: "presentation",
-      presentationConfigurationId: configId,
+      kind: "gs1-link",
       uniqueProductIdentifierId: upiId,
-      slug: null,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  // (6) presentation kind REQUIRES a non-null presentationConfigurationId
-  it("rejects a presentation create with null presentationConfigurationId", () => {
-    const result = PermalinkInvariantsSchema.safeParse({
-      kind: "presentation",
       presentationConfigurationId: null,
-      slug: null,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  // (6b) rejects a presentation create with missing presentationConfigurationId
-  it("rejects a presentation create with missing presentationConfigurationId", () => {
-    const result = PermalinkInvariantsSchema.safeParse({
-      kind: "presentation",
-      slug: null,
     });
     expect(result.success).toBe(false);
   });
 });
 
-// --- Slice 14: PermalinkCreateRequestSchema + extended PermalinkUpdateRequestSchema ---
-
 import { PermalinkCreateRequestSchema, PermalinkUpdateRequestSchema } from "./permalink.dto";
 
 describe("PermalinkCreateRequestSchema", () => {
-  // (1) parses presentation {kind:'presentation', presentationConfigurationId:<uuid>, slug?, baseUrl?}
-  it("parses a presentation create request with presentationConfigurationId", () => {
+  it("parses a bare open-dpp create request (passportId only)", () => {
     const result = PermalinkCreateRequestSchema.safeParse({
-      kind: "presentation",
-      presentationConfigurationId: configId,
+      kind: "open-dpp",
+      passportId,
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.kind).toBe("presentation");
+      expect(result.data.kind).toBe("open-dpp");
     }
   });
 
-  it("parses a presentation create request with optional slug and baseUrl", () => {
+  it("parses an open-dpp create request with config, UPI, slug, and baseUrl", () => {
     const result = PermalinkCreateRequestSchema.safeParse({
-      kind: "presentation",
+      kind: "open-dpp",
+      passportId,
       presentationConfigurationId: configId,
+      uniqueProductIdentifierId: upiId,
       slug: "my-product",
       baseUrl: "https://passports.example.com",
     });
     expect(result.success).toBe(true);
   });
 
-  // (2) parses gs1-link {kind:'gs1-link', uniqueProductIdentifierId:<uuid>, presentationConfigurationId?:<uuid>|null, gs1DataAttributes?, slug?}
-  it("parses a gs1-link create request with uniqueProductIdentifierId", () => {
+  it("rejects an open-dpp create request without passportId", () => {
+    const result = PermalinkCreateRequestSchema.safeParse({
+      kind: "open-dpp",
+      presentationConfigurationId: configId,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects the legacy 'presentation' kind in create requests", () => {
+    const result = PermalinkCreateRequestSchema.safeParse({
+      kind: "presentation",
+      presentationConfigurationId: configId,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("parses a gs1-link create request with passportId and uniqueProductIdentifierId", () => {
     const result = PermalinkCreateRequestSchema.safeParse({
       kind: "gs1-link",
+      passportId,
       uniqueProductIdentifierId: upiId,
       presentationConfigurationId: null,
       gs1DataAttributes: null,
@@ -486,6 +546,7 @@ describe("PermalinkCreateRequestSchema", () => {
   it("parses a gs1-link create request with optional presentationConfigurationId, gs1DataAttributes, and slug", () => {
     const result = PermalinkCreateRequestSchema.safeParse({
       kind: "gs1-link",
+      passportId,
       uniqueProductIdentifierId: upiId,
       presentationConfigurationId: configId,
       gs1DataAttributes: { "17": "251231" },
@@ -494,20 +555,27 @@ describe("PermalinkCreateRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  // (3) rejects gs1-link without uniqueProductIdentifierId
   it("rejects a gs1-link create request without uniqueProductIdentifierId", () => {
     const result = PermalinkCreateRequestSchema.safeParse({
       kind: "gs1-link",
+      passportId,
       presentationConfigurationId: null,
     });
     expect(result.success).toBe(false);
   });
 
-  // (4) rejects presentation with gs1DataAttributes
-  it("rejects a presentation create request with gs1DataAttributes", () => {
+  it("rejects a gs1-link create request without passportId", () => {
     const result = PermalinkCreateRequestSchema.safeParse({
-      kind: "presentation",
-      presentationConfigurationId: configId,
+      kind: "gs1-link",
+      uniqueProductIdentifierId: upiId,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an open-dpp create request with gs1DataAttributes", () => {
+    const result = PermalinkCreateRequestSchema.safeParse({
+      kind: "open-dpp",
+      passportId,
       gs1DataAttributes: { "17": "251231" },
     } as Record<string, unknown>);
     expect(result.success).toBe(false);
@@ -515,7 +583,6 @@ describe("PermalinkCreateRequestSchema", () => {
 });
 
 describe("PermalinkUpdateRequestSchema", () => {
-  // (5) still accepts {slug, baseUrl}
   it("still accepts slug and baseUrl", () => {
     const result = PermalinkUpdateRequestSchema.safeParse({
       slug: "updated-slug",
@@ -524,16 +591,14 @@ describe("PermalinkUpdateRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  // (6) accepts {primary:true}
-  it("accepts primary: true", () => {
+  it("strips the removed 'primary' field", () => {
     const result = PermalinkUpdateRequestSchema.safeParse({ primary: true });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.primary).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(result.data, "primary")).toBe(false);
     }
   });
 
-  // (7) accepts {gs1DataAttributes}
   it("accepts gs1DataAttributes", () => {
     const result = PermalinkUpdateRequestSchema.safeParse({
       gs1DataAttributes: { "17": "251231" },
@@ -541,7 +606,6 @@ describe("PermalinkUpdateRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  // (8) accepts {presentationConfigurationId:<uuid>|null}
   it("accepts presentationConfigurationId as a uuid", () => {
     const result = PermalinkUpdateRequestSchema.safeParse({
       presentationConfigurationId: configId,
@@ -549,24 +613,18 @@ describe("PermalinkUpdateRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts presentationConfigurationId as null", () => {
+  it("accepts presentationConfigurationId as null (rebind to standard view)", () => {
     const result = PermalinkUpdateRequestSchema.safeParse({
       presentationConfigurationId: null,
     });
     expect(result.success).toBe(true);
   });
 
-  // (9) does NOT accept changing kind (absent/stripped)
   it("strips kind if provided (does not accept changing kind)", () => {
     const result = PermalinkUpdateRequestSchema.safeParse({
       kind: "gs1-link",
       slug: "test-slug",
     } as Record<string, unknown>);
-    // Either fails or strips the kind field — result should succeed but kind absent
-    if (result.success) {
-      expect((result.data as Record<string, unknown>).kind).toBeUndefined();
-    }
-    // success is also acceptable if the schema simply omits kind (strict or strip)
     expect(result.success).toBe(true);
     if (result.success) {
       expect(Object.prototype.hasOwnProperty.call(result.data, "kind")).toBe(false);
@@ -577,13 +635,13 @@ describe("PermalinkUpdateRequestSchema", () => {
 describe("PermalinkPaginationDtoSchema", () => {
   const validPermalinkPublic = {
     id: "44444444-4444-4444-8444-444444444444",
-    kind: "presentation",
+    kind: "open-dpp",
+    passportId,
     slug: null,
     baseUrl: null,
     publishedUrl: null,
     presentationConfigurationId: configId,
     uniqueProductIdentifierId: null,
-    primary: true,
     gs1DataAttributes: null,
     createdAt: isoNow,
     updatedAt: isoNow,

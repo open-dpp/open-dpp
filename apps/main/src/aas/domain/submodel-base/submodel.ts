@@ -1,8 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
-import { KeyTypes, ModellingKindType, ReferenceTypes, SubmodelJsonSchema } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
-import { isEmptyObject } from "../../../utils";
+import {
+  KeyTypes,
+  ModellingKindType,
+  Permissions,
+  ReferenceTypes,
+  SubmodelJsonSchema,
+} from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IdShortPath } from "../common/id-short-path";
 import { Key } from "../common/key";
@@ -26,13 +31,12 @@ import {
   deleteSubmodelElementOrFail,
   ISubmodelBase,
   ISubmodelElement,
+  ISubmodelElementSearchable,
   parseSubmodelElement,
-  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
-import { SubmodelElementList } from "./submodel-element-list";
-import { TableExtension } from "./table-extension";
+import { TableExtension } from "./table/table-extension";
 import { SubmodelElementAdded } from "../../../activity-history/domain/change-events/submodel-element-added";
 import {
   ChangeTracker,
@@ -40,11 +44,24 @@ import {
   withTrackingHelper,
 } from "../../../activity-history/domain/change-tracker";
 import { SubmodelElementDeleted } from "../../../activity-history/domain/change-events/submodel-element-deleted";
+import { SubmodelElementMoved } from "../../../activity-history/domain/change-events/submodel-element-moved";
+import { Pointer } from "./pointer";
+import { NestedTableExtension } from "./table/nested-table-extension";
+import {
+  ITableExtendable,
+  MoveOptions,
+  parseAsSubmodelElementListOrFail,
+} from "./table/table-extensable";
+import { AccessResult } from "../security/access-allowed";
+import { AasAbility } from "../security/aas-ability";
 
-export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
+export class Submodel
+  implements ISubmodelBase, IPersistable, ITrackable, ISubmodelElementSearchable
+{
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
   public readonly tracker;
+  private _parentPointer = Pointer.create({});
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -58,14 +75,22 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly submodelElements: Array<ISubmodelElement>,
+    private submodelElements: Array<ISubmodelElement>,
   ) {
     this.displayName = displayName;
     this.description = description;
-    setParentIdShortPaths(this, this.idShort);
+    this._parentPointer.setParentPointersOfSubmodelElements(this);
     this.tracker = ChangeTracker.create({
       onStopCallback: () => this.administration.increaseVersion(),
     });
+  }
+
+  getPointer(): Pointer {
+    return this._parentPointer.getPointerToElement(this);
+  }
+
+  getReference(): Reference {
+    return this._parentPointer.getReferenceToElement(this);
   }
 
   withTracking(changeTracker?: ChangeTracker) {
@@ -73,7 +98,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
   }
 
   getIdShortPath(): IdShortPath {
-    return IdShortPath.create({ path: this.idShort });
+    return this._parentPointer.getIdShortPathToElement(this);
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -169,15 +194,17 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     return submodelElement;
   }
 
-  private getListAsTableExtensionOrFail(idShortPath: IdShortPath) {
-    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    if (submodelElement instanceof SubmodelElementList) {
-      return new TableExtension(submodelElement).withTracking(this.tracker);
-    } else {
-      throw new ValueError(
-        `Cannot create table for submodel element with type ${submodelElement.getSubmodelElementType()}`,
-      );
-    }
+  private getListAsTableExtensionOrFail(idShortPath: IdShortPath): ITableExtendable {
+    const submodelElementList = parseAsSubmodelElementListOrFail(
+      this.findSubmodelElementOrFail(idShortPath),
+    );
+    const tableExtension = submodelElementList.hasParentList()
+      ? NestedTableExtension.create({
+          data: submodelElementList,
+          submodelElementSearch: this,
+        })
+      : new TableExtension(submodelElementList);
+    return tableExtension.withTracking(this.tracker);
   }
 
   addRow(idShortPath: IdShortPath, options: AddOptions) {
@@ -211,9 +238,80 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
 
   deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-
     tableExtension.deleteColumn(idShortOfColumn, options);
     return tableExtension.getTableElement();
+  }
+
+  addColumnToGroup(
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    column: ISubmodelElement,
+    options: AddOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.addColumnToGroup(groupIdShort, column, options);
+    return tableExtension.getTableElement();
+  }
+
+  modifyColumnInGroup(
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    data: unknown,
+    options: ModifierVisitorOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.modifyColumnInGroup(groupIdShort, idShortOfColumn, data, options);
+    return tableExtension.getTableElement();
+  }
+
+  deleteColumnFromGroup(
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    options: MoveOptions & DeleteOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.deleteColumnFromGroup(groupIdShort, idShortOfColumn, options);
+    return tableExtension.getTableElement();
+  }
+
+  moveColumnToGroup(
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    groupIdShort: string,
+    options: MoveOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.moveColumnToGroup(columnIdShort, groupIdShort, options);
+    return tableExtension.getTableElement();
+  }
+
+  createGroupFromColumn(
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    group: ISubmodelElement,
+    options: MoveOptions,
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.createGroupFromColumn(columnIdShort, group, options);
+    return tableExtension.getTableElement();
+  }
+
+  reorderColumn(
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    options: { ability: AasAbility },
+  ) {
+    const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
+    tableExtension.reorderColumn(idShortOfColumn, groupIdShort, position, options);
+    return tableExtension.getTableElement();
+  }
+
+  getKeyType() {
+    return KeyTypes.Submodel;
   }
 
   getValueRepresentation({
@@ -265,7 +363,7 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     let addedSubmodelElement: ISubmodelElement;
     if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
-      submodelElement.setParentIdShortPath(parent.getIdShortPath());
+      submodelElement.setParentPointer(parent.getPointer());
       addedSubmodelElement = parent.addSubmodelElement(submodelElement, options);
     } else {
       addedSubmodelElement = addSubmodelElementOrFail(this, submodelElement, options);
@@ -306,6 +404,92 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     }
   }
 
+  /** Whether `target` is a table (SubmodelElementList) itself, or is any of
+   * its rows or other descendants — i.e. its reference passes through a
+   * SubmodelElementList on the way down from the Submodel root. */
+  private isWithinTable(target: ISubmodelBase): boolean {
+    return (
+      target
+        .getReference()
+        .constructIdShortPathsForType(KeyTypes.SubmodelElementList, { excludeSubmodel: true })
+        .length > 0
+    );
+  }
+
+  public moveSubmodelElement(
+    sourcePath: IdShortPath,
+    targetParent: { path?: IdShortPath; position?: number },
+    options: MoveOptions,
+  ): ISubmodelElement {
+    const element = this.findSubmodelElementOrFail(sourcePath);
+    const oldPath = element.getIdShortPath();
+    const sourceParent: ISubmodelBase = this.findSubmodelElementParent(sourcePath) ?? this;
+    const targetPath = targetParent.path ?? sourcePath.getParentPath();
+    const resolvedTargetParent: ISubmodelBase = targetPath.isEmpty()
+      ? this
+      : this.findSubmodelElementOrFail(targetPath);
+
+    if (this.isWithinTable(resolvedTargetParent)) {
+      throw new ValueError(
+        `Cannot move submodel element with idShortPath ${sourcePath.toString()} into a SubmodelElementList (table) with idShortPath ${targetPath.toString()}, or any of its rows or other descendants; rows must be added via the table's row/column operations.`,
+      );
+    }
+
+    if (targetPath.isChildOf(sourcePath)) {
+      throw new ValueError(
+        `Cannot move submodel element with idShortPath ${sourcePath.toString()} into itself or one of its descendants`,
+      );
+    }
+
+    if (!options.ability.can(Permissions.Delete, element.getIdShortPath())) {
+      throw new ForbiddenError(
+        `Missing permissions to delete element ${element.getIdShortPath().toString()}.`,
+      );
+    }
+
+    const sourceSiblings = sourceParent.getSubmodelElements();
+    const indexInSource = sourceSiblings.findIndex((el) => el.idShort === element.idShort);
+    sourceSiblings.splice(indexInSource, 1);
+
+    try {
+      if (resolvedTargetParent === (this as ISubmodelBase)) {
+        addSubmodelElementOrFail(this, element, {
+          position: targetParent.position,
+          ability: options.ability,
+        });
+      } else {
+        resolvedTargetParent.addSubmodelElement(element, {
+          position: targetParent.position,
+          ability: options.ability,
+        });
+      }
+    } catch (e) {
+      sourceSiblings.splice(indexInSource, 0, element);
+      element.setParentPointer(sourceParent.getPointer());
+      throw e;
+    }
+
+    const newPosition = resolvedTargetParent
+      .getSubmodelElements()
+      .findIndex((el) => el.idShort === element.idShort);
+    const newPath = element.getIdShortPath();
+
+    // Track the move and trigger callback if the path or position has changed
+    if (!oldPath.isEqual(newPath) || newPosition !== indexInSource) {
+      this.tracker.track(
+        SubmodelElementMoved.create({
+          oldPath,
+          newPath,
+          position: newPosition,
+          value: element,
+        }),
+      );
+      options.onMove(oldPath, newPath);
+    }
+
+    return element;
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitSubmodel(this, context);
   }
@@ -315,19 +499,37 @@ export class Submodel implements ISubmodelBase, IPersistable, ITrackable {
     return this.accept(jsonVisitor, options?.context);
   }
 
+  setSubmodelElements(submodelElements: Array<ISubmodelElement>): void {
+    this.submodelElements = submodelElements;
+    this.getSubmodelElements().forEach((se) => {
+      se.setParentPointer(this.getPointer());
+    });
+  }
+
   getSubmodelElements(): ISubmodelElement[] {
     return this.submodelElements;
   }
 
-  copy(options?: ICopyOptions): Submodel | undefined {
-    const plain = this.toPlain(options);
-    if (isEmptyObject(plain)) {
-      return undefined;
+  copy(options?: ICopyOptions): AccessResult<Submodel> {
+    const submodelElementsCopy = this.getSubmodelElements().map((se) => se.copy(options));
+
+    if (
+      options?.ability === undefined ||
+      options?.ability?.can(Permissions.Read, this.getIdShortPath()) ||
+      submodelElementsCopy.some((se) => se.isAllowed)
+    ) {
+      const plainClone = this.toPlain(options);
+      const copy = Submodel.fromPlain({ ...plainClone, id: randomUUID() });
+      copy.setSubmodelElements(
+        submodelElementsCopy.filter((se) => se.isAllowed).map((se) => se.value),
+      );
+      if (options?.transformer) {
+        copy.accept(options.transformer);
+      }
+      return AccessResult.allowed(copy);
+    } else {
+      return AccessResult.denied();
     }
-    return Submodel.fromPlain({
-      ...plain,
-      id: randomUUID(),
-    });
   }
 }
 

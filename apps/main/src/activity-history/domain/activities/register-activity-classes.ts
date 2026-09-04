@@ -12,10 +12,17 @@ import { PolicyDeletedActivity } from "./policy-deleted.activity";
 import { ColumnAddedActivity } from "./column-added.activity";
 import { ColumnModifiedActivity } from "./column-modified.activity";
 import { ColumnDeletedActivity } from "./column-deleted.activity";
+import { ColumnAddedToGroupActivity } from "./column-added-to-group.activity";
+import { ColumnModifiedInGroupActivity } from "./column-modified-in-group.activity";
+import { ColumnDeletedFromGroupActivity } from "./column-deleted-from-group.activity";
+import { ColumnMovedToGroupActivity } from "./column-moved-to-group.activity";
+import { ColumnGroupCreatedActivity } from "./column-group-created.activity";
 import { RowDeletedActivity } from "./row-deleted.activity";
 import { SubmodelAddedActivity } from "./submodel-added.activity";
 import { SubmodelDeletedActivity } from "./submodel-deleted.activity";
 import { DigitalProductDocumentStatusChangedActivity } from "./digital-product-document-status-changed.activity";
+import { SubmodelElementMovedActivity } from "./submodel-element-moved.activity";
+import { SubmodelMovedActivity } from "./submodel-moved.activity";
 
 export function registerActivityClasses(): void {
   registerActivity(ActivityTypes.SubmodelAdded, SubmodelAddedActivity);
@@ -39,6 +46,13 @@ export function registerActivityClasses(): void {
   registerActivity(ActivityTypes.RowDeleted, RowDeletedActivity);
   registerActivity(ActivityTypes.ColumnModified, ColumnModifiedActivity);
   registerActivity(ActivityTypes.ColumnDeleted, ColumnDeletedActivity);
+  registerActivity(ActivityTypes.ColumnAddedToGroup, ColumnAddedToGroupActivity);
+  registerActivity(ActivityTypes.ColumnModifiedInGroup, ColumnModifiedInGroupActivity);
+  registerActivity(ActivityTypes.ColumnDeletedFromGroup, ColumnDeletedFromGroupActivity);
+  registerActivity(ActivityTypes.ColumnMovedToGroup, ColumnMovedToGroupActivity);
+  registerActivity(ActivityTypes.ColumnGroupCreated, ColumnGroupCreatedActivity);
+  registerActivity(ActivityTypes.SubmodelElementMoved, SubmodelElementMovedActivity);
+  registerActivity(ActivityTypes.SubmodelMoved, SubmodelMovedActivity);
   registerActivity(
     ActivityTypes.DigitalProductDocumentStatusChanged,
     DigitalProductDocumentStatusChangedActivity,

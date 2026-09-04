@@ -11,12 +11,15 @@ import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { BrandingModule } from "./branding/branding.module";
+import { BulkImportModule } from "./bulk-import/bulk-import.module";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
+import { EmailChangeRequestsModule } from "./identity/email-change-requests/email-change-requests.module";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
+import { ApiKeysModule } from "./identity/api-keys/api-keys.module";
 import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
 import { McpServerModule } from "./mcp/mcp.server.module";
@@ -46,10 +49,13 @@ import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.midd
     AasModule,
     UniqueProductIdentifierModule,
     BrandingModule,
+    BulkImportModule,
     TemplatesModule,
     PassportsModule,
     OrganizationsModule,
     UsersModule,
+    ApiKeysModule,
+    EmailChangeRequestsModule,
     HttpModule,
     TraceabilityEventsModule,
     ServeStaticModule.forRoot({

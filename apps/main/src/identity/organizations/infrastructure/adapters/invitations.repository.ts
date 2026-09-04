@@ -2,12 +2,12 @@ import type { Auth } from "better-auth";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { ObjectId } from "mongodb";
+import type { Document, Filter } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
+import { idFilter } from "../../../lib/better-auth-id";
 import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
-import { MemberRoleEnum } from "../../domain/member-role.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";
 import { InvitationDoc } from "../schemas/invitation.schema";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
@@ -21,9 +21,11 @@ export class InvitationsRepository {
   ) {}
 
   async findOneById(id: string): Promise<Invitation | null> {
-    const document = await this.invitationModel.findOne({ _id: new ObjectId(id) });
-    if (!document) return null;
-    return InvitationMapper.toDomain(document);
+    const rawDoc = await this.invitationModel.collection.findOne({
+      _id: idFilter(id),
+    } as unknown as Filter<Document>);
+    if (!rawDoc) return null;
+    return InvitationMapper.toDomain(rawDoc);
   }
 
   async findOneByIdOrFail(id: string): Promise<Invitation> {
@@ -34,9 +36,12 @@ export class InvitationsRepository {
     return invitation;
   }
 
+  // The `$eq` wrapper is a security guard against NoSQL operator injection:
+  // it forces an operator-shaped `email` (e.g. `{ $ne: null }`) to be compared
+  // as a literal value instead of being interpreted as a query operator.
   async findByEmail(email: string): Promise<Invitation[]> {
-    const documents = await this.invitationModel.find({ email });
-    return documents.map(InvitationMapper.toDomain);
+    const rawDocs = await this.invitationModel.collection.find({ email: { $eq: email } }).toArray();
+    return rawDocs.map((rawDoc) => InvitationMapper.toDomain(rawDoc));
   }
 
   async findOneUnexpiredByEmailAndOrganization(
@@ -45,38 +50,26 @@ export class InvitationsRepository {
   ): Promise<Invitation | null> {
     // Query the raw MongoDB collection to bypass Mongoose's String schema casting,
     // since Better Auth's MongoDB adapter stores reference fields as ObjectId
-    const orgIdFilter = ObjectId.isValid(organizationId)
-      ? { $in: [organizationId, new ObjectId(organizationId)] }
-      : organizationId;
     const rawDoc = await this.invitationModel.collection.findOne({
-      email,
-      organizationId: orgIdFilter,
+      email: { $eq: email },
+      organizationId: idFilter(organizationId),
       expiresAt: { $gte: new Date() },
       status: InvitationStatus.PENDING,
     });
     if (!rawDoc) return null;
-    return Invitation.loadFromDb({
-      id: rawDoc._id.toString(),
-      email: rawDoc.email as string,
-      organizationId: rawDoc.organizationId?.toString() ?? "",
-      inviterId: rawDoc.inviterId?.toString() ?? "",
-      role: MemberRoleEnum.parse(rawDoc.role),
-      status: rawDoc.status as InvitationStatus,
-      createdAt: rawDoc.createdAt as Date,
-      expiresAt: rawDoc.expiresAt as Date,
-    });
+    return InvitationMapper.toDomain(rawDoc);
   }
 
   async save(invitation: Invitation, headers?: BetterAuthHeaders): Promise<string> {
-    return (
-      await (this.auth.api as any).createInvitation({
-        headers,
-        body: {
-          email: invitation.email,
-          role: invitation.role,
-          organizationId: invitation.organizationId,
-        },
-      })
-    ).id;
+    const betterAuthInvitation = await (this.auth.api as any).createInvitation({
+      headers,
+      body: {
+        email: invitation.email,
+        role: invitation.role,
+        organizationId: invitation.organizationId,
+      },
+    });
+
+    return betterAuthInvitation.id;
   }
 }

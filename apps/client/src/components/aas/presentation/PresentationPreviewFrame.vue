@@ -4,8 +4,8 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { usePresentationConfigurationStore } from "../../../stores/presentation-configuration";
 import SubmodelElementValue from "../../presentation/SubmodelElementValue.vue";
-import { PRESENTATION_COMPONENTS } from "../../presentation/components/presentation-components";
-import { resolveComponent } from "../../presentation/presentation-config";
+import { PRESENTATION_COMPONENTS } from "../../../lib/presentation/presentation-components.ts";
+import { resolveComponent } from "../../../lib/presentation/presentation-config.ts";
 
 const props = defineProps<{
   element: SubmodelElementResponseDto;

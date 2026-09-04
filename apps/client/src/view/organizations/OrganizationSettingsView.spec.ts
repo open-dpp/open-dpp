@@ -3,10 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import { createI18n } from "vue-i18n";
 
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
-
 const { getBranding, setBranding, updateOrganization } = vi.hoisted(() => ({
   getBranding: vi.fn(),
   setBranding: vi.fn(),
@@ -58,7 +54,6 @@ vi.mock("../../stores/organizations", () => ({
   }),
 }));
 
-// MediaInput pulls in heavy media plumbing; stub it out.
 vi.mock("../../components/media/MediaInput.vue", () => ({
   default: defineComponent({ name: "MediaInput", template: "<div />" }),
 }));

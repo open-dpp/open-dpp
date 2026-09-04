@@ -8,17 +8,14 @@ import { useErrorHandlingStore } from "../../stores/error.handling";
 const model = defineModel<boolean>("visible");
 
 const props = defineProps<{
-  // The passport this dialog creates a UPI for — taken from the route, not chosen here.
   passportId: string;
-  // UPIs can only be created while the passport is a draft (backend returns 409 otherwise).
-  isDraft: boolean;
+  passportPublished: boolean;
   createGs1Upi: (data: {
     referenceId: string;
     gtin: string;
     batch?: string;
     serial?: string;
   }) => Promise<UniqueProductIdentifierListItemDto>;
-  // Mint a plain internal (OPEN_DPP_UUID) UPI — no identity payload. See ADR 0005.
   createInternalUpi: (passportId: string) => Promise<UniqueProductIdentifierListItemDto>;
 }>();
 
@@ -29,8 +26,6 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
 
-// The identifier type the user is creating. GS1 carries a GTIN (+ optional
-// batch/serial); INTERNAL is a server-minted UUID with no identity payload.
 const UPI_TYPE_GS1 = "GS1";
 const UPI_TYPE_INTERNAL = "OPEN_DPP_UUID";
 const upiType = ref<string>(UPI_TYPE_GS1);
@@ -46,12 +41,6 @@ const serial = ref<string>("");
 const gtinError = ref<string | null>(null);
 const busy = ref<boolean>(false);
 
-/**
- * Live client-side validation for an optional batch / serial:
- * an empty value is valid (it clears the component);
- * a non-empty value must satisfy GS1 CSET-82 and the 20-character cap.
- * Returns a localized error message or null.
- */
 function validateComponent(value: string): string | null {
   const trimmed = value.trim();
   if (trimmed.length === 0) return null;
@@ -65,8 +54,7 @@ const serialError = computed(() => validateComponent(serial.value));
 const hasComponentError = computed(() => batchError.value !== null || serialError.value !== null);
 
 const canSubmit = computed(() => {
-  if (!props.isDraft || busy.value) return false;
-  // An internal UPI needs no input — the server mints its uuid.
+  if (busy.value) return false;
   if (!isGs1.value) return true;
   return gtin.value.trim().length > 0 && !hasComponentError.value;
 });
@@ -151,12 +139,12 @@ function cancel() {
       </p>
 
       <Message
-        v-if="!isDraft"
-        severity="warn"
+        v-if="passportPublished"
+        severity="info"
         :closable="false"
-        data-testid="upi-passport-not-draft"
+        data-testid="upi-passport-published-note"
       >
-        {{ t("uniqueProductIdentifiers.create.passportNotDraft") }}
+        {{ t("uniqueProductIdentifiers.create.passportPublishedNote") }}
       </Message>
 
       <template v-if="isGs1">
@@ -169,7 +157,7 @@ function cancel() {
             v-model="gtin"
             data-testid="upi-create-gtin"
             :invalid="!!gtinError"
-            :disabled="busy || !isDraft"
+            :disabled="busy"
             inputmode="numeric"
             autocomplete="off"
             spellcheck="false"
@@ -189,7 +177,7 @@ function cancel() {
               v-model="batch"
               data-testid="upi-create-batch"
               :invalid="!!batchError"
-              :disabled="busy || !isDraft"
+              :disabled="busy"
               autocomplete="off"
               spellcheck="false"
               maxlength="20"
@@ -207,7 +195,7 @@ function cancel() {
               v-model="serial"
               data-testid="upi-create-serial"
               :invalid="!!serialError"
-              :disabled="busy || !isDraft"
+              :disabled="busy"
               autocomplete="off"
               spellcheck="false"
               maxlength="20"

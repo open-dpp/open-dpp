@@ -1,0 +1,648 @@
+import type {
+  DataTypeDefType,
+  FileRequestDto,
+  LanguageType,
+  PropertyRequestDto,
+  SubmodelElementModificationDto,
+  SubmodelElementSharedRequestDto,
+  TableModificationParamsDto,
+} from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, Language } from "@open-dpp/dto";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
+import { match, P } from "ts-pattern";
+import { toRaw } from "vue";
+import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
+import type {
+  AasEditorPath,
+  EditorType,
+  OpenDrawerCallback,
+} from "../../composables/aas-drawer.ts";
+import { ColumnEditorKey, EditorMode } from "../../composables/aas-drawer.ts";
+import { columnKindOf, isGroupColumn, type Column } from "./columns.ts";
+
+const translatePrefix = "aasEditor";
+const translateTablePrefix = `${translatePrefix}.table`;
+
+export type ColumnMenuOptions = TableModificationParamsDto & {
+  addColumnActions?: boolean;
+  /** Set when the menu is opened for the group's own spanning header cell. */
+  isGroupHeader?: boolean;
+  /** Parent group idShort when operating on a sub-column or group header. */
+  groupIdShort?: string;
+};
+export type RowMenuOptions = TableModificationParamsDto;
+
+export interface TableMenuDeps {
+  translate: (label: string, ...args: unknown[]) => string;
+  openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
+  openConfirm: (option: ConfirmationOptions) => void;
+  pathToList: AasEditorPath;
+  selectedLanguage: LanguageType;
+  errorHandlingStore: IErrorHandlingStore;
+  disableRowCreation?: boolean;
+  disableRowDeletion?: boolean;
+  disableColumnCreation?: boolean;
+  disableColumnDeletion?: boolean;
+  disableColumnEditing?: boolean;
+  onCreateColumn: (
+    colData: SubmodelElementSharedRequestDto,
+    options: TableModificationParamsDto,
+  ) => Promise<void>;
+  onAddColumnToGroup: (
+    groupIdShort: string,
+    colData: SubmodelElementSharedRequestDto,
+    options: TableModificationParamsDto,
+  ) => Promise<void>;
+  onModifyTopLevelColumn: (
+    formData: SubmodelElementModificationDto,
+    column: Column,
+  ) => Promise<void>;
+  onModifyColumnInGroup: (
+    groupIdShort: string,
+    subColumn: Column,
+    formData: SubmodelElementModificationDto,
+  ) => Promise<void>;
+  onRemoveColumn: (column: Column) => Promise<void>;
+  onDeleteColumnFromGroup: (groupIdShort: string, subColumn: Column) => Promise<void>;
+  onMoveColumnToGroup: (column: Column, groupIdShort: string) => Promise<void>;
+  onReorderColumn: (column: Column, position: number, groupIdShort?: string) => Promise<void>;
+  onCreateGroupFromColumn: (
+    column: Column,
+    groupData: SubmodelElementSharedRequestDto,
+  ) => Promise<void>;
+  onAddRow: (options: RowMenuOptions) => Promise<void>;
+  onRemoveRow: (rowIndex: number) => Promise<void>;
+}
+
+function getColumnAtIndexOrFail(columns: Column[], index: number): Column {
+  const column = columns[index];
+  if (!column) {
+    throw new Error(`Column with index ${index} not found`);
+  }
+  return column;
+}
+
+function getSubColumnAtIndexOrFail(columns: Column[], groupIdShort: string, index: number): Column {
+  const group = columns.find((c) => c.idShort === groupIdShort);
+  const subCol = group?.children?.[index];
+  if (!subCol) {
+    throw new Error(`Sub-column at index ${index} in group "${groupIdShort}" not found`);
+  }
+  return subCol;
+}
+
+function getGroupColumns(columns: Column[]): Column[] {
+  return columns.filter(isGroupColumn);
+}
+
+function buildColumnTypeMenuItem(
+  fieldLabel: string,
+  icon: string,
+  options: TableModificationParamsDto,
+  type:
+    | typeof AasSubmodelElements.File
+    | typeof AasSubmodelElements.Property
+    | typeof AasSubmodelElements.SubmodelElementCollection
+    | typeof AasSubmodelElements.SubmodelElementList,
+  deps: TableMenuDeps,
+  valueType?: DataTypeDefType,
+  groupIdShort?: string,
+) {
+  const { translate, openDrawer, pathToList, selectedLanguage, disableColumnCreation } = deps;
+  const addColumnLabel = translate(`${translateTablePrefix}.addFieldAsColumn`, {
+    field: selectedLanguage === Language.de ? fieldLabel : fieldLabel.toLowerCase(),
+  });
+  const labelIconAndDisableOption = {
+    label: fieldLabel,
+    icon,
+    disabled: disableColumnCreation,
+  };
+  const sharedDrawerProps = {
+    mode: EditorMode.CREATE,
+    title: addColumnLabel,
+    path: pathToList,
+  };
+
+  const createFn = groupIdShort
+    ? (colData: SubmodelElementSharedRequestDto) =>
+        deps.onAddColumnToGroup(groupIdShort, colData, options)
+    : (colData: SubmodelElementSharedRequestDto) => deps.onCreateColumn(colData, options);
+
+  return match({ type, valueType })
+    .with({ type: AasSubmodelElements.SubmodelElementList }, ({ type }) => ({
+      ...labelIconAndDisableOption,
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          ...sharedDrawerProps,
+          type: ColumnEditorKey,
+          data: {
+            modelType: type,
+            typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          },
+          callback: async (colData: any) => createFn({ modelType: type, ...colData }),
+        });
+      },
+    }))
+    .with({ type: AasSubmodelElements.File }, ({ type }) => ({
+      ...labelIconAndDisableOption,
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          ...sharedDrawerProps,
+          type: ColumnEditorKey,
+          data: { modelType: type, contentType: "application/octet-stream" },
+          callback: async (colData: FileRequestDto) => createFn({ modelType: type, ...colData }),
+        });
+      },
+    }))
+    .with({ type: AasSubmodelElements.Property, valueType: P.string }, ({ type, valueType }) => ({
+      ...labelIconAndDisableOption,
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          ...sharedDrawerProps,
+          type: ColumnEditorKey,
+          data: { modelType: type, valueType },
+          callback: async (colData: PropertyRequestDto) =>
+            createFn({ modelType: type, ...colData }),
+        });
+      },
+    }))
+    .run();
+}
+
+function buildAllColumnTypeMenuItems(
+  icon: string,
+  options: TableModificationParamsDto,
+  deps: TableMenuDeps,
+  groupIdShort?: string,
+): MenuItem[] {
+  const { translate } = deps;
+  return [
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.textField`),
+      icon,
+      options,
+      AasSubmodelElements.Property,
+      deps,
+      DataTypeDef.String,
+      groupIdShort,
+    ),
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.numberField`),
+      icon,
+      options,
+      AasSubmodelElements.Property,
+      deps,
+      DataTypeDef.Double,
+      groupIdShort,
+    ),
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.booleanField`),
+      icon,
+      options,
+      AasSubmodelElements.Property,
+      deps,
+      DataTypeDef.Boolean,
+      groupIdShort,
+    ),
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.dateField`),
+      icon,
+      options,
+      AasSubmodelElements.Property,
+      deps,
+      DataTypeDef.Date,
+      groupIdShort,
+    ),
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.dateTimeField`),
+      icon,
+      options,
+      AasSubmodelElements.Property,
+      deps,
+      DataTypeDef.DateTime,
+      groupIdShort,
+    ),
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.link`),
+      icon,
+      options,
+      AasSubmodelElements.Property,
+      deps,
+      DataTypeDef.AnyUri,
+      groupIdShort,
+    ),
+    buildColumnTypeMenuItem(
+      translate(`${translatePrefix}.file`),
+      icon,
+      options,
+      AasSubmodelElements.File,
+      deps,
+      undefined,
+      groupIdShort,
+    ),
+    // "Table" columns (nested SubmodelElementList) are top-level only — they
+    // can't be flattened into a group like scalar columns, so they're never
+    // offered when this menu is built for a group's sub-columns.
+    ...(groupIdShort
+      ? []
+      : [
+          buildColumnTypeMenuItem(
+            translate(`${translatePrefix}.submodelElementList`),
+            "pi pi-table",
+            options,
+            AasSubmodelElements.SubmodelElementList,
+            deps,
+          ),
+        ]),
+  ];
+}
+
+function buildMoveColumnMenuItems(
+  column: Column,
+  position: number,
+  containerLength: number,
+  deps: TableMenuDeps,
+  groupIdShort?: string,
+): MenuItem[] {
+  const { translate, disableColumnEditing } = deps;
+  return [
+    {
+      label: translate("common.moveLeft"),
+      icon: "pi pi-arrow-left",
+      disabled: !!disableColumnEditing || position <= 0,
+      command: async () => {
+        await deps.onReorderColumn(column, position - 1, groupIdShort);
+      },
+    },
+    {
+      label: translate("common.moveRight"),
+      icon: "pi pi-arrow-right",
+      disabled: !!disableColumnEditing || position >= containerLength - 1,
+      command: async () => {
+        await deps.onReorderColumn(column, position + 1, groupIdShort);
+      },
+    },
+  ];
+}
+
+function modifyColumnMenuItem(column: Column, deps: TableMenuDeps) {
+  const { translate, openDrawer, pathToList, disableColumnEditing } = deps;
+  return {
+    label: translate(`common.edit`),
+    icon: "pi pi-pencil",
+    disabled: disableColumnEditing,
+    command: (_event: MenuItemCommandEvent) => {
+      openDrawer({
+        type: ColumnEditorKey,
+        data: toRaw(column.plain),
+        mode: EditorMode.EDIT,
+        title: translate(`${translatePrefix}.table.editColumn`),
+        path: pathToList,
+        callback: async (data: SubmodelElementModificationDto) =>
+          deps.onModifyTopLevelColumn(data, column),
+      });
+    },
+  };
+}
+
+function removeColumnMenuItem(column: Column, deps: TableMenuDeps) {
+  const { translate, openConfirm, disableColumnDeletion } = deps;
+  const removeLabel = translate("common.remove");
+  const cancelLabel = translate("common.cancel");
+
+  return {
+    label: removeLabel,
+    icon: "pi pi-trash",
+    disabled: disableColumnDeletion,
+    command: async () => {
+      openConfirm({
+        message: isGroupColumn(column)
+          ? translate(`${translateTablePrefix}.removeGroupColumn`)
+          : translate(`${translateTablePrefix}.removeColumn`),
+        header: removeLabel,
+        icon: "pi pi-info-circle",
+        rejectLabel: cancelLabel,
+        rejectProps: {
+          label: cancelLabel,
+          severity: "secondary",
+          outlined: true,
+        },
+        acceptProps: {
+          label: removeLabel,
+          severity: "danger",
+        },
+        accept: async () => {
+          await deps.onRemoveColumn(column);
+        },
+      });
+    },
+  };
+}
+
+function createGroupFromColumnMenuItem(column: Column, deps: TableMenuDeps): MenuItem {
+  const { translate, openDrawer, pathToList, disableColumnEditing } = deps;
+  const label = translate(`${translateTablePrefix}.newGroup`);
+  return {
+    label,
+    icon: "pi pi-plus",
+    disabled: !!disableColumnEditing,
+    command: (_event: MenuItemCommandEvent) => {
+      openDrawer({
+        mode: EditorMode.CREATE,
+        title: label,
+        path: pathToList,
+        type: ColumnEditorKey,
+        data: { modelType: AasSubmodelElements.SubmodelElementCollection },
+        callback: async (groupData: any) =>
+          deps.onCreateGroupFromColumn(column, {
+            modelType: AasSubmodelElements.SubmodelElementCollection,
+            ...groupData,
+          }),
+      });
+    },
+  };
+}
+
+function modifySubColumnMenuItem(
+  groupIdShort: string,
+  subColumn: Column,
+  deps: TableMenuDeps,
+): MenuItem {
+  const { translate, openDrawer, pathToList, disableColumnEditing } = deps;
+  return {
+    label: translate(`common.edit`),
+    icon: "pi pi-pencil",
+    disabled: disableColumnEditing,
+    command: (_event: MenuItemCommandEvent) => {
+      openDrawer({
+        type: ColumnEditorKey,
+        data: toRaw(subColumn.plain),
+        mode: EditorMode.EDIT,
+        title: translate(`${translatePrefix}.table.editColumn`),
+        path: pathToList,
+        callback: async (formData: SubmodelElementModificationDto) =>
+          deps.onModifyColumnInGroup(groupIdShort, subColumn, formData),
+      });
+    },
+  };
+}
+
+function removeFromGroupMenuItem(
+  groupIdShort: string,
+  subColumn: Column,
+  deps: TableMenuDeps,
+): MenuItem {
+  const { translate, openConfirm, disableColumnDeletion } = deps;
+  const removeLabel = translate(`${translateTablePrefix}.removeFromGroup`);
+  const cancelLabel = translate("common.cancel");
+  return {
+    label: removeLabel,
+    icon: "pi pi-sign-out",
+    disabled: disableColumnDeletion,
+    command: async () => {
+      openConfirm({
+        message: translate(`${translateTablePrefix}.removeFromGroupConfirm`),
+        header: removeLabel,
+        icon: "pi pi-info-circle",
+        rejectLabel: cancelLabel,
+        rejectProps: { label: cancelLabel, severity: "secondary", outlined: true },
+        acceptProps: { label: removeLabel, severity: "danger" },
+        accept: async () => {
+          await deps.onDeleteColumnFromGroup(groupIdShort, subColumn);
+        },
+      });
+    },
+  };
+}
+
+function buildAddColumnLeftRightSections(
+  position: number,
+  deps: TableMenuDeps,
+  groupIdShort?: string,
+): MenuItem[] {
+  const { translate } = deps;
+  return [
+    {
+      label: translate(`${translateTablePrefix}.addColumnLeft`),
+      items: buildAllColumnTypeMenuItems("pi pi-arrow-left", { position }, deps, groupIdShort),
+    },
+    {
+      label: translate(`${translateTablePrefix}.addColumnRight`),
+      items: buildAllColumnTypeMenuItems(
+        "pi pi-arrow-right",
+        { position: position + 1 },
+        deps,
+        groupIdShort,
+      ),
+    },
+  ];
+}
+
+function buildTopLevelColumnMenu(
+  options: ColumnMenuOptions,
+  columns: Column[],
+  deps: TableMenuDeps,
+): MenuItem[] {
+  const { translate, errorHandlingStore, disableColumnEditing } = deps;
+
+  if (!options.addColumnActions) {
+    return buildAllColumnTypeMenuItems("pi pi-arrow-right", options, deps);
+  }
+
+  const position = options.position ?? 0;
+  const menu: MenuItem[] = buildAddColumnLeftRightSections(position, deps);
+
+  try {
+    const column = getColumnAtIndexOrFail(columns, position);
+    const groups = getGroupColumns(columns);
+
+    menu.push({
+      label: translate("common.actions"),
+      items: [
+        modifyColumnMenuItem(column, deps),
+        ...buildMoveColumnMenuItems(column, position, columns.length, deps),
+        removeColumnMenuItem(column, deps),
+      ],
+    });
+
+    // Group targets live in their own top-level section rather than nested
+    // inside "common.actions" for clarity, not a library limitation.
+    // Always present: existing groups as move-targets, plus a trailing
+    // entry to wrap this column into a brand-new group.
+    // Table columns (nested SubmodelElementList) can never be nested inside
+    // a group, so this section is omitted entirely for them — mirroring how
+    // buildAllColumnTypeMenuItems omits "Table" from a group's own menu.
+    if (columnKindOf(column.plain.modelType) !== "table") {
+      menu.push({
+        label: translate(`${translateTablePrefix}.moveToGroup`),
+        items: [
+          ...groups.map((group) => ({
+            label: group.label,
+            icon: "pi pi-objects-column",
+            disabled: !!disableColumnEditing,
+            command: async () => {
+              await deps.onMoveColumnToGroup(column, group.idShort);
+            },
+          })),
+          createGroupFromColumnMenuItem(column, deps),
+        ],
+      });
+    }
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
+  }
+  return menu;
+}
+
+function buildGroupHeaderMenu(
+  options: ColumnMenuOptions,
+  columns: Column[],
+  deps: TableMenuDeps,
+): MenuItem[] | undefined {
+  const { translate, errorHandlingStore } = deps;
+  const groupIdShort = options.groupIdShort!;
+  const groupColumn = columns.find((c) => c.idShort === groupIdShort);
+  if (!groupColumn) {
+    errorHandlingStore.logErrorWithNotification(translate("common.errorOccurred"));
+    return undefined;
+  }
+
+  const subColPosition = groupColumn.children?.length ?? 0;
+  const subColMenuItems = buildAllColumnTypeMenuItems(
+    "pi pi-arrow-right",
+    { position: subColPosition },
+    deps,
+    groupIdShort,
+  );
+  const groupPosition = columns.findIndex((c) => c.idShort === groupIdShort);
+
+  return [
+    {
+      label: translate(`${translateTablePrefix}.addSubColumn`),
+      items: subColMenuItems,
+    },
+    {
+      label: translate("common.actions"),
+      items: [
+        modifyColumnMenuItem(groupColumn, deps),
+        ...buildMoveColumnMenuItems(groupColumn, groupPosition, columns.length, deps),
+        removeColumnMenuItem(groupColumn, deps),
+      ],
+    },
+  ];
+}
+
+function buildSubColumnMenu(
+  options: ColumnMenuOptions,
+  columns: Column[],
+  deps: TableMenuDeps,
+): MenuItem[] | undefined {
+  const { translate, errorHandlingStore } = deps;
+  const { groupIdShort, position } = options;
+
+  try {
+    const subColumn = getSubColumnAtIndexOrFail(columns, groupIdShort!, position ?? 0);
+    const group = columns.find((c) => c.idShort === groupIdShort);
+    const containerLength = group?.children?.length ?? 0;
+    return [
+      ...buildAddColumnLeftRightSections(position ?? 0, deps, groupIdShort),
+      {
+        label: translate("common.actions"),
+        items: [
+          modifySubColumnMenuItem(groupIdShort!, subColumn, deps),
+          ...buildMoveColumnMenuItems(
+            subColumn,
+            position ?? 0,
+            containerLength,
+            deps,
+            groupIdShort,
+          ),
+          removeFromGroupMenuItem(groupIdShort!, subColumn, deps),
+        ],
+      },
+    ];
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(translate("common.errorOccurred"), e);
+    return undefined;
+  }
+}
+
+/**
+ * Returns the menu items to show, or `undefined` when the requested column
+ * couldn't be resolved — in that case the caller should leave the previously
+ * displayed menu as-is rather than clearing it.
+ */
+export function buildColumnMenu(
+  options: ColumnMenuOptions,
+  columns: Column[],
+  deps: TableMenuDeps,
+): MenuItem[] | undefined {
+  if (options.isGroupHeader && options.groupIdShort) {
+    return buildGroupHeaderMenu(options, columns, deps);
+  }
+  if (options.groupIdShort && options.addColumnActions) {
+    return buildSubColumnMenu(options, columns, deps);
+  }
+  return buildTopLevelColumnMenu(options, columns, deps);
+}
+
+function removeRowMenuItem(rowIndex: number, deps: TableMenuDeps) {
+  const { translate, openConfirm, disableRowDeletion } = deps;
+  const removeLabel = translate("common.remove");
+  const cancelLabel = translate("common.cancel");
+  return {
+    label: removeLabel,
+    icon: "pi pi-trash",
+    disabled: disableRowDeletion,
+    command: async () => {
+      openConfirm({
+        message: translate(`${translateTablePrefix}.removeRow`),
+        header: removeLabel,
+        icon: "pi pi-info-circle",
+        rejectLabel: cancelLabel,
+        rejectProps: {
+          label: cancelLabel,
+          severity: "secondary",
+          outlined: true,
+        },
+        acceptProps: {
+          label: removeLabel,
+          severity: "danger",
+        },
+        accept: async () => {
+          await deps.onRemoveRow(rowIndex);
+        },
+      });
+    },
+  };
+}
+
+export function buildRowMenu(
+  options: RowMenuOptions,
+  rowsLength: number,
+  deps: TableMenuDeps,
+): MenuItem[] {
+  const { translate, disableRowCreation } = deps;
+  return [
+    {
+      label: translate(`${translateTablePrefix}.addRowAbove`),
+      icon: "pi pi-arrow-up",
+      command: async () => {
+        await deps.onAddRow(options);
+      },
+      disabled: disableRowCreation,
+    },
+    {
+      label: translate(`${translateTablePrefix}.addRowBelow`),
+      icon: "pi pi-arrow-down",
+      command: async () => {
+        await deps.onAddRow({
+          position: options.position !== undefined ? options.position + 1 : rowsLength,
+        });
+      },
+      disabled: disableRowCreation,
+    },
+    removeRowMenuItem(options.position ?? 0, deps),
+  ];
+}

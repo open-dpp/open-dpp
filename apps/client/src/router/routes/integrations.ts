@@ -1,6 +1,7 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
 import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
+import { BULK_IMPORT, BULK_IMPORT_RUN } from "./bulk-import.ts";
 
 export const INTEGRATIONS: RouteRecordRaw = {
   path: "",
@@ -48,5 +49,5 @@ export function aiIntegrationBreadcrumbs(to: RouteLocationNormalizedGeneric) {
 
 export const ORGANIZATION_INTEGRATIONS_PARENT: RouteRecordRaw = {
   path: "integrations",
-  children: [INTEGRATIONS, AI_INTEGRATION],
+  children: [INTEGRATIONS, AI_INTEGRATION, BULK_IMPORT, BULK_IMPORT_RUN],
 };

@@ -31,4 +31,3 @@ export class BrandingDoc extends Document<string> {
 }
 
 export const BrandingSchema = SchemaFactory.createForClass(BrandingDoc);
-BrandingSchema.index({ organizationId: 1 });

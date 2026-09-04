@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "@jest/globals";
 import { ValueError } from "@open-dpp/exception";
-import { UniqueProductIdentifierListItemDtoSchema } from "@open-dpp/dto";
+import {
+  UniqueProductIdentifierListItemDtoSchema,
+  UniqueProductIdentifierType,
+} from "@open-dpp/dto";
 import { UniqueProductIdentifier } from "./unique.product.identifier";
-import { ExternalIdentifierType } from "../presentation/dto/unique-product-identifier-dto.schema";
 
 const VALID_GTIN13 = "4006381333931";
 const VALID_GTIN13_AS_14 = "04006381333931";
@@ -11,14 +13,14 @@ const VALID_GTIN13_AS_14 = "04006381333931";
 describe("UniqueProductIdentifier (GS1)", () => {
   it("creates an OPEN_DPP_UUID UPI with no GS1 identity by default", () => {
     const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
-    expect(upi.type).toBe(ExternalIdentifierType.OPEN_DPP_UUID);
+    expect(upi.type).toBe(UniqueProductIdentifierType.OPEN_DPP_UUID);
     expect(upi.gs1).toBeUndefined();
   });
 
   it("creates a GS1 UPI from a raw GTIN, normalizing it to GTIN-14", () => {
     const referenceId = randomUUID();
     const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
-    expect(upi.type).toBe(ExternalIdentifierType.GS1);
+    expect(upi.type).toBe(UniqueProductIdentifierType.GS1);
     expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
     expect(upi.referenceId).toBe(referenceId);
   });
@@ -40,7 +42,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: null,
       }),
     ).toThrow(ValueError);
@@ -51,7 +53,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.OPEN_DPP_UUID,
+        type: UniqueProductIdentifierType.OPEN_DPP_UUID,
         gtin: VALID_GTIN13_AS_14,
       }),
     ).toThrow(ValueError);
@@ -61,7 +63,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
     const upi = UniqueProductIdentifier.loadFromDb({
       uuid: randomUUID(),
       referenceId: randomUUID(),
-      type: ExternalIdentifierType.GS1,
+      type: UniqueProductIdentifierType.GS1,
       gtin: VALID_GTIN13_AS_14,
     });
     expect(upi.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
@@ -75,7 +77,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
     expect(upi.toPlain()).toEqual({
       uuid: upi.uuid,
       referenceId: upi.referenceId,
-      type: ExternalIdentifierType.GS1,
+      type: UniqueProductIdentifierType.GS1,
       gtin: VALID_GTIN13_AS_14,
       batch: null,
       serial: null,
@@ -88,7 +90,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
     expect(upi.toPlain()).toEqual({
       uuid: upi.uuid,
       referenceId: upi.referenceId,
-      type: ExternalIdentifierType.OPEN_DPP_UUID,
+      type: UniqueProductIdentifierType.OPEN_DPP_UUID,
       gtin: null,
       batch: null,
       serial: null,
@@ -101,14 +103,72 @@ describe("UniqueProductIdentifier (GS1)", () => {
       referenceId: randomUUID(),
       gtin: VALID_GTIN13,
     });
-    expect(upi.buildDigitalLink("https://id.example.com")).toBe(
-      `https://id.example.com/01/${VALID_GTIN13_AS_14}`,
+    expect(upi.buildDigitalLink("https://id.example.com/p")).toBe(
+      `https://id.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}`,
     );
   });
 
   it("throws when building a Digital Link for a UPI without a GS1 identity", () => {
     const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
     expect(() => upi.buildDigitalLink("https://id.example.com")).toThrow(ValueError);
+  });
+
+  describe("toGs1Response", () => {
+    const RESOLVER_BASE = "https://id.example.com/p";
+    const RESOLVER_ORIGIN = "https://id.example.com";
+
+    it("assembles the response for a model-granularity GS1 UPI (gtin only)", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
+      expect(upi.toGs1Response(RESOLVER_BASE)).toEqual({
+        uuid: upi.uuid,
+        referenceId,
+        gtin: VALID_GTIN13_AS_14,
+        batch: null,
+        serial: null,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`,
+      });
+    });
+
+    it("assembles the response for a batch-granularity GS1 UPI", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId,
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+      });
+      expect(upi.toGs1Response(RESOLVER_BASE)).toEqual({
+        uuid: upi.uuid,
+        referenceId,
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: null,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42`,
+      });
+    });
+
+    it("assembles the response for an item-granularity GS1 UPI (batch + serial)", () => {
+      const referenceId = randomUUID();
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId,
+        gtin: VALID_GTIN13,
+        batch: "LOT-42",
+        serial: "SN-001",
+      });
+      expect(upi.toGs1Response(RESOLVER_BASE)).toEqual({
+        uuid: upi.uuid,
+        referenceId,
+        gtin: VALID_GTIN13_AS_14,
+        batch: "LOT-42",
+        serial: "SN-001",
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+      });
+    });
+
+    it("throws for a UPI without a GS1 identity", () => {
+      const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+      expect(() => upi.toGs1Response(RESOLVER_BASE)).toThrow(ValueError);
+    });
   });
 
   describe("batch & serial (Phase 2)", () => {
@@ -170,8 +230,18 @@ describe("UniqueProductIdentifier (GS1)", () => {
         batch: "LOT-42",
         serial: "SN-001",
       });
-      // original untouched (still a bare GTIN)
       expect(base.gs1).toEqual({ gtin: VALID_GTIN13_AS_14 });
+    });
+
+    it("withGs1 preserves organizationId (an edited GS1 UPI must not vanish from the org list)", () => {
+      const organizationId = randomUUID();
+      const base = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        organizationId,
+      });
+      const updated = base.withGs1({ gtin: VALID_GTIN13, batch: "LOT-42" });
+      expect(updated.organizationId).toBe(organizationId);
     });
 
     it("withGs1 can clear a previously-set batch / serial", () => {
@@ -190,7 +260,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
@@ -206,7 +276,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: randomUUID(),
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: null,
         serial: null,
@@ -224,7 +294,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(withKeys.toPlain()).toEqual({
         uuid: withKeys.uuid,
         referenceId: withKeys.referenceId,
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
@@ -238,7 +308,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(bare.toPlain()).toEqual({
         uuid: bare.uuid,
         referenceId: bare.referenceId,
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: null,
         serial: null,
@@ -254,7 +324,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
         serial: "SN-001",
       });
       expect(upi.buildDigitalLink("https://id.example.com")).toBe(
-        `https://id.example.com/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        `https://id.example.com/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
       );
     });
   });
@@ -293,8 +363,26 @@ describe("UniqueProductIdentifier (GS1)", () => {
     });
   });
 
+  describe("canonicalValue", () => {
+    it("is the Digital-Link path with normalized GTIN-14 and encoded components", () => {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+        batch: "LOT/1",
+        serial: "SN-1",
+      });
+      expect(upi.canonicalValue).toBe(`01/${VALID_GTIN13_AS_14}/10/LOT%2F1/21/SN-1`);
+    });
+
+    it("is the uuid for a non-GS1 UPI", () => {
+      const upi = UniqueProductIdentifier.create({ referenceId: randomUUID() });
+      expect(upi.canonicalValue).toBe(upi.uuid);
+    });
+  });
+
   describe("toListItem", () => {
-    const RESOLVER_BASE = "https://id.example.com";
+    const RESOLVER_BASE = "https://id.example.com/p";
+    const RESOLVER_ORIGIN = "https://id.example.com";
 
     it("returns a full list item for a GS1 UPI with gtin+batch+serial", () => {
       const referenceId = randomUUID();
@@ -308,14 +396,27 @@ describe("UniqueProductIdentifier (GS1)", () => {
       expect(item).toEqual({
         uuid: upi.uuid,
         referenceId,
-        type: ExternalIdentifierType.GS1,
+        type: UniqueProductIdentifierType.GS1,
         gtin: VALID_GTIN13_AS_14,
         batch: "LOT-42",
         serial: "SN-001",
         granularity: "item",
-        digitalLink: `${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
+        digitalLink: `${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}/10/LOT-42/21/SN-001`,
         passportPublished: false,
+        permalink: null,
       });
+    });
+
+    it("passes a permalink summary through verbatim and defaults it to null", () => {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: randomUUID(),
+        gtin: VALID_GTIN13,
+      });
+      const summary = { id: randomUUID(), publicUrl: "https://dpp.example.com/my-link" };
+      expect(upi.toListItem({ passportPublished: false, permalink: summary }).permalink).toEqual(
+        summary,
+      );
+      expect(upi.toListItem({ passportPublished: false }).permalink).toBeNull();
     });
 
     it("returns granularity 'model' and a bare-GTIN digital link for a bare-GTIN GS1 UPI", () => {
@@ -323,7 +424,7 @@ describe("UniqueProductIdentifier (GS1)", () => {
       const upi = UniqueProductIdentifier.createGs1({ referenceId, gtin: VALID_GTIN13 });
       const item = upi.toListItem({ resolverBase: RESOLVER_BASE, passportPublished: true });
       expect(item.granularity).toBe("model");
-      expect(item.digitalLink).toBe(`${RESOLVER_BASE}/01/${VALID_GTIN13_AS_14}`);
+      expect(item.digitalLink).toBe(`${RESOLVER_ORIGIN}/gs1/v1/01/${VALID_GTIN13_AS_14}`);
       expect(item.passportPublished).toBe(true);
     });
 

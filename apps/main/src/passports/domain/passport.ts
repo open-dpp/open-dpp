@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { PassportDtoSchema } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentTypes,
+  DigitalProductDocumentTypesType,
+  PassportDtoSchema,
+} from "@open-dpp/dto";
 import { IDigitalProductDocument } from "../../digital-product-document/domain/digital-product-document";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
@@ -96,6 +100,10 @@ export class Passport
 
   getEnvironment(): Environment {
     return this.environment;
+  }
+
+  getType(): DigitalProductDocumentTypesType {
+    return DigitalProductDocumentTypes.Passport;
   }
 
   getOrganizationId(): string {

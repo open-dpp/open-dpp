@@ -53,23 +53,11 @@ export class PassportNamespace implements IDigitalProductDocumentNamespace {
     return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data);
   }
 
-  /**
-   * Passport-scoped permalink list (presentation + gs1-link union), cursor
-   * paginated. Returns the standard `{ paging_metadata, result }` envelope. This
-   * is what the per-passport backoffice list view calls — the org-scoped
-   * `/permalinks` endpoint is kept for API consumers only.
-   */
   public async getPermalinks(passportId: string, params?: CursorListParams) {
     const url = `${this.passportEndpoint}/${encodeURIComponent(passportId)}/permalinks`;
     return await this.axiosInstance.get<PermalinkPaginationDto>(url, { params });
   }
 
-  /**
-   * Passport-scoped UPI list (OPEN_DPP_UUID + GS1), cursor paginated. Returns the
-   * standard `{ paging_metadata, result }` envelope. This is what the per-passport
-   * backoffice list view calls — the org-scoped `/unique-product-identifiers`
-   * endpoint is kept for API consumers only.
-   */
   public async getUniqueProductIdentifiers(passportId: string, params?: CursorListParams) {
     const url = `${this.passportEndpoint}/${encodeURIComponent(passportId)}/unique-product-identifiers`;
     return await this.axiosInstance.get<UniqueProductIdentifierPaginationDto>(url, { params });

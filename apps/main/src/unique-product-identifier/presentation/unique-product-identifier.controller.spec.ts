@@ -1,13 +1,3 @@
-/**
- * Slices 41, 42 & 43 — UpiController GET (org-scoped list) + POST (create GS1 UPI)
- *                       + GET/PATCH/DELETE by id
- *
- * Integration suite using createAasTestContext + supertest.
- *
- * NOTE: The controller is registered via UniqueProductIdentifierModule (no explicit
- * `controllers` override), so that PassportService (a transitive dependency of the
- * POST handler) is resolved within the module scope.
- */
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
@@ -36,6 +26,9 @@ import {
 } from "../../presentation-configurations/infrastructure/presentation-configuration.schema";
 import { PresentationConfigurationsModule } from "../../presentation-configurations/presentation-configurations.module";
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
+import { PermalinkKind, UniqueProductIdentifierType } from "@open-dpp/dto";
+import { Permalink } from "../../permalink/domain/permalink";
+import { PermalinkRepository } from "../../permalink/infrastructure/permalink.repository";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
 import { PermalinkModule } from "../../permalink/permalink.module";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
@@ -44,15 +37,13 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
-import { ExternalIdentifierType } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 
 describe("UniqueProductIdentifierController", () => {
-  const basePath = "/unique-product-identifiers";
+  const basePath = "/v1/unique-product-identifiers";
 
-  // The controller is registered through UniqueProductIdentifierModule — no explicit
-  // `controllers` entry so NestJS resolves PassportService within the module scope.
   const ctx = createAasTestContext(
+    basePath,
     basePath,
     {
       imports: [
@@ -74,7 +65,26 @@ describe("UniqueProductIdentifierController", () => {
     SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
-  async function createPassport(orgId: string, options: { published?: boolean } = {}) {
+  function lastStatusChangeFor(options: { published?: boolean; archived?: boolean }) {
+    if (options.archived) {
+      return DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Archived,
+      });
+    }
+    if (options.published) {
+      return DigitalProductDocumentStatusChange.create({
+        previousStatus: DigitalProductDocumentStatus.Draft,
+        currentStatus: DigitalProductDocumentStatus.Published,
+      });
+    }
+    return DigitalProductDocumentStatusChange.create({});
+  }
+
+  async function createPassport(
+    orgId: string,
+    options: { published?: boolean; archived?: boolean } = {},
+  ) {
     const { aas, submodels } = ctx.getAasObjects();
     const passport = Passport.create({
       id: randomUUID(),
@@ -84,15 +94,9 @@ describe("UniqueProductIdentifierController", () => {
         submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
-      lastStatusChange: options.published
-        ? DigitalProductDocumentStatusChange.create({
-            previousStatus: DigitalProductDocumentStatus.Draft,
-            currentStatus: DigitalProductDocumentStatus.Published,
-          })
-        : DigitalProductDocumentStatusChange.create({}),
+      lastStatusChange: lastStatusChangeFor(options),
     });
     const moduleRef = ctx.getModuleRef();
-    // Canonical UPI must carry organizationId so findAllByOrganizationId can include it.
     await moduleRef
       .get(UniqueProductIdentifierRepository)
       .save(passport.createUniqueProductIdentifier().withOrganizationId(orgId));
@@ -105,7 +109,6 @@ describe("UniqueProductIdentifierController", () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id);
-      // Use a unique serial per test to avoid index collisions across the shared DB.
       const uniqueSerial = `C42A-${randomUUID().slice(0, 8)}`;
 
       const response = await request(app.getHttpServer())
@@ -114,17 +117,20 @@ describe("UniqueProductIdentifierController", () => {
         .set(ORGANIZATION_ID_HEADER, org!.id)
         .send({
           referenceId: passport.id,
-          gtin: "4006381333931", // 13-digit EAN, normalizes to GTIN-14
+          gtin: "4006381333931",
           batch: "LOT-C42",
           serial: uniqueSerial,
         });
 
       expect(response.status).toEqual(201);
       expect(response.body.referenceId).toEqual(passport.id);
-      expect(response.body.gtin).toEqual("04006381333931"); // normalized GTIN-14
+      expect(response.body.gtin).toEqual("04006381333931");
       expect(response.body.batch).toEqual("LOT-C42");
       expect(response.body.serial).toEqual(uniqueSerial);
       expect(response.body.uuid).toBeDefined();
+      expect(response.body.type).toEqual("GS1");
+      expect(response.body.passportPublished).toEqual(false);
+      expect(response.body.permalink).toBeNull();
     });
 
     it("returns 201 for a second POST for the SAME passport with a distinct serial (many-per-passport)", async () => {
@@ -149,16 +155,36 @@ describe("UniqueProductIdentifierController", () => {
       expect(response2.body.serial).toEqual(`C42B-${uniqueBase}-2`);
     });
 
-    it("returns 409 when the passport is published (lifecycle freeze)", async () => {
+    it("returns 201 when the passport is published (adding an identity is allowed)", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id, { published: true });
+      const uniqueSerial = `PUB-${randomUUID().slice(0, 8)}`;
 
       const response = await request(app.getHttpServer())
         .post(basePath)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
-        .send({ referenceId: passport.id, gtin: "04006381333931" });
+        .send({ referenceId: passport.id, gtin: "04006381333931", serial: uniqueSerial });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.passportPublished).toEqual(true);
+    });
+
+    it("returns 409 when the passport is archived", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id, { archived: true });
+
+      const response = await request(app.getHttpServer())
+        .post(basePath)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `ARC-${randomUUID().slice(0, 8)}`,
+        });
 
       expect(response.status).toEqual(409);
     });
@@ -193,10 +219,6 @@ describe("UniqueProductIdentifierController", () => {
 
     it("returns 409 when the same full GS1 key (gtin+batch+serial) already exists (duplicate key)", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
-      // The partial unique index on (gtin, batch, serial) is built asynchronously by
-      // Mongoose autoIndex; under the full parallel suite it may not exist yet when this
-      // test runs, letting the duplicate insert succeed (201) instead of 409. Build it
-      // deterministically first (mirrors permalink.repository.spec.ts).
       await (
         app.get(getModelToken(UniqueProductIdentifierDoc.name)) as Model<UniqueProductIdentifierDoc>
       ).syncIndexes();
@@ -234,7 +256,7 @@ describe("UniqueProductIdentifierController", () => {
         .post(basePath)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
-        .send({ referenceId: passport.id, gtin: "0400638133393X" }); // invalid
+        .send({ referenceId: passport.id, gtin: "0400638133393X" });
 
       expect(response.status).toEqual(400);
     });
@@ -254,16 +276,31 @@ describe("UniqueProductIdentifierController", () => {
 
       expect(response.status).toEqual(201);
       expect(response.body.referenceId).toEqual(passport.id);
-      expect(response.body.type).toEqual(ExternalIdentifierType.OPEN_DPP_UUID);
+      expect(response.body.type).toEqual(UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(response.body.gtin).toBeNull();
       expect(response.body.digitalLink).toBeNull();
       expect(response.body.uuid).toBeDefined();
     });
 
-    it("returns 409 when the passport is published (lifecycle freeze)", async () => {
+    it("returns 201 when the passport is published (adding an identity is allowed)", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id, { published: true });
+
+      const response = await request(app.getHttpServer())
+        .post(`${basePath}/internal`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send({ referenceId: passport.id });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.passportPublished).toEqual(true);
+    });
+
+    it("returns 409 when the passport is archived", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id, { archived: true });
 
       const response = await request(app.getHttpServer())
         .post(`${basePath}/internal`)
@@ -292,11 +329,11 @@ describe("UniqueProductIdentifierController", () => {
       expect(Array.isArray(response.body.result)).toBe(true);
       const openDppRow = response.body.result.find(
         (row: { type: string; referenceId: string }) =>
-          row.type === ExternalIdentifierType.OPEN_DPP_UUID && row.referenceId === passport.id,
+          row.type === UniqueProductIdentifierType.OPEN_DPP_UUID && row.referenceId === passport.id,
       );
       expect(openDppRow).toBeDefined();
       expect(openDppRow.referenceId).toEqual(passport.id);
-      expect(openDppRow.type).toEqual(ExternalIdentifierType.OPEN_DPP_UUID);
+      expect(openDppRow.type).toEqual(UniqueProductIdentifierType.OPEN_DPP_UUID);
     });
 
     it("returns 200 including GS1 UPIs for the org and exposes type/referenceId/gtin/batch/serial", async () => {
@@ -322,22 +359,75 @@ describe("UniqueProductIdentifierController", () => {
 
       expect(response.status).toEqual(200);
       const gs1Row = response.body.result.find(
-        (row: { type: string }) => row.type === ExternalIdentifierType.GS1,
+        (row: { type: string }) => row.type === UniqueProductIdentifierType.GS1,
       );
       expect(gs1Row).toBeDefined();
-      expect(gs1Row.type).toEqual(ExternalIdentifierType.GS1);
+      expect(gs1Row.type).toEqual(UniqueProductIdentifierType.GS1);
       expect(gs1Row.referenceId).toEqual(passport.id);
       expect(gs1Row.gtin).toEqual("04006381333931");
       expect(gs1Row.batch).toEqual("LOT-1");
       expect(gs1Row.serial).toEqual("SN-1");
     });
 
+    it("enriches a GS1 row with its gs1-link permalink summary; unlinked rows carry null", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id);
+      const moduleRef = ctx.getModuleRef();
+      const upiRepo = moduleRef.get(UniqueProductIdentifierRepository);
+      const linkedUpi = await upiRepo.save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `LN-${randomUUID().slice(0, 8)}`,
+          organizationId: org!.id,
+        }),
+      );
+      await upiRepo.save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `UN-${randomUUID().slice(0, 8)}`,
+          organizationId: org!.id,
+        }),
+      );
+      const permalink = await moduleRef.get(PermalinkRepository).save(
+        Permalink.create({
+          kind: PermalinkKind.GS1_LINK,
+          passportId: passport.id,
+          uniqueProductIdentifierId: linkedUpi.uuid,
+          presentationConfigurationId: null,
+          organizationId: org!.id,
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get(basePath)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      const rows = new Map(
+        response.body.result.map((row: { uuid: string }) => [row.uuid, row]),
+      ) as Map<string, { permalink: { id: string; publicUrl: string } | null }>;
+      const linkedRow = rows.get(linkedUpi.uuid);
+      expect(linkedRow?.permalink).toBeDefined();
+      expect(linkedRow?.permalink?.id).toEqual(permalink.id);
+      expect(linkedRow?.permalink?.publicUrl).toMatch(/^https?:\/\//);
+      const unlinkedRows = response.body.result.filter(
+        (row: { uuid: string }) => row.uuid !== linkedUpi.uuid,
+      );
+      expect(unlinkedRows.length).toBeGreaterThan(0);
+      for (const row of unlinkedRows) {
+        expect(row.permalink).toBeNull();
+      }
+    });
+
     it("excludes UPIs belonging to other organizations", async () => {
       const { app, getOrganizationAndUserWithCookie, betterAuthHelper } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
-      // Create a passport for the requesting org
       await createPassport(org!.id);
-      // Create a passport for a separate org
       const { org: otherOrg } = await betterAuthHelper.createOrganizationAndUserWithCookie();
       const moduleRef = ctx.getModuleRef();
       const otherOrgAas = ctx.getAasObjects().aas;
@@ -363,7 +453,6 @@ describe("UniqueProductIdentifierController", () => {
         .send();
 
       expect(response.status).toEqual(200);
-      // No rows from the other org should appear
       const otherOrgRows = response.body.result.filter(
         (row: { referenceId: string }) => row.referenceId === otherOrgPassport.id,
       );
@@ -375,8 +464,6 @@ describe("UniqueProductIdentifierController", () => {
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id);
       const moduleRef = ctx.getModuleRef();
-      // createPassport seeds the canonical OPEN_DPP_UUID row; add two GS1 rows so the
-      // org has three UPIs total → limit:2 yields a full first page plus a remainder.
       for (let i = 0; i < 2; i++) {
         await moduleRef.get(UniqueProductIdentifierRepository).save(
           UniqueProductIdentifier.createGs1({
@@ -428,7 +515,6 @@ describe("UniqueProductIdentifierController", () => {
 
     it("returns 403 when the requester is not a member of the org", async () => {
       const { app, betterAuthHelper } = ctx.globals();
-      // A user who belongs to no org makes the request
       const nonMemberData = await betterAuthHelper.createUser();
       const nonMemberCookie = await betterAuthHelper.signAsUser(nonMemberData.user.id);
       const { org: someOrg } = await betterAuthHelper.createOrganizationAndUserWithCookie();
@@ -442,10 +528,6 @@ describe("UniqueProductIdentifierController", () => {
       expect(response.status).toEqual(403);
     });
   });
-
-  // ---------------------------------------------------------------------------
-  // Slice 43 — GET/PATCH/DELETE /:id
-  // ---------------------------------------------------------------------------
 
   describe("GET /unique-product-identifiers/:id", () => {
     it("returns the GS1 UPI including digitalLink", async () => {
@@ -494,7 +576,6 @@ describe("UniqueProductIdentifierController", () => {
 
     it("returns 403 when the requester is not a member of the UPI's owning org (cross-org)", async () => {
       const { app, betterAuthHelper } = ctx.globals();
-      // Org A owns the passport and UPI
       const { org: orgA } = await betterAuthHelper.createOrganizationAndUserWithCookie();
       const moduleRef = ctx.getModuleRef();
       const { aas, submodels } = ctx.getAasObjects();
@@ -519,7 +600,6 @@ describe("UniqueProductIdentifierController", () => {
         }),
       );
 
-      // User B is a member of org B, not org A
       const { org: orgB, userCookie: userBCookie } =
         await betterAuthHelper.createOrganizationAndUserWithCookie();
 
@@ -560,6 +640,7 @@ describe("UniqueProductIdentifierController", () => {
       expect(response.body.uuid).toEqual(savedUpi.uuid);
       expect(response.body.batch).toEqual("NEW-BATCH");
       expect(response.body.digitalLink).toBeDefined();
+      expect(response.body.type).toEqual("GS1");
     });
 
     it("returns 409 when the passport is published (lifecycle freeze)", async () => {
@@ -591,10 +672,9 @@ describe("UniqueProductIdentifierController", () => {
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id);
       const moduleRef = ctx.getModuleRef();
-      // The canonical OPEN_DPP_UUID row was created by createPassport
       const repo = moduleRef.get(UniqueProductIdentifierRepository);
       const allUpis = await repo.findAllByReferencedId(passport.id);
-      const systemUpi = allUpis.find((u) => u.type === ExternalIdentifierType.OPEN_DPP_UUID);
+      const systemUpi = allUpis.find((u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(systemUpi).toBeDefined();
 
       const response = await request(app.getHttpServer())
@@ -631,15 +711,15 @@ describe("UniqueProductIdentifierController", () => {
 
       expect(response.status).toEqual(204);
 
-      // The GS1 UPI row must be gone
       const gone = await moduleRef.get(UniqueProductIdentifierRepository).findOne(savedUpi.uuid);
       expect(gone).toBeUndefined();
 
-      // The canonical OPEN_DPP_UUID row must still exist
       const remaining = await moduleRef
         .get(UniqueProductIdentifierRepository)
         .findAllByReferencedId(passport.id);
-      const canonicalRow = remaining.find((u) => u.type === ExternalIdentifierType.OPEN_DPP_UUID);
+      const canonicalRow = remaining.find(
+        (u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
+      );
       expect(canonicalRow).toBeDefined();
     });
 
@@ -674,7 +754,7 @@ describe("UniqueProductIdentifierController", () => {
       const moduleRef = ctx.getModuleRef();
       const repo = moduleRef.get(UniqueProductIdentifierRepository);
       const allUpis = await repo.findAllByReferencedId(passport.id);
-      const internalUpi = allUpis.find((u) => u.type === ExternalIdentifierType.OPEN_DPP_UUID);
+      const internalUpi = allUpis.find((u) => u.type === UniqueProductIdentifierType.OPEN_DPP_UUID);
       expect(internalUpi).toBeDefined();
 
       const response = await request(app.getHttpServer())
@@ -689,9 +769,6 @@ describe("UniqueProductIdentifierController", () => {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // Passport-scoped list — GET /passports/:id/unique-product-identifiers
-  // ---------------------------------------------------------------------------
   describe("GET /passports/:id/unique-product-identifiers", () => {
     it("returns 200 with the passport's UPIs (canonical + GS1) in an envelope, scoped to the passport", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
@@ -706,11 +783,10 @@ describe("UniqueProductIdentifierController", () => {
           organizationId: org!.id,
         }),
       );
-      // A different passport's UPI must NOT appear in this passport's list.
       const otherPassport = await createPassport(org!.id);
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
         .send();
@@ -723,14 +799,55 @@ describe("UniqueProductIdentifierController", () => {
       expect(refs.every((ref: string) => ref === passport.id)).toBe(true);
       expect(refs).not.toContain(otherPassport.id);
       const types = response.body.result.map((r: { type: string }) => r.type);
-      expect(types).toContain(ExternalIdentifierType.OPEN_DPP_UUID);
-      expect(types).toContain(ExternalIdentifierType.GS1);
+      expect(types).toContain(UniqueProductIdentifierType.OPEN_DPP_UUID);
+      expect(types).toContain(UniqueProductIdentifierType.GS1);
+    });
+
+    it("enriches a GS1 row with its gs1-link permalink summary in the passport-scoped list", async () => {
+      const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+      const { org, userCookie } = await getOrganizationAndUserWithCookie();
+      const passport = await createPassport(org!.id);
+      const moduleRef = ctx.getModuleRef();
+      const linkedUpi = await moduleRef.get(UniqueProductIdentifierRepository).save(
+        UniqueProductIdentifier.createGs1({
+          referenceId: passport.id,
+          gtin: "04006381333931",
+          serial: `PL-${randomUUID().slice(0, 8)}`,
+          organizationId: org!.id,
+        }),
+      );
+      const permalink = await moduleRef.get(PermalinkRepository).save(
+        Permalink.create({
+          kind: PermalinkKind.GS1_LINK,
+          passportId: passport.id,
+          uniqueProductIdentifierId: linkedUpi.uuid,
+          presentationConfigurationId: null,
+          organizationId: org!.id,
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org!.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      const linkedRow = response.body.result.find(
+        (row: { uuid: string }) => row.uuid === linkedUpi.uuid,
+      );
+      expect(linkedRow.permalink.id).toEqual(permalink.id);
+      expect(linkedRow.permalink.publicUrl).toMatch(/^https?:\/\//);
+      const systemRow = response.body.result.find(
+        (row: { type: string }) => row.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
+      );
+      expect(systemRow.permalink).toBeNull();
     });
 
     it("paginates via ?limit and ?cursor — the second page does not overlap the first", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
-      const passport = await createPassport(org!.id); // canonical UPI seeded → 1
+      const passport = await createPassport(org!.id);
       const moduleRef = ctx.getModuleRef();
       for (let i = 0; i < 2; i++) {
         await moduleRef.get(UniqueProductIdentifierRepository).save(
@@ -744,7 +861,7 @@ describe("UniqueProductIdentifierController", () => {
       }
 
       const page1 = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .query({ limit: 2 })
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -754,7 +871,7 @@ describe("UniqueProductIdentifierController", () => {
       expect(page1.body.paging_metadata.cursor).toBeTruthy();
 
       const page2 = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .query({ limit: 2, cursor: page1.body.paging_metadata.cursor })
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
@@ -774,7 +891,7 @@ describe("UniqueProductIdentifierController", () => {
         await betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userBCookie)
         .set(ORGANIZATION_ID_HEADER, orgB.id)
         .send();
@@ -787,7 +904,7 @@ describe("UniqueProductIdentifierController", () => {
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${randomUUID()}/unique-product-identifiers`)
+        .get(`/v1/passports/${randomUUID()}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org!.id)
         .send();
@@ -801,7 +918,7 @@ describe("UniqueProductIdentifierController", () => {
       const passport = await createPassport(org!.id);
 
       const response = await request(app.getHttpServer())
-        .get(`/passports/${passport.id}/unique-product-identifiers`)
+        .get(`/v1/passports/${passport.id}/unique-product-identifiers`)
         .set("Cookie", userCookie)
         .send();
 

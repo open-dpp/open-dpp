@@ -1,18 +1,31 @@
 <script lang="ts" setup>
-import type { PagingParamsDto, PermalinkPublicDto } from "@open-dpp/dto";
-import { PermalinkKind } from "@open-dpp/dto";
+import type {
+  PagingParamsDto,
+  PermalinkPublicDto,
+  PresentationConfigurationDto,
+} from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  PermalinkKind,
+  UniqueProductIdentifierType,
+} from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useConfirm } from "primevue/useconfirm";
 import { useRoute, useRouter } from "vue-router";
-import PermalinkCreateGs1LinkDialog from "../../components/permalinks/PermalinkCreateGs1LinkDialog.vue";
+import PermalinkCreateDialog from "../../components/permalinks/PermalinkCreateDialog.vue";
 import PermalinkEditDialog from "../../components/permalinks/PermalinkEditDialog.vue";
-import Gs1LinkQrCode from "../../components/permalinks/Gs1LinkQrCode.vue";
+import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
+import TablePagination from "../../components/pagination/TablePagination.vue";
+import { useDigitalProductDocument } from "../../composables/digital-product-document";
 import { usePagination } from "../../composables/pagination";
+import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
 import apiClient from "../../lib/api-client";
+import { DigitalProductDocumentType } from "../../lib/digital-product-document";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const { t } = useI18n();
 const confirm = useConfirm();
@@ -20,21 +33,19 @@ const errorHandlingStore = useErrorHandlingStore();
 const notificationStore = useNotificationStore();
 const route = useRoute();
 const router = useRouter();
+const { fetchById: fetchPassportById } = useDigitalProductDocument(
+  DigitalProductDocumentType.Passport,
+);
 
-// The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
-
-// -------------------------------------------------------------------------
-// State
-// -------------------------------------------------------------------------
 
 const permalinks = ref<PermalinkPublicDto[]>([]);
 const loading = ref(false);
-const createGs1DialogVisible = ref(false);
+const createDialogVisible = ref(false);
 
-// -------------------------------------------------------------------------
-// Pagination wiring (server-side cursor pagination, mirrors the other list views)
-// -------------------------------------------------------------------------
+const preselectedUpiId = ref(
+  route.query.createForUpi ? String(route.query.createForUpi) : undefined,
+);
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
@@ -49,8 +60,6 @@ async function fetchCallback(pagingParams: PagingParamsDto) {
   loading.value = true;
   try {
     const response = await apiClient.dpp.passports.getPermalinks(passportId.value, pagingParams);
-    // The passport-scoped list returns the standard cursor envelope
-    // ({ paging_metadata, result }) — expose the rows and surface the next cursor.
     const items = (response.data?.result ?? []) as PermalinkPublicDto[];
     const cursor = response.data?.paging_metadata?.cursor ?? null;
     permalinks.value = items;
@@ -60,61 +69,75 @@ async function fetchCallback(pagingParams: PagingParamsDto) {
   }
 }
 
-const { nextPage, reloadCurrentPage } = usePagination({
+const {
+  hasPrevious,
+  hasNext,
+  currentPage,
+  previousPage,
+  resetCursor,
+  nextPage,
+  reloadCurrentPage,
+} = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
   fetchCallback,
   changeQueryParams,
 });
 
-// -------------------------------------------------------------------------
-// Edit dialog state
-// -------------------------------------------------------------------------
-
 const editDialogVisible = ref(false);
 const selectedPermalink = ref<PermalinkPublicDto | null>(null);
-
-// -------------------------------------------------------------------------
-// QR dialog state
-// -------------------------------------------------------------------------
 
 const qrDialogVisible = ref(false);
 const qrPermalink = ref<PermalinkPublicDto | null>(null);
 
-// -------------------------------------------------------------------------
-// Derived: existing gs1-link UPI ids (for the create dialog)
-// -------------------------------------------------------------------------
+const passportIsPublished = ref(false);
 
-function existingGs1LinkUpiIds(): string[] {
-  return permalinks.value
-    .filter((pl) => pl.kind === PermalinkKind.GS1_LINK && pl.uniqueProductIdentifierId != null)
-    .map((pl) => pl.uniqueProductIdentifierId as string);
+async function loadPassportStatus() {
+  const passport = await fetchPassportById(passportId.value);
+  passportIsPublished.value =
+    passport?.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Published;
 }
 
-// -------------------------------------------------------------------------
-// Derived: presentation permalink count (for guarded delete)
-// -------------------------------------------------------------------------
+const { upis, fetchUniqueProductIdentifiers } = useUniqueProductIdentifiers();
 
-const presentationPermalinkCount = computed(
-  () => permalinks.value.filter((pl) => pl.kind === PermalinkKind.PRESENTATION).length,
+const UPI_PICKER_LIMIT = 1000;
+
+async function loadUpis() {
+  try {
+    await fetchUniqueProductIdentifiers(passportId.value, { limit: UPI_PICKER_LIMIT });
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(t("permalink.create.loadFailed"), e);
+  }
+}
+
+const linkableUpis = computed(() =>
+  upis.value.filter(
+    (upi) =>
+      (upi.type === UniqueProductIdentifierType.GS1 && upi.permalink == null) ||
+      upi.type === UniqueProductIdentifierType.OPEN_DPP_UUID,
+  ),
 );
 
-// -------------------------------------------------------------------------
-// Create dialog
-// -------------------------------------------------------------------------
+const configs = ref<PresentationConfigurationDto[]>([]);
 
-function openCreateGs1Dialog() {
-  createGs1DialogVisible.value = true;
+async function loadConfigs() {
+  try {
+    const response = await apiClient.dpp.passports.presentationConfiguration.list(passportId.value);
+    configs.value = response.data ?? [];
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(t("permalink.create.loadFailed"), e);
+  }
+}
+
+async function openCreateDialog() {
+  await Promise.all([loadUpis(), loadConfigs()]);
+  createDialogVisible.value = true;
 }
 
 async function onPermalinkCreated(_permalink: PermalinkPublicDto) {
-  createGs1DialogVisible.value = false;
-  await reloadCurrentPage();
+  createDialogVisible.value = false;
+  await Promise.all([reloadCurrentPage(), loadUpis()]);
 }
-
-// -------------------------------------------------------------------------
-// Edit dialog
-// -------------------------------------------------------------------------
 
 function openEditDialog(permalink: PermalinkPublicDto) {
   selectedPermalink.value = permalink;
@@ -126,57 +149,18 @@ async function onPermalinkUpdated(_permalink: PermalinkPublicDto) {
   await reloadCurrentPage();
 }
 
-// -------------------------------------------------------------------------
-// QR dialog
-// -------------------------------------------------------------------------
-
 function openQrDialog(permalink: PermalinkPublicDto) {
   qrPermalink.value = permalink;
   qrDialogVisible.value = true;
 }
 
-// -------------------------------------------------------------------------
-// Set primary
-// -------------------------------------------------------------------------
-
-async function onSetPrimary(permalink: PermalinkPublicDto) {
-  try {
-    await apiClient.dpp.permalinks.setPrimary(permalink.id);
-    notificationStore.addSuccessNotification(t("permalink.list.setPrimarySuccess"));
-    await reloadCurrentPage();
-  } catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("permalink.list.setPrimaryError"), e);
-  }
-}
-
-// -------------------------------------------------------------------------
-// Delete (guarded)
-// -------------------------------------------------------------------------
-
-/**
- * A permalink can be deleted when:
- *  - it is not published (publishedUrl is null)
- *  - AND it is not the primary presentation permalink
- *  - AND it is not the last/sole presentation permalink
- */
 function canDelete(permalink: PermalinkPublicDto): boolean {
-  if (permalink.publishedUrl != null) return false;
-  if (permalink.kind === PermalinkKind.PRESENTATION) {
-    if (permalink.primary) return false;
-    if (presentationPermalinkCount.value <= 1) return false;
-  }
-  return true;
+  return permalink.publishedUrl == null;
 }
 
 function deleteTooltip(permalink: PermalinkPublicDto): string {
   if (permalink.publishedUrl != null) {
     return t("permalink.list.deletePublishedTooltip");
-  }
-  if (
-    permalink.kind === PermalinkKind.PRESENTATION &&
-    (permalink.primary || presentationPermalinkCount.value <= 1)
-  ) {
-    return t("permalink.list.deletePrimaryTooltip");
   }
   return t("permalink.list.delete");
 }
@@ -201,10 +185,6 @@ async function onDelete(permalink: PermalinkPublicDto) {
   });
 }
 
-// -------------------------------------------------------------------------
-// Helpers
-// -------------------------------------------------------------------------
-
 function kindLabel(kind: string): string {
   if (kind === PermalinkKind.GS1_LINK) {
     return t("permalink.list.kindGs1Link");
@@ -212,41 +192,55 @@ function kindLabel(kind: string): string {
   return t("permalink.list.kindPresentation");
 }
 
-// -------------------------------------------------------------------------
-// Mount
-// -------------------------------------------------------------------------
-
 onMounted(async () => {
-  await nextPage();
+  await Promise.all([loadPassportStatus().catch(() => undefined), nextPage()]);
+  if (preselectedUpiId.value) {
+    await openCreateDialog();
+    changeQueryParams({ createForUpi: undefined });
+  }
 });
 </script>
 
 <template>
-  <div>
-    <ConfirmDialog />
+  <ContentViewWrapper>
+    <Message
+      v-if="passportIsPublished"
+      severity="info"
+      class="mb-4"
+      data-testid="permalink-frozen-info"
+    >
+      {{ t("permalink.list.frozenInfo") }}
+    </Message>
 
-    <DataTable :value="permalinks" :loading="loading" data-testid="permalink-data-table">
+    <DataTable
+      :value="permalinks"
+      :loading="loading"
+      data-testid="permalink-data-table"
+      paginator
+      :rows="10"
+      :rows-per-page-options="[10]"
+    >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("permalink.list.label", 2) }}</span>
           <Button
-            :label="t('permalink.list.createGs1Link')"
-            data-testid="permalink-create-gs1-link-btn"
-            @click="openCreateGs1Dialog"
+            :label="t('permalink.list.createPermalink')"
+            data-testid="permalink-create-btn"
+            @click="openCreateDialog"
           />
         </div>
       </template>
 
-      <!-- Kind column -->
       <Column field="kind" :header="t('permalink.list.kind')">
         <template #body="{ data }">
-          <span :data-testid="`permalink-kind-${data.id}`">
-            {{ kindLabel(data.kind) }}
-          </span>
+          <div class="flex items-center gap-2">
+            <span :data-testid="`permalink-kind-${data.id}`">
+              {{ kindLabel(data.kind) }}
+            </span>
+          </div>
         </template>
       </Column>
 
-      <!-- Public URL column -->
       <Column field="publicUrl" :header="t('permalink.list.publicUrl')">
         <template #body="{ data }">
           <a
@@ -260,69 +254,32 @@ onMounted(async () => {
         </template>
       </Column>
 
-      <!-- Primary column -->
-      <Column :header="t('permalink.list.primary')">
-        <template #body="{ data }">
-          <Tag
-            v-if="data.primary"
-            :value="t('permalink.list.primary')"
-            severity="success"
-            :data-testid="`permalink-primary-badge-${data.id}`"
-          />
-        </template>
-      </Column>
-
-      <!-- Published column -->
-      <Column :header="t('permalink.list.published')">
-        <template #body="{ data }">
-          <Tag
-            v-if="data.publishedUrl"
-            :value="t('permalink.list.published')"
-            severity="info"
-            :data-testid="`permalink-published-badge-${data.id}`"
-          />
-        </template>
-      </Column>
-
-      <!-- Actions column -->
       <Column :header="t('common.actions')">
         <template #body="{ data }">
-          <div class="flex gap-2">
-            <!-- Edit button (all rows) -->
+          <div class="flex gap-1">
             <Button
-              :label="t('common.edit')"
-              :data-testid="`permalink-edit-btn-${data.id}`"
-              severity="secondary"
-              variant="text"
-              @click="openEditDialog(data)"
-            />
-
-            <!-- Set primary button (non-primary presentation rows only) -->
-            <Button
-              v-if="data.kind === PermalinkKind.PRESENTATION && !data.primary"
-              :label="t('permalink.list.setPrimary')"
-              :data-testid="`permalink-set-primary-btn-${data.id}`"
-              severity="secondary"
-              variant="text"
-              @click="onSetPrimary(data)"
-            />
-
-            <!-- Show QR button (gs1-link rows only) -->
-            <Button
-              v-if="data.kind === PermalinkKind.GS1_LINK"
-              :label="t('common.qrCode')"
+              icon="pi pi-qrcode"
+              severity="info"
+              :aria-label="t('common.qrCode')"
+              :title="t('common.qrCode')"
               :data-testid="`permalink-show-qr-btn-${data.id}`"
-              severity="secondary"
-              variant="text"
               @click="openQrDialog(data)"
             />
 
-            <!-- Delete button -->
             <Button
-              :label="t('permalink.list.delete')"
-              :data-testid="`permalink-delete-btn-${data.id}`"
+              icon="pi pi-pencil"
+              severity="primary"
+              :aria-label="t('common.edit')"
+              :title="t('common.edit')"
+              :data-testid="`permalink-edit-btn-${data.id}`"
+              @click="openEditDialog(data)"
+            />
+
+            <Button
+              icon="pi pi-trash"
               severity="danger"
-              variant="text"
+              :aria-label="t('permalink.list.delete')"
+              :data-testid="`permalink-delete-btn-${data.id}`"
               :disabled="!canDelete(data)"
               :title="deleteTooltip(data)"
               @click="onDelete(data)"
@@ -330,16 +287,28 @@ onMounted(async () => {
           </div>
         </template>
       </Column>
+
+      <template #paginatorcontainer>
+        <TablePagination
+          :current-page="currentPage"
+          :has-previous="hasPrevious"
+          :has-next="hasNext"
+          @reset-cursor="resetCursor"
+          @previous-page="previousPage"
+          @next-page="nextPage"
+        />
+      </template>
     </DataTable>
 
-    <!-- Create GS1 Link dialog -->
-    <PermalinkCreateGs1LinkDialog
-      v-model:visible="createGs1DialogVisible"
-      :existing-gs1-link-upi-ids="existingGs1LinkUpiIds()"
+    <PermalinkCreateDialog
+      v-model:visible="createDialogVisible"
+      :passport-id="passportId"
+      :upis="linkableUpis"
+      :configs="configs"
+      :preselected-upi-id="preselectedUpiId"
       @created="onPermalinkCreated"
     />
 
-    <!-- Edit dialog -->
     <PermalinkEditDialog
       v-if="selectedPermalink"
       v-model:visible="editDialogVisible"
@@ -347,9 +316,8 @@ onMounted(async () => {
       @updated="onPermalinkUpdated"
     />
 
-    <!-- QR dialog -->
     <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
-      <Gs1LinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
+      <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" />
     </Dialog>
-  </div>
+  </ContentViewWrapper>
 </template>

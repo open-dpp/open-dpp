@@ -1,0 +1,38 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    {{> emailHeader }}
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong>Hi {{ firstName }},</strong></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Please confirm that you want to change your open-dpp account email to
+          <strong>{{ newEmail }}</strong
+          >.<br />
+          <p></p
+        ></mj-text>
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Click the button below to confirm your new email address.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{ link }}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >Confirm new email</mj-button
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial" padding-top="20px"
+          >If you did not request this change, you can safely ignore this message and your account
+          email will stay the same.</mj-text
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

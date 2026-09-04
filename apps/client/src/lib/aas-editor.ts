@@ -17,6 +17,7 @@ export interface SharedEditorProps<Data, RequestDto> {
   data: Data;
   callback: (data: RequestDto) => Promise<void>;
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
+  hideDrawer: () => void;
   aasNamespace: AasNamespace;
   errorHandlingStore: IErrorHandlingStore;
   id: string;
@@ -53,12 +54,12 @@ export function getVisualType(
     if (valueType === DataTypeDef.DateTime) {
       return translate(`${translatePrefix}.dateTimeField`);
     }
+    if (valueType === DataTypeDef.AnyUri) {
+      return translate(`${translatePrefix}.link`);
+    }
   }
   if (modelType === AasSubmodelElements.SubmodelElementList) {
     return translate(`${translatePrefix}.submodelElementList`);
-  }
-  if (modelType === AasSubmodelElements.ReferenceElement) {
-    return translate(`${translatePrefix}.link`);
   }
   if (modelType === AasSubmodelElements.File) {
     return translate(`${translatePrefix}.file`);

@@ -12,23 +12,6 @@ import { Pagination } from "../../pagination/pagination";
 import { PassportService } from "../../passports/application/services/passport.service";
 import { UpiCollectionService } from "../application/services/upi-collection.service";
 
-/**
- * Passport-scoped surface for the UPI collection.
- *
- * Lives in the UPI module (cohesion with the list-item assembly in
- * `UpiCollectionService`) but mounts under `/passports` because the resource is
- * addressed per passport. It is a separate controller from
- * `UniqueProductIdentifierController` because that controller's
- * `unique-product-identifiers` prefix cannot express the `/passports/:id/...`
- * path. The route is distinct from `PassportController`'s singular
- * `:id/unique-product-identifier`, so the two never collide.
- *
- * GET /passports/:id/unique-product-identifiers — list the passport's UPIs
- * (OPEN_DPP_UUID + GS1), newest-first, cursor-paginated (`?limit` + `?cursor`),
- * returning the standard `{ paging_metadata, result }` envelope. Ownership-gated
- * via `loadDigitalProductDocumentAndCheckOwnership`: 403 for a non-member /
- * cross-org caller, 404 for an unknown passport, 400 for a missing org header.
- */
 @Controller("passports")
 export class PassportUniqueProductIdentifierController {
   constructor(
@@ -46,8 +29,6 @@ export class PassportUniqueProductIdentifierController {
     @CursorQueryParam() cursor: string | undefined,
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
-    // Verifies the passport exists (404) and that the caller belongs to its org
-    // (403 cross-org / non-member).
     await this.passportService.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
       id,
       subject,

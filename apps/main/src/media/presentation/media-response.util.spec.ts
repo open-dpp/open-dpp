@@ -8,9 +8,9 @@ function makeRes() {
     setHeader: jest.fn((k: string, v: string) => {
       headers[k] = v;
     }),
-    status: jest.fn(() => res),
-    json: jest.fn(() => res),
-    destroy: jest.fn(),
+    status: jest.fn((_code: number) => res),
+    json: jest.fn((_body: unknown) => res),
+    destroy: jest.fn((_error?: Error) => res),
   };
   return { res, headers };
 }

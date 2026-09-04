@@ -3,12 +3,6 @@ import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 import { passportBreadcrumbs } from "./passports/passports.ts";
 
-/**
- * Passport-scoped permalink list, mounted under the passport route
- * (`/organizations/:organizationId/passports/:passportId/permalinks`) and reached
- * from the passport's top-right dropdown. The org-scoped `GET /permalinks` endpoint
- * is kept API-only — the frontend no longer lists permalinks org-wide.
- */
 export const PASSPORT_PERMALINKS_LIST: RouteRecordRaw = {
   path: "permalinks",
   name: "passportPermalinks",

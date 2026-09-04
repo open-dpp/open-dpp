@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
-import { PermalinkKind, PresentationReferenceType } from "@open-dpp/dto";
+import { LatestApiVersionWithPrefixDto, DigitalProductDocumentTypes } from "@open-dpp/dto";
 import type { Model } from "mongoose";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
@@ -46,9 +46,12 @@ import {
 import { UniqueProductIdentifierModule } from "../../unique-product-identifier/unique.product.identifier.module";
 
 describe("PermalinkController", () => {
-  const basePath = "/p";
+  const basePathV1 = "/v1/p";
+  const basePathV2 = "/v2/p";
+
   const ctx = createAasTestContext(
-    basePath,
+    basePathV1,
+    basePathV2,
     {
       imports: [
         PermalinkModule,
@@ -79,7 +82,7 @@ describe("PermalinkController", () => {
 
   async function createPassportWithPermalink(
     options: { slug?: string | null; published?: boolean } = {},
-  ) {
+  ): Promise<any> {
     const { aas, submodels } = ctx.getAasObjects();
 
     const environment = Environment.create({
@@ -109,6 +112,7 @@ describe("PermalinkController", () => {
     });
 
     const permalink = Permalink.create({
+      passportId: passport.id,
       presentationConfigurationId: config.id,
       slug: options.slug ?? null,
     });
@@ -136,7 +140,7 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/p/${fixture.id}`)
+      .get(`/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`)
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
@@ -149,20 +153,26 @@ describe("PermalinkController", () => {
     const slug = `slug-${randomUUID().slice(0, 8)}`;
     const fixture = await createPassportWithPermalink({ slug });
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${slug}`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/${LatestApiVersionWithPrefixDto}/p/${slug}`,
+    );
 
     expect(response.status).toEqual(200);
     expect(response.body.passport.id).toEqual(fixture.passport.id);
   });
 
   it(`/GET returns 404 for unknown permalink id`, async () => {
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${randomUUID()}`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/${LatestApiVersionWithPrefixDto}/p/${randomUUID()}`,
+    );
 
     expect(response.status).toEqual(404);
   });
 
   it(`/GET returns 404 for unknown slug`, async () => {
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/nonexistent-slug`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/${LatestApiVersionWithPrefixDto}/p/nonexistent-slug`,
+    );
 
     expect(response.status).toEqual(404);
   });
@@ -171,7 +181,7 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink();
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p?passportId=${fixture.passport.id}`,
+      `/${LatestApiVersionWithPrefixDto}/p?passportId=${fixture.passport.id}`,
     );
 
     expect(response.status).toEqual(200);
@@ -182,7 +192,7 @@ describe("PermalinkController", () => {
 
   it(`/GET permalink by passport id returns empty array when missing`, async () => {
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p?passportId=${randomUUID()}`,
+      `/${LatestApiVersionWithPrefixDto}/p?passportId=${randomUUID()}`,
     );
 
     expect(response.status).toEqual(200);
@@ -193,14 +203,14 @@ describe("PermalinkController", () => {
     const fixture = await createPassportWithPermalink({ published: false });
 
     const response = await request(ctx.globals().app.getHttpServer()).get(
-      `/p?passportId=${fixture.passport.id}`,
+      `/${LatestApiVersionWithPrefixDto}/p?passportId=${fixture.passport.id}`,
     );
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([]);
   });
 
-  describe("GET /p?passportId=... — NoSQL injection hardening", () => {
+  describe("GET /${LatestApiVersion}/p?passportId=... — NoSQL injection hardening", () => {
     it.each([
       ["passportId[$gt]=", "$gt operator object"],
       ["passportId[$ne]=", "$ne operator object"],
@@ -209,21 +219,21 @@ describe("PermalinkController", () => {
       ["", "missing passportId"],
     ])("rejects %s with 400 (%s)", async (queryString) => {
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/p${queryString.length > 0 ? `?${queryString}` : ""}`,
+        `/${LatestApiVersionWithPrefixDto}/p${queryString.length > 0 ? `?${queryString}` : ""}`,
       );
       expect(response.status).toEqual(400);
     });
 
     it("returns 200 with empty list for a valid but unknown UUID", async () => {
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/p?passportId=${randomUUID()}`,
+        `/${LatestApiVersionWithPrefixDto}/p?passportId=${randomUUID()}`,
       );
       expect(response.status).toEqual(200);
       expect(response.body).toEqual([]);
     });
   });
 
-  describe("GET /p?passportId=... — lazy backfill for pre-refactor passports", () => {
+  describe("GET /${LatestApiVersion}/p?passportId=... — lazy backfill for pre-refactor passports", () => {
     async function seedBarePassport(orgId: string) {
       const passport = Passport.create({
         id: randomUUID(),
@@ -245,7 +255,7 @@ describe("PermalinkController", () => {
       const passport = await seedBarePassport(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -258,7 +268,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(config).toBeDefined();
@@ -280,12 +290,15 @@ describe("PermalinkController", () => {
         organizationId: org.id,
         referenceId: passport.id,
       });
-      const existingPermalink = Permalink.create({ presentationConfigurationId: config.id });
+      const existingPermalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
       await ctx.getModuleRef().get(PermalinkRepository).save(existingPermalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -305,7 +318,7 @@ describe("PermalinkController", () => {
       const passport = await seedBarePassport(orgId);
 
       const response = await request(ctx.globals().app.getHttpServer()).get(
-        `/p?passportId=${passport.id}`,
+        `/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`,
       );
 
       expect(response.status).toEqual(200);
@@ -315,7 +328,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(config).toBeUndefined();
@@ -327,7 +340,7 @@ describe("PermalinkController", () => {
       const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id);
 
@@ -338,7 +351,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(config).toBeUndefined();
@@ -351,7 +364,7 @@ describe("PermalinkController", () => {
       const ghostPassportId = randomUUID();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p?passportId=${ghostPassportId}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${ghostPassportId}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -371,7 +384,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p?passportId=${passport.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p?passportId=${passport.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -389,7 +402,7 @@ describe("PermalinkController", () => {
         .getModuleRef()
         .get(PresentationConfigurationRepository)
         .findManyByReference({
-          referenceType: PresentationReferenceType.Passport,
+          referenceType: DigitalProductDocumentTypes.Passport,
           referenceId: passport.id,
         });
       expect(configs).toHaveLength(1);
@@ -397,20 +410,39 @@ describe("PermalinkController", () => {
     });
   });
 
-  it(`/GET rejects permalink when config is template-type`, async () => {
-    const organizationId = randomUUID();
+  it(`/GET rejects permalink when its bound config is template-type (data corruption)`, async () => {
+    const fixture = await createPassportWithPermalink();
     const templateConfig = PresentationConfiguration.create({
-      organizationId,
+      organizationId: fixture.passport.organizationId,
       referenceId: randomUUID(),
-      referenceType: PresentationReferenceType.Template,
+      referenceType: DigitalProductDocumentTypes.Template,
     });
     await ctx.getModuleRef().get(PresentationConfigurationRepository).save(templateConfig);
-    const permalink = Permalink.create({ presentationConfigurationId: templateConfig.id });
+    const permalink = Permalink.create({
+      passportId: fixture.passport.id,
+      presentationConfigurationId: templateConfig.id,
+    });
     await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${permalink.id}`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`,
+    );
 
     expect(response.status).toEqual(404);
+  });
+
+  it(`/GET renders the standard view (presentationConfiguration null) for a bare permalink`, async () => {
+    const fixture = await createPassportWithPermalink();
+    const bare = Permalink.create({ passportId: fixture.passport.id });
+    await ctx.getRepositories().dppIdentifiableRepository.save(bare);
+
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/${LatestApiVersionWithPrefixDto}/p/${bare.id}`,
+    );
+
+    expect(response.status).toEqual(200);
+    expect(response.body.passport.id).toEqual(fixture.passport.id);
+    expect(response.body.presentationConfiguration).toBeNull();
   });
 
   it(`/GET shells`, async () => {
@@ -445,7 +477,9 @@ describe("PermalinkController", () => {
     it("returns 404 to anonymous when the passport is in draft", async () => {
       const fixture = await createPassportWithPermalink({ published: false });
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
 
       expect(response.status).toEqual(404);
     });
@@ -467,15 +501,51 @@ describe("PermalinkController", () => {
         organizationId: org.id,
         referenceId: passport.id,
       });
-      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      const permalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
       await ctx.getModuleRef().get(PassportRepository).save(passport);
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p/${permalink.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(200);
+      expect(response.body.passport.id).toEqual(passport.id);
+    });
+
+    it("returns 200 to a member of the owning org for a draft passport without the organization header", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: org.id,
+        environment: Environment.create({
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        }),
+      });
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      const permalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
+        .set("Cookie", userCookie);
 
       expect(response.status).toEqual(200);
       expect(response.body.passport.id).toEqual(passport.id);
@@ -499,17 +569,398 @@ describe("PermalinkController", () => {
         organizationId: ownerOrg.id,
         referenceId: passport.id,
       });
-      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      const permalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
       await ctx.getModuleRef().get(PassportRepository).save(passport);
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p/${permalink.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id);
 
       expect(response.status).toEqual(404);
+    });
+  });
+
+  describe("POST /permalinks — gs1-link", () => {
+    const emptyEnvironment = () =>
+      Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      });
+
+    async function createPassportInOrg(orgId: string): Promise<Passport> {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: emptyEnvironment(),
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      return passport;
+    }
+
+    async function createGs1Upi(
+      orgId: string,
+      passport: Passport,
+    ): Promise<UniqueProductIdentifier> {
+      const upi = UniqueProductIdentifier.createGs1({
+        referenceId: passport.id,
+        organizationId: orgId,
+        gtin: "09501101020917",
+        serial: `SER-${randomUUID().slice(0, 8)}`,
+      });
+      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+      return upi;
+    }
+
+    async function createOpenDppUpi(
+      orgId: string,
+      passport: Passport,
+    ): Promise<UniqueProductIdentifier> {
+      const upi = UniqueProductIdentifier.create({
+        referenceId: passport.id,
+        organizationId: orgId,
+      });
+      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+      return upi;
+    }
+
+    async function createConfig(
+      orgId: string,
+      passport: Passport,
+    ): Promise<PresentationConfiguration> {
+      const config = PresentationConfiguration.createForPassport({
+        organizationId: orgId,
+        referenceId: passport.id,
+      });
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
+      return config;
+    }
+
+    function postPermalink(cookie: string, orgId: string, body: Record<string, unknown>) {
+      return request(ctx.globals().app.getHttpServer())
+        .post(`/${LatestApiVersionWithPrefixDto}/permalinks`)
+        .set("Cookie", cookie)
+        .set(ORGANIZATION_ID_HEADER, orgId)
+        .send(body);
+    }
+
+    it("rejects binding to another org's presentation config with 403", async () => {
+      const attacker = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const victim = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const attackerPassport = await createPassportInOrg(attacker.org.id);
+      const upi = await createGs1Upi(attacker.org.id, attackerPassport);
+      const victimPassport = await createPassportInOrg(victim.org.id);
+      const victimConfig = await createConfig(victim.org.id, victimPassport);
+
+      const response = await postPermalink(attacker.userCookie, attacker.org.id, {
+        kind: "gs1-link",
+        passportId: attackerPassport.id,
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: victimConfig.id,
+      });
+
+      expect(response.status).toEqual(403);
+      const persisted = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findByPresentationConfigurationId(victimConfig.id);
+      expect(persisted).toBeUndefined();
+    });
+
+    it("creates a gs1-link permalink bound to a config of the same passport", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const upi = await createGs1Upi(org.id, passport);
+      const config = await createConfig(org.id, passport);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: config.id,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.presentationConfigurationId).toEqual(config.id);
+      expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
+      expect(response.body.passportId).toEqual(passport.id);
+    });
+
+    it("rejects a config belonging to a different passport with 400", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const otherPassport = await createPassportInOrg(org.id);
+      const upi = await createGs1Upi(org.id, passport);
+      const foreignConfig = await createConfig(org.id, otherPassport);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: foreignConfig.id,
+      });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("rejects a UPI belonging to a different passport with 400", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const otherPassport = await createPassportInOrg(org.id);
+      const foreignUpi = await createGs1Upi(org.id, otherPassport);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: foreignUpi.uuid,
+      });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("returns 404 when the presentation config does not exist", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const upi = await createGs1Upi(org.id, passport);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: upi.uuid,
+        presentationConfigurationId: randomUUID(),
+      });
+
+      expect(response.status).toEqual(404);
+    });
+
+    it("rejects a non-GS1 unique product identifier with 400 and persists nothing", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const upi = await createOpenDppUpi(org.id, passport);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: upi.uuid,
+      });
+
+      expect(response.status).toEqual(400);
+      const persisted = await ctx
+        .getModuleRef()
+        .get(PermalinkRepository)
+        .findGs1LinkByUpiId(upi.uuid);
+      expect(persisted).toBeUndefined();
+    });
+
+    it("creates a gs1-link permalink when presentationConfigurationId is omitted", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const upi = await createGs1Upi(org.id, passport);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: upi.uuid,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.presentationConfigurationId).toBeNull();
+      expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
+    });
+
+    it("binds several gs1-links to the same config (uniqueness is per UPI, not per config)", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const config = await createConfig(org.id, passport);
+      const first = await createGs1Upi(org.id, passport);
+      const second = await createGs1Upi(org.id, passport);
+
+      const firstResponse = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: first.uuid,
+        presentationConfigurationId: config.id,
+      });
+      const secondResponse = await postPermalink(userCookie, org.id, {
+        kind: "gs1-link",
+        passportId: passport.id,
+        uniqueProductIdentifierId: second.uuid,
+        presentationConfigurationId: config.id,
+      });
+
+      expect(firstResponse.status).toEqual(201);
+      expect(secondResponse.status).toEqual(201);
+    });
+  });
+
+  describe("POST /permalinks — open-dpp", () => {
+    const emptyEnvironment = () =>
+      Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: [],
+      });
+
+    async function createPassportInOrg(orgId: string): Promise<Passport> {
+      const passport = Passport.create({
+        id: randomUUID(),
+        organizationId: orgId,
+        environment: emptyEnvironment(),
+      });
+      await ctx.getModuleRef().get(PassportRepository).save(passport);
+      return passport;
+    }
+
+    function postPermalink(cookie: string, orgId: string, body: Record<string, unknown>) {
+      return request(ctx.globals().app.getHttpServer())
+        .post(`/${LatestApiVersionWithPrefixDto}/permalinks`)
+        .set("Cookie", cookie)
+        .set(ORGANIZATION_ID_HEADER, orgId)
+        .send(body);
+    }
+
+    it("creates a bare permalink (passportId only)", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "open-dpp",
+        passportId: passport.id,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.kind).toEqual("open-dpp");
+      expect(response.body.passportId).toEqual(passport.id);
+      expect(response.body.presentationConfigurationId).toBeNull();
+      expect(response.body.uniqueProductIdentifierId).toBeNull();
+    });
+
+    it("creates a permalink bound to an open-dpp UPI of the same passport", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const upi = UniqueProductIdentifier.create({
+        referenceId: passport.id,
+        organizationId: org.id,
+      });
+      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "open-dpp",
+        passportId: passport.id,
+        uniqueProductIdentifierId: upi.uuid,
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
+    });
+
+    it("rejects a GS1-type UPI on the open-dpp kind with 400 (strict kind matching)", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const gs1Upi = UniqueProductIdentifier.createGs1({
+        referenceId: passport.id,
+        organizationId: org.id,
+        gtin: "09501101020917",
+        serial: `SER-${randomUUID().slice(0, 8)}`,
+      });
+      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(gs1Upi);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "open-dpp",
+        passportId: passport.id,
+        uniqueProductIdentifierId: gs1Upi.uuid,
+      });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("rejects the legacy 'presentation' kind with 400", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "presentation",
+        passportId: passport.id,
+      });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("returns 404 for an unknown passport", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+
+      const response = await postPermalink(userCookie, org.id, {
+        kind: "open-dpp",
+        passportId: randomUUID(),
+      });
+
+      expect(response.status).toEqual(404);
+    });
+
+    it("returns 403 for a passport of a different org", async () => {
+      const owner = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(owner.org.id);
+
+      const response = await postPermalink(outsider.userCookie, outsider.org.id, {
+        kind: "open-dpp",
+        passportId: passport.id,
+      });
+
+      expect(response.status).toEqual(403);
+    });
+
+    it("creates a permalink with a vanity slug and returns 409 on a duplicate", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const passport = await createPassportInOrg(org.id);
+      const slug = `vanity-${randomUUID().slice(0, 8)}`;
+
+      const first = await postPermalink(userCookie, org.id, {
+        kind: "open-dpp",
+        passportId: passport.id,
+        slug,
+      });
+      const second = await postPermalink(userCookie, org.id, {
+        kind: "open-dpp",
+        passportId: passport.id,
+        slug,
+      });
+
+      expect(first.status).toEqual(201);
+      expect(first.body.slug).toEqual(slug);
+      expect(second.status).toEqual(409);
     });
   });
 
@@ -533,6 +984,7 @@ describe("PermalinkController", () => {
         referenceId: passport.id,
       });
       const permalink = Permalink.create({
+        passportId: passport.id,
         presentationConfigurationId: config.id,
         slug,
       });
@@ -550,7 +1002,7 @@ describe("PermalinkController", () => {
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug });
@@ -574,7 +1026,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id, initialSlug);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: null });
@@ -590,7 +1042,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "BAD SLUG" });
@@ -605,7 +1057,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "new" });
@@ -622,7 +1074,7 @@ describe("PermalinkController", () => {
       const { permalink: target } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${target.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${target.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: taken });
@@ -638,7 +1090,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(ownerOrg.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", outsider.userCookie)
         .set(ORGANIZATION_ID_HEADER, outsider.org.id)
         .send({ slug: "trespass" });
@@ -651,7 +1103,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .send({ slug: "anon" });
 
       expect([401, 403]).toContain(response.status);
@@ -674,14 +1126,17 @@ describe("PermalinkController", () => {
         organizationId: org.id,
         referenceId: passport.id,
       });
-      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      const permalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
       await ctx.getModuleRef().get(PassportRepository).save(passport);
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const slug = `slug-${randomUUID().slice(0, 8)}`;
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug });
@@ -696,7 +1151,7 @@ describe("PermalinkController", () => {
         .betterAuthHelper.createOrganizationAndUserWithCookie();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${randomUUID()}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${randomUUID()}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug: "ghost" });
@@ -711,7 +1166,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ baseUrl: "https://passports.example.com" });
@@ -738,7 +1193,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${created.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${created.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ baseUrl: null });
@@ -754,7 +1209,7 @@ describe("PermalinkController", () => {
       const { permalink } = await createPassportWithPermalinkInOrg(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ baseUrl: "https://example.com?q=1" });
@@ -770,7 +1225,7 @@ describe("PermalinkController", () => {
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/p/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
         .send({ slug, baseUrl: "https://passports.example.com" });
@@ -788,7 +1243,9 @@ describe("PermalinkController", () => {
       const seeded = fixture.permalink.withBaseUrl("https://override.example.com");
       await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
 
       expect(response.status).toEqual(200);
       expect(response.body.publicUrl).toEqual(`https://override.example.com/${fixture.id}`);
@@ -797,7 +1254,9 @@ describe("PermalinkController", () => {
     it("falls back to OPEN_DPP_URL when neither permalink nor branding has a base URL", async () => {
       const fixture = await createPassportWithPermalink();
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
 
       expect(response.status).toEqual(200);
       expect(typeof response.body.publicUrl).toBe("string");
@@ -816,7 +1275,7 @@ describe("PermalinkController", () => {
       await seedBranding(fixture.passport.organizationId, "https://branding.example.com");
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p`)
         .query({ passportId: fixture.passport.id });
 
       expect(response.status).toEqual(200);
@@ -828,7 +1287,7 @@ describe("PermalinkController", () => {
       const fixture = await createPassportWithPermalink();
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p`)
         .query({ passportId: fixture.passport.id });
 
       expect(response.status).toEqual(200);
@@ -843,7 +1302,7 @@ describe("PermalinkController", () => {
       await ctx.getModuleRef().get(PermalinkRepository).save(seeded);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p`)
         .query({ passportId: fixture.passport.id });
 
       expect(response.status).toEqual(200);
@@ -865,7 +1324,9 @@ describe("PermalinkController", () => {
       const repo = ctx.getModuleRef().get(PermalinkRepository);
       expect((await repo.findOneOrFail(fixture.id)).publishedUrl).toBeNull();
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
 
       expect(response.status).toEqual(200);
       const persisted = (await repo.findOneOrFail(fixture.id)).publishedUrl;
@@ -881,7 +1342,9 @@ describe("PermalinkController", () => {
         .get<Model<BrandingDoc>>(getModelToken(BrandingDoc.name));
       await brandingModel.create({ organizationId: fixture.passport.organizationId });
 
-      await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
       const repo = ctx.getModuleRef().get(PermalinkRepository);
       const frozenUrl = (await repo.findOneOrFail(fixture.id)).publishedUrl;
 
@@ -890,7 +1353,9 @@ describe("PermalinkController", () => {
         { $set: { permalinkBaseUrl: "https://changed.example.com" } },
       );
 
-      const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+      const response = await request(ctx.globals().app.getHttpServer()).get(
+        `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+      );
 
       expect(response.status).toEqual(200);
       expect(response.body.publicUrl).toEqual(frozenUrl);
@@ -914,13 +1379,16 @@ describe("PermalinkController", () => {
         organizationId: org.id,
         referenceId: passport.id,
       });
-      const permalink = Permalink.create({ presentationConfigurationId: config.id });
+      const permalink = Permalink.create({
+        passportId: passport.id,
+        presentationConfigurationId: config.id,
+      });
       await ctx.getModuleRef().get(PassportRepository).save(passport);
       await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
       await ctx.getRepositories().dppIdentifiableRepository.save(permalink);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/p/${permalink.id}`)
+        .get(`/${LatestApiVersionWithPrefixDto}/p/${permalink.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
@@ -947,7 +1415,9 @@ describe("PermalinkController", () => {
     const countBefore = await presentationConfigurationRepository.countByReference(referenceFilter);
     expect(countBefore).toEqual(1);
 
-    const response = await request(ctx.globals().app.getHttpServer()).get(`/p/${fixture.id}`);
+    const response = await request(ctx.globals().app.getHttpServer()).get(
+      `/${LatestApiVersionWithPrefixDto}/p/${fixture.id}`,
+    );
 
     expect(response.status).toEqual(200);
     expect(response.body.presentationConfiguration.referenceType).toEqual("passport");
@@ -957,520 +1427,8 @@ describe("PermalinkController", () => {
     expect(countAfter).toEqual(1);
   });
 
-  // ---------------------------------------------------------------------------
-  // Slice 45 — GET /permalinks (org-scoped list, both kinds)
-  // ---------------------------------------------------------------------------
-  describe("GET /permalinks", () => {
-    async function createOrgWithPermalink(
-      orgId: string,
-      options: { primary?: boolean; slug?: string | null } = {},
-    ) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-        lastStatusChange: DigitalProductDocumentStatusChange.create({
-          previousStatus: DigitalProductDocumentStatus.Draft,
-          currentStatus: DigitalProductDocumentStatus.Published,
-        }),
-      });
-      const config = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const permalink = Permalink.create({
-        presentationConfigurationId: config.id,
-        slug: options.slug ?? null,
-        primary: options.primary ?? true,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
-      await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
-      return { passport, config, permalink };
-    }
-
-    it("(a) returns 200 array of all permalinks for the org including id, primary, publicUrl", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createOrgWithPermalink(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(200);
-      expect(response.body.paging_metadata).toBeDefined();
-      expect(Array.isArray(response.body.result)).toBe(true);
-      const row = response.body.result.find((r: { id: string }) => r.id === permalink.id);
-      expect(row).toBeDefined();
-      expect(row.id).toEqual(permalink.id);
-      expect(typeof row.primary).toBe("boolean");
-      expect(typeof row.publicUrl).toBe("string");
-    });
-
-    it("(a-gs1) returns gs1-link permalink with uniqueProductIdentifierId and gs1 fields", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const upiId = randomUUID();
-      const gs1Permalink = Permalink.create({
-        kind: PermalinkKind.GS1_LINK,
-        uniqueProductIdentifierId: upiId,
-        presentationConfigurationId: null,
-        gs1DataAttributes: null,
-        primary: false,
-        organizationId: org.id,
-      });
-      await ctx.getModuleRef().get(PermalinkRepository).save(gs1Permalink);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(200);
-      const row = response.body.result.find((r: { id: string }) => r.id === gs1Permalink.id);
-      expect(row).toBeDefined();
-      expect(row.kind).toEqual(PermalinkKind.GS1_LINK);
-      expect(row.uniqueProductIdentifierId).toEqual(upiId);
-      expect(row.primary).toBe(false);
-    });
-
-    it("(b) excludes permalinks belonging to a different org", async () => {
-      const { org: orgA, userCookie: cookieA } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { org: orgB } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      await createOrgWithPermalink(orgA.id);
-      await createOrgWithPermalink(orgB.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .set("Cookie", cookieA)
-        .set(ORGANIZATION_ID_HEADER, orgA.id);
-
-      expect(response.status).toEqual(200);
-      // All returned rows must belong to orgA
-      for (const row of response.body.result as { id: string }[]) {
-        const stored = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(row.id);
-        expect(stored.organizationId).toEqual(orgA.id);
-      }
-    });
-
-    it("(e) paginates via ?limit and ?cursor — the second page does not overlap the first", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const repo = ctx.getModuleRef().get(PermalinkRepository);
-      for (let i = 0; i < 3; i++) {
-        await repo.save(
-          Permalink.create({
-            kind: PermalinkKind.GS1_LINK,
-            uniqueProductIdentifierId: randomUUID(),
-            presentationConfigurationId: null,
-            gs1DataAttributes: null,
-            primary: false,
-            organizationId: org.id,
-          }),
-        );
-      }
-
-      const page1 = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .query({ limit: 2 })
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(page1.status).toEqual(200);
-      expect(page1.body.result).toHaveLength(2);
-      expect(page1.body.paging_metadata.cursor).toBeTruthy();
-
-      const page2 = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .query({ limit: 2, cursor: page1.body.paging_metadata.cursor })
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(page2.status).toEqual(200);
-      expect(page2.body.result).toHaveLength(1);
-
-      const page1Ids = page1.body.result.map((r: { id: string }) => r.id);
-      const page2Ids = page2.body.result.map((r: { id: string }) => r.id);
-      expect(page1Ids.some((id: string) => page2Ids.includes(id))).toBe(false);
-    });
-
-    it("(c) returns 400 when the org header is missing", async () => {
-      const { userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .set("Cookie", userCookie);
-
-      expect(response.status).toEqual(400);
-    });
-
-    it("(d) returns 403 when the requester is not a member of the org", async () => {
-      const { org } = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const nonMember = await ctx.globals().betterAuthHelper.createUser();
-      const nonMemberCookie = await ctx.globals().betterAuthHelper.signAsUser(nonMember.user.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .set("Cookie", nonMemberCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(403);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Passport-scoped list — GET /passports/:id/permalinks (presentation + gs1-link union)
-  // ---------------------------------------------------------------------------
-  describe("GET /passports/:id/permalinks", () => {
-    async function seedPassportWithPermalinks(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-        lastStatusChange: DigitalProductDocumentStatusChange.create({
-          previousStatus: DigitalProductDocumentStatus.Draft,
-          currentStatus: DigitalProductDocumentStatus.Published,
-        }),
-      });
-      const config = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const presentation = Permalink.create({
-        presentationConfigurationId: config.id,
-        primary: true,
-        organizationId: orgId,
-      });
-      // gs1-link permalink whose UPI belongs to this passport (the union's gs1 side)
-      const upi = UniqueProductIdentifier.createGs1({
-        referenceId: passport.id,
-        gtin: "04006381333931",
-        serial: `SN-${randomUUID().slice(0, 8)}`,
-        organizationId: orgId,
-      });
-      const gs1Link = Permalink.create({
-        kind: PermalinkKind.GS1_LINK,
-        uniqueProductIdentifierId: upi.uuid,
-        presentationConfigurationId: null,
-        gs1DataAttributes: null,
-        primary: false,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
-      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
-      await ctx.getModuleRef().get(PermalinkRepository).save(presentation);
-      await ctx.getModuleRef().get(PermalinkRepository).save(gs1Link);
-      return { passport, presentation, gs1Link };
-    }
-
-    it("returns 200 with the passport's permalinks (presentation + gs1-link union), envelope shape", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport, presentation, gs1Link } = await seedPassportWithPermalinks(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${passport.id}/permalinks`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(200);
-      expect(response.body.paging_metadata).toBeDefined();
-      expect(Array.isArray(response.body.result)).toBe(true);
-      const ids = response.body.result.map((r: { id: string }) => r.id);
-      expect(ids).toContain(presentation.id);
-      expect(ids).toContain(gs1Link.id);
-      const presRow = response.body.result.find((r: { id: string }) => r.id === presentation.id);
-      expect(typeof presRow.publicUrl).toBe("string");
-    });
-
-    it("scopes to the passport — excludes another passport's permalinks", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const first = await seedPassportWithPermalinks(org.id);
-      const other = await seedPassportWithPermalinks(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${first.passport.id}/permalinks`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(200);
-      const ids = response.body.result.map((r: { id: string }) => r.id);
-      expect(ids).toContain(first.presentation.id);
-      expect(ids).not.toContain(other.presentation.id);
-      expect(ids).not.toContain(other.gs1Link.id);
-    });
-
-    it("paginates via ?limit and ?cursor — the second page does not overlap the first", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await seedPassportWithPermalinks(org.id); // 2 permalinks total
-
-      const page1 = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${passport.id}/permalinks`)
-        .query({ limit: 1 })
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-      expect(page1.status).toEqual(200);
-      expect(page1.body.result).toHaveLength(1);
-      expect(page1.body.paging_metadata.cursor).toBeTruthy();
-
-      const page2 = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${passport.id}/permalinks`)
-        .query({ limit: 1, cursor: page1.body.paging_metadata.cursor })
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-      expect(page2.status).toEqual(200);
-      expect(page2.body.result).toHaveLength(1);
-      expect(page1.body.result[0].id).not.toEqual(page2.body.result[0].id);
-    });
-
-    it("returns 403 for a cross-org / non-member request", async () => {
-      const { org: ownerOrg } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await seedPassportWithPermalinks(ownerOrg.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${passport.id}/permalinks`)
-        .set("Cookie", outsider.userCookie)
-        .set(ORGANIZATION_ID_HEADER, outsider.org.id);
-
-      expect(response.status).toEqual(403);
-    });
-
-    it("returns 404 when the passport does not exist", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${randomUUID()}/permalinks`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(404);
-    });
-
-    it("returns 400 when the org header is missing", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await seedPassportWithPermalinks(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .get(`/passports/${passport.id}/permalinks`)
-        .set("Cookie", userCookie);
-
-      expect(response.status).toEqual(400);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Slice 46 — POST /permalinks (create gs1-link or presentation)
-  // ---------------------------------------------------------------------------
-  describe("POST /permalinks", () => {
-    async function createPassportWithConfig(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-        lastStatusChange: DigitalProductDocumentStatusChange.create({
-          previousStatus: DigitalProductDocumentStatus.Draft,
-          currentStatus: DigitalProductDocumentStatus.Published,
-        }),
-      });
-      const config = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
-      return { passport, config };
-    }
-
-    async function createGs1Upi(orgId: string, referenceId: string) {
-      const upi = UniqueProductIdentifier.createGs1({
-        referenceId,
-        gtin: "04006381333931",
-        batch: `LOT-${randomUUID().slice(0, 8)}`,
-        serial: `SN-${randomUUID().slice(0, 8)}`,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
-      return upi;
-    }
-
-    it("(a) returns 201 when creating a gs1-link permalink for a known UPI", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await createPassportWithConfig(org.id);
-      const upi = await createGs1Upi(org.id, passport.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({
-          kind: PermalinkKind.GS1_LINK,
-          uniqueProductIdentifierId: upi.uuid,
-        });
-
-      expect(response.status).toEqual(201);
-      expect(response.body.kind).toEqual(PermalinkKind.GS1_LINK);
-      expect(response.body.uniqueProductIdentifierId).toEqual(upi.uuid);
-      expect(response.body.id).toBeDefined();
-    });
-
-    it("(a-baseUrl) persists a custom baseUrl supplied when creating a gs1-link permalink", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await createPassportWithConfig(org.id);
-      const upi = await createGs1Upi(org.id, passport.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({
-          kind: PermalinkKind.GS1_LINK,
-          uniqueProductIdentifierId: upi.uuid,
-          baseUrl: "https://custom.example.com",
-        });
-
-      expect(response.status).toEqual(201);
-      expect(response.body.baseUrl).toEqual("https://custom.example.com");
-    });
-
-    it("(b) returns 409 when a second gs1-link is created for the same UPI", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await createPassportWithConfig(org.id);
-      const upi = await createGs1Upi(org.id, passport.id);
-
-      await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({ kind: PermalinkKind.GS1_LINK, uniqueProductIdentifierId: upi.uuid });
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({ kind: PermalinkKind.GS1_LINK, uniqueProductIdentifierId: upi.uuid });
-
-      expect(response.status).toEqual(409);
-    });
-
-    it("(c) returns 201 when creating an additional presentation permalink (non-primary)", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { config } = await createPassportWithConfig(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({
-          kind: PermalinkKind.PRESENTATION,
-          presentationConfigurationId: config.id,
-        });
-
-      expect(response.status).toEqual(201);
-      expect(response.body.kind).toEqual(PermalinkKind.PRESENTATION);
-      expect(response.body.id).toBeDefined();
-    });
-
-    it("(d) returns 403 for cross-org / non-member request", async () => {
-      const { org: ownerOrg } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await createPassportWithConfig(ownerOrg.id);
-      const upi = await createGs1Upi(ownerOrg.id, passport.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", outsider.userCookie)
-        .set(ORGANIZATION_ID_HEADER, outsider.org.id)
-        .send({ kind: PermalinkKind.GS1_LINK, uniqueProductIdentifierId: upi.uuid });
-
-      expect(response.status).toEqual(403);
-    });
-
-    it("(e) returns 400 for invalid gs1DataAttributes", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { passport } = await createPassportWithConfig(org.id);
-      const upi = await createGs1Upi(org.id, passport.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({
-          kind: PermalinkKind.GS1_LINK,
-          uniqueProductIdentifierId: upi.uuid,
-          gs1DataAttributes: { "99zz": "bad-ai-key" },
-        });
-
-      expect(response.status).toEqual(400);
-    });
-
-    it("(f) returns 400 when the org header is missing", async () => {
-      const { userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post("/permalinks")
-        .set("Cookie", userCookie)
-        .send({ kind: PermalinkKind.GS1_LINK, uniqueProductIdentifierId: randomUUID() });
-
-      expect(response.status).toEqual(400);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Slice 47 — PATCH /permalinks/:id (extend to gs1 fields; keep slug/baseUrl)
-  // ---------------------------------------------------------------------------
-  describe("PATCH /permalinks/:id", () => {
-    async function createGs1LinkPermalinkInOrg(orgId: string) {
+  describe("mutating /permalinks/:id routes work for the owning org", () => {
+    async function seedViaServiceFlow(orgId: string) {
       const passport = Passport.create({
         id: randomUUID(),
         organizationId: orgId,
@@ -1480,492 +1438,151 @@ describe("PermalinkController", () => {
           conceptDescriptions: [],
         }),
       });
-      const upi = UniqueProductIdentifier.createGs1({
-        referenceId: passport.id,
-        gtin: "04006381333931",
-        batch: `LOT-${randomUUID().slice(0, 8)}`,
-        serial: `SN-${randomUUID().slice(0, 8)}`,
-        organizationId: orgId,
-      });
-      const gs1Permalink = Permalink.create({
-        kind: PermalinkKind.GS1_LINK,
-        uniqueProductIdentifierId: upi.uuid,
-        presentationConfigurationId: null,
-        gs1DataAttributes: null,
-        primary: false,
-        organizationId: orgId,
-      });
       await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
-      await ctx.getModuleRef().get(PermalinkRepository).save(gs1Permalink);
-      return { passport, upi, permalink: gs1Permalink };
-    }
 
-    async function createPresentationPermalinkInOrg(
-      orgId: string,
-      options: { published?: boolean; slug?: string | null } = {},
-    ) {
-      const lastStatusChange =
-        options.published === false
-          ? DigitalProductDocumentStatusChange.create({})
-          : DigitalProductDocumentStatusChange.create({
-              previousStatus: DigitalProductDocumentStatus.Draft,
-              currentStatus: DigitalProductDocumentStatus.Published,
-            });
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-        lastStatusChange,
-      });
-      const config = PresentationConfiguration.createForPassport({
+      const configRepository = ctx.getModuleRef().get(PresentationConfigurationRepository);
+      const config1 = PresentationConfiguration.createForPassport({
         organizationId: orgId,
         referenceId: passport.id,
       });
-      const permalink = Permalink.create({
-        presentationConfigurationId: config.id,
-        slug: options.slug ?? null,
-        primary: true,
+      const config2 = PresentationConfiguration.createForPassport({
         organizationId: orgId,
+        referenceId: passport.id,
       });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
-      await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
-      return { passport, config, permalink };
+      await configRepository.save(config1);
+      await configRepository.save(config2);
+
+      const service = ctx.getModuleRef().get(PermalinkApplicationService);
+      const [first] = await service.createPermalinksForConfigs([config1], orgId);
+      const second = await service.createOpenDppPermalink({
+        passportId: passport.id,
+        organizationId: orgId,
+        presentationConfigurationId: config2.id,
+      });
+      return { passport, first, second };
     }
 
-    it("(a) sets gs1DataAttributes on a gs1-link permalink → 200, reflected", async () => {
+    it("PATCH /permalinks/:id updates the slug for an org member", async () => {
       const { org, userCookie } = await ctx
         .globals()
         .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createGs1LinkPermalinkInOrg(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/permalinks/${permalink.id}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({
-          gs1DataAttributes: { "17": "251231" },
-        });
-
-      expect(response.status).toEqual(200);
-      expect(response.body.gs1DataAttributes).toEqual({ "17": "251231" });
-    });
-
-    it("(b) rejects an invalid GS1 AI value with 400", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createGs1LinkPermalinkInOrg(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/permalinks/${permalink.id}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({ gs1DataAttributes: { "99zz": "bad-ai-key" } });
-
-      expect(response.status).toEqual(400);
-    });
-
-    it("(c) slug/baseUrl update still works on a presentation permalink (regression)", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createPresentationPermalinkInOrg(org.id, { published: false });
+      const { first } = await seedViaServiceFlow(org.id);
       const slug = `slug-${randomUUID().slice(0, 8)}`;
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/permalinks/${permalink.id}`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${first.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({ slug, baseUrl: "https://passports.example.com" });
+        .send({ slug });
 
       expect(response.status).toEqual(200);
       expect(response.body.slug).toEqual(slug);
-      expect(response.body.baseUrl).toEqual("https://passports.example.com");
+      const refetched = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(first.id);
+      expect(refetched.slug).toEqual(slug);
     });
 
-    it("(d) returns 409 when patching slug on a PUBLISHED presentation permalink", async () => {
+    it("POST /permalinks/:id/primary no longer exists (primary concept removed)", async () => {
       const { org, userCookie } = await ctx
         .globals()
         .betterAuthHelper.createOrganizationAndUserWithCookie();
-      // Seed a published permalink (publishedUrl frozen via direct DB write)
-      const { permalink } = await createPresentationPermalinkInOrg(org.id, { published: true });
-      // Freeze the publishedUrl so assertNotPublished fires
-      const frozen = permalink.withPublishedUrl(`https://passports.example.com/${permalink.id}`);
-      await ctx.getModuleRef().get(PermalinkRepository).save(frozen);
+      const { second } = await seedViaServiceFlow(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/permalinks/${permalink.id}`)
+        .post(`/${LatestApiVersionWithPrefixDto}/permalinks/${second.id}/primary`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id);
+
+      expect(response.status).toEqual(404);
+    });
+
+    it("PATCH /permalinks/:id rebinds the presentation configuration (pre-freeze)", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { passport, first } = await seedViaServiceFlow(org.id);
+      const newConfig = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: passport.id,
+      });
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(newConfig);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${first.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id)
-        .send({ slug: `slug-${randomUUID().slice(0, 8)}` });
-
-      expect(response.status).toEqual(409);
-    });
-
-    it("(e) returns 403 when the requester's org does not own the permalink", async () => {
-      const { org: ownerOrg } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createGs1LinkPermalinkInOrg(ownerOrg.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .patch(`/permalinks/${permalink.id}`)
-        .set("Cookie", outsider.userCookie)
-        .set(ORGANIZATION_ID_HEADER, outsider.org.id)
-        .send({ gs1DataAttributes: { "17": "251231" } });
-
-      expect(response.status).toEqual(403);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Slice 48 — DELETE /permalinks/:id (guarded)
-  // ---------------------------------------------------------------------------
-  describe("DELETE /permalinks", () => {
-    async function createTwoPresentationPermalinksInOrg(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-      });
-      const config1 = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const config2 = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const primaryPermalink = Permalink.create({
-        presentationConfigurationId: config1.id,
-        primary: true,
-        organizationId: orgId,
-      });
-      const nonPrimaryPermalink = Permalink.create({
-        presentationConfigurationId: config2.id,
-        primary: false,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config1);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config2);
-      await ctx.getModuleRef().get(PermalinkRepository).save(primaryPermalink);
-      await ctx.getModuleRef().get(PermalinkRepository).save(nonPrimaryPermalink);
-      return { passport, primaryPermalink, nonPrimaryPermalink };
-    }
-
-    async function createSinglePresentationPermalinkInOrg(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-      });
-      const config = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const permalink = Permalink.create({
-        presentationConfigurationId: config.id,
-        primary: true,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config);
-      await ctx.getModuleRef().get(PermalinkRepository).save(permalink);
-      return { passport, permalink };
-    }
-
-    async function createGs1LinkPermalinkInOrgForDelete(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-      });
-      const upi = UniqueProductIdentifier.createGs1({
-        referenceId: passport.id,
-        gtin: "04006381333931",
-        batch: `LOT-${randomUUID().slice(0, 8)}`,
-        serial: `SN-${randomUUID().slice(0, 8)}`,
-        organizationId: orgId,
-      });
-      const gs1Permalink = Permalink.create({
-        kind: PermalinkKind.GS1_LINK,
-        uniqueProductIdentifierId: upi.uuid,
-        presentationConfigurationId: null,
-        gs1DataAttributes: null,
-        primary: false,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
-      await ctx.getModuleRef().get(PermalinkRepository).save(gs1Permalink);
-      return { passport, upi, permalink: gs1Permalink };
-    }
-
-    it("(a) DELETE an unpublished, non-primary presentation permalink (passport has >1) → 204", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { nonPrimaryPermalink } = await createTwoPresentationPermalinksInOrg(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .delete(`/permalinks/${nonPrimaryPermalink.id}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(204);
-
-      // Verify it was actually deleted
-      const found = await ctx
-        .getModuleRef()
-        .get(PermalinkRepository)
-        .findOne(nonPrimaryPermalink.id);
-      expect(found).toBeUndefined();
-    });
-
-    it("(b) DELETE the last/primary presentation permalink → 409", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createSinglePresentationPermalinkInOrg(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .delete(`/permalinks/${permalink.id}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(409);
-    });
-
-    it("(c) DELETE a published permalink → 409", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { nonPrimaryPermalink } = await createTwoPresentationPermalinksInOrg(org.id);
-      // Freeze the permalink to simulate a published state
-      const frozen = nonPrimaryPermalink.withPublishedUrl(
-        `https://passports.example.com/${nonPrimaryPermalink.id}`,
-      );
-      await ctx.getModuleRef().get(PermalinkRepository).save(frozen);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .delete(`/permalinks/${frozen.id}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(409);
-    });
-
-    it("(d) DELETE an unpublished gs1-link permalink → 204", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createGs1LinkPermalinkInOrgForDelete(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .delete(`/permalinks/${permalink.id}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(204);
-
-      // Verify it was actually deleted
-      const found = await ctx.getModuleRef().get(PermalinkRepository).findOne(permalink.id);
-      expect(found).toBeUndefined();
-    });
-
-    it("(e) DELETE from a different org → 403", async () => {
-      const { org: ownerOrg } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { nonPrimaryPermalink } = await createTwoPresentationPermalinksInOrg(ownerOrg.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .delete(`/permalinks/${nonPrimaryPermalink.id}`)
-        .set("Cookie", outsider.userCookie)
-        .set(ORGANIZATION_ID_HEADER, outsider.org.id);
-
-      expect(response.status).toEqual(403);
-    });
-
-    it("(f) DELETE unknown id → 404", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .delete(`/permalinks/${randomUUID()}`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(404);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Slice 49 — POST /permalinks/:id/primary (set primary)
-  // ---------------------------------------------------------------------------
-  describe("POST /permalinks/:id/primary", () => {
-    async function createTwoPresentationPermalinksForPrimary(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-      });
-      const config1 = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const config2 = PresentationConfiguration.createForPassport({
-        organizationId: orgId,
-        referenceId: passport.id,
-      });
-      const primaryPermalink = Permalink.create({
-        presentationConfigurationId: config1.id,
-        primary: true,
-        organizationId: orgId,
-      });
-      const nonPrimaryPermalink = Permalink.create({
-        presentationConfigurationId: config2.id,
-        primary: false,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config1);
-      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(config2);
-      await ctx.getModuleRef().get(PermalinkRepository).save(primaryPermalink);
-      await ctx.getModuleRef().get(PermalinkRepository).save(nonPrimaryPermalink);
-      return { passport, primaryPermalink, nonPrimaryPermalink };
-    }
-
-    async function createGs1LinkPermalinkForPrimary(orgId: string) {
-      const passport = Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        }),
-      });
-      const upi = UniqueProductIdentifier.createGs1({
-        referenceId: passport.id,
-        gtin: "04006381333931",
-        batch: `LOT-${randomUUID().slice(0, 8)}`,
-        serial: `SN-${randomUUID().slice(0, 8)}`,
-        organizationId: orgId,
-      });
-      const gs1Permalink = Permalink.create({
-        kind: PermalinkKind.GS1_LINK,
-        uniqueProductIdentifierId: upi.uuid,
-        presentationConfigurationId: null,
-        gs1DataAttributes: null,
-        primary: false,
-        organizationId: orgId,
-      });
-      await ctx.getModuleRef().get(PassportRepository).save(passport);
-      await ctx.getModuleRef().get(UniqueProductIdentifierRepository).save(upi);
-      await ctx.getModuleRef().get(PermalinkRepository).save(gs1Permalink);
-      return { passport, upi, permalink: gs1Permalink };
-    }
-
-    it("(a) POST on a presentation permalink → 200, primary:true, sibling flips to primary:false", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { nonPrimaryPermalink, primaryPermalink } =
-        await createTwoPresentationPermalinksForPrimary(org.id);
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post(`/permalinks/${nonPrimaryPermalink.id}/primary`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
+        .send({ presentationConfigurationId: newConfig.id });
 
       expect(response.status).toEqual(200);
-      expect(response.body.id).toEqual(nonPrimaryPermalink.id);
-      expect(response.body.primary).toBe(true);
-
-      // Verify the previously-primary sibling flipped to primary:false via a follow-up GET
-      const listResponse = await request(ctx.globals().app.getHttpServer())
-        .get("/permalinks")
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(listResponse.status).toEqual(200);
-      const newPrimary = listResponse.body.result.find(
-        (r: { id: string }) => r.id === nonPrimaryPermalink.id,
-      );
-      const oldPrimary = listResponse.body.result.find(
-        (r: { id: string }) => r.id === primaryPermalink.id,
-      );
-      expect(newPrimary?.primary).toBe(true);
-      expect(oldPrimary?.primary).toBe(false);
+      expect(response.body.presentationConfigurationId).toEqual(newConfig.id);
+      const refetched = await ctx.getModuleRef().get(PermalinkRepository).findOneOrFail(first.id);
+      expect(refetched.presentationConfigurationId).toEqual(newConfig.id);
     });
 
-    it("(b) setting a gs1-link permalink as primary → 409", async () => {
+    it("PATCH /permalinks/:id rebinds the configuration to null (standard view)", async () => {
       const { org, userCookie } = await ctx
         .globals()
         .betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { permalink } = await createGs1LinkPermalinkForPrimary(org.id);
+      const { first } = await seedViaServiceFlow(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .post(`/permalinks/${permalink.id}/primary`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${first.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ presentationConfigurationId: null });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.presentationConfigurationId).toBeNull();
+    });
+
+    it("PATCH /permalinks/:id rejects rebinding to another passport's config with 400", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { first } = await seedViaServiceFlow(org.id);
+      const { passport: otherPassport } = await seedViaServiceFlow(org.id);
+      const foreignConfig = PresentationConfiguration.createForPassport({
+        organizationId: org.id,
+        referenceId: otherPassport.id,
+      });
+      await ctx.getModuleRef().get(PresentationConfigurationRepository).save(foreignConfig);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${first.id}`)
+        .set("Cookie", userCookie)
+        .set(ORGANIZATION_ID_HEADER, org.id)
+        .send({ presentationConfigurationId: foreignConfig.id });
+
+      expect(response.status).toEqual(400);
+    });
+
+    it("DELETE /permalinks/:id deletes a permalink for an org member", async () => {
+      const { org, userCookie } = await ctx
+        .globals()
+        .betterAuthHelper.createOrganizationAndUserWithCookie();
+      const { second } = await seedViaServiceFlow(org.id);
+
+      const response = await request(ctx.globals().app.getHttpServer())
+        .delete(`/${LatestApiVersionWithPrefixDto}/permalinks/${second.id}`)
         .set("Cookie", userCookie)
         .set(ORGANIZATION_ID_HEADER, org.id);
 
-      expect(response.status).toEqual(409);
+      expect(response.status).toEqual(204);
+      const gone = await ctx.getModuleRef().get(PermalinkRepository).findOne(second.id);
+      expect(gone).toBeUndefined();
     });
 
-    it("(c) cross-org request → 403", async () => {
-      const { org: ownerOrg } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
+    it("returns 403 for a member of a different org", async () => {
+      const { org } = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
       const outsider = await ctx.globals().betterAuthHelper.createOrganizationAndUserWithCookie();
-      const { nonPrimaryPermalink } = await createTwoPresentationPermalinksForPrimary(ownerOrg.id);
+      const { first } = await seedViaServiceFlow(org.id);
 
       const response = await request(ctx.globals().app.getHttpServer())
-        .post(`/permalinks/${nonPrimaryPermalink.id}/primary`)
+        .patch(`/${LatestApiVersionWithPrefixDto}/permalinks/${first.id}`)
         .set("Cookie", outsider.userCookie)
-        .set(ORGANIZATION_ID_HEADER, outsider.org.id);
+        .set(ORGANIZATION_ID_HEADER, outsider.org.id)
+        .send({ slug: "trespass" });
 
       expect(response.status).toEqual(403);
-    });
-
-    it("(d) unknown id → 404", async () => {
-      const { org, userCookie } = await ctx
-        .globals()
-        .betterAuthHelper.createOrganizationAndUserWithCookie();
-
-      const response = await request(ctx.globals().app.getHttpServer())
-        .post(`/permalinks/${randomUUID()}/primary`)
-        .set("Cookie", userCookie)
-        .set(ORGANIZATION_ID_HEADER, org.id);
-
-      expect(response.status).toEqual(404);
     });
   });
 });

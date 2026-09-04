@@ -1,32 +1,17 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 
 import type {
-  DataTypeDefType,
-  FileRequestDto,
   LanguageType,
-  PropertyRequestDto,
-  ReferenceElementRequestDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementSharedRequestDto,
   TableModificationParamsDto,
-  ValueRequestDto,
 } from "@open-dpp/dto";
-import {
-  AasSubmodelElements,
-  DataTypeDef,
-  KeyTypes,
-  Language,
-  ReferenceTypes,
-  SubmodelElementCollectionJsonSchema,
-  SubmodelElementListJsonSchema,
-  SubmodelElementSchema,
-  ValueSchema,
-} from "@open-dpp/dto";
+import { KeyTypes, SubmodelElementListJsonSchema } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
-import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
+import type { MenuItem } from "primevue/menuitem";
 import type { Ref } from "vue";
-import { ref, toRaw } from "vue";
+import { computed, ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type {
   AasEditorPath,
@@ -34,10 +19,28 @@ import type {
   OpenDrawerCallback,
   SubmodelElementListEditorProps,
 } from "./aas-drawer.ts";
-import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
-import { match, P } from "ts-pattern";
-import { HTTPCode } from "../stores/http-codes.ts";
+import { EditorMode } from "./aas-drawer.ts";
 import { formatPropertyValue } from "../lib/property-value.ts";
+import type { Column, FlatColumn, Row, RowContext, Value } from "../lib/table/columns.ts";
+import {
+  convertDataToColumns,
+  convertDataToRows,
+  convertRowToRequestDto,
+  flattenColumns,
+  isGroupColumn,
+  resolveFieldValue,
+  setFieldValue,
+} from "../lib/table/columns.ts";
+import type { ColumnMenuOptions, RowMenuOptions, TableMenuDeps } from "../lib/table/menu.ts";
+import {
+  buildColumnMenu as computeColumnMenu,
+  buildRowMenu as computeRowMenu,
+} from "../lib/table/menu.ts";
+import type { TableMutationsDeps } from "../lib/table/mutations.ts";
+import * as tableMutations from "../lib/table/mutations.ts";
+
+export type { Column, FlatColumn, Row } from "../lib/table/columns.ts";
+export type { ColumnMenuOptions, RowMenuOptions } from "../lib/table/menu.ts";
 
 interface AasTableExtensionProps {
   id: string;
@@ -62,13 +65,6 @@ interface AasTableExtensionProps {
   timezone?: string;
 }
 
-export type ColumnMenuOptions = TableModificationParamsDto & {
-  addColumnActions?: boolean;
-};
-export type RowMenuOptions = TableModificationParamsDto;
-type Value = string | null;
-type Row = Record<string, Value>;
-
 export interface CellEditProps {
   data: Row;
   newValue: Value;
@@ -76,16 +72,10 @@ export interface CellEditProps {
   index: number;
 }
 
-interface Column {
-  idShort: string;
-  label: string;
-  plain: any;
-}
-
-type RowContext = Record<string, any>;
-
 export interface IAasTableExtension {
   columns: Ref<Column[]>;
+  flatColumns: Ref<FlatColumn[]>;
+  hasGroups: Ref<boolean>;
   rows: Ref<Row[]>;
   rowsContext: Ref<RowContext[]>;
   columnMenu: Ref<MenuItem[]>;
@@ -94,7 +84,12 @@ export interface IAasTableExtension {
   buildRowMenu: (options: RowMenuOptions) => void;
   onCellEditComplete: (event: CellEditProps) => Promise<void>;
   formatCellValue: (value: string, column: Column) => Value;
-  save: () => Promise<void>;
+  resolveFieldValue: (data: Row, field: string) => Value;
+  setFieldValue: (data: Row, field: string, value: Value) => void;
+  openNestedTable: (rowIndex: number, column: Column) => void;
+  hasParentTable: Ref<boolean>;
+  goBackToParentTable: () => Promise<void>;
+  save: () => Promise<boolean>;
 }
 
 export function useAasTableExtension({
@@ -120,299 +115,20 @@ export function useAasTableExtension({
   const columnMenu = ref<MenuItem[]>([]);
   const rowMenu = ref<MenuItem[]>([]);
   const data = ref<SubmodelElementListResponseDto>(initialData);
-  const ValueMatcher = P.optional(P.union(P.string, null));
 
   const rows = ref<Row[]>([]);
   const rowsContext = ref<RowContext[]>([]);
-
-  function buildColumnMenuItem(
-    fieldLabel: string,
-    icon: string,
-    options: TableModificationParamsDto,
-    type:
-      | typeof AasSubmodelElements.File
-      | typeof AasSubmodelElements.Property
-      | typeof AasSubmodelElements.ReferenceElement,
-    valueType?: DataTypeDefType,
-  ) {
-    const addColumLabel = translate(`${translateTablePrefix}.addFieldAsColumn`, {
-      field: selectedLanguage === Language.de ? fieldLabel : fieldLabel.toLowerCase(),
-    });
-    const labelIconAndDisableOption = {
-      label: fieldLabel,
-      icon,
-      disabled: disableColumnCreation,
-    };
-    const sharedDrawerProps = {
-      mode: EditorMode.CREATE,
-      title: addColumLabel,
-      path: pathToList,
-    };
-
-    return match({ type, valueType })
-      .with({ type: AasSubmodelElements.File }, ({ type }) => ({
-        ...labelIconAndDisableOption,
-        command: (_event: MenuItemCommandEvent) => {
-          openDrawer({
-            ...sharedDrawerProps,
-            type: ColumnEditorKey,
-            data: { modelType: type, contentType: "application/octet-stream" },
-            callback: async (data: FileRequestDto) =>
-              createColumn({ modelType: type, ...data }, options),
-          });
-        },
-      }))
-      .with({ type: AasSubmodelElements.Property, valueType: P.string }, ({ type, valueType }) => ({
-        ...labelIconAndDisableOption,
-        command: (_event: MenuItemCommandEvent) => {
-          openDrawer({
-            ...sharedDrawerProps,
-            type: ColumnEditorKey,
-            data: { modelType: type, valueType },
-            callback: async (data: PropertyRequestDto) =>
-              createColumn({ modelType: type, ...data }, options),
-          });
-        },
-      }))
-      .with({ type: AasSubmodelElements.ReferenceElement }, ({ type }) => ({
-        ...labelIconAndDisableOption,
-        command: (_event: MenuItemCommandEvent) => {
-          openDrawer({
-            ...sharedDrawerProps,
-            type: ColumnEditorKey,
-            data: { modelType: type },
-            callback: async (data: ReferenceElementRequestDto) =>
-              createColumn({ modelType: type, ...data }, options),
-          });
-        },
-      }))
-      .run();
-  }
-
   const columns = ref<Column[]>([]);
 
-  async function saveRows(rowsToSave: ValueRequestDto) {
-    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
-    try {
-      const response = await aasNamespace.modifyValueOfSubmodelElement(
-        id,
-        pathToList.submodelId!,
-        pathToList.idShortPath!,
-        rowsToSave,
-      );
-      if (response.status !== HTTPCode.OK) {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-        return false;
-      }
-      return true;
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-      return false;
-    }
-  }
+  const flatColumns = computed<FlatColumn[]>(() => flattenColumns(columns.value));
+  const hasGroups = computed(() => columns.value.some(isGroupColumn));
 
-  async function save() {
-    await saveRows(rows.value.map(convertRowToRequestDto));
-  }
-
-  function convertRowToRequestDto(row: Row): ValueRequestDto {
-    const rowContext = rowsContext.value.find((r) => r.idShort === row.idShort);
-    if (!rowContext) {
-      throw new Error(`Row context not found for idShort: ${row.idShort}`);
-    }
-    function convertCell(value: Value, context: RowContext) {
-      return match({ value, ...context })
-        .with(
-          {
-            value: ValueMatcher,
-            modelType: AasSubmodelElements.File,
-            contentType: P.string,
-          },
-          ({ value, contentType }) => ({ value, contentType }),
-        )
-        .with(
-          {
-            value: ValueMatcher,
-            modelType: AasSubmodelElements.Property,
-          },
-          ({ value }) => value,
-        )
-        .with(
-          {
-            modelType: AasSubmodelElements.ReferenceElement,
-            value: ValueMatcher,
-            type: P.optional(P.string),
-            keyType: P.optional(P.string),
-          },
-          ({ value, type, keyType }) => {
-            return value
-              ? {
-                  type: type ?? ReferenceTypes.ExternalReference,
-                  keys: [{ type: keyType ?? KeyTypes.GlobalReference, value }],
-                }
-              : null;
-          },
-        )
-        .otherwise(() => null);
-    }
-    const requestDto = Object.entries(row)
-      .filter(([field]) => field !== "idShort")
-      .reduce(
-        (acc, [field, value]) => ({
-          ...acc,
-          [field]: convertCell(value, rowContext[field]),
-        }),
-        {},
-      );
-
-    return ValueSchema.parse(requestDto);
-  }
-
-  async function onCellEditComplete(event: CellEditProps) {
-    const { data: rowData, newValue, field, index: editedRowIndex } = event;
-    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
-    if (rowData[field] !== newValue) {
-      try {
-        const modifications = rows.value.map((row, index) =>
-          index === editedRowIndex
-            ? convertRowToRequestDto({ ...row, [field]: newValue })
-            : convertRowToRequestDto(row),
-        );
-        if (await saveRows(modifications)) {
-          rowData[field] = newValue;
-        } else {
-          errorHandlingStore.logErrorWithNotification(errorMessage);
-        }
-      } catch (e) {
-        errorHandlingStore.logErrorWithNotification(errorMessage, e);
-      }
-    }
-  }
-
-  function convertDataToColumns(newData: SubmodelElementListResponseDto) {
-    if (newData.value.length > 0) {
-      const headerRow = SubmodelElementCollectionJsonSchema.parse(newData.value[0]);
-      for (const [index, col] of headerRow.value.entries()) {
-        const foundColumn = columns.value.find((c) => c.idShort === col.idShort);
-        const column = {
-          idShort: col.idShort,
-          label: col.displayName.find((d) => d.language === selectedLanguage)?.text ?? col.idShort,
-          plain: col,
-        };
-        if (!foundColumn) {
-          columns.value.splice(index, 0, column);
-        } else if (foundColumn.label !== column.label) {
-          foundColumn.label = column.label;
-          foundColumn.plain = column.plain;
-        }
-      }
-    }
-    return [];
-  }
-
-  function convertDataToRows(newData: SubmodelElementListResponseDto) {
-    function convertColumn(v: any): { value: Value; context: any } {
-      return (
-        match(v)
-          .returnType<{ value: Value; context: any }>()
-          .with(
-            {
-              contentType: P.string,
-              modelType: AasSubmodelElements.File,
-              value: ValueMatcher,
-            },
-            ({ value, contentType, modelType }) => ({
-              value: value ?? null,
-              context: { contentType, modelType },
-            }),
-          )
-          .with(
-            {
-              modelType: AasSubmodelElements.Property,
-              value: ValueMatcher,
-            },
-            ({ value, modelType }) => ({
-              value: value ?? null,
-              context: { modelType },
-            }),
-          )
-          // Currently, only ReferenceElement values which are global references are supported
-          .with(
-            {
-              modelType: AasSubmodelElements.ReferenceElement,
-              value: P.optional(
-                P.union(
-                  {
-                    type: ReferenceTypes.ExternalReference,
-                    keys: P.array({
-                      type: KeyTypes.GlobalReference,
-                      value: P.string,
-                    }),
-                  },
-                  null,
-                ),
-              ),
-            },
-            ({ value }) => ({
-              value: value?.keys[0]?.value ?? null,
-              context: {
-                modelType: AasSubmodelElements.ReferenceElement,
-                type: value?.type,
-                keyType: value?.keys[0]?.type,
-              },
-            }),
-          )
-          .otherwise(() => {
-            throw new Error(`Unsupported model type: ${v.modelType}`);
-          })
-      );
-    }
-    for (const [index, row] of newData.value.entries()) {
-      const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);
-      const foundRow = rows.value.find((r) => r.idShort === row.idShort);
-      const foundRowContext = rowsContext.value.find((r) => r.idShort === row.idShort);
-      const rowToModify = foundRow || { idShort: row.idShort };
-      const rowContextToModify = foundRowContext || { idShort: row.idShort };
-
-      // Remove fields that are no longer present in the server data
-      const newColIds = new Set(parsedRow.value.map((col) => col.idShort));
-      for (const key of Object.keys(rowToModify)) {
-        if (key !== "idShort" && !newColIds.has(key)) {
-          delete rowToModify[key];
-          delete rowContextToModify[key];
-        }
-      }
-
-      for (const col of parsedRow.value) {
-        const { value, context } = convertColumn(col);
-        if (rowToModify[col.idShort] !== value) {
-          rowToModify[col.idShort] = value;
-        }
-        if (rowContextToModify[col.idShort] !== context) {
-          rowContextToModify[col.idShort] = context;
-        }
-      }
-      if (!foundRow) {
-        rows.value.splice(index, 0, rowToModify);
-      }
-      if (!foundRowContext) {
-        rowsContext.value.splice(index, 0, rowContextToModify);
-      }
-    }
-  }
+  const mutationDeps: TableMutationsDeps = { aasNamespace, id, pathToList, errorHandlingStore };
 
   function updateListData(newListData: SubmodelElementListResponseDto) {
     data.value = newListData;
-    convertDataToColumns(data.value);
-    convertDataToRows(data.value);
-  }
-
-  function getColumnAtIndexOrFail(index: number): Column {
-    const column = columns.value[index];
-    if (!column) {
-      throw new Error(`Column with index ${index} not found`);
-    }
-    return column;
+    convertDataToColumns(columns.value, data.value, selectedLanguage);
+    convertDataToRows(rows.value, rowsContext.value, data.value);
   }
 
   function getRowIdShortAtIndexOrFail(index: number): string {
@@ -421,290 +137,6 @@ export function useAasTableExtension({
       throw new Error(`Row with index ${index} not found`);
     }
     return row.idShort;
-  }
-
-  const buildRowMenu = (options: RowMenuOptions) => {
-    rowMenu.value = [
-      {
-        label: translate(`${translateTablePrefix}.addRowAbove`),
-        icon: "pi pi-arrow-up",
-        command: async () => {
-          await addRow(options);
-        },
-        disabled: disableRowCreation,
-      },
-      {
-        label: translate(`${translateTablePrefix}.addRowBelow`),
-        icon: "pi pi-arrow-down",
-        command: async () => {
-          await addRow({
-            position: options.position !== undefined ? options.position + 1 : rows.value.length,
-          });
-        },
-        disabled: disableRowCreation,
-      },
-      removeRowMenuItem(options.position ?? 0),
-    ];
-  };
-
-  function removeRowMenuItem(rowIndex: number) {
-    const removeLabel = translate("common.remove");
-    const cancelLabel = translate("common.cancel");
-    return {
-      label: removeLabel,
-      icon: "pi pi-trash",
-      disabled: disableRowDeletion,
-      command: async () => {
-        openConfirm({
-          message: translate(`${translateTablePrefix}.removeRow`),
-          header: removeLabel,
-          icon: "pi pi-info-circle",
-          rejectLabel: cancelLabel,
-          rejectProps: {
-            label: cancelLabel,
-            severity: "secondary",
-            outlined: true,
-          },
-          acceptProps: {
-            label: removeLabel,
-            severity: "danger",
-          },
-          accept: async () => {
-            try {
-              const response = await aasNamespace.deleteRowFromSubmodelElementList(
-                id,
-                pathToList.submodelId!,
-                pathToList.idShortPath!,
-                getRowIdShortAtIndexOrFail(rowIndex),
-              );
-              if (response.status === HTTPCode.OK) {
-                data.value = response.data;
-                rows.value.splice(rowIndex, 1);
-                rowsContext.value.splice(rowIndex, 1);
-              }
-            } catch (e) {
-              errorHandlingStore.logErrorWithNotification(
-                translate(`${translateTablePrefix}.errorRemoveRow`),
-                e,
-              );
-            }
-          },
-        });
-      },
-    };
-  }
-
-  async function addRow({ position = 0 }: RowMenuOptions) {
-    const errorMessage = translate(`${translateTablePrefix}.errorAddRow`);
-    try {
-      const response = await aasNamespace.addRowToSubmodelElementList(
-        id,
-        pathToList.submodelId!,
-        pathToList.idShortPath!,
-        { position },
-      );
-      if (response.status === HTTPCode.CREATED) {
-        updateListData(response.data);
-      } else {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
-  }
-
-  const buildColumnMenu = (options: ColumnMenuOptions) => {
-    const icon = `pi pi-arrow-${options.addColumnActions ? "left" : "right"}`;
-    const colMenuItems = [
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.textField`),
-        icon,
-        options,
-        AasSubmodelElements.Property,
-        DataTypeDef.String,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.numberField`),
-        icon,
-        options,
-        AasSubmodelElements.Property,
-        DataTypeDef.Double,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.booleanField`),
-        icon,
-        options,
-        AasSubmodelElements.Property,
-        DataTypeDef.Boolean,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.dateField`),
-        icon,
-        options,
-        AasSubmodelElements.Property,
-        DataTypeDef.Date,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.dateTimeField`),
-        icon,
-        options,
-        AasSubmodelElements.Property,
-        DataTypeDef.DateTime,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.file`),
-        icon,
-        options,
-        AasSubmodelElements.File,
-      ),
-      buildColumnMenuItem(
-        translate(`${translatePrefix}.link`),
-        icon,
-        options,
-        AasSubmodelElements.ReferenceElement,
-      ),
-    ];
-    columnMenu.value = options.addColumnActions
-      ? [
-          {
-            label: translate(`${translateTablePrefix}.addColumnLeft`),
-            items: colMenuItems,
-          },
-        ]
-      : colMenuItems;
-
-    if (options.addColumnActions) {
-      try {
-        const column = getColumnAtIndexOrFail(options.position ?? 0);
-        columnMenu.value.push({
-          label: translate("common.actions"),
-          items: [modifyColumnMenuItem(column), removeColumnMenuItem(column)],
-        });
-      } catch (e) {
-        errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
-      }
-    }
-  };
-
-  function modifyColumnMenuItem(column: Column) {
-    return {
-      label: translate(`common.edit`),
-      icon: "pi pi-pencil",
-      disabled: disableColumnEditing,
-      command: (_event: MenuItemCommandEvent) => {
-        openDrawer({
-          type: ColumnEditorKey,
-          data: toRaw(column.plain),
-          mode: EditorMode.EDIT,
-          title: translate(`${translatePrefix}.table.editColumn`),
-          path: pathToList,
-          callback: async (data: SubmodelElementModificationDto) =>
-            modifyPropertyColumn(data, column),
-        });
-      },
-    };
-  }
-
-  function removeColumnMenuItem(column: Column) {
-    const removeLabel = translate("common.remove");
-    const cancelLabel = translate("common.cancel");
-
-    return {
-      label: removeLabel,
-      icon: "pi pi-trash",
-      disabled: disableColumnDeletion,
-      command: async () => {
-        openConfirm({
-          message: translate(`${translateTablePrefix}.removeColumn`),
-          header: removeLabel,
-          icon: "pi pi-info-circle",
-          rejectLabel: cancelLabel,
-          rejectProps: {
-            label: cancelLabel,
-            severity: "secondary",
-            outlined: true,
-          },
-          acceptProps: {
-            label: removeLabel,
-            severity: "danger",
-          },
-          accept: async () => {
-            try {
-              const response = await aasNamespace.deleteColumnFromSubmodelElementList(
-                id,
-                pathToList.submodelId!,
-                pathToList.idShortPath!,
-                column.idShort,
-              );
-              if (response.status === HTTPCode.OK) {
-                columns.value.splice(
-                  columns.value.findIndex((c) => c.idShort === column.idShort),
-                  1,
-                );
-                updateListData(response.data);
-              }
-            } catch (e) {
-              errorHandlingStore.logErrorWithNotification(
-                translate(`${translateTablePrefix}.errorRemoveColumn`),
-                e,
-              );
-            }
-          },
-        });
-      },
-    };
-  }
-
-  async function modifyPropertyColumn(data: SubmodelElementModificationDto, column: Column) {
-    const errorMessage = translate(`${translatePrefix}.table.errorEditColumn`);
-    try {
-      const response = await aasNamespace.modifyColumnOfSubmodelElementList(
-        id,
-        pathToList.submodelId!,
-        pathToList.idShortPath!,
-        column.idShort,
-        data,
-      );
-      if (response.status === HTTPCode.OK) {
-        await navigateBackToListView(
-          pathToList,
-          SubmodelElementListJsonSchema.parse(response.data),
-        );
-      } else {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
-  }
-
-  async function createColumn(
-    data: SubmodelElementSharedRequestDto,
-    options: TableModificationParamsDto,
-  ) {
-    const errorMessage = translate(`${translatePrefix}.table.errorAddColumn`);
-    try {
-      const requestBody = SubmodelElementSchema.parse({
-        ...data,
-      });
-      const response = await aasNamespace.addColumnToSubmodelElementList(
-        id,
-        pathToList.submodelId!,
-        pathToList.idShortPath!,
-        requestBody,
-        options,
-      );
-      if (response.status === HTTPCode.CREATED) {
-        await navigateBackToListView(
-          pathToList,
-          SubmodelElementListJsonSchema.parse(response.data),
-        );
-      } else {
-        errorHandlingStore.logErrorWithNotification(errorMessage);
-      }
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
   }
 
   async function navigateBackToListView(
@@ -722,13 +154,292 @@ export function useAasTableExtension({
     });
   }
 
+  /** Opens `path`'s SubmodelElementList in the drawer, wiring its save
+   * callback to a plain `modifySubmodelElement` PATCH at that path. Shared by
+   * both drill-in (openNestedTable) and drill-out (goBackToParentTable). */
+  function openTableAtPath(path: AasEditorPath, listData: SubmodelElementListEditorProps) {
+    const formItemLabel = translate(`${translatePrefix}.submodelElementList`);
+    openDrawer({
+      type: KeyTypes.SubmodelElementList,
+      data: listData,
+      mode: EditorMode.EDIT,
+      title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
+      path,
+      callback: async (modData: SubmodelElementModificationDto) => {
+        await aasNamespace.modifySubmodelElement(id, path.submodelId!, path.idShortPath!, modData);
+      },
+    });
+  }
+
+  /** Drills into a "Table" column's cell: opens the same editor, recursively,
+   * scoped to that row's nested SubmodelElementList. */
+  function openNestedTable(rowIndex: number, column: Column) {
+    const rowIdShort = getRowIdShortAtIndexOrFail(rowIndex);
+    const rawRow: any = data.value.value[rowIndex];
+    const nestedColumn = rawRow?.value?.find((el: any) => el.idShort === column.idShort);
+    if (!nestedColumn) {
+      throw new Error(`Column "${column.idShort}" not found in row "${rowIdShort}"`);
+    }
+    const nestedListData = SubmodelElementListJsonSchema.parse(nestedColumn);
+    const nestedPath: AasEditorPath = {
+      submodelId: pathToList.submodelId,
+      idShortPath: `${pathToList.idShortPath}.${rowIdShort}.${column.idShort}`,
+      idShortPathIncludingSubmodel: `${pathToList.idShortPathIncludingSubmodel}.${rowIdShort}.${column.idShort}`,
+      parentTablePath: pathToList,
+    };
+    openTableAtPath(nestedPath, nestedListData);
+  }
+
+  const hasParentTable = computed(() => !!pathToList.parentTablePath);
+
+  /** Navigates back up to the parent table this list was drilled into from,
+   * re-fetching its current data so the view reflects any changes made
+   * elsewhere in the meantime. */
+  async function goBackToParentTable() {
+    const parentPath = pathToList.parentTablePath;
+    if (!parentPath?.submodelId || !parentPath.idShortPath) return;
+    const response = await aasNamespace.getSubmodelElementById(
+      id,
+      parentPath.submodelId,
+      parentPath.idShortPath,
+    );
+    openTableAtPath(parentPath, SubmodelElementListJsonSchema.parse(response.data));
+  }
+
+  async function onCreateColumn(
+    colData: SubmodelElementSharedRequestDto,
+    options: TableModificationParamsDto,
+  ) {
+    await tableMutations.createColumn(
+      colData,
+      options,
+      mutationDeps,
+      translate(`${translatePrefix}.table.errorAddColumn`),
+      async (listData) => {
+        await navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
+  async function onAddColumnToGroup(
+    groupIdShort: string,
+    colData: SubmodelElementSharedRequestDto,
+    options: TableModificationParamsDto,
+  ) {
+    await tableMutations.addColumnToGroup(
+      groupIdShort,
+      colData,
+      options,
+      mutationDeps,
+      translate(`${translatePrefix}.table.errorAddColumn`),
+      async (listData) => {
+        await navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
+  async function onModifyTopLevelColumn(formData: SubmodelElementModificationDto, column: Column) {
+    await tableMutations.modifyTopLevelColumn(
+      column.idShort,
+      formData,
+      mutationDeps,
+      translate(`${translatePrefix}.table.errorEditColumn`),
+      async (listData) => {
+        await navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
+  async function onModifyColumnInGroup(
+    groupIdShort: string,
+    subColumn: Column,
+    formData: SubmodelElementModificationDto,
+  ) {
+    await tableMutations.modifyColumnInGroup(
+      groupIdShort,
+      subColumn.idShort,
+      formData,
+      mutationDeps,
+      translate(`${translatePrefix}.table.errorEditColumn`),
+      async (listData) => {
+        await navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
+  async function onRemoveColumn(column: Column) {
+    await tableMutations.deleteColumn(
+      column.idShort,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorRemoveColumn`),
+      (listData) => {
+        columns.value.splice(
+          columns.value.findIndex((c) => c.idShort === column.idShort),
+          1,
+        );
+        updateListData(listData);
+      },
+    );
+  }
+
+  async function onDeleteColumnFromGroup(groupIdShort: string, subColumn: Column) {
+    await tableMutations.deleteColumnFromGroup(
+      groupIdShort,
+      subColumn.idShort,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorRemoveColumn`),
+      (listData) => {
+        const group = columns.value.find((c) => c.idShort === groupIdShort);
+        if (group?.children) {
+          group.children = group.children.filter((c) => c.idShort !== subColumn.idShort);
+        }
+        updateListData(listData);
+      },
+    );
+  }
+
+  async function onMoveColumnToGroup(column: Column, groupIdShort: string) {
+    await tableMutations.moveColumnToGroup(
+      column.idShort,
+      groupIdShort,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorMoveColumn`),
+      (listData) => {
+        updateListData(SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
+  async function onReorderColumn(column: Column, position: number, groupIdShort?: string) {
+    await tableMutations.reorderColumn(
+      column.idShort,
+      position,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorMoveColumn`),
+      (listData) => {
+        updateListData(SubmodelElementListJsonSchema.parse(listData));
+      },
+      groupIdShort,
+    );
+  }
+
+  async function onCreateGroupFromColumn(
+    column: Column,
+    groupData: SubmodelElementSharedRequestDto,
+  ) {
+    await tableMutations.createGroupFromColumn(
+      column.idShort,
+      groupData,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorCreateGroup`),
+      (listData) => {
+        navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(listData));
+      },
+    );
+  }
+
+  async function onAddRow(options: RowMenuOptions) {
+    await tableMutations.addRow(
+      options,
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorAddRow`),
+      (listData) => {
+        updateListData(listData);
+      },
+    );
+  }
+
+  async function onRemoveRow(rowIndex: number) {
+    await tableMutations.deleteRow(
+      getRowIdShortAtIndexOrFail(rowIndex),
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorRemoveRow`),
+      (listData) => {
+        data.value = listData;
+        rows.value.splice(rowIndex, 1);
+        rowsContext.value.splice(rowIndex, 1);
+      },
+    );
+  }
+
+  const menuDeps: TableMenuDeps = {
+    translate,
+    openDrawer,
+    openConfirm,
+    pathToList,
+    selectedLanguage,
+    errorHandlingStore,
+    disableRowCreation,
+    disableRowDeletion,
+    disableColumnCreation,
+    disableColumnDeletion,
+    disableColumnEditing,
+    onCreateColumn,
+    onAddColumnToGroup,
+    onModifyTopLevelColumn,
+    onModifyColumnInGroup,
+    onRemoveColumn,
+    onDeleteColumnFromGroup,
+    onMoveColumnToGroup,
+    onReorderColumn,
+    onCreateGroupFromColumn,
+    onAddRow,
+    onRemoveRow,
+  };
+
+  function buildColumnMenu(options: ColumnMenuOptions) {
+    const menu = computeColumnMenu(options, columns.value, menuDeps);
+    // `undefined` means the requested column couldn't be resolved — leave the
+    // previously displayed menu as-is rather than clearing it.
+    if (menu !== undefined) {
+      columnMenu.value = menu;
+    }
+  }
+
+  function buildRowMenu(options: RowMenuOptions) {
+    rowMenu.value = computeRowMenu(options, rows.value.length, menuDeps);
+  }
+
+  async function save() {
+    return await tableMutations.saveRows(
+      rows.value.map((row) => convertRowToRequestDto(row, rowsContext.value)),
+      mutationDeps,
+      translate(`${translateTablePrefix}.errorEditEntries`),
+    );
+  }
+
+  async function onCellEditComplete(event: CellEditProps) {
+    const { data: rowData, newValue, field, index: editedRowIndex } = event;
+    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
+    if (resolveFieldValue(rowData, field) !== newValue) {
+      try {
+        const modifications = rows.value.map((row, index) => {
+          if (index === editedRowIndex) {
+            const updated = { ...row };
+            setFieldValue(updated, field, newValue);
+            return convertRowToRequestDto(updated, rowsContext.value);
+          }
+          return convertRowToRequestDto(row, rowsContext.value);
+        });
+        const success = await tableMutations.saveRows(modifications, mutationDeps, errorMessage);
+        if (success) {
+          setFieldValue(rowData, field, newValue);
+        } else {
+          errorHandlingStore.logErrorWithNotification(errorMessage);
+        }
+      } catch (e) {
+        errorHandlingStore.logErrorWithNotification(errorMessage, e);
+      }
+    }
+  }
+
   function formatCellValue(value: Value, column: Column) {
     return formatPropertyValue(value, column.plain.valueType, selectedLanguage, timezone);
   }
 
   function init() {
-    convertDataToRows(initialData);
-    convertDataToColumns(initialData);
+    convertDataToRows(rows.value, rowsContext.value, initialData);
+    convertDataToColumns(columns.value, initialData, selectedLanguage);
   }
   init();
 
@@ -736,9 +447,16 @@ export function useAasTableExtension({
     rows,
     rowsContext,
     columns,
+    flatColumns,
+    hasGroups,
     columnMenu,
     rowMenu,
     formatCellValue,
+    resolveFieldValue,
+    setFieldValue,
+    openNestedTable,
+    hasParentTable,
+    goBackToParentTable,
     save,
     buildColumnMenu,
     buildRowMenu,

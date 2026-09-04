@@ -43,7 +43,8 @@ export const uniqueProductIdentifierPaths = {
     },
     post: {
       tags: ["unique-product-identifiers"],
-      summary: "Creates a new GS1 unique product identifier for a draft passport",
+      summary:
+        "Creates a new GS1 unique product identifier — draft or published passport; archived is rejected",
       parameters: [orgaIdHeader],
       requestBody: {
         content: {
@@ -68,7 +69,7 @@ export const uniqueProductIdentifierPaths = {
     post: {
       tags: ["unique-product-identifiers"],
       summary:
-        "Creates a new internal (OPEN_DPP_UUID) unique product identifier for a draft passport",
+        "Creates a new internal (OPEN_DPP_UUID) unique product identifier — draft or published passport; archived is rejected",
       parameters: [orgaIdHeader],
       requestBody: {
         content: {
@@ -138,7 +139,6 @@ export const uniqueProductIdentifierPaths = {
       security,
     },
   },
-  // Passport-scoped list (system + GS1)
   "/passports/{id}/unique-product-identifiers": {
     get: {
       tags: ["unique-product-identifiers"],

@@ -1,6 +1,6 @@
 {
   "name": "@open-dpp/docs",
-  "version": "2.6.0",
+  "version": "4.0.1",
   "private": true,
   "description": "",
   "keywords": [],
@@ -12,9 +12,6 @@
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
     "docs:preview": "vitepress preview"
-  },
-  "dependencies": {
-    "vitepress-openapi": "^0.1.20"
   },
   "devDependencies": {
     "vitepress": "2.0.0-alpha.16"

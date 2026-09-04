@@ -1,13 +1,5 @@
 import { defineConfig } from "vitepress";
-import { useSidebar } from "vitepress-openapi";
-import spec from "../api-docs.json" with { type: "json" };
 import pkg from "../package.json" with { type: "json" };
-
-const sidebar = useSidebar({
-  spec,
-  // Optionally, you can specify a link prefix for all generated sidebar items. Default is `/operations/`.
-  linkPrefix: "/operations/",
-});
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -30,19 +22,6 @@ export default defineConfig({
     ],
 
     sidebar: {
-      "/api": [
-        {
-          text: "Resources",
-          items: sidebar
-            .generateSidebarGroups({
-              linkPrefix: "/api/operations/",
-            })
-            .map((group) => ({
-              ...group,
-              collapsed: true,
-            })),
-        },
-      ],
       "/": {
         items: [
           {
@@ -65,6 +44,7 @@ export default defineConfig({
               { text: "Branding", link: "/guides/branding" },
               { text: "AI Integration", link: "/guides/ai" },
               { text: "Development", link: "/guides/development" },
+              { text: "Production setup", link: "/guides/production-setup" },
             ],
           },
         ],

@@ -1,26 +1,33 @@
 <script lang="ts" setup>
-import type { UniqueProductIdentifierListItemDto } from "@open-dpp/dto";
-import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import type {
+  UniqueProductIdentifierListItemDto,
+  UniqueProductIdentifierTypeValue,
+} from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, UniqueProductIdentifierType } from "@open-dpp/dto";
 import { Column, DataTable } from "primevue";
-import { computed, onMounted, ref } from "vue";
+import { useConfirm } from "primevue/useconfirm";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import UniqueProductIdentifierCreateDialog from "../../components/unique-product-identifier/UniqueProductIdentifierCreateDialog.vue";
 import Gs1DigitalLinkPromptDialog from "../../components/unique-product-identifier/Gs1DigitalLinkPromptDialog.vue";
+import PermalinkQrCode from "../../components/permalinks/PermalinkQrCode.vue";
+import TablePagination from "../../components/pagination/TablePagination.vue";
 import { usePagination } from "../../composables/pagination";
 import { useUniqueProductIdentifiers } from "../../composables/unique-product-identifiers";
 import apiClient from "../../lib/api-client";
+import { useErrorHandlingStore } from "../../stores/error.handling";
+import { useNotificationStore } from "../../stores/notification";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const confirm = useConfirm();
+const errorHandlingStore = useErrorHandlingStore();
+const notificationStore = useNotificationStore();
 
-// The passport this list is scoped to (from the nested route param).
 const passportId = computed(() => String(route.params.passportId));
-
-// -------------------------------------------------------------------------
-// Pagination wiring
-// -------------------------------------------------------------------------
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
@@ -53,32 +60,30 @@ const {
   changeQueryParams,
 });
 
-// -------------------------------------------------------------------------
-// Create dialog
-// -------------------------------------------------------------------------
-
 const createDialogVisible = ref(false);
-// A GS1 UPI can only be created while this passport is a draft; resolved on open.
-const passportIsDraft = ref(false);
+const passportStatus = ref<string | null>(null);
+const passportIsDraft = computed(
+  () => passportStatus.value === DigitalProductDocumentStatusDto.Draft,
+);
+const passportIsPublished = computed(
+  () => passportStatus.value === DigitalProductDocumentStatusDto.Published,
+);
 
-async function openCreateDialog() {
+async function loadPassportStatus() {
   const { data } = await apiClient.dpp.passports.getById(passportId.value);
-  passportIsDraft.value =
-    data.lastStatusChange.currentStatus === DigitalProductDocumentStatusDto.Draft;
-  createDialogVisible.value = true;
+  passportStatus.value = data.lastStatusChange.currentStatus;
 }
 
-// -------------------------------------------------------------------------
-// GS1 Digital Link prompt dialog
-// -------------------------------------------------------------------------
+async function openCreateDialog() {
+  await loadPassportStatus();
+  createDialogVisible.value = true;
+}
 
 const promptDialogVisible = ref(false);
 const promptUpi = ref<UniqueProductIdentifierListItemDto | null>(null);
 
 async function onUpiCreated(upi: UniqueProductIdentifierListItemDto) {
   createDialogVisible.value = false;
-  // The GS1 Digital Link prompt only applies to GS1 UPIs; an internal UPI has no
-  // structured key to build a Digital Link from, so just refresh the list.
   if (upi.type === "GS1") {
     promptUpi.value = upi;
     promptDialogVisible.value = true;
@@ -87,42 +92,105 @@ async function onUpiCreated(upi: UniqueProductIdentifierListItemDto) {
   }
 }
 
-async function onAddLink(_upi: UniqueProductIdentifierListItemDto) {
-  promptDialogVisible.value = false;
-  // Jump to this passport's permalink list, where a GS1 Digital Link permalink
-  // can be created for the UPI.
+async function onAddLink(upi: UniqueProductIdentifierListItemDto) {
   await router.push({
     name: "passportPermalinks",
     params: { organizationId: route.params.organizationId, passportId: passportId.value },
+    query: { createForUpi: upi.uuid },
   });
 }
 
-async function onSkipPrompt() {
-  promptDialogVisible.value = false;
-  await reloadCurrentPage();
+watch(promptDialogVisible, async (visible) => {
+  if (!visible) {
+    await reloadCurrentPage();
+  }
+});
+
+const qrDialogVisible = ref(false);
+const qrUpi = ref<UniqueProductIdentifierListItemDto | null>(null);
+
+function openQrDialog(upi: UniqueProductIdentifierListItemDto) {
+  qrUpi.value = upi;
+  qrDialogVisible.value = true;
 }
 
-// -------------------------------------------------------------------------
-// Delete
-// -------------------------------------------------------------------------
+const qrPermalink = computed(() =>
+  qrUpi.value?.permalink
+    ? {
+        kind: qrUpi.value.permalink.kind,
+        publicUrl: qrUpi.value.permalink.publicUrl,
+      }
+    : null,
+);
 
-async function onDeleteUpi(uuid: string) {
-  await deleteUpi(uuid);
-  await reloadCurrentPage();
+const qrIdentity = computed(() =>
+  qrUpi.value?.gtin
+    ? { gtin: qrUpi.value.gtin, batch: qrUpi.value.batch, serial: qrUpi.value.serial }
+    : null,
+);
+
+const USER_MANAGED_TYPES: UniqueProductIdentifierTypeValue[] = [
+  UniqueProductIdentifierType.GS1,
+  UniqueProductIdentifierType.OPEN_DPP_UUID,
+];
+
+function canDelete(upi: UniqueProductIdentifierListItemDto): boolean {
+  return passportIsDraft.value && USER_MANAGED_TYPES.includes(upi.type);
 }
 
-// -------------------------------------------------------------------------
-// Mount
-// -------------------------------------------------------------------------
+function deleteTooltip(upi: UniqueProductIdentifierListItemDto): string {
+  if (!USER_MANAGED_TYPES.includes(upi.type)) {
+    return t("uniqueProductIdentifiers.list.systemReadOnly");
+  }
+  if (!passportIsDraft.value) {
+    return t("uniqueProductIdentifiers.list.deleteLockedTooltip");
+  }
+  return t("uniqueProductIdentifiers.list.delete");
+}
+
+function onDeleteUpi(uuid: string) {
+  confirm.require({
+    message: t("uniqueProductIdentifiers.list.deleteConfirmMessage"),
+    header: t("uniqueProductIdentifiers.list.deleteConfirmHeader"),
+    icon: "pi pi-info-circle",
+    rejectLabel: t("common.cancel"),
+    rejectProps: { label: t("common.cancel"), severity: "secondary", outlined: true },
+    acceptProps: { label: t("uniqueProductIdentifiers.list.delete"), severity: "danger" },
+    accept: async () => {
+      try {
+        await deleteUpi(uuid);
+        notificationStore.addSuccessNotification(t("uniqueProductIdentifiers.list.deleteSuccess"));
+        await reloadCurrentPage();
+      } catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          t("uniqueProductIdentifiers.list.deleteError"),
+          e,
+        );
+      }
+    },
+  });
+}
 
 onMounted(async () => {
-  await nextPage();
+  await Promise.all([
+    loadPassportStatus().catch((e) =>
+      errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), e),
+    ),
+    nextPage(),
+  ]);
 });
 </script>
 
 <template>
-  <div>
-    <DataTable :value="upis ?? []" :loading="loading" data-testid="upi-data-table">
+  <ContentViewWrapper>
+    <DataTable
+      :value="upis ?? []"
+      :loading="loading"
+      data-testid="upi-data-table"
+      paginator
+      :rows="10"
+      :rows-per-page-options="[10]"
+    >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("uniqueProductIdentifiers.label", 2) }}</span>
@@ -131,45 +199,79 @@ onMounted(async () => {
       </template>
 
       <Column field="type" :header="t('uniqueProductIdentifiers.list.type')" />
-      <Column field="gtin" :header="t('uniqueProductIdentifiers.list.gtin')">
+      <Column field="identity" :header="t('uniqueProductIdentifiers.list.identity')">
         <template #body="{ data }">
-          <span>{{ data.gtin ?? "" }}</span>
+          <div v-if="data.type === UniqueProductIdentifierType.GS1">
+            <div>
+              {{ data.gtin ? `${t("uniqueProductIdentifiers.list.gtin")}: ${data.gtin}` : "" }}
+            </div>
+            <div>
+              {{ data.gtin ? `${t("uniqueProductIdentifiers.list.batch")}:  ${data.gtin}` : "" }}
+            </div>
+            <div>
+              {{
+                data.serial ? `${t("uniqueProductIdentifiers.list.batch")}: " + ${data.serial}` : ""
+              }}
+            </div>
+          </div>
+          <div v-else-if="data.type === UniqueProductIdentifierType.OPEN_DPP_UUID">
+            <span>{{ data.uuid ?? "" }}</span>
+          </div>
         </template>
       </Column>
-      <Column field="batch" :header="t('uniqueProductIdentifiers.list.batch')">
-        <template #body="{ data }">
-          <span>{{ data.batch ?? "" }}</span>
-        </template>
-      </Column>
-      <Column field="serial" :header="t('uniqueProductIdentifiers.list.serial')">
-        <template #body="{ data }">
-          <span>{{ data.serial ?? "" }}</span>
-        </template>
-      </Column>
-      <Column field="referenceId" :header="t('uniqueProductIdentifiers.list.reference')" />
-
-      <!-- Actions column: all listed UPIs (GS1 + internal) are deletable while draft (ADR 0006) -->
-      <Column style="width: 5rem">
+      <Column style="width: 9rem">
         <template #body="{ data }">
           <div data-testid="upi-row-actions" class="flex gap-1">
             <Button
+              v-if="data.permalink"
+              icon="pi pi-qrcode"
+              severity="info"
+              :aria-label="t('common.qrCode')"
+              :title="t('common.qrCode')"
+              data-testid="upi-qr-btn"
+              @click="openQrDialog(data)"
+            />
+            <Button
+              v-if="
+                (data.type === UniqueProductIdentifierType.GS1 && !data.permalink) ||
+                data.type === UniqueProductIdentifierType.OPEN_DPP_UUID
+              "
+              icon="pi pi-link"
+              severity="primary"
+              :aria-label="t('uniqueProductIdentifiers.list.createPermalink')"
+              :title="t('uniqueProductIdentifiers.list.createPermalink')"
+              data-testid="upi-permalink-create"
+              @click="onAddLink(data)"
+            />
+            <Button
               icon="pi pi-trash"
               severity="danger"
-              variant="text"
-              :aria-label="t('common.delete')"
-              :title="t('common.delete')"
+              :aria-label="t('uniqueProductIdentifiers.list.delete')"
+              :title="deleteTooltip(data)"
+              :disabled="!canDelete(data)"
               data-testid="upi-delete-btn"
               @click="onDeleteUpi(data.uuid)"
             />
           </div>
         </template>
       </Column>
+
+      <template #paginatorcontainer>
+        <TablePagination
+          :current-page="currentPage"
+          :has-previous="hasPrevious"
+          :has-next="hasNext"
+          @reset-cursor="resetCursor"
+          @previous-page="previousPage"
+          @next-page="nextPage"
+        />
+      </template>
     </DataTable>
 
     <UniqueProductIdentifierCreateDialog
       v-model:visible="createDialogVisible"
       :passport-id="passportId"
-      :is-draft="passportIsDraft"
+      :passport-published="passportIsPublished"
       :create-gs1-upi="createGs1Upi"
       :create-internal-upi="createInternalUpi"
       @created="onUpiCreated"
@@ -180,7 +282,10 @@ onMounted(async () => {
       v-model:visible="promptDialogVisible"
       :upi="promptUpi"
       @add-link="onAddLink"
-      @skip="onSkipPrompt"
     />
-  </div>
+
+    <Dialog v-model:visible="qrDialogVisible" modal :header="t('common.qrCode')">
+      <PermalinkQrCode v-if="qrPermalink" :permalink="qrPermalink" :identity="qrIdentity" />
+    </Dialog>
+  </ContentViewWrapper>
 </template>

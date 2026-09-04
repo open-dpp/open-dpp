@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropertyRequestDto } from "@open-dpp/dto";
+import { DataTypeDef, type PropertyRequestDto } from "@open-dpp/dto";
 import type { PropertyCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { PropertyJsonSchema } from "@open-dpp/dto";
@@ -13,7 +13,7 @@ import {
   submodelBaseFormDefaultValues,
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
-import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import { convertLocaleToLanguage } from "../../translations/util.ts";
 
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
@@ -22,7 +22,7 @@ const props = defineProps<SharedEditorProps<PropertyCreateEditorProps, PropertyR
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
-  value: z.nullish(z.string()),
+  value: props.data.valueType === DataTypeDef.AnyUri ? z.nullish(z.url()) : z.nullish(z.string()),
 });
 const { locale } = useI18n();
 export type FormValues = z.infer<typeof propertyFormSchema>;

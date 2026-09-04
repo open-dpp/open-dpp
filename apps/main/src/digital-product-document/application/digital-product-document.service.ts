@@ -4,41 +4,53 @@ import { EnvironmentService, UserContext } from "../../aas/presentation/environm
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { Response } from "express";
 
-import {
-  ActivityPaginationDtoSchema,
+import type {
+  ApiVersionsDtoType,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DeletePolicyDto,
+  MoveSubmodelDto,
+  MoveSubmodelElementDto,
+  ReorderColumnDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
-  type SubmodelElementRequestDto,
+  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelModificationDto,
-  type SubmodelRequestDto,
+  SubmodelRequestDto,
   SubmodelResponseDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
+import { ActivityPaginationDtoSchema } from "@open-dpp/dto";
+
 import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { DbSessionOptions } from "../../database/query-options";
 import {
   DigitalProductDocumentEntity,
   IDigitalProductDocumentRepository,
 } from "../infrastructure/digital-product-document-repository.interface";
-import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { Pagination } from "../../pagination/pagination";
 import archiver, { Archiver } from "archiver";
 import { IDigitalProductDocumentStatusChangeable } from "../domain/digital-product-document-status";
 import { Period } from "../../time/period";
-import type { Connection } from "mongoose";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
+import { SubmodelElementRequest } from "../../aas/presentation/requests/submodel-element.request";
+import { SubmodelRequest } from "../../aas/presentation/requests/submodel.request";
+import { SubmodelModificationRequest } from "../../aas/presentation/requests/submodel-modification.request";
+import { ValueModificationRequest } from "../../aas/presentation/requests/value-modification.request";
+import { SubmodelElementModificationRequest } from "../../aas/presentation/requests/submodel-element-modification.request";
+import { MoveSubmodelElementRequest } from "../../aas/presentation/requests/move-submodel-element.request";
+import { PresentationDeletionObserver } from "../../aas/presentation/event-bus/delete-submodel-base-observer";
+import { PresentationMoveObserver } from "../../aas/presentation/event-bus/move-submodel-base-observer";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 
 export class DigitalProductDocumentService<T extends DigitalProductDocumentEntity> {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly digitalProductDocRepository: IDigitalProductDocumentRepository<T>,
     private readonly activityRepository: ActivityRepository,
-    private connection: Connection,
+    private readonly presentationConfigurationService: PresentationConfigurationService,
   ) {}
 
   async createSubmodel(
@@ -47,6 +59,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     body: SubmodelRequestDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -58,9 +71,36 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       correlationId,
       id,
       item.getEnvironment(),
-      body,
+      SubmodelRequest.create({ body, version }),
       this.saveEnvironmentCallback(item),
       userContext,
+    );
+  }
+
+  async moveSubmodel(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    body: MoveSubmodelDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveSubmodel(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      body.position,
+      this.saveEnvironmentCallback(item),
+      userContext,
+      version,
     );
   }
 
@@ -73,6 +113,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     body: SubmodelElementRequestDto,
     position: number | undefined,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -80,14 +121,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       organizationId,
     );
     this.archiveGuard(item);
-    const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(
       correlationId,
       id,
       item.getEnvironment(),
       submodelId,
       idShortPath,
-      column,
+      SubmodelElementRequest.create({ body, version }),
       userContext,
       position,
     );
@@ -101,6 +141,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     position: number | undefined,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -116,6 +157,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortPath,
       userContext,
       position,
+      version,
     );
   }
 
@@ -126,19 +168,21 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: SubmodelElementRequestDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
       userContext.subject,
       organizationId,
     );
+
     this.archiveGuard(item);
     return await this.environmentService.addSubmodelElement(
       correlationId,
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelElementRequest.create({ body, version }),
       userContext,
     );
   }
@@ -151,6 +195,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: SubmodelElementRequestDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -163,9 +208,43 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelElementRequest.create({ body, version }),
       userContext,
       idShortPath,
+    );
+  }
+
+  async moveSubmodelElement(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: MoveSubmodelElementDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveSubmodelElement(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      MoveSubmodelElementRequest.create({ body, version }),
+      userContext,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -200,6 +279,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: SubmodelModificationDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -212,7 +292,40 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelModificationRequest.create({ body, version }),
+      userContext,
+    );
+  }
+
+  async modifyValueOfMultipleSubmodels(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    body: Record<string, ValueRequestDto>,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ) {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    const valueModificationRequests = new Map<string, ValueModificationRequest>();
+    for (const [submodelId, value] of Object.entries(body)) {
+      if (valueModificationRequests.has(submodelId)) {
+        throw new ValueError(`Multiple values for submodel ${submodelId} are not allowed.`);
+      }
+      valueModificationRequests.set(
+        submodelId,
+        ValueModificationRequest.create({ body: value, version }),
+      );
+    }
+    await this.environmentService.modifyValueOfMultipleSubmodels(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      valueModificationRequests,
       userContext,
     );
   }
@@ -224,6 +337,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     body: ValueRequestDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -236,7 +350,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      ValueModificationRequest.create({ body, version }),
       userContext,
     );
   }
@@ -250,6 +364,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortOfColumn: string,
     body: SubmodelModificationDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -264,8 +379,40 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       idShortPath,
       idShortOfColumn,
-      body,
+      SubmodelElementModificationRequest.create({ body, version }),
       userContext,
+    );
+  }
+
+  async reorderColumn(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    body: ReorderColumnDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.reorderColumn(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      idShortOfColumn,
+      groupIdShort,
+      body.position,
+      userContext,
+      version,
     );
   }
 
@@ -277,6 +424,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: SubmodelElementModificationDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -289,7 +437,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      SubmodelElementModificationRequest.create({ body, version }),
       idShortPath,
       userContext,
     );
@@ -301,7 +449,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     id: string,
     submodelId: string,
     userContext: UserContext,
-    extraCleanup?: (submodelIdShort: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -316,7 +463,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       this.saveEnvironmentCallback(item),
       userContext,
-      extraCleanup,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -327,7 +480,6 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     submodelId: string,
     idShortPath: IdShortPath,
     userContext: UserContext,
-    extraCleanup?: (idShortPathString: string, options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -342,7 +494,13 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       submodelId,
       idShortPath,
       userContext,
-      extraCleanup,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -354,6 +512,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -369,6 +528,193 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortPath,
       idShortOfColumn,
       userContext,
+      version,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
+    );
+  }
+
+  async addColumnToGroupInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    body: SubmodelElementRequestDto,
+    position: number | undefined,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.addColumnToGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      SubmodelElementRequest.create({ body, version }),
+      userContext,
+      position,
+    );
+  }
+
+  async modifyColumnInGroupOfSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    body: SubmodelModificationDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.modifyColumnInGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      SubmodelElementModificationRequest.create({ body, version }),
+      userContext,
+    );
+  }
+
+  async deleteColumnFromGroupInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    idShortOfColumn: string,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.deleteColumnFromGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      idShortOfColumn,
+      userContext,
+      version,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
+    );
+  }
+
+  async moveColumnToGroupInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    groupIdShort: string,
+    columnIdShort: string,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.moveColumnToGroup(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      groupIdShort,
+      columnIdShort,
+      userContext,
+      version,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
+    );
+  }
+
+  async createGroupFromColumnInSubmodelElementList(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    columnIdShort: string,
+    body: SubmodelElementRequestDto,
+    userContext: UserContext,
+    version: ApiVersionsDtoType,
+  ): Promise<SubmodelElementListResponseDto> {
+    const item = await this.loadDigitalProductDocumentAndCheckOwnership(
+      id,
+      userContext.subject,
+      organizationId,
+    );
+    this.archiveGuard(item);
+    return await this.environmentService.createGroupFromColumn(
+      correlationId,
+      id,
+      item.getEnvironment(),
+      submodelId,
+      idShortPath,
+      columnIdShort,
+      SubmodelElementRequest.create({ body, version }),
+      userContext,
+      [
+        PresentationMoveObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -405,6 +751,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     idShortOfRow: string,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementListResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -420,6 +767,14 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       idShortPath,
       idShortOfRow,
       userContext,
+      version,
+      [
+        PresentationDeletionObserver.create({
+          presentationConfigurationService: this.presentationConfigurationService,
+          digitalProductDocumentId: id,
+          digitalProductDocumentType: item.getType(),
+        }),
+      ],
     );
   }
 
@@ -431,6 +786,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     idShortPath: IdShortPath,
     body: ValueRequestDto,
     userContext: UserContext,
+    version: ApiVersionsDtoType,
   ): Promise<SubmodelElementResponseDto> {
     const item = await this.loadDigitalProductDocumentAndCheckOwnership(
       id,
@@ -443,7 +799,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
       id,
       item.getEnvironment(),
       submodelId,
-      body,
+      ValueModificationRequest.create({ body, version }),
       idShortPath,
       userContext,
     );

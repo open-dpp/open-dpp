@@ -1,12 +1,22 @@
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  let normalized = hex.trim().replace(/^#/, "");
+function normalizeHex(hex: string): string {
+  const normalized = hex.trim().replace(/^#/, "");
 
   if (normalized.length === 3) {
-    normalized = normalized
+    return normalized
       .split("")
       .map((c) => c + c)
       .join("");
   }
+
+  return normalized;
+}
+
+function isValidHexColor(hex: string): boolean {
+  return /^[0-9a-f]{6}$/i.test(normalizeHex(hex));
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const normalized = normalizeHex(hex);
 
   if (!/^[0-9a-f]{6}$/i.test(normalized)) {
     throw new Error(`Invalid hex color: ${hex}`);
@@ -131,5 +141,6 @@ export {
   darkenHex,
   getContrastRatio,
   getPalettePositionByContrast,
+  isValidHexColor,
   lightenHex,
 };

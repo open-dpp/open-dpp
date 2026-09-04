@@ -1,39 +1,42 @@
 import type { Connection } from "mongoose";
-import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { EnvironmentService, UserContext } from "../../aas/presentation/environment.service";
+import { BulkImportConfigService } from "../../bulk-import/application/services/bulk-import-config.service";
 import { PresentationConfigurationRepository } from "../../presentation-configurations/infrastructure/presentation-configuration.repository";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import {
   DigitalProductDocumentStatusModificationDto,
-  PresentationReferenceType,
+  DigitalProductDocumentTypes,
   TemplateDtoSchema,
 } from "@open-dpp/dto";
 import { DigitalProductDocumentService } from "../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../activity-history/infrastructure/activity.repository";
 import { handleDppStatusChangeRequest } from "../../digital-product-document/domain/digital-product-document-status";
 import { DigitalProductDocumentStatusChangedActivity } from "../../activity-history/domain/activities/digital-product-document-status-changed.activity";
+import { PresentationConfigurationService } from "../../presentation-configurations/application/services/presentation-configuration.service";
 
 @Injectable()
 export class TemplateService {
-  private readonly logger = new Logger(TemplateService.name);
   public readonly digitalProductDocumentService: DigitalProductDocumentService<Template>;
 
   constructor(
     private readonly templateRepository: TemplateRepository,
     private readonly environmentService: EnvironmentService,
     private readonly activityRepository: ActivityRepository,
-    @InjectConnection() private connection: Connection,
     private readonly presentationConfigurationRepository: PresentationConfigurationRepository,
+    @InjectConnection() private readonly connection: Connection,
+    presentationConfigurationService: PresentationConfigurationService,
+    private readonly bulkImportConfigService: BulkImportConfigService,
   ) {
     this.digitalProductDocumentService = new DigitalProductDocumentService(
       this.environmentService,
       this.templateRepository,
       this.activityRepository,
-      this.connection,
+      presentationConfigurationService,
     );
   }
 
@@ -89,9 +92,10 @@ export class TemplateService {
         await this.templateRepository.deleteById(template.id, { session });
         await this.activityRepository.deleteByAggregateId(template.id, { session });
         await this.presentationConfigurationRepository.deleteByReference(
-          { referenceType: PresentationReferenceType.Template, referenceId: template.id },
+          { referenceType: DigitalProductDocumentTypes.Template, referenceId: template.id },
           { session },
         );
+        await this.bulkImportConfigService.deleteAllByTemplateId(template.id, { session });
       });
     } finally {
       await session.endSession();
