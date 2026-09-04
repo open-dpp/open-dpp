@@ -5,6 +5,11 @@ packages:
 
 injectWorkspacePackages: true
 
+# Supply-chain policy: only install versions published at least 24 h ago.
+# This is pnpm 11's default, spelled out so every tool that runs pnpm here
+# (CI, Docker build, Renovate) applies the same gate at resolution time.
+minimumReleaseAge: 1440
+
 allowBuilds:
   "@nestjs/core": true
   "@scarf/scarf": true
