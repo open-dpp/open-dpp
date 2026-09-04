@@ -25,3 +25,6 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  # Renovate security update: better-auth@1.6.22
+  - better-auth@1.6.22
