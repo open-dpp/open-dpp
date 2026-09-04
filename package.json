@@ -35,7 +35,7 @@
     "@changesets/cli": "^2.31.0",
     "@dotenvx/dotenvx": "^1.71.3",
     "@types/node": "^22.20.0",
-    "oxfmt": "^0.45.0",
+    "oxfmt": "^0.65.0",
     "oxlint": "^1.69.0",
     "tsx": "^4.20.0",
     "turbo": "^2.9.18",
