@@ -25,3 +25,6 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  # Renovate security update: multer@2.2.0
+  - multer@2.2.0
