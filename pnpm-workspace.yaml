@@ -25,3 +25,6 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  # Renovate security update: postcss@8.5.23
+  - postcss@8.5.23
