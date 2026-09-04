@@ -70,11 +70,6 @@ services:
       exit 0;
       "
 
-  clamav-rest:
-    image: ajilaag/clamav-rest
-    ports:
-      - ${OPEN_DPP_CLAMAV_PORT}:9000
-
   mailpit:
     container_name: mailpit
     image: axllent/mailpit:latest

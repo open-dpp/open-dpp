@@ -32,7 +32,7 @@ curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/open-dpp/open
 curl -fsSL -o .env https://raw.githubusercontent.com/open-dpp/open-dpp/main/.env.example
 ```
 
-Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration).
+Before starting the services, update `.env` with values that match your environment — at minimum, set `OPEN_DPP_AUTH_SECRET` to a secure value. For a complete list of settings, see [configuration options](/reference/configuration). This example stack does not virus-scan uploads; see the [Production setup](/guides/production-setup#virus-scanning-clamav) guide to add ClamAV.
 
 ## Start services
 

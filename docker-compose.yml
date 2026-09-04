@@ -68,9 +68,6 @@ services:
       exit 0;
       "
 
-  clamav-rest:
-    image: ajilaag/clamav-rest
-
 volumes:
   minio_data:
   mongo_db:
