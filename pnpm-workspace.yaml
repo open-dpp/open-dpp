@@ -25,3 +25,6 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  # Renovate security update: body-parser@2.3.0
+  - body-parser@2.3.0
