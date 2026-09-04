@@ -42,7 +42,7 @@ describe("media store", () => {
     getMock.mockReset();
   });
 
-  // ADR 0006 (Design C): public file media gated through the permalink, keyed by mediaId.
+  // Public file media gated through the permalink, keyed by mediaId.
   describe("fetchPermalinkMedia", () => {
     it("combines info and blob from the permalink-gated by-id routes", async () => {
       const store = useMediaStore();

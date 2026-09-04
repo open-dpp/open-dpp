@@ -34,7 +34,7 @@ import { PermalinkController } from "./presentation/permalink.controller";
     OrganizationsModule,
     UsersModule,
     InstanceSettingsModule,
-    // ADR 0006: public, permalink-gated media reads (MediaModule exports MediaService).
+    // Permalink-gated media reads need MediaService (exported by MediaModule).
     MediaModule,
     forwardRef(() => PassportsModule),
     forwardRef(() => UniqueProductIdentifierModule),

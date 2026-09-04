@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { ChatService } from "./chat.service";
 
-describe("ChatService.askAgent (ADR 0006)", () => {
+describe("ChatService.askAgent (resolves the passport directly)", () => {
   it("resolves the passport by passportId and throws when it is missing — no UPI lookup", async () => {
     const findOne = jest.fn<any>().mockResolvedValue(undefined);
     const service = new ChatService(

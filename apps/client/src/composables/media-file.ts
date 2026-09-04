@@ -1,7 +1,22 @@
-import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
+import type { MaybeRefOrGetter } from "vue";
+import type { MediaInfo, MediaResult } from "../components/media/MediaInfo.interface.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
-import { onUnmounted, ref } from "vue";
+import { onUnmounted, ref, toValue } from "vue";
 import { useMediaStore } from "../stores/media.ts";
+
+/**
+ * Fetch a media's info and bytes. With a permalink (public passport page) the permalink-gated
+ * route is used, so access ends with the permalink; without one, the authenticated bare route.
+ */
+function fetchMediaResult(
+  mediaStore: ReturnType<typeof useMediaStore>,
+  mediaId: string,
+  permalinkIdOrSlug: string | undefined,
+): Promise<MediaResult> {
+  return permalinkIdOrSlug
+    ? mediaStore.fetchPermalinkMedia(permalinkIdOrSlug, mediaId)
+    : mediaStore.fetchMedia(mediaId);
+}
 
 export function useMediaFile() {
   const mediaInfo = ref<MediaInfo | null>(null);
@@ -14,9 +29,11 @@ export function useMediaFile() {
       if (fileUrl.value) {
         URL.revokeObjectURL(fileUrl.value);
       }
-      const { blob, mediaInfo: fetchedMediaInfo } = permalinkIdOrSlug
-        ? await mediaStore.fetchPermalinkMedia(permalinkIdOrSlug, mediaId)
-        : await mediaStore.fetchMedia(mediaId);
+      const { blob, mediaInfo: fetchedMediaInfo } = await fetchMediaResult(
+        mediaStore,
+        mediaId,
+        permalinkIdOrSlug,
+      );
 
       if (blob) {
         fileUrl.value = URL.createObjectURL(blob);
@@ -47,11 +64,17 @@ export interface MediaFileCollectionItem {
 export interface MediaFileCollectionProps {
   errorHandlingStore: IErrorHandlingStore;
   translate: (label: string, ...args: unknown[]) => string;
+  /**
+   * Set on the public passport page: media is then fetched through the permalink-gated route.
+   * Read lazily on every fetch, so a getter/ref may resolve after the composable is created.
+   */
+  permalinkIdOrSlug?: MaybeRefOrGetter<string | undefined>;
 }
 
 export function useMediaFileCollection({
   errorHandlingStore,
   translate,
+  permalinkIdOrSlug,
 }: MediaFileCollectionProps) {
   const files = ref<MediaFileCollectionItem[]>([]);
   const mediaStore = useMediaStore();
@@ -73,7 +96,11 @@ export function useMediaFileCollection({
       return false;
     }
     try {
-      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(mediaId);
+      const { blob, mediaInfo: fetchedMediaInfo } = await fetchMediaResult(
+        mediaStore,
+        mediaId,
+        toValue(permalinkIdOrSlug),
+      );
       if (blob) {
         const newMedia = {
           blob,

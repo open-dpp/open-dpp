@@ -197,6 +197,9 @@ onMounted(async () => {
           <Button :label="t('common.add')" data-testid="upi-add-btn" @click="openCreateDialog" />
         </div>
       </template>
+      <template #empty>
+        <span data-testid="upi-empty">{{ t("uniqueProductIdentifiers.list.empty") }}</span>
+      </template>
 
       <Column field="type" :header="t('uniqueProductIdentifiers.list.type')" />
       <Column field="identity" :header="t('uniqueProductIdentifiers.list.identity')">

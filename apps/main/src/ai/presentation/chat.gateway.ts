@@ -43,7 +43,7 @@ export class ChatGateway {
         { userId: client.data.user?.id },
       );
 
-      // ADR 0006: pass the resolved passportId straight to the agent — no canonical UPI hop.
+      // Pass the resolved passportId straight to the agent — no canonical UPI hop.
       const reply = await this.chatService.askAgent(
         message.msg,
         passport.id,

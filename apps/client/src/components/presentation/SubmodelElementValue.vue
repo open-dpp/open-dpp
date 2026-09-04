@@ -7,7 +7,7 @@ import type {
 import { DataTypeDef } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
+import { usePassportStore } from "../../stores/passport";
 import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import PresentationComponentRenderer from "./PresentationComponentRenderer.vue";
@@ -23,9 +23,10 @@ const { element, path, config } = defineProps<{
 }>();
 
 const { t } = useI18n();
-const route = useRoute();
-// Public media must be gated through the permalink (ADR 0006): access dies with the permalink.
-const permalinkIdOrSlug = computed(() => String(route.params.permalink ?? ""));
+const passportStore = usePassportStore();
+// Public media is fetched through the permalink the passport was loaded with, so access to a
+// passport's files ends together with the permalink. Empty outside the public page (editor).
+const permalinkIdOrSlug = computed(() => passportStore.permalinkIdOrSlug);
 </script>
 
 <template>

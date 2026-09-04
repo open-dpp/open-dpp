@@ -38,7 +38,7 @@ export const useMediaStore = defineStore("media", () => {
     return { blob, mediaInfo: info };
   };
 
-  // ADR 0006 (Design C): public file media is gated through the permalink,
+  // Public file media is gated through the permalink,
   // so access dies with the permalink — mirrors fetchMedia but routes by-id.
   const fetchPermalinkMedia = async (
     permalinkIdOrSlug: string,

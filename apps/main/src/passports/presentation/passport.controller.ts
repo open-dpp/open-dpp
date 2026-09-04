@@ -1145,7 +1145,7 @@ export class PassportController
       body,
       organizationId,
       async (p, options) => {
-        // ADR 0006: no canonical UPI auto-mint on import.
+        // Imports do not auto-mint a canonical UPI either.
         await this.passportRepository.save(p, options);
       },
       async (p, options) => {

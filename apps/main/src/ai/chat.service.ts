@@ -36,7 +36,7 @@ export class ChatService {
   }
 
   async askAgent(query: string, passportId: string, user: User | null, member: Member | null) {
-    // ADR 0006: the AI agent operates on the passport directly (the system prompt is
+    // The AI agent operates on the passport directly (the system prompt is
     // keyed by passportId); resolve it without the canonical UPI indirection.
     this.logger.log(`Resolve passport: ${passportId}`);
     const passport = await this.passportRepository.findOne(passportId);

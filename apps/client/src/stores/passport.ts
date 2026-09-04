@@ -28,8 +28,20 @@ export const usePassportStore = defineStore("passport", () => {
   const submodels = ref<SubmodelResponseDto[]>([]);
   const shells = ref<AssetAdministrationShellResponseDto[]>();
   const presentationConfig = ref<PresentationConfigurationDto | null>(null);
+  /**
+   * The permalink (id or slug) the passport was loaded through. Public media is fetched through
+   * it, so access to a passport's files ends together with the permalink. Empty outside the
+   * public page.
+   */
+  const permalinkIdOrSlug = ref<string>("");
+
+  /** Forget the permalink when leaving the public page, so other views fetch media by bare id. */
+  function clearPermalink(): void {
+    permalinkIdOrSlug.value = "";
+  }
 
   async function loadPassport(id: string): Promise<void> {
+    permalinkIdOrSlug.value = id;
     try {
       const response = await apiClient.dpp.permalinks.getById(id);
       productPassport.value = response.data.passport;
@@ -61,6 +73,8 @@ export const usePassportStore = defineStore("passport", () => {
     submodels,
     shells,
     presentationConfig,
+    permalinkIdOrSlug,
     loadPassport,
+    clearPermalink,
   };
 });

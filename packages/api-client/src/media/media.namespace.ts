@@ -19,7 +19,7 @@ export class MediaNamespace {
     return this.axiosInstance.get<MediaInfoDto[]>(`${this.mediaEndpoint}/by-organization`);
   }
 
-  // --- ADR 0006 (Design C): public file media gated through the permalink, by mediaId ---
+  // --- Public file media gated through the permalink, by mediaId ---
 
   /** Public, permalink-gated media info (access dies with the permalink). */
   async getPermalinkMediaInfo(permalinkIdOrSlug: string, mediaId: string) {
