@@ -56,7 +56,7 @@
     "dayjs": "^1.11.21",
     "express": "^5.2.1",
     "file-type": "^21.3.4",
-    "form-data": "^4.0.5",
+    "form-data": "^4.0.6",
     "handlebars": "^4.7.9",
     "handlebars-helpers": "^0.10.0",
     "http-proxy-3": "^1.23.3",
