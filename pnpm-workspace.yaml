@@ -25,3 +25,6 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  # Renovate security update: pnpm@11.11.0
+  - pnpm@11.11.0
