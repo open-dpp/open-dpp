@@ -262,7 +262,7 @@ describe("UniqueProductIdentifierController", () => {
     });
   });
 
-  describe("POST /unique-product-identifiers/internal (create internal — ADR 0005)", () => {
+  describe("POST /unique-product-identifiers/internal (create internal)", () => {
     it("returns 201 with an internal UPI (type OPEN_DPP_UUID, null gtin/digitalLink)", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
@@ -747,7 +747,7 @@ describe("UniqueProductIdentifierController", () => {
       expect(response.status).toEqual(409);
     });
 
-    it("deletes an internal (OPEN_DPP_UUID) UPI on a DRAFT passport → 204, row is gone (ADR 0006)", async () => {
+    it("deletes an internal (OPEN_DPP_UUID) UPI on a DRAFT passport → 204, row is gone", async () => {
       const { app, getOrganizationAndUserWithCookie } = ctx.globals();
       const { org, userCookie } = await getOrganizationAndUserWithCookie();
       const passport = await createPassport(org!.id);

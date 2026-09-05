@@ -12,10 +12,18 @@ const mocks = vi.hoisted(() => {
 
 const fetchMediaMock =
   vi.fn<(mediaId: string) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>>();
+const fetchPermalinkMediaMock =
+  vi.fn<
+    (
+      permalinkIdOrSlug: string,
+      mediaId: string,
+    ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
+  >();
 
 vi.mock("../stores/media.ts", () => ({
   useMediaStore: () => ({
     fetchMedia: fetchMediaMock,
+    fetchPermalinkMedia: fetchPermalinkMediaMock,
   }),
 }));
 
@@ -27,6 +35,7 @@ describe("useMediaFileCollection", () => {
 
   beforeEach(() => {
     fetchMediaMock.mockReset();
+    fetchPermalinkMediaMock.mockReset();
 
     createObjectURLMock.mockClear();
     revokeObjectURLMock.mockClear();
@@ -44,11 +53,11 @@ describe("useMediaFileCollection", () => {
 
   const errorHandlingStore = generatedErrorHandlingStoreMock(mocks.logErrorNotification);
 
-  function mountHarness() {
+  function mountHarness(permalinkIdOrSlug?: () => string | undefined) {
     const Harness = defineComponent({
       name: "MediaFileCollectionHarness",
       setup() {
-        const api = useMediaFileCollection({ errorHandlingStore, translate });
+        const api = useMediaFileCollection({ errorHandlingStore, translate, permalinkIdOrSlug });
         return { api };
       },
       template: "<div />",
@@ -60,6 +69,42 @@ describe("useMediaFileCollection", () => {
       api: wrapper.vm.api as ReturnType<typeof useMediaFileCollection>,
     };
   }
+
+  it("fetches through the permalink-gated route when a permalink is given (public page)", async () => {
+    fetchPermalinkMediaMock.mockImplementation(async (_permalink: string, mediaId: string) => ({
+      blob: new Blob(["hello"], { type: "text/plain" }),
+      mediaInfo: { id: mediaId },
+    }));
+
+    const { api } = mountHarness(() => "slug-1");
+    await api.download(["a", "b"]);
+    await nextTick();
+
+    expect(fetchPermalinkMediaMock).toHaveBeenCalledWith("slug-1", "a");
+    expect(fetchPermalinkMediaMock).toHaveBeenCalledWith("slug-1", "b");
+    expect(fetchMediaMock).not.toHaveBeenCalled();
+    expect(api.files.value.map((f) => f.mediaInfo.id)).toEqual(["a", "b"]);
+  });
+
+  it("reads the permalink lazily, so it may be set after the composable is created", async () => {
+    fetchPermalinkMediaMock.mockImplementation(async (_permalink: string, mediaId: string) => ({
+      blob: new Blob(["hello"], { type: "text/plain" }),
+      mediaInfo: { id: mediaId },
+    }));
+    fetchMediaMock.mockImplementation(async (mediaId: string) => ({
+      blob: new Blob(["hello"], { type: "text/plain" }),
+      mediaInfo: { id: mediaId },
+    }));
+    let permalink: string | undefined;
+
+    const { api } = mountHarness(() => permalink);
+    await api.add("a");
+    permalink = "slug-2";
+    await api.add("b");
+
+    expect(fetchMediaMock).toHaveBeenCalledWith("a");
+    expect(fetchPermalinkMediaMock).toHaveBeenCalledWith("slug-2", "b");
+  });
 
   it("downloads files and creates object URLs for blobs (keeps empty url for null blobs)", async () => {
     fetchMediaMock.mockImplementation(async (mediaId: string) => ({

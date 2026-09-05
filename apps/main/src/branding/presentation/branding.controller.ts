@@ -1,16 +1,40 @@
 import type express from "express";
 import { readFile } from "node:fs/promises";
-import { Body, Controller, Get, Put, Res } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, Put, Res } from "@nestjs/common";
 import { type BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
-import { ZodValidationPipe } from "@open-dpp/exception";
+import {
+  NotFoundError,
+  NotFoundInDatabaseException,
+  ValueError,
+  ZodValidationPipe,
+} from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { MediaService } from "../../media/infrastructure/media.service";
+import { streamMedia } from "../../media/presentation/media-response.util";
 import { Branding } from "../domain/branding";
 import { BrandingRepository } from "../infrastructure/branding.repository";
 
+/**
+ * Failures the public logo route deliberately collapses into a 404 so the response cannot be
+ * used to enumerate which mediaIds exist. Anything else (database, object store) is unexpected
+ * and must surface as a 5xx via the global filters instead of being masked.
+ */
+function isExpectedLogoLookupError(error: unknown): boolean {
+  return (
+    error instanceof NotFoundInDatabaseException ||
+    error instanceof NotFoundError ||
+    error instanceof NotFoundException ||
+    error instanceof ValueError
+  );
+}
+
 @Controller("/branding")
 export class BrandingController {
-  constructor(private readonly brandingRepository: BrandingRepository) {}
+  constructor(
+    private readonly brandingRepository: BrandingRepository,
+    private readonly mediaService: MediaService,
+  ) {}
 
   @Get()
   async getOrganizationBranding(@OrganizationId() organizationId: string): Promise<BrandingDto> {
@@ -43,5 +67,38 @@ export class BrandingController {
     const fileContent = await readFile(file.path);
     response.type(file.filetype);
     return response.send(fileContent);
+  }
+
+  /**
+   * Public organization logo. The bare `/media/:id` route is authenticated, so this is the
+   * one anonymous path to logo bytes — gated so it serves ONLY media that is its owning
+   * org's branding logo (`existsByLogoForOrg`), never arbitrary media by id.
+   */
+  @AllowAnonymous()
+  @Get("/logo/:mediaId")
+  async getOrganizationLogo(
+    @Param("mediaId") mediaId: string,
+    @Res() res: express.Response,
+  ): Promise<void> {
+    try {
+      const media = await this.mediaService.findOneOrFail(mediaId);
+      const isLogo = await this.brandingRepository.isOrganizationLogo(
+        mediaId,
+        media.ownedByOrganizationId,
+      );
+      // A logo is always an image — refuse anything else even if mis-assigned, so a non-image
+      // passport file can never be exposed publicly through this route.
+      if (!isLogo || !media.mimeType.startsWith("image/")) {
+        res.status(404).json({ error: "Logo not found" });
+        return;
+      }
+      const stream = await this.mediaService.getFilestreamOfMedia(media);
+      streamMedia(res, media, stream);
+    } catch (error) {
+      if (!isExpectedLogoLookupError(error)) {
+        throw error;
+      }
+      res.status(404).json({ error: "Logo not found" });
+    }
   }
 }

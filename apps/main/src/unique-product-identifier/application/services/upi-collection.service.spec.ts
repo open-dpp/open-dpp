@@ -529,7 +529,7 @@ describe("UpiCollectionService.delete", () => {
     expect(upiRepo.deleteById).not.toHaveBeenCalled();
   });
 
-  it("(f) deleting a read-only GTIN/EAN system row → ConflictException, no delete (ADR 0006)", async () => {
+  it("(f) deleting a read-only GTIN/EAN system row → ConflictException, no delete", async () => {
     const systemRow = UniqueProductIdentifier.create({
       externalUUID: upiUuid,
       referenceId,
@@ -552,7 +552,7 @@ describe("UpiCollectionService.delete", () => {
     expect(upiRepo.deleteById).not.toHaveBeenCalled();
   });
 
-  it("(h) deleting an internal (OPEN_DPP_UUID) UPI on a draft → deleteById called (ADR 0006)", async () => {
+  it("(h) deleting an internal (OPEN_DPP_UUID) UPI on a draft → deleteById called", async () => {
     const internalUpi = makeSystemUpi();
 
     const { service, upiRepo } = makeService({

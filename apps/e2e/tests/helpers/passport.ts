@@ -92,3 +92,24 @@ export async function acceptDeleteConfirm(page: Page): Promise<void> {
     .last()
     .click();
 }
+
+/**
+ * The public slug of the passport's default permalink, read from the permalink list. Every
+ * passport gets that permalink on creation, so this needs no prior setup.
+ */
+export async function readDefaultPermalinkSlug(page: Page, ids: PassportIds): Promise<string> {
+  await gotoPermalinkList(page, ids);
+  const row = page
+    .getByTestId("permalink-data-table")
+    .locator("tbody tr:not(.p-datatable-empty-message)")
+    .first();
+  const kindTestId = await row
+    .locator("[data-testid^='permalink-kind-']")
+    .getAttribute("data-testid");
+  expect(kindTestId, "permalink row should expose its id through the kind cell").not.toBeNull();
+  const permalinkId = kindTestId!.replace("permalink-kind-", "");
+  const publicUrl = await page.getByTestId(`permalink-public-url-${permalinkId}`).innerText();
+  const slug = publicUrl.split("/p/")[1];
+  expect(slug, `public url ${publicUrl} should end in the permalink slug`).toBeTruthy();
+  return slug!;
+}

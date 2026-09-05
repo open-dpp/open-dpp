@@ -42,7 +42,7 @@ describe("uniqueProductIdentifierPaths", () => {
     expect(post.security).toEqual([{ apiKeyAuth: [] }]);
   });
 
-  it("should export POST /unique-product-identifiers/internal with org header + security (ADR 0005)", () => {
+  it("should export POST /unique-product-identifiers/internal with org header + security", () => {
     expect(uniqueProductIdentifierPaths).toHaveProperty("/unique-product-identifiers/internal");
     const post = uniqueProductIdentifierPaths["/unique-product-identifiers/internal"].post;
     expect(post).toBeDefined();

@@ -153,81 +153,6 @@ describe("MediaService", () => {
     versionId: "v1",
   };
 
-  describe("uploadFileOfProductPassport", () => {
-    it("should upload file and save media", async () => {
-      mockMediaModel.find.mockResolvedValue([]);
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
-      mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
-
-      const buffer = Buffer.from("test");
-      const result = await service.uploadFileOfProductPassport(
-        "file.pdf",
-        buffer,
-        "field-id",
-        "upid",
-        "user-id",
-        "org-id",
-      );
-
-      expect(mockMediaModel.find).toHaveBeenCalled();
-      expect(mockMinioInstance.putObject).toHaveBeenCalled();
-      expect(mockMediaModel.findOneAndUpdate).toHaveBeenCalled();
-      expect(result).toBeInstanceOf(Media);
-    });
-
-    it("should delete existing media if found", async () => {
-      mockMediaModel.find.mockResolvedValue([{ _id: "existing" }]);
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag", versionId: "v1" });
-      mockMediaModel.findOneAndUpdate.mockResolvedValue(validMediaDoc);
-
-      await service.uploadFileOfProductPassport(
-        "file.pdf",
-        Buffer.from("test"),
-        "field-id",
-        "upid",
-        "user-id",
-        "org-id",
-      );
-
-      expect(mockMediaModel.deleteMany).toHaveBeenCalledWith({
-        dataFieldId: "field-id",
-        uniqueProductIdentifier: "upid",
-      });
-    });
-
-    it("should process image if mimetype starts with image/", async () => {
-      mockMediaModel.find.mockResolvedValue([]);
-      mockFileTypeFromBuffer.mockResolvedValue({ mime: "image/png", ext: "png" });
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.putObject.mockResolvedValue({ etag: "etag" });
-      mockMediaModel.findOneAndUpdate.mockResolvedValue({
-        ...validMediaDoc,
-        mimeType: "image/webp",
-      });
-
-      await service.uploadFileOfProductPassport(
-        "img.png",
-        Buffer.from("img"),
-        "fid",
-        "upid",
-        "uid",
-        "oid",
-      );
-
-      expect(mockMinioInstance.putObject).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        expect.objectContaining({ length: 15 }), // "processed-image".length
-        expect.anything(),
-        expect.anything(),
-      );
-    });
-  });
-
   describe("uploadMedia", () => {
     it("should upload media", async () => {
       mockFileTypeFromBuffer.mockResolvedValue({ mime: "application/pdf", ext: "pdf" });
@@ -255,18 +180,6 @@ describe("MediaService", () => {
     it("should throw if bucket does not exist", async () => {
       mockMinioInstance.bucketExists.mockResolvedValue(false);
       await expect(service.getFileStream("bucket", "file")).rejects.toThrow();
-    });
-  });
-
-  describe("getFilestreamOfProductPassport", () => {
-    it("should return stream and media", async () => {
-      mockMediaModel.find.mockResolvedValue([validMediaDoc]);
-      mockMinioInstance.bucketExists.mockResolvedValue(true);
-      mockMinioInstance.getObject.mockResolvedValue("stream");
-
-      const result = await service.getFilestreamOfProductPassport("fid", "upid");
-      expect(result.stream).toBe("stream");
-      expect(result.media).toBeInstanceOf(Media);
     });
   });
 
@@ -321,19 +234,6 @@ describe("MediaService", () => {
     it("should throw if not found", async () => {
       mockMediaModel.findById.mockResolvedValue(null);
       await expect(service.findOneOrFail("id")).rejects.toThrow();
-    });
-  });
-
-  describe("findOneDppFileOrFail", () => {
-    it("should return domain object", async () => {
-      mockMediaModel.find.mockResolvedValue([validMediaDoc]);
-      const result = await service.findOneDppFileOrFail("fid", "upid");
-      expect(result).toBeInstanceOf(Media);
-    });
-
-    it("should throw if not found", async () => {
-      mockMediaModel.find.mockResolvedValue([]);
-      await expect(service.findOneDppFileOrFail("fid", "upid")).rejects.toThrow();
     });
   });
 

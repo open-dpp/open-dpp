@@ -2,7 +2,7 @@
  * PassportNamespace surface guards.
  *
  * The 1:1 GS1 write surface and the canonical `getUniqueProductIdentifierOfPassport`
- * lookup (ADR 0006) are removed — the @ts-expect-error guards below assert the members
+ * lookup are removed — the @ts-expect-error guards below assert the members
  * no longer exist (before removal they fail as unused directives).
  */
 
@@ -17,7 +17,7 @@ function makeNamespace() {
 }
 
 describe("PassportNamespace — removed surface", () => {
-  it("getUniqueProductIdentifierOfPassport does NOT exist (ADR 0006)", () => {
+  it("getUniqueProductIdentifierOfPassport does NOT exist", () => {
     const { ns } = makeNamespace();
     // @ts-expect-error — method must not exist after removal
     expect(ns.getUniqueProductIdentifierOfPassport).toBeUndefined();
