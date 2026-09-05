@@ -19,6 +19,17 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
+/** A promise settled by the test, to hold a mocked response until the test decides. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 describe("passport store", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -66,5 +77,67 @@ describe("passport store", () => {
     store.clearPermalink();
 
     expect(store.permalinkIdOrSlug).toBe("");
+  });
+
+  describe("when a newer load starts before an earlier one finishes", () => {
+    const passportFor = (id: string) => ({
+      data: { passport: { id: `passport-${id}` }, presentationConfiguration: null },
+    });
+    const submodelsFor = (id: string) => ({ data: { result: [{ id: `submodel-${id}` }] } });
+    const shellsFor = (id: string) => ({ data: { result: [{ id: `shell-${id}` }] } });
+
+    beforeEach(() => {
+      mocks.getById.mockImplementation(async (id: string) => passportFor(id));
+      mocks.getSubmodels.mockImplementation(async (id: string) => submodelsFor(id));
+      mocks.getShells.mockImplementation(async (id: string) => shellsFor(id));
+    });
+
+    /** Holds the "slug-old" response of one request until the test releases it. */
+    function holdOldResponse(mock: ReturnType<typeof vi.fn>, responseFor: (id: string) => unknown) {
+      const requested = deferred<void>();
+      const response = deferred<unknown>();
+      mock.mockImplementation((id: string) => {
+        if (id !== "slug-old") return Promise.resolve(responseFor(id));
+        requested.resolve();
+        return response.promise;
+      });
+      return { requested: requested.promise, release: response.resolve, fail: response.reject };
+    }
+
+    it.each([
+      ["passport", mocks.getById, passportFor],
+      ["submodels", mocks.getSubmodels, submodelsFor],
+      ["shells", mocks.getShells, shellsFor],
+    ] as const)(
+      "drops the earlier load's late %s response, so the store never mixes it with the current permalink",
+      async (_step, mock, responseFor) => {
+        const store = usePassportStore();
+        const old = holdOldResponse(mock, responseFor);
+
+        const oldLoad = store.loadPassport("slug-old");
+        await old.requested;
+        await store.loadPassport("slug-new");
+        old.release(responseFor("slug-old"));
+        await oldLoad;
+
+        expect(store.permalinkIdOrSlug).toBe("slug-new");
+        expect(store.productPassport).toEqual({ id: "passport-slug-new" });
+        expect(store.submodels).toEqual([{ id: "submodel-slug-new" }]);
+        expect(store.shells).toEqual([{ id: "shell-slug-new" }]);
+      },
+    );
+
+    it("resolves a superseded load without reporting its failure, since only the latest load's outcome matters", async () => {
+      const store = usePassportStore();
+      const old = holdOldResponse(mocks.getById, passportFor);
+
+      const oldLoad = store.loadPassport("slug-old");
+      await old.requested;
+      await store.loadPassport("slug-new");
+      old.fail(new Error("network down"));
+
+      await expect(oldLoad).resolves.toBeUndefined();
+      expect(store.productPassport).toEqual({ id: "passport-slug-new" });
+    });
   });
 });

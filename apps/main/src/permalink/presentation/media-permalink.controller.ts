@@ -1,7 +1,9 @@
 import type express from "express";
+import type { Media } from "../../media/domain/media";
 import type { PublicMediaInfo } from "../../media/presentation/media-response.util";
 import type { Passport } from "../../passports/domain/passport";
-import { Controller, Get, NotFoundException, Param, Res } from "@nestjs/common";
+import { Controller, Get, Header, NotFoundException, Param, Res } from "@nestjs/common";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { File } from "../../aas/domain/submodel-base/file";
 import { ISubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
@@ -10,11 +12,26 @@ import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { MediaService } from "../../media/infrastructure/media.service";
-import { streamMedia, toPublicMediaInfo } from "../../media/presentation/media-response.util";
+import {
+  MEDIA_CACHE_CONTROL,
+  streamMedia,
+  toPublicMediaInfo,
+} from "../../media/presentation/media-response.util";
 import {
   PermalinkAccessContext,
   PermalinkApplicationService,
 } from "../application/services/permalink.application.service";
+
+/**
+ * The only failures the permalink-gated routes collapse into a 404: a missing permalink,
+ * passport or media record (`NotFoundInDatabaseException`) and the publish/ownership denial
+ * the gate normalizes to `NotFoundException`, so the response cannot be used to enumerate
+ * which permalinks or mediaIds exist. Database, object-store and other operational errors are
+ * unexpected and must surface as a 5xx via Nest's exception layer instead of being masked.
+ */
+function isExpectedMediaLookupError(error: unknown): boolean {
+  return error instanceof NotFoundInDatabaseException || error instanceof NotFoundException;
+}
 
 /** Recursively collect every `File` element's `value` (a mediaId) under the given elements. */
 function collectFileMediaIds(elements: ISubmodelElement[], acc: Set<string>): void {
@@ -32,14 +49,22 @@ function collectFileMediaIds(elements: ISubmodelElement[], acc: Set<string>): vo
  *
  * Resolving the permalink applies the publish/ownership gate (`resolveToPassport`), and the
  * requested media must be referenced by that passport — a File-element value or a shell's
- * default thumbnail (the mediaId IS the passport↔media link — no denormalized field). So a
- * deleted permalink or an unpublished passport 404s, and one passport's permalink cannot pull
- * a media that the passport does not reference (no cross-passport IDOR). Many-to-many: a media
- * shown on several passports is reachable through each of their permalinks.
+ * default thumbnail (the mediaId IS the passport↔media link — no denormalized field) — and be
+ * owned by the passport's organization (`Media.ownedByOrganizationId`). So a deleted permalink
+ * or an unpublished passport 404s, one passport's permalink cannot pull a media that the
+ * passport does not reference (no cross-passport IDOR), and a passport that points at another
+ * organization's media cannot expose it (no cross-organization reference: a member could
+ * otherwise write a foreign mediaId into a File value or thumbnail and publish it through their
+ * own permalink). Many-to-many: a media shown on several passports of its owning organization
+ * is reachable through each of their permalinks.
  *
  * Like the other permalink routes, the caller's session (if any) is forwarded to the gate,
  * so a member of the passport's organization can preview the media of a still-unpublished
  * draft while anonymous callers only ever see published passports.
+ *
+ * Every response, the `/info` JSON and the 404 branch included, is `Cache-Control: no-store`:
+ * the gate is re-evaluated per request and per session, so a stored copy would keep serving
+ * after an unpublish or hand a member's draft preview to anonymous callers via a shared cache.
  *
  * Routes are 5/6-segment (`media/permalink/:idOrSlug/by-id/:mediaId/...`) and never
  * collide with the bare `media/:id/...` routes.
@@ -55,17 +80,21 @@ export class MediaPermalinkController {
 
   @Get("permalink/:permalinkIdOrSlug/by-id/:mediaId/info")
   @OptionalAuth()
+  @Header("Cache-Control", MEDIA_CACHE_CONTROL)
   async getInfo(
     @Param("permalinkIdOrSlug") permalinkIdOrSlug: string,
     @Param("mediaId") mediaId: string,
     @AuthSession() session: Session | undefined,
   ): Promise<PublicMediaInfo> {
-    await this.assertReferencedOr404(permalinkIdOrSlug, mediaId, { userId: session?.userId });
-    return toPublicMediaInfo(await this.mediaService.findOneOrFail(mediaId));
+    const media = await this.loadReferencedMediaOr404(permalinkIdOrSlug, mediaId, {
+      userId: session?.userId,
+    });
+    return toPublicMediaInfo(media);
   }
 
   @Get("permalink/:permalinkIdOrSlug/by-id/:mediaId/download")
   @OptionalAuth()
+  @Header("Cache-Control", MEDIA_CACHE_CONTROL)
   async download(
     @Param("permalinkIdOrSlug") permalinkIdOrSlug: string,
     @Param("mediaId") mediaId: string,
@@ -73,33 +102,68 @@ export class MediaPermalinkController {
     @Res() res: express.Response,
   ): Promise<void> {
     try {
-      await this.assertReferencedOr404(permalinkIdOrSlug, mediaId, { userId: session?.userId });
-      const result = await this.mediaService.getFilestreamById(mediaId);
-      streamMedia(res, result.media, result.stream);
-    } catch {
+      const media = await this.loadReferencedMediaOr404(permalinkIdOrSlug, mediaId, {
+        userId: session?.userId,
+      });
+      const stream = await this.mediaService.getFilestreamOfMedia(media);
+      streamMedia(res, media, stream);
+    } catch (error) {
+      if (!isExpectedMediaLookupError(error)) {
+        throw error;
+      }
       res.status(404).json({ error: "File not found" });
     }
   }
 
   /**
    * Resolve the permalink to its passport (public publish/ownership gate, member-aware via
-   * `access`) and assert the passport references the mediaId. Anything else is a 404.
+   * `access`), assert the passport references the mediaId, then load the media, which must be
+   * owned by the passport's organization. An expected miss (see `isExpectedMediaLookupError`),
+   * an unreferenced media and a foreign-owned media are all the same 404 so the response cannot
+   * tell them apart; operational failures propagate.
    */
-  private async assertReferencedOr404(
+  private async loadReferencedMediaOr404(
     permalinkIdOrSlug: string,
     mediaId: string,
     access: PermalinkAccessContext,
-  ): Promise<void> {
-    let passport: Passport;
-    try {
-      ({ passport } = await this.permalinkApplicationService.resolveToPassport(
-        permalinkIdOrSlug,
-        access,
-      ));
-    } catch {
+  ): Promise<Media> {
+    const passport = await this.resolvePassportOr404(permalinkIdOrSlug, access);
+    if (!(await this.passportReferencesMedia(passport, mediaId))) {
       throw new NotFoundException("Media not found");
     }
-    if (!(await this.passportReferencesMedia(passport, mediaId))) {
+    const media = await this.loadMediaOr404(mediaId);
+    if (media.ownedByOrganizationId !== passport.organizationId) {
+      throw new NotFoundException("Media not found");
+    }
+    return media;
+  }
+
+  private async resolvePassportOr404(
+    permalinkIdOrSlug: string,
+    access: PermalinkAccessContext,
+  ): Promise<Passport> {
+    try {
+      const { passport } = await this.permalinkApplicationService.resolveToPassport(
+        permalinkIdOrSlug,
+        access,
+      );
+      return passport;
+    } catch (error) {
+      if (!isExpectedMediaLookupError(error)) {
+        throw error;
+      }
+      throw new NotFoundException("Media not found");
+    }
+  }
+
+  /** A dangling reference (a File value or thumbnail pointing at a deleted media) is a 404 too. */
+  private async loadMediaOr404(mediaId: string): Promise<Media> {
+    try {
+      return await this.mediaService.findOneOrFail(mediaId);
+    } catch (error) {
+      if (!(error instanceof NotFoundInDatabaseException)) {
+        throw error;
+      }
       throw new NotFoundException("Media not found");
     }
   }

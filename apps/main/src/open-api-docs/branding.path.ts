@@ -104,6 +104,21 @@ export const brandingPaths = {
             },
           },
         },
+        [HTTPCode.NOT_FOUND]: {
+          description:
+            "The media does not exist, is not its owning organization's branding logo, or is not an image.",
+          content: {
+            [ContentType.JSON]: {
+              schema: {
+                type: "object",
+                properties: {
+                  error: { type: "string", example: "Logo not found" },
+                },
+                required: ["error"],
+              },
+            },
+          },
+        },
       },
     },
   },

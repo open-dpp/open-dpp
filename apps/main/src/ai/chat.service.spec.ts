@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
+import { NotFoundError } from "@open-dpp/exception";
 import { ChatService } from "./chat.service";
 
 describe("ChatService.askAgent (resolves the passport directly)", () => {
@@ -12,9 +13,9 @@ describe("ChatService.askAgent (resolves the passport directly)", () => {
       { findOne } as never, // passportRepository
     );
 
-    await expect(service.askAgent("hi", "passport-1", null, null)).rejects.toThrow(
-      "Product passport passport-1 not found",
-    );
+    const result = service.askAgent("hi", "passport-1", null, null);
+    await expect(result).rejects.toThrow(NotFoundError);
+    await expect(result).rejects.toThrow("Product passport passport-1 not found");
     expect(findOne).toHaveBeenCalledWith("passport-1");
   });
 });

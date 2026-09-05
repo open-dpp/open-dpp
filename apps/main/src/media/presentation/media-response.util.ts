@@ -16,12 +16,23 @@ const ALLOWED_MEDIA_CONTENT_TYPES = new Set([
 ]);
 
 /**
+ * Cache policy for every media response, `/info` JSON included: each route is
+ * authorization-gated and session-dependent, so nothing may be stored by a browser or
+ * shared cache (see `setSafeMediaHeaders`).
+ */
+export const MEDIA_CACHE_CONTROL = "no-store";
+
+/**
  * Set hardened response headers for serving user-uploaded media.
  *
  * Defends against stored-XSS via MIME sniffing: `X-Content-Type-Options: nosniff`
  * stops the browser from re-interpreting the bytes, and the Content-Type is clamped to
  * the upload allowlist so a crafted file can never be served as an HTML/script type.
  * Anything outside the allowlist is forced to a non-rendering attachment download.
+ *
+ * Caching is disabled (`Cache-Control: no-store`): every download route is
+ * authorization-gated (organization membership, permalink publish state, logo assignment),
+ * so a cached copy would keep serving bytes after that access is revoked.
  */
 export function setSafeMediaHeaders(res: Response, media: Media): void {
   const isAllowed = ALLOWED_MEDIA_CONTENT_TYPES.has(media.mimeType);
@@ -36,7 +47,7 @@ export function setSafeMediaHeaders(res: Response, media: Media): void {
   if (media.updatedAt) {
     res.setHeader("Last-Modified", media.updatedAt.toUTCString());
   }
-  res.setHeader("Cache-Control", "private, max-age=31536000");
+  res.setHeader("Cache-Control", MEDIA_CACHE_CONTROL);
 }
 
 /** Public-safe projection of a Media — exactly the api-client `MediaInfoDto` shape. */

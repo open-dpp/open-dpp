@@ -5,6 +5,7 @@ import {
   Delete,
   FileTypeValidator,
   Get,
+  Header,
   MaxFileSizeValidator,
   NotFoundException,
   Param,
@@ -15,6 +16,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { memoryStorage } from "multer";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
@@ -23,8 +25,24 @@ import { MembersService } from "../../identity/organizations/application/service
 import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
-import { PublicMediaInfo, streamMedia, toPublicMediaInfo } from "./media-response.util";
+import {
+  MEDIA_CACHE_CONTROL,
+  PublicMediaInfo,
+  streamMedia,
+  toPublicMediaInfo,
+} from "./media-response.util";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
+
+/**
+ * The only failures the download route collapses into a 404: the missing-record case from the
+ * media lookup and the membership denial `loadMediaForMember` normalizes to the same
+ * NotFoundException, so the response cannot be used to enumerate which mediaIds exist.
+ * Database, object-store and other operational errors are unexpected and must surface as a 5xx
+ * via Nest's exception layer instead of being masked.
+ */
+function isMediaNotFoundError(error: unknown): boolean {
+  return error instanceof NotFoundInDatabaseException || error instanceof NotFoundException;
+}
 
 @Controller("media")
 export class MediaController {
@@ -39,6 +57,7 @@ export class MediaController {
   }
 
   @Get(":id/download")
+  @Header("Cache-Control", MEDIA_CACHE_CONTROL)
   async streamFile(
     @Param("id") id: string,
     @AuthSession() session: Session,
@@ -48,12 +67,16 @@ export class MediaController {
       const media = await this.loadMediaForMember(id, session.userId);
       const stream = await this.filesService.getFilestreamOfMedia(media);
       streamMedia(res, media, stream);
-    } catch {
+    } catch (error) {
+      if (!isMediaNotFoundError(error)) {
+        throw error;
+      }
       res.status(404).json({ error: "File not found" });
     }
   }
 
   @Get(":id/info")
+  @Header("Cache-Control", MEDIA_CACHE_CONTROL)
   async getMediaInfo(
     @Param("id") id: string,
     @AuthSession() session: Session,
@@ -76,7 +99,10 @@ export class MediaController {
     let media: Media;
     try {
       media = await this.filesService.findOneOrFail(id);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof NotFoundInDatabaseException)) {
+        throw error;
+      }
       // Collapse "does not exist" into the same 404 as "not a member" so the response shape
       // cannot be used to enumerate which mediaIds exist.
       throw new NotFoundException("Media not found");

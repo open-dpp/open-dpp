@@ -2,6 +2,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import { NotFoundError } from "@open-dpp/exception";
 import { Member } from "../identity/organizations/domain/member";
 import { User } from "../identity/users/domain/user";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
@@ -41,7 +42,7 @@ export class ChatService {
     this.logger.log(`Resolve passport: ${passportId}`);
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
-      throw new Error(`Product passport ${passportId} not found`);
+      throw new NotFoundError(`Product passport ${passportId} not found`);
     }
 
     // Check quota BEFORE processing

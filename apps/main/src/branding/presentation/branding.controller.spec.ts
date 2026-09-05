@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { BrandingController } from "./branding.controller";
 
 function makeRes() {
@@ -69,11 +70,43 @@ describe("BrandingController.getOrganizationLogo (public, ownership-gated)", () 
 
   it("404s when the media does not exist", async () => {
     const { controller, mediaService } = make();
-    mediaService.findOneOrFail.mockRejectedValue(new Error("not found"));
+    mediaService.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException("Media"));
     const res = makeRes();
 
     await controller.getOrganizationLogo("missing", res);
 
     expect((res as unknown as { status: jest.Mock }).status).toHaveBeenCalledWith(404);
+  });
+
+  it("rethrows database failures from the media lookup instead of masking them as 404", async () => {
+    const { controller, mediaService } = make();
+    mediaService.findOneOrFail.mockRejectedValue(new Error("MongoNetworkError: connection lost"));
+    const res = makeRes();
+
+    await expect(controller.getOrganizationLogo("m-1", res)).rejects.toThrow("connection lost");
+
+    expect((res as unknown as { status: jest.Mock }).status).not.toHaveBeenCalled();
+  });
+
+  it("rethrows database failures from the logo ownership check instead of masking them as 404", async () => {
+    const { controller, brandingRepository } = make();
+    brandingRepository.isOrganizationLogo.mockRejectedValue(new Error("MongoServerError: timeout"));
+    const res = makeRes();
+
+    await expect(controller.getOrganizationLogo("m-1", res)).rejects.toThrow("timeout");
+
+    expect((res as unknown as { status: jest.Mock }).status).not.toHaveBeenCalled();
+  });
+
+  it("rethrows object-store failures when fetching the logo stream instead of masking them as 404", async () => {
+    const { controller, mediaService } = make({ isOwnLogo: true });
+    mediaService.getFilestreamOfMedia.mockRejectedValue(new Error("Bucket does not exist"));
+    const res = makeRes();
+
+    await expect(controller.getOrganizationLogo("m-1", res)).rejects.toThrow(
+      "Bucket does not exist",
+    );
+
+    expect((res as unknown as { status: jest.Mock }).status).not.toHaveBeenCalled();
   });
 });

@@ -26,6 +26,7 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
+import { MediaService } from "../../media/infrastructure/media.service";
 import { Template } from "../../templates/domain/template";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
@@ -40,6 +41,7 @@ import { SubmodelSecurityContext } from "../domain/security/submodel-security-co
 import { Submodel } from "../domain/submodel-base/submodel";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
+import { extractMediaIds } from "../infrastructure/serialization/extract-media-ids";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { DigitalProductPassportIdentifiableEnvironmentPopulateDecorator } from "./digital-product-passport-identifiable-environment-populate-decorator";
 import { PopulateOptions } from "./environment-populate-decorator";
@@ -114,6 +116,7 @@ export class EnvironmentService {
     conceptDescriptionRepository: ConceptDescriptionRepository,
     private transactionService: TransactionService,
     private activityRepository: ActivityRepository,
+    private readonly mediaService: MediaService,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
@@ -218,6 +221,7 @@ export class EnvironmentService {
   async modifyAasShell(
     correlationId: string,
     digitalProductDocumentId: string,
+    organizationId: string,
     environment: Environment,
     aasId: string,
     modification: AssetAdministrationShellModificationDto,
@@ -234,11 +238,17 @@ export class EnvironmentService {
       });
     }
 
+    const mediaIdsBefore = extractMediaIds([aas], []);
     aas.withTracking().modify(modification, {
       subject: userContext.subject,
       ability,
       submodelSecurityContext,
     });
+    await this.assertNoForeignMediaIntroduced(
+      mediaIdsBefore,
+      extractMediaIds([aas], []),
+      organizationId,
+    );
     const activity = AssetAdministrationShellModifiedActivity.create({
       digitalProductDocumentId,
       userId: userContext.userId,
@@ -257,6 +267,35 @@ export class EnvironmentService {
       return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ ability }));
     } finally {
       await session.endSession();
+    }
+  }
+
+  /**
+   * Reject a modification that newly points the document at media another organization owns
+   * (`Media.ownedByOrganizationId`). The permalink-gated media route refuses to serve such a
+   * reference anyway, so fail fast at the write boundary instead of persisting a link that can
+   * never resolve. Only ids introduced by this modification are checked — references the
+   * document already held are not re-validated — and ids that resolve to no media record are
+   * tolerated: a File value or thumbnail path is free-form per AAS and nothing can leak through
+   * a dangling one.
+   */
+  private async assertNoForeignMediaIntroduced(
+    mediaIdsBefore: string[],
+    mediaIdsAfter: string[],
+    organizationId: string,
+  ): Promise<void> {
+    const before = new Set(mediaIdsBefore);
+    const introduced = mediaIdsAfter.filter((id) => !before.has(id));
+    if (introduced.length === 0) {
+      return;
+    }
+    const foreign = (await this.mediaService.findByIds(introduced)).filter(
+      (media) => media.ownedByOrganizationId !== organizationId,
+    );
+    if (foreign.length > 0) {
+      throw new ValueError(
+        `Media ${foreign.map((media) => media.id).join(", ")} is not owned by this organization.`,
+      );
     }
   }
 

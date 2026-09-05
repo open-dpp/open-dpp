@@ -51,7 +51,7 @@ A passport's media as the public can reach it: only through one of that passport
 _Not to be confused with_: a Member's own media access inside the Organization, which needs no Permalink.
 
 **Referenced Media**:
-A media item a passport points at, as the value of a File element or as a default thumbnail of one of its shells. Only Referenced Media is reachable through the passport's Permalinks.
+A media item a passport points at, as the value of a File element or as a default thumbnail of one of its shells. Only Referenced Media that the passport's Organization owns is reachable through the passport's Permalinks; a pointer at another Organization's media resolves to nothing.
 _Avoid_: attached file, linked media.
 
 **Organization Logo**:

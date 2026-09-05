@@ -49,6 +49,12 @@ describe("setSafeMediaHeaders", () => {
     expect(headers["Content-Disposition"]).toBe("attachment");
     expect(headers["X-Content-Type-Options"]).toBe("nosniff");
   });
+
+  it("disables caching so authorization-gated bytes are not reused after access is revoked", () => {
+    const { res, headers } = makeRes();
+    setSafeMediaHeaders(res as never, { mimeType: "image/webp" } as never);
+    expect(headers["Cache-Control"]).toBe("no-store");
+  });
 });
 
 describe("toPublicMediaInfo", () => {
