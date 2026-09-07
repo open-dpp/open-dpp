@@ -25,10 +25,16 @@ async function openDialog(orgaId: string) {
   organizationId.value = orgaId;
   success.value = false;
   visible.value = true;
+  policyLimits.value = null;
   errors.value = [];
 
-  const response = await apiClient.dpp.policies.get(orgaId);
-  policyLimits.value = response.data;
+  try {
+    loading.value = true;
+    const response = await apiClient.dpp.policies.get(orgaId);
+    policyLimits.value = response.data;
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function submit() {
@@ -71,7 +77,7 @@ defineExpose({
         v-model="rule.limit"
       />
       <div class="mt-4 flex w-full flex-col items-end">
-        <Button type="submit" :disabled="loading">
+        <Button type="submit" :disabled="loading || !policyLimits">
           {{ t("common.save") }}
         </Button>
       </div>

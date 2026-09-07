@@ -532,7 +532,8 @@
     "usage": {
       "title": "Usage policies",
       "setLimitsDialog": {
-        "title": "Set usage limits"
+        "title": "Set usage limits",
+        "nullIsUnlimited": "A value of 0 will make the limit be unlimited."
       },
       "policy": {
         "AI_TOKEN_QUOTA": {
