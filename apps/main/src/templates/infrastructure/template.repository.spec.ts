@@ -13,6 +13,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
@@ -104,6 +105,42 @@ describe("templateRepository", () => {
         createdAt: legacyDoc.createdAt,
         updatedAt: legacyDoc.updatedAt,
         lastStatusChange: DigitalProductDocumentStatusChange.create({}),
+      }),
+    );
+  });
+
+  it(`should load and migrate template from version 1.1.0 to 1.2.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new TemplateDocument({
+      _id: id,
+      _schemaVersion: TemplateDocVersion.v1_1_0,
+      organizationId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+      },
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundTemplate = await templateRepository.findOneOrFail(id);
+    expect(foundTemplate.getPassportEditingMode()).toEqual(PassportEditingMode.Full);
+    expect(foundTemplate).toEqual(
+      Template.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          currentStatus: DigitalProductDocumentStatus.Draft,
+        }),
+        passportEditingMode: PassportEditingMode.Full,
       }),
     );
   });
