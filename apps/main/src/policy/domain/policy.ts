@@ -18,6 +18,7 @@ export abstract class Policy {
   private readonly limit: number;
 
   protected constructor(key: PolicyKey, limit: number, organizationId: string) {
+    Policy.assertValidLimit(limit);
     this.key = key;
     this.limit = limit;
     this.organizationId = organizationId;

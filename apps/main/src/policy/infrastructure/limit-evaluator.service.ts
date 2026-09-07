@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { MediaService } from "../../media/infrastructure/media.service";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PolicyKey, PolicyKeyList } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 
 @Injectable()
 export class LimitEvaluatorService {
@@ -14,13 +15,12 @@ export class LimitEvaluatorService {
     switch (key) {
       case PolicyKeyList.MEDIA_STORAGE_LIMIT: {
         const bytesUsed = await this.mediaService.calculateOrganizationStorageUsage(orgId);
-        const mbUsed = Math.round((bytesUsed / (1024 * 1024)) * 100) / 100;
-        return mbUsed;
+        return bytesUsed / (1024 * 1024);
       }
       case PolicyKeyList.PASSPORT_CREATE_LIMIT:
         return await this.passportRepository.countByOrganizationId(orgId);
       default:
-        throw new Error(`No limit evaluator registered for ${key}`);
+        throw new ValueError(`No limit evaluator registered for ${key}`);
     }
   }
 }

@@ -41,7 +41,7 @@ const limitText = computed(() => {
         {{ t(`organizations.usage.policy.${key}.title`) }}
       </span>
       <span
-        >{{ usage }} {{ t(unitKey, usage) }} / {{ limitText }}
+        >{{ usage.toFixed(2) }} {{ t(unitKey, usage) }} / {{ limitText }}
         {{ t(unitKey, limit === 0 ? 10 : limit) }}</span
       >
     </div>

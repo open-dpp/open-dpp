@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Quota } from "../domain/quota";
 import { QuotaDoc } from "./quota.schema";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import type { PolicyKey } from "@open-dpp/dto";
 
 @Injectable()
@@ -46,7 +46,7 @@ export class QuotaRepository {
   ): Promise<Quota> {
     const quota = await this.findOneByOrganizationIdAndKey(organizationId, key);
     if (!quota) {
-      throw new NotFoundInDatabaseException(this.quotaDoc.modelName);
+      throw new NotFoundError(this.quotaDoc.modelName);
     }
 
     return quota;

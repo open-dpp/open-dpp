@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { PolicyKeyList, type PolicyKey, type SetPolicyLimitsDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { Limit } from "../domain/limit";
 import { PolicyDefinitions, PolicyQuotaRule } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
@@ -66,12 +66,15 @@ export class PolicyService {
   }
 
   async isQuotaExceeded(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
-    const quota = await this.getQuota(orgaId, key);
+    let quota = await this.getQuota(orgaId, key);
+    if (!quota) {
+      quota = await this.quotaRepository.update(this.createDefaultQuota(orgaId, key));
+    }
 
     return {
-      limit: quota?.getLimit() ?? 0,
-      used: quota?.getCount() ?? 0,
-      reset: quota?.getNextReset(),
+      limit: quota.getLimit(),
+      used: quota.getCount(),
+      reset: quota.getNextReset(),
     };
   }
 
@@ -169,7 +172,7 @@ export class PolicyService {
     const rule = PolicyDefinitions[key];
 
     if (rule.type !== "quota") {
-      throw new Error(`Policy ${PolicyKeyList[key]} is not a quota rule`);
+      throw new ValueError(`Policy ${PolicyKeyList[key]} is not a quota rule`);
     }
 
     return rule as PolicyQuotaRule;
