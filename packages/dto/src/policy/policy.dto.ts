@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * The policy rules an organization is held to. `*_QUOTA` keys count usage
- * within a period and reset, `*_LIMIT` keys are evaluated against current
- * state and never reset.
- */
 export const PolicyKeyList = {
   AI_TOKEN_QUOTA: "AI_TOKEN_QUOTA",
   MEDIA_STORAGE_LIMIT: "MEDIA_STORAGE_LIMIT",

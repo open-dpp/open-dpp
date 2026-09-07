@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { MediaService } from "../../media/infrastructure/media.service";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import { PolicyKey, PolicyKeyList } from "../domain/policy-rules";
+import { PolicyKey, PolicyKeyList } from "@open-dpp/dto";
 
 @Injectable()
 export class LimitEvaluatorService {

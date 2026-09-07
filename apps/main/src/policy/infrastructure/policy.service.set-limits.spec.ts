@@ -3,13 +3,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
 import { Limit } from "../domain/limit";
-import type { PolicyKey } from "../domain/policy-rules";
-import { PolicyKeyList } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
 import { LimitEvaluatorService } from "./limit-evaluator.service";
 import { LimitRepository } from "./limit.repository";
 import { PolicyService } from "./policy.service";
 import { QuotaRepository } from "./quota.repository";
+import { type PolicyKey, PolicyKeyList } from "@open-dpp/dto";
 
 const ORGANIZATION_ID = "org-1";
 
@@ -63,16 +62,16 @@ describe("policyService.setLimits", () => {
       findOneByOrganizationIdAndKeyOrFail: jest.fn(async (_orgId: string, key: PolicyKey) =>
         findOrFail(storedLimits, key),
       ),
-      save: jest.fn(async (limit: Limit) => {
+      update: jest.fn(async (limit: Limit) => {
         storedLimits.set(limit.getKey(), limit);
         return limit;
       }),
     };
     const quotaRepository = {
-      findOneByOrganizationIdAndKeyOrFail: jest.fn(async (_orgId: string, key: PolicyKey) =>
-        findOrFail(storedQuotas, key),
+      findOneByOrganizationIdAndKey: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        storedQuotas.get(key),
       ),
-      save: jest.fn(async (quota: Quota) => {
+      update: jest.fn(async (quota: Quota) => {
         storedQuotas.set(quota.getKey(), quota);
         return quota;
       }),

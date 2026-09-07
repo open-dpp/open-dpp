@@ -5,12 +5,12 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Member } from "../identity/organizations/domain/member";
 import { User } from "../identity/users/domain/user";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
-import { PolicyKeyList } from "../policy/domain/policy-rules";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 @Injectable()
 export class ChatService {

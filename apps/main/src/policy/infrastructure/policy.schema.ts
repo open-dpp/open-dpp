@@ -1,6 +1,6 @@
 import { Prop, Schema } from "@nestjs/mongoose";
+import type { PolicyKey } from "@open-dpp/dto";
 import { Document } from "mongoose";
-import type { PolicyKey } from "../domain/policy-rules";
 
 /**
  * Fields shared by every per-organization policy document. Not backed by a

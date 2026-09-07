@@ -56,9 +56,16 @@ export class OrganizationsService {
     if (!createdOrganization) {
       throw new BadRequestException();
     }
-    // Pin the limits and quotas the organization starts with instead of leaving
-    // them to be derived from the env defaults whenever they are first read.
-    await this.policyService.ensureDefaultPolicies(createdOrganization.id);
+    try {
+      await this.policyService.ensureDefaultPolicies(createdOrganization.id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to seed default policies for organization ${createdOrganization.id}; ` +
+          "it will be backfilled on next application bootstrap",
+        error,
+      );
+    }
+
     // BetterAuth's createOrganization already adds the authenticated user as owner; do not add again.
     return createdOrganization;
   }

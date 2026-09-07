@@ -1,6 +1,6 @@
 import { ValueError } from "@open-dpp/exception";
-import { PolicyKeyList } from "./policy-rules";
 import { Quota, QuotaPeriod } from "./quota";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 describe("quota", () => {
   it("should reset if lastSetBack was 7 days ago (same day of week)", () => {
@@ -17,7 +17,7 @@ describe("quota", () => {
       lastSetBack: lastWeek,
     });
 
-    expect(quota.needsReset()).toBe(true);
+    expect(quota.needsReset(today)).toBe(true);
   });
 
   it("should not reset if lastSetBack is today", () => {
@@ -32,7 +32,7 @@ describe("quota", () => {
       lastSetBack: today,
     });
 
-    expect(quota.needsReset()).toBe(false);
+    expect(quota.needsReset(today)).toBe(false);
   });
 
   it("should reset if lastSetBack is yesterday", () => {
@@ -49,7 +49,7 @@ describe("quota", () => {
       lastSetBack: yesterday,
     });
 
-    expect(quota.needsReset()).toBe(true);
+    expect(quota.needsReset(today)).toBe(true);
   });
 
   describe("getNextReset", () => {
@@ -88,9 +88,10 @@ describe("quota", () => {
     });
 
     it("should return a date in the future exactly when a reset is not yet due", () => {
-      const quota = quotaWith("day", new Date());
+      const today = new Date();
+      const quota = quotaWith("day", today);
 
-      expect(quota.needsReset()).toBe(false);
+      expect(quota.needsReset(today)).toBe(false);
       expect(quota.getNextReset().getTime()).toBeGreaterThan(Date.now());
     });
   });

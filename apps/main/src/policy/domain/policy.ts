@@ -1,5 +1,5 @@
+import type { PolicyKey } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { PolicyKey } from "./policy-rules";
 
 export interface PolicyCreateProps {
   organizationId: string;
@@ -13,9 +13,9 @@ export interface PolicyCreateProps {
  * that resets each period.
  */
 export abstract class Policy {
-  private key: PolicyKey;
-  private organizationId: string;
-  private limit: number;
+  private readonly key: PolicyKey;
+  private readonly organizationId: string;
+  private readonly limit: number;
 
   protected constructor(key: PolicyKey, limit: number, organizationId: string) {
     this.key = key;

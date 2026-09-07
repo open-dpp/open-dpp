@@ -32,6 +32,7 @@ import {
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
+  PolicyKeyList,
   Populates,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
@@ -146,7 +147,6 @@ import { UserIdDecorator } from "../../identity/auth/presentation/decorators/use
 import { CorrelationIdDecorator } from "../../common/decorators/correlation-id.decorator";
 import { ActivityTypesType } from "../../activity-history/domain/activities/activity-types";
 import { ApiVersion } from "../../common/decorators/api-version.decorator";
-import { PolicyKeyList } from "../../policy/domain/policy-rules";
 
 @Controller({ path: "/passports", version: AllApiVersions })
 export class PassportController

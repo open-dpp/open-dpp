@@ -6,9 +6,9 @@ import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { Limit } from "../domain/limit";
-import { PolicyKey } from "../domain/policy-rules";
 import { LimitRepository } from "./limit.repository";
 import { LimitDoc, LimitSchema } from "./limit.schema";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 describe("limitRepository", () => {
   let limitRepository: LimitRepository;
@@ -34,27 +34,27 @@ describe("limitRepository", () => {
   it("should save a limit and read it back", async () => {
     const organizationId = randomUUID();
 
-    await limitRepository.save(
-      Limit.create({ organizationId, key: PolicyKey.PASSPORT_CREATE_LIMIT, limit: 5 }),
+    await limitRepository.update(
+      Limit.create({ organizationId, key: PolicyKeyList.PASSPORT_CREATE_LIMIT, limit: 5 }),
     );
 
-    const found = await limitRepository.findOneByOrganizationIdAndKey(
+    const found = await limitRepository.findOneByOrganizationIdAndKeyOrFail(
       organizationId,
-      PolicyKey.PASSPORT_CREATE_LIMIT,
+      PolicyKeyList.PASSPORT_CREATE_LIMIT,
     );
     expect(found?.getLimit()).toBe(5);
-    expect(found?.getKey()).toBe(PolicyKey.PASSPORT_CREATE_LIMIT);
+    expect(found?.getKey()).toBe(PolicyKeyList.PASSPORT_CREATE_LIMIT);
     expect(found?.getOrganizationId()).toBe(organizationId);
   });
 
   it("should overwrite the limit of an existing organization and key pair", async () => {
     const organizationId = randomUUID();
 
-    await limitRepository.save(
-      Limit.create({ organizationId, key: PolicyKey.PASSPORT_CREATE_LIMIT, limit: 5 }),
+    await limitRepository.update(
+      Limit.create({ organizationId, key: PolicyKeyList.PASSPORT_CREATE_LIMIT, limit: 5 }),
     );
-    await limitRepository.save(
-      Limit.create({ organizationId, key: PolicyKey.PASSPORT_CREATE_LIMIT, limit: 9 }),
+    await limitRepository.update(
+      Limit.create({ organizationId, key: PolicyKeyList.PASSPORT_CREATE_LIMIT, limit: 9 }),
     );
 
     const all = await limitRepository.findAllByOrganizationId(organizationId);
@@ -66,16 +66,16 @@ describe("limitRepository", () => {
     const organizationId = randomUUID();
     const otherOrganizationId = randomUUID();
 
-    await limitRepository.save(
-      Limit.create({ organizationId, key: PolicyKey.PASSPORT_CREATE_LIMIT, limit: 5 }),
+    await limitRepository.update(
+      Limit.create({ organizationId, key: PolicyKeyList.PASSPORT_CREATE_LIMIT, limit: 5 }),
     );
-    await limitRepository.save(
-      Limit.create({ organizationId, key: PolicyKey.MEDIA_STORAGE_LIMIT, limit: 200 }),
+    await limitRepository.update(
+      Limit.create({ organizationId, key: PolicyKeyList.MEDIA_STORAGE_LIMIT, limit: 200 }),
     );
-    await limitRepository.save(
+    await limitRepository.update(
       Limit.create({
         organizationId: otherOrganizationId,
-        key: PolicyKey.PASSPORT_CREATE_LIMIT,
+        key: PolicyKeyList.PASSPORT_CREATE_LIMIT,
         limit: 1,
       }),
     );
@@ -83,16 +83,19 @@ describe("limitRepository", () => {
     const all = await limitRepository.findAllByOrganizationId(organizationId);
     expect(all.map((limit) => limit.getLimit()).sort()).toEqual([200, 5].sort());
 
-    const other = await limitRepository.findOneByOrganizationIdAndKey(
+    const other = await limitRepository.findOneByOrganizationIdAndKeyOrFail(
       otherOrganizationId,
-      PolicyKey.PASSPORT_CREATE_LIMIT,
+      PolicyKeyList.PASSPORT_CREATE_LIMIT,
     );
     expect(other?.getLimit()).toBe(1);
   });
 
   it("should return undefined when no limit is stored", async () => {
     await expect(
-      limitRepository.findOneByOrganizationIdAndKey(randomUUID(), PolicyKey.PASSPORT_CREATE_LIMIT),
+      limitRepository.findOneByOrganizationIdAndKey(
+        randomUUID(),
+        PolicyKeyList.PASSPORT_CREATE_LIMIT,
+      ),
     ).resolves.toBeUndefined();
   });
 

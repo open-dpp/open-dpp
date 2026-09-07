@@ -1,5 +1,5 @@
+import { PolicyKey } from "@open-dpp/dto";
 import { Policy, PolicyCreateProps } from "./policy";
-import { PolicyKey } from "./policy-rules";
 
 export type LimitCreateProps = PolicyCreateProps;
 

@@ -7,10 +7,10 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
-import { PolicyKey } from "../domain/policy-rules";
 import { PolicyService } from "../infrastructure/policy.service";
 import { POLICY_META } from "./policy.decorator";
 import { LimitExceededException } from "./policy.exception";
+import type { PolicyKey } from "@open-dpp/dto";
 
 @Injectable()
 export class PolicyGuard implements CanActivate {

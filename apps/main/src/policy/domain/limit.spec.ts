@@ -1,6 +1,6 @@
 import { ValueError } from "@open-dpp/exception";
 import { Limit } from "./limit";
-import { PolicyKeyList } from "./policy-rules";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 describe("limit", () => {
   const limit = Limit.loadFromDb({

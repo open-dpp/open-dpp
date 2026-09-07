@@ -1,14 +1,9 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
-import type { SetPolicyLimitsDto } from "@open-dpp/dto";
+import { PolicyKeyList, type PolicyKey, type SetPolicyLimitsDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Limit } from "../domain/limit";
-import {
-  PolicyDefinitions,
-  PolicyKey,
-  PolicyKeyList,
-  PolicyQuotaRule,
-} from "../domain/policy-rules";
+import { PolicyDefinitions, PolicyQuotaRule } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
 import { LimitEvaluatorService } from "./limit-evaluator.service";
 import { LimitRepository } from "./limit.repository";
@@ -53,27 +48,30 @@ export class PolicyService {
     };
   }
 
-  async getQuota(organizationId: string, key: PolicyKey): Promise<Quota> {
-    const quota = await this.quotaRepository.findOneByOrganizationIdAndKeyOrFail(
-      organizationId,
-      key,
-    );
+  async getQuota(organizationId: string, key: PolicyKey): Promise<Quota | undefined> {
+    this.getQuotaRule(key);
 
-    if (quota.needsReset()) {
+    const quota = await this.quotaRepository.findOneByOrganizationIdAndKey(organizationId, key);
+    if (!quota) {
+      return undefined;
+    }
+
+    const now = new Date();
+    if (quota.needsReset(now)) {
       quota.reset();
-      return await this.quotaRepository.save(quota);
+      return await this.quotaRepository.update(quota);
     }
 
     return quota;
   }
 
   async isQuotaExceeded(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
-    let quota = await this.getQuota(orgaId, key);
+    const quota = await this.getQuota(orgaId, key);
 
     return {
-      limit: quota.getLimit(),
-      used: quota.getCount(),
-      reset: quota.getNextReset(),
+      limit: quota?.getLimit() ?? 0,
+      used: quota?.getCount() ?? 0,
+      reset: quota?.getNextReset(),
     };
   }
 
@@ -88,30 +86,25 @@ export class PolicyService {
   async ensureDefaultPolicies(organizationId: string): Promise<void> {
     for (const rule of Object.values(PolicyDefinitions)) {
       if (rule.type === "quota") {
-        try {
-          await this.quotaRepository.findOneByOrganizationIdAndKeyOrFail(organizationId, rule.key);
-        } catch (error) {
-          if (error instanceof NotFoundInDatabaseException) {
-            await this.quotaRepository.save(this.createDefaultQuota(organizationId, rule.key));
-          }
+        const quota = await this.quotaRepository.findOneByOrganizationIdAndKey(
+          organizationId,
+          rule.key,
+        );
+        if (!quota) {
+          await this.quotaRepository.update(this.createDefaultQuota(organizationId, rule.key));
         }
       } else {
-        try {
-          await this.limitRepository.findOneByOrganizationIdAndKeyOrFail(organizationId, rule.key);
-        } catch (error) {
-          if (error instanceof NotFoundInDatabaseException) {
-            await this.limitRepository.save(this.createDefaultLimit(organizationId, rule.key));
-          }
+        const limit = await this.limitRepository.findOneByOrganizationIdAndKey(
+          organizationId,
+          rule.key,
+        );
+        if (!limit) {
+          await this.limitRepository.update(this.createDefaultLimit(organizationId, rule.key));
         }
       }
     }
   }
 
-  /**
-   * Overwrites the limit of every policy key present in `limits`. Keys that are
-   * absent keep the limit they already have. Returns the utilization of all
-   * policies afterwards, so the caller sees the new state in one round trip.
-   */
   async setLimits(
     organizationId: string,
     limits: SetPolicyLimitsDto,
@@ -120,14 +113,14 @@ export class PolicyService {
       const rule = PolicyDefinitions[key];
 
       if (rule.type === "quota") {
-        const quota = await this.getQuota(organizationId, key);
-        await this.quotaRepository.save(quota.withLimit(limit));
+        const quota = await this.getQuotaOrFail(organizationId, key);
+        await this.quotaRepository.update(quota.withLimit(limit));
       } else {
         const existing = await this.limitRepository.findOneByOrganizationIdAndKeyOrFail(
           organizationId,
           key,
         );
-        await this.limitRepository.save(existing.withLimit(limit));
+        await this.limitRepository.update(existing.withLimit(limit));
       }
     }
 
@@ -207,10 +200,13 @@ export class PolicyService {
   }
 
   async incrementQuota(organizationId: string, key: PolicyKey, amount: number = 1): Promise<Quota> {
-    const quota =
-      (await this.getQuota(organizationId, key)) ?? this.createDefaultQuota(organizationId, key);
+    let quota = await this.getQuota(organizationId, key);
+    if (!quota) {
+      quota = this.createDefaultQuota(organizationId, key);
+      await this.quotaRepository.update(quota);
+    }
 
     quota.increment(amount);
-    return await this.quotaRepository.save(quota);
+    return await this.quotaRepository.update(quota);
   }
 }

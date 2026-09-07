@@ -5,10 +5,10 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
-import { PolicyKey } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
 import { QuotaRepository } from "./quota.repository";
 import { QuotaDoc, QuotaSchema } from "./quota.schema";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 describe("quotaRepository", () => {
   let quotaRepository: QuotaRepository;
@@ -17,7 +17,7 @@ describe("quotaRepository", () => {
   const newQuota = (organizationId: string) =>
     Quota.create({
       organizationId,
-      key: PolicyKey.AI_TOKEN_QUOTA,
+      key: PolicyKeyList.AI_TOKEN_QUOTA,
       limit: 100,
       period: "month",
     });
@@ -44,11 +44,11 @@ describe("quotaRepository", () => {
     const quota = newQuota(organizationId);
     quota.increment(3);
 
-    await quotaRepository.save(quota);
+    await quotaRepository.update(quota);
 
-    const found = await quotaRepository.findOneByOrganizationIdAndKey(
+    const found = await quotaRepository.findOneByOrganizationIdAndKeyOrFail(
       organizationId,
-      PolicyKey.AI_TOKEN_QUOTA,
+      PolicyKeyList.AI_TOKEN_QUOTA,
     );
     expect(found?.getLimit()).toBe(100);
     expect(found?.getCount()).toBe(3);
@@ -60,9 +60,9 @@ describe("quotaRepository", () => {
     const organizationId = randomUUID();
     const quota = newQuota(organizationId);
 
-    await quotaRepository.save(quota);
+    await quotaRepository.update(quota);
     quota.increment(7);
-    await quotaRepository.save(quota);
+    await quotaRepository.update(quota);
 
     const all = await quotaRepository.findAllByOrganizationId(organizationId);
     expect(all).toHaveLength(1);
@@ -73,21 +73,21 @@ describe("quotaRepository", () => {
     const organizationId = randomUUID();
     const quota = newQuota(organizationId);
     quota.increment(9);
-    await quotaRepository.save(quota);
+    await quotaRepository.update(quota);
 
     quota.reset();
-    await quotaRepository.save(quota);
+    await quotaRepository.update(quota);
 
-    const found = await quotaRepository.findOneByOrganizationIdAndKey(
+    const found = await quotaRepository.findOneByOrganizationIdAndKeyOrFail(
       organizationId,
-      PolicyKey.AI_TOKEN_QUOTA,
+      PolicyKeyList.AI_TOKEN_QUOTA,
     );
     expect(found?.getCount()).toBe(0);
   });
 
   it("should return undefined when no quota is stored", async () => {
     await expect(
-      quotaRepository.findOneByOrganizationIdAndKey(randomUUID(), PolicyKey.AI_TOKEN_QUOTA),
+      quotaRepository.findOneByOrganizationIdAndKey(randomUUID(), PolicyKeyList.AI_TOKEN_QUOTA),
     ).resolves.toBeUndefined();
   });
 

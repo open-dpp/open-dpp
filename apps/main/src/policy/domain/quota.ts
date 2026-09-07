@@ -1,5 +1,5 @@
+import type { PolicyKey } from "@open-dpp/dto";
 import { Policy, PolicyCreateProps } from "./policy";
-import { PolicyKey } from "./policy-rules";
 
 export type QuotaPeriod = "year" | "month" | "day";
 
@@ -59,11 +59,10 @@ export class Quota extends Policy {
     );
   }
 
-  needsReset(): boolean {
-    const currentDate = new Date();
-    const sameYear = currentDate.getFullYear() === this.lastSetBack.getFullYear();
-    const sameMonth = currentDate.getMonth() === this.lastSetBack.getMonth();
-    const sameDay = sameYear && sameMonth && currentDate.getDate() === this.lastSetBack.getDate();
+  needsReset(now: Date): boolean {
+    const sameYear = now.getFullYear() === this.lastSetBack.getFullYear();
+    const sameMonth = now.getMonth() === this.lastSetBack.getMonth();
+    const sameDay = sameYear && sameMonth && now.getDate() === this.lastSetBack.getDate();
 
     switch (this.period) {
       case "day":

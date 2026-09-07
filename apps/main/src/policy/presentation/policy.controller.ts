@@ -4,7 +4,7 @@ import { SetPolicyLimitsDtoSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserHasRole } from "../../identity/auth/presentation/decorators/user-has-role.decorator";
-import { UserRole, UserRoleType } from "../../identity/users/domain/user-role.enum";
+import { UserRole, type UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { PolicyService } from "../infrastructure/policy.service";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 

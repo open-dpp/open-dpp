@@ -2,9 +2,9 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Limit } from "../domain/limit";
-import { PolicyKey } from "../domain/policy-rules";
 import { LimitDoc } from "./limit.schema";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
+import type { PolicyKey } from "@open-dpp/dto";
 
 @Injectable()
 export class LimitRepository {
@@ -25,16 +25,28 @@ export class LimitRepository {
     });
   }
 
+  async findOneByOrganizationIdAndKey(
+    organizationId: string,
+    key: PolicyKey,
+  ): Promise<Limit | undefined> {
+    const limitDoc = await this.limitDoc.findOne({ key, organizationId }).exec();
+    if (!limitDoc) {
+      return undefined;
+    }
+
+    return this.convertToDomain(limitDoc);
+  }
+
   async findOneByOrganizationIdAndKeyOrFail(
     organizationId: string,
     key: PolicyKey,
   ): Promise<Limit> {
-    const limitDoc = await this.limitDoc.findOne({ key, organizationId }).exec();
-    if (!limitDoc) {
-      throw new NotFoundInDatabaseException(this.limitDoc.modelName);
+    const limit = await this.findOneByOrganizationIdAndKey(organizationId, key);
+    if (!limit) {
+      throw new NotFoundError(this.limitDoc.modelName);
     }
 
-    return this.convertToDomain(limitDoc);
+    return limit;
   }
 
   async findAllByOrganizationId(organizationId: string): Promise<Limit[]> {
@@ -42,25 +54,20 @@ export class LimitRepository {
     return limitDocs.map((limitDoc) => this.convertToDomain(limitDoc));
   }
 
-  async save(limit: Limit): Promise<Limit> {
-    const limitDoc = await this.limitDoc
-      .findOneAndUpdate(
-        { key: limit.getKey(), organizationId: limit.getOrganizationId() },
-        {
-          $set: {
-            key: limit.getKey(),
-            organizationId: limit.getOrganizationId(),
-            limit: limit.getLimit(),
-          },
-        },
-        {
-          new: true,
-          upsert: true,
-          runValidators: true,
-        },
-      )
+  async update(limit: Limit): Promise<Limit> {
+    let limitDoc = await this.limitDoc
+      .findOne({ key: limit.getKey(), organizationId: limit.getOrganizationId() })
       .exec();
+    if (!limitDoc) {
+      limitDoc = new this.limitDoc();
+    }
 
-    return this.convertToDomain(limitDoc);
+    limitDoc.set({
+      key: limit.getKey(),
+      organizationId: limit.getOrganizationId(),
+      limit: limit.getLimit(),
+    });
+
+    return this.convertToDomain(await limitDoc.save());
   }
 }

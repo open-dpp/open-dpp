@@ -19,10 +19,10 @@ import { Session } from "../../identity/auth/domain/session";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
-import { PolicyKeyList } from "../../policy/domain/policy-rules";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 @Controller("media")
 export class MediaController {

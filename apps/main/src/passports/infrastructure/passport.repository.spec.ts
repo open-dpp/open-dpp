@@ -6,6 +6,7 @@ import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { passportsPlainFactory } from "@open-dpp/testing";
 import { Model, Model as MongooseModel } from "mongoose";
 
 import { AasModule } from "../../aas/aas.module";
@@ -421,13 +422,16 @@ describe("passportRepository", () => {
     const otherOrganizationId = randomUUID();
 
     const newPassport = (orgId: string) =>
-      Passport.create({
-        id: randomUUID(),
-        organizationId: orgId,
-        environment: Environment.create({
-          assetAdministrationShells: [randomUUID()],
+      Passport.fromPlain(
+        passportsPlainFactory.build({
+          organizationId: orgId,
+          environment: {
+            assetAdministrationShells: [randomUUID()],
+            submodels: [],
+            conceptDescriptions: [],
+          },
         }),
-      });
+      );
 
     await passportRepository.save(newPassport(organizationId));
     await passportRepository.save(newPassport(organizationId));

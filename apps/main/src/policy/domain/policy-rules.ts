@@ -1,8 +1,6 @@
 import { type PolicyKey, PolicyKeyList } from "@open-dpp/dto";
 import type { QuotaPeriod } from "./quota";
 import { NumericEnvKeys } from "@open-dpp/env";
-export { PolicyKeyEnum, PolicyKeyList } from "@open-dpp/dto";
-export type { PolicyKey } from "@open-dpp/dto";
 
 export interface PolicyLimitRule {
   type: "limit";

@@ -2,8 +2,6 @@ import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { OrganizationsRepository } from "../../identity/organizations/infrastructure/adapters/organizations.repository";
 import { PolicyService } from "./policy.service";
 
-// Backfills organizations that predate a policy rule — either because they were
-// created before the rule existed, or before policies were materialized at all.
 @Injectable()
 export class PolicyInitializerService implements OnApplicationBootstrap {
   private readonly logger = new Logger(PolicyInitializerService.name);

@@ -1,10 +1,10 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { PolicyKey } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
 import { QuotaDoc } from "./quota.schema";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import type { PolicyKey } from "@open-dpp/dto";
 
 @Injectable()
 export class QuotaRepository {
@@ -28,16 +28,28 @@ export class QuotaRepository {
     });
   }
 
+  async findOneByOrganizationIdAndKey(
+    organizationId: string,
+    key: PolicyKey,
+  ): Promise<Quota | undefined> {
+    const quotaDoc = await this.quotaDoc.findOne({ key, organizationId }).exec();
+    if (!quotaDoc) {
+      return undefined;
+    }
+
+    return this.convertToDomain(quotaDoc);
+  }
+
   async findOneByOrganizationIdAndKeyOrFail(
     organizationId: string,
     key: PolicyKey,
   ): Promise<Quota> {
-    const quotaDoc = await this.quotaDoc.findOne({ key, organizationId }).exec();
-    if (!quotaDoc) {
+    const quota = await this.findOneByOrganizationIdAndKey(organizationId, key);
+    if (!quota) {
       throw new NotFoundInDatabaseException(this.quotaDoc.modelName);
     }
 
-    return this.convertToDomain(quotaDoc);
+    return quota;
   }
 
   async findAllByOrganizationId(organizationId: string): Promise<Quota[]> {
@@ -45,28 +57,23 @@ export class QuotaRepository {
     return quotaDocs.map((quotaDoc) => this.convertToDomain(quotaDoc));
   }
 
-  async save(quota: Quota): Promise<Quota> {
-    const quotaDoc = await this.quotaDoc
-      .findOneAndUpdate(
-        { key: quota.getKey(), organizationId: quota.getOrganizationId() },
-        {
-          $set: {
-            key: quota.getKey(),
-            organizationId: quota.getOrganizationId(),
-            limit: quota.getLimit(),
-            count: quota.getCount(),
-            period: quota.getPeriod(),
-            lastSetBack: quota.getLastReset(),
-          },
-        },
-        {
-          new: true,
-          upsert: true,
-          runValidators: true,
-        },
-      )
+  async update(quota: Quota): Promise<Quota> {
+    let quotaDoc = await this.quotaDoc
+      .findOne({ key: quota.getKey(), organizationId: quota.getOrganizationId() })
       .exec();
+    if (!quotaDoc) {
+      quotaDoc = new this.quotaDoc();
+    }
 
-    return this.convertToDomain(quotaDoc);
+    quotaDoc.set({
+      key: quota.getKey(),
+      organizationId: quota.getOrganizationId(),
+      limit: quota.getLimit(),
+      count: quota.getCount(),
+      period: quota.getPeriod(),
+      lastSetBack: quota.getLastReset(),
+    });
+
+    return this.convertToDomain(await quotaDoc.save());
   }
 }
