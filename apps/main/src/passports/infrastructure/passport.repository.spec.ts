@@ -16,6 +16,7 @@ import {
   DigitalProductDocumentStatus,
   DigitalProductDocumentStatusChange,
 } from "../../digital-product-document/domain/digital-product-document-status";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
@@ -105,6 +106,44 @@ describe("passportRepository", () => {
         createdAt: legacyDoc.createdAt,
         updatedAt: legacyDoc.updatedAt,
         lastStatusChange: DigitalProductDocumentStatusChange.create({}),
+      }),
+    );
+  });
+
+  it(`should load and migrate passport from version 1.1.0 to 1.2.0`, async () => {
+    const id = randomUUID();
+    const now = new Date();
+    const legacyDoc = new PassportDocument({
+      _id: id,
+      _schemaVersion: PassportDocVersion.v1_1_0,
+      organizationId: randomUUID(),
+      templateId: randomUUID(),
+      environment: {
+        submodels: [randomUUID()],
+        assetAdministrationShells: [randomUUID()],
+        conceptDescriptions: [],
+      },
+      createdAt: now,
+      updatedAt: now,
+      lastStatusChange: {
+        currentStatus: DigitalProductDocumentStatus.Draft,
+      },
+    });
+    await legacyDoc.save({ validateBeforeSave: false });
+    const foundPassport = await passportRepository.findOneOrFail(id);
+    expect(foundPassport.getEditingMode()).toEqual(PassportEditingMode.Full);
+    expect(foundPassport).toEqual(
+      Passport.fromPlain({
+        id,
+        environment: Environment.fromPlain(legacyDoc.environment),
+        templateId: legacyDoc.templateId,
+        organizationId: legacyDoc.organizationId,
+        createdAt: legacyDoc.createdAt,
+        updatedAt: legacyDoc.updatedAt,
+        lastStatusChange: DigitalProductDocumentStatusChange.create({
+          currentStatus: DigitalProductDocumentStatus.Draft,
+        }),
+        editingMode: PassportEditingMode.Full,
       }),
     );
   });
