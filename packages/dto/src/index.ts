@@ -10,6 +10,7 @@ export * from "./shared/get-all-params.dto";
 export * from "./shared/filter.dto";
 export * from "./shared/time.dto";
 export * from "./digital-product-document/digital-product-document.dto";
+export * from "./digital-product-document/passport-editing-mode.dto";
 
 export * from "./api-version.dto";
 export * from "./organizations/invitation.dto";

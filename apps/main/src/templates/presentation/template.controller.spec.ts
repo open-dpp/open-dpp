@@ -286,7 +286,7 @@ describe("templateController", () => {
     expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => {
-        const { passportLockEnabled: _passportLockEnabled, ...plain } = t.toPlain();
+        const { passportEditingMode: _passportEditingMode, ...plain } = t.toPlain();
         return {
           ...plain,
           environment: {
@@ -311,7 +311,7 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => {
-        const { passportLockEnabled: _passportLockEnabled, ...plain } = t.toPlain();
+        const { passportEditingMode: _passportEditingMode, ...plain } = t.toPlain();
         return {
           ...plain,
           createdAt: t.createdAt.toISOString(),
@@ -332,7 +332,7 @@ describe("templateController", () => {
         total_count: 1,
       },
       result: [t2].map((p) => {
-        const { passportLockEnabled: _passportLockEnabled, ...plain } = p.toPlain();
+        const { passportEditingMode: _passportEditingMode, ...plain } = p.toPlain();
         return {
           ...plain,
           createdAt: p.createdAt.toISOString(),

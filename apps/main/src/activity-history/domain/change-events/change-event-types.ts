@@ -27,7 +27,7 @@ export const ChangeEventTypes = {
   ColumnDeletedFromGroup: "ColumnDeletedFromGroup",
   ColumnModifiedInGroup: "ColumnModifiedInGroup",
   ColumnMovedToGroup: "ColumnMovedToGroup",
-  PassportLockEnabled: "PassportLockEnabled",
+  PassportEditingModeChanged: "PassportEditingModeChanged",
 } as const;
 export const ChangeEventTypeEnum = z.enum(ChangeEventTypes);
 export type ChangeEventTypesType = z.infer<typeof ChangeEventTypeEnum>;

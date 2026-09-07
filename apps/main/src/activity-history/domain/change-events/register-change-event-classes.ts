@@ -25,7 +25,7 @@ import { ColumnAddedToGroup } from "./column-added-to-group";
 import { ColumnDeletedFromGroup } from "./column-deleted-from-group";
 import { ColumnModifiedInGroup } from "./column-modified-in-group";
 import { ColumnMovedToGroup } from "./column-moved-to-group";
-import { PassportLockEnabled } from "./passport-lock-enabled";
+import { PassportEditingModeChanged } from "./passport-editing-mode-changed";
 
 export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.AddedSubmodelToEnv, AddedSubmodelToEnv);
@@ -57,5 +57,5 @@ export function registerChangeEventClasses(): void {
   registerChangeEvent(ChangeEventTypes.ColumnDeletedFromGroup, ColumnDeletedFromGroup);
   registerChangeEvent(ChangeEventTypes.ColumnModifiedInGroup, ColumnModifiedInGroup);
   registerChangeEvent(ChangeEventTypes.ColumnMovedToGroup, ColumnMovedToGroup);
-  registerChangeEvent(ChangeEventTypes.PassportLockEnabled, PassportLockEnabled);
+  registerChangeEvent(ChangeEventTypes.PassportEditingModeChanged, PassportEditingModeChanged);
 }

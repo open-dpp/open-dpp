@@ -32,6 +32,7 @@ import {
   LatestApiVersionWithPrefixDto,
   PresentationComponentName,
   DigitalProductDocumentTypes,
+  PassportEditingModeDto,
   ReferenceTypes,
 } from "@open-dpp/dto";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
@@ -297,6 +298,7 @@ describe("passportController", () => {
         currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
+      editingMode: PassportEditingModeDto.Full,
     });
 
     const aasRepository = ctx.getModuleRef().get(AasRepository);
@@ -361,6 +363,7 @@ describe("passportController", () => {
         currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
+      editingMode: PassportEditingModeDto.Full,
     });
 
     expect(response.body.environment.assetAdministrationShells).toHaveLength(
