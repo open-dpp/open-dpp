@@ -59,6 +59,9 @@ describe("policyService.setLimits", () => {
     };
 
     const limitRepository = {
+      findOneByOrganizationIdAndKey: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        storedLimits.get(key),
+      ),
       findOneByOrganizationIdAndKeyOrFail: jest.fn(async (_orgId: string, key: PolicyKey) =>
         findOrFail(storedLimits, key),
       ),
@@ -70,6 +73,9 @@ describe("policyService.setLimits", () => {
     const quotaRepository = {
       findOneByOrganizationIdAndKey: jest.fn(async (_orgId: string, key: PolicyKey) =>
         storedQuotas.get(key),
+      ),
+      findOneByOrganizationIdAndKeyOrFail: jest.fn(async (_orgId: string, key: PolicyKey) =>
+        findOrFail(storedQuotas, key),
       ),
       update: jest.fn(async (quota: Quota) => {
         storedQuotas.set(quota.getKey(), quota);

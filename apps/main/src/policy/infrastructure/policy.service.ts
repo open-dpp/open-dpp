@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { PolicyKeyList, type PolicyKey, type SetPolicyLimitsDto } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
-import { NotFoundInDatabaseException, ValueError } from "@open-dpp/exception";
+import { ValueError } from "@open-dpp/exception";
 import { Limit } from "../domain/limit";
 import { PolicyDefinitions, PolicyQuotaRule } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
@@ -39,7 +39,11 @@ export class PolicyService {
   }
 
   async isLimitReached(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
-    const limit = await this.limitRepository.findOneByOrganizationIdAndKeyOrFail(orgaId, key);
+    let limit = await this.limitRepository.findOneByOrganizationIdAndKey(orgaId, key);
+    if (!limit) {
+      limit = await this.limitRepository.update(this.createDefaultLimit(orgaId, key));
+    }
+
     const used = await this.limitEvaluatorService.getCurrent(orgaId, key);
 
     return {
@@ -78,14 +82,6 @@ export class PolicyService {
     };
   }
 
-  async getQuotaOrFail(organizationId: string, key: PolicyKey): Promise<Quota> {
-    const quota = await this.getQuota(organizationId, key);
-    if (!quota) {
-      throw new NotFoundInDatabaseException(Quota.name);
-    }
-    return quota;
-  }
-
   async ensureDefaultPolicies(organizationId: string): Promise<void> {
     for (const rule of Object.values(PolicyDefinitions)) {
       if (rule.type === "quota") {
@@ -116,7 +112,10 @@ export class PolicyService {
       const rule = PolicyDefinitions[key];
 
       if (rule.type === "quota") {
-        const quota = await this.getQuotaOrFail(organizationId, key);
+        const quota = await this.quotaRepository.findOneByOrganizationIdAndKeyOrFail(
+          organizationId,
+          key,
+        );
         await this.quotaRepository.update(quota.withLimit(limit));
       } else {
         const existing = await this.limitRepository.findOneByOrganizationIdAndKeyOrFail(

@@ -25,12 +25,18 @@ const value = computed(() => {
 
 const unitKey = computed(() => `organizations.usage.policy.${key}.unit`);
 
+const formatNumber = (num: number) => {
+  return Number.isInteger(num) ? num.toString() : num.toFixed(2);
+};
+
+const usageText = computed(() => formatNumber(usage));
+
 const limitText = computed(() => {
   if (limit === 0) {
     return "∞";
   }
 
-  return limit;
+  return formatNumber(limit);
 });
 </script>
 
@@ -41,7 +47,7 @@ const limitText = computed(() => {
         {{ t(`organizations.usage.policy.${key}.title`) }}
       </span>
       <span
-        >{{ usage.toFixed(2) }} {{ t(unitKey, usage) }} / {{ limitText }}
+        >{{ usageText }} {{ t(unitKey, usage) }} / {{ limitText }}
         {{ t(unitKey, limit === 0 ? 10 : limit) }}</span
       >
     </div>

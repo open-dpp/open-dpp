@@ -6,6 +6,8 @@ import {
   type ApiVersionsDtoType,
   BulkImportRunStatusDto,
   type BulkImportRunStatusDtoType,
+  type PolicyKey,
+  PolicyKeyList,
   type ValueRequestDto,
 } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
@@ -108,6 +110,18 @@ describe("BulkImportRunService", () => {
           >(),
       },
     };
+    // Unlimited by default; tests that care about the cap re-mock enforce().
+    const policyService = {
+      enforce:
+        jest.fn<
+          (
+            organizationId: string,
+            keys: PolicyKey[],
+          ) => Promise<{ key: string; used: number; limit: number } | null>
+        >(),
+    };
+    policyService.enforce.mockResolvedValue(null);
+
     // No real Mongo session in these unit tests; just run the work directly.
     const transactionService = {
       withTransaction: jest.fn<<T>(work: (options: DbSessionOptions) => Promise<T>) => Promise<T>>(
@@ -122,6 +136,7 @@ describe("BulkImportRunService", () => {
       productLinkRepository as any,
       passportService as any,
       transactionService as any,
+      policyService as any,
     );
 
     return {
@@ -132,6 +147,7 @@ describe("BulkImportRunService", () => {
       productLinkRepository,
       passportService,
       transactionService,
+      policyService,
     };
   }
 
@@ -320,6 +336,109 @@ describe("BulkImportRunService", () => {
     expect(productLinkRepository.save).not.toHaveBeenCalled();
     expect(item.status).toEqual("updated");
     expect(item.passportId).toEqual("existing-passport");
+    expect(run.status).toEqual(BulkImportRunStatusDto.Completed);
+  });
+
+  it("marks a row failed instead of creating a passport once the passport limit is reached", async () => {
+    const {
+      service,
+      configRepository,
+      runRepository,
+      runItemRepository,
+      productLinkRepository,
+      passportService,
+      policyService,
+    } = buildFakes();
+    const config = buildConfig();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: config.id,
+      organizationId: config.organizationId,
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 1,
+    });
+    const item = BulkImportRunItem.create({
+      runId: run.id,
+      rowIndex: 0,
+      inputData: { sku: "4711", weightKg: 12 },
+      externalId: "4711",
+    });
+
+    configRepository.findOneOrFail.mockResolvedValue(config);
+    runRepository.findOneOrFail.mockResolvedValue(run);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [item] }),
+    );
+    productLinkRepository.findOne.mockResolvedValue(undefined);
+    policyService.enforce.mockResolvedValue({
+      key: "PASSPORT_CREATE_LIMIT",
+      used: 10,
+      limit: 10,
+    });
+
+    await (service as any).processRun(run.id);
+
+    expect(policyService.enforce).toHaveBeenCalledWith(run.organizationId, [
+      PolicyKeyList.PASSPORT_CREATE_LIMIT,
+    ]);
+    expect(passportService.createPassportFromTemplate).not.toHaveBeenCalled();
+    expect(productLinkRepository.save).not.toHaveBeenCalled();
+    expect(item.status).toEqual("failed");
+    expect(item.error).toContain("Passport limit exceeded: 10/10");
+    expect(run.failedCount).toEqual(1);
+    expect(run.status).toEqual(BulkImportRunStatusDto.CompletedWithErrors);
+  });
+
+  it("still updates rows linked to an existing passport when the passport limit is reached", async () => {
+    const {
+      service,
+      configRepository,
+      runRepository,
+      runItemRepository,
+      productLinkRepository,
+      passportService,
+      policyService,
+    } = buildFakes();
+    const config = buildConfig();
+    const run = BulkImportRun.create({
+      bulkImportConfigId: config.id,
+      organizationId: config.organizationId,
+      subject: SubjectAttributes.create({ userRole: UserRole.USER }),
+      userId: randomUUID(),
+      totalCount: 1,
+    });
+    const item = BulkImportRunItem.create({
+      runId: run.id,
+      rowIndex: 0,
+      inputData: { sku: "4711", weightKg: 12 },
+      externalId: "4711",
+    });
+
+    configRepository.findOneOrFail.mockResolvedValue(config);
+    runRepository.findOneOrFail.mockResolvedValue(run);
+    runItemRepository.findAllByRunId.mockResolvedValue(
+      PagingResult.create({ pagination: Pagination.create({}), items: [item] }),
+    );
+    productLinkRepository.findOne.mockResolvedValue(
+      BulkImportProductLink.create({
+        organizationId: run.organizationId,
+        templateId: config.templateId,
+        externalId: "4711",
+        passportId: "existing-passport",
+      }),
+    );
+    policyService.enforce.mockResolvedValue({
+      key: "PASSPORT_CREATE_LIMIT",
+      used: 10,
+      limit: 10,
+    });
+
+    await (service as any).processRun(run.id);
+
+    // No new passport is needed, so the cap must not block the update.
+    expect(policyService.enforce).not.toHaveBeenCalled();
+    expect(passportService.createPassportFromTemplate).not.toHaveBeenCalled();
+    expect(item.status).toEqual("updated");
     expect(run.status).toEqual(BulkImportRunStatusDto.Completed);
   });
 

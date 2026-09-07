@@ -24,10 +24,6 @@ export abstract class Policy {
     this.organizationId = organizationId;
   }
 
-  /**
-   * A limit counts things, so it has to be a whole, non-negative number.
-   * 0 is allowed and means unlimited.
-   */
   protected static assertValidLimit(limit: number): void {
     if (!Number.isInteger(limit) || limit < 0) {
       throw new ValueError(`Limit must be a non-negative integer, got ${limit}`);
