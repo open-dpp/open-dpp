@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { OrganizationsRepository } from "../../identity/organizations/infrastructure/adapters/organizations.repository";
-import { PolicyService } from "./policy.service";
+import { PolicyManagementService } from "../application/services/policy-management.service";
 
 @Injectable()
 export class PolicyInitializerService implements OnApplicationBootstrap {
@@ -8,7 +8,7 @@ export class PolicyInitializerService implements OnApplicationBootstrap {
 
   constructor(
     private readonly organizationsRepository: OrganizationsRepository,
-    private readonly policyService: PolicyService,
+    private readonly policyManagementService: PolicyManagementService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -17,7 +17,7 @@ export class PolicyInitializerService implements OnApplicationBootstrap {
 
     for (const organizationId of organizationIds) {
       try {
-        await this.policyService.ensureDefaultPolicies(organizationId);
+        await this.policyManagementService.ensureDefaultPolicies(organizationId);
       } catch (error) {
         // A single unreachable organization must not take down the whole instance.
         failed++;

@@ -5,12 +5,12 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UserHasRole } from "../../identity/auth/presentation/decorators/user-has-role.decorator";
 import { UserRole, type UserRoleType } from "../../identity/users/domain/user-role.enum";
-import { PolicyService } from "../infrastructure/policy.service";
+import { PolicyManagementService } from "../application/services/policy-management.service";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 
 @Controller("policies")
 export class PolicyController {
-  constructor(private readonly policyService: PolicyService) {}
+  constructor(private readonly policyManagementService: PolicyManagementService) {}
 
   @Get("organizations/:organizationId")
   async getPolicies(
@@ -22,7 +22,7 @@ export class PolicyController {
       throw new UnauthorizedException();
     }
 
-    return await this.policyService.getPolicyUtilization(organizationId);
+    return await this.policyManagementService.getPolicyUtilization(organizationId);
   }
 
   @Patch("organizations/:organizationId/limits")
@@ -31,6 +31,6 @@ export class PolicyController {
     @Param("organizationId") organizationId: string,
     @Body(new ZodValidationPipe(SetPolicyLimitsDtoSchema)) body: SetPolicyLimitsDto,
   ) {
-    return await this.policyService.setLimits(organizationId, body);
+    return await this.policyManagementService.setLimits(organizationId, body);
   }
 }

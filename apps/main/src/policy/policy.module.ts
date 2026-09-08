@@ -13,6 +13,7 @@ import { LimitDoc, LimitSchema } from "./infrastructure/limit.schema";
 import { PolicyService } from "./infrastructure/policy.service";
 import { QuotaRepository } from "./infrastructure/quota.repository";
 import { QuotaDoc, QuotaSchema } from "./infrastructure/quota.schema";
+import { PolicyManagementService } from "./application/services/policy-management.service";
 import { PolicyController } from "./presentation/policy.controller";
 
 @Module({
@@ -29,6 +30,7 @@ import { PolicyController } from "./presentation/policy.controller";
   controllers: [PolicyController],
   providers: [
     PolicyService,
+    PolicyManagementService,
     PolicyInitializerService,
     LimitEvaluatorService,
     LimitRepository,
@@ -36,6 +38,6 @@ import { PolicyController } from "./presentation/policy.controller";
     MediaService,
     PassportRepository,
   ],
-  exports: [PolicyService],
+  exports: [PolicyService, PolicyManagementService],
 })
 export class PolicyModule {}

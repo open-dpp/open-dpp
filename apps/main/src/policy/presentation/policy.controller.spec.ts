@@ -25,14 +25,14 @@ import { UsersService } from "../../identity/users/application/services/users.se
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../identity/users/users.module";
 import { LimitRepository } from "../infrastructure/limit.repository";
-import { PolicyService } from "../infrastructure/policy.service";
 import { QuotaRepository } from "../infrastructure/quota.repository";
+import { PolicyManagementService } from "../application/services/policy-management.service";
 import { PolicyModule } from "../policy.module";
 
 describe("PolicyController", () => {
   let app: INestApplication;
   let moduleRef: TestingModule;
-  let policyService: PolicyService;
+  let policyManagementService: PolicyManagementService;
   let limitRepository: LimitRepository;
   let quotaRepository: QuotaRepository;
   const betterAuthHelper = new BetterAuthHelper();
@@ -41,7 +41,7 @@ describe("PolicyController", () => {
 
   async function seedOrganization(): Promise<string> {
     const organizationId = randomUUID();
-    await policyService.ensureDefaultPolicies(organizationId);
+    await policyManagementService.ensureDefaultPolicies(organizationId);
     return organizationId;
   }
 
@@ -73,7 +73,7 @@ describe("PolicyController", () => {
       .compile();
 
     betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
-    policyService = moduleRef.get<PolicyService>(PolicyService);
+    policyManagementService = moduleRef.get<PolicyManagementService>(PolicyManagementService);
     limitRepository = moduleRef.get<LimitRepository>(LimitRepository);
     quotaRepository = moduleRef.get<QuotaRepository>(QuotaRepository);
 

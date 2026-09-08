@@ -1,7 +1,6 @@
 import { expect, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
-import { Limit } from "../domain/limit";
 import { Quota } from "../domain/quota";
 import { LimitEvaluatorService } from "./limit-evaluator.service";
 import { LimitRepository } from "./limit.repository";
@@ -85,37 +84,6 @@ describe("policyService", () => {
       await expect(
         service.isQuotaExceeded("org-1", PolicyKeyList.PASSPORT_CREATE_LIMIT),
       ).rejects.toThrow("Policy PASSPORT_CREATE_LIMIT is not a quota rule");
-    });
-  });
-
-  describe("ensureDefaultPolicies", () => {
-    it("should persist a row for every policy definition using the configured defaults", async () => {
-      envService.get.mockReturnValue(7);
-      limitRepository.findOneByOrganizationIdAndKey.mockResolvedValue(undefined);
-      quotaRepository.findOneByOrganizationIdAndKey.mockResolvedValue(undefined);
-      limitRepository.update.mockImplementation(async (l: Limit) => l);
-      quotaRepository.update.mockImplementation(async (q: Quota) => q);
-
-      await service.ensureDefaultPolicies("org-1");
-
-      const savedLimits: Limit[] = limitRepository.update.mock.calls.map(
-        (call: [Limit]) => call[0],
-      );
-      const savedQuotas: Quota[] = quotaRepository.update.mock.calls.map(
-        (call: [Quota]) => call[0],
-      );
-
-      expect(savedLimits.map((limit) => limit.getKey()).sort()).toEqual(
-        [PolicyKeyList.MEDIA_STORAGE_LIMIT, PolicyKeyList.PASSPORT_CREATE_LIMIT].sort(),
-      );
-      expect(savedQuotas.map((quota) => quota.getKey())).toEqual([PolicyKeyList.AI_TOKEN_QUOTA]);
-
-      for (const policy of [...savedLimits, ...savedQuotas]) {
-        expect(policy.getOrganizationId()).toBe("org-1");
-        expect(policy.getLimit()).toBe(7);
-      }
-      expect(savedQuotas[0].getPeriod()).toBe("month");
-      expect(savedQuotas[0].getCount()).toBe(0);
     });
   });
 

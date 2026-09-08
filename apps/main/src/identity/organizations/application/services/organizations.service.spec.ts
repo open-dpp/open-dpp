@@ -12,7 +12,7 @@ import { InstanceSettingsService } from "../../../../instance-settings/applicati
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { InstanceSettings } from "../../../../instance-settings/domain/instance-settings";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
-import { PolicyService } from "../../../../policy/infrastructure/policy.service";
+import { PolicyManagementService } from "../../../../policy/application/services/policy-management.service";
 
 describe("OrganizationsService", () => {
   let service: OrganizationsService;
@@ -70,7 +70,7 @@ describe("OrganizationsService", () => {
           useValue: mockInstanceSettingsService,
         },
         {
-          provide: PolicyService,
+          provide: PolicyManagementService,
           useValue: mockPolicyService,
         },
       ],

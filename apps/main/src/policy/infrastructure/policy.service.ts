@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
-import { PolicyKeyList, type PolicyKey, type SetPolicyLimitsDto } from "@open-dpp/dto";
+import { PolicyKeyList, type PolicyKey } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
 import { ValueError } from "@open-dpp/exception";
 import { Limit } from "../domain/limit";
@@ -16,7 +16,7 @@ interface PolicyRuleUtilization {
   reset?: Date;
 }
 
-interface LimitAndValue {
+export interface LimitAndValue {
   limit: number;
   used: number;
   reset?: Date;
@@ -82,69 +82,7 @@ export class PolicyService {
     };
   }
 
-  async ensureDefaultPolicies(organizationId: string): Promise<void> {
-    for (const rule of Object.values(PolicyDefinitions)) {
-      if (rule.type === "quota") {
-        const quota = await this.quotaRepository.findOneByOrganizationIdAndKey(
-          organizationId,
-          rule.key,
-        );
-        if (!quota) {
-          await this.quotaRepository.update(this.createDefaultQuota(organizationId, rule.key));
-        }
-      } else {
-        const limit = await this.limitRepository.findOneByOrganizationIdAndKey(
-          organizationId,
-          rule.key,
-        );
-        if (!limit) {
-          await this.limitRepository.update(this.createDefaultLimit(organizationId, rule.key));
-        }
-      }
-    }
-  }
-
-  async setLimits(
-    organizationId: string,
-    limits: SetPolicyLimitsDto,
-  ): Promise<Record<PolicyKey, LimitAndValue>> {
-    for (const [key, limit] of Object.entries(limits) as [PolicyKey, number][]) {
-      const rule = PolicyDefinitions[key];
-
-      if (rule.type === "quota") {
-        const quota = await this.quotaRepository.findOneByOrganizationIdAndKeyOrFail(
-          organizationId,
-          key,
-        );
-        await this.quotaRepository.update(quota.withLimit(limit));
-      } else {
-        const existing = await this.limitRepository.findOneByOrganizationIdAndKeyOrFail(
-          organizationId,
-          key,
-        );
-        await this.limitRepository.update(existing.withLimit(limit));
-      }
-    }
-
-    return await this.getPolicyUtilization(organizationId);
-  }
-
-  async getPolicyUtilization(organizationId: string): Promise<Record<PolicyKey, LimitAndValue>> {
-    const entries: [PolicyKey, LimitAndValue][] = [];
-
-    for (const rule of Object.values(PolicyDefinitions)) {
-      const utilization =
-        rule.type === "quota"
-          ? await this.isQuotaExceeded(organizationId, rule.key)
-          : await this.isLimitReached(organizationId, rule.key);
-
-      entries.push([rule.key, utilization]);
-    }
-
-    return Object.fromEntries(entries) as Record<PolicyKey, LimitAndValue>;
-  }
-
-  private createDefaultLimit(organizationId: string, key: PolicyKey): Limit {
+  createDefaultLimit(organizationId: string, key: PolicyKey): Limit {
     return Limit.create({
       key,
       organizationId,
@@ -152,7 +90,7 @@ export class PolicyService {
     });
   }
 
-  private createDefaultQuota(organizationId: string, key: PolicyKey): Quota {
+  createDefaultQuota(organizationId: string, key: PolicyKey): Quota {
     return Quota.create({
       key,
       organizationId,
