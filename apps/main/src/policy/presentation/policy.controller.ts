@@ -18,7 +18,7 @@ export class PolicyController {
     @UserRoleDecorator() userRole: UserRoleType,
     @Param("organizationId") paramOrganizationId: string,
   ) {
-    if (paramOrganizationId !== organizationId && userRole !== "admin") {
+    if (paramOrganizationId !== organizationId && userRole !== UserRole.ADMIN) {
       throw new UnauthorizedException();
     }
 
