@@ -9,6 +9,7 @@ import { LimitRepository } from "../../infrastructure/limit.repository";
 import { PolicyService } from "../../infrastructure/policy.service";
 import { QuotaRepository } from "../../infrastructure/quota.repository";
 import { type PolicyKey, PolicyKeyList } from "@open-dpp/dto";
+import { PolicyDefinitions } from "../../domain/policy-rules";
 import { PolicyManagementService } from "./policy-management.service";
 
 const ORGANIZATION_ID = "org-1";
@@ -63,10 +64,19 @@ describe("PolicyManagementService", () => {
         (call: [Quota]) => call[0],
       );
 
+      const rules = Object.values(PolicyDefinitions);
       expect(savedLimits.map((limit) => limit.getKey()).sort()).toEqual(
-        [PolicyKeyList.MEDIA_STORAGE_LIMIT, PolicyKeyList.PASSPORT_CREATE_LIMIT].sort(),
+        rules
+          .filter((rule) => rule.type === "limit")
+          .map((rule) => rule.key)
+          .sort(),
       );
-      expect(savedQuotas.map((quota) => quota.getKey())).toEqual([PolicyKeyList.AI_TOKEN_QUOTA]);
+      expect(savedQuotas.map((quota) => quota.getKey()).sort()).toEqual(
+        rules
+          .filter((rule) => rule.type === "quota")
+          .map((rule) => rule.key)
+          .sort(),
+      );
 
       for (const policy of [...savedLimits, ...savedQuotas]) {
         expect(policy.getOrganizationId()).toBe("org-1");

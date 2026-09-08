@@ -81,8 +81,11 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 ## Default caps
 
-| Variable                             | Type          | Required | Default | Description                                  |
-| ------------------------------------ | ------------- | -------- | ------- | -------------------------------------------- |
-| `OPEN_DPP_DEFAULT_MODEL_CREATE_CAP`  | number (>= 0) | No       | `0`     | Default model creation cap per organization. |
-| `OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA`    | number (>= 0) | No       | `0`     | Default AI token quota per organization.     |
-| `OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP` | number (>= 0) | No       | `0`     | Default media storage cap per organization.  |
+| Variable                                   | Type          | Required | Default | Description                                  |
+| ------------------------------------------ | ------------- | -------- | ------- | -------------------------------------------- |
+| `OPEN_DPP_DEFAULT_MODEL_CREATE_CAP`        | number (>= 0) | No       | `0`     | Default model creation cap per organization. |
+| `OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA`          | number (>= 0) | No       | `0`     | Default AI token quota per organization.     |
+| `OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP`       | number (>= 0) | No       | `0`     | Default media storage cap per organization.  |
+| `OPEN_DPP_DEFAULT_ORGANIZATION_MEMBER_CAP` | number (>= 0) | No       | `0`     | Default member cap per organization.         |
+
+> A value of `0` means unlimited.

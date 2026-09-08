@@ -80,6 +80,7 @@ export const envSchema = z
     OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
     OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),
     OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP: z.coerce.number().min(0).optional().default(0),
+    OPEN_DPP_DEFAULT_ORGANIZATION_MEMBER_CAP: z.coerce.number().min(0).optional().default(0),
   })
   .superRefine((val, ctx) => {
     const hasUri = !!val.OPEN_DPP_MONGODB_URI;

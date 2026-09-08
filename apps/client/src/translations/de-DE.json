@@ -550,6 +550,11 @@
           "title": "Produktpass Limit",
           "unit": "Pass | Pässe",
           "description": "Begrenzt die Gesamtzahl der Produktpässe, die eine Organisation erstellen kann."
+        },
+        "ORGANIZATION_MEMBER_LIMIT": {
+          "title": "Teammitglieder Limit",
+          "unit": "Mitglied | Mitglieder",
+          "description": "Begrenzt die Gesamtzahl der Teammitglieder, die einer Organisation beitreten können."
         }
       }
     },
@@ -931,7 +936,8 @@
       "limit": {
         "PASSPORT_CREATE_LIMIT": "Limit von {limit} Produktpässen ist erreicht.",
         "MEDIA_STORAGE_LIMIT": "Limit von {limit}MB Speicherplatz ist erreicht.",
-        "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht."
+        "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht.",
+        "ORGANIZATION_MEMBER_LIMIT": "Limit von {limit} Teammitgliedern ist erreicht. Entfernen Sie ein Mitglied oder erweitern Sie Ihr Limit, um weitere Personen einzuladen."
       }
     }
   },

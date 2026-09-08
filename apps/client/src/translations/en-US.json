@@ -550,6 +550,11 @@
           "title": "Passport limit",
           "unit": "Pass | Passes",
           "description": "Limits the total number of passports the organization can create."
+        },
+        "ORGANIZATION_MEMBER_LIMIT": {
+          "title": "Team member limit",
+          "unit": "Member | Members",
+          "description": "Limits the total number of members in an organization."
         }
       }
     },
@@ -931,7 +936,8 @@
       "limit": {
         "PASSPORT_CREATE_LIMIT": "Model limit of {limit} has been reached.",
         "MEDIA_STORAGE_LIMIT": "Storage limit of {limit} MB has been reached.",
-        "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached."
+        "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached.",
+        "ORGANIZATION_MEMBER_LIMIT": "Team member limit of {limit} has been reached. Remove a member or raise your limit to invite more people."
       }
     }
   },

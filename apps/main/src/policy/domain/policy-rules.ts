@@ -39,4 +39,10 @@ export const PolicyDefinitions: Record<PolicyKey, PolicyRule> = {
     defaultlimit: "OPEN_DPP_DEFAULT_MODEL_CREATE_CAP",
     description: "Models created",
   },
+  [PolicyKeyList.ORGANIZATION_MEMBER_LIMIT]: {
+    type: "limit",
+    key: PolicyKeyList.ORGANIZATION_MEMBER_LIMIT,
+    defaultlimit: "OPEN_DPP_DEFAULT_ORGANIZATION_MEMBER_CAP",
+    description: "Members in organization",
+  },
 };
