@@ -22,7 +22,7 @@ export class PolicyController {
       throw new UnauthorizedException();
     }
 
-    return await this.policyManagementService.getPolicyUtilization(organizationId);
+    return await this.policyManagementService.getPolicyUtilization(paramOrganizationId);
   }
 
   @Patch("organizations/:organizationId/limits")
