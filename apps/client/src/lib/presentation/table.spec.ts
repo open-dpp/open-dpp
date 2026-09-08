@@ -187,6 +187,25 @@ describe("buildColumns", () => {
     });
     expect(cols.find((c) => c.field === "name")?.groupIdShort).toBeUndefined();
   });
+
+  it("leaves description empty when the element has none", () => {
+    const cols = buildColumns([makePropertyOnlyRow()]);
+    expect(cols.find((c) => c.field === "name")?.description).toBe("");
+  });
+
+  it("resolves the description in the requested locale", () => {
+    const row = makePropertyOnlyRow();
+    row.value![0]!.description = [
+      { language: "en", text: "Component name" },
+      { language: "de", text: "Komponentenname" },
+    ];
+    expect(buildColumns([row], "en").find((c) => c.field === "name")?.description).toBe(
+      "Component name",
+    );
+    expect(buildColumns([row], "de").find((c) => c.field === "name")?.description).toBe(
+      "Komponentenname",
+    );
+  });
 });
 
 describe("hasGroupColumns", () => {
@@ -203,8 +222,8 @@ describe("buildGroupHeaders", () => {
   it("returns colspan 1 for plain columns and N for group columns", () => {
     const headers = buildGroupHeaders([makeGroupRow()]);
     expect(headers).toEqual([
-      { idShort: "name", header: "Name", colspan: 1, isGroup: false },
-      { idShort: "Group1", header: "Group", colspan: 2, isGroup: true },
+      { idShort: "name", header: "Name", description: "", colspan: 1, isGroup: false },
+      { idShort: "Group1", header: "Group", description: "", colspan: 2, isGroup: true },
     ]);
   });
 });
