@@ -1,90 +1,61 @@
-import { randomUUID } from "node:crypto";
-import { DigitalProductDocumentTypes } from "@open-dpp/dto";
+import { DigitalProductDocumentTypesType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { DateTime } from "../../../lib/date-time";
-import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfiguration } from "../../../presentation-configurations/domain/presentation-configuration";
-import { Template } from "../../../templates/domain/template";
 import { LatestAasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
 import { ExpandedEnvironment } from "../expanded-environment";
 import { SubjectAttributes } from "../security/subject-attributes";
 import { DigitalProductDocumentStatusChange } from "../../../digital-product-document/domain/digital-product-document-status";
 
-export class AasExportable {
+export interface AasExportable {
+  readonly id: string;
+  readonly organizationId: string;
+  readonly environment: ExpandedEnvironment;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly lastStatusChange: DigitalProductDocumentStatusChange;
+  readonly presentationConfiguration: PresentationConfiguration | null;
+  toExportPlain(subject: SubjectAttributes): Record<string, unknown>;
+}
+
+/**
+ * Shared base for the two concrete exportables (TemplateExportable, PassportExportable) —
+ * factors out everything about `toExportPlain()` that's identical between them, leaving only
+ * the entity-specific fields (e.g. passportEditingMode vs editingMode) to the subclass.
+ */
+export abstract class BaseAasExportable implements AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
   private readonly EXPORT_VERSION = LatestAasExportVersion;
 
-  private constructor(
+  protected constructor(
     public readonly id: string,
     public readonly organizationId: string,
-    public readonly templateId: string | null,
     public readonly environment: ExpandedEnvironment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly lastStatusChange: DigitalProductDocumentStatusChange,
-    public readonly presentationConfiguration: PresentationConfiguration | null = null,
-  ) {}
-
-  static create(data: {
-    id?: string;
-    organizationId: string;
-    templateId?: string | null;
-    environment: ExpandedEnvironment;
-    createdAt?: Date;
-    updatedAt?: Date;
-    lastStatusChange?: DigitalProductDocumentStatusChange;
-    presentationConfiguration?: PresentationConfiguration | null;
-  }) {
-    const now = DateTime.now();
-
-    return new AasExportable(
-      data.id ?? randomUUID(),
-      data.organizationId,
-      data.templateId ?? null,
-      data.environment,
-      data.createdAt ?? now,
-      data.updatedAt ?? now,
-      data.lastStatusChange ?? DigitalProductDocumentStatusChange.create({}),
-      data.presentationConfiguration ?? null,
-    );
-  }
-
-  static createFromPassport(
-    data: Passport,
-    expandedEnvironment: ExpandedEnvironment,
-    presentationConfiguration: PresentationConfiguration | null = null,
+    public readonly presentationConfiguration: PresentationConfiguration | null,
+    private readonly referenceType: DigitalProductDocumentTypesType,
   ) {
-    assertConfigMatches(presentationConfiguration, DigitalProductDocumentTypes.Passport, data.id);
-    return AasExportable.create({
-      id: data.id,
-      organizationId: data.organizationId,
-      templateId: data.templateId,
-      environment: expandedEnvironment,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      lastStatusChange: data.getLastStatusChange(),
-      presentationConfiguration,
-    });
+    this.assertConfigMatches();
   }
 
-  static createFromTemplate(
-    data: Template,
-    expandedEnvironment: ExpandedEnvironment,
-    presentationConfiguration: PresentationConfiguration | null = null,
-  ) {
-    assertConfigMatches(presentationConfiguration, DigitalProductDocumentTypes.Template, data.id);
-    return AasExportable.create({
-      id: data.id,
-      organizationId: data.organizationId,
-      environment: expandedEnvironment,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      lastStatusChange: data.getLastStatusChange(),
-      presentationConfiguration,
-    });
+  protected abstract exportSpecificFields(): Record<string, unknown>;
+
+  private assertConfigMatches(): void {
+    if (!this.presentationConfiguration) return;
+    if (this.presentationConfiguration.referenceType !== this.referenceType) {
+      throw new ValueError(
+        `PresentationConfiguration referenceType ${this.presentationConfiguration.referenceType} does not match expected ${this.referenceType}`,
+      );
+    }
+    if (this.presentationConfiguration.referenceId !== this.id) {
+      throw new ValueError(
+        `PresentationConfiguration referenceId ${this.presentationConfiguration.referenceId} does not match expected ${this.id}`,
+      );
+    }
   }
 
-  toExportPlain(subject: SubjectAttributes) {
+  toExportPlain(subject: SubjectAttributes): Record<string, unknown> {
     const ability =
       this.environment.shells.length > 0
         ? this.environment.shells[0].security.defineAbilityForSubject(subject)
@@ -111,24 +82,7 @@ export class AasExportable {
             },
           }
         : {}),
+      ...this.exportSpecificFields(),
     };
-  }
-}
-
-function assertConfigMatches(
-  config: PresentationConfiguration | null,
-  expectedType: (typeof DigitalProductDocumentTypes)[keyof typeof DigitalProductDocumentTypes],
-  expectedReferenceId: string,
-): void {
-  if (!config) return;
-  if (config.referenceType !== expectedType) {
-    throw new ValueError(
-      `PresentationConfiguration referenceType ${config.referenceType} does not match expected ${expectedType}`,
-    );
-  }
-  if (config.referenceId !== expectedReferenceId) {
-    throw new ValueError(
-      `PresentationConfiguration referenceId ${config.referenceId} does not match expected ${expectedReferenceId}`,
-    );
   }
 }

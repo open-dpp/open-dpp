@@ -11,7 +11,7 @@ import { DbSessionOptions } from "../../../database/query-options";
 import { TransactionService } from "../../../database/transaction.service";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
-import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
+import { PassportExportable } from "../../../aas/domain/exportable/passport-exportable";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { EnvironmentService, UserContext } from "../../../aas/presentation/environment.service";
 import { PermalinkApplicationService } from "../../../permalink/application/services/permalink.application.service";
@@ -62,7 +62,7 @@ export class PassportService {
     );
   }
 
-  async getExpandedProductPassport(passportId: string): Promise<AasExportable> {
+  async getExpandedProductPassport(passportId: string): Promise<PassportExportable> {
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
@@ -76,7 +76,7 @@ export class PassportService {
         `Passport ${passportId} has no environment; returning empty shells and submodels`,
       );
 
-      return AasExportable.createFromPassport(
+      return PassportExportable.fromPassport(
         passport,
         ExpandedEnvironment.fromEnvironment(
           Environment.create({}),
@@ -92,7 +92,7 @@ export class PassportService {
       passport.environment,
     );
 
-    return AasExportable.createFromPassport(
+    return PassportExportable.fromPassport(
       passport,
       expandedEnvironment,
       presentationConfiguration,
