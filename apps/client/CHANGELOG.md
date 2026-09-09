@@ -1,5 +1,17 @@
 # @open-dpp/client
 
+## 5.2.0
+
+### Minor Changes
+
+- [#848](https://github.com/open-dpp/open-dpp/pull/848) [`fe4ad17`](https://github.com/open-dpp/open-dpp/commit/fe4ad177e8ece990b57ebf274454ac74d99de411) Thanks [@Hentra](https://github.com/Hentra)! - Add descriptions to table columns
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.2.0
+  - @open-dpp/dto@5.2.0
+
 ## 5.1.0
 
 ### Minor Changes
