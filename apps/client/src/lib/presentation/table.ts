@@ -9,6 +9,8 @@ import { resolveLanguageTexts } from "../../composables/language.ts";
 export interface ColumnDef {
   header: string;
   field: string;
+  /** Non-empty only when the source element has a description set. */
+  description: string;
   /** Present only for columns that need a minimum width (e.g. File elements). */
   style?: { minWidth: string };
   /** Set when this column is a sub-column of a group, holding the group's idShort. */
@@ -20,6 +22,8 @@ export interface ColumnDef {
 export interface GroupHeaderDef {
   idShort: string;
   header: string;
+  /** Non-empty only when the source element has a description set. */
+  description: string;
   /** Number of sub-columns spanned; 1 for a plain (non-group) column. */
   colspan: number;
   isGroup: boolean;
@@ -29,6 +33,10 @@ const FILE_MIN_WIDTH = "200px";
 
 function buildLabel(element: SubmodelElementResponseDto, locale: string): string {
   return resolveLanguageTexts(element.displayName, locale, element.idShort);
+}
+
+function buildDescription(element: SubmodelElementResponseDto, locale: string): string {
+  return resolveLanguageTexts(element.description, locale, "");
 }
 
 /**
@@ -81,6 +89,7 @@ export function buildColumns(
   return flattenColumns(buildStructuredColumns(content, locale)).map((col) => ({
     header: col.label,
     field: col.field,
+    description: buildDescription(col.plain, locale),
     groupIdShort: col.groupIdShort,
     isTableColumn: columnKindOf(col.plain.modelType) === "table",
     ...(col.plain.modelType === "File" ? { style: { minWidth: FILE_MIN_WIDTH } } : {}),
@@ -101,6 +110,7 @@ export function buildGroupHeaders(
   return buildStructuredColumns(content, locale).map((col) => ({
     idShort: col.idShort,
     header: col.label,
+    description: buildDescription(col.plain, locale),
     colspan: isGroupColumn(col) ? col.children!.length : 1,
     isGroup: isGroupColumn(col),
   }));
