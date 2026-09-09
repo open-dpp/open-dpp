@@ -17,6 +17,8 @@ const props = defineProps<{
   dataCyPrefix: string;
   submitAttempted: boolean;
   disabled?: boolean;
+  // Renders each row's text field as a Textarea instead of a single-line input.
+  multiline?: boolean;
 }>();
 
 const { t } = useI18n();
@@ -59,6 +61,7 @@ function ignoreOptions(language: LanguageType): LanguageType[] {
       :submit-attempted="props.submitAttempted"
       :ignore-language-options="ignoreOptions(field.value.language)"
       :disabled="props.disabled"
+      :multiline="props.multiline"
       @remove="removeRow(Number(index))"
     />
     <div>
