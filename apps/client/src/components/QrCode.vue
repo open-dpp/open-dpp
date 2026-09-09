@@ -24,6 +24,7 @@ function generateQRCode(newLink: string, newSize: number) {
     newLink,
     { width: newSize, margin: 1 },
     (error: Error | null | undefined) => {
+      // oxlint-disable-next-line no-console
       if (error instanceof Error) console.error(error);
     },
   );
