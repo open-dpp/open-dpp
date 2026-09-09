@@ -9,21 +9,28 @@ const props = defineProps<{
 const canvas = ref<HTMLCanvasElement>();
 watch(
   [() => props.link, () => props.size],
-  async ([newLink, newSize]) => {
-    await generateQRCode(newLink, newSize);
+  ([newLink, newSize]) => {
+    generateQRCode(newLink, newSize);
   },
   { immediate: false },
 );
 
-async function generateQRCode(newLink: string, newSize: number) {
+function generateQRCode(newLink: string, newSize: number) {
   if (!canvas.value) return;
   canvas.value.width = newSize;
   canvas.value.height = newSize;
-  await toCanvas(canvas.value, newLink, { width: newSize, margin: 1 });
+  toCanvas(
+    canvas.value,
+    newLink,
+    { width: newSize, margin: 1 },
+    (error: Error | null | undefined) => {
+      if (error instanceof Error) console.error(error);
+    },
+  );
 }
 
-onMounted(async () => {
-  await generateQRCode(props.link, props.size);
+onMounted(() => {
+  generateQRCode(props.link, props.size);
 });
 </script>
 
