@@ -75,5 +75,9 @@ auth-db
 
 .postman
 /postman
-# Conformance Review: local copies of standard texts (copyrighted / gated), see docs/conformance
+# Conformance Review: local copies of standard texts (copyrighted / gated), see dpp-standards/README.md
 /standards/
+
+# Claude Code: local settings and agent worktrees stay local; .claude/skills/ is committed
+.claude/settings.local.json
+.claude/worktrees/

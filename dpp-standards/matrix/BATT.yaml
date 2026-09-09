@@ -1,0 +1,1718 @@
+# Conformance Matrix: BATT (02023R1542-20250731). Rules: dpp-standards/README.md.
+# Criteria extracted from research/criteria-tier-a.md on 2026-09-03; assessments are added in place, one per Criterion.
+standard: BATT
+edition: 02023R1542-20250731
+extractedFrom: dpp-standards/research/criteria-tier-a.md
+extractedAt: 2026-09-03
+sections:
+  - id: Art13
+    title: Article 13 – Labelling and marking of batteries
+  - id: Art77
+    title: Article 77 – Battery passport
+  - id: Art78
+    title: Article 78 – Technical design and operation of the battery passport
+  - id: AnnexXIII
+    title: Annex XIII – Information to be included in the battery passport
+criteria:
+  - id: BATT-Art13(6)
+    section: Art13
+    clause: Art. 13(6) chapeau
+    paraphrase: From 18 February 2027 every battery carries a QR code per Annex VI Part C (high contrast, readable by common hand-held QR readers).
+    applicability: mixed
+    areas:
+      - 4
+    operationalisedBy:
+      - EN18220
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: client-side QR generation
+      notes: "Client-side QR generation exists, but not the Annex VI Part C battery-label format (high contrast, specified layout). Tracked by #489."
+      gapIssue: 489
+  - id: BATT-Art13(6)(a)
+    section: Art13
+    clause: Art. 13(6)(a)
+    paraphrase: For LMT batteries, industrial batteries above 2 kWh and EV batteries the QR code gives access to the battery passport.
+    applicability: software
+    areas:
+      - 4
+      - 3
+      - 11
+    operationalisedBy:
+      - EN18220
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Met
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code of the permalink/GS1 link
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: resolves the scanned key to the passport
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: doc
+          ref: docs/guides/passports.md
+      notes: A scanned QR code carrying the GS1 Digital Link resolves to the passport's public presentation view; the resolver E2E test proves the chain. The Annex VI Part C carrier format itself is tracked as a Gap (Art. 13(6) chapeau).
+  - id: BATT-Art13(6)(b)
+    section: Art13
+    clause: Art. 13(6)(b)
+    paraphrase: For other batteries the QR code gives access to the Art. 13(1)-(5) label information, the declaration of conformity, the due-diligence report and the Art. 74(1)(a)-(f) waste information.
+    applicability: software
+    areas:
+      - 11
+      - 8
+    operationalisedBy:
+      - EN18220
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-Art13(6)(c)
+    section: Art13
+    clause: Art. 13(6)(c)
+    paraphrase: For SLI batteries the QR code gives the share of cobalt, lead, lithium and nickel recovered from waste in active materials, calculated per Art. 8.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-Art13(6)-closing
+    section: Art13
+    clause: Art. 13(6) closing sentence
+    paraphrase: The information behind the QR code is complete, up to date and accurate.
+    applicability: mixed
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18222
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: content modelling
+        - type: code
+          ref: apps/main/src/activity-history/domain/change-events/change-event-types.ts
+          note: edit audit trail for currency
+      notes: "open-dpp's editing, Draft/Published lifecycle and activity history let an operator keep passport data current, but there is no validation that the information is complete against Annex XIII (which depends on the battery template, #522) or accurate."
+      gapIssue: 522
+  - id: BATT-Art77(1)
+    section: Art77
+    clause: Art. 77(1)
+    paraphrase: From 18 February 2027 each LMT, industrial above 2 kWh and EV battery placed on the market or put into service has an electronic record, the battery passport.
+    applicability: mixed
+    areas:
+      - 8
+      - 1
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Met
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: a passport is an AAS Environment created per product/battery
+        - type: test
+          ref: apps/main/src/passports/domain/passport.spec.ts
+        - type: doc
+          ref: docs/guides/passports.md
+      notes: open-dpp creates an electronic passport record (AAS Environment) per product; an operator can create one per battery. The battery-specific content is tracked separately (no shipped Annex XIII template).
+  - id: BATT-Art77(2)-sub1
+    section: Art77
+    clause: Art. 77(2) first subparagraph
+    paraphrase: The passport holds model-level information and individual-battery information, including data from use, as set out in Annex XIII.
+    applicability: software
+    areas:
+      - 8
+      - 3
+    operationalisedBy:
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: model-level information via the generic template
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full submodel-element set
+      notes: "Model-level information is modellable via the generic template (no battery template ships, #522). The individual-battery information including data from use is a separate gap (#822: no per-battery use-data schema or timeline). Assessed here on the model-information part."
+      gapIssue: 522
+  - id: BATT-Art77(2)(a)
+    section: Art77
+    clause: Art. 77(2)(a)
+    paraphrase: "Information open to the general public: Annex XIII point 1."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-Art77(2)(b)
+    section: Art77
+    clause: Art. 77(2)(b)
+    paraphrase: "Information only for notified bodies, market surveillance authorities and the Commission: Annex XIII points 2 and 3."
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: authorities
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed 5-role hierarchy, no external-party roles
+      notes: open-dpp has no notified-body, market-surveillance-authority or legitimate-interest role; access is only anonymous vs organisation roles, so this access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-Art77(2)(c)
+    section: Art77
+    clause: Art. 77(2)(c)
+    paraphrase: "Information only for persons with a legitimate interest for the purposes in the third subparagraph: Annex XIII points 2 and 4."
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed 5-role hierarchy, no external-party roles
+      notes: open-dpp has no notified-body, market-surveillance-authority or legitimate-interest role; access is only anonymous vs organisation roles, so this access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-Art77(2)-sub3(a)
+    section: Art77
+    clause: Art. 77(2) third subparagraph (a)
+    paraphrase: "Legitimate-interest purpose: dismantling (including safety measures) and detailed composition, essential for repairers, remanufacturers, second-life operators and recyclers."
+    applicability: commission
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: defines the legitimate-interest dismantling and composition purpose. No software surface in open-dpp."
+  - id: BATT-Art77(2)-sub3(b)
+    section: Art77
+    clause: Art. 77(2) third subparagraph (b)
+    paraphrase: "Legitimate-interest purpose: individual-battery data essential to the purchaser or its agents for offering the battery to energy aggregators or market participants."
+    applicability: commission
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: defines the legitimate-interest second-life purpose. No software surface."
+  - id: BATT-Art77(2)-sub4
+    section: Art77
+    clause: Art. 77(2) fourth subparagraph
+    paraphrase: Information is included only to the extent applicable to the battery category or sub-category.
+    applicability: operator
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator editorial duty: include information only to the extent applicable to the battery category. open-dpp lets the operator model what applies; the scoping decision is the operator's."
+  - id: BATT-Art77(2)-sub5
+    section: Art77
+    clause: Art. 77(2) fifth subparagraph
+    paraphrase: The Commission may amend Annex XIII by delegated act.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: may amend Annex XIII by delegated act. No software surface."
+  - id: BATT-Art77(3)-sub1
+    section: Art77
+    clause: Art. 77(3) first subparagraph
+    paraphrase: The passport is reached through the Art. 13(6) QR code, which links to a unique identifier attributed by the operator placing the battery on the market.
+    applicability: software
+    areas:
+      - 3
+      - 4
+    operationalisedBy:
+      - EN18219
+      - EN18220
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Met
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: QR -> UPI -> passport
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: operator-attributed UPI, model/batch/item granularity
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+        - type: doc
+          ref: docs/guides/passports.md
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-09-07
+      notes: The passport is reached through a GS1 Digital Link QR resolving to a unique product identifier the operator attributes (GTIN/batch/serial, item-level granularity supported). The resolver.redirect-published Check evidences the redirect.
+  - id: BATT-Art77(3)-sub2
+    section: Art77
+    clause: Art. 77(3) second subparagraph
+    paraphrase: QR code and unique identifier comply with ISO/IEC 15459-1:2014, -2:2015, -3:2014, -4:2014, -5:2014, -6:2014 "or their equivalent".
+    applicability: software
+    areas:
+      - 3
+      - 4
+    operationalisedBy:
+      - EN18219
+      - EN18220
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1
+          note: GS1 Digital Link AI table/parser/builder
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: operator-attributed UPI
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-09-07
+      notes: "GS1 Digital Link identifiers are used and validate in the GS1 Syntax Engine (GS1 is an ISO/IEC 15459 issuing scheme); ISO/IEC 15459 conformance is not explicitly asserted and the standard is gated/unread. Tracked by #518."
+      gapIssue: 518
+  - id: BATT-Art77(3)-sub3
+    section: Art77
+    clause: Art. 77(3) third subparagraph
+    paraphrase: The Commission may replace or add those standards by delegated act.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: may replace or add identifier standards by delegated act. No software surface."
+  - id: BATT-Art77(4)
+    section: Art77
+    clause: Art. 77(4)
+    paraphrase: The operator placing the battery on the market keeps passport information accurate, complete and up to date; it may authorise another operator in writing.
+    applicability: operator
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "The core duty (keep passport information accurate, complete and up to date) is the operator's. The clause also permits authorising another operator in writing, a delegation surface open-dpp does not model (see #825); a future re-extraction may reclassify this as mixed and assess the delegation surface. Assessed Not applicable under its current applicability (operator)."
+  - id: BATT-Art77(5)
+    section: Art77
+    clause: Art. 77(5)
+    paraphrase: All passport information is based on open standards, in an interoperable format, transferable through an open interoperable network without vendor lock-in, machine-readable, structured and searchable, per Art. 78.
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 13
+    operationalisedBy:
+      - EN18216
+      - EN18222
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: JSON export
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: served OpenAPI 3.1
+        - type: check
+          ref: api.openapi-document-served
+          result: passed
+          date: 2026-09-07
+        - type: check
+          ref: export.aas-environment-verifies
+          result: failed
+          date: 2026-09-07
+      notes: Passport data are machine-readable structured JSON over a documented OpenAPI and searchable via the API, but the export is a proprietary open-dpp:json envelope, not standard AAS JSON (it omits the AAS-required shell id); the export.aas-environment-verifies Check fails. Interoperability without vendor lock-in is therefore not met.
+      gapIssue: 823
+  - id: BATT-Art77(6)
+    section: Art77
+    clause: Art. 77(6)
+    paraphrase: Access to passport information is regulated per the Art. 78 essential requirements.
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-element idShortPath ACL
+      notes: Per-element read/edit access exists via idShortPath ACL, but only for anonymous, organisation member, owner and instance admin; the battery access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-Art77(7)-sub1
+    section: Art77
+    clause: Art. 77(7) first subparagraph
+    paraphrase: After preparation for re-use, preparation for repurposing, repurposing or remanufacturing, responsibility passes to the operator placing the battery on the market again; the battery gets a new passport linked to the original passport(s).
+    applicability: mixed
+    areas:
+      - 3
+      - 6
+    operationalisedBy:
+      - EN18219
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+          note: AAS derivedFrom reference
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: lifecycle statuses
+      notes: The AAS derivedFrom reference can link a passport to an original and lifecycle statuses exist, but there is no re-use/repurposing workflow that transfers responsibility or creates the linked new passport.
+      gapIssue: 825
+  - id: BATT-Art77(7)-sub2
+    section: Art77
+    clause: Art. 77(7) second subparagraph
+    paraphrase: When the battery becomes waste, responsibility passes to the producer, its producer responsibility organisation or the selected waste management operator.
+    applicability: operator
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty: responsibility passes to the producer, its PRO or the waste operator when the battery becomes waste. Organisational, no software surface."
+  - id: BATT-Art77(8)
+    section: Art77
+    clause: Art. 77(8)
+    paraphrase: The passport ceases to exist once the battery has been recycled.
+    applicability: mixed
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+      - EN18222
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: Draft-only delete; published archived
+      notes: A passport can be archived (published passports cannot be deleted), but there is no recycling-triggered cessation.
+      gapIssue: 825
+  - id: BATT-Art77(9)-sub1
+    section: Art77
+    clause: Art. 77(9) first subparagraph
+    paraphrase: By 18 August 2026 the Commission defines by implementing act who has a legitimate interest, which point 2 and 4 data they can access, and how far they may download, share, publish and re-use it.
+    applicability: commission
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: define by implementing act who has a legitimate interest and what point 2 and 4 data they may access. Was due 18 August 2026; not yet adopted. No software surface until it exists."
+  - id: BATT-Art77(9)(a)
+    section: Art77
+    clause: Art. 77(9) second subparagraph (a)
+    paraphrase: "Criterion: need to evaluate the battery's status, residual value and further-use capability."
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: criterion for the Art. 77(9) implementing act. No software surface."
+  - id: BATT-Art77(9)(b)
+    section: Art77
+    clause: Art. 77(9) second subparagraph (b)
+    paraphrase: "Criterion: need for re-use, repurposing, remanufacturing or recycling decisions."
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: criterion for the Art. 77(9) implementing act. No software surface."
+  - id: BATT-Art77(9)(c)
+    section: Art77
+    clause: Art. 77(9) second subparagraph (c)
+    paraphrase: "Criterion: limit access to commercially sensitive information to the minimum."
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty: criterion for the Art. 77(9) implementing act. No software surface."
+  - id: BATT-Art77(10)
+    section: Art77
+    clause: Art. 77(10) (marked C2)
+    paraphrase: The operator placing the battery on the market uploads the unique identifier into the ESPR Art. 13(1) registry.
+    applicability: mixed
+    areas:
+      - 7
+      - 3
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "open-dpp has no EU DPP registry client; the battery unique identifier is not uploaded to the ESPR Art. 13(1) registry. Tracked by #579."
+      gapIssue: 579
+  - id: BATT-Art78(a)
+    section: Art78
+    clause: Art. 78(a)
+    paraphrase: The passport is fully interoperable with ecodesign DPPs in the technical, semantic and organisational aspects of end-to-end communication and data transfer.
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 7
+      - 8
+    operationalisedBy:
+      - EN18223
+      - EN18216
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: JSON export
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: served OpenAPI 3.1
+      notes: Passport data are machine-readable structured JSON over a documented OpenAPI and searchable via the API, but the export is a proprietary open-dpp:json envelope, not standard AAS JSON (it omits the AAS-required shell id); the export.aas-environment-verifies Check fails. Interoperability without vendor lock-in is therefore not met.
+      gapIssue: 823
+  - id: BATT-Art78(b)
+    section: Art78
+    clause: Art. 78(b)
+    paraphrase: Consumers, economic operators and other actors access the passport free of charge per Annex XIII and the Art. 77(9) act.
+    applicability: software
+    areas:
+      - 5
+      - 11
+    operationalisedBy:
+      - EN18239
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-Art78(c)
+    section: Art78
+    clause: Art. 78(c)
+    paraphrase: Passport data are stored by the responsible operator (Art. 77(4) or (7)) or by operators authorised to act on its behalf.
+    applicability: mixed
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/database/config.ts
+          note: the instance persists passport records in its own database
+        - type: doc
+          ref: docs/guides/production-setup.md
+      notes: "open-dpp is self-hostable, so an operator can store passport data on its own infrastructure, but this is a deployment choice the software neither enforces nor verifies: it is equally deployable as multi-tenant SaaS, file attachments are held in S3-compatible object storage (a managed third party per the production setup guide), and delegation to an authorised operator (Art. 77(4)) is not modelled."
+      gapIssue: 825
+  - id: BATT-Art78(d)
+    section: Art78
+    clause: Art. 78(d)
+    paraphrase: Authorised operators may not sell, re-use or process the data beyond what the storage or processing service needs.
+    applicability: operator
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator or processor duty: authorised operators may not sell, re-use or process the data beyond the service need. Contractual, no software surface."
+  - id: BATT-Art78(e)
+    section: Art78
+    clause: Art. 78(e)
+    paraphrase: The passport remains available after the responsible operator ceases to exist or ceases activity in the Union.
+    applicability: mixed
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: No escrow, handover or continuity mechanism keeps the passport available after the responsible operator ceases to exist or activity in the Union.
+      gapIssue: 825
+  - id: BATT-Art78(f)
+    section: Art78
+    clause: Art. 78(f)
+    paraphrase: Rights to access, introduce, modify or update information are restricted per Annex XIII and the Art. 77(9) act.
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-element idShortPath ACL
+      notes: Per-element read/edit access exists via idShortPath ACL, but only for anonymous, organisation member, owner and instance admin; the battery access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-Art78(g)
+    section: Art78
+    clause: Art. 78(g)
+    paraphrase: Data authentication, reliability and integrity are ensured.
+    applicability: software
+    areas:
+      - 10
+    operationalisedBy:
+      - EN18246
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence: []
+      notes: No digital signature, content hash or verifiable credential is applied to passport data or exports; passport content is not tamper-evident. The transport HSTS Check is skipped on a plain-http instance.
+      gapIssue: 824
+  - id: BATT-Art78(h)
+    section: Art78
+    clause: Art. 78(h)
+    paraphrase: A high level of security and privacy is ensured and fraud is avoided.
+    applicability: software
+    areas:
+      - 10
+      - 5
+    operationalisedBy:
+      - EN18239
+      - EN18246
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: auth + access control
+        - type: code
+          ref: apps/main/src/media/presentation/virus-scan.file-validator.ts
+          note: upload virus scanning
+      notes: Authentication, per-element access control and upload virus scanning exist, but there is no data-signing or fraud-prevention mechanism, so security is only partially met.
+      gapIssue: 824
+  - id: BATT-AnnexXIII-1
+    section: AnnexXIII
+    clause: Annex XIII point 1 chapeau
+    paraphrase: All point 1 attributes are model-level and accessible to the public.
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-09-07
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(a)
+    section: AnnexXIII
+    clause: Annex XIII 1(a)
+    paraphrase: "The Annex VI Part A label information: manufacturer identity, category and identification, place and date of manufacture, weight, capacity, chemistry, hazardous substances other than Hg/Cd/Pb, extinguishing agent, critical raw materials above 0,1 % w/w."
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(b)
+    section: AnnexXIII
+    clause: Annex XIII 1(b)
+    paraphrase: "Material composition: chemistry, hazardous substances other than mercury, cadmium or lead, critical raw materials."
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(c)
+    section: AnnexXIII
+    clause: Annex XIII 1(c)
+    paraphrase: Carbon footprint information per Art. 7(1) and (2).
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(d)
+    section: AnnexXIII
+    clause: Annex XIII 1(d)
+    paraphrase: Responsible-sourcing information from the Art. 52(3) due-diligence report.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(e)
+    section: AnnexXIII
+    clause: Annex XIII 1(e)
+    paraphrase: Recycled content per the Art. 8(1) documentation.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(f)
+    section: AnnexXIII
+    clause: Annex XIII 1(f)
+    paraphrase: Share of renewable content.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(g)
+    section: AnnexXIII
+    clause: Annex XIII 1(g)
+    paraphrase: Rated capacity in Ah.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(h)
+    section: AnnexXIII
+    clause: Annex XIII 1(h)
+    paraphrase: Minimal, nominal and maximum voltage, with temperature ranges where relevant.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(i)
+    section: AnnexXIII
+    clause: Annex XIII 1(i)
+    paraphrase: Original power capability in W and its limits, with temperature range where relevant.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(j)
+    section: AnnexXIII
+    clause: Annex XIII 1(j)
+    paraphrase: Expected lifetime in cycles and the reference test used.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(k)
+    section: AnnexXIII
+    clause: Annex XIII 1(k)
+    paraphrase: Capacity threshold for exhaustion (EV batteries only).
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(l)
+    section: AnnexXIII
+    clause: Annex XIII 1(l)
+    paraphrase: Temperature range the battery withstands when not in use, with reference test.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(m)
+    section: AnnexXIII
+    clause: Annex XIII 1(m)
+    paraphrase: Period of the commercial warranty for calendar life.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(n)
+    section: AnnexXIII
+    clause: Annex XIII 1(n)
+    paraphrase: Initial round-trip energy efficiency and the value at 50 % of cycle life.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(o)
+    section: AnnexXIII
+    clause: Annex XIII 1(o)
+    paraphrase: Internal cell and pack resistance.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(p)
+    section: AnnexXIII
+    clause: Annex XIII 1(p)
+    paraphrase: C-rate of the relevant cycle-life test.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(q)
+    section: AnnexXIII
+    clause: Annex XIII 1(q) (as corrected by C4)
+    paraphrase: "The Art. 13(4) and (5) marking requirements: separate-collection symbol and Cd/Pb symbols."
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(r)
+    section: AnnexXIII
+    clause: Annex XIII 1(r)
+    paraphrase: The EU declaration of conformity per Art. 18.
+    applicability: software
+    areas:
+      - 8
+      - 2
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-1(s)
+    section: AnnexXIII
+    clause: Annex XIII 1(s)
+    paraphrase: The Art. 74(1)(a)-(f) information on preventing and managing waste batteries.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: public
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2
+    section: AnnexXIII
+    clause: Annex XIII point 2 chapeau
+    paraphrase: All point 2 attributes are model-level and accessible only to persons with a legitimate interest and the Commission.
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed 5-role hierarchy, no external-party roles
+      notes: open-dpp has no notified-body, market-surveillance-authority or legitimate-interest role; access is only anonymous vs organisation roles, so this access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-AnnexXIII-2(a)
+    section: AnnexXIII
+    clause: Annex XIII 2(a)
+    paraphrase: Detailed composition, including cathode, anode and electrolyte materials.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(b)
+    section: AnnexXIII
+    clause: Annex XIII 2(b)
+    paraphrase: Part numbers for components and contact details of spare-part sources.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)
+    section: AnnexXIII
+    clause: Annex XIII 2(c) chapeau
+    paraphrase: Dismantling information, at least the six items below.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)-1
+    section: AnnexXIII
+    clause: Annex XIII 2(c) first dash
+    paraphrase: Exploded diagrams of the system or pack showing cell locations.
+    applicability: software
+    areas:
+      - 8
+      - 2
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)-2
+    section: AnnexXIII
+    clause: Annex XIII 2(c) second dash
+    paraphrase: Disassembly sequences.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)-3
+    section: AnnexXIII
+    clause: Annex XIII 2(c) third dash
+    paraphrase: Type and number of fastening techniques to be unlocked.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)-4
+    section: AnnexXIII
+    clause: Annex XIII 2(c) fourth dash
+    paraphrase: Tools required for disassembly.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)-5
+    section: AnnexXIII
+    clause: Annex XIII 2(c) fifth dash
+    paraphrase: Warnings where parts risk damage.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(c)-6
+    section: AnnexXIII
+    clause: Annex XIII 2(c) sixth dash
+    paraphrase: Number of cells used and their layout.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-2(d)
+    section: AnnexXIII
+    clause: Annex XIII 2(d)
+    paraphrase: Safety measures.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-3
+    section: AnnexXIII
+    clause: Annex XIII point 3 chapeau
+    paraphrase: Point 3 information is model-level and accessible only to notified bodies, market surveillance authorities and the Commission.
+    applicability: software
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    accessClass: authorities
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed 5-role hierarchy, no external-party roles
+      notes: open-dpp has no notified-body, market-surveillance-authority or legitimate-interest role; access is only anonymous vs organisation roles, so this access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-AnnexXIII-3-1
+    section: AnnexXIII
+    clause: Annex XIII 3 single dash
+    paraphrase: Results of test reports proving compliance with the Regulation and its delegated or implementing acts.
+    applicability: software
+    areas:
+      - 8
+      - 2
+    operationalisedBy:
+      - EN18239
+    accessClass: authorities
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: full AAS submodel-element type set
+      notes: The generic AAS template system can model this attribute (Property/MultiLanguageProperty/File/collections); open-dpp ships no battery passport template and no semantic binding. The E2E fixture apps/e2e/tests/api/battery-passport.ts proves a full Annex XIII passport is expressible.
+      gapIssue: 522
+  - id: BATT-AnnexXIII-4
+    section: AnnexXIII
+    clause: Annex XIII point 4 chapeau
+    paraphrase: Point 4 data are individual-battery data accessible only to persons with a legitimate interest.
+    applicability: software
+    areas:
+      - 5
+      - 3
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed 5-role hierarchy, no external-party roles
+      notes: open-dpp has no notified-body, market-surveillance-authority or legitimate-interest role; access is only anonymous vs organisation roles, so this access class cannot be expressed.
+      gapIssue: 821
+  - id: BATT-AnnexXIII-4(a)
+    section: AnnexXIII
+    clause: Annex XIII 4(a)
+    paraphrase: Values of the Art. 10(1) performance and durability parameters at placing on the market and at each status change.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/traceability-events/domain/traceability-event-wrapper.ts
+          note: generic per-item event store; free-form UNTP/EPCIS payloads
+      notes: The generic traceability-events store can hold per-item UNTP/EPCIS payloads, but there is no battery use-data schema, no built-in event type beyond identifier/item creation, and no per-item timeline query.
+      gapIssue: 822
+  - id: BATT-AnnexXIII-4(b)
+    section: AnnexXIII
+    clause: Annex XIII 4(b)
+    paraphrase: State-of-health information per Art. 14.
+    applicability: software
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/traceability-events/domain/traceability-event-wrapper.ts
+          note: generic per-item event store; free-form UNTP/EPCIS payloads
+      notes: The generic traceability-events store can hold per-item UNTP/EPCIS payloads, but there is no battery use-data schema, no built-in event type beyond identifier/item creation, and no per-item timeline query.
+      gapIssue: 822
+  - id: BATT-AnnexXIII-4(c)
+    section: AnnexXIII
+    clause: Annex XIII 4(c)
+    paraphrase: 'Battery status: "original", "repurposed", "re-used", "remanufactured" or "waste".'
+    applicability: software
+    areas:
+      - 8
+      - 6
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft/Published/Archived
+      notes: A lifecycle status exists, but not the battery status enum original/repurposed/re-used/remanufactured/waste, and it is not modelled as an individual-battery Annex XIII attribute.
+      gapIssue: 825
+  - id: BATT-AnnexXIII-4(d)
+    section: AnnexXIII
+    clause: Annex XIII 4(d)
+    paraphrase: "Use data: charge and discharge cycle count, negative events such as accidents, periodically recorded operating conditions including temperature, and state of charge."
+    applicability: software
+    areas:
+      - 8
+      - 9
+    operationalisedBy:
+      - EN18239
+    accessClass: legitimate interest
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/traceability-events/domain/traceability-event-wrapper.ts
+          note: generic per-item event store; free-form UNTP/EPCIS payloads
+      notes: The generic traceability-events store can hold per-item UNTP/EPCIS payloads, but there is no battery use-data schema, no built-in event type beyond identifier/item creation, and no per-item timeline query.
+      gapIssue: 822

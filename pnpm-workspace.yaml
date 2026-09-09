@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - docs
+  - dpp-standards
 
 injectWorkspacePackages: true
 

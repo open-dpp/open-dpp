@@ -9,12 +9,16 @@
   "main": "index.js",
   "scripts": {
     "e2e-test": "pnpm exec playwright test",
-    "e2e-test:ui": "pnpm exec playwright test --ui"
+    "e2e-test:ui": "pnpm exec playwright test --ui",
+    "conformance": "pnpm exec playwright test --project=setup --project=conformance-setup --project=conformance"
   },
   "devDependencies": {
+    "@aas-core-works/aas-core3.0-typescript": "1.0.5",
+    "@axe-core/playwright": "4.13.0",
     "@open-dpp/env": "workspace:*",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.3",
+    "gs1encoder": "1.4.1",
     "uuid": "^13.0.2",
     "zod": "^4.4.3"
   },

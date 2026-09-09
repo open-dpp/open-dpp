@@ -1,0 +1,320 @@
+# Register of every text the Conformance Review assesses. One entry per source id; matrix files
+# reference the id in their `standard` field. Rules and field meanings: README.md, src/schema.ts.
+# Verified against research/public-sources.md (2026-09-03).
+sources:
+  # ---- Tier A: EU law -------------------------------------------------------------------------
+  - id: ESPR
+    tier: A
+    title: Ecodesign for Sustainable Products Regulation
+    short: ESPR 2024/1781
+    reference: Regulation (EU) 2024/1781
+    publisher: European Union
+    edition: Consolidated text CELEX 02024R1781-20240628 (corrigenda of 7.8.2024 and 28.4.2025)
+    stage: In force since 18 July 2024
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1781-20240628
+    normativeReferences: [ISO15459]
+    watch:
+      url: https://publications.europa.eu/webapi/rdf/sparql
+      lookFor: A newer consolidated CELEX 02024R1781-* or a new corrigendum, found with research/eurlex-dpp-acts.rq
+  - id: BATT
+    tier: A
+    title: Batteries Regulation
+    short: Batteries 2023/1542
+    reference: Regulation (EU) 2023/1542
+    publisher: European Union
+    edition: Consolidated text CELEX 02023R1542-20250731 (corrigenda up to 10.4.2026)
+    stage: In force; the battery passport obligation applies from 18 February 2027 (Art. 77(1))
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02023R1542-20250731
+    normativeReferences: [ISO15459]
+    watch:
+      url: https://publications.europa.eu/webapi/rdf/sparql
+      lookFor: The Art. 77(9) implementing act on legitimate-interest access (was due 2026-08-18) and any newer consolidated text
+  - id: REG1778
+    tier: A
+    title: DPP registry implementation arrangements
+    short: Registry 2026/1778
+    reference: Commission Implementing Regulation (EU) 2026/1778
+    publisher: European Union
+    edition: CELEX 32026R1778 (OJ L, 17.7.2026), no consolidated version
+    stage: In force from the twentieth day after publication (Art. 24); national registry administrators by 18 February 2027
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1778
+    watch:
+      url: https://single-market-economy.ec.europa.eu/single-market/digital-product-passport/dpp-registry_en
+      lookFor: Registry API documentation, the token issuance procedure (Art. 2(3)), the semantic repository URL (Art. 12) and the list of verified DPP service providers (Art. 3(f))
+  - id: DEC1736
+    tier: A
+    title: Harmonised standards for digital product passports
+    short: Standards Dec. 2026/1736
+    reference: Commission Implementing Decision (EU) 2026/1736
+    publisher: European Union
+    edition: CELEX 32026D1736 (OJ L, 15.7.2026)
+    stage: In force since 15 July 2026; cites six ENs as a set, EN 18239 and EN 18246 not yet
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026D1736
+    watch:
+      url: https://single-market-economy.ec.europa.eu/single-market/goods/european-standards/harmonised-standards/digital-product-passport-dpp_en
+      lookFor: A second implementing decision citing EN 18239 and EN 18246 (expected September 2026)
+
+  # ---- Tier A, Sector laws (decided 2026-09-06 in #767): DPPs mandated outside ESPR, registered in
+  # ---- the ESPR registry; ESPR-restating clauses are Mirrors of the ESPR rows ----------------------
+  - id: CPR
+    tier: A
+    title: Construction Products Regulation
+    short: CPR 2024/3110
+    reference: Regulation (EU) 2024/3110
+    publisher: European Union
+    edition: CELEX 32024R3110 (OJ L, 18.12.2024), no consolidated version
+    stage: In force since 7 January 2025, applies from 8 January 2026; the DPP duty (Art. 22(7)) applies 18 months after the Art. 75(1) delegated act enters into force, which has no deadline and is not adopted; the CPR prevails over ESPR in a conflict (Art. 12(2))
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R3110
+    watch:
+      url: https://publications.europa.eu/webapi/rdf/sparql
+      lookFor: The Art. 75(1) delegated act setting up the construction DPP system (it may lay down alternative identifier, carrier and registry rules, Art. 75(2)(h)), the Art. 80(2) amending acts and any consolidated text, found with research/eurlex-dpp-acts.rq
+  - id: TOYS
+    tier: A
+    title: Toy Safety Regulation
+    short: Toys 2025/2509
+    reference: Regulation (EU) 2025/2509
+    publisher: European Union
+    edition: CELEX 32025R2509 (OJ L, 12.12.2025), no consolidated version
+    stage: In force since 1 January 2026; applies from 1 August 2030 (Art. 59), the toy passport with it; the Art. 49(1) delegated act on its technical requirements has no deadline and is not adopted
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32025R2509
+    watch:
+      url: https://publications.europa.eu/webapi/rdf/sparql
+      lookFor: The Art. 49(1) delegated act on the technical requirements of the toy passport, the Art. 49(2)-(3) acts amending Annex VI or the registry content, the optional Art. 22(2) implementing act on registry arrangements and any consolidated text, found with research/eurlex-dpp-acts.rq
+  - id: DET
+    tier: A
+    title: Detergents and Surfactants Regulation
+    short: Detergents 2026/405
+    reference: Regulation (EU) 2026/405
+    publisher: European Union
+    edition: CELEX 32026R0405 (OJ L, 2.3.2026), no consolidated version
+    stage: In force since 22 March 2026; applies from 23 September 2029 (Art. 37), the detergent passport with it, with a one-year grace for products compliant with Regulation (EC) No 648/2004 (Art. 36(2)); the Art. 21(10) implementing act on its basic technical requirements has no deadline and is not adopted
+    access: public
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R0405
+    watch:
+      url: https://publications.europa.eu/webapi/rdf/sparql
+      lookFor: The Art. 21(10) implementing act on the basic technical requirements of the detergent passport, the Art. 30(2)-(3) acts amending Annex VI or the registry content, the Art. 30(10) digital-labelling delegated act (due 1 October 2028, it shares the data carrier) and any consolidated text, found with research/eurlex-dpp-acts.rq
+
+  # ---- Tier B: CEN/CENELEC JTC 24 harmonised standards (standardisation request M/604) --------
+  - id: EN18219
+    tier: B
+    title: Digital product passport – Unique identifiers
+    reference: EN 18219:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: EN 18219:2026 (available 2026-05-27)
+    stage: Published; date of withdrawal of conflicting national standards 2026-11-30
+    access: gated
+    url: https://www.nen.nl/nen-en-18219-2026-en-352707
+    citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
+    localFile: standards/EN18219-2026.pdf
+    normativeReferences: [ISO15459, ISO18975, IEC61406, GS1DL]
+    watch:
+      url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
+      lookFor: An amendment or new edition on the JTC 24 work programme
+  - id: EN18220
+    tier: B
+    title: Digital product passport – Data carriers
+    reference: EN 18220:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: EN 18220:2026 (available 2026-05-27)
+    stage: Published; date of withdrawal of conflicting national standards 2026-11-30
+    access: gated
+    url: https://www.nen.nl/nen-en-18220-2026-en-352706
+    citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
+    localFile: standards/EN18220-2026.pdf
+    normativeReferences: [GS1DL]
+    watch:
+      url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
+      lookFor: An amendment or new edition on the JTC 24 work programme
+  - id: EN18216
+    tier: B
+    title: Digital product passport – Data exchange protocols
+    reference: EN 18216:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: EN 18216:2026 (available 2026-05-27)
+    stage: Published; date of withdrawal of conflicting national standards 2026-11-30
+    access: gated
+    url: https://www.nen.nl/nen-en-18216-2026-en-352718
+    citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
+    localFile: standards/EN18216-2026.pdf
+    normativeReferences: [EN301549, ISO21778]
+    watch:
+      url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
+      lookFor: An amendment updating the dated EN 301 549 V3.2.1 reference, or a new edition
+  - id: EN18222
+    tier: B
+    title: Digital product passport – APIs for the product passport lifecycle management and searchability
+    reference: EN 18222:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: EN 18222:2026 (available 2026-05-27)
+    stage: Published; date of withdrawal of conflicting national standards 2026-11-30
+    access: gated
+    url: https://www.nen.nl/nen-en-18222-2026-en-352705
+    citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
+    localFile: standards/EN18222-2026.pdf
+    normativeReferences: [IEC63278, IDTAAAS]
+    watch:
+      url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
+      lookFor: An amendment citing IEC 63278-4 or -5, or a new edition
+  - id: EN18223
+    tier: B
+    title: Digital product passport – System interoperability
+    reference: EN 18223:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: EN 18223:2026 (available 2026-05-27)
+    stage: Published; date of withdrawal of conflicting national standards 2026-11-30
+    access: gated
+    url: https://www.nen.nl/nen-en-18223-2026-en-352704
+    citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
+    localFile: standards/EN18223-2026.pdf
+    normativeReferences: [IEC63278, IDTAAAS]
+    watch:
+      url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
+      lookFor: An amendment or new edition on the JTC 24 work programme
+  - id: EN18221
+    tier: B
+    title: Digital product passport – Data storage, archiving and data persistence
+    reference: EN 18221:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: EN 18221:2026 (available 2026-05-27)
+    stage: Published; date of withdrawal of conflicting national standards 2026-11-30
+    access: gated
+    url: https://www.nen.nl/nen-en-18221-2026-en-352703
+    citedInOj: Implementing Decision (EU) 2026/1736, OJ L 15.7.2026
+    localFile: standards/EN18221-2026.pdf
+    watch:
+      url: https://www.cencenelec.eu/news-events/news/2026/en-in-the-spotlight/2026-07-15-dpp/
+      lookFor: An amendment or new edition on the JTC 24 work programme
+  - id: EN18239
+    tier: B
+    title: Digital product passport – Access rights management, information system security and business confidentiality
+    reference: EN 18239:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: Draft DIN EN 18239:2025-09 until the final text is on sale (2026-09-16)
+    stage: Ratified (formal vote closed 2026-07-16); final text available 2026-09-16; OJ citation expected September 2026
+    access: gated
+    url: https://www.dinmedia.de/en/draft-standard/din-en-18239/393949301
+    localFile: standards/EN18239-2026.pdf
+    watch:
+      url: https://www.dinmedia.de/en/draft-standard/din-en-18239/393949301
+      lookFor: The final edition on sale (2026-09-16), then the OJ citation; re-assess the delta to the draft
+  - id: EN18246
+    tier: B
+    title: Digital product passport – Data authentication, reliability and integrity
+    reference: EN 18246:2026
+    publisher: CEN/CENELEC JTC 24
+    edition: Draft DIN EN 18246:2025-09 until the final text is on sale (2026-09-16)
+    stage: Ratified (formal vote closed 2026-07-16); final text available 2026-09-16; OJ citation expected September 2026
+    access: gated
+    url: https://www.dinmedia.de/en/draft-standard/din-en-18246/394416240
+    localFile: standards/EN18246-2026.pdf
+    watch:
+      url: https://www.dinmedia.de/en/draft-standard/din-en-18246/394416240
+      lookFor: The final edition on sale (2026-09-16), then the OJ citation; re-assess the delta to the draft
+
+  # ---- Tier C: normative references of the A and B texts, assessed in full --------------------
+  - id: ISO15459
+    tier: C
+    title: Information technology – Automatic identification and data capture techniques – Unique identification, Parts 1 to 6
+    reference: ISO/IEC 15459-1:2014, -2:2015, -3:2014, -4:2014, -5:2014, -6:2014
+    publisher: ISO/IEC
+    edition: 2014 and 2015 editions, all confirmed current in 2025 (the editions ESPR Annex III cites)
+    stage: Published, no revision in progress
+    access: gated
+    url: https://www.iso.org/standard/54779.html
+    localFile: standards/ISO-IEC-15459-<part>.pdf
+    watch:
+      url: https://www.iso.org/standard/54779.html
+      lookFor: Any part entering stage 90.92 (revision) or a new edition
+  - id: ISO18975
+    tier: C
+    title: Information technology – Automatic identification and data capture techniques – Encoding and resolving identifiers over HTTP
+    reference: ISO/IEC 18975:2024
+    publisher: ISO/IEC
+    edition: Edition 1, 2024-11
+    stage: Published
+    access: gated
+    url: https://www.iso.org/standard/85540.html
+    localFile: standards/ISO-IEC-18975-2024.pdf
+    watch:
+      url: https://www.iso.org/standard/85540.html
+      lookFor: A new edition or amendment
+  - id: IEC61406
+    tier: C
+    title: Identification link – Part 1 General requirements; Part 2 Types/models, lots/batches, items and characteristics
+    reference: IEC 61406-1:2022, IEC 61406-2:2024
+    publisher: IEC
+    edition: 61406-1 Ed. 1.0 (2022-09), 61406-2 Ed. 1.0 (2024-05)
+    stage: Published; 61406-1 Ed. 2 in development (65E/1196/CDV, forecast 2027-07)
+    access: gated
+    url: https://webstore.iec.ch/en/publication/67673
+    localFile: standards/IEC-61406-<part>.pdf
+    watch:
+      url: https://www.iec.ch/dyn/www/f?p=103:23:::::FSP_ORG_ID,FSP_LANG_ID:1452,25
+      lookFor: 65E/1196/CDV (61406-1 Ed. 2) reaching FDIS or publication
+  - id: GS1DL
+    tier: C
+    title: GS1 Digital Link URI Syntax and GS1-Conformant Resolver
+    reference: GS1 Digital Link URI Syntax 1.7.0; GS1-Conformant Resolver Standard 1.2.1
+    publisher: GS1
+    edition: URI Syntax 1.7.0 and Conformant Resolver 1.2.1, both ratified August 2026
+    stage: Published, royalty-free under the GS1 IP policy
+    access: public
+    url: https://ref.gs1.org/standards/digital-link/uri-syntax/
+    watch:
+      url: https://ref.gs1.org/standards/resolver/
+      lookFor: A release newer than URI Syntax 1.7.0 or Conformant Resolver 1.2.1
+  - id: IEC63278
+    tier: C
+    title: Asset Administration Shell for industrial applications – Part 1 Asset Administration Shell structure
+    reference: IEC 63278-1:2023
+    publisher: IEC
+    edition: Edition 1.0, 2023-12
+    stage: Published; parts 2 to 5 in development (Part 4 forecast 2026-10)
+    access: gated
+    url: https://webstore.iec.ch/en/publication/65628
+    localFile: standards/IEC-63278-1-2023.pdf
+    watch:
+      url: https://www.iec.ch/dyn/www/f?p=103:23:::::FSP_ORG_ID,FSP_LANG_ID:1250,25
+      lookFor: Publication of IEC 63278-4 (2026-10), -2, -3 or -5, and whether EN 18222 or EN 18223 start citing them
+  - id: IDTAAAS
+    tier: C
+    title: IDTA Specification of the Asset Administration Shell – Part 1 Metamodel and Part 2 API
+    reference: IDTA-01001-3-2 (V3.2) and IDTA-01002-3-2 (V3.2.0)
+    publisher: Industrial Digital Twin Association
+    edition: Release 26-01, July 2026 (CC-BY-4.0), with the DPP annex
+    stage: Published
+    access: public
+    url: https://industrialdigitaltwin.org/en/content-hub/aasspecifications
+    watch:
+      url: https://github.com/admin-shell-io/aas-specs-api/releases
+      lookFor: Release 26-02 (Part 4 Security with a DPP annex) or any Part 1 or Part 2 patch release
+  - id: EN301549
+    tier: C
+    title: Accessibility requirements for ICT products and services
+    reference: ETSI EN 301 549 V3.2.1 (2021-03), as cited by EN 18216
+    publisher: ETSI
+    edition: V3.2.1 (the dated reference in EN 18216); V4.1.1 (2026-09) is the current version
+    stage: Published, free
+    access: public
+    url: https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf
+    watch:
+      url: https://www.etsi.org/deliver/etsi_en/301500_301599/301549/
+      lookFor: An EN 18216 amendment updating the dated reference, or a version newer than V4.1.1
+  - id: ISO21778
+    tier: C
+    title: Information technology – The JSON data interchange syntax
+    reference: ISO/IEC 21778:2017 (identical to ECMA-404, 2nd edition, December 2017)
+    publisher: ISO/IEC and Ecma International
+    edition: 2017 edition; assessed on the free ECMA-404 text
+    stage: Published
+    access: public
+    url: https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf
+    watch:
+      url: https://www.iso.org/standard/71616.html
+      lookFor: A new edition (none expected)

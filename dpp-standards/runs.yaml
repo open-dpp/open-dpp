@@ -1,0 +1,796 @@
+# Validation Runs of the Conformance Review, newest last. One entry per run, written by matrix:run;
+# the reviewer of record replaces `reviewer: pending` before the run's PR merges (matrix:check refuses
+# a pending reviewer). Procedures: PLAYBOOK.md. Vocabulary: CONTEXT.md, "Reviews (shared)".
+runs:
+  - id: 2026-09-05-batt
+    date: 2026-09-05
+    trigger:
+      kind: code
+      detail: first assessment of BATT 02023R1542-20250731 (battery passport), gated-text-free run
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - BATT
+    scope:
+      - id: BATT-Art13(6)
+        reason: not assessed
+      - id: BATT-Art13(6)(a)
+        reason: not assessed
+      - id: BATT-Art13(6)(b)
+        reason: not assessed
+      - id: BATT-Art13(6)(c)
+        reason: not assessed
+      - id: BATT-Art13(6)-closing
+        reason: not assessed
+      - id: BATT-Art77(1)
+        reason: not assessed
+      - id: BATT-Art77(2)-sub1
+        reason: not assessed
+      - id: BATT-Art77(2)(a)
+        reason: not assessed
+      - id: BATT-Art77(2)(b)
+        reason: not assessed
+      - id: BATT-Art77(2)(c)
+        reason: not assessed
+      - id: BATT-Art77(2)-sub3(a)
+        reason: not assessed
+      - id: BATT-Art77(2)-sub3(b)
+        reason: not assessed
+      - id: BATT-Art77(2)-sub4
+        reason: not assessed
+      - id: BATT-Art77(2)-sub5
+        reason: not assessed
+      - id: BATT-Art77(3)-sub1
+        reason: not assessed
+      - id: BATT-Art77(3)-sub2
+        reason: not assessed
+      - id: BATT-Art77(3)-sub3
+        reason: not assessed
+      - id: BATT-Art77(4)
+        reason: not assessed
+      - id: BATT-Art77(5)
+        reason: not assessed
+      - id: BATT-Art77(6)
+        reason: not assessed
+      - id: BATT-Art77(7)-sub1
+        reason: not assessed
+      - id: BATT-Art77(7)-sub2
+        reason: not assessed
+      - id: BATT-Art77(8)
+        reason: not assessed
+      - id: BATT-Art77(9)-sub1
+        reason: not assessed
+      - id: BATT-Art77(9)(a)
+        reason: not assessed
+      - id: BATT-Art77(9)(b)
+        reason: not assessed
+      - id: BATT-Art77(9)(c)
+        reason: not assessed
+      - id: BATT-Art77(10)
+        reason: not assessed
+      - id: BATT-Art78(a)
+        reason: not assessed
+      - id: BATT-Art78(b)
+        reason: not assessed
+      - id: BATT-Art78(c)
+        reason: not assessed
+      - id: BATT-Art78(d)
+        reason: not assessed
+      - id: BATT-Art78(e)
+        reason: not assessed
+      - id: BATT-Art78(f)
+        reason: not assessed
+      - id: BATT-Art78(g)
+        reason: not assessed
+      - id: BATT-Art78(h)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(a)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(b)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(c)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(d)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(e)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(f)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(g)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(h)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(i)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(j)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(k)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(l)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(m)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(n)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(o)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(p)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(q)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(r)
+        reason: not assessed
+      - id: BATT-AnnexXIII-1(s)
+        reason: not assessed
+      - id: BATT-AnnexXIII-2
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(a)
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(b)
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)-1
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)-2
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)-3
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)-4
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)-5
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(c)-6
+        reason: not assessed
+      - id: BATT-AnnexXIII-2(d)
+        reason: not assessed
+      - id: BATT-AnnexXIII-3
+        reason: not assessed
+      - id: BATT-AnnexXIII-3-1
+        reason: not assessed
+      - id: BATT-AnnexXIII-4
+        reason: not assessed
+      - id: BATT-AnnexXIII-4(a)
+        reason: not assessed
+      - id: BATT-AnnexXIII-4(b)
+        reason: not assessed
+      - id: BATT-AnnexXIII-4(c)
+        reason: not assessed
+      - id: BATT-AnnexXIII-4(d)
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: pending
+    notes: "First battery assessment (Assess procedure): 3 Met, 51 Partial, 8 Gap, 12 Not applicable. open-dpp is a generic AAS platform, not battery-specific. Checks ran against a branch build (2152c281); the assessed commit is main d5f8219e and the checked behaviours are identical. The export.aas-environment-verifies Check fails, evidencing a real finding for BATT-Art77(5)/Art78(a): the export is a proprietary open-dpp:json envelope, not standard AAS JSON. Gap clusters: #522 template, #821 access classes, #822 use data, #823 interoperability, #824 integrity, #825 lifecycle, #579 registry, #489 carrier, #518 identifiers. A full adversarial second-agent review is recommended before merge. Adversarial review (2026-09-06) downgraded Art78(c) Met->Partial (self-hosting is a deployment choice, not enforced; attachments in S3), fixed two mis-copied notes, and flagged Art77(4) for possible reclassification to mixed on re-extraction."
+  - id: 2026-09-06-reg1778
+    date: 2026-09-06
+    trigger:
+      kind: code
+      detail: first assessment of REG1778 32026R1778 (DPP registry), gated-text-free run
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - REG1778
+    scope:
+      - id: REG1778-Art3(a)
+        reason: not assessed
+      - id: REG1778-Art3(b)
+        reason: not assessed
+      - id: REG1778-Art3(c)
+        reason: not assessed
+      - id: REG1778-Art3(d)
+        reason: not assessed
+      - id: REG1778-Art3(e)
+        reason: not assessed
+      - id: REG1778-Art3(f)
+        reason: not assessed
+      - id: REG1778-Art3(g)
+        reason: not assessed
+      - id: REG1778-Art3(h)
+        reason: not assessed
+      - id: REG1778-Art3(i)
+        reason: not assessed
+      - id: REG1778-Art8(1)
+        reason: not assessed
+      - id: REG1778-Art8(2)
+        reason: not assessed
+      - id: REG1778-Art8(2)-sub2
+        reason: not assessed
+      - id: REG1778-Art8(3)
+        reason: not assessed
+      - id: REG1778-Art8(4)
+        reason: not assessed
+      - id: REG1778-Art8(5)
+        reason: not assessed
+      - id: REG1778-Art8(6)
+        reason: not assessed
+      - id: REG1778-Art8(7)
+        reason: not assessed
+      - id: REG1778-Art8(7)(a)
+        reason: not assessed
+      - id: REG1778-Art8(7)(b)
+        reason: not assessed
+      - id: REG1778-Art8(7)(c)
+        reason: not assessed
+      - id: REG1778-Art8(7)(d)
+        reason: not assessed
+      - id: REG1778-Art8(7)(e)
+        reason: not assessed
+      - id: REG1778-Art8(8)
+        reason: not assessed
+      - id: REG1778-Art8(9)(a)
+        reason: not assessed
+      - id: REG1778-Art8(9)(b)
+        reason: not assessed
+      - id: REG1778-Art8(9)(c)
+        reason: not assessed
+      - id: REG1778-Art8(9)(d)
+        reason: not assessed
+      - id: REG1778-Art8(10)
+        reason: not assessed
+      - id: REG1778-Art9(1)
+        reason: not assessed
+      - id: REG1778-Art9(2)
+        reason: not assessed
+      - id: REG1778-Art9(2)(a)
+        reason: not assessed
+      - id: REG1778-Art9(2)(b)
+        reason: not assessed
+      - id: REG1778-Art9(2)(c)
+        reason: not assessed
+      - id: REG1778-Art9(2)(d)
+        reason: not assessed
+      - id: REG1778-Art9(2)(e)
+        reason: not assessed
+      - id: REG1778-Art9(3)
+        reason: not assessed
+      - id: REG1778-Art9(4)
+        reason: not assessed
+      - id: REG1778-Art10(1)
+        reason: not assessed
+      - id: REG1778-Art10(2)
+        reason: not assessed
+      - id: REG1778-Art10(3)
+        reason: not assessed
+      - id: REG1778-Art10(4)
+        reason: not assessed
+      - id: REG1778-Art11(1)
+        reason: not assessed
+      - id: REG1778-Art11(2)
+        reason: not assessed
+      - id: REG1778-Art11(3)
+        reason: not assessed
+      - id: REG1778-Art11(4)
+        reason: not assessed
+      - id: REG1778-Art12(1)
+        reason: not assessed
+      - id: REG1778-Art12(2)(a)
+        reason: not assessed
+      - id: REG1778-Art12(2)(b)
+        reason: not assessed
+      - id: REG1778-Art12(2)(c)
+        reason: not assessed
+      - id: REG1778-Art12(2)(d)
+        reason: not assessed
+      - id: REG1778-Art12(2)(e)
+        reason: not assessed
+      - id: REG1778-Art12(3)
+        reason: not assessed
+      - id: REG1778-Art12(4)
+        reason: not assessed
+      - id: REG1778-Art12(5)
+        reason: not assessed
+      - id: REG1778-Art12(6)
+        reason: not assessed
+      - id: REG1778-Art12(7)
+        reason: not assessed
+      - id: REG1778-Art14(1)
+        reason: not assessed
+      - id: REG1778-Art14(2)(a)
+        reason: not assessed
+      - id: REG1778-Art14(2)(b)
+        reason: not assessed
+      - id: REG1778-Art14(2)(c)
+        reason: not assessed
+      - id: REG1778-Art14(2)(d)
+        reason: not assessed
+      - id: REG1778-Art14(3)(a)
+        reason: not assessed
+      - id: REG1778-Art14(3)(b)
+        reason: not assessed
+      - id: REG1778-Art14(3)(c)
+        reason: not assessed
+      - id: REG1778-Art14(4)
+        reason: not assessed
+      - id: REG1778-Art14(5)
+        reason: not assessed
+      - id: REG1778-Art15(1)
+        reason: not assessed
+      - id: REG1778-Art15(2)
+        reason: not assessed
+      - id: REG1778-Art15(3)
+        reason: not assessed
+      - id: REG1778-Art15(4)
+        reason: not assessed
+      - id: REG1778-Art16(1)
+        reason: not assessed
+      - id: REG1778-Art16(2)(a)
+        reason: not assessed
+      - id: REG1778-Art16(2)(b)
+        reason: not assessed
+      - id: REG1778-Art16(2)(c)
+        reason: not assessed
+      - id: REG1778-Art16(2)(d)
+        reason: not assessed
+      - id: REG1778-Art16(2)(e)
+        reason: not assessed
+      - id: REG1778-Art19(1)
+        reason: not assessed
+      - id: REG1778-Art19(2)
+        reason: not assessed
+      - id: REG1778-Art19(3)
+        reason: not assessed
+      - id: REG1778-Art19(4)
+        reason: not assessed
+      - id: REG1778-Art19(5)
+        reason: not assessed
+      - id: REG1778-Art20(1)
+        reason: not assessed
+      - id: REG1778-Art20(2)
+        reason: not assessed
+      - id: REG1778-Art20(3)
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: pending
+    adversarialReview:
+      blockingObjections: 4
+    notes: "First registry assessment (Assess procedure), gated-text-free: 0 Met, 17 Partial, 13 Gap, 54 Not applicable. The Regulation binds mostly the Commission (54 rows NA by rule); the 30 software/mixed rows show that nothing in open-dpp talks to the EU registry: no client, no registration-identifier field, no commodity code, no back-up URL, no hashable passport version; GS1 identity gives implicit model/batch/item granularity only. No Check tags a registry Criterion (registry left manual in #755); the report of 2026-09-05 was folded for the record without effect. Gap clusters: #579 registry client (14 rows incl. the ESPR run), #597 granularity, #596 back-up URL, #824 integrity/versions, #823 standard export, #821 roles, new #826 semantic repository data models. Adversarial review (2026-09-06, 4 blocking objections, all resolved): Art8(4) test note and notes reworded to what the UI spec exercises; Art12(2)(e) language count corrected 31 -> 29 (capability-inventory.md fixed too); Art12(2)(b) notes now credit what earns Partial; Art12(6) notes state why Gap unlike Art3(g)/11(3); Art8(7)(b) over-claim dropped; Art11(4) shell mention; Art11(3) operational; Art8(7)(e) stray evidence dropped. Flagged for the next Extract (applicability changes only there): Art8(9)(d), Art10(2) and Art12(6) read as Commission duties and may move mixed -> commission; ESPR-Art13(4) paraphrase omits 'or putting it into service'. Text quirk: the OJ text of Art. 8(8) cross-references paragraph 6 and Art. 8(10) paragraph 9 where 7 and 8 are meant; the paraphrases follow the evident meaning, watch for a corrigendum. The export.aas-environment-verifies Check is now tagged REG1778-Art8(7) so the next Check run folds onto it."
+  - id: 2026-09-06-manual
+    date: 2026-09-06
+    trigger:
+      kind: manual
+      detail: "first assessment of ESPR Art. 13 (registry article), run alongside the REG1778 run of the same day; the remaining ESPR DPP articles are ticket #766"
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - ESPR
+    scope:
+      - id: ESPR-Art13(1)
+        reason: manual
+      - id: ESPR-Art13(2)
+        reason: manual
+      - id: ESPR-Art13(2)(a)
+        reason: manual
+      - id: ESPR-Art13(2)(b)
+        reason: manual
+      - id: ESPR-Art13(2)(c)
+        reason: manual
+      - id: ESPR-Art13(3)
+        reason: manual
+      - id: ESPR-Art13(4)
+        reason: manual
+      - id: ESPR-Art13(5)
+        reason: manual
+      - id: ESPR-Art13(5)-sub2
+        reason: manual
+      - id: ESPR-Art13(6)
+        reason: manual
+    validator: agent:conformance-review
+    reviewer: pending
+    adversarialReview:
+      blockingObjections: 4
+    notes: "ESPR Art. 13 assessed with the REG1778 run of the same day (manual trigger because matrix:run has no per-article scope): 0 Met, 0 Partial, 2 Gap, 8 Not applicable. Art13(4) and Art13(5) are the registry-client Gap (#579), detailed in REG1778 Art. 8. The remaining ESPR DPP articles are ticket #766. Covered by the same adversarial review as run 2026-09-06-reg1778 (4 blocking objections, none on these rows)."
+  - id: 2026-09-06-manual-2
+    date: 2026-09-06
+    trigger:
+      kind: manual
+      detail: "ticket #766: first assessment of the remaining ESPR DPP articles, Art. 7(2)(b), 7(5), 9, 14, 15 and the Annex III points no EN operationalises (manual trigger because matrix:run has no per-article scope), gated-text-free"
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - ESPR
+    scope:
+      - id: ESPR-Art7(2)(b)(i)
+        reason: manual
+      - id: ESPR-Art7(2)(b)(ii)
+        reason: manual
+      - id: ESPR-Art7(2)(b)(iii)
+        reason: manual
+      - id: ESPR-Art7(2)(b)(iv)
+        reason: manual
+      - id: ESPR-Art7(5)
+        reason: manual
+      - id: ESPR-Art7(5)(a)(i)
+        reason: manual
+      - id: ESPR-Art7(5)(a)(ii)
+        reason: manual
+      - id: ESPR-Art7(5)(a)(iii)
+        reason: manual
+      - id: ESPR-Art7(5)(a)(iv)
+        reason: manual
+      - id: ESPR-Art7(5)(b)
+        reason: manual
+      - id: ESPR-Art7(5)(c)
+        reason: manual
+      - id: ESPR-Art7(5)(d)
+        reason: manual
+      - id: ESPR-Art7(5)(e)
+        reason: manual
+      - id: ESPR-Art7(5)-sub2
+        reason: manual
+      - id: ESPR-Art9(1)
+        reason: manual
+      - id: ESPR-Art9(2)
+        reason: manual
+      - id: ESPR-Art9(2)(a)
+        reason: manual
+      - id: ESPR-Art9(2)(b)
+        reason: manual
+      - id: ESPR-Art9(2)(c)
+        reason: manual
+      - id: ESPR-Art9(2)(d)
+        reason: manual
+      - id: ESPR-Art9(2)(e)
+        reason: manual
+      - id: ESPR-Art9(2)(f)
+        reason: manual
+      - id: ESPR-Art9(2)(g)
+        reason: manual
+      - id: ESPR-Art9(2)(h)
+        reason: manual
+      - id: ESPR-Art9(2)(i)
+        reason: manual
+      - id: ESPR-Art9(3)(a)
+        reason: manual
+      - id: ESPR-Art9(3)(b)
+        reason: manual
+      - id: ESPR-Art9(3)(c)
+        reason: manual
+      - id: ESPR-Art9(4)(a)
+        reason: manual
+      - id: ESPR-Art9(4)(b)
+        reason: manual
+      - id: ESPR-Art14
+        reason: manual
+      - id: ESPR-Art15(1)
+        reason: manual
+      - id: ESPR-Art15(2)
+        reason: manual
+      - id: ESPR-Art15(3)
+        reason: manual
+      - id: ESPR-Art15(4)
+        reason: manual
+      - id: ESPR-Art15(5)
+        reason: manual
+      - id: ESPR-AnnexIII
+        reason: manual
+      - id: ESPR-AnnexIII(a)
+        reason: manual
+      - id: ESPR-AnnexIII(d)
+        reason: manual
+      - id: ESPR-AnnexIII(e)
+        reason: manual
+      - id: ESPR-AnnexIII(f)
+        reason: manual
+      - id: ESPR-AnnexIII(j)
+        reason: manual
+      - id: ESPR-AnnexIII-para3
+        reason: manual
+    validator: agent:conformance-review
+    reviewer: pending
+    adversarialReview:
+      blockingObjections: 1
+      comment: https://github.com/open-dpp/open-dpp/issues/766#issuecomment-5558452457
+    notes: "Ticket #766, gated-text-free (Assess procedure, manual trigger over 43 ids because matrix:run has no per-article scope): ESPR Art. 7(2)(b), 7(5), 9, 14, 15 and the Annex III rows no EN operationalises (chapeau, (a), (d), (e), (f), (j), third paragraph); Annex III (b), (c), (g)-(i), (k), (l) and the standards paragraph stay with the EN 18219, 18221 and 18220 assessments (#756, #760, #757). Result: 0 Met, 28 Partial, 1 Gap, 14 Not applicable. Finding: every ESPR content element (Art. 7 information, substances of concern, Annex III (a), (e), (f), (j), para 3) is modellable with the generic AAS template but nothing ESPR-specific ships (new cluster #827); Art. 9(2)(e) is done in software (permalink, GS1 Digital Link, QR code, anonymous access, resolver Check passes) but docs/ never mentions any of it (new cluster #828, Met once documented); the Art. 9(2) access, update and availability rows fall to the existing clusters #821, #825, #597, #489; Art. 15(1) and Annex III (d) to the registry client #579; Art. 9(1) completeness to #826. #516 (DIN norm, empty) closed as the ticket asked. Checks re-run on 2026-09-06 against a branch build (2152c281, apps unchanged versus the assessed main d5f8219e for the checked behaviours) with new tags: resolver.redirect-published -> Art9(2)(e), access.anonymous-reads-published -> Art9(2)(f), access.anonymous-denied-management and access.foreign-user-denied-management -> Art9(2)(g); 9 passed, 1 skipped (HSTS on http), 1 failed (export.aas-environment-verifies, the known standard-AAS finding, on Partial rows only). The fold refreshed the check dates on the BATT and REG1778 rows too. Adversarial review (2026-09-06, fresh agent, 1 blocking objection, applied): AnnexIII(e) test evidence pointed at media.controller.spec.ts, which only instantiates the controller; replaced by media.service.spec.ts (upload and download cases) and virus-scan.file-validator.spec.ts. Non-blocking remarks applied: operational harmonised to true on Art7(5)(a)(i)-(iv), (b), (c) like their siblings; Art9(2)(h) notes say no arrangements exist yet to assess against; Art15(1) notes say why Gap and not Partial (capture from the registry, not storage). Remarks left for the reviewer of record: the Check build is the branch head 2152c281, not d5f8219e (differences outside the checked paths); NA rationales point forward to rows still unassessed (Art. 10(1)(d), 10(3)(a), 11(b)); Art9(2)(c) applicability (operator) may become mixed once a print-ready carrier exists, an Extract-level change."
+  - id: 2026-09-07-cpr
+    date: 2026-09-07
+    trigger:
+      kind: code
+      detail: "ticket #831: first assessment of CPR 32024R3110 (construction products passport, Art. 22(7) and Chapter X Art. 75-80), gated-text-free run"
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - CPR
+    scope:
+      - id: CPR-Art22(7)
+        reason: not assessed
+      - id: CPR-Art75(1)
+        reason: not assessed
+      - id: CPR-Art75(2)(a)
+        reason: not assessed
+      - id: CPR-Art75(2)(b)
+        reason: not assessed
+      - id: CPR-Art75(2)(c)
+        reason: not assessed
+      - id: CPR-Art75(2)(f)
+        reason: not assessed
+      - id: CPR-Art75(2)(h)
+        reason: not assessed
+      - id: CPR-Art75(2)(i)
+        reason: not assessed
+      - id: CPR-Art75(2)(j)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(i)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(ii)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(iii)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(iv)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(v)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(vi)
+        reason: not assessed
+      - id: CPR-Art76(2)(a)(vii)
+        reason: not assessed
+      - id: CPR-Art76(2)(b)
+        reason: not assessed
+      - id: CPR-Art76(2)(c)
+        reason: not assessed
+      - id: CPR-Art76(2)(d)
+        reason: not assessed
+      - id: CPR-Art76(2)(e)
+        reason: not assessed
+      - id: CPR-Art76(2)(f)
+        reason: not assessed
+      - id: CPR-Art76(2)(g)
+        reason: not assessed
+      - id: CPR-Art76(2)(h)
+        reason: not assessed
+      - id: CPR-Art76(4)
+        reason: not assessed
+      - id: CPR-Art77(1)(a)
+        reason: not assessed
+      - id: CPR-Art77(1)(b)
+        reason: not assessed
+      - id: CPR-Art77(1)(c)
+        reason: not assessed
+      - id: CPR-Art77(1)(d)
+        reason: not assessed
+      - id: CPR-Art77(1)(f)
+        reason: not assessed
+      - id: CPR-Art77(1)(g)
+        reason: not assessed
+      - id: CPR-Art77(1)(h)
+        reason: not assessed
+      - id: CPR-Art77(3)
+        reason: not assessed
+      - id: CPR-Art78(c)
+        reason: not assessed
+      - id: CPR-Art78(d)
+        reason: not assessed
+      - id: CPR-Art78(e)
+        reason: not assessed
+      - id: CPR-Art78(g)
+        reason: not assessed
+      - id: CPR-Art79(1)
+        reason: not assessed
+      - id: CPR-Art79(2)
+        reason: not assessed
+      - id: CPR-Art80(1)
+        reason: not assessed
+      - id: CPR-Art80(2)(a)
+        reason: not assessed
+      - id: CPR-Art80(2)(b)
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: pending
+    notes: "Ticket #831, first CPR assessment (Assess procedure, code trigger over CPR, gated-text-free): 41 own Criteria, 0 Met, 31 Partial, 2 Gap, 8 Not applicable; the 15 Mirrors inherit their ESPR targets (3 Partial, 4 Not applicable, 8 Not assessed until the ESPR Art. 10 to 12 rows are assessed by #756-#763). Finding: open-dpp enables the generic passport mechanics the CPR reuses from ESPR (create, hold, update, publish and serve a passport; permalink and GS1 Digital Link carriers with a conformant resolver; per-element access rules) but nothing construction-specific: no declaration of performance and conformity, REACH, technical-documentation or Annex IV structure (new cluster #834), no passport-to-passport link for key parts (new #835), no product-type granularity or manufacturer product-type code (#597), no operator or facility identifiers and no registry client (#579), no back-up or continuity for the 25-year system and 10-year operator availability (#596, #825), no access levels for external actors (#821), export not standard AAS (#823), the QR carrier only on screen with no download (#489), and operator docs silent on permalinks, carriers and public access (#828). New finding beyond the ESPR runs: the media download and info routes are anonymous and check neither passport status nor element read policy, so a hidden or draft attachment stays downloadable by anyone holding its id (new #836, on CPR-Art78(g); noted on 77(1)(g) and 75(2)(c)). The Art. 75(1) delegated act does not exist: CPR-Art75(1) names the rows it may change (identifiers and carriers, registry, access levels, storage, back-up) and each such row says so. Checks run 2026-09-07 against a local dev instance built from the branch head 2152c281, whose merge-base with main is 9c560822; the 45 main commits since touch none of the read, resolve, export, OpenAPI or public-view paths the eleven Checks exercise (adversarial review, remark 1), so the results transfer and no status rests on a Check. Nine CPR tags were added to the existing Checks (one of them, a11y on CPR-Art76(2)(e), removed again on review): 9 passed, 1 skipped (HSTS on http), 1 failed (export.aas-environment-verifies, the known standard-AAS finding, folded onto the Partial row CPR-Art77(1)(d)); the fold refreshed the check dates on the BATT, ESPR and REG1778 rows too. Adversarial review (2026-09-07, fresh agent, 1 blocking objection, applied): CPR-Art75(2)(b) Met -> Partial (#834), because the functionalities required to implement an Art. 76 passport are the ones the run finds missing on the Art. 76(2) and 77 rows. Remarks applied: a11y Check untagged from CPR-Art76(2)(e); test notes made precise on 76(2)(b), 77(1)(b), 76(2)(f), 78(g); gapIssue rationale written on 78(c) and 79(1); #834 marks the label and guidelines rows as blocked on their instrument and gained 75(2)(b); #489 told the carrier-export gap; conformance label added to #489 and #518. Left for the reviewer of record: the fold does not compare the report commit with the run commit (tooling follow-up); one security-adjacent observation outside this run's rows went to the private security review (#772). No PR: the dpp-standards folder is still uncommitted on the branch, the map owner commits."
+    adversarialReview:
+      blockingObjections: 1
+      comment: https://github.com/open-dpp/open-dpp/issues/831#issuecomment-5567090459
+  - id: 2026-09-07-det
+    date: 2026-09-07
+    trigger:
+      kind: code
+      detail: "First assessment of DET 32026R0405 (ticket #832): every own Criterion of the detergent passport chapter, Art. 21-25, Art. 30(2)-(3) and Annex VI, gated-text-free"
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - DET
+    scope:
+      - id: DET-Art21(1)
+        reason: not assessed
+      - id: DET-Art21(2)(a)
+        reason: not assessed
+      - id: DET-Art21(2)(b)
+        reason: not assessed
+      - id: DET-Art21(2)(c)
+        reason: not assessed
+      - id: DET-Art21(2)(e)
+        reason: not assessed
+      - id: DET-Art21(2)(f)
+        reason: not assessed
+      - id: DET-Art21(2)(g)
+        reason: not assessed
+      - id: DET-Art21(2)(i)
+        reason: not assessed
+      - id: DET-Art21(3)
+        reason: not assessed
+      - id: DET-Art21(4)(a)
+        reason: not assessed
+      - id: DET-Art21(4)(b)
+        reason: not assessed
+      - id: DET-Art21(4)(c)
+        reason: not assessed
+      - id: DET-Art21(4)(d)
+        reason: not assessed
+      - id: DET-Art21(4)(e)
+        reason: not assessed
+      - id: DET-Art21(4)(f)
+        reason: not assessed
+      - id: DET-Art21(5)
+        reason: not assessed
+      - id: DET-Art21(6)
+        reason: not assessed
+      - id: DET-Art21(7)
+        reason: not assessed
+      - id: DET-Art21(8)
+        reason: not assessed
+      - id: DET-Art21(9)
+        reason: not assessed
+      - id: DET-Art21(10)
+        reason: not assessed
+      - id: DET-Art21(10)(c)
+        reason: not assessed
+      - id: DET-Art21(11)
+        reason: not assessed
+      - id: DET-Art22(d)
+        reason: not assessed
+      - id: DET-Art22(h)
+        reason: not assessed
+      - id: DET-Art23(1)
+        reason: not assessed
+      - id: DET-Art23(2)
+        reason: not assessed
+      - id: DET-Art23(3)
+        reason: not assessed
+      - id: DET-Art24(1)-sub2
+        reason: not assessed
+      - id: DET-Art24(2)-sub2
+        reason: not assessed
+      - id: DET-Art25(1)
+        reason: not assessed
+      - id: DET-Art25(4)
+        reason: not assessed
+      - id: DET-Art25(6)
+        reason: not assessed
+      - id: DET-Art30(2)
+        reason: not assessed
+      - id: DET-Art30(3)(a)
+        reason: not assessed
+      - id: DET-AnnexVI-A(a)
+        reason: not assessed
+      - id: DET-AnnexVI-A(b)
+        reason: not assessed
+      - id: DET-AnnexVI-A(d)
+        reason: not assessed
+      - id: DET-AnnexVI-A(e)
+        reason: not assessed
+      - id: DET-AnnexVI-A(g)
+        reason: not assessed
+      - id: DET-AnnexVI-A(h)
+        reason: not assessed
+      - id: DET-AnnexVI-A(h)-sub2
+        reason: not assessed
+      - id: DET-AnnexVI-A(i)
+        reason: not assessed
+      - id: DET-AnnexVI-B
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: pending
+    notes: "Ticket #832, first DET assessment (Assess procedure, code trigger over DET, gated-text-free): 44 own Criteria in scope, 43 assessed: 1 Met (DET-Art22(d), no registration or password), 27 Partial, 0 Gap, 15 Not applicable (nine Commission duties, six operator duties). DET-Art21(2)(i) is left unassessed on purpose: it requires conformity with the Art. 21(10) implementing act, which does not exist, so there is nothing to assess against; re-validate with a text trigger once it is adopted (DET-Art21(10) names the rows it may change). The 33 Mirrors inherit their ESPR targets (6 Partial, 3 Gap, 9 Not applicable, 15 Not assessed until the ESPR Art. 10, 11 and Annex III rows are assessed by #756-#763). Finding: open-dpp enables the generic passport mechanics the Regulation reuses from ESPR (create, publish and serve a passport anonymously without registration or password, the one Met; permalink and GS1 Digital Link carriers with a conformant resolver; per-element access rules; model, batch and item keys through GS1 identities) but nothing detergent-specific: no Annex VI Part A or Part B structure, no compliance or sole-responsibility statement, no CLP-identified ingredient list or micro-organism taxonomy (new cluster #837); MultiLanguageProperty values neither editable in the client nor rendered in the public view, and Irish and Maltese absent from the language list (new #838); no legal-basis marking to keep the data sets of several acts and voluntary information apart behind one carrier (new #839); a first-party page-view counter and an IP-and-agent request log that run on every anonymous visit and cannot be switched off (new #840, the no-tracking limb of Art. 22(h); the personal-data limb holds). Model granularity and the batch or item override (#597), the 10-year availability (#825), external access classes for authorities and the Commission (#821), the print-ready carrier with the scan-for-information caption (#489), pre-purchase reachability documentation (#828), identifier standards (#518) and the missing operator and registration identifiers (#579) fall to the existing clusters. Checks run 2026-09-07 against an Instance built from the assessed commit d5f8219e in a git worktree (the reporter now records OPEN_DPP_COMMIT when set, a tooling addition of this run answering remark 1 of the CPR review): of the 11 Checks 9 passed, 1 skipped (HSTS on http), 1 failed (export.aas-environment-verifies, the known standard-AAS finding on Partial rows of other texts; no DET row carries it). Three DET tags added: access.anonymous-reads-published on DET-Art22(d), resolver.redirect-published on DET-Art21(4)(f), identifiers.gs1-syntax-valid on DET-Art23(1); the fold refreshed the check dates of the BATT, ESPR, REG1778 and CPR rows. Adversarial review (2026-09-07, fresh agent, 1 blocking objection, applied): the run notes had counted the two Playwright setup tests as passing Checks (11 instead of 9) and split the Not-applicable rows wrongly; both figures corrected. Remarks applied: the router-guard ref (apps/client/src/router/index.ts) added on DET-Art22(d) and its notes say the Check's view assertion is vacuous (the SPA shell answers 200 for any path), so the view limb rests on the code and the E2E test; the chat.gateway.ts ref added on DET-Art22(h); DET-Art23(2) notes flag the ESPR Art. 12(4) import for the next Extract. Left for the reviewer of record: DET-Art21(2)(i) unassessed versus Not applicable with a reason (the reviewer's call; the playbook rule for a missing text was followed); the report's commit is an assertion through OPEN_DPP_COMMIT, to be derived from the Instance in the CI follow-up #820; the five earlier unsigned runs keep the one-problem gate from holding. No PR: the dpp-standards folder is still uncommitted on the branch, the map owner commits."
+    adversarialReview:
+      blockingObjections: 1
+      comment: https://github.com/open-dpp/open-dpp/issues/832#issuecomment-5569418013
+  - id: 2026-09-07-toys
+    date: 2026-09-07
+    trigger:
+      kind: code
+      detail: "First assessment of TOYS 32025R2509 (ticket #833): every own Criterion of the toy passport chapter, Art. 19-24, Art. 49(1)-(3) and Annex VI, gated-text-free"
+    commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+    sources:
+      - TOYS
+    scope:
+      - id: TOYS-Art19(1)
+        reason: not assessed
+      - id: TOYS-Art19(2)(a)
+        reason: not assessed
+      - id: TOYS-Art19(2)(b)
+        reason: not assessed
+      - id: TOYS-Art19(2)(c)
+        reason: not assessed
+      - id: TOYS-Art19(2)(e)
+        reason: not assessed
+      - id: TOYS-Art19(2)(f)
+        reason: not assessed
+      - id: TOYS-Art19(2)(g)
+        reason: not assessed
+      - id: TOYS-Art19(2)(i)
+        reason: not assessed
+      - id: TOYS-Art19(3)
+        reason: not assessed
+      - id: TOYS-Art19(4)
+        reason: not assessed
+      - id: TOYS-Art19(5)
+        reason: not assessed
+      - id: TOYS-Art19(5)(a)
+        reason: not assessed
+      - id: TOYS-Art19(5)(b)
+        reason: not assessed
+      - id: TOYS-Art19(5)(c)
+        reason: not assessed
+      - id: TOYS-Art19(5)(d)
+        reason: not assessed
+      - id: TOYS-Art19(6)
+        reason: not assessed
+      - id: TOYS-Art19(7)
+        reason: not assessed
+      - id: TOYS-Art19(8)
+        reason: not assessed
+      - id: TOYS-Art19(9)
+        reason: not assessed
+      - id: TOYS-Art19(10)
+        reason: not assessed
+      - id: TOYS-Art19(11)
+        reason: not assessed
+      - id: TOYS-Art20(4)
+        reason: not assessed
+      - id: TOYS-Art20(10)
+        reason: not assessed
+      - id: TOYS-Art21(1)
+        reason: not assessed
+      - id: TOYS-Art21(2)-sub2
+        reason: not assessed
+      - id: TOYS-Art21(3)
+        reason: not assessed
+      - id: TOYS-Art22(1)
+        reason: not assessed
+      - id: TOYS-Art22(2)-sub2
+        reason: not assessed
+      - id: TOYS-Art23(1)
+        reason: not assessed
+      - id: TOYS-Art23(4)
+        reason: not assessed
+      - id: TOYS-Art23(6)
+        reason: not assessed
+      - id: TOYS-Art24
+        reason: not assessed
+      - id: TOYS-Art49(1)
+        reason: not assessed
+      - id: TOYS-Art49(1)(c)
+        reason: not assessed
+      - id: TOYS-Art49(1)-sub2
+        reason: not assessed
+      - id: TOYS-Art49(1)-sub3
+        reason: not assessed
+      - id: TOYS-Art49(1)-sub4
+        reason: not assessed
+      - id: TOYS-Art49(2)
+        reason: not assessed
+      - id: TOYS-Art49(3)-sub1
+        reason: not assessed
+      - id: TOYS-Art49(3)(a)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(b)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(d)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(e)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(g)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(h)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(i)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(j)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(k)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(l)
+        reason: not assessed
+      - id: TOYS-AnnexVI-I(m)
+        reason: not assessed
+    validator: agent:conformance-review
+    reviewer: pending
+    notes: "Ticket #833, first TOYS assessment (Assess procedure, code trigger over TOYS, gated-text-free): 50 own Criteria in scope, 49 assessed: 1 Met (TOYS-Art20(4), no registration or password), 28 Partial, 1 Gap (TOYS-Art22(1), the registry upload), 19 Not applicable (thirteen Commission duties, six operator duties). TOYS-Art19(2)(i) is left unassessed on purpose: it requires conformity with the Art. 49(1) delegated act, which does not exist, so there is nothing to assess against; re-validate with a text trigger once it is adopted (TOYS-Art49(1) names the rows it may change). The 35 Mirrors inherit their ESPR targets (8 Partial, 2 Gap, 7 Not applicable, 18 Not assessed until the ESPR Art. 10, 11, 12 and Annex III rows are assessed by #756-#763). Finding: open-dpp enables the generic passport mechanics the Regulation reuses from ESPR (create, publish and serve a passport anonymously without registration or password, the one Met; permalink and GS1 Digital Link carriers with a conformant resolver; per-element access rules; model and batch keys through GS1 identities) but nothing toy-specific: no Annex VI Part I or Part II structure and no declaration-of-conformity elements (compliance and sole-responsibility statements, Union-law and harmonised-standard references, notified body, CE marking, the replaced-declaration mention of Art. 19(5) and (6)), no identification image, allergenic-fragrance list or communication-channel element (new cluster #841, 16 rows); no fixed Safety Gate Portal link on access to the passport (new cluster #842, the one toy-specific display duty). The clauses shared with the Detergents Regulation reuse its findings and clusters: Member-State languages (#838), single passport and single carrier with legal-basis marking (#839, which also carries the batch override of Art. 19(9)), usage tracking (#840). Model granularity (#597), the 10-year availability (#825), external access classes now including notified bodies (#821), the print-ready carrier under the fixed placement priority (#489), identifier standards (#518) and the missing operator and registration identifiers plus the registry upload (#579) fall to the existing clusters. Checks run 2026-09-07 against an Instance built from the assessed commit d5f8219e in a git worktree (OPEN_DPP_COMMIT recorded; the first Playwright run failed in conformance-setup on the Vite warm-up, the second ran through): of the 11 Checks 9 passed, 1 skipped (HSTS on http), 1 failed (export.aas-environment-verifies, the known standard-AAS finding on Partial rows of other texts; no TOYS row carries it). Three TOYS tags added: access.anonymous-reads-published on TOYS-Art20(4), resolver.redirect-published on TOYS-Art19(7), identifiers.gs1-syntax-valid on TOYS-Art21(1); the fold refreshed the DET and REG1778 rows the same Checks tag. Adversarial review (2026-09-07, fresh agent, 0 blocking objections, 12 remarks): four notes corrected (the EU-type examination reference on Annex VI Part I(j), the essential-safety-requirements reference on Art. 19(2)(b), the Annex IV reference on Art. 19(2)(a), the reachability caveat on the resolver Check of Art. 19(7)), #841 completed with the mailto-and-tel and traceability-events findings, #828 told the three rows that name it. Left for the reviewer of record: TOYS-Art19(2)(i) unassessed versus Not applicable with a reason (the same call as DET-Art21(2)(i)); the Art. 19(11) Partial rests on a generic link element, no toy-specific feature exists; the resolver and GS1-syntax Checks evidence reachability and identifier syntax only, never placement, visibility or ISO/IEC 15459; Extract matters for the next TOYS edition: the Mirror TOYS-Art20(3) keeps the ESPR actor-list reading although its list differs like Art. 19(2)(f), Annex VI Part II mirrors a required ESPR item while being optional, and TOYS-Art21(2)-sub2 stays commission until an ESPR Art. 12(4) act binds the software; the DET notes on Art. 22(d) and 22(h) cite the toy clauses as Art. 20(d) and 20(h) instead of 20(4) and 20(10), to fix when DET is next touched. No PR: the dpp-standards folder is still uncommitted on the branch, the map owner commits."
+    adversarialReview:
+      blockingObjections: 0
+      comment: https://github.com/open-dpp/open-dpp/issues/833#issuecomment-5569983292

@@ -41,10 +41,18 @@ The privileged Member role of an Organization. Only Owners may change other Memb
 An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
 _Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).
 
+## Reviews (shared)
+
+Terms the Conformance Review and the Privacy Review use with one meaning.
+
+**Validation Run**:
+One dated pass of a review's playbook or runbook against a stated open-dpp commit, over a stated scope, carried out by a validator (a person or an agent) and approved by a reviewer of record. Happens on demand, never on a fixed cadence.
+_Not to be confused with_: an Assessment (one Criterion's result inside a run) or Re-validation (the activity as a whole).
+
 ## Conformance Review
 
 **Conformance Review**:
-The whole effort of assessing how far open-dpp enables an operator to meet the EU Digital Product Passport requirements: the law (ESPR, Batteries Regulation and their delegated/implementing acts) and the harmonised CEN/CENELEC JTC 24 standards. Produces the Conformance Matrix, Gaps and a re-validation playbook.
+The whole effort of assessing how far open-dpp enables an operator to meet the EU Digital Product Passport requirements: the law (ESPR, the Batteries Regulation, every Sector law, and their delegated/implementing acts) and the harmonised CEN/CENELEC JTC 24 standards. Produces the Conformance Matrix, Gaps and a re-validation playbook.
 _Avoid_: compliance review, audit. The software cannot be "compliant"; only an operator can. The review states conformance status.
 
 **Conformance Matrix**:
@@ -52,6 +60,13 @@ The living artifact of the Conformance Review: every Criterion with its latest A
 
 **Criterion**:
 One requirement traced to exactly one standard and clause (or article and paragraph). The unit the matrix is assessed at.
+
+**Sector law**:
+A Union act outside ESPR that mandates a Digital Product Passport for the products it governs and requires that passport to be registered in the ESPR registry, so that the registry Regulation names it. Enters the Conformance Review on adoption, like a delegated act. Today: the Construction Products Regulation, the Toy Safety Regulation and the Detergents Regulation.
+_Not to be confused with_: a product-group delegated act under ESPR, which adds requirements to ESPR rather than restating them.
+
+**Mirror**:
+A Criterion whose requirement is the same software obligation as a Criterion of another source, typically an ESPR article restated by a Sector law. It carries no Assessment of its own and shows the mirrored Criterion's latest Assessment; when the two texts differ in any detail, the Criterion is not a Mirror and receives its own Assessment.
 
 **Assessment**:
 One dated evaluation of one Criterion against one open-dpp version, with a status of Met, Partial, Gap or Not applicable, and evidence pointing into code, tests or docs.
@@ -62,6 +77,16 @@ A Criterion whose latest Assessment is Partial or Gap. Every Gap is tracked as a
 
 **Re-validation**:
 Running the Assessments again, for every Criterion or the ones a trigger touches, after a new version of a standard or a new release of open-dpp. Meant to be driven by an agent following a playbook.
+
+**Playbook**:
+The procedure text an agent or a human follows to change the Conformance Matrix. Three procedures, each sized to one session: **Extract** (a text becomes a register entry and a matrix file of unassessed Criteria), **Assess** (every Criterion of one text receives its first Assessment) and **Re-validate** (only the Criteria a trigger touches are assessed again; earlier Assessments are kept as history).
+
+**Check**:
+An automated black-box test run against a live Instance whose pass at a stated commit is evidence for every Criterion it is tagged with. A Check has a stable id of its own; one Check can evidence several Criteria and one Criterion can collect several Checks.
+_Not to be confused with_: the matrix check (the CI gate that validates the matrix files) or a test in the product's own suites, which is evidence of type test.
+
+**Check report**:
+The result of one run of all Checks against one commit: per Check its status and the Criteria it tags. Folded into the Conformance Matrix as check evidence; never a status by itself.
 
 ## Privacy & Compliance
 
@@ -105,6 +130,3 @@ The spine of the Privacy Review: one row per catalogue criterion, mapping it to 
 
 **Finding**:
 One gap between a criterion and the evidence, with a severity and a disposition. A Finding is ticketed, not fixed, within the Privacy Review.
-
-**Validation Run**:
-One dated pass of the re-validation runbook against a stated commit, signed by a reviewer of record. Re-validation happens on demand.

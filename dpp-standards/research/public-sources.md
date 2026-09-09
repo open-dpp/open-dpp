@@ -40,7 +40,7 @@ All EUR-Lex pages are PUBLIC. Note for agents: `eur-lex.europa.eu` sits behind a
 |---|---|---|---|---|---|
 | ESPR / Energy Labelling Working Plan 2025-2030 | Communication from the Commission, COM(2025) 187 final, Brussels 16.4.2025, with SWD(2025) 112 final; CELEX 52025DC0187 / 52025SC0112 | Adopted 16 April 2025; mid-term review 2028 | PUBLIC | https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52025DC0187 — PDF via Cellar: http://publications.europa.eu/resource/celex/52025DC0187 (Accept: application/pdf) | Section 2 product priorities with indicative adoption dates of the first delegated acts: final products — Textiles/Apparel (2027), Furniture (2028), Tyres (2027), Mattresses (2029); intermediate products — Iron & Steel (2026), Aluminium (2027); horizontal — Repairability incl. scoring (2027), Recycled content & recyclability of EEE (2029); ICT covered through the horizontals; footwear study by end 2027; chemicals scoping study. Energy-related products table (displays 2027, EV chargers 2028, motors/VSD 2028, refrigerating appliances 2028, light sources 2029, welding/mobile phones & tablets/tumble dryers/standby end 2030). |
 
-### 2.4 Sectoral regulations that mandate a DPP registered in the ESPR registry (in scope only via Reg. 2026/1778 Art. 1)
+### 2.4 Sector laws that mandate a DPP registered in the ESPR registry (in scope since #767, 2026-09-06; comparison in `criteria-sector-laws.md`)
 
 | Source | Official ref / number | Version / stage / date | Access | URL | Needed for |
 |---|---|---|---|---|---|

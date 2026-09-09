@@ -1,0 +1,153 @@
+# State of the mechanical standards watch: every act the Cellar query has returned so far, with the
+# disposition the Conformance Review gave it. matrix:watch prints the acts not listed here; the
+# Validation Run classifies them and appends them (PLAYBOOK.md, "Watch"). Seeded 2026-09-05 in
+# wayfinder ticket #754 from the 31 acts the query returned that day; `baseline` means the map's
+# research tickets (#748, #752) already weighed the act when the scope was decided. The three Sector laws
+# were added as `extracted` by ticket #830 (2026-09-07).
+cellar:
+  endpoint: https://publications.europa.eu/webapi/rdf/sparql
+  query: research/eurlex-dpp-acts.rq
+  seen:
+    - celex: 32024R1781
+      date: 2024-06-13
+      title: "Regulation (EU) 2024/1781 of the European Parliament and of the Council of 13 June 2024 establishing a framework for the setting of ecodesign requirements for sustainable products, amending Directive (EU) 2020/1828 and Regulation (EU) 2023/1542 and repealing Directive 2009/125/EC (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 02024R1781-20240628
+      date: 2024-06-28
+      title: "Regulation (EU) 2024/1781 of the European Parliament and of the Council of 13 June 2024 establishing a framework for the setting of ecodesign requirements for sustainable products, amending Directive (EU) 2020/1828 and Regulation (EU) 2023/1542 and repealing Directive 2009/125/EC (Text with EEA relevance)"
+      disposition: extracted
+      source: ESPR
+    - celex: 32024R1834
+      date: 2024-07-03
+      title: "Commission Regulation (EU) 2024/1834 of 3 July 2024 implementing Directive 2009/125/EC of the European Parliament and of the Council with regard to ecodesign requirements for fans driven by motors with an electric input power between 125 W and 500 kW and repealing Commission Regulation (EU) No 327/2011"
+      disposition: baseline
+    - celex: 02023R1542-20240718
+      date: 2024-07-18
+      title: "Regulation (EU) 2023/1542 of the European Parliament and of the Council of 12 July 2023 concerning batteries and waste batteries, amending Directive 2008/98/EC and Regulation (EU) 2019/1020 and repealing Directive 2006/66/EC (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 32024R1781R(01)
+      date: 2024-08-07
+      title: "Corrigendum to Regulation (EU) 2024/1781 of the European Parliament and of the Council of 13 June 2024 establishing a framework for the setting of ecodesign requirements for sustainable products, amending Directive (EU) 2020/1828 and Regulation (EU) 2023/1542 and repealing Directive 2009/125/EC (OJ L, 2024/1781, 28.6.2024)"
+      disposition: baseline
+    - celex: 32024D2638
+      date: 2024-10-09
+      title: "Commission Implementing Decision (EU) 2024/2638 of 9 October 2024 on the harmonised standards drafted in support of Regulation (EU) 2016/2281 laying down ecodesign requirements for air heating products, cooling products, high temperature process chillers and fan coil units"
+      disposition: baseline
+    - celex: 32024D2779
+      date: 2024-10-24
+      title: "Commission Decision (EU) 2024/2779 of 24 October 2024 setting up the group of experts on ecodesign for sustainable products and energy labelling (the Ecodesign Forum)"
+      disposition: baseline
+    - celex: 32024R3110
+      date: 2024-11-27
+      title: "Regulation (EU) 2024/3110 of the European Parliament and of the Council of 27 November 2024 laying down harmonised rules for the marketing of construction products and repealing Regulation (EU) No 305/2011 (Text with EEA relevance)"
+      disposition: extracted
+      source: CPR
+    - celex: 52025DC0187
+      date: 2025-04-16
+      title: "COMMUNICATION FROM THE COMMISSION Ecodesign for Sustainable Products and Energy Labelling Working Plan 2025-2030"
+      disposition: baseline
+    - celex: 52025SC0112
+      date: 2025-04-16
+      title: "COMMISSION STAFF WORKING DOCUMENT Implementation of the Ecodesign and Energy Labelling Working Plan 2022-2024 Accompanying the document Commission Communication Ecodesign for Sustainable Products and Energy Labelling Working Plan 2025-2030"
+      disposition: baseline
+    - celex: 32024R1781R(02)
+      date: 2025-04-28
+      title: "Corrigendum to Regulation (EU) 2024/1781 of the European Parliament and of the Council of 13 June 2024 establishing a framework for the setting of ecodesign requirements for sustainable products, amending Directive (EU) 2020/1828 and Regulation (EU) 2023/1542 and repealing Directive 2009/125/EC (OJ L, 2024/1781, 28.6.2024)"
+      disposition: baseline
+    - celex: 52025PC0258
+      date: 2025-05-21
+      title: "Proposal for a REGULATION OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL amending Regulation (EU) 2023/1542 as regards obligations of economic operators concerning battery due diligence policies"
+      disposition: baseline
+    - celex: 02023R1670-20250620
+      date: 2025-06-20
+      title: "Commission Regulation (EU) 2023/1670 of 16 June 2023 laying down ecodesign requirements for smartphones, mobile phones other than smartphones, cordless phones and slate tablets pursuant to Directive 2009/125/EC of the European Parliament and of the Council and amending Commission Regulation (EU) 2023/826 (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 02023R0826-20250701
+      date: 2025-07-01
+      title: "Commission Regulation (EU) 2023/826 of 17 April 2023 laying down ecodesign requirements for off mode, standby mode, and networked standby energy consumption of electrical and electronic household and office equipment pursuant to Directive 2009/125/EC of the European Parliament and of the Council and repealing Commission Regulations (EC) No 1275/2008 and (EC) No 107/2009 (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 32024R1103R(04)
+      date: 2025-07-11
+      title: "Corrigendum to Commission Regulation (EU) 2024/1103 of 18 April 2024 implementing Directive 2009/125/EC of the European Parliament and of the Council as regards ecodesign requirements for local space heaters and separate related controls and repealing Commission Regulation (EU) 2015/1188 (OJ L, 2024/1103, 19.4.2024)"
+      disposition: baseline
+    - celex: 32025R1561
+      date: 2025-07-18
+      title: "Regulation (EU) 2025/1561 of the European Parliament and of the Council of 18 July 2025 amending Regulation (EU) 2023/1542 as regards obligations of economic operators concerning battery due diligence policies (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 02023R1542-20250731
+      date: 2025-07-31
+      title: "Regulation (EU) 2023/1542 of the European Parliament and of the Council of 12 July 2023 concerning batteries and waste batteries, amending Directive 2008/98/EC and Regulation (EU) 2019/1020 and repealing Directive 2006/66/EC (Text with EEA relevance)"
+      disposition: extracted
+      source: BATT
+    - celex: 32023R1542R(11)
+      date: 2025-10-08
+      title: "Corrigendum to Regulation (EU) 2023/1542 of the European Parliament and of the Council of 12 July 2023 concerning batteries and waste batteries, amending Directive 2008/98/EC and Regulation (EU) 2019/1020 and repealing Directive 2006/66/EC (OJ L 191, 28.7.2023)"
+      disposition: baseline
+    - celex: 32025R2052
+      date: 2025-10-13
+      title: "Commission Regulation (EU) 2025/2052 of 13 October 2025 laying down ecodesign requirements for external power supplies, wireless chargers, wireless charging pads, battery chargers for portable batteries of general use and USB Type-C cables, pursuant to Directive 2009/125/EC of the European Parliament and of the Council and repealing Commission Regulation (EU) 2019/1782"
+      disposition: baseline
+    - celex: 52025SC0289
+      date: 2025-10-13
+      title: "COMMISSION STAFF WORKING DOCUMENT EXECUTIVE SUMMARY OF THE IMPACT ASSESSMENT REPORT Accompanying the document COMMISSION REGULATION (EU) …/… laying down ecodesign requirements for external power supplies, wireless chargers, wireless charging pads, battery chargers for portable batteries of general use and USB Type-C cables, pursuant to Directive 2009/125/EC of the European Parliament and of the Council and repealing Commission Regulation (EU) 2019/1782"
+      disposition: baseline
+    - celex: 52025SC0288
+      date: 2025-10-13
+      title: "COMMISSION STAFF WORKING DOCUMENT IMPACT ASSESSMENT REPORT Accompanying the document COMMISSION REGULATION laying down ecodesign requirements for external power supplies, wireless chargers, wireless charging pads, battery chargers for portable batteries of general use and USB Type-C cables, pursuant to Directive 2009/125/EC of the European Parliament and of the Council and repealing Commission Regulation (EU) 2019/1782"
+      disposition: baseline
+    - celex: 02023R2533-20251124
+      date: 2025-11-24
+      title: "Commission Regulation (EU) 2023/2533 of 17 November 2023 implementing Directive 2009/125/EC of the European Parliament and of the Council with regard to ecodesign requirements for household tumble dryers, amending Commission Regulation (EU) 2023/826, and repealing Commission Regulation (EU) No 932/2012 (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 02023R0826-20251124
+      date: 2025-11-24
+      title: "Commission Regulation (EU) 2023/826 of 17 April 2023 laying down ecodesign requirements for off mode, standby mode, and networked standby energy consumption of electrical and electronic household and office equipment pursuant to Directive 2009/125/EC of the European Parliament and of the Council and repealing Commission Regulations (EC) No 1275/2008 and (EC) No 107/2009 (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 32025R2509
+      date: 2025-11-26
+      title: "Regulation (EU) 2025/2509 of the European Parliament and of the Council of 26 November 2025 on the safety of toys and repealing Directive 2009/48/EC (Text with EEA relevance)"
+      disposition: extracted
+      source: TOYS
+    - celex: 52025PC0981
+      date: 2025-12-10
+      title: "Proposal for a REGULATION OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL amending Regulation (EU) 2023/1542 and Regulation (EU) 2024/1244 as regards simplification of some requirements and reduction of administrative burden"
+      disposition: baseline
+    - celex: 32025R2006
+      date: 2025-12-18
+      title: "Commission Regulation (EU) 2025/2006 of 18 December 2025 correcting and amending Regulation (EU) 2023/1670 laying down ecodesign requirements for smartphones, mobile phones other than smartphones, cordless phones and slate tablets pursuant to Directive 2009/125/EC of the European Parliament and of the Council"
+      disposition: baseline
+    - celex: 02024R1834-20251228
+      date: 2025-12-28
+      title: "Commission Regulation (EU) 2024/1834 of 3 July 2024 implementing Directive 2009/125/EC of the European Parliament and of the Council with regard to ecodesign requirements for fans driven by motors with an electric input power between 125 W and 500 kW and repealing Commission Regulation (EU) No 327/2011 (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 32026L0074
+      date: 2026-01-12
+      title: "Commission Delegated Directive (EU) 2026/74 of 12 January 2026 amending Annex II to Directive (EU) 2024/1799 of the European Parliament and of the Council promoting the repair of goods to include domestic local space heaters as provided in Commission Regulation (EU) 2024/1103 as regards ecodesign requirements for local space heaters and separate related controls"
+      disposition: baseline
+    - celex: 32026R0405
+      date: 2026-02-11
+      title: "Regulation (EU) 2026/405 of the European Parliament and of the Council of 11 February 2026 on detergents and surfactants, and repealing Regulation (EC) No 648/2004 (Text with EEA relevance)"
+      disposition: extracted
+      source: DET
+    - celex: 32023R1542R(13)
+      date: 2026-04-10
+      title: "Corrigendum to Regulation (EU) 2023/1542 of the European Parliament and of the Council of 12 July 2023 concerning batteries and waste batteries, amending Directive 2008/98/EC and Regulation (EU) 2019/1020 and repealing Directive 2006/66/EC (OJ L 191, 28.7.2023)"
+      disposition: baseline
+    - celex: 32026D1736
+      date: 2026-07-14
+      title: "Commission Implementing Decision (EU) 2026/1736 of 14 July 2026 on harmonised standards for digital product passports drafted in support of Regulation (EU) 2024/1781 of the European Parliament and of the Council"
+      disposition: registered
+      source: DEC1736
+    - celex: 32026R1778
+      date: 2026-07-16
+      title: "Commission Implementing Regulation (EU) 2026/1778 of 16 July 2026 laying down the implementation arrangements for the digital product passport registry set up under Regulation (EU) 2024/1781 of the European Parliament and of the Council"
+      disposition: extracted
+      source: REG1778
+    - celex: 02011R0327-20260724
+      date: 2026-07-24
+      title: "Commission Regulation (EU) No 327/2011 of 30 March 2011 implementing Directive 2009/125/EC of the European Parliament and of the Council with regard to ecodesign requirements for fans driven by motors with an electric input power between 125 W and 500 kW (Text with EEA relevance)"
+      disposition: baseline
+    - celex: 32024R1834R(04)
+      date: 2026-09-04
+      title: "Corrigendum to Commission Regulation (EU) 2024/1834 of 3 July 2024 implementing Directive 2009/125/EC of the European Parliament and of the Council with regard to ecodesign requirements for fans driven by motors with an electric input power between 125 W and 500 kW and repealing Commission Regulation (EU) No 327/2011 (OJ L, 2024/1834, 4.7.2024)"
+      disposition: baseline

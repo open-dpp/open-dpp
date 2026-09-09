@@ -51,6 +51,7 @@ packages/env/        # Zod-validated env schema + NestJS EnvModule
 packages/exception/  # ValueError, NotFoundError, NotSupportedError + NestJS filters
 packages/permission/ # CASL-based permission helpers
 packages/testing/    # Fishery factories for test data
+dpp-standards/      # Conformance Review: matrix files, schema, checks, preview site (read dpp-standards/README.md first)
 ```
 
 ## Architecture

@@ -1,0 +1,1550 @@
+# Conformance Matrix: TOYS (32025R2509). Rules: dpp-standards/README.md.
+# Criteria extracted from research/criteria-sector-laws.md and verified against the Cellar text on 2026-09-07 (ticket #830); assessments are added in place, one per Criterion.
+# Clauses outside Chapter V, Art. 49(1)-(3) and Annex VI that the paraphrases cite (Art. 3, 7, 45, 47, Annex II) are not extracted; the ENs carry presumption of conformity under ESPR only, so operationalisedBy stays empty until the Art. 49(1) act names standards.
+standard: TOYS
+edition: 32025R2509
+extractedFrom: dpp-standards/research/criteria-sector-laws.md
+extractedAt: 2026-09-07
+sections:
+  - id: Art19
+    title: Article 19 – Digital product passport
+  - id: Art20
+    title: Article 20 – Technical design and operation of the digital product passport
+  - id: Art21
+    title: Article 21 – Data carriers and unique identifiers
+  - id: Art22
+    title: Article 22 – Digital product passport registry
+  - id: Art23
+    title: Article 23 – Customs controls relating to the digital product passport
+  - id: Art24
+    title: Article 24 – Assistance for micro-, small and medium-sized enterprises
+  - id: Art49
+    title: Article 49 – Delegated powers (paragraphs 1 to 3)
+  - id: AnnexVI
+    title: Annex VI – Digital product passport
+criteria:
+  # ---- Article 19 ---------------------------------------------------------------------------
+  - id: TOYS-Art19(1)
+    section: Art19
+    clause: Art. 19(1)
+    paraphrase: "Before a toy is placed on the market its manufacturer creates a DPP that meets Art. 19 and Art. 20. Restates the first limb of ESPR-Art9(1) with the creator fixed as the manufacturer and the requirements fixed in the Regulation itself, not in a delegated act."
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: POST /passports from a template or an environment, PUT status, AAS update routes
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: createPassportFromTemplate, status changes, draft-only delete
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: public URL resolution and freeze on publish
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: creation from a template, publish freezes permalinks
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing freezes the permalink and opens it to anonymous visitors
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: the three lifecycle stages and what each allows; no page on creating, editing or serving a passport
+      notes: "Software part: a passport the manufacturer can create before placing the toy on the market, and that meets Art. 19 and 20. Credited: a passport is created from a template or an environment, held as a draft, published and then served publicly at its permalink and through the GS1 resolver; every change is recorded. Missing: the passport does not meet Art. 19 and 20 as this run assesses them, above all the Annex VI content and the declaration-of-conformity elements (#841, the cluster whose delivery makes a passport an Art. 19 passport), the Member-State languages (#838), the single-passport and separation rules (#839), the Safety Gate link on access (#842), the no-tracking rule (#840), the external access classes (#821), the model granularity (#597) and the print-ready carrier (#489); the operator docs cover the lifecycle stages only (#828). Same reading as CPR-Art75(2)(b) after its adversarial review and DET-Art21(1): the generic mechanics are credited, the sector content is the gap. The creator is fixed as the manufacturer: any organisation member can create a passport, which is the manufacturer's own affair. Applies from 1 August 2030."
+      gapIssue: 841
+  - id: TOYS-Art19(2)(a)
+    section: Art19
+    clause: Art. 19(2)(a)
+    paraphrase: "The DPP corresponds to a specific toy model. Restates ESPR-Art10(1)(f) and ESPR-Art9(2)(d) with the granularity fixed at model level by the law (batch level only under the Art. 19(9) derogation)."
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: granularity is model when a GS1 identity has no batch or serial
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model, batch, item
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: assetKind Instance for passports, Type for templates
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+          note: model granularity for a bare GTIN
+      notes: "The Regulation fixes the passport at the toy model (the conformity-assessment modules of Annex IV speak of the passport of a toy model). Credited: a GS1 identity with a bare GTIN is a model-level identifier and resolves as one, and several identifiers may sit on a passport, so a model passport can be built. Missing: no passport-level granularity or model attribute, an open-dpp UUID identifier carries no level, nothing ties a passport to a model definition so that a changed model yields a new passport, and a passport's AAS asset is always assetKind Instance while Type is reserved for templates, so a model passport cannot declare itself one (#597; same finding as DET-Art21(2)(a), CPR-Art76(2)(d), ESPR-Art9(2)(d) and REG1778 Art. 8(3)). The batch-level derogation is TOYS-Art19(9)."
+      gapIssue: 597
+  - id: TOYS-Art19(2)(b)
+    section: Art19
+    clause: Art. 19(2)(b)
+    paraphrase: The DPP states that the toy's compliance with the Regulation, in particular the essential safety requirements, has been demonstrated (the declaration-of-conformity statement lives inside the DPP; no ESPR counterpart).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: a text Property renders in the public view
+      notes: "The passport states that the toy's compliance with the Regulation, in particular the essential safety requirements of Art. 5 and Annex II, has been demonstrated (recital 54: the passport replaces the EU declaration of conformity; the content rows are TOYS-AnnexVI-I(d) and I(g)). Credited: a text Property holding the statement is modellable in a template, carries a semanticId and renders in the public view. Missing: no compliance-statement element or fixed text ships, nothing marks a passport as carrying the statement, and a multilingual statement is not rendered (#838); tracked in the content cluster #841. Same finding as DET-Art21(2)(b). No ESPR counterpart."
+      gapIssue: 841
+  - id: TOYS-Art19(2)(c)
+    section: Art19
+    clause: Art. 19(2)(c)
+    paraphrase: The DPP contains at least the data of Annex VI Part I. Restates ESPR-Art9(2)(a) with the mandatory data set fixed in the law instead of a delegated act.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: a passport is an AAS Environment per product, created from a template
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+      notes: "The mandatory data set is fixed in the law (Annex VI Part I, fourteen points) instead of a delegated act. Credited: templates are freely composable per organisation and passports are created from them, so an operator can build the Part I set by hand, element by element, as the Annex VI rows record. Missing: no Annex VI Part I template or submodel ships, and nothing checks that a passport holds the whole set before it is published (#841; a validation against a data model is the semantic-repository question, #826). Same shape as ESPR-Art9(2)(a) and DET-Art21(2)(c), with the set fixed."
+      gapIssue: 841
+  - id: TOYS-Art19(2)(d)
+    section: Art19
+    clause: Art. 19(2)(d)
+    paraphrase: The DPP is accurate, complete and up to date (the second limb of ESPR Art. 9(1)).
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    mirrors: ESPR-Art9(1)
+  - id: TOYS-Art19(2)(e)
+    section: Art19
+    clause: Art. 19(2)(e)
+    paraphrase: The DPP is available in the language or languages required by the Member State where the toy is made available (no ESPR counterpart; multilingual passport content).
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: one text per language in the data model and the API
+        - type: code
+          ref: packages/dto/src/aas/enums/language-enum.ts
+          note: fixed list of 29 language codes; Irish (ga) and Maltese (mt) absent
+        - type: code
+          ref: apps/client/src/components/aas/form/LanguageTextArrayForm.vue
+          note: element and submodel labels editable per language
+        - type: code
+          ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
+          note: language switcher of the public view, built from the passport's language tags
+        - type: code
+          ref: apps/client/src/composables/presentation-language.ts
+          note: the chosen language travels in the ?lang= query parameter as a BCP 47 tag
+        - type: code
+          ref: apps/client/src/composables/language.ts
+          note: browser preference picks the initial language; per-text resolution with en fallback
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: "no MultiLanguageProperty branch: the value renders blank"
+        - type: code
+          ref: apps/client/src/composables/aas-editor.ts
+          note: the element menu offers no MultiLanguageProperty
+        - type: test
+          ref: apps/client/src/composables/language.spec.ts
+          note: language resolution and preferred-language selection
+      notes: "Software part: let the operator enter the passport in every language a Member State requires and show a visitor one of them. Credited: MultiLanguageProperty in the data model and API, per-language labels editable in the client, a language switcher on the public view driven by the languages present in the passport, a shareable ?lang= choice and browser-preference detection. Missing: a MultiLanguageProperty value is not rendered in the public view (label shown, value blank; also empty in tables) and cannot be created or edited in the client, so values are single-language Properties duplicated by hand; the language list behind every language text lacks Irish and Maltese, so two EU official languages cannot be entered at all; the public view's own strings exist in English and German only; nothing checks completeness per language; no operator documentation (#838). Same finding as DET-Art21(2)(e), the identical clause; no ESPR counterpart."
+      gapIssue: 838
+  - id: TOYS-Art19(2)(f)
+    section: Art19
+    clause: Art. 19(2)(f)
+    paraphrase: "The DPP is accessible to consumers and other end users, market surveillance authorities, customs authorities, notified bodies, the Commission and other economic operators according to the access rights set by the Art. 49(1)(d) delegated act. Restates ESPR-Art11(b) with a different actor list: notified bodies added; repairers, recyclers, civil society and trade unions not named."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "role hierarchy: admin, owner, member, user, anonymous"
+        - type: code
+          ref: apps/client/src/components/aas/PermissionsForm.vue
+          note: editor UI to grant or withdraw the anonymous read right per element
+        - type: test
+          ref: apps/main/src/aas/domain/security/security.spec.ts
+          note: access rules per role and element
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: an anonymous subject is refused on a hidden submodel (ForbiddenError)
+      notes: "Software part: give consumers and other end users, market surveillance and customs authorities, notified bodies, the Commission and other economic operators access to the data meant for each, as the Art. 49(1)(d) delegated act will fix (it does not exist yet). Credited: per-submodel and per-element visibility for the roles anonymous, organisation member, organisation owner and instance admin; a published passport is public by default and any element can be withheld from anonymous readers, which covers the consumer class today. Missing: none of the named external classes (market surveillance, customs, a notified body, the Commission, another economic operator) can be expressed, so information cannot be shown to an authority or a notified body and withheld from the public, and there is no credential-based grant (#821; same finding as DET-Art21(2)(f), ESPR-Art9(2)(f), CPR-Art75(2)(c) and BATT-Art77(2)). The delta against ESPR-Art11(b) is the actor list: notified bodies added, repairers, civil society and trade unions absent. Free access is the Mirror TOYS-Art20(3), the no-registration rule TOYS-Art20(4). Re-validate when the delegated act fixes the access rights."
+      gapIssue: 821
+  - id: TOYS-Art19(2)(g)
+    section: Art19
+    clause: Art. 19(2)(g)
+    paraphrase: The DPP stays available for 10 years after the toy is placed on the market, including after insolvency, liquidation or cessation of the creating operator's activity in the Union. Restates ESPR-Art11(e) and ESPR-Art9(2)(i) with the period fixed at 10 years from placing on the market.
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: deletePassport refuses non-draft passports
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: what each stage allows
+      notes: "Software part: keep the passport available for 10 years after the toy is placed on the market (Art. 7(3) puts the same 10 years on the manufacturer's keeping duty), including after the creator's insolvency, liquidation or cessation of activity in the Union. Credited: published and archived passports cannot be deleted and archiving is reversible, so a passport stays in the system indefinitely, and the lifecycle is documented. Missing: no representation of an availability period or of the placing-on-the-market date it runs from, an archived passport is no longer served publicly (the permalink service requires Published), no back-up (#596; the back-up copy itself is the Mirror TOYS-Art19(13)) and no escrow, handover or continuity once the operator ceases (#825). Same finding as DET-Art21(2)(g), ESPR-Art9(2)(i) and CPR-Art76(2)(h), with the period fixed at 10 years."
+      gapIssue: 825
+  - id: TOYS-Art19(2)(h)
+    section: Art19
+    clause: Art. 19(2)(h)
+    paraphrase: The DPP is connected through a data carrier to a persistent unique product identifier.
+    applicability: software
+    areas:
+      - 3
+      - 4
+    mirrors: ESPR-Art10(1)(a)
+  - id: TOYS-Art19(2)(i)
+    section: Art19
+    clause: Art. 19(2)(i)
+    paraphrase: The DPP fulfils the specific and technical requirements laid down in the Art. 49(1) delegated act (not yet adopted; nothing to assess until it exists).
+    applicability: software
+    areas:
+      - 12
+  - id: TOYS-Art19(3)
+    section: Art19
+    clause: Art. 19(3)
+    paraphrase: The DPP may additionally contain the data of Annex VI Part II. Restates ESPR-Art10(2) and ESPR-AnnexIII-para3 with the optional data set fixed in the law.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: multilingual text in the data model
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for an attached instruction leaflet
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: MultiLanguageProperty values are not rendered in the public view
+      notes: "Optional content fixed in the law: the Annex VI Part II safety information and warnings and the instructions of use (the Mirrors TOYS-AnnexVI-II(a) and II(b) of ESPR-AnnexIII(f), Partial, #827). Credited: templates accept any additional submodel or element, so warnings and instructions are addable today as text, per language in the data model, or as an attached leaflet. Missing: no Part II structure ships to add as such, and a multilingual warning text is not rendered in the public view (#838); tracked with the content cluster #841. Same shape as ESPR-Art10(2), ESPR-AnnexIII-para3 and DET-Art21(3), with the optional set fixed."
+      gapIssue: 841
+  - id: TOYS-Art19(4)
+    section: Art19
+    clause: Art. 19(4)
+    paraphrase: By creating the DPP the manufacturer assumes responsibility for the toy's compliance with the Regulation.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: by creating the passport the manufacturer assumes responsibility for the toy's compliance with the Regulation. A legal consequence of the act of creation, no software surface; the sole-responsibility statement as passport content is TOYS-AnnexVI-I(d). Same reading as DET-Art21(9)."
+  - id: TOYS-Art19(5)
+    section: Art19
+    clause: Art. 19(5)
+    paraphrase: "Where the DPP holds all the information an EU declaration of conformity requires under the AI Act, the Cyber Resilience Act, RoHS, EMC, LVD, RED or Delegated Regulation (EU) 2019/945 (drones), points (a) to (d) apply: the passport can carry the full content of those declarations (no ESPR counterpart; nearest ESPR-AnnexIII(e))."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for an attached declaration of conformity
+        - type: code
+          ref: apps/client/src/components/aas/LinkCellField.vue
+          note: URL property, e.g. a link to the act or the standard cited
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+      notes: "Software part: a passport able to hold all the information the EU declaration of conformity of each named act requires (the AI Act, the Cyber Resilience Act, RoHS, EMC, LVD, RED and the drone Delegated Regulation each fix a declaration model in an annex: product identification, manufacturer, sole-responsibility statement, object, Union law, standards or specifications, notified body, place, date and signatory), so that the passport can stand in for those declarations under points (a) to (d). Credited: every element of such a declaration is modellable as a text Property, a URL Property or a File element, and a signed declaration can be attached as a document. Missing: no declaration-of-conformity structure per act ships, nothing marks which acts a passport covers or checks that it holds everything the act's declaration model needs before the manufacturer relies on paragraph 5, and an attached PDF is a document, not passport data (#841; the mention itself is TOYS-Art19(6) and TOYS-AnnexVI-I(h)). No ESPR counterpart; nearest ESPR-AnnexIII(e) (Partial, #827), which asks for the compliance documents."
+      gapIssue: 841
+  - id: TOYS-Art19(5)(a)
+    section: Art19
+    clause: Art. 19(5)(a)
+    paraphrase: Manufacturers and, where applicable, providers of high-risk AI systems are deemed to have drawn up the EU declaration of conformity required by each of those acts.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: a deeming provision, the manufacturer and, where applicable, the provider of a high-risk AI system are deemed to have drawn up the EU declaration of conformity of the acts named in paragraph 5. A legal effect of the passport's content, which is TOYS-Art19(5)."
+  - id: TOYS-Art19(5)(b)
+    section: Art19
+    clause: Art. 19(5)(b)
+    paraphrase: Manufacturers are also deemed to meet the duty that the declaration accompanies the product under the Cyber Resilience Act, RED or the drone Delegated Regulation.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: a deeming provision, the manufacturer is also deemed to meet the duty that the declaration accompanies the product under the Cyber Resilience Act, RED or the drone Delegated Regulation. The passport reachable through the carrier on the toy is what stands in for the accompanying document; that reachability is TOYS-Art19(7)."
+  - id: TOYS-Art19(5)(c)
+    section: Art19
+    clause: Art. 19(5)(c)
+    paraphrase: By drawing up the DPP manufacturers assume responsibility for compliance with those Regulations and Directives.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: by drawing up the passport the manufacturer assumes responsibility for compliance with the acts it replaces the declarations of. A liability consequence, no software surface; same reading as TOYS-Art19(4)."
+  - id: TOYS-Art19(5)(d)
+    section: Art19
+    clause: Art. 19(5)(d)
+    paraphrase: Economic operators and, where applicable, providers of high-risk AI systems use the DPP to fulfil their declaration-of-conformity duties under the listed provisions of those acts.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: economic operators and providers of high-risk AI systems use the passport to fulfil their declaration-related duties under the listed provisions of the named acts (keeping the declaration, giving it to authorities, checking it exists). The passport's availability to those actors is TOYS-Art19(2)(f) and the Mirror TOYS-Art20(3); the use itself is the operator's."
+  - id: TOYS-Art19(6)
+    section: Art19
+    clause: Art. 19(6)
+    paraphrase: When a manufacturer relies on Art. 19(5), the DPP contains the Annex VI Part I(h) mention that it replaces the EU declaration of conformity under the acts concerned.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: a text Property renders in the public view
+      notes: "When the manufacturer relies on paragraph 5, the passport contains the Annex VI Part I (h) mention that it replaces the EU declaration of conformity under the acts concerned. Credited: a text Property with the mention is modellable and renders in the public view. Missing: no mention element ships, no selection of the acts covered, nothing ties the mention to the completeness of TOYS-Art19(5), and a multilingual mention is not rendered (#838); tracked in #841 with the content row TOYS-AnnexVI-I(h). No ESPR counterpart."
+      gapIssue: 841
+  - id: TOYS-Art19(7)
+    section: Art19
+    clause: Art. 19(7)
+    paraphrase: "The data carrier sits on the toy or an affixed label; where size or nature forbids it, on the packaging or accompanying documentation as the Art. 49(1) act provides. It is clearly visible to consumers before purchase and to market surveillance authorities, including in distance sales. Folds ESPR-Art10(1)(b) and ESPR-Art9(2)(e) with the placement priority fixed in the law and visibility to authorities added."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code rendered into a canvas
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: a QR code per permalink, URL copyable
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: QR dialog of a passport
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public /p/:id routes without a session
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GS1 Digital Link resolver
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-identity.controller.ts
+          note: GET /passports/:id/gs1-identity returns the Digital Link
+        - type: test
+          ref: apps/e2e/tests/passport-identity/permalink-crud.spec.ts
+          note: "the QR dialog of a permalink: URL text and copy button (the canvas itself is not asserted)"
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+          note: a scanned key on a published passport redirects to its view
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing opens the permalink to anonymous visitors
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-09-07
+      notes: "Two limbs folded into one paragraph. Placement: the carrier sits on the toy or an affixed label, else on the packaging or the accompanying documentation as the Art. 49(1) act will provide (it does not exist yet); the software part is a carrier the manufacturer can print. Credited: a QR code is rendered for every permalink and for the GS1 Digital Link. Missing: the QR exists only as an on-screen canvas, with no image download (PNG or SVG), no print layout, no size or quiet-zone guidance and no server endpoint returning the carrier, so the manufacturer regenerates the code from the copied URL with another tool; no GS1 2D code with FNC1 either (#489; same finding as DET-Art21(4)(a) and CPR-Art77(1)(b)). Visibility: clearly visible to consumers before purchase and to market surveillance authorities, including in distance sales (Art. 19(12) gives sellers a digital copy). Credited: the public permalink, the GS1 Digital Link resolved by the built-in resolver (Check resolver.redirect-published, which evidences that the encoded link is reachable, not the carrier's placement or its visibility), a QR code of either and anonymous access once the passport is published; an authority reaches the same public view. Missing: no downloadable carrier image for the distance-sales offer and no operator documentation on sharing a passport before purchase (#828; same finding as DET-Art21(4)(f) and ESPR-Art9(2)(e)). Where the carrier goes on the toy is the manufacturer's act; re-validate when the Art. 49(1) act fixes the placement and the carrier."
+      gapIssue: 489
+  - id: TOYS-Art19(8)
+    section: Art19
+    clause: Art. 19(8)
+    paraphrase: Where other Union law requires information on the toy to be reachable through a data carrier, a single carrier serves this Regulation and that law (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: one permalink or Digital Link resolves to the whole passport
+        - type: code
+          ref: apps/main/src/permalink/infrastructure/permalink.repository.ts
+          note: "findAllByPassportId: several permalinks per passport"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: submodels as separate sections of one passport
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: the published passport is served whole at its permalink
+      notes: "A single data carrier provides the information this Regulation and other Union law require through a carrier. Credited: one carrier resolves to the whole passport, whose submodels can hold the toy data and any other act's data as separate sections, so one QR code can serve them all. Missing: nothing marks which submodel serves which act, so a visitor or authority cannot tell the data sets apart by their legal basis (#839); a passport may carry several carriers and nothing tells the operator that one must serve all acts, the docs being silent on carriers (#828). Same finding as DET-Art21(5); no ESPR counterpart."
+      gapIssue: 839
+  - id: TOYS-Art19(9)
+    section: Art19
+    clause: Art. 19(9)
+    paraphrase: Where other Union law requires a DPP for the toy, a single DPP holds the data of this Regulation and of that law; if that law requires batch level, the toy DPP may be issued at batch level by derogation from Art. 19(2)(a) (no ESPR counterpart; nearest ESPR-Art10(2)).
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: one passport is one AAS Environment per product
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: any number of submodels in one passport
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: a template composes the submodels of several acts
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element, the only place a legal basis could be named
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN and batch (AI 10); granularity derived from the parts
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: resolver routes GTIN and GTIN plus batch keys
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+          note: batch granularity from the GS1 parts
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+          note: resolver routes per key shape
+      notes: "Two limbs. Single passport: where other Union law also requires a passport for the toy, one passport holds both data sets (recital 56). Credited: a passport is one AAS environment with any number of submodels, so the toy data set and another act's data set sit in one passport under one identity. Missing: no notion of the legal basis of a submodel or element (a semanticId can name it by convention, nothing enforces or renders it), no shipped submodels per act to assemble (#841, #827) and no completeness check per act (#839; same finding as DET-Art21(6)). Batch override: by derogation from Art. 19(2)(a) the toy passport may be issued at batch level where that other law requires it. Credited: a GS1 identity with a batch part yields a batch-level identifier, the resolver routes it, and a passport can be created per batch. Missing: no passport-level granularity attribute and no relationship between a model passport and its batch passports, so the shared Annex VI model data would be copied per batch (#597; same finding as DET-Art21(7)). Which other Union law triggers either limb is the operator's determination."
+      gapIssue: 839
+  - id: TOYS-Art19(10)
+    section: Art19
+    clause: Art. 19(10)
+    paraphrase: Operators may make other information reachable through the same data carrier, but it must be clearly separated from the information required by this Regulation and other Union law (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: submodels as separate sections
+        - type: code
+          ref: apps/client/src/components/presentation/Submodel.vue
+          note: the public view renders each submodel as its own titled section
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+      notes: "Other information an operator exposes through the carrier is clearly separated from the information required under this Regulation and other Union law. Credited: submodels are separate titled sections of the public view, so voluntary information can be kept in a submodel of its own. Missing: nothing distinguishes a required data set from voluntary information by legal basis in the view or the API, so the separation rests on the operator's naming discipline (#839). Same finding as DET-Art21(8); no ESPR counterpart."
+      gapIssue: 839
+  - id: TOYS-Art19(11)
+    section: Art19
+    clause: Art. 19(11)
+    paraphrase: The manufacturer or the DPP service provider ensures that a link to the Safety Gate Portal section for reporting dangerous toys (Reg. (EU) 2023/988 Art. 34(3)) is displayed whenever the DPP is accessed (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: "the public view renders the Passport component and nothing else: no footer or fixed links"
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: an anyURI Property renders as a link when the href is safe
+        - type: code
+          ref: apps/client/src/lib/urls.ts
+          note: isSafeHref accepts http and https only
+        - type: code
+          ref: apps/main/src/branding/domain/branding.ts
+          note: branding holds logo, primary colour and permalink base URL; no links
+        - type: code
+          ref: apps/main/src/presentation-configurations/domain/presentation-configuration.ts
+          note: presentation configuration maps elements to display components; no fixed content
+        - type: doc
+          ref: docs/guides/branding.md
+          note: branding options; no regulatory link or footer
+      notes: "The manufacturer or the DPP service provider ensures that a link to the Safety Gate Portal section for reporting dangerous toys (GPSR Art. 34(3)) is displayed whenever the passport is accessed. Credited: an operator can add the link as an anyURI Property in the toy template, and the public view renders such a Property as a clickable link, so the link can be shown on every passport built from that template. Missing: nothing ensures it. No fixed link, footer or notice area exists in the public view shell, neither the branding nor the presentation configuration carries an instance-, organisation- or template-level regulatory link, a template element can be left out, deleted or withheld from anonymous readers like any other element, no Safety Gate URL is known to the software, and the operator docs say nothing about it (#842). Not a content row: the duty is about the act of accessing, which is why it is not folded into #841. Applies from 1 August 2030; no ESPR counterpart."
+      gapIssue: 842
+  - id: TOYS-Art19(12)(a)
+    section: Art19
+    clause: Art. 19(12)(a)
+    paraphrase: The operator placing the toy on the market gives distributors and online marketplace providers a digital copy of the data carrier or of the unique product identifier so customers without physical access can reach it.
+    applicability: mixed
+    areas:
+      - 4
+      - 3
+    mirrors: ESPR-Art10(3)(a)
+  - id: TOYS-Art19(12)(b)
+    section: Art19
+    clause: Art. 19(12)(b)
+    paraphrase: That digital copy or a web link is provided free of charge, promptly and within five working days of a request.
+    applicability: operator
+    mirrors: ESPR-Art10(3)(b)
+  - id: TOYS-Art19(13)
+    section: Art19
+    clause: Art. 19(13)
+    paraphrase: When placing the toy on the market the operator makes a back-up copy of the DPP available through a DPP service provider.
+    applicability: mixed
+    areas:
+      - 6
+      - 2
+    mirrors: ESPR-Art10(4)
+  # ---- Article 20 ---------------------------------------------------------------------------
+  - id: TOYS-Art20(1)
+    section: Art20
+    clause: Art. 20(1)
+    paraphrase: The DPP is fully interoperable with the DPPs other Union law requires, in the technical, semantic and organisational aspects of end-to-end communication and data transfer.
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 7
+      - 8
+    mirrors: ESPR-Art11(a)
+  - id: TOYS-Art20(2)
+    section: Art20
+    clause: Art. 20(2)
+    paraphrase: All DPP data are based on open standards in an interoperable format and, as appropriate, machine-readable, structured, searchable and transferable through an open interoperable data exchange network without vendor lock-in.
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 13
+    mirrors: ESPR-Art10(1)(d)
+  - id: TOYS-Art20(3)
+    section: Art20
+    clause: Art. 20(3)
+    paraphrase: Consumers and other end users, economic operators, competent national and customs authorities, the Commission and other relevant actors get free access to the DPP according to their access rights under Union law.
+    applicability: software
+    areas:
+      - 5
+      - 11
+    mirrors: ESPR-Art11(b)
+  - id: TOYS-Art20(4)
+    section: Art20
+    clause: Art. 20(4)
+    paraphrase: Consumers are not asked to register or to provide a password to access the DPP (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: "GET /p/:id and the AAS read routes under it are @OptionalAuth: no session needed"
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: an optional-auth route passes without a session
+        - type: code
+          ref: apps/client/src/router/routes/presentation/presentation.ts
+          note: the /p routes carry meta.public
+        - type: code
+          ref: apps/client/src/router/index.ts
+          note: the router guard redirects to sign-in only for routes without meta.public
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: the resolver routes are @OptionalAuth
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: a cookie-less browser context gets 404 before and 200 after publication
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: the public permalink route serves a published passport to a request without a user
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-09-07
+      notes: "Consumers are not requested to register or to provide a password to access the passport. A published passport is served at its permalink and through the GS1 resolver to anyone: the public routes carry no authentication requirement, the client's public routes never redirect to sign-in, and there is no account, password, CAPTCHA, cookie or consent gate on the way (verified in the code at d5f8219e, no such mechanism exists). Check access.anonymous-reads-published exercises the API limb against a live Instance from an empty browser context; its second assertion (the public view answers 200) is vacuous because the SPA shell answers 200 for any non-API path, so the view limb rests on the router-guard code and the E2E test rather than the Check (carried over from the DET-Art22(d) adversarial review; a stronger Check asserting a rendered passport element and no sign-in form is a follow-up). Not operational: the property holds for every published passport by construction, the operator does nothing for it (publishing itself is TOYS-Art19(1)). Elements an operator withholds from anonymous readers are withheld from everyone outside the organisation, an access-rights choice under TOYS-Art19(2)(f), not a registration; the page-view counter that fires on the visit is TOYS-Art20(10). Same clause and same evidence as DET-Art22(d), Met; no ESPR counterpart."
+  - id: TOYS-Art20(5)
+    section: Art20
+    clause: Art. 20(5)
+    paraphrase: The DPP is stored by the economic operator responsible for its creation or by DPP service providers.
+    applicability: mixed
+    areas:
+      - 6
+    mirrors: ESPR-Art11(c)
+  - id: TOYS-Art20(6)
+    section: Art20
+    clause: Art. 20(6)
+    paraphrase: A new DPP created for a toy that already has one is linked to the original DPP or DPPs.
+    applicability: software
+    areas:
+      - 3
+      - 6
+    mirrors: ESPR-Art11(d)
+  - id: TOYS-Art20(7)
+    section: Art20
+    clause: Art. 20(7)
+    paraphrase: DPP service providers storing or processing the data may not sell, reuse or process it beyond what the storage or processing service needs, unless the operator placing the toy on the market agrees.
+    applicability: operator
+    mirrors: ESPR-Art11-sub2
+  - id: TOYS-Art20(8)
+    section: Art20
+    clause: Art. 20(8)
+    paraphrase: Data authentication, reliability and integrity are ensured.
+    applicability: software
+    areas:
+      - 10
+    mirrors: ESPR-Art11(g)
+  - id: TOYS-Art20(9)
+    section: Art20
+    clause: Art. 20(9)
+    paraphrase: The DPP is designed and operated with a high level of security and privacy and so that fraud is avoided.
+    applicability: software
+    areas:
+      - 10
+      - 5
+    mirrors: ESPR-Art11(h)
+  - id: TOYS-Art20(10)
+    section: Art20
+    clause: Art. 20(10)
+    paraphrase: "Operators may not track, analyse or use any usage information beyond what serving the DPP online strictly needs, and customer personal data enter the DPP only with the explicit consent of the consumer or end user under GDPR Art. 6. Restates ESPR-Art10(1)(e) with an added no-tracking, no-analytics rule."
+    applicability: mixed
+    areas:
+      - 5
+      - 10
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: addPageView() fires as soon as a passport loads in the public view
+        - type: code
+          ref: apps/client/src/stores/analytics.ts
+          note: posts the permalink and the full page URL, query string included
+        - type: code
+          ref: apps/main/src/analytics/presentation/passport-metric.controller.ts
+          note: POST /passport-metrics/page-views accepts anonymous calls; GET serves the aggregation to the organisation
+        - type: code
+          ref: apps/main/src/analytics/domain/passport-metric.ts
+          note: "two time-series documents per view: organisation, passport, template, URL or origin, minute timestamp; no IP, agent or visitor id"
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: every request logged with ip and userAgent, 2xx at debug
+        - type: code
+          ref: apps/main/src/main.ts
+          note: debug level enabled; no cookie set on public routes
+        - type: code
+          ref: apps/main/src/ai/presentation/chat.gateway.ts
+          note: the anonymous chat logs each visitor message verbatim before forwarding it
+        - type: code
+          ref: apps/client/index.html
+          note: no third-party script, font or pixel
+        - type: test
+          ref: apps/main/src/analytics/domain/passport-metric.spec.ts
+          note: what a page view stores
+        - type: test
+          ref: apps/client/src/stores/analytics.spec.ts
+          note: the page-view call from the public view
+      notes: "Two limbs. Personal data of the customer in the passport: met in substance, the public view is read-only, stores nothing a visitor enters, sets no cookie and loads nothing from a third party; the anonymous AI chat (off unless an organisation enables it) keeps no conversation but logs each message verbatim and forwards it to the configured third-party model. Usage information: not met as shipped. A first-party page-view counter runs on every anonymous visit and records organisation, passport, template, the full page URL and a minute-granularity timestamp in a time-series collection that the owning organisation queries; it stores no IP, user agent or visitor identifier, so it is an aggregate counter, but it analyses usage for the operator's benefit rather than for serving the passport and cannot be switched off by the instance or the organisation. The request log records IP address and user agent of every request, successful anonymous reads included, at a level the bootstrap enables, and only the format is configurable. Both are tracked in #840; the privacy notice and the needless session call on load are for the Privacy Review (#730). Same clause and same evidence as DET-Art22(h). Restates ESPR-Art10(1)(e) (the personal-data limb, unassessed until #758) with the no-tracking prohibition added."
+      gapIssue: 840
+  # ---- Article 21 ---------------------------------------------------------------------------
+  - id: TOYS-Art21(1)
+    section: Art21
+    clause: Art. 21(1)
+    paraphrase: Data carriers, unique product identifiers and unique operator identifiers comply with the standards that apply to them under ESPR. Folds ESPR-Art10(1)(c), ESPR-Art12(1) and ESPR-AnnexIII-para2 by reference.
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GS1 Digital Link builder and validation
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch, serial; open-dpp UUID
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR data carrier of the permalink or Digital Link
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+          note: Digital Link building and GTIN normalisation
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-09-07
+      notes: "The carriers, the unique product identifiers and the unique operator identifiers follow the standards ESPR applies to them (ESPR Art. 10(1)(c), Art. 12(1) and the Annex III second paragraph: the ISO/IEC 15459 series and the harmonised standards cited in the OJ). Credited for the product side: the carriers encode GS1 Digital Link URIs that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), and GS1 is an ISO/IEC 15459 issuing agency; the QR carrier is a standard symbology. Missing: ISO/IEC 15459 conformance is neither asserted nor checked and the standard is unread (#518; same finding as DET-Art23(1), CPR-Art77(1)(c) and BATT-Art77(3)-sub2), the QR symbology itself is not verified, and unique operator identifiers do not exist at all (no GLN, EORI or other legal-entity scheme on an organisation; #579, recorded as passport content on TOYS-AnnexVI-I(b)). gapIssue #518 because the row is about the identifier and carrier standards; the standards themselves (EN 18219, EN 18220) are the Tier B tickets #756 and #757."
+      gapIssue: 518
+  - id: TOYS-Art21(2)-sub1
+    section: Art21
+    clause: Art. 21(2) first subparagraph
+    paraphrase: ESPR Art. 12(2) applies to operators creating or updating a toy DPP where a unique operator identifier is not yet available (confirm none exists, request one on the actor's behalf, pass on the details).
+    applicability: operator
+    areas:
+      - 3
+    mirrors: ESPR-Art12(2)
+  - id: TOYS-Art21(2)-sub2
+    section: Art21
+    clause: Art. 21(2) second subparagraph
+    paraphrase: The lifecycle rules for unique identifiers and data carriers set by ESPR Art. 12(4) delegated acts also apply to toy identifiers and carriers. Folds ESPR-Art12(4)(a), ESPR-Art12(4)(b) and ESPR-Art12(5)(d) by reference.
+    applicability: commission
+    areas:
+      - 3
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the lifecycle rules for unique identifiers and data carriers that ESPR Art. 12(4) delegated acts set also apply to toy identifiers and carriers. No such act exists (ESPR-Art12(4)(a) and (b), Not assessed until #756). Once one is adopted it enters the matrix as an act under a registered source, and its rules bind the software, so the first Art. 12(4) act re-opens this row's applicability in an Extract of TOYS (the same note stands on DET-Art23(2)). The first subparagraph, the missing-operator-identifier procedure, is the Mirror TOYS-Art21(2)-sub1."
+  - id: TOYS-Art21(3)
+    section: Art21
+    clause: Art. 21(3)
+    paraphrase: Where a toy also needs a DPP under an ESPR Art. 4 delegated act or other Union law, its unique product identifier, unique operator identifier and unique registration identifier are the same across the regimes (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 3
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts
+          note: canonical identifier value globally unique across passports
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity or open-dpp UUID, several per passport
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: the passport's identifiers listed through the API
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has a name and slug, no operator identifier
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+          note: global uniqueness of a bare GTIN across passports
+      notes: "Where the toy also needs a passport under an ESPR Art. 4 delegated act or other Union law, its unique product identifier, unique operator identifier and unique registration identifier are the same under both regimes. Credited: one passport (TOYS-Art19(9)) carries one set of product identifiers that is globally unique across the instance, so the product identifier is the same by construction and a GS1 identity is the same everywhere. Missing: the unique operator identifier and the unique registration identifier do not exist in open-dpp at all (no operator identifier on an organisation, no registration-identifier field, no registry client; #579), so two of the three identifiers the clause equates cannot be the same because they cannot be held; and nothing stops an operator from minting a second passport with a different identifier for the other regime (#597, #839). Same finding as DET-Art23(3); no ESPR counterpart."
+      gapIssue: 579
+  - id: TOYS-Art21(4)
+    section: Art21
+    clause: Art. 21(4)
+    paraphrase: The procedures for issuing and verifying digital credentials of actors with access rights, set by implementing acts under ESPR Art. 11 fourth paragraph, also apply to the toy DPP.
+    applicability: commission
+    areas:
+      - 5
+    mirrors: ESPR-Art11-sub4
+  - id: TOYS-Art21(5)
+    section: Art21
+    clause: Art. 21(5)
+    paraphrase: The requirements for becoming and acting as a DPP service provider, set by delegated acts under ESPR Art. 11 third paragraph, also apply to the toy DPP.
+    applicability: commission
+    mirrors: ESPR-Art11-sub3
+  # ---- Article 22 ---------------------------------------------------------------------------
+  - id: TOYS-Art22(1)
+    section: Art22
+    clause: Art. 22(1)
+    paraphrase: "Before placing a toy on the market the operator uploads its unique product identifier and unique operator identifier into the registry set up under ESPR Art. 13(1); for toys to be released for free circulation the registry stores the commodity code. Folds ESPR-Art13(4) with the data fixed and the commodity-code storage of ESPR-Art13(1)."
+    applicability: mixed
+    areas:
+      - 7
+      - 3
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: the product identifiers exist; nothing uploads them anywhere
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: no unique operator identifier on an organisation
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: no registration identifier, commodity code or registry state on a passport
+        - type: manual
+          ref: "Searched apps/main/src and packages/ at d5f8219e for a registry client, a registration identifier or a commodity code field: none exists"
+          date: 2026-09-07
+      notes: "Software part: upload the toy's unique product identifier and unique operator identifier into the ESPR Art. 13(1) registry before the toy is placed on the market; the commodity code the registry stores for goods released for free circulation is the registry's own duty, but the passport must carry it (the Mirror TOYS-AnnexVI-I(f) of ESPR-AnnexIII(d)). open-dpp has no client for the EU DPP registry: nothing registers a passport, captures the registration identifier the registry returns (the Mirror TOYS-Art22(2)-sub1 of ESPR-Art13(5), Gap) or talks to the registry API, and the operator identifier the upload needs does not exist either. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation (#579; same Gap as ESPR-Art13(4), CPR-Art79(2) and REG1778 Art. 8). Folds ESPR-Art13(4) with the data fixed."
+      gapIssue: 579
+  - id: TOYS-Art22(2)-sub1
+    section: Art22
+    clause: Art. 22(2) first subparagraph
+    paraphrase: On upload the registry automatically returns to the operator a unique registration identifier tied to the uploaded identifiers; that communication is not proof of compliance.
+    applicability: mixed
+    areas:
+      - 7
+    mirrors: ESPR-Art13(5)
+  - id: TOYS-Art22(2)-sub2
+    section: Art22
+    clause: Art. 22(2) second subparagraph
+    paraphrase: The Commission may adopt an implementing act on the registry arrangements for toys, including how the unique registration identifier is communicated (examination procedure, Art. 53(3)). Optional and distinct from the ESPR-Art13(5)-sub2 act, which is Reg. 2026/1778.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: an optional implementing act on the registry arrangements for toys, including the communication of the unique registration identifier. Not adopted; Regulation (EU) 2026/1778 (REG1778) is the ESPR counterpart already assessed. Its adoption joins the matrix as an act under a registered source. Same reading as DET-Art24(2)-sub2."
+  - id: TOYS-Art22(3)
+    section: Art22
+    clause: Art. 22(3)
+    paraphrase: The Commission, competent national authorities and customs authorities have registry access for their duties under the Regulation.
+    applicability: commission
+    mirrors: ESPR-Art13(6)
+  # ---- Article 23 ---------------------------------------------------------------------------
+  - id: TOYS-Art23(1)
+    section: Art23
+    clause: Art. 23(1)
+    paraphrase: Toys entering the Union market are subject to the verifications and measures of Art. 23, without prejudice to the Union Customs Code and Chapter VII of Reg. (EU) 2019/1020. Scope sentence folding ESPR-Art15(5).
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a scope clause subjecting toys entering the Union market to the Art. 23 verifications, without prejudice to the Union Customs Code and Chapter VII of the Market Surveillance Regulation (the folded ESPR-Art15(5)). No software surface; the operator's side of customs is the Mirror TOYS-Art23(2) (ESPR-Art15(1), Gap, #579). Same reading as DET-Art25(1) and DET-Art25(7)."
+  - id: TOYS-Art23(2)
+    section: Art23
+    clause: Art. 23(2)
+    paraphrase: Whoever intends to release a toy for free circulation provides or makes available to customs the unique registration identifier of Art. 22(2).
+    applicability: mixed
+    areas:
+      - 7
+    mirrors: ESPR-Art15(1)
+  - id: TOYS-Art23(3)
+    section: Art23
+    clause: Art. 23(3)
+    paraphrase: Customs release a toy for free circulation only after verifying at least that the registration identifier and the commodity code match the registry; release is not proof of compliance.
+    applicability: commission
+    mirrors: ESPR-Art15(2)
+  - id: TOYS-Art23(4)
+    section: Art23
+    clause: Art. 23(4)
+    paraphrase: "That verification is electronic and automatic through the interconnection between the registry and EU CSW-CERTEX of ESPR Art. 15(3), from the later of the interconnection becoming operational and the Regulation's date of application (1 August 2030). Relies on ESPR-Art15(3), which builds the interconnection."
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the automatic electronic verification through the interconnection between the registry and EU CSW-CERTEX of ESPR Art. 15(3), from the later of the interconnection becoming operational and 1 August 2030. Built by the Commission (ESPR Art. 15(3), REG1778); an operator instance never talks to it. Same reading as DET-Art25(4); the date is in the stage line of TOYS in sources.yaml."
+  - id: TOYS-Art23(5)
+    section: Art23
+    clause: Art. 23(5)
+    paraphrase: The Commission and customs may retrieve and use DPP and registry data on toys for their duties under Union law, including risk management, customs controls and release for free circulation.
+    applicability: commission
+    areas:
+      - 5
+    mirrors: ESPR-Art15(4)
+  - id: TOYS-Art23(6)
+    section: Art23
+    clause: Art. 23(6)
+    paraphrase: The customs verifications and measures are carried out on the basis of the commodity codes and product descriptions listed in Annex VII.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: customs verifications run on the Annex VII list of commodity codes and product descriptions. An amendment of Annex VII (Art. 49(4)) is a text trigger only if it changes Chapter V or Annex VI, which it does not; the commodity code as passport content is the Mirror TOYS-AnnexVI-I(f). Same reading as DET-Art25(6)."
+  # ---- Article 24 ---------------------------------------------------------------------------
+  - id: TOYS-Art24
+    section: Art24
+    clause: Art. 24
+    paraphrase: By 1 August 2029 the Commission, consulting the competent national authorities, gives SMEs guidelines on how to set up and operate a toy DPP.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: by 1 August 2029 the Commission gives SMEs guidelines on setting up and operating a toy passport. No software surface; when the guidelines appear they are a manual watch item for the TOYS source (they may name what an operator expects the software to do, which feeds the docs cluster #828 and the content cluster #841, not this row)."
+  # ---- Article 49(1) to (3) -----------------------------------------------------------------
+  - id: TOYS-Art49(1)
+    section: Art49
+    clause: Art. 49(1)
+    paraphrase: The Commission adopts delegated acts (procedure Art. 50) determining the technical requirements of the toy DPP, covering at least points (a) to (f). The toy counterpart of ESPR-Art9(2), with its own list.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the Commission adopts the delegated act with the technical requirements of the toy passport, and it has not been adopted (watch entry of TOYS in sources.yaml); it applies no earlier than 18 months after its entry into force (TOYS-Art49(1)-sub4). The software rows of this run record what open-dpp offers today; the rows that act may fix or change are the carrier row (TOYS-Art19(7) and the Mirrors TOYS-Art49(1)(a), (b); points (a), (b)), the standards row (TOYS-Art49(1)(c); point (c), which fills operationalisedBy), the access row (TOYS-Art19(2)(f) and the Mirror TOYS-Art49(1)(d); point (d)), the actors that create or update and the arrangements for it (the Mirrors TOYS-Art49(1)(e), (f)) and the technical-requirements row TOYS-Art19(2)(i), which stays unassessed until the act exists. Its adoption is a text trigger for this file, and its content enters the matrix as an act under a registered source. Same reading as DET-Art21(10)."
+  - id: TOYS-Art49(1)(a)
+    section: Art49
+    clause: Art. 49(1)(a)
+    paraphrase: Which data carrier or carriers are to be used.
+    applicability: mixed
+    areas:
+      - 4
+    mirrors: ESPR-Art9(2)(b)
+  - id: TOYS-Art49(1)(b)
+    section: Art49
+    clause: Art. 49(1)(b)
+    paraphrase: The layout in which the data carrier is presented and its positioning.
+    applicability: operator
+    areas:
+      - 4
+    mirrors: ESPR-Art9(2)(c)
+  - id: TOYS-Art49(1)(c)
+    section: Art49
+    clause: Art. 49(1)(c)
+    paraphrase: The technical elements of the DPP for which defined European or international standards are to be used (no ESPR counterpart; the hook through which standards bind the toy DPP).
+    applicability: commission
+    areas:
+      - 12
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the delegated act names the technical elements of the passport for which defined European or international standards are to be used. Not exercised, the act does not exist. Once it names the JTC 24 ENs or others, operationalisedBy is filled on the TOYS rows concerned and those rows are re-validated with a text trigger; the Regulation itself carries no presumption of conformity for the passport (Art. 15 and 16 cover the toy, not the passport). Same reading as DET-Art21(10)(c)."
+  - id: TOYS-Art49(1)(d)
+    section: Art49
+    clause: Art. 49(1)(d)
+    paraphrase: Which actors get access to which DPP data.
+    applicability: mixed
+    areas:
+      - 5
+    mirrors: ESPR-Art9(2)(f)
+  - id: TOYS-Art49(1)(e)
+    section: Art49
+    clause: Art. 49(1)(e)
+    paraphrase: Which actors may create a DPP or update its data, and which data they may introduce or update.
+    applicability: mixed
+    areas:
+      - 5
+    mirrors: ESPR-Art9(2)(g)
+  - id: TOYS-Art49(1)(f)
+    section: Art49
+    clause: Art. 49(1)(f)
+    paraphrase: The detailed arrangements for introducing or updating data.
+    applicability: mixed
+    areas:
+      - 1
+      - 5
+      - 6
+    mirrors: ESPR-Art9(2)(h)
+  - id: TOYS-Art49(1)-sub2
+    section: Art49
+    clause: Art. 49(1) second subparagraph
+    paraphrase: When setting the point (d) access rights the Commission weighs the protection of confidential business information and trade secrets (Dir. (EU) 2016/943) against consumers' easy access to the information relevant to them.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: when fixing the point (d) access rights the Commission weighs confidential business information and trade secrets against consumers' easy access to what is relevant to them. A criterion for the act, no software surface; the access rights themselves are TOYS-Art19(2)(f) once fixed."
+  - id: TOYS-Art49(1)-sub3
+    section: Art49
+    clause: Art. 49(1) third subparagraph
+    paraphrase: Actors that update DPP data under point (e) are responsible for the accuracy of the data they provide, unless they act on the manufacturer's behalf.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: an actor that updates passport data under point (e) answers for its accuracy unless it acts on the manufacturer's behalf. A liability rule; the activity history (apps/main/src/activity-history/) records who changed what, which supports it but is not required by it. Same reading as DET-Art21(11)."
+  - id: TOYS-Art49(1)-sub4
+    section: Art49
+    clause: Art. 49(1) fourth subparagraph
+    paraphrase: The delegated acts apply no earlier than 18 months after their entry into force, except in duly justified cases, partial repeals or amendments.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the delegated acts apply no earlier than 18 months after their entry into force, save in duly justified cases and for partial repeals or amendments. A timing rule for the act; it fixes when a text trigger from TOYS-Art49(1) becomes binding, nothing more."
+  - id: TOYS-Art49(2)
+    section: Art49
+    clause: Art. 49(2)
+    paraphrase: The Commission may amend Annex VI (the DPP data) by delegated act to follow technical and scientific progress and the digital readiness of market surveillance authorities, users and their supervisors.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a power to amend Annex VI (the passport content) for technical and scientific progress and the digital readiness of authorities, users and their supervisors. An amending act is a text trigger for this file (the Annex VI rows are re-extracted and re-validated). Same reading as DET-Art30(2)."
+  - id: TOYS-Art49(3)-sub1
+    section: Art49
+    clause: Art. 49(3) first subparagraph
+    paraphrase: The Commission may amend Art. 22(1) by delegated act so that further Annex VI information, or information on a toy's non-compliance after Art. 45(2) or (4) measures, is stored in the registry. Restates ESPR-Art13(2) with non-compliance information added.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a power to amend Art. 22(1) so that further Annex VI information, or information on a toy's non-compliance after Art. 45(2) or (4) measures, is stored in the registry. Restates ESPR-Art13(2) (Not applicable) with the non-compliance information added, which is why it is an own row. An act amending Art. 22(1) is a text trigger; the software side of the registry is #579 on TOYS-Art22(1)."
+  - id: TOYS-Art49(3)(a)
+    section: Art49
+    clause: Art. 49(3)(a)
+    paraphrase: Criterion for those acts; consistency with other applicable Union acts.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a criterion (consistency with other applicable Union acts) the Commission weighs when it requires more information in the registry. No software surface; an act amending Art. 22(1) is a text trigger. Same reading as DET-Art30(3)(a)."
+  - id: TOYS-Art49(3)(b)
+    section: Art49
+    clause: Art. 49(3)(b)
+    paraphrase: Criterion; the need to allow verification of the DPP's authenticity.
+    applicability: commission
+    areas:
+      - 10
+    mirrors: ESPR-Art13(2)(a)
+  - id: TOYS-Art49(3)(c)
+    section: Art49
+    clause: Art. 49(3)(c)
+    paraphrase: Criterion; relevance of the information for more efficient and effective market surveillance checks and customs controls on toys.
+    applicability: commission
+    mirrors: ESPR-Art13(2)(b)
+  - id: TOYS-Art49(3)(d)
+    section: Art49
+    clause: Art. 49(3)(d)
+    paraphrase: Criterion; avoiding a disproportionate administrative burden for economic operators and national authorities, including customs.
+    applicability: commission
+    mirrors: ESPR-Art13(2)(c)
+  # ---- Annex VI -----------------------------------------------------------------------------
+  - id: TOYS-AnnexVI-I(a)
+    section: AnnexVI
+    clause: Annex VI Part I(a)
+    paraphrase: The unique product identifier of the toy (model level per Art. 19(2)(a)).
+    applicability: software
+    areas:
+      - 3
+    mirrors: ESPR-AnnexIII(b)
+  - id: TOYS-AnnexVI-I(b)
+    section: AnnexVI
+    clause: Annex VI Part I(b)
+    paraphrase: Name and address of the manufacturer and, where applicable, of its authorised representative, plus the unique operator identifier. Folds ESPR-AnnexIII(g) with the authorised representative's details added (ESPR-AnnexIII(h) for its identifier).
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has a name and slug, no operator identifier or contact details
+      notes: "Name and address of the manufacturer and, where applicable, of its authorised representative, plus the unique operator identifier (Art. 7(6) lets the manufacturer's contact details sit in the passport too). Credited: text Properties can hold every field in a template, with a semanticId each. Missing: no manufacturer or authorised-representative element, no typing of a postal address, and no unique operator identifier anywhere (the organisation record has neither an identifier scheme nor contact details; #579 asks where it is configured); tracked in the content cluster #841. Folds ESPR-AnnexIII(g) (unassessed, #756) with the authorised representative added; same finding as DET-AnnexVI-A(b)."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(c)
+    section: AnnexVI
+    clause: Annex VI Part I(c)
+    paraphrase: Name and address of the economic operator responsible under Reg. (EU) 2019/1020 Art. 4, plus its unique operator identifier.
+    applicability: software
+    areas:
+      - 3
+      - 8
+    mirrors: ESPR-AnnexIII(k)
+  - id: TOYS-AnnexVI-I(d)
+    section: AnnexVI
+    clause: Annex VI Part I(d)
+    paraphrase: A statement that the DPP is issued under the sole responsibility of the manufacturer (no ESPR counterpart; declaration-of-conformity element).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+      notes: "A statement that the passport is issued under the sole responsibility of the manufacturer (the declaration-of-conformity wording carried into the passport). Credited: a text Property with the statement is modellable. Missing: nothing ships or renders it as a fixed statement of the passport, and a multilingual statement is not rendered (#838); tracked in #841. Same finding as DET-AnnexVI-A(e); no ESPR counterpart."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(e)
+    section: AnnexVI
+    clause: Annex VI Part I(e)
+    paraphrase: The object of the DPP, an identification of the toy allowing traceability, including a colour image clear enough to identify the toy (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 8
+      - 9
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: the passport's unique product identifiers through the API
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch and serial
+        - type: code
+          ref: apps/main/src/aas/domain/asset-information.ts
+          note: "defaultThumbnails: product images on the shell"
+        - type: code
+          ref: apps/client/src/components/presentation/PassportHeader.vue
+          note: product images shown in the public view header
+        - type: code
+          ref: apps/client/src/components/media/MediaPreview.vue
+          note: an image attachment renders inline
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: image upload (JPEG, PNG, HEIC, WebP, 15 MB) with virus scan
+        - type: code
+          ref: apps/main/src/traceability-events/presentation/traceability-events.controller.ts
+          note: opaque EPCIS, UNTP or open-dpp event store
+        - type: test
+          ref: apps/main/src/media/infrastructure/media.service.spec.ts
+          note: upload of passport attachments and download streams
+      notes: "The object of the passport: an identification of the toy allowing its traceability, including a colour image clear enough to identify it. Credited: a GS1 identity gives a model, batch or serial key that traces the toy, text Properties can hold a type or model number, lot and production site, a product image is uploaded as a shell thumbnail or a File element and shown in the public view, and the traceability-events store accepts EPCIS or UNTP payloads. Missing: no object-of-the-passport element, no designated identification image (a thumbnail is any image, colour is not checked), no check that an image is present, no query over the event store and no link between an event and the passport's identifiers (#841; the events store is the UNTP and EPCIS user story #189). Folds the trade-name-and-image and traceability rows of the detergent passport (DET-AnnexVI-A(a) and A(d), same findings); no ESPR counterpart beyond the identifier of ESPR-AnnexIII(b)."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(f)
+    section: AnnexVI
+    clause: Annex VI Part I(f)
+    paraphrase: Where applicable, the Combined Nomenclature commodity code (Reg. (EEC) No 2658/87) under which the toy is classified when the DPP is created.
+    applicability: software
+    areas:
+      - 8
+    mirrors: ESPR-AnnexIII(d)
+  - id: TOYS-AnnexVI-I(g)
+    section: AnnexVI
+    clause: Annex VI Part I(g)
+    paraphrase: References to all Union law the toy complies with (declaration-of-conformity element; nearest ESPR-AnnexIII(e)).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list of references, one per Union act
+        - type: code
+          ref: apps/client/src/components/aas/LinkCellField.vue
+          note: URL property, e.g. a link to the act on EUR-Lex
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: an anyURI Property renders as a link; lists render as tables
+      notes: "References to all Union law the toy complies with (a declaration-of-conformity element; the passport replaces the Directive 2009/48/EC declaration, recital 54). Credited: a list of text or URL Properties, one per act, is modellable and renders as a table with clickable links. Missing: no typed list of applicable Union acts, no vocabulary of act identifiers (CELEX or ELI) and no document typing (#841). Nearest ESPR-AnnexIII(e) (Partial, #827), which asks for the compliance documents themselves; same finding as DET-AnnexVI-A(g)."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(h)
+    section: AnnexVI
+    clause: Annex VI Part I(h)
+    paraphrase: Where applicable, the mention that the DPP replaces the EU declaration of conformity under the AI Act, the Cyber Resilience Act, RoHS, EMC, LVD, RED or Delegated Regulation (EU) 2019/945 (see Art. 19(5)-(6); no ESPR counterpart).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: a text Property renders in the public view
+      notes: "Where applicable, the mention that the passport replaces the EU declaration of conformity under the AI Act, the Cyber Resilience Act, RoHS, EMC, LVD, RED or the drone Delegated Regulation (the content of the TOYS-Art19(6) duty). Credited: a text Property with the mention, naming the acts, is modellable and renders in the public view. Missing: no mention element, no selection of the acts covered from a fixed list, nothing ties the mention to the completeness the paragraph 5 reliance needs (TOYS-Art19(5)), and a multilingual mention is not rendered (#838); tracked in #841. No ESPR counterpart."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(i)
+    section: AnnexVI
+    clause: Annex VI Part I(i)
+    paraphrase: References to the harmonised standards used, or to the common specifications against which conformity is declared (declaration-of-conformity element; nearest ESPR-AnnexIII(e)).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list of references, one per standard
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+          note: reference, title and edition per standard
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: lists render as tables in the public view
+      notes: "References to the harmonised standards used, or to the common specifications against which conformity is declared (a declaration-of-conformity element). Credited: a list of collections, one per standard with reference, title and edition, is modellable and renders as a table. Missing: no standards-list element, no vocabulary of the harmonised standards cited in the OJ under the Regulation and no distinction between a harmonised standard and a common specification (#841). Nearest ESPR-AnnexIII(e) (Partial, #827); no detergent counterpart."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(j)
+    section: AnnexVI
+    clause: Annex VI Part I(j)
+    paraphrase: Where applicable, name and number of the notified body that intervened in conformity assessment and issued a certificate, with the certificate reference (nearest ESPR-AnnexIII(e)).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for an attached certificate
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+      notes: "Where applicable, the name and number of the notified body that intervened in the conformity assessment (EU-type examination, Module B of Annex IV Part II under Art. 26(3)) and issued a certificate, with the reference of the certificate. Credited: text Properties for name, number and certificate reference and a File element for the certificate are modellable. Missing: no notified-body element, no validation of the four-digit NANDO number, no certificate typing and no restriction of the certificate to authorities (#821 for the access class; #841 for the content). Nearest ESPR-AnnexIII(e) (Partial, #827), whose assessment already notes the absent link to a notified body."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(k)
+    section: AnnexVI
+    clause: Annex VI Part I(k)
+    paraphrase: The CE marking (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for an uploaded image
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: image upload (JPEG, PNG, HEIC, WebP, 15 MB) with virus scan
+        - type: code
+          ref: apps/client/src/components/media/MediaPreview.vue
+          note: an image attachment renders inline in the public view
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+      notes: "The CE marking as passport content (the graphic of Annex II to Regulation (EC) No 765/2008, affixed under Art. 17 and 18 of the Regulation; in the passport it stands in for the marking on the declaration of conformity). Credited: the marking is an image, and an uploaded image File renders inline in the public view, so the operator can show it. Missing: no CE-marking element, no shipped graphic in the prescribed proportions, no marker that the passport carries the marking and no coupling to the notified-body number that accompanies it where a notified body intervened (TOYS-AnnexVI-I(j)); tracked in #841. No ESPR counterpart."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(l)
+    section: AnnexVI
+    clause: Annex VI Part I(l)
+    paraphrase: The list of allergenic fragrances present in the toy that are subject to the specific labelling of Annex II Appendix Part B point 1 (sector content; nearest ESPR-Art7(5) substances of concern).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list of collections, one per fragrance
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+          note: name and identifier per fragrance
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId per substance, e.g. a CAS or EC number
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: lists render as tables in the public view
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+      notes: "The list of allergenic fragrances present in the toy that are subject to the specific labelling of Annex II Appendix Part B point 1 (the same names appear on the toy, its label or packaging). Credited: a list of collections, one per fragrance with its name and identifiers, is modellable and renders as a table in the public view. Missing: no fragrance element, no vocabulary of the listed allergenic fragrances to pick from, no validation of CAS or EC numbers and no coupling to the labelling threshold (#841; the delegated acts of Art. 49(7) amending Part B are an Extract matter for the list, not a text trigger for this row). Sector content; nearest ESPR-Art7(5) substances of concern (Partial, #827) and the detergent ingredient list DET-AnnexVI-A(h)."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(m)
+    section: AnnexVI
+    clause: Annex VI Part I(m)
+    paraphrase: The consumer communication channel the manufacturer provides under Art. 7(12) (no ESPR counterpart).
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: packages/dto/src/aas/enums/data-type-def.ts
+          note: Property value types include anyURI
+        - type: code
+          ref: apps/client/src/components/aas/LinkCellField.vue
+          note: URL property editor
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: an anyURI Property renders as a link when the href is safe
+        - type: code
+          ref: apps/client/src/lib/urls.ts
+          note: "isSafeHref accepts http and https only: mailto and tel links render as plain text"
+      notes: "The consumer communication channel the manufacturer provides under Art. 7(12): a telephone number, an electronic address or a dedicated section of its website through which consumers submit safety complaints and report accidents, mindful of the accessibility needs of persons with disabilities. Credited: a URL Property renders as a clickable link in the public view and text Properties hold a telephone number or e-mail address. Missing: no communication-channel element typed as telephone, e-mail or web address, a mailto or tel address is rendered as plain text rather than a link because only http and https pass the safe-href check, and nothing marks the channel as the Art. 7(12) one (#841). Accessibility of the public view itself is the EN 301 549 question of the Tier B ticket #761 (via EN 18216). No ESPR counterpart."
+      gapIssue: 841
+  - id: TOYS-AnnexVI-I(n)
+    section: AnnexVI
+    clause: Annex VI Part I(n)
+    paraphrase: The reference of the DPP service provider hosting the back-up copy of the DPP.
+    applicability: software
+    areas:
+      - 6
+      - 8
+    mirrors: ESPR-AnnexIII(l)
+  - id: TOYS-AnnexVI-II(a)
+    section: AnnexVI
+    clause: Annex VI Part II(a)
+    paraphrase: Optional content; safety information and warnings for the toy.
+    applicability: software
+    areas:
+      - 8
+      - 11
+    mirrors: ESPR-AnnexIII(f)
+  - id: TOYS-AnnexVI-II(b)
+    section: AnnexVI
+    clause: Annex VI Part II(b)
+    paraphrase: Optional content; instructions of use.
+    applicability: software
+    areas:
+      - 8
+      - 11
+    mirrors: ESPR-AnnexIII(f)

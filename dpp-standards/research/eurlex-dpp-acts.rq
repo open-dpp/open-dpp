@@ -1,0 +1,16 @@
+# Acts the standards watch looks for: DPP and battery-passport acts, everything under ESPR and the
+# Batteries Regulation, and the Sector laws (CPR 2024/3110, Toys 2025/2509, Detergents 2026/405) with
+# their supplementing, amending and consolidated acts (widened in #829). CPR implementing acts on
+# harmonised technical specifications match too; they take disposition `out of scope` (PLAYBOOK.md).
+PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
+SELECT DISTINCT ?celex ?date ?title WHERE {
+  ?work cdm:resource_legal_id_celex ?celex .
+  ?work cdm:work_date_document ?date .
+  ?exp cdm:expression_belongs_to_work ?work ;
+       cdm:expression_title ?title ;
+       cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG> .
+  FILTER(?date >= "2024-06-01"^^xsd:date)
+  FILTER(REGEX(STR(?title), "product passport|battery passport|passport registry|Regulation \\(EU\\) 2024/1781|Regulation \\(EU\\) 2023/1542|Regulation \\(EU\\) 2024/3110|Regulation \\(EU\\) 2025/2509|Regulation \\(EU\\) 2026/405([^0-9]|$)|ecodesign", "i"))
+}
+ORDER BY ?date
+LIMIT 300

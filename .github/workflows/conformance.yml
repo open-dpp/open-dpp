@@ -1,0 +1,40 @@
+name: Conformance Matrix
+
+on:
+  pull_request:
+    paths: ["dpp-standards/**"]
+  push:
+    branches: [main, dpp-standard-compliance]
+    paths: ["dpp-standards/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate the Conformance Matrix files
+        run: pnpm --filter @open-dpp/dpp-standards matrix:check
+
+      - name: Test the matrix tooling
+        run: pnpm --filter @open-dpp/dpp-standards matrix:test
+
+      - name: Build the preview site
+        run: pnpm --filter @open-dpp/dpp-standards matrix:build

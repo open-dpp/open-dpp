@@ -1,0 +1,228 @@
+:root {
+  --vp-c-brand-1: #6bad87;
+  --vp-c-brand-2: #005f61;
+  --vp-c-brand-3: #005f61;
+  --vp-layout-max-width: 1600px;
+}
+
+/* Matrix pages need the width: no aside, content up to 1400px. */
+.conformance-page .VPDoc .container,
+.conformance-page .VPDoc .content,
+.conformance-page .VPDoc .content-container {
+  max-width: 1400px !important;
+}
+
+/* ---- shared atoms of the conformance components (cm-*) ---- */
+.cm-muted {
+  color: var(--vp-c-text-2);
+  font-size: 0.85rem;
+}
+.cm-id {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.cm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05em 0.6em;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.cm-badge.compact {
+  font-size: 0.68rem;
+  padding: 0 0.45em;
+}
+.cm-met {
+  color: var(--vp-c-green-1);
+  background: var(--vp-c-green-soft);
+}
+.cm-partial {
+  color: var(--vp-c-yellow-1);
+  background: var(--vp-c-yellow-soft);
+}
+.cm-gap {
+  color: var(--vp-c-red-1);
+  background: var(--vp-c-red-soft);
+}
+.cm-na {
+  color: var(--vp-c-text-3);
+  background: var(--vp-c-default-soft);
+}
+.cm-unassessed {
+  color: var(--vp-c-text-2);
+  border-color: var(--vp-c-divider);
+  background: transparent;
+}
+.cm-fill-met {
+  background: var(--vp-c-green-1);
+}
+.cm-fill-partial {
+  background: var(--vp-c-yellow-1);
+}
+.cm-fill-gap {
+  background: var(--vp-c-red-1);
+}
+.cm-fill-na {
+  background: var(--vp-c-text-3);
+}
+.cm-fill-unassessed {
+  background: var(--vp-c-divider);
+}
+.cm-bar {
+  display: flex;
+  height: 6px;
+  width: 100%;
+  margin-top: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--vp-c-bg-soft);
+}
+.cm-bar > span {
+  flex-basis: 0;
+  min-width: 0;
+}
+.cm-tag,
+.cm-chip {
+  display: inline-block;
+  padding: 0 0.5em;
+  border-radius: 4px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+  font-size: 0.72rem;
+  line-height: 1.8;
+  white-space: nowrap;
+}
+.cm-chip + .cm-chip {
+  margin-left: 4px;
+}
+/* A Mirror row: the status and evidence shown are the target's. */
+.cm-mirror {
+  border: 1px dashed var(--vp-c-divider);
+  text-decoration: none;
+}
+.cm-mirror a {
+  color: inherit;
+}
+.cm-assessment.inherited {
+  border-left: 2px dashed var(--vp-c-divider);
+  padding-left: 10px;
+}
+.cm-evidence-type {
+  display: inline-block;
+  padding: 0 0.45em;
+  border-radius: 4px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.68rem;
+  line-height: 1.8;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-default-soft);
+  margin-right: 4px;
+}
+.cm-ev-code {
+  background: var(--vp-c-indigo-soft);
+}
+.cm-ev-test,
+.cm-ev-check {
+  background: var(--vp-c-green-soft);
+}
+.cm-ev-doc {
+  background: var(--vp-c-yellow-soft);
+}
+.cm-ev-manual {
+  background: var(--vp-c-purple-soft);
+}
+.vp-doc .cm-table {
+  display: table;
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.vp-doc .cm-table th,
+.vp-doc .cm-table td {
+  vertical-align: top;
+  text-align: left;
+  padding: 8px 10px;
+}
+.vp-doc .cm-table td.num,
+.vp-doc .cm-table th.num,
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dim {
+  opacity: 0.55;
+}
+
+/* ---- criterion detail ---- */
+.cm-detail {
+  font-size: 0.85rem;
+}
+.cm-detail-paraphrase {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.cm-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0 0 10px;
+}
+.cm-detail-meta dt {
+  display: inline;
+  color: var(--vp-c-text-2);
+  font-weight: 500;
+}
+.cm-detail-meta dt::after {
+  content: ": ";
+}
+.cm-detail-meta dd {
+  display: inline;
+  margin: 0;
+}
+.cm-assessment {
+  padding: 10px 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+}
+.cm-assessment > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.cm-evidence {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+}
+.vp-doc .cm-evidence li {
+  margin: 2px 0;
+}
+.cm-notes {
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+.cm-history h4 {
+  margin: 10px 0 4px;
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+}
+.cm-history ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.vp-doc .cm-history li {
+  margin: 2px 0;
+}
+
+.cm-after {
+  margin-left: 0.4em;
+}

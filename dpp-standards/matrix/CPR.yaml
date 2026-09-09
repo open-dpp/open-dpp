@@ -1,0 +1,1212 @@
+# Conformance Matrix: CPR (32024R3110). Rules: dpp-standards/README.md.
+# Criteria extracted from research/criteria-sector-laws.md and verified against the Cellar text on 2026-09-07 (ticket #830); assessments are added in place, one per Criterion.
+# Clauses outside Chapter X that the paraphrases cite (Art. 14, 15, 16, 18(2)(g), 22(3), 22(5), 22(6), 22(9), 59-61) are not extracted; the ENs carry presumption of conformity under ESPR only, so operationalisedBy stays empty until a CPR act names standards.
+# Every operative duty of the chapter waits on the Art. 75(1) delegated act (CPR-Art80(1)); the CPR prevails over ESPR in a conflict (Art. 12(2)).
+standard: CPR
+edition: 32024R3110
+extractedFrom: dpp-standards/research/criteria-sector-laws.md
+extractedAt: 2026-09-07
+sections:
+  - id: Art22
+    title: Article 22 – Obligations of manufacturers
+  - id: Art75
+    title: Article 75 – Construction digital product passport system
+  - id: Art76
+    title: Article 76 – Digital product passport
+  - id: Art77
+    title: Article 77 – General requirements for the digital product passport
+  - id: Art78
+    title: Article 78 – Technical design and operation of the digital product passport
+  - id: Art79
+    title: Article 79 – Unique identifiers and digital product passport registry
+  - id: Art80
+    title: Article 80 – Mandatory use and technical adaptation
+criteria:
+  - id: CPR-Art22(7)
+    section: Art22
+    clause: Art. 22(7)
+    paraphrase: "Obligation trigger: within 18 months of the entry into force of the Art. 75(1) delegated act, the manufacturer makes a DPP per Art. 76 available through the construction DPP system of Art. 75, connected to the data carrier displayed with the CE marking (Art. 18(2)(g)). Counterpart of the first limb of ESPR-Art9(1), with the actor fixed as the manufacturer and a date tied to the delegated act."
+    applicability: mixed
+    areas:
+      - 1
+      - 4
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: public URL resolution and freeze on publish
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: a scanned carrier redirects to the public view
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing freezes the permalink and opens it to anonymous visitors
+      notes: "Software part: a passport the manufacturer can publish and that is reachable through a data carrier. Credited: a passport is created, published and then served anonymously at its permalink; the QR code (apps/client/src/components/permalinks/PermalinkQrCode.vue) encodes the permalink or the GS1 Digital Link and the resolver answers a scan with a redirect to the public view. Missing: nothing connects to the construction DPP system of Art. 75, which does not exist yet (re-validate once the Art. 75(1) act is adopted), and the operator documentation says nothing about permalinks, QR codes or anonymous access, so the manufacturer has no guide to the software part (#828). Displaying the carrier with the CE marking is the manufacturer's act (CPR-Art77(1)(b))."
+      gapIssue: 828
+  - id: CPR-Art75(1)
+    section: Art75
+    clause: Art. 75(1)
+    paraphrase: "The Commission adopts a delegated act (Art. 89 procedure) that sets up the construction DPP system under the conditions of Chapter X. Counterpart of ESPR-Art9(2), but one system-wide act rather than product-group acts; every operative duty of the chapter waits on it."
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the Commission adopts the delegated act that sets up the construction DPP system, and it has not been adopted (watch entry of CPR in sources.yaml). Every operative duty of the chapter waits on it. The software rows of this run record what open-dpp offers today; the rows that act may change are the identifier and carrier rows (CPR-Art76(2)(a)(v), 77(1)(c), 79(1)), the registry row (79(2)), the access-level rows (75(2)(c), 76(2)(f), 77(1)(g)), storage (78(c)) and the back-up system (75(2)(f), 78(e))."
+  - id: CPR-Art75(2)(a)
+    section: Art75
+    clause: Art. 75(2)(a)
+    paraphrase: "The system is compatible with, interoperable with and based upon the ESPR DPP, without compromising interoperability with Building Information Modelling (BIM) and taking construction specifics into account. Restates ESPR-Art11(a) with two deltas: the CPR system builds on the ESPR DPP itself, and BIM interoperability is added."
+    applicability: mixed
+    areas:
+      - 1
+      - 2
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/environment.ts
+          note: a passport is an AAS environment (IEC 63278-1)
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: JSON export in the open-dpp:json envelope
+      notes: "Software part: a construction passport built on and interoperable with the ESPR DPP, and interoperable with BIM. Credited: the passport is an AAS environment with a semanticId on every element, the technical basis the JTC 24 standards give the ESPR DPP (EN 18223). Missing: the export is a proprietary open-dpp:json envelope that fails AAS metamodel verification (Check export.aas-environment-verifies, folded on CPR-Art77(1)(d); #823), and nothing addresses BIM: no IFC or other BIM export, no link between a passport and a BIM object, no property-set mapping. What BIM interoperability requires is for the Art. 75(1) act to fix; re-validate then."
+      gapIssue: 823
+  - id: CPR-Art75(2)(b)
+    section: Art75
+    clause: Art. 75(2)(b)
+    paraphrase: "The system has the functionalities needed to implement and manage the DPPs of Art. 76 (create, hold, update and serve them)."
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: POST /passports from a template or an environment, PUT status, AAS update routes
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: createPassportFromTemplate, status changes, draft-only delete
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: holds and updates the passport's AAS environment
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: serves the passport publicly at /p/:id
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+          note: create, update, status and delete routes
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: creation from a template, publish freezes permalinks
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: the three lifecycle stages and what each allows; no page on creating, editing or serving a passport
+      notes: "Software part: the functionality to implement and manage passports as Art. 76 describes them; the construction DPP system itself is the Commission's and does not exist yet. Credited: open-dpp creates a passport from a template or an environment, persists it, lets the owning organisation edit it before and after publication through AAS-style routes and the editor, and serves it publicly once published. Missing: the functionalities an Art. 76 passport requires are the ones this run finds absent on the Art. 76(2) and 77 rows, above all the construction content structure (#834, the cluster whose delivery makes a passport an Art. 76 passport), the key-part links (#835), the product-type granularity (#597), the external access levels (#821) and continuity (#825); the operator docs cover the lifecycle stages only. Downgraded from Met by the adversarial review of 2026-09-07. Re-validate when the Art. 75(1) act fixes the system's functionalities."
+      gapIssue: 834
+  - id: CPR-Art75(2)(c)
+    section: Art75
+    clause: Art. 75(2)(c)
+    paraphrase: "The delegated act determines which actors (economic operators, clients, deinstallers, users and competent national authorities among them) may access which DPP information, weighing the protection of intellectual property rights and sensitive commercial information and the safety of construction works. Restates ESPR-Art9(2)(f) with a delta: the named construction actors and the IP, confidentiality and safety-of-works constraints on access."
+    applicability: mixed
+    areas:
+      - 5
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "role hierarchy: admin, owner, member, user, anonymous"
+        - type: code
+          ref: apps/client/src/components/aas/PermissionsForm.vue
+          note: editor UI to grant or withdraw the anonymous read right per element
+        - type: test
+          ref: apps/main/src/aas/domain/security/security.spec.ts
+          note: access rules per role and element
+      notes: "Software part: give each construction actor (economic operators, clients, deinstallers, users, competent national authorities) access to the information meant for it while protecting intellectual property, sensitive commercial information and the safety of works. Credited: per-submodel and per-element visibility for the roles anonymous, organisation member, organisation owner and instance admin; a published passport is public by default and any element can be withheld from anonymous readers. Missing: none of the named construction actors can be expressed as an access class, so information cannot be shown to authorities or clients and withheld from the public (#821, same finding as ESPR-Art9(2)(f)); attachments do not follow the element policy (#836). The actual actor list is for the Art. 75(1) act."
+      gapIssue: 821
+  - id: CPR-Art75(2)(d)
+    section: Art75
+    clause: Art. 75(2)(d)
+    paraphrase: "The delegated act determines which actors (manufacturers, authorised representatives, importers, distributors and DPP service providers among them) may introduce or update DPP information, including creating a new DPP where necessary, and which information they may introduce or update."
+    applicability: mixed
+    areas:
+      - 5
+    mirrors: ESPR-Art9(2)(g)
+  - id: CPR-Art75(2)(e)
+    section: Art75
+    clause: Art. 75(2)(e)
+    paraphrase: "The delegated act lays down the detailed arrangements for updating the information in the DPP of an existing product."
+    applicability: mixed
+    areas:
+      - 1
+      - 5
+      - 6
+    mirrors: ESPR-Art9(2)(h)
+  - id: CPR-Art75(2)(f)
+    section: Art75
+    clause: Art. 75(2)(f)
+    paraphrase: "The delegated act establishes procedures that keep DPPs available after the insolvency, liquidation or cessation of activity in the Union of the operator that created them, and where necessary after the manufacturer's own availability duty has expired, including a back-up system run by DPP service providers. Folds ESPR-Art11(e) and ESPR-Art10(4) and adds the post-expiry case."
+    applicability: mixed
+    areas:
+      - 6
+      - 2
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: one-passport JSON export, the only copy an operator can take
+      notes: "Software part: a back-up system and a continuity path that keep passports available after the creator's insolvency, liquidation or cessation, or after its own availability duty has expired. Nothing exists: no back-up copy or back-up URL (#596), no escrow, handover or transfer of a passport to a DPP service provider or another operator (#825). The one-passport JSON export is a manual copy in a proprietary format, not a back-up system. The procedures themselves are for the Art. 75(1) act."
+      gapIssue: 596
+  - id: CPR-Art75(2)(g)
+    section: Art75
+    clause: Art. 75(2)(g)
+    paraphrase: "The delegated act sets requirements for DPP service providers and, if required, a certification scheme to verify them, based as far as possible on the corresponding ESPR developments."
+    applicability: commission
+    mirrors: ESPR-Art11-sub3
+  - id: CPR-Art75(2)(h)
+    section: Art75
+    clause: Art. 75(2)(h)
+    paraphrase: "Where required, the delegated act lays down more detailed or alternative rules and procedures on the life cycle of identifiers, data carriers, digital credentials and the DPP registry than those ESPR sets for the same purpose. Sector-specific power to deviate from ESPR-Art12 and ESPR-Art13; no ESPR counterpart."
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a power to replace the ESPR rules on identifiers, data carriers, digital credentials and the registry with sector-specific ones. Not exercised, the delegated act does not exist. Once it is, CPR-Art76(2)(a)(v), 77(1)(c), 79(1) and 79(2) are re-validated against the alternative rules with a text trigger."
+  - id: CPR-Art75(2)(i)
+    section: Art75
+    clause: Art. 75(2)(i)
+    paraphrase: "The system stays accessible for 25 years after the last product of a product type was placed on the market, and the economic operator makes the DPP available for at least 10 years, without disproportionate cost for longer periods. Restates ESPR-Art9(2)(i) with fixed periods counted from the last product of the type instead of a per-product expected lifetime."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: deletePassport refuses non-draft passports
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: what each stage allows
+      notes: "Software part: keep a passport available for 10 years (the operator) within a system that stays accessible for 25 years, both counted from the last product of the product type. Credited: published and archived passports cannot be deleted, archiving is reversible and the lifecycle is documented. Missing: no representation of an availability period or of the date the last product of a type was placed on the market, an archived passport is no longer served publicly (the permalink service requires Published), no back-up (#596) and no continuity once the operator ceases (#825). Same finding as ESPR-Art9(2)(i), with the CPR periods."
+      gapIssue: 825
+  - id: CPR-Art75(2)(j)
+    section: Art75
+    clause: Art. 75(2)(j)
+    paraphrase: "The delegated act takes into account the need to keep information available for the reuse and remanufacturing of products."
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a consideration the delegated act must take into account. Reuse and remanufacturing information as passport content is assessed on the content rows (CPR-Art76(2)(a)) once the act names it."
+  - id: CPR-Art76(1)
+    section: Art76
+    clause: Art. 76(1)
+    paraphrase: "The information in the DPP is accurate, complete and up to date (the second limb of ESPR Art. 9(1); the placing-on-the-market gate of that clause is the own row CPR-Art22(7))."
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    mirrors: ESPR-Art9(1)
+  - id: CPR-Art76(2)(a)(i)
+    section: Art76
+    clause: Art. 76(2)(a)(i)
+    paraphrase: "The DPP includes the declaration of performance and conformity of Art. 15 (model in Annex V), the REACH safety-data-sheet and substance information of Art. 15(6), which may be included through a connection to other Union databases where available, and the documentation supplied with the declaration under Annex V. Sector-specific; nearest ESPR-AnnexIII(e), with the environmental data of the declaration, REACH information and Union-database links added."
+    applicability: software
+    areas:
+      - 8
+      - 2
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for an attached document
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachment upload (images and PDF, 15 MB) with virus scan
+        - type: code
+          ref: apps/client/src/components/aas/LinkCellField.vue
+          note: URL property, e.g. a link to a Union database entry
+        - type: test
+          ref: apps/main/src/media/infrastructure/media.service.spec.ts
+          note: upload of passport attachments and download streams
+      notes: "The declaration of performance and conformity (Annex V model with environmental performance per life-cycle module), the REACH safety-data-sheet or Art. 33 information of Art. 15(6), which may come through a connection to other Union databases, and the documents supplied with the declaration. Credited: the declaration and its documents can be attached as PDF File elements, its fields modelled by hand in a template, and a database entry linked by a URL property. Missing: no declaration template or submodel (declaration code and version, product-type code, declared performances per essential characteristic, environmental sustainability per module, notified body, harmonised technical specification), no structured REACH or substance information, no connection to a Union database, no document typing (#834). Same shape as ESPR-AnnexIII(e), sector content added."
+      gapIssue: 834
+  - id: CPR-Art76(2)(a)(ii)
+    section: Art76
+    clause: Art. 76(2)(a)(ii)
+    paraphrase: "The DPP includes the general product information, instructions for use and safety information of Art. 22(6) (content fixed by Annex IV). Restates ESPR-AnnexIII(f) with a delta: general product information is an added, fixed document set."
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for attached instructions
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: multilingual text values (29 languages)
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachment upload with virus scan
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: public view renders Property, File, list and collection values only
+        - type: test
+          ref: apps/main/src/media/infrastructure/media.service.spec.ts
+          note: upload of passport attachments and download streams
+      notes: "General product information, instructions for use and safety information with the fixed content of Annex IV (Art. 22(6)), in a language the Member State determines. Credited: attached documents and, in the data model, multilingual text. Missing: no Annex IV structure (product identification, description, uses, users, conditions of use and the further points) ships, and a MultiLanguageProperty is served by the API but not rendered in the public view, so multilingual instructions reach a visitor only as attachments (#834). Same shape as ESPR-AnnexIII(f) with the fixed Annex IV set."
+      gapIssue: 834
+  - id: CPR-Art76(2)(a)(iii)
+    section: Art76
+    clause: Art. 76(2)(a)(iii)
+    paraphrase: "The DPP includes the technical documentation of Art. 22(3), with the specific sections required for the simplified procedures of Art. 59 to 61. Restates ESPR-AnnexIII(e) with a delta: mandatory in the law, not left to a delegated act."
+    applicability: software
+    areas:
+      - 8
+      - 2
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for attached documents
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachment upload with virus scan
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: an element can be withheld from anonymous readers
+        - type: test
+          ref: apps/main/src/media/infrastructure/media.service.spec.ts
+          note: upload of passport attachments and download streams
+      notes: "The technical documentation of Art. 22(3) (declared use, evidence of performance and conformity, procedures, assessment system, simplified procedures of Art. 59 to 61, environmental calculation), mandatory in the passport. Credited: it can be attached as File elements (PDF) and withheld from the public by an element policy, since it is meant for authorities and notified bodies rather than users. Missing: no structure for its sections, no document typing, no authority access class to disclose it to (#821), and attachments do not follow the element policy (#836); tracked in the content cluster #834. Same shape as ESPR-AnnexIII(e)."
+      gapIssue: 834
+  - id: CPR-Art76(2)(a)(iv)
+    section: Art76
+    clause: Art. 76(2)(a)(iv)
+    paraphrase: "The DPP includes the label of Art. 22(9) (the environmental sustainability label a delegated act may impose). Sector-specific; no ESPR counterpart."
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element, image content types accepted
+        - type: code
+          ref: apps/client/src/components/media/MediaFieldView.vue
+          note: image preview and download in the public view
+        - type: code
+          ref: apps/main/src/aas/domain/asset-information.ts
+          note: "defaultThumbnails: product images on the shell"
+      notes: "The environmental sustainability label a delegated act may impose under Art. 22(9); none exists yet. Credited: a label image can be attached as a File element or a product image and is shown in the public view. Missing: no representation of the label (class, underlying performance values, the delegated act it follows), no rendering as a label (#834). Re-validate when a labelling act is adopted."
+      gapIssue: 834
+  - id: CPR-Art76(2)(a)(v)
+    section: Art76
+    clause: Art. 76(2)(a)(v)
+    paraphrase: "The DPP includes the unique identifiers issued under Art. 79(1), that is the product, operator and facility identifiers of ESPR Art. 12 unless the delegated act sets alternative rules. Folds ESPR-AnnexIII(b), (g) and (h)."
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: "product identifier: open-dpp UUID or GS1 identity, several per passport"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-identity.controller.ts
+          note: GET /passports/:id/gs1-identity
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/unique-product-identifier.controller.spec.ts
+          note: identifier create, list and lifecycle routes
+        - type: test
+          ref: apps/e2e/tests/passport-identity/upi-crud.spec.ts
+          note: a new passport is seeded with an internal identifier; GS1 identifiers are added
+      notes: "The identifiers of Art. 79(1) are those of ESPR Art. 12: the unique product identifier, the unique operator identifiers and the unique facility identifiers. Credited: every passport carries one or more product identifiers (an open-dpp UUID seeded at creation, GS1 identities with GTIN, batch and serial), readable through the API and shown with the passport. Missing: no operator identifier beyond the tenant organisation (no GLN, EORI or other legal-entity scheme) and no facility identifier at all (capability inventory, area 3); the registry client of #579 already asks where the operator and facility identifiers are configured. Which identifiers the CPR finally requires is for the Art. 75(1) act (CPR-Art75(2)(h))."
+      gapIssue: 579
+  - id: CPR-Art76(2)(a)(vi)
+    section: Art76
+    clause: Art. 76(2)(a)(vi)
+    paraphrase: "The DPP includes the documentation required under other Union law applicable to the product. Restates the other-Union-law limb of ESPR-AnnexIII(a) as a mandatory inclusion, where ESPR-Art10(2) only allows it."
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for attached documents
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: attachment upload with virus scan
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+      notes: "Documentation required under other Union law applicable to the product, mandatory here where ESPR Art. 10(2) only allows it. Credited: any document can be attached and any element can name its legal basis through a semanticId. Missing: no typing of a document by the Union act that requires it and no list of the acts that apply to a product family (#834). Same shape as the other-Union-law limb of ESPR-AnnexIII(a)."
+      gapIssue: 834
+  - id: CPR-Art76(2)(a)(vii)
+    section: Art76
+    clause: Art. 76(2)(a)(vii)
+    paraphrase: "The DPP includes the data carriers of key parts that have a DPP of their own, linking a product passport to its component passports. Sector-specific; nearest ESPR-Art11(d) (linking passports) and ESPR-AnnexIII(c) (part identifiers)."
+    applicability: software
+    areas:
+      - 4
+      - 9
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/reference-element.ts
+          note: ReferenceElement in the domain
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/entity.ts
+          note: Entity with globalAssetId and specificAssetIds
+        - type: code
+          ref: apps/main/src/aas/domain/asset-adminstration-shell.ts
+          note: derivedFrom on the shell, never set by the application
+        - type: code
+          ref: apps/client/src/components/aas/LinkCellField.vue
+          note: URL property editor
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: a URL property renders as an external hyperlink
+        - type: test
+          ref: apps/main/src/aas/domain/submodel-base/entity.spec.ts
+          note: Entity domain behaviour
+      notes: "The passport carries the data carriers of its key parts that have a passport of their own: a parent-to-component link. Credited: the data model can express a link (ReferenceElement, Entity, derivedFrom) and an operator can paste a component passport's permalink into a URL property, which the public view shows as a hyperlink. Missing: no passport-to-passport link as a feature, no selection of another passport as a component, no resolution to its permalink or GS1 Digital Link, no rendering of the component's carrier inside the parent, no client editor for ReferenceElement or Entity (#835). Nearest ESPR rows: Art11(d) and AnnexIII(c), still unassessed."
+      gapIssue: 835
+  - id: CPR-Art76(2)(b)
+    section: Art76
+    clause: Art. 76(2)(b)
+    paraphrase: "The DPP is connected to one or more data carriers. Restates the carrier half of ESPR-Art10(1)(a) with a delta: several carriers per passport are allowed."
+    applicability: software
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/infrastructure/permalink.repository.ts
+          note: "findAllByPassportId: several permalinks per passport"
+        - type: code
+          ref: packages/dto/src/permalinks/permalink.dto.ts
+          note: permalink kinds open-dpp and gs1-link
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: a QR code per permalink
+        - type: test
+          ref: apps/e2e/tests/passport-identity/permalink-crud.spec.ts
+          note: a new passport has one permalink and its QR dialog (URL text and copy button); more permalinks can be added
+      notes: "Credited: a passport has any number of permalinks, each rendered as a QR code (the open-dpp kind on the permalink URL, the gs1-link kind on the GS1 Digital Link), so one or more carriers can be connected. Missing: the operator documentation mentions neither permalinks nor QR codes (#828). The carrier image exists only on screen (no download or print layout), assessed on CPR-Art77(1)(b)."
+      gapIssue: 828
+  - id: CPR-Art76(2)(c)
+    section: Art76
+    clause: Art. 76(2)(c)
+    paraphrase: "The DPP is accessible by electronic means through the data carrier displayed under Art. 18(2)(g), that is next to the CE marking. Restates ESPR-Art10(1)(b) with a delta: the carrier placement follows the CE-marking rules instead of a delegated act."
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: 302 from a scanned GS1 key to the public view
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public /p/:id without a session
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+          note: a scanned key on a published passport redirects to its view
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-09-07
+      notes: "Software part: a passport reachable electronically by scanning the carrier. Credited: the QR code encodes the permalink or the GS1 Digital Link, the resolver answers a scan with a redirect to the public view (Check resolver.redirect-published) and the public view needs no account. Missing: operator documentation (#828). Displaying the carrier with the CE marking is the manufacturer's act (CPR-Art77(1)(b))."
+      gapIssue: 828
+  - id: CPR-Art76(2)(d)
+    section: Art76
+    clause: Art. 76(2)(d)
+    paraphrase: "The DPP corresponds to the product type and its unique identification code of Art. 22(5). Restates ESPR-Art10(1)(f) and ESPR-Art9(2)(d) with the granularity fixed at product type with a manufacturer-assigned code; no batch or item level."
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: granularity is model when a GS1 identity has no batch or serial
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model, batch, item
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: assetKind Instance for passports, Type for templates
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+          note: model granularity for a bare GTIN
+      notes: "The CPR fixes the passport at the product type, identified by the manufacturer-specific unique identification code of Art. 22(5). Credited: a GS1 identity with a bare GTIN is a model-level identifier and resolves as one, and several identifiers may sit on a passport. Missing: no passport-level granularity or product-type attribute, an open-dpp UUID identifier carries no level, the manufacturer's own product-type code (which need not be a GTIN) has no field, and a passport's AAS asset is always assetKind Instance while Type is reserved for templates, so a product-type passport cannot declare itself one (#597; same finding as ESPR-Art9(2)(d) and REG1778 Art. 8(3))."
+      gapIssue: 597
+  - id: CPR-Art76(2)(e)
+    section: Art76
+    clause: Art. 76(2)(e)
+    paraphrase: "The DPP is accessible free of charge to all economic operators, clients, users and authorities through the data carrier. Restates ESPR-Art11(b) with a delta: a different actor list and access through the carrier."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public /p/:id without a session
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: a published passport opens to anonymous visitors
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-09-07
+      notes: "Credited: a published passport is served to anyone, without account or payment, through its permalink and the GS1 resolver (Check access.anonymous-reads-published passes), which reaches economic operators, clients, users and authorities alike. Missing: operator documentation on publishing to the public and on the carriers (#828); Met once documented. Per-actor access levels are assessed on CPR-Art76(2)(f); ease of access (accessibility of the public view) is inherited from ESPR-Art11(b) on CPR-Art78(b)."
+      gapIssue: 828
+  - id: CPR-Art76(2)(f)
+    section: Art76
+    clause: Art. 76(2)(f)
+    paraphrase: "The DPP gives different levels of access to the construction DPP system. Counterpart of ESPR-Art10(1)(g) without the reference to essential requirements; CPR-Art77(1)(g) carries that."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "role hierarchy: admin, owner, member, user, anonymous"
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: per-element read and edit rights, inherited down the idShortPath
+        - type: code
+          ref: apps/client/src/components/aas/PermissionsForm.vue
+          note: editor UI for element permissions per role
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: an anonymous subject is refused on a hidden submodel (ForbiddenError); elements are filtered for lower roles
+        - type: test
+          ref: apps/main/src/aas/domain/security/security.spec.ts
+          note: access rules per role and element
+      notes: "Different levels of access to the construction DPP system. Credited: five subject levels (instance admin, organisation owner, organisation member, signed-in user, anonymous) with per-submodel and per-element read and edit rights, so a passport can show one set of elements to the public and more to the owning organisation. Missing: the levels the system will define for external actors (clients, deinstallers, authorities) cannot be expressed; there is no grant to a named outside party, no time-limited or credential-based access (#821). Same finding as ESPR-Art9(2)(f) and BATT-Art77(6)."
+      gapIssue: 821
+  - id: CPR-Art76(2)(g)
+    section: Art76
+    clause: Art. 76(2)(g)
+    paraphrase: "The DPP lets the actors the system specifies introduce or update its information. Positive counterpart of ESPR-Art11(f) and ESPR-Art9(2)(g); CPR-Art78(f) carries the restriction."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "role hierarchy: admin, owner, member, user, anonymous"
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: organisation-scoped create and update routes
+        - type: code
+          ref: apps/main/src/identity/api-keys/presentation/api-keys.controller.ts
+          note: API keys for machine clients
+        - type: test
+          ref: apps/main/src/passports/presentation/passport.controller.spec.ts
+          note: members create and update; outsiders are refused
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-09-07
+        - type: check
+          ref: access.foreign-user-denied-management
+          result: passed
+          date: 2026-09-07
+      notes: "The actors the system specifies may introduce or update passport information (manufacturers, authorised representatives, importers, distributors and DPP service providers per CPR-Art75(2)(d)). Credited: members and owners of the owning organisation introduce and update data through the editor, the AAS routes and API keys (the allow side rests on the create and update route tests), and everyone else is refused (Checks access.anonymous-denied-management and access.foreign-user-denied-management evidence the refusal). Missing: no write right for an actor outside the organisation, e.g. an importer or a DPP service provider completing a manufacturer's passport (#821). Same finding as ESPR-Art9(2)(g)."
+      gapIssue: 821
+  - id: CPR-Art76(2)(h)
+    section: Art76
+    clause: Art. 76(2)(h)
+    paraphrase: "The DPP is accessible for an established period after the last product of its product type was placed on the market (25 years for the system, 10 years for the operator under CPR-Art75(2)(i)). Restates ESPR-Art9(2)(i) and ESPR-Art11(e) with a delta: the period runs from the last product of the type."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: deletePassport refuses non-draft passports
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: what each stage allows
+      notes: "Credited: published and archived passports cannot be deleted and archiving is reversible, so a passport stays in the system indefinitely. Missing: no availability period tied to the last product of the type, an archived passport is no longer served publicly, no back-up (#596) and no continuity (#825). The period itself is fixed by CPR-Art75(2)(i)."
+      gapIssue: 825
+  - id: CPR-Art76(3)(a)
+    section: Art76
+    clause: Art. 76(3)(a)
+    paraphrase: "The Art. 76(2) requirements ensure that actors along the value chain can easily access and understand the product information relevant to them."
+    applicability: commission
+    areas:
+      - 11
+    mirrors: ESPR-Art9(3)(a)
+  - id: CPR-Art76(3)(b)
+    section: Art76
+    clause: Art. 76(3)(b)
+    paraphrase: "The Art. 76(2) requirements facilitate the verification of product compliance by competent national authorities."
+    applicability: commission
+    areas:
+      - 5
+    mirrors: ESPR-Art9(3)(b)
+  - id: CPR-Art76(3)(c)
+    section: Art76
+    clause: Art. 76(3)(c)
+    paraphrase: "The Art. 76(2) requirements improve the traceability of products along the value chain."
+    applicability: commission
+    areas:
+      - 9
+    mirrors: ESPR-Art9(3)(c)
+  - id: CPR-Art76(4)
+    section: Art76
+    clause: Art. 76(4)
+    paraphrase: "Products covered by the Art. 14 exemption from the declaration of performance and conformity (custom-made and heritage products among them) are exempt from the DPP obligation."
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: whether a product falls under the Art. 14 exemption from the declaration of performance and conformity (custom-made and heritage products among others) is the manufacturer's determination. open-dpp needs no representation of the exemption; an operator creates no passport for such a product."
+  - id: CPR-Art77(1)(a)
+    section: Art77
+    clause: Art. 77(1)(a)
+    paraphrase: "The DPP is connected through one or more data carriers to a persistent unique identification code of the product type. Restates ESPR-Art10(1)(a) with deltas: the identifier is the product-type code of Art. 22(5) and several carriers are allowed."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/domain/permalink.ts
+          note: "withPublishedUrl: the carrier URL is frozen once published"
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: canonical GS1 Digital Link path, model granularity for a bare GTIN
+        - type: code
+          ref: apps/main/src/permalink/infrastructure/permalink.schema.ts
+          note: several permalinks per passport, one gs1-link per identifier
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+          note: global uniqueness of a bare GTIN across passports
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: a permalink published with the passport cannot be deleted
+      notes: "Credited: one or more carriers (permalink QR codes) connect to a globally unique identifier that is frozen when the passport is published, and a bare GTIN is a product-type level key. Missing: the persistent identification code of the product type as the CPR defines it (manufacturer-specific, Art. 22(5)) has no representation; open-dpp mints UUIDs or accepts GS1 keys, and nothing marks a passport as the product-type passport (#597)."
+      gapIssue: 597
+  - id: CPR-Art77(1)(b)
+    section: Art77
+    clause: Art. 77(1)(b)
+    paraphrase: "The data carrier is affixed as Art. 18(2)(g) requires, together with the CE marking. Restates ESPR-Art10(1)(b) with the placement fixed by the law."
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code rendered into a canvas
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: QR dialog of a passport
+        - type: test
+          ref: apps/e2e/tests/passport-identity/permalink-crud.spec.ts
+          note: "the QR dialog of a permalink: URL text and copy button (the canvas itself is not asserted)"
+      notes: "Software part: a carrier the manufacturer can affix next to the CE marking. Credited: a QR code is rendered for every permalink. Missing: the QR exists only as an on-screen canvas, with no image download (PNG or SVG), no print layout and no server endpoint returning the carrier, so the manufacturer must regenerate the code from the copied URL with another tool; no GS1 2D code with FNC1 either (#489, told this carrier-export gap in a comment). Affixing it with the CE marking is the manufacturer's act."
+      gapIssue: 489
+  - id: CPR-Art77(1)(c)
+    section: Art77
+    clause: Art. 77(1)(c)
+    paraphrase: "The data carrier complies with Art. 79(1), that is with ESPR Art. 12 unless the Art. 75(1) delegated act sets more detailed or alternative rules. Restates ESPR-Art10(1)(c) with an override reserved to the delegated act."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GS1 Digital Link builder and validation
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch, serial
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+          note: Digital Link building and GTIN normalisation
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-09-07
+      notes: "Art. 79(1) applies ESPR Art. 12 and, through it, the Annex III second-paragraph carrier and identifier standards (the ISO/IEC 15459 series). Credited: the carriers encode GS1 Digital Link URIs that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), and GS1 is an ISO/IEC 15459 issuing agency. Missing: ISO/IEC 15459 conformance is neither asserted nor checked and the standard is unread (#518; same finding as BATT-Art77(3)-sub2), and the QR symbology itself is not verified. An alternative rule in the Art. 75(1) act re-opens this row."
+      gapIssue: 518
+  - id: CPR-Art77(1)(d)
+    section: Art77
+    clause: Art. 77(1)(d)
+    paraphrase: "All DPP information is based on open standards, in an interoperable format and, as appropriate, machine-readable, structured, searchable and transferable through an open interoperable data exchange network without vendor lock-in, per the Art. 78 essential requirements; documents supplied with the declaration and the technical documentation are exempt where technically justified. Restates ESPR-Art10(1)(d) with a delta: the technical-reason exemption for attached documents."
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 13
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: JSON export
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: served OpenAPI 3.1
+        - type: code
+          ref: apps/main/src/aas/presentation/aas.decorators.ts
+          note: AAS-style REST routes for shells, submodels, elements
+        - type: check
+          ref: api.openapi-document-served
+          result: passed
+          date: 2026-09-07
+        - type: check
+          ref: export.aas-environment-verifies
+          result: failed
+          date: 2026-09-07
+      notes: "Credited: passport data are structured, machine-readable JSON served over AAS-style REST routes described by an OpenAPI 3.1 document (Check api.openapi-document-served) and searchable through the API. Missing: the export is a proprietary open-dpp:json envelope, not standard AAS JSON (the shell id is omitted), so the export.aas-environment-verifies Check fails and transfer without vendor lock-in is not shown (#823). The technical-reason exemption for the declaration's documents and the technical documentation needs no software: attachments are opaque files by design."
+      gapIssue: 823
+  - id: CPR-Art77(1)(e)
+    section: Art77
+    clause: Art. 77(1)(e)
+    paraphrase: "No personal data of the product's end-user is stored in the DPP without the end-user's explicit consent under GDPR Art. 6 (ESPR Art. 10(1)(e) says customer; the same obligation on open-dpp)."
+    applicability: mixed
+    areas:
+      - 5
+      - 10
+    mirrors: ESPR-Art10(1)(e)
+  - id: CPR-Art77(1)(f)
+    section: Art77
+    clause: Art. 77(1)(f)
+    paraphrase: "The DPP information includes a reference to the product type of Art. 76(2)(d). Restates ESPR-Art10(1)(f) with the granularity fixed at product type."
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: the passport's identifiers listed through the API
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity and Digital Link of a passport
+      notes: "Credited: the passport's identifiers, its GS1 identity and Digital Link are part of its data and readable through the API, so a model-level GTIN references the product type. Missing: no field references the product type of CPR-Art76(2)(d) as such, and a passport without a GS1 identity references nothing beyond its own UUID (#597)."
+      gapIssue: 597
+  - id: CPR-Art77(1)(g)
+    section: Art77
+    clause: Art. 77(1)(g)
+    paraphrase: "Access to DPP information is regulated by the Art. 78 essential requirements, and the specific access rights follow the access levels of the construction DPP system. Restates ESPR-Art10(1)(g) with the CPR essential requirements (which add CPR-Art78(c), (d) and (g)) and system access levels in place of delegated-act rights."
+    applicability: software
+    areas:
+      - 5
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+        - type: code
+          ref: apps/main/src/aas/domain/security/aas-ability.ts
+          note: rights resolved per idShortPath
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: a passport is public only once published; drafts answer 404 to outsiders
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: anonymous access to hidden submodels and elements is refused
+        - type: check
+          ref: access.anonymous-denied-management
+          result: passed
+          date: 2026-09-07
+        - type: check
+          ref: resolver.draft-hidden
+          result: passed
+          date: 2026-09-07
+      notes: "Access regulated by the Art. 78 essential requirements and the system's access levels. Credited: access follows explicit per-element rules with the published-or-member gate (Checks resolver.draft-hidden and access.anonymous-denied-management), so the rules of CPR-Art78(b) and (f) are enforced for the roles that exist. Missing: the system's access levels for external actors (#821), and the attachment routes sit outside the rules: media download and info are anonymous and check neither the passport status nor the element policy (#836), which also touches Art. 78(g). Same shape as ESPR-Art10(1)(g), still unassessed (#758)."
+      gapIssue: 821
+  - id: CPR-Art77(1)(h)
+    section: Art77
+    clause: Art. 77(1)(h)
+    paraphrase: "The declaration of performance and conformity inside the DPP follows the guidelines on interoperable human- and machine-readable formats the Commission may request from the European standardisation organisations under Art. 16(3). Sector-specific."
+    applicability: software
+    areas:
+      - 2
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for the attached declaration
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: machine-readable JSON of whatever the passport models
+      notes: "The declaration of performance and conformity inside the passport follows the human- and machine-readable format guidelines the Commission may request from the European standardisation organisations under Art. 16(3). No guidelines have been issued, so there is nothing to conform to yet. Credited: a declaration modelled as AAS elements is human-readable in the public view and machine-readable through the API and export; a PDF attachment is human-readable only. Missing: any declaration structure (#834); re-validate when the guidelines exist and fill operationalisedBy for this row."
+      gapIssue: 834
+  - id: CPR-Art77(2)
+    section: Art77
+    clause: Art. 77(2)
+    paraphrase: "Information that other Union law requires or allows in the DPP may be included as the Art. 75(1) delegated act provides."
+    applicability: mixed
+    areas:
+      - 8
+    mirrors: ESPR-Art10(2)
+  - id: CPR-Art77(3)
+    section: Art77
+    clause: Art. 77(3)
+    paraphrase: "The manufacturer gives actors selling online or at a distance a digital copy of the data carrier and of the product identifier so customers without physical access can reach the DPP, free of charge and within 5 working days of the request. Folds ESPR-Art10(3)(a) and (b) with deltas: the duty sits on the manufacturer and covers carrier and identifier together."
+    applicability: mixed
+    areas:
+      - 4
+      - 3
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-identity.controller.ts
+          note: GET /passports/:id/gs1-identity returns the Digital Link
+        - type: code
+          ref: packages/dto/src/permalinks/permalink.dto.ts
+          note: publicUrl on every permalink
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: copy the carrier URL to the clipboard
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-identity.controller.spec.ts
+          note: the passport reports its GS1 identity and Digital Link
+      notes: "Software part: give the manufacturer a digital copy of the carrier and the product identifier, or a webpage link, to pass to online and distance sellers. Credited: the permalink public URL and the GS1 Digital Link (which carries the product identifier) are exposed on the API and copyable in the UI, and the second sentence of Art. 77(3) accepts a webpage link. Missing: no downloadable carrier image (#489, assessed on CPR-Art77(1)(b)) and no operator documentation on sharing a passport link before a sale (#828). The five-working-day deadline is the manufacturer's."
+      gapIssue: 828
+  - id: CPR-Art78(a)
+    section: Art78
+    clause: Art. 78(a)
+    paraphrase: "The DPP is fully interoperable with other DPPs in the technical, semantic and organisational aspects of end-to-end communication and data transfer."
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 7
+      - 8
+    mirrors: ESPR-Art11(a)
+  - id: CPR-Art78(b)
+    section: Art78
+    clause: Art. 78(b)
+    paraphrase: "A recipient of the DPP has easy, free-of-charge access to it according to the recipient's access rights in the construction DPP system."
+    applicability: software
+    areas:
+      - 5
+      - 11
+    mirrors: ESPR-Art11(b)
+  - id: CPR-Art78(c)
+    section: Art78
+    clause: Art. 78(c)
+    paraphrase: "DPP data is stored as the construction DPP system of Art. 75 specifies. Restates ESPR-Art11(c) with a delta: the storage arrangement is dictated by the delegated act rather than left to the operator or a DPP service provider."
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/database/config.ts
+          note: passport records in the instance's own MongoDB
+        - type: doc
+          ref: docs/guides/production-setup.md
+          note: MongoDB replica set and S3-compatible storage for attachments
+      notes: "Software part: store the data as the construction DPP system will specify. Credited: passport data live in the instance's MongoDB and attachments in S3-compatible object storage, both self-hostable and documented. Missing: the storage specification does not exist yet (Art. 75(1) act; re-validate then), whatever it says will include the back-up system of CPR-Art75(2)(f), which open-dpp lacks, and where the data are stored is a deployment choice the software neither enforces nor verifies (same reading as BATT-Art78(c)). Linked to #596 through the back-up condition CPR-Art78(e) attaches to storage; no other open issue describes the storage side."
+      gapIssue: 596
+  - id: CPR-Art78(d)
+    section: Art78
+    clause: Art. 78(d)
+    paraphrase: "Authorised operators or DPP service providers that store or process DPP data may not sell, reuse or process it beyond what the storage or processing service needs, unless agreed with the operator placing the product on the market. Restates ESPR-Art11-sub2 with a delta: authorised operators are bound too."
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator or processor duty, assessed Not applicable by rule: an authorised operator or DPP service provider that stores or processes the data may not sell, reuse or process it beyond the service unless the manufacturer agrees. Contractual, no software surface; same reading as BATT-Art78(d) and ESPR-Art11-sub2."
+  - id: CPR-Art78(e)
+    section: Art78
+    clause: Art. 78(e)
+    paraphrase: "The DPP remains available for the CPR-Art76(2)(h) period, including after the insolvency, liquidation or cessation of activity in the Union of the operator that created it, under the back-up conditions of CPR-Art75(2)(f). Folds ESPR-Art11(e) and ESPR-Art10(4) with the CPR period."
+    applicability: mixed
+    areas:
+      - 6
+      - 2
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: deletePassport refuses non-draft passports
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+      notes: "Folds the availability period (credited as on CPR-Art76(2)(h): a published passport cannot be deleted) with continuity after insolvency, liquidation or cessation and the back-up conditions of CPR-Art75(2)(f). Missing: no escrow, handover or continuity mechanism (#825, the same Gap as BATT-Art78(e)) and no back-up system (#596)."
+      gapIssue: 825
+  - id: CPR-Art78(f)
+    section: Art78
+    clause: Art. 78(f)
+    paraphrase: "The rights to access and to introduce, modify or update DPP information are restricted to the access rights the construction DPP system specifies."
+    applicability: software
+    areas:
+      - 5
+    mirrors: ESPR-Art11(f)
+  - id: CPR-Art78(g)
+    section: Art78
+    clause: Art. 78(g)
+    paraphrase: "Protection of trade secrets (Directive (EU) 2016/943 Art. 2(1)) and intellectual property rights is ensured. Sector-specific: an essential requirement here, only a delegated-act consideration in ESPR."
+    applicability: software
+    areas:
+      - 5
+      - 10
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/security.ts
+          note: anonymous read is granted by default per submodel and can be withdrawn
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+        - type: code
+          ref: apps/client/src/components/aas/PermissionsForm.vue
+          note: editor UI to withhold an element from anonymous readers
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: media download and info routes are anonymous and check no policy
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: an anonymous subject is refused on a hidden submodel (ForbiddenError)
+      notes: "Protection of trade secrets and intellectual property as an essential requirement. Credited: any submodel or element can be withheld from the public and from lower roles, and a draft is invisible to outsiders, so confidential data can be kept out of the public view. Missing: attached files do not follow the element policy, since the media routes are anonymous and load a file by its id without checking the passport status or the element's read right, so a hidden or draft attachment stays downloadable by anyone holding its id (#836); no confidentiality classification, no policy on elements inside a list, no encryption at rest, and no disclosure tier for a party under NDA or an authority (#821). Same requirement as BATT-Art78(h) in part."
+      gapIssue: 836
+  - id: CPR-Art78(h)
+    section: Art78
+    clause: Art. 78(h)
+    paraphrase: "Data authentication, reliability and integrity are ensured."
+    applicability: software
+    areas:
+      - 10
+    mirrors: ESPR-Art11(g)
+  - id: CPR-Art78(i)
+    section: Art78
+    clause: Art. 78(i)
+    paraphrase: "The DPP is designed and operated so that a high level of security and privacy is ensured and fraud is avoided."
+    applicability: software
+    areas:
+      - 10
+      - 5
+    mirrors: ESPR-Art11(h)
+  - id: CPR-Art79(1)
+    section: Art79
+    clause: Art. 79(1)
+    paraphrase: "ESPR Art. 12 (unique identifiers and data carriers) applies to construction products unless the Art. 75(1) delegated act lays down more detailed or alternative rules under CPR-Art75(2)(h). Applies ESPR-Art12(1) to (6) by reference, overridable."
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch, serial; open-dpp UUID
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GS1 Digital Link resolver at gs1/v1
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR data carrier
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+          note: resolver routes, 404 for drafts and unknown keys
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-09-07
+      notes: "ESPR Art. 12 applied by reference: unique product, operator and facility identifiers and data carriers per the Annex III standards, with operator procedures for missing identifiers (Art. 12(2), (3)) and Commission rules on issuing agencies (Art. 12(4) to (6)). Credited for the product side: GS1 Digital Link identifiers (GS1 is an ISO/IEC 15459 issuing agency) that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid) and a QR carrier with a conformant resolver. Missing: operator and facility identifiers do not exist (#579), ISO/IEC 15459 conformance is not asserted (#518) and the carrier is not print-ready (#489). gapIssue #518 because this row is about the identifier and carrier standards ESPR Art. 12 applies (the ISO/IEC 15459 assertion); the operator and facility identifiers as passport content sit on CPR-Art76(2)(a)(v) under #579. The paragraph-by-paragraph Assessment of ESPR Art. 12 belongs to the identifiers ticket #756 (EN 18219); an alternative rule in the Art. 75(1) act re-opens this row."
+      gapIssue: 518
+  - id: CPR-Art79(2)
+    section: Art79
+    clause: Art. 79(2)
+    paraphrase: "ESPR Art. 13 (the DPP registry) applies to construction products unless the Art. 75(1) delegated act lays down more detailed or alternative rules under CPR-Art75(2)(h). Applies ESPR-Art13(1) to (6) by reference, overridable."
+    applicability: mixed
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: passport identifiers readable through the API, the data a registration would upload
+      notes: "ESPR Art. 13 applied by reference: upload of the identifiers to the EU registry and capture of the registration identifier. open-dpp has no client for the EU DPP registry, no registration-identifier field and no commodity code (ESPR-Art13(4), ESPR-Art13(5) and REG1778 Art. 8, all Gap, #579). An alternative registry rule in the Art. 75(1) act re-opens this row."
+      gapIssue: 579
+  - id: CPR-Art79(3)
+    section: Art79
+    clause: Art. 79(3)
+    paraphrase: "ESPR Art. 14 (the Commission's web portal for DPP information) applies to construction DPPs as it stands, with no alternative rule."
+    applicability: commission
+    areas:
+      - 1
+      - 5
+    mirrors: ESPR-Art14
+  - id: CPR-Art80(1)
+    section: Art80
+    clause: Art. 80(1)
+    paraphrase: "Six months after the Art. 75(1) delegated act enters into force the system is fully operational with the Art. 76 functionalities; 18 months after, the CPR-Art22(7) duty applies; manufacturers may use the system voluntarily in between."
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the timing of the system (fully operational six months after the delegated act) and of the manufacturer's duty (18 months after it, CPR-Art22(7)). No software surface; the dates go into the stage line of CPR in sources.yaml once the act is adopted."
+  - id: CPR-Art80(2)(a)
+    section: Art80
+    clause: Art. 80(2)(a)
+    paraphrase: "The Commission may adopt delegated acts that further specify, add or remove Art. 75(2) functionalities to follow technical progress or the once-only principle for information duties in other Union law."
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a power to specify, add or remove Art. 75(2) functionalities. An amending act is a text trigger for this file."
+  - id: CPR-Art80(2)(b)
+    section: Art80
+    clause: Art. 80(2)(b)
+    paraphrase: "The Commission may adopt delegated acts revising Art. 77(1) and Art. 78 to keep compatibility and interoperability with ESPR."
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a power to revise Art. 77(1) and Art. 78 for compatibility and interoperability with ESPR. An amending act is a text trigger for this file."

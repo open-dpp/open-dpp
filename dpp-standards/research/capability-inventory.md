@@ -53,7 +53,7 @@ Surveyed 2026-09-03 on `main` at 9c560822 for the Conformance Review. Lists what
 ## 8. Templates / semantic models
 - Template = reusable AAS Environment per org (templates/domain/template.ts; /templates CRUD + AAS routes + export/import + status).
 - NO shipped IDTA submodel templates (Nameplate, TechnicalData, ContactInfo, HandoverDoc, PCF). Only test fixtures (submodel.spec.ts PCF ids; apps/e2e/tests/api/battery-passport.ts hand-built).
-- MultiLanguageProperty + LanguageText; Language enum fixed 31 entries (packages/dto/src/aas/enums/language-enum.ts); BcpLanguageTagSchema exists, no non-test consumer.
+- MultiLanguageProperty + LanguageText; Language enum fixed 29 entries (packages/dto/src/aas/enums/language-enum.ts); BcpLanguageTagSchema exists, no non-test consumer.
 - NOT FOUND: ECLASS/IEC CDD, IRDI handling, textile/steel templates.
 
 ## 9. Traceability

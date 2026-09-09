@@ -1,0 +1,1486 @@
+# Conformance Matrix: REG1778 (32026R1778). Rules: dpp-standards/README.md.
+# Criteria extracted from research/criteria-tier-a.md on 2026-09-03; assessments are added in place, one per Criterion.
+standard: REG1778
+edition: 32026R1778
+extractedFrom: dpp-standards/research/criteria-tier-a.md
+extractedAt: 2026-09-03
+sections:
+  - id: Art3
+    title: Article 3
+  - id: Art8
+    title: Article 8
+  - id: Art9
+    title: Article 9
+  - id: Art10
+    title: Article 10
+  - id: Art11
+    title: Article 11
+  - id: Art12
+    title: Article 12
+  - id: Art14
+    title: Article 14
+  - id: Art15
+    title: Article 15
+  - id: Art16
+    title: Article 16
+  - id: Art19
+    title: Article 19
+  - id: Art20
+    title: Article 20
+criteria:
+  - id: REG1778-Art3(a)
+    section: Art3
+    clause: Art. 3(a)
+    paraphrase: The registry has a website with a secure user interface for operators, value chain actors, national and customs authorities.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the Commission builds and runs the registry website and its secure user interface. open-dpp is not the registry."
+  - id: REG1778-Art3(b)
+    section: Art3
+    clause: Art. 3(b)
+    paraphrase: The registry has an API for registering DPPs and receiving information from the registry.
+    applicability: mixed
+    areas:
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: a client that registers passports through the registry API and receives its responses. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation."
+      gapIssue: 579
+  - id: REG1778-Art3(c)
+    section: Art3
+    clause: Art. 3(c)
+    paraphrase: The registry has a verification platform that confirms the existence and completeness of DPPs.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the verification platform is a registry component. The corresponding software precondition (a passport the platform can read) is assessed under Art. 8(7)."
+  - id: REG1778-Art3(d)
+    section: Art3
+    clause: Art. 3(d)
+    paraphrase: The registry has a scheme for generating unique registration identifiers.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registration identifier scheme is a registry component; capturing the identifier is assessed under Art. 8(10)."
+  - id: REG1778-Art3(e)
+    section: Art3
+    clause: Art. 3(e)
+    paraphrase: The registry stores at least the unique identifiers and the commodity codes for goods released for free circulation.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: storage of identifiers and commodity codes happens in the registry; supplying them is assessed under Art. 8(7)(b) and (d)."
+  - id: REG1778-Art3(f)
+    section: Art3
+    clause: Art. 3(f)
+    paraphrase: The registry keeps a list of verified DPP service providers.
+    applicability: commission
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the list of verified DPP service providers is kept by the registry. Whether an open-dpp operator enrols as a service provider is an organisational act (map: out of scope)."
+  - id: REG1778-Art3(g)
+    section: Art3
+    clause: Art. 3(g)
+    paraphrase: The registry has a semantic repository.
+    applicability: mixed
+    areas:
+      - 8
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds on every submodel element
+        - type: code
+          ref: apps/main/src/aas/domain/concept-description.ts
+          note: ConceptDescription with multilingual displayName and description; no HTTP endpoint
+      notes: "Software part: consume the semantic repository. Every submodel element can carry a semanticId referencing a repository IRI and ConceptDescriptions are modelled, but nothing imports the repository's data models or validates against them; the repository is not yet public (watch entry of REG1778 in sources.yaml)."
+      gapIssue: 826
+  - id: REG1778-Art3(h)
+    section: Art3
+    clause: Art. 3(h)
+    paraphrase: The registry has a log system.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the log system is a registry component; open-dpp's own audit trail is assessed under Art. 10(2)."
+  - id: REG1778-Art3(i)
+    section: Art3
+    clause: Art. 3(i)
+    paraphrase: The registry has identification and authorisation schemes for its users.
+    applicability: commission
+    areas:
+      - 5
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: identification and authorisation schemes of registry users are the Commission's; operator-side credential handling is assessed under Art. 19(3)."
+  - id: REG1778-Art8(1)
+    section: Art8
+    clause: Art. 8(1)
+    paraphrase: For ESPR delegated-act products a verified economic operator registers the DPP at the granularity (model, batch, item) the delegated act sets.
+    applicability: mixed
+    areas:
+      - 7
+      - 3
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model/batch/item implied by the present GS1 keys
+      notes: "Software part: register a passport with the registry at the model, batch or item level the delegated act sets. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation. The granularity a GS1 identifier implies exists (Art. 8(3) to (5)) but nothing registers it."
+      gapIssue: 579
+  - id: REG1778-Art8(2)
+    section: Art8
+    clause: Art. 8(2) first subparagraph
+    paraphrase: For batteries, construction products, toys, detergents and other Union-law DPPs the relevant actor registers at the level that law sets.
+    applicability: mixed
+    areas:
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model/batch/item implied by the present GS1 keys
+      notes: "Software part: register the battery, construction-product, toy or detergent passport at the level the sectoral law sets. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation. Same Gap as BATT-Art77(10)."
+      gapIssue: 579
+  - id: REG1778-Art8(2)-sub2
+    section: Art8
+    clause: Art. 8(2) second subparagraph
+    paraphrase: A third party allowed by Union law to act for those actors may register once verified under Art. 19(4).
+    applicability: operator
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator (organisational) duty, assessed Not applicable by rule: whether a third party registers on the operator's behalf, and its verification under Art. 19(4), are contractual and identity-verification matters outside the software."
+  - id: REG1778-Art8(3)
+    section: Art8
+    clause: Art. 8(3)
+    paraphrase: Where different Union rules require different granularities for the same product, register at the most granular level.
+    applicability: mixed
+    areas:
+      - 3
+      - 7
+    operationalisedBy:
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model/batch/item implied by the present GS1 keys
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity = GTIN plus optional batch and serial
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+      notes: "Software part: represent the passport at the most granular level Union law requires. A GS1 identifier implies model (GTIN), batch (+AI 10) or item (+AI 21) granularity, so an operator can create the passport at any level; open-dpp UUID identifiers carry no granularity, no passport-level granularity field exists and no rule enforces the most granular level (#597)."
+      gapIssue: 597
+  - id: REG1778-Art8(4)
+    section: Art8
+    clause: Art. 8(4)
+    paraphrase: An item-level DPP links both the batch and the model identifier where those exist.
+    applicability: software
+    areas:
+      - 3
+    operationalisedBy:
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity = GTIN plus optional batch and serial
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model/batch/item implied by the present GS1 keys
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+        - type: test
+          ref: apps/e2e/tests/passport-identity/upi-crud.spec.ts
+          note: UI flow creating a GTIN plus serial identifier; batch is not exercised
+      notes: An item-level GS1 identity (GTIN plus serial) carries the model identifier (GTIN) and, when given, the batch (AI 10) in the same identifier, so both are linked to the passport for GS1-identified products; the domain test asserts GTIN, batch and serial together. Non-GS1 identifiers have no model or batch link, and there is no relationship from an item passport to a batch or model passport (#597).
+      gapIssue: 597
+  - id: REG1778-Art8(5)
+    section: Art8
+    clause: Art. 8(5)
+    paraphrase: A batch-level DPP links the model identifier where a model exists.
+    applicability: software
+    areas:
+      - 3
+    operationalisedBy:
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity = GTIN plus optional batch and serial
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model/batch/item implied by the present GS1 keys
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+      notes: A batch-level GS1 identity (GTIN plus AI 10) carries the model identifier (GTIN); non-GS1 identifiers carry none, and no link from a batch passport to a model passport exists (#597).
+      gapIssue: 597
+  - id: REG1778-Art8(6)
+    section: Art8
+    clause: Art. 8(6)
+    paraphrase: Registration happens either through the secure user interface or through the API.
+    applicability: mixed
+    areas:
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: either an API registration or a file the operator can upload through the registry UI (the UI accepts XML/JSON registration files, research/public-sources.md section 8). open-dpp produces neither: no client and no export in the registry's upload format (the client Gap is detailed under Art. 3(b))."
+      gapIssue: 579
+  - id: REG1778-Art8(7)
+    section: Art8
+    clause: Art. 8(7) chapeau
+    paraphrase: On submission the Commission reads the DPP content and automatically confirms points (a) to (e); the DPP must therefore be machine-readable by the registry.
+    applicability: mixed
+    areas:
+      - 7
+      - 1
+    operationalisedBy:
+      - EN18222
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: proprietary open-dpp:json export envelope, versions v1 to v5
+        - type: code
+          ref: apps/main/src/open-api-docs/index.ts
+          note: OpenAPI 3.1 document of the passport API
+        - type: check
+          ref: export.aas-environment-verifies
+          result: failed
+          date: 2026-09-07
+      notes: "Software part: passport content the registry can read by machine. open-dpp serves structured JSON over a documented OpenAPI, but its export is a proprietary open-dpp:json envelope, not standard AAS JSON (the export.aas-environment-verifies Check fails, see BATT-Art77(5)); the format the registry reads is fixed by the semantic repository data models, which are not yet published."
+      gapIssue: 823
+  - id: REG1778-Art8(7)(a)
+    section: Art8
+    clause: Art. 8(7)(a)
+    paraphrase: Semantic conformity of the DPP data with the applicable delegated acts or other Union law.
+    applicability: mixed
+    areas:
+      - 8
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds on every submodel element
+        - type: code
+          ref: apps/main/src/aas/domain/concept-description.ts
+          note: ConceptDescription with multilingual displayName and description; no HTTP endpoint
+      notes: "Software part: passport data that conform semantically to the applicable data model. Elements can reference the model's semantic ids, but open-dpp validates nothing against a published data model; the registry's own semantic validation service is not yet available (research/public-sources.md, section 8)."
+      gapIssue: 826
+  - id: REG1778-Art8(7)(b)
+    section: Art8
+    clause: Art. 8(7)(b)
+    paraphrase: Coherence of the mandatory registry data with the values inside the DPP.
+    applicability: mixed
+    areas:
+      - 7
+      - 3
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: passport identifiers readable through the API
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GS1 Digital Link resolver for /01/gtin[/10/batch][/21/serial]
+      notes: "Software part: the passport exposes the identifiers the operator registers so the registry can compare them. Unique product identifiers and the GS1 identity are readable through the API (the export omits them); the commodity code, the other mandatory registry datum, does not exist in open-dpp (Art. 8(7)(d))."
+      gapIssue: 579
+  - id: REG1778-Art8(7)(c)
+    section: Art8
+    clause: Art. 8(7)(c)
+    paraphrase: Conformity of the DPP with the required granularity level.
+    applicability: mixed
+    areas:
+      - 3
+    operationalisedBy:
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model/batch/item implied by the present GS1 keys
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity = GTIN plus optional batch and serial
+      notes: "Software part: a passport whose granularity the registry can confirm. Granularity is implied by the GS1 identifier keys only; there is no explicit granularity attribute the registry could check for non-GS1 identifiers (#597)."
+      gapIssue: 597
+  - id: REG1778-Art8(7)(d)
+    section: Art8
+    clause: Art. 8(7)(d)
+    paraphrase: Validity of the commodity code against the permitted range for the product group.
+    applicability: mixed
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: hold the product's commodity code (CN/TARIC) on the passport so the registry can validate it. No commodity code field exists anywhere in open-dpp (backend, DTOs, client); #579 lists where to configure it as an open question."
+      gapIssue: 579
+  - id: REG1778-Art8(7)(e)
+    section: Art8
+    clause: Art. 8(7)(e)
+    paraphrase: The link to the back-up hosted by a DPP service provider, where relevant.
+    applicability: mixed
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: a back-up copy of the passport hosted by a DPP service provider, reachable by a link the registry can verify. open-dpp keeps no back-up or snapshot of a passport and exposes no back-up URL (capability inventory, area 6); #596 tracks the feature."
+      gapIssue: 596
+  - id: REG1778-Art8(8)
+    section: Art8
+    clause: Art. 8(8)
+    paraphrase: After successful verification the registry generates and stores a unique, persistent registration identifier.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry generates and stores the registration identifier; receiving it is assessed under Art. 8(10)."
+  - id: REG1778-Art8(9)(a)
+    section: Art8
+    clause: Art. 8(9)(a)
+    paraphrase: The registry stores the unique identifiers as registration data.
+    applicability: commission
+    areas:
+      - 7
+      - 3
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry stores the identifiers it receives; supplying them is assessed under Art. 8(7)(b)."
+  - id: REG1778-Art8(9)(b)
+    section: Art8
+    clause: Art. 8(9)(b)
+    paraphrase: The registry stores the commodity code.
+    applicability: commission
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry stores the commodity code; holding one is assessed under Art. 8(7)(d)."
+  - id: REG1778-Art8(9)(c)
+    section: Art8
+    clause: Art. 8(9)(c)
+    paraphrase: The registry stores the reference to the DPP service provider.
+    applicability: commission
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry stores the reference to the DPP service provider; the back-up link is assessed under Art. 8(7)(e)."
+  - id: REG1778-Art8(9)(d)
+    section: Art8
+    clause: Art. 8(9)(d)
+    paraphrase: The registry stores registrant information, registration date and time, and the integrity of the DPP as evidence of the registration event.
+    applicability: mixed
+    areas:
+      - 10
+      - 6
+    operationalisedBy:
+      - EN18246
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: createdAt/updatedAt and Draft/Published/Archived status; no version snapshots
+      notes: "Software part: a passport version whose integrity the registry can record as evidence of the registration event, which presupposes a canonical, hashable representation of that version. open-dpp has no content hash, signature or immutable version of a passport (capability inventory, areas 6 and 10); #824 tracks data integrity."
+      gapIssue: 824
+  - id: REG1778-Art8(10)
+    section: Art8
+    clause: Art. 8(10)
+    paraphrase: The unique registration identifier is returned automatically through the UI or the API response.
+    applicability: mixed
+    areas:
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: receive the unique registration identifier from the API response (or let the operator record the one shown in the UI) and keep it with the passport. No field, endpoint or client exists for it. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation."
+      gapIssue: 579
+  - id: REG1778-Art9(1)
+    section: Art9
+    clause: Art. 9(1)
+    paraphrase: The registering operator (or its third party) can generate a proof of registration for its DPPs at any time.
+    applicability: mixed
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: request the proof of registration for one or more passports through the API. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation."
+      gapIssue: 579
+  - id: REG1778-Art9(2)
+    section: Art9
+    clause: Art. 9(2) chapeau
+    paraphrase: The proof is a downloadable secure electronic document evidencing, also towards third parties, that the registration duty was met; it holds at least (a) to (e).
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the content and form of the proof of registration are fixed by the registry."
+  - id: REG1778-Art9(2)(a)
+    section: Art9
+    clause: Art. 9(2)(a)
+    paraphrase: The unique product identifier.
+    applicability: commission
+    areas:
+      - 3
+    operationalisedBy:
+      - EN18219
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the proof carries the unique product identifier the registry stored; the identifier itself is assessed under Art. 8(7)(b)."
+  - id: REG1778-Art9(2)(b)
+    section: Art9
+    clause: Art. 9(2)(b)
+    paraphrase: The commodity code, where relevant.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the proof carries the commodity code stored in the registry."
+  - id: REG1778-Art9(2)(c)
+    section: Art9
+    clause: Art. 9(2)(c)
+    paraphrase: Name and identity of the verified economic operator responsible.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the proof names the verified economic operator from the registry's identity verification."
+  - id: REG1778-Art9(2)(d)
+    section: Art9
+    clause: Art. 9(2)(d)
+    paraphrase: Date and time of registration of the latest DPP version, validated by a Commission electronic time stamp.
+    applicability: commission
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registration time stamp is the Commission's."
+  - id: REG1778-Art9(2)(e)
+    section: Art9
+    clause: Art. 9(2)(e)
+    paraphrase: "A hash of the DPP version the proof covers (Art. 2(16): cryptographic output over the version's data)."
+    applicability: mixed
+    areas:
+      - 10
+      - 6
+    operationalisedBy:
+      - EN18246
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: createdAt/updatedAt and Draft/Published/Archived status; no version snapshots
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: proprietary open-dpp:json export envelope, versions v1 to v5
+      notes: "Software part: a canonical representation of a passport version over which a cryptographic hash (Art. 2(16)) is computed, so that the proof's hash can be reproduced and verified against the passport. open-dpp has no content hashing and no versioned passport state (capability inventory, areas 6 and 10); #824 tracks data integrity."
+      gapIssue: 824
+  - id: REG1778-Art9(3)
+    section: Art9
+    clause: Art. 9(3)
+    paraphrase: The proof carries a qualified electronic seal (eIDAS Art. 38) and the Commission time stamp.
+    applicability: commission
+    areas:
+      - 10
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the qualified electronic seal and time stamp on the proof are applied by the Commission."
+  - id: REG1778-Art9(4)
+    section: Art9
+    clause: Art. 9(4)
+    paraphrase: The proof is available via UI or API for 90 calendar days after generation.
+    applicability: mixed
+    areas:
+      - 7
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: fetch and store the proof of registration through the API within its 90-day availability. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation."
+      gapIssue: 579
+  - id: REG1778-Art10(1)
+    section: Art10
+    clause: Art. 10(1)
+    paraphrase: Every creation, modification or deletion of registration data is logged and reflected in the registration status.
+    applicability: commission
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: logging of registration-data changes and the registration status live in the registry."
+  - id: REG1778-Art10(2)
+    section: Art10
+    clause: Art. 10(2)
+    paraphrase: The registry versions the registered data and time-stamps each update.
+    applicability: mixed
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+      - EN18222
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/activity-history/domain/change-tracker.ts
+          note: change events per passport modification with timestamps
+        - type: code
+          ref: apps/main/src/aas/domain/common/administrative-information.ts
+          note: AAS version/revision on identifiables only
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: createdAt/updatedAt and Draft/Published/Archived status; no version snapshots
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+      notes: "Software part: passport versions the operator can identify and push to the registry as updates. open-dpp records every change as a timestamped activity (audit trail) and carries AAS version/revision on identifiables, but a passport has no addressable, immutable versions: the current state is mutable in place and only createdAt/updatedAt mark it. #824 tracks versioned, hashable passport states."
+      gapIssue: 824
+  - id: REG1778-Art10(3)
+    section: Art10
+    clause: Art. 10(3)
+    paraphrase: Registration data are deleted 10 years after registration unless Union law sets a DPP availability period, which then governs retention.
+    applicability: commission
+    areas:
+      - 6
+    operationalisedBy:
+      - EN18221
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry deletes registration data after 10 years or the availability period; passport retention itself is an EN 18221 topic (ticket #760)."
+  - id: REG1778-Art10(4)
+    section: Art10
+    clause: Art. 10(4)
+    paraphrase: Users may request deletion of their account when no longer responsible.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: deletion of registry user accounts is a registry function."
+  - id: REG1778-Art11(1)
+    section: Art11
+    clause: Art. 11(1)
+    paraphrase: Each product group's data model is based on its delegated act or other applicable Union law.
+    applicability: commission
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the Commission derives each product group's data model from the delegated act."
+  - id: REG1778-Art11(2)
+    section: Art11
+    clause: Art. 11(2)
+    paraphrase: Data models may build on existing Union semantic assets, controlled vocabularies and reference data models.
+    applicability: commission
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: reuse of Union semantic assets in the Commission's data models."
+  - id: REG1778-Art11(3)
+    section: Art11
+    clause: Art. 11(3)
+    paraphrase: All data in a DPP are structured per the common data models and semantic definitions published in the semantic repository.
+    applicability: software
+    areas:
+      - 8
+      - 7
+      - 2
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds on every submodel element
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: template = reusable AAS Environment per product group; no version field
+        - type: code
+          ref: apps/main/src/aas/domain/concept-description.ts
+          note: ConceptDescription with multilingual displayName and description; no HTTP endpoint
+      notes: open-dpp structures every passport as an AAS Environment whose elements can reference semantic definitions by IRI, and organisations build templates freely; nothing binds a template or passport to a data model published in the semantic repository, and no conformity check exists. The repository is not yet public, so the binding cannot be built against a real target today.
+      gapIssue: 826
+  - id: REG1778-Art11(4)
+    section: Art11
+    clause: Art. 11(4)
+    paraphrase: Data models are versioned.
+    applicability: mixed
+    areas:
+      - 8
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: template = reusable AAS Environment per product group; no version field
+        - type: code
+          ref: apps/main/src/aas/domain/common/administrative-information.ts
+          note: AAS version/revision on identifiables only
+      notes: "Software part: versioned data models on the open-dpp side. Templates carry no version; the optional AAS AdministrativeInformation (version/revision) exists on shells, submodels and concept descriptions, unenforced, and nothing ties a passport to a template version."
+      gapIssue: 826
+  - id: REG1778-Art12(1)
+    section: Art12
+    clause: Art. 12(1)
+    paraphrase: The Commission maintains an authoritative, machine-readable semantic repository for all product groups, per the Interoperable Europe Act (Reg. 2024/903).
+    applicability: commission
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the Commission establishes and maintains the semantic repository."
+  - id: REG1778-Art12(2)(a)
+    section: Art12
+    clause: Art. 12(2)(a)
+    paraphrase: The repository holds the semantic meaning of required attributes and specifications for typed, resolvable links between DPPs and from attributes to value-chain evidence.
+    applicability: mixed
+    areas:
+      - 7
+      - 8
+      - 3
+      - 9
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/reference-element.ts
+          note: typed reference to an external or model reference
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/relationship-element.ts
+        - type: code
+          ref: apps/main/src/aas/domain/common/reference.ts
+          note: ExternalReference and ModelReference key chains
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId and supplementalSemanticIds on every submodel element
+      notes: "Software part: express attribute semantics and typed, resolvable links between passports and to evidence. AAS ReferenceElement and RelationshipElement with ExternalReference keys can express typed links to another passport's URI or to evidence documents, and semanticId carries attribute meaning; no link type vocabulary from the repository is consumed and no convention makes a passport-to-passport link resolvable."
+      gapIssue: 826
+  - id: REG1778-Art12(2)(b)
+    section: Art12
+    clause: Art. 12(2)(b)
+    paraphrase: It holds the data models and formats for the in-scope products.
+    applicability: mixed
+    areas:
+      - 8
+      - 2
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: template = reusable AAS Environment per product group; no version field
+        - type: code
+          ref: apps/main/src/aas/infrastructure/serialization/aas-serialization.service.ts
+          note: proprietary open-dpp:json export envelope, versions v1 to v5
+      notes: "Software part: use the repository's product-group data models and formats. What exists: templates are open-dpp's data-model mechanism, an AAS Environment defined once per product group and reused by every passport created from it, exportable and importable as JSON, so a repository data model has a place to land. What is missing: no data model is imported from the repository, templates carry no version, and the export format is the proprietary open-dpp:json envelope, not a repository-defined format (Art. 8(7))."
+      gapIssue: 826
+  - id: REG1778-Art12(2)(c)
+    section: Art12
+    clause: Art. 12(2)(c)
+    paraphrase: It holds metadata about those data models.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: metadata about the data models is published by the Commission."
+  - id: REG1778-Art12(2)(d)
+    section: Art12
+    clause: Art. 12(2)(d)
+    paraphrase: It holds the semantic meaning of the roles defined in delegated acts or other DPP legislation.
+    applicability: mixed
+    areas:
+      - 5
+    operationalisedBy:
+      - EN18239
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: fixed role hierarchy admin/owner/member/user/anonymous
+      notes: "Software part: map the roles a delegated act defines onto access rights. open-dpp's roles are fixed (instance admin, organisation owner/member, user, anonymous) and its AAS access rules key on them; legislation-defined roles such as legitimate-interest parties or authorities cannot be represented (#821, filed for the battery access classes, tracks the same feature)."
+      gapIssue: 821
+  - id: REG1778-Art12(2)(e)
+    section: Art12
+    clause: Art. 12(2)(e)
+    paraphrase: It holds multilingual labels and definitions for all mandatory attributes.
+    applicability: mixed
+    areas:
+      - 8
+      - 11
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+        - type: code
+          ref: apps/main/src/aas/domain/concept-description.ts
+          note: ConceptDescription with multilingual displayName and description; no HTTP endpoint
+        - type: code
+          ref: packages/dto/src/aas/enums/language-enum.ts
+          note: 29 fixed language codes
+      notes: "Software part: multilingual labels and definitions on mandatory attributes. MultiLanguageProperty values and ConceptDescription displayName/description carry per-language text over 29 fixed languages, so labels can be entered per template; they are not sourced from the repository, and the UI itself is translated in en and de only."
+      gapIssue: 826
+  - id: REG1778-Art12(3)
+    section: Art12
+    clause: Art. 12(3)
+    paraphrase: Data-model metadata conform to DCAT-AP.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: DCAT-AP conformity of the Commission's metadata."
+  - id: REG1778-Art12(4)
+    section: Art12
+    clause: Art. 12(4)
+    paraphrase: Newly introduced attributes get multilingual labels and definitions published.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: publication of labels for newly introduced attributes."
+  - id: REG1778-Art12(5)
+    section: Art12
+    clause: Art. 12(5)
+    paraphrase: The repository offers a search service for reading, searching and retrieving semantic definitions and data structures.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the repository's search service."
+  - id: REG1778-Art12(6)
+    section: Art12
+    clause: Art. 12(6)
+    paraphrase: Repository content is accessible through publicly documented APIs supporting common formats and machine-readable semantic assets.
+    applicability: mixed
+    areas:
+      - 7
+      - 8
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: false
+      evidence: []
+      notes: "Software part: retrieve semantic assets automatically through the repository's APIs. Unlike Art. 3(g) and 11(3), where the semantic references an imported model would need already exist, this clause's software part is the automated retrieval itself, and nothing in open-dpp calls any external semantic source, hence Gap rather than Partial. The repository API is not yet published (watch entry of REG1778 in sources.yaml)."
+      gapIssue: 826
+  - id: REG1778-Art12(7)
+    section: Art12
+    clause: Art. 12(7)
+    paraphrase: Access to and use of the repository and its APIs are free of charge.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: free access to the repository."
+  - id: REG1778-Art14(1)
+    section: Art14
+    clause: Art. 14(1)
+    paraphrase: The Commission runs a log system that produces a complete, accurate and reliable audit trail.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry's log system and audit trail."
+  - id: REG1778-Art14(2)(a)
+    section: Art14
+    clause: Art. 14(2)(a)
+    paraphrase: "Logged: access and authentication entries."
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: registry access and authentication logging."
+  - id: REG1778-Art14(2)(b)
+    section: Art14
+    clause: Art. 14(2)(b)
+    paraphrase: "Logged: data modifications by all users, including ESPR Art. 13(4) uploads and other mandated uploads."
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: registry logging of data modifications and uploads."
+  - id: REG1778-Art14(2)(c)
+    section: Art14
+    clause: Art. 14(2)(c)
+    paraphrase: "Logged: administrative actions, account changes, permission changes, configuration changes."
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: registry logging of administrative actions."
+  - id: REG1778-Art14(2)(d)
+    section: Art14
+    clause: Art. 14(2)(d)
+    paraphrase: "Logged: data exchange logs."
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: registry data-exchange logs."
+  - id: REG1778-Art14(3)(a)
+    section: Art14
+    clause: Art. 14(3)(a)
+    paraphrase: Access and authentication logs are kept six months.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: six-month retention of registry access logs."
+  - id: REG1778-Art14(3)(b)
+    section: Art14
+    clause: Art. 14(3)(b)
+    paraphrase: Administrative and data-exchange logs are kept five years.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: five-year retention of registry administrative and data-exchange logs."
+  - id: REG1778-Art14(3)(c)
+    section: Art14
+    clause: Art. 14(3)(c)
+    paraphrase: Data-modification logs are kept for the duration of the registration.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: retention of registry data-modification logs for the registration's duration."
+  - id: REG1778-Art14(4)
+    section: Art14
+    clause: Art. 14(4)
+    paraphrase: Logs are made available to national authorities for suspected incidents, audits and random security checks.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: making registry logs available to national authorities."
+  - id: REG1778-Art14(5)
+    section: Art14
+    clause: Art. 14(5)
+    paraphrase: Technical and organisational measures protect the logs, ensuring at least their immutability and confidentiality.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: immutability and confidentiality of the registry logs."
+  - id: REG1778-Art15(1)
+    section: Art15
+    clause: Art. 15(1)
+    paraphrase: The Commission publishes guidelines on registering and managing registry data.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: guidelines on registering and managing registry data; open-dpp's operator docs would point at them once a client exists."
+  - id: REG1778-Art15(2)
+    section: Art15
+    clause: Art. 15(2)
+    paraphrase: The registry is accessible at all times except announced maintenance such as software releases.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: availability of the registry."
+  - id: REG1778-Art15(3)
+    section: Art15
+    clause: Art. 15(3)
+    paraphrase: The Commission may suspend availability without notice for malfunction, cyber-attack or urgent security need.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: suspension of the registry for security reasons."
+  - id: REG1778-Art15(4)
+    section: Art15
+    clause: Art. 15(4)
+    paraphrase: Where unavailability prevents registration, the Commission records the date and time and keeps that record available for at least five years.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: recording of registry unavailability."
+  - id: REG1778-Art16(1)
+    section: Art16
+    clause: Art. 16(1)
+    paraphrase: The Commission ensures registry security and may run technical audits and random checks on its components.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: security and technical audits of the registry."
+  - id: REG1778-Art16(2)(a)
+    section: Art16
+    clause: Art. 16(2)(a)
+    paraphrase: Measures prevent unauthorised access to the registry.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: preventing unauthorised access to the registry."
+  - id: REG1778-Art16(2)(b)
+    section: Art16
+    clause: Art. 16(2)(b)
+    paraphrase: Measures prevent unauthorised processing of registry data.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: preventing unauthorised processing of registry data."
+  - id: REG1778-Art16(2)(c)
+    section: Art16
+    clause: Art. 16(2)(c)
+    paraphrase: Measures detect unauthorised activities.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: detecting unauthorised activities in the registry."
+  - id: REG1778-Art16(2)(d)
+    section: Art16
+    clause: Art. 16(2)(d)
+    paraphrase: Measures prevent data breaches.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: preventing registry data breaches."
+  - id: REG1778-Art16(2)(e)
+    section: Art16
+    clause: Art. 16(2)(e)
+    paraphrase: Security events are logged per the Commission's IT security standards.
+    applicability: commission
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: security-event logging per the Commission's IT security standards."
+  - id: REG1778-Art19(1)
+    section: Art19
+    clause: Art. 19(1)
+    paraphrase: The verified operator supplies all Art. 8 registration information and answers for its accuracy and completeness at registration.
+    applicability: operator
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator (organisational) duty, assessed Not applicable by rule: supplying accurate and complete registration information is the operator's responsibility; the software precondition is assessed under Art. 8."
+  - id: REG1778-Art19(2)
+    section: Art19
+    clause: Art. 19(2)
+    paraphrase: The verified operator keeps the registry information about its DPP accurate, complete and up to date at all times.
+    applicability: mixed
+    areas:
+      - 7
+      - 6
+    operationalisedBy:
+      - EN18223
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Gap
+      operational: true
+      evidence: []
+      notes: "Software part: push changes of the registered data (identifiers, commodity code, back-up link, new passport versions) to the registry so it stays accurate and up to date. open-dpp has no client for the EU DPP registry (capability inventory, area 7): nothing registers a passport, captures a registration identifier or talks to the registry API. The API is undocumented and reachable only behind an EU Login session (research/public-sources.md, section 8), so the client cannot be built or checked yet; the Gap is recorded against the requirement, not against the missing documentation."
+      gapIssue: 579
+  - id: REG1778-Art19(3)
+    section: Art19
+    clause: Art. 19(3)
+    paraphrase: The verified operator implements technical and organisational security for the IT systems and credentials it uses to reach the registry, against unauthorised access or modification of registration data.
+    applicability: mixed
+    areas:
+      - 10
+      - 5
+    operationalisedBy:
+      - EN18239
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: Better Auth sessions, organisations and API keys
+        - type: code
+          ref: apps/main/src/identity/api-keys/domain/api-key.ts
+          note: API keys stored hashed, shown once
+      notes: "Software part: protect the credentials and IT system used to reach the registry. open-dpp's own access is hardened (session and API-key authentication, API keys stored hashed and shown once, rate limiting, per-element access rules), but no registry credential or authentication token (Art. 2(3)) is stored or handled because no registry client exists; the measures for those are part of the client (#579)."
+      gapIssue: 579
+  - id: REG1778-Art19(4)
+    section: Art19
+    clause: Art. 19(4)
+    paraphrase: A third party registering on the operator's behalf must be verified under Art. 5; the operator stays fully responsible.
+    applicability: operator
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator (organisational) duty, assessed Not applicable by rule: verification of a delegated third party and the operator's continued responsibility are organisational."
+  - id: REG1778-Art19(5)
+    section: Art19
+    clause: Art. 19(5)
+    paraphrase: The verified operator is the controller of the data it submits.
+    applicability: operator
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator (organisational) duty, assessed Not applicable by rule: controllership of submitted data is a legal role of the operator."
+  - id: REG1778-Art20(1)
+    section: Art20
+    clause: Art. 20(1)
+    paraphrase: A verified value chain actor authorising a third party stays responsible for compliance.
+    applicability: operator
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator (organisational) duty, assessed Not applicable by rule: a value chain actor's responsibility for an authorised third party is organisational."
+  - id: REG1778-Art20(2)
+    section: Art20
+    clause: Art. 20(2)
+    paraphrase: A verified value chain actor secures the IT systems and credentials it uses to reach the registry.
+    applicability: mixed
+    areas:
+      - 10
+      - 5
+    operationalisedBy:
+      - EN18239
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/identity/auth/auth.provider.ts
+          note: Better Auth sessions, organisations and API keys
+        - type: code
+          ref: apps/main/src/identity/api-keys/domain/api-key.ts
+          note: API keys stored hashed, shown once
+      notes: "Software part as for Art. 19(3): open-dpp's own access is hardened, but registry credentials for value chain actors (repairers, recyclers) have no storage or handling because no registry client and no value-chain-actor role exist (#579; roles under #821)."
+      gapIssue: 579
+  - id: REG1778-Art20(3)
+    section: Art20
+    clause: Art. 20(3)
+    paraphrase: Where Union law lets value chain actors upload to the registry, each is the controller of the data it submits.
+    applicability: operator
+    assessment:
+      date: 2026-09-06
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator (organisational) duty, assessed Not applicable by rule: controllership of data a value chain actor submits is a legal role."

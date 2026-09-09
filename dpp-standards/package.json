@@ -1,0 +1,27 @@
+{
+  "name": "@open-dpp/dpp-standards",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Conformance Review of open-dpp against EU DPP law and the CEN/CENELEC JTC 24 standards: matrix files, schema, checks, playbook scripts and a renderer prototype",
+  "license": "LGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "matrix:check": "tsx src/check.ts",
+    "matrix:test": "vitest run",
+    "matrix:affected": "tsx src/affected.ts",
+    "matrix:run": "tsx src/run.ts",
+    "matrix:supersede": "tsx src/supersede.ts",
+    "matrix:fold": "tsx src/fold.ts",
+    "matrix:watch": "tsx src/watch.ts",
+    "matrix:dev": "vitepress dev site",
+    "matrix:build": "vitepress build site",
+    "matrix:preview": "vitepress preview site"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "vitepress": "2.0.0-alpha.16",
+    "vitest": "^4.1.8",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  }
+}

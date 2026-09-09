@@ -1,0 +1,203 @@
+# Mechanical half of the Conformance Review re-validation (wayfinder tickets #754 and #819). Two
+# entry points, never a matrix write; a human runs the local playbook (dpp-standards/PLAYBOOK.md)
+# against the issue this workflow opens, because the gated standard texts live outside the repository.
+#
+# - workflow_dispatch: validates the matrix files, runs the Cellar watch query and the automated
+#   checks, and opens one "Validation Run requested" issue with the results.
+# - schedule (weekly): runs the Cellar watch query alone and opens or updates one "Standards watch"
+#   issue when an act is unseen by dpp-standards/watch-state.yaml. A quiet week leaves no issue.
+#   GitHub fires a schedule from the default branch only, so it is live once dpp-standards/ is on
+#   main, and it is paused after 60 days without a commit (GitHub's rule for scheduled workflows).
+#   The `standards_watch` input exercises the scheduled path by hand.
+name: Conformance Validation Run
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Sources to re-validate: all, or comma-separated source ids (ESPR,EN18219)"
+        required: false
+        default: all
+      reason:
+        description: "Why this run is requested, in one line (becomes the trigger detail)"
+        required: false
+        default: ""
+      checks:
+        description: "Run the automated conformance checks"
+        type: boolean
+        default: true
+      watch:
+        description: "Run the Cellar watch query"
+        type: boolean
+        default: true
+      standards_watch:
+        description: "Run the weekly Standards-watch path instead (watch query only, opens or updates the Standards watch issue)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  validate:
+    name: Validate the matrix files
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.standards_watch }}
+    runs-on: ubuntu-latest
+    outputs:
+      check: ${{ steps.check.outcome }}
+      test: ${{ steps.test.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      # A pending reviewer on the branch makes the check red by design; the request is opened anyway.
+      - id: check
+        continue-on-error: true
+        run: pnpm --filter @open-dpp/dpp-standards matrix:check
+      - id: test
+        continue-on-error: true
+        run: pnpm --filter @open-dpp/dpp-standards matrix:test
+
+  watch:
+    name: Cellar watch query
+    if: ${{ github.event_name == 'schedule' || inputs.standards_watch || inputs.watch }}
+    runs-on: ubuntu-latest
+    outputs:
+      new: ${{ steps.watch.outputs.new }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - id: watch
+        run: pnpm --silent --filter @open-dpp/dpp-standards matrix:watch > watch.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validation-run-watch
+          path: watch.md
+          retention-days: 30
+
+  checks:
+    name: Automated conformance checks
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.standards_watch && inputs.checks }}
+    runs-on: ubuntu-latest
+    steps:
+      # v1 (wayfinder ticket #755) runs the Checks locally: `pnpm --filter e2e conformance` against a
+      # live Instance, then `matrix:fold`. Wiring them into this job (boot the app as e2e.yml does,
+      # run the conformance projects, upload apps/e2e/conformance-report.*) is the CI follow-up ticket.
+      - name: Record that the Checks run locally in v1
+        run: |
+          echo "No automated Check ran in CI: v1 runs the conformance project locally (dpp-standards/PLAYBOOK.md, section Checks) and folds the report with matrix:fold." > checks.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validation-run-checks
+          path: checks.md
+          retention-days: 30
+
+  request:
+    name: Open the Validation Run request
+    needs: [validate, watch, checks]
+    if: ${{ always() && github.event_name == 'workflow_dispatch' && !inputs.standards_watch }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: validation-run-*
+          merge-multiple: true
+          path: results
+      - name: Compose and open the issue
+        env:
+          SCOPE: ${{ inputs.scope }}
+          REASON: ${{ inputs.reason }}
+          CHECK: ${{ needs.validate.outputs.check }}
+          TEST: ${{ needs.validate.outputs.test }}
+          WATCH_RESULT: ${{ needs.watch.result }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          section() { if [ -f "results/$1" ]; then cat "results/$1"; else echo "$2"; fi; }
+          today=$(date -u +%F)
+          {
+            echo "## Validation Run requested"
+            echo
+            echo "- **Scope**: \`$SCOPE\`"
+            echo "- **Reason**: ${REASON:-not given}"
+            echo "- **Requested by**: @${{ github.actor }} on $today, [workflow run]($RUN_URL)"
+            echo "- **Matrix check**: $CHECK · **tooling tests**: $TEST"
+            echo
+            echo "### Standards watch (Cellar query: $WATCH_RESULT)"
+            echo
+            section watch.md "Skipped."
+            echo
+            echo "### Automated checks ($CHECKS_RESULT)"
+            echo
+            section checks.md "Skipped."
+            echo
+            echo "### Next step (a human, locally)"
+            echo
+            echo "Open the run with the \`conformance-review\` skill, procedure **Re-validate** in \`dpp-standards/PLAYBOOK.md\`:"
+            echo
+            echo '```'
+            echo "pnpm --filter @open-dpp/dpp-standards matrix:run --trigger code --sources $SCOPE --detail \"${REASON:-requested run}\" --requested-by <this issue>"
+            echo '```'
+            echo
+            echo "The run's PR closes this issue."
+          } > body.md
+          gh issue create --title "Validation Run requested: $SCOPE, $today" --label conformance --body-file body.md
+
+  standards-watch:
+    name: Open or update the Standards watch issue
+    needs: [watch]
+    # Only the scheduled path, and only when the query returned an act the state file has not seen.
+    if: ${{ (github.event_name == 'schedule' || inputs.standards_watch) && needs.watch.outputs.new != '0' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: validation-run-watch
+          path: results
+      - name: Compose the issue, then update the open one or create it
+        env:
+          NEW: ${{ needs.watch.outputs.new }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          today=$(date -u +%F)
+          title="Standards watch: $NEW unseen act(s), $today"
+          {
+            echo "## Standards watch"
+            echo
+            echo "The weekly Cellar query ([workflow run]($RUN_URL), $today) returned $NEW act(s) that \`dpp-standards/watch-state.yaml\` has not seen:"
+            echo
+            cat results/watch.md
+            echo
+            echo "### Next step (a human, locally)"
+            echo
+            echo "Classify each act by the disposition rule in \`dpp-standards/PLAYBOOK.md\`, section Watch, and append it to \`watch-state.yaml\` with the run id: an act that joins the scope gets its Extract as its own source; a corrigendum or consolidation of a registered text becomes a \`text\` trigger for it; anything else in doubt is \`pending decision\` for the map owner; the rest is \`out of scope\`. The PR that records the dispositions closes this issue."
+          } > body.md
+          # One issue at a time: the open one whose title starts with the prefix is updated in place.
+          existing=$(gh issue list --label conformance --state open --limit 100 --json number,title \
+            --jq '[.[] | select(.title | startswith("Standards watch:"))] | .[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file body.md
+            gh issue comment "$existing" --body "Updated on $today: $NEW unseen act(s), [workflow run]($RUN_URL)."
+            echo "updated #$existing"
+          else
+            gh issue create --title "$title" --label conformance --body-file body.md
+          fi

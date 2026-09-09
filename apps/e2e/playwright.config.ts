@@ -26,7 +26,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   /* `open: "never"` matters on CI: the bare "html" reporter tries to open a browser. */
-  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "html",
+  /* The conformance reporter writes the Check report when Checks ran (tests/conformance/reporter.ts). */
+  reporter: process.env.CI
+    ? [["github"], ["html", { open: "never" }], ["./tests/conformance/reporter.ts"]]
+    : [["list"], ["html"], ["./tests/conformance/reporter.ts"]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
@@ -39,10 +42,10 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     // Setup project
-    { name: "setup", testMatch: /.*\.setup\.ts/ },
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "chromium",
-      testIgnore: /account\//,
+      testIgnore: /account\/|conformance\//,
       use: {
         ...devices["Desktop Chrome"],
         // de-DE so renders before the profile locale is bootstrapped still match
@@ -55,7 +58,7 @@ export default defineConfig({
 
     {
       name: "firefox",
-      testIgnore: /account\//,
+      testIgnore: /account\/|conformance\//,
       use: {
         ...devices["Desktop Firefox"],
         // Use prepared auth state.
@@ -68,6 +71,44 @@ export default defineConfig({
       name: "webkit",
       testIgnore: /account\//,
       use: { ...devices["Desktop Safari"] },
+    },
+
+    // Conformance Checks (dpp-standards/PLAYBOOK.md): black-box evidence for the Conformance
+
+    // Matrix. conformance-setup mints the published subject once; the checks read it. Run with
+
+    // `pnpm --filter e2e conformance`; never part of the browser projects above.
+
+    {
+      name: "conformance-setup",
+
+      testMatch: /conformance\/.*\.setup\.ts/,
+
+      use: {
+        ...devices["Desktop Chrome"],
+
+        locale: "de-DE",
+
+        storageState: "playwright/.auth/user.json",
+      },
+
+      dependencies: ["setup"],
+    },
+
+    {
+      name: "conformance",
+
+      testMatch: /conformance\/.*\.spec\.ts/,
+
+      use: {
+        ...devices["Desktop Chrome"],
+
+        locale: "de-DE",
+
+        storageState: "playwright/.auth/user.json",
+      },
+
+      dependencies: ["conformance-setup"],
     },
 
     // Account / email-change + profile specs. Self-contained: each test mints a

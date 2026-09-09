@@ -1,0 +1,1375 @@
+# Conformance Matrix: DET (32026R0405). Rules: dpp-standards/README.md.
+# Criteria extracted from research/criteria-sector-laws.md and verified against the Cellar text on 2026-09-07 (ticket #830); assessments are added in place, one per Criterion.
+# Clauses outside Chapter V, Art. 30(2)-(3) and Annex VI that the paraphrases cite (Art. 2, 8, 17-20, 29, Annex IV, V, VII) are not extracted; the ENs carry presumption of conformity under ESPR only, so operationalisedBy stays empty until the Art. 21(10) implementing act names standards.
+# A Mirror (mirrors: <ESPR id>) restates the ESPR Criterion with no delta and inherits its Assessment; own rows name the related ESPR id in the paraphrase.
+standard: DET
+edition: 32026R0405
+extractedFrom: dpp-standards/research/criteria-sector-laws.md
+extractedAt: 2026-09-07
+sections:
+  - id: Art21
+    title: Article 21 – Digital product passport
+  - id: Art22
+    title: Article 22 – Technical design and operation of the digital product passport
+  - id: Art23
+    title: Article 23 – Data carriers and unique identifiers
+  - id: Art24
+    title: Article 24 – Digital product passport registry
+  - id: Art25
+    title: Article 25 – Customs controls relating to the digital product passport
+  - id: Art30
+    title: Article 30 – Delegated powers (paragraphs 2 and 3)
+  - id: AnnexVI
+    title: Annex VI – Digital product passport
+criteria:
+  # ---- Article 21 -----------------------------------------------------------------------------
+  - id: DET-Art21(1)
+    section: Art21
+    clause: Art. 21(1)
+    paraphrase: Before a detergent or end-user surfactant is placed on the market its manufacturer creates a DPP for it that meets Art. 21 and Art. 22. Related to ESPR-Art9(1), with the creator fixed as the manufacturer and no delegated act in between; the accuracy limb is Art. 21(2)(d).
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/presentation/passport.controller.ts
+          note: POST /passports from a template or an environment, PUT status, AAS update routes
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: createPassportFromTemplate, status changes, draft-only delete
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: public URL resolution and freeze on publish
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: creation from a template, publish freezes permalinks
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing freezes the permalink and opens it to anonymous visitors
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: the three lifecycle stages and what each allows; no page on creating, editing or serving a passport
+      notes: "Software part: a passport the manufacturer can create before placing the product on the market, and that meets Art. 21 and 22. Credited: a passport is created from a template or an environment, held as a draft, published and then served publicly at its permalink and through the GS1 resolver; every change is recorded. Missing: the passport does not meet Art. 21 and 22 as this run assesses them, above all the Annex VI content (#837, the cluster whose delivery makes a passport an Art. 21 passport), the Member-State languages (#838), the single-passport and separation rules (#839), the no-tracking rule (#840), the external access classes (#821), the model granularity (#597) and the print-ready carrier (#489); the operator docs cover the lifecycle stages only (#828). Same reading as CPR-Art75(2)(b) after its adversarial review: the generic mechanics are credited, the sector content is the gap. The creator is fixed as the manufacturer: any organisation member can create a passport, which is the manufacturer's own affair."
+      gapIssue: 837
+  - id: DET-Art21(2)(a)
+    section: Art21
+    clause: Art. 21(2)(a)
+    paraphrase: The DPP corresponds to a specific model of detergent or end-user surfactant. Related to ESPR-Art10(1)(f) and ESPR-Art9(2)(d), with the granularity fixed at model level by the law itself (batch or item only by the Art. 21(7) derogation).
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: granularity is model when a GS1 identity has no batch or serial
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/unique-product-identifier-type.ts
+          note: Gs1Granularity model, batch, item
+        - type: code
+          ref: apps/main/src/aas/presentation/environment.service.ts
+          note: assetKind Instance for passports, Type for templates
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+          note: model granularity for a bare GTIN
+      notes: "The Regulation fixes the passport at the model of detergent or end-user surfactant (recital 45: the same model as long as neither the formula nor the production changes the label). Credited: a GS1 identity with a bare GTIN is a model-level identifier and resolves as one, and several identifiers may sit on a passport, so a model passport can be built. Missing: no passport-level granularity or model attribute, an open-dpp UUID identifier carries no level, nothing ties a passport to a label version or formula so that a change forcing a new label yields a new model passport, and a passport's AAS asset is always assetKind Instance while Type is reserved for templates, so a model passport cannot declare itself one (#597; same finding as CPR-Art76(2)(d), ESPR-Art9(2)(d) and REG1778 Art. 8(3)). The batch or item override is DET-Art21(7)."
+      gapIssue: 597
+  - id: DET-Art21(2)(b)
+    section: Art21
+    clause: Art. 21(2)(b)
+    paraphrase: The DPP states that the product's compliance with the Regulation has been demonstrated (the declaration-of-conformity statement inside the passport; content detail in Annex VI Part A(g)). No ESPR counterpart.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: a text Property renders in the public view
+      notes: "The passport states that the product's compliance with the Regulation has been demonstrated (recital 49: the manufacturer declares compliance and takes responsibility; the wording is DET-AnnexVI-A(g)). Credited: a text Property holding the statement is modellable in a template, carries a semanticId and renders in the public view. Missing: no compliance-statement element or fixed text ships, nothing marks a passport as carrying the statement, and a multilingual statement is not rendered (#838); tracked in the content cluster #837. No ESPR counterpart."
+      gapIssue: 837
+  - id: DET-Art21(2)(c)
+    section: Art21
+    clause: Art. 21(2)(c)
+    paraphrase: The DPP contains at least the data of Annex VI Part A. Related to ESPR-Art9(2)(a), with the mandatory data set fixed in the law instead of a delegated act.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: a passport is an AAS Environment per product, created from a template
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+      notes: "The mandatory data set is fixed in the law (Annex VI Part A) instead of a delegated act. Credited: templates are freely composable per organisation and passports are created from them, so an operator can build the Part A set by hand, element by element, as the Annex VI rows record. Missing: no Annex VI Part A template or submodel ships, and nothing checks that a passport holds the whole set before it is published (#837; a validation against a data model is the semantic-repository question, #826). Same shape as ESPR-Art9(2)(a), with the set fixed."
+      gapIssue: 837
+  - id: DET-Art21(2)(d)
+    section: Art21
+    clause: Art. 21(2)(d)
+    paraphrase: The DPP is accurate, complete and up to date.
+    applicability: mixed
+    areas:
+      - 1
+      - 6
+    mirrors: ESPR-Art9(1)
+  - id: DET-Art21(2)(e)
+    section: Art21
+    clause: Art. 21(2)(e)
+    paraphrase: The DPP is available in the language or languages required by the Member State in which the product is made available on the market. No ESPR counterpart (multilingual passport content).
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: one text per language in the data model and the API
+        - type: code
+          ref: packages/dto/src/aas/enums/language-enum.ts
+          note: fixed list of 29 language codes; Irish (ga) and Maltese (mt) absent
+        - type: code
+          ref: apps/client/src/components/aas/form/LanguageTextArrayForm.vue
+          note: element and submodel labels editable per language
+        - type: code
+          ref: apps/client/src/components/presentation/PresentationLanguageSelect.vue
+          note: language switcher of the public view, built from the passport's language tags
+        - type: code
+          ref: apps/client/src/composables/presentation-language.ts
+          note: the chosen language travels in the ?lang= query parameter as a BCP 47 tag
+        - type: code
+          ref: apps/client/src/composables/language.ts
+          note: browser preference picks the initial language; per-text resolution with en fallback
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: "no MultiLanguageProperty branch: the value renders blank"
+        - type: code
+          ref: apps/client/src/composables/aas-editor.ts
+          note: the element menu offers no MultiLanguageProperty
+        - type: test
+          ref: apps/client/src/composables/language.spec.ts
+          note: language resolution and preferred-language selection
+      notes: "Software part: let the operator enter the passport in every language a Member State requires and show a visitor one of them. Credited: MultiLanguageProperty in the data model and API, per-language labels editable in the client, a language switcher on the public view driven by the languages present in the passport, a shareable ?lang= choice and browser-preference detection. Missing: a MultiLanguageProperty value is not rendered in the public view (label shown, value blank; also empty in tables) and cannot be created or edited in the client, so values are single-language Properties duplicated by hand; the language list behind every language text lacks Irish and Maltese, so two EU official languages cannot be entered at all; the public view's own strings exist in English and German only; nothing checks completeness per language; no operator documentation (#838). No ESPR counterpart; the same clause returns in the Toy Safety Regulation Art. 19(2)(e)."
+      gapIssue: 838
+  - id: DET-Art21(2)(f)
+    section: Art21
+    clause: Art. 21(2)(f)
+    paraphrase: The DPP is accessible to consumers or other end-users, market surveillance authorities, customs authorities, the Commission and other economic operators according to the access rights the Art. 21(10)(d) implementing act lays down. Related to ESPR-Art11(b), with a closed and shorter actor list (no repairers, civil society or trade unions) and the rights set by an implementing act.
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+        - type: code
+          ref: apps/main/src/aas/domain/security/subject-attributes.ts
+          note: "role hierarchy: admin, owner, member, user, anonymous"
+        - type: code
+          ref: apps/client/src/components/aas/PermissionsForm.vue
+          note: editor UI to grant or withdraw the anonymous read right per element
+        - type: test
+          ref: apps/main/src/aas/domain/security/security.spec.ts
+          note: access rules per role and element
+        - type: test
+          ref: apps/main/src/aas/presentation/environment.service.spec.ts
+          note: an anonymous subject is refused on a hidden submodel (ForbiddenError)
+      notes: "Software part: give consumers and other end-users, market surveillance and customs authorities, the Commission and other economic operators access to the data meant for each, as the Art. 21(10)(d) implementing act will fix (it does not exist yet). Credited: per-submodel and per-element visibility for the roles anonymous, organisation member, organisation owner and instance admin; a published passport is public by default and any element can be withheld from anonymous readers, which covers the consumer class today. Missing: none of the named external classes (market surveillance, customs, the Commission, another economic operator) can be expressed, so information cannot be shown to an authority and withheld from the public, and there is no credential-based grant (#821; same finding as ESPR-Art9(2)(f), CPR-Art75(2)(c) and BATT-Art77(2)). Free access and the no-registration rule are DET-Art22(c) (Mirror) and DET-Art22(d). Re-validate when the implementing act fixes the access rights."
+      gapIssue: 821
+  - id: DET-Art21(2)(g)
+    section: Art21
+    clause: Art. 21(2)(g)
+    paraphrase: The DPP stays available for 10 years from the date the product is placed on the market, including after insolvency, liquidation or cessation of activity in the Union of the operator that created it. Related to ESPR-Art11(e) and ESPR-Art9(2)(i), with the period fixed at 10 years by the law.
+    applicability: mixed
+    areas:
+      - 6
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/application/services/passport.service.ts
+          note: deletePassport refuses non-draft passports
+        - type: code
+          ref: apps/main/src/digital-product-document/domain/digital-product-document-status.ts
+          note: Draft -> Published -> Archived -> Restore
+        - type: test
+          ref: apps/main/src/passports/application/services/passport.service.spec.ts
+          note: deletePassport rejects non-draft passports
+        - type: doc
+          ref: docs/guides/digital-product-document/lifecycle.md
+          note: what each stage allows
+      notes: "Software part: keep the passport available for 10 years from the placing on the market (Art. 8(3) puts the same 10 years on the manufacturer's keeping and updating duty), including after the creator's insolvency, liquidation or cessation. Credited: published and archived passports cannot be deleted and archiving is reversible, so a passport stays in the system indefinitely, and the lifecycle is documented. Missing: no representation of an availability period or of the placing-on-the-market date it runs from, an archived passport is no longer served publicly (the permalink service requires Published), no back-up (#596; the back-up copy itself is the Mirror DET-Art21(12)(c)) and no escrow, handover or continuity once the operator ceases (#825). Same finding as ESPR-Art9(2)(i) and CPR-Art76(2)(h), with the period fixed at 10 years."
+      gapIssue: 825
+  - id: DET-Art21(2)(h)
+    section: Art21
+    clause: Art. 21(2)(h)
+    paraphrase: The DPP is connected through a data carrier to a persistent unique product identifier.
+    applicability: software
+    areas:
+      - 3
+      - 4
+    mirrors: ESPR-Art10(1)(a)
+  - id: DET-Art21(2)(i)
+    section: Art21
+    clause: Art. 21(2)(i)
+    paraphrase: The DPP fulfils the specific and technical requirements the Art. 21(10) implementing act lays down. Not assessable until that act exists; its content then enters the matrix as an act under a registered source.
+    applicability: software
+    areas:
+      - 12
+  - id: DET-Art21(3)
+    section: Art21
+    clause: Art. 21(3)
+    paraphrase: Besides the Annex VI Part A data the DPP may contain the Annex VI Part B data (the labelling information). Related to ESPR-Art10(2) and ESPR-AnnexIII-para3, with the optional set fixed in the law.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list for the dosage table
+      notes: "Optional content fixed in the law: the Annex VI Part B labelling information (Art. 17(3) and (4), that is the Annex V general labelling and dosage information). Credited: templates accept any additional submodel or element, so the label text and a dosage table are addable today. Missing: no Annex V label or dosage structure ships to add as such, and a multilingual label text is not rendered in the public view (#838); tracked with the content cluster #837, the content row itself is DET-AnnexVI-B. Same shape as ESPR-Art10(2) and ESPR-AnnexIII-para3, with the optional set fixed."
+      gapIssue: 837
+  - id: DET-Art21(4)(a)
+    section: Art21
+    clause: Art. 21(4)(a)
+    paraphrase: The data carrier is printed or otherwise physically present on the label or the packaging, or on the accompanying documents for products transported in bulk, as the Art. 21(10) implementing act specifies. Related to ESPR-Art10(1)(b), with the label named and the bulk-transport documents added.
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: QR code rendered into a canvas
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: a QR code per permalink, URL copyable
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: QR dialog of a passport
+        - type: test
+          ref: apps/e2e/tests/passport-identity/permalink-crud.spec.ts
+          note: "the QR dialog of a permalink: URL text and copy button (the canvas itself is not asserted)"
+      notes: "Software part: a carrier the manufacturer can print on the label or packaging, or on the documents accompanying a bulk consignment, as the Art. 21(10) implementing act will specify (it does not exist yet). Credited: a QR code is rendered for every permalink and for the GS1 Digital Link. Missing: the QR exists only as an on-screen canvas, with no image download (PNG or SVG), no print layout and no server endpoint returning the carrier, so the manufacturer must regenerate the code from the copied URL with another tool; no GS1 2D code with FNC1 either (#489). The operator docs mention neither permalinks nor QR codes (#828). Placing it is the manufacturer's act; re-validate when the act fixes the placement. Same finding as CPR-Art77(1)(b)."
+      gapIssue: 489
+  - id: DET-Art21(4)(b)
+    section: Art21
+    clause: Art. 21(4)(b)
+    paraphrase: The data carrier is indelible. A physical property of the printed carrier; no ESPR counterpart.
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: the indelibility of the printed carrier is a property of the label or packaging print, not of the software. The carrier image the operator prints is assessed on DET-Art21(4)(a)."
+  - id: DET-Art21(4)(c)
+    section: Art21
+    clause: Art. 21(4)(c)
+    paraphrase: The data carrier is positioned so that digital devices can process it automatically. Related to ESPR-Art9(2)(c), with machine processability fixed in the law instead of a delegated act; the carrier format is the software part, its placement the operator's.
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/QrCode.vue
+          note: standard QR symbology from the qrcode library, one-module quiet zone
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: the encoded URI is a GS1 Digital Link
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: a scanned key redirects to the public view
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+          note: a scanned key on a published passport redirects to its view
+      notes: "Machine processability fixed in the law instead of a delegated act; the carrier format is the software part, its positioning the operator's. Credited: the carrier is a standard QR symbology encoding a URL (permalink or GS1 Digital Link) that any camera application processes, and a scan resolves to the passport. Missing: no print-ready artwork with symbol size, quiet zone and error-correction guidance, so machine readability on the printed label depends on what the operator regenerates elsewhere, and no verification of the symbol against ISO/IEC 18004 or the GS1 2D specifications (#489; the carrier standards are the EN 18220 ticket #757). Positioning on the label so that devices read it is the operator's act."
+      gapIssue: 489
+  - id: DET-Art21(4)(d)
+    section: Art21
+    clause: Art. 21(4)(d)
+    paraphrase: For products made available through refill, the data carrier is present on the refill station. A placement duty; no ESPR counterpart.
+    applicability: operator
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: placing the carrier on the refill station (and on every refilled packaging, Art. 17(2)) is the act of the operator selling through refill. The same carrier image serves; nothing refill-specific is needed from the software."
+  - id: DET-Art21(4)(e)
+    section: Art21
+    clause: Art. 21(4)(e)
+    paraphrase: The data carrier is accompanied by the statement "Please scan for more comprehensive information on the product" or a similar statement. No ESPR counterpart; the software part is a carrier rendering that carries the caption.
+    applicability: mixed
+    areas:
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: the only texts near the code are the kind label and the URL
+        - type: code
+          ref: apps/client/src/translations/en-US.json
+          note: no scan-for-information caption string exists
+        - type: code
+          ref: apps/client/src/components/presentation/PassportQrCodeDialog.vue
+          note: draft and archived warnings only
+      notes: "The printed carrier is accompanied by the statement asking the reader to scan for more comprehensive product information, or a similar one. Software part: a carrier artwork that carries the caption, so the label designer need not add it. Missing: no caption is rendered next to the QR code and no exportable artwork exists at all (#489, told this caption requirement in a comment); the operator adds the statement when designing the label, unguided by the docs (#828). No ESPR counterpart."
+      gapIssue: 489
+  - id: DET-Art21(4)(f)
+    section: Art21
+    clause: Art. 21(4)(f)
+    paraphrase: The data carrier is visible to consumers or other end-users before any purchase and to market surveillance authorities, including, where applicable, in distance sales. Related to ESPR-Art9(2)(e), with the pre-purchase reachability fixed in the law and visibility to authorities added.
+    applicability: mixed
+    areas:
+      - 4
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: public /p/:id routes without a session
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: GS1 Digital Link resolver
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-identity.controller.ts
+          note: GET /passports/:id/gs1-identity returns the Digital Link
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR code of the permalink or Digital Link, URL copyable
+        - type: test
+          ref: apps/e2e/tests/passport-identity/gs1-resolver.spec.ts
+          note: a scanned key redirects to the presentation view
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: publishing opens the permalink to anonymous visitors
+        - type: check
+          ref: resolver.redirect-published
+          result: passed
+          date: 2026-09-07
+      notes: "Pre-purchase reachability fixed in the law, with visibility to market surveillance authorities added and distance sales covered (Art. 20: the offer shows a digital copy of the carrier or the unique product identifier). Software part: a link or code a seller can show before the sale, online or in the shop, that an authority can use too. Credited: the public permalink, the GS1 Digital Link resolved by the built-in resolver (Check resolver.redirect-published), a QR code of either and anonymous access once the passport is published; an authority reaches the same public view. Missing: no downloadable carrier image for the distance-sales offer (#489, on DET-Art21(4)(a)) and no operator documentation on sharing a passport before purchase (#828). Same finding as ESPR-Art9(2)(e)."
+      gapIssue: 828
+  - id: DET-Art21(5)
+    section: Art21
+    clause: Art. 21(5)
+    paraphrase: Where other Union law requires product information to be available via a data carrier, a single data carrier provides the information required under this Regulation and that other law. No ESPR counterpart.
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/application/services/permalink.application.service.ts
+          note: one permalink or Digital Link resolves to the whole passport
+        - type: code
+          ref: apps/main/src/permalink/infrastructure/permalink.repository.ts
+          note: "findAllByPassportId: several permalinks per passport"
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: submodels as separate sections of one passport
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: the published passport is served whole at its permalink
+      notes: "A single data carrier provides the information this Regulation and other Union law require through a carrier; the digital label of Art. 19 is reached through the same carrier (Art. 19(1)(d)). Credited: one carrier resolves to the whole passport, whose submodels can hold the detergent data, the Annex V label and any other act's data as separate sections, so one QR code can serve them all. Missing: nothing marks which submodel serves which act or the digital label, so a visitor or authority cannot tell the data sets apart by their legal basis (#839); a passport may carry several carriers and nothing tells the operator that one must serve all acts, the docs being silent on carriers (#828). No ESPR counterpart."
+      gapIssue: 839
+  - id: DET-Art21(6)
+    section: Art21
+    clause: Art. 21(6)
+    paraphrase: Where other Union law applying to the product requires a DPP, a single DPP is created holding the data required under this Regulation and the data required by that other law. No ESPR counterpart.
+    applicability: software
+    areas:
+      - 2
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/passports/domain/passport.ts
+          note: one passport is one AAS Environment per product
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: any number of submodels in one passport
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: a template composes the submodels of several acts
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element, the only place a legal basis could be named
+      notes: "Where other Union law also requires a passport, a single one holds the data sets of both acts (recital 46: one passport, fully interoperable). Credited: a passport is one AAS environment with any number of submodels, so the detergent data set and another act's data set sit in one passport under one identity. Missing: no notion of the legal basis of a submodel or element (a semanticId can name it by convention, nothing enforces or renders it), no shipped submodels per act to assemble (#837, #827) and no completeness check per act (#839). No ESPR counterpart; the same clause returns in the Toy Safety Regulation Art. 19(7)."
+      gapIssue: 839
+  - id: DET-Art21(7)
+    section: Art21
+    clause: Art. 21(7)
+    paraphrase: By derogation from Art. 21(2)(a), where other Union law requires the DPP at batch or item level, the DPP under this Regulation may be issued at that level. No ESPR counterpart (granularity override).
+    applicability: software
+    areas:
+      - 3
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch (AI 10) and serial (AI 21); granularity derived from the parts
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: resolver routes GTIN, GTIN plus batch and GTIN plus serial keys
+        - type: test
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.spec.ts
+          note: resolver routes per key shape
+        - type: test
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.spec.ts
+          note: batch and item granularity from the GS1 parts
+      notes: "The derogation lets the detergent passport be issued at batch or item level where other Union law requires that level. Credited: a GS1 identity with a batch (AI 10) or serial (AI 21) part yields a batch- or item-level identifier, the resolver routes each shape, and a passport can be created per batch or item. Missing: no passport-level granularity attribute, no relationship between a model passport and its batch or item passports (so the shared Annex VI model data would be copied per passport), and a UUID identifier carries no level (#597; the same finding as ESPR-Art9(2)(d)). Which other Union law triggers the override is the operator's determination."
+      gapIssue: 597
+  - id: DET-Art21(8)
+    section: Art21
+    clause: Art. 21(8)
+    paraphrase: Economic operators may make other information accessible through the data carrier, in which case it is clearly separated from the data required under this Regulation and, where relevant, other Union law. No ESPR counterpart.
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel.ts
+          note: submodels as separate sections
+        - type: code
+          ref: apps/client/src/components/presentation/Submodel.vue
+          note: the public view renders each submodel as its own titled section
+        - type: code
+          ref: apps/main/src/aas/domain/security/access-control.ts
+          note: per-submodel and per-element access rules
+      notes: "Other information an operator exposes through the carrier is clearly separated from the data required under this Regulation and other Union law (recital 50: separately and clearly distinguishable, for authorities and consumers). Credited: submodels are separate titled sections of the public view, so voluntary information can be kept in a submodel of its own. Missing: nothing distinguishes a required data set from voluntary information by legal basis in the view or the API, so the separation rests on the operator's naming discipline (#839). No ESPR counterpart."
+      gapIssue: 839
+  - id: DET-Art21(9)
+    section: Art21
+    clause: Art. 21(9)
+    paraphrase: By creating the DPP the manufacturer assumes responsibility for the product's compliance with the Regulation.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: by creating the passport the manufacturer assumes responsibility for the product's compliance (recital 49). A legal consequence of the act of creation, no software surface; the sole-responsibility indication as passport content is DET-AnnexVI-A(e)."
+  - id: DET-Art21(10)
+    section: Art21
+    clause: Art. 21(10)
+    paraphrase: The Commission adopts, by the examination procedure, an implementing act with the basic technical requirements for the detergents DPP, covering at least points (a) to (f); it applies no earlier than 18 months after its entry into force save in justified cases. The counterpart of ESPR-Art9(2), as an implementing rather than a delegated act and without a deadline.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the Commission adopts the implementing act with the basic technical requirements of the detergent passport, and it has not been adopted (watch entry of DET in sources.yaml); it applies no earlier than 18 months after its entry into force. The software rows of this run record what open-dpp offers today; the rows that act may fix or change are the carrier rows (DET-Art21(4)(a), (c), (e); points (a), (b)), the standards row (DET-Art21(10)(c); point (c)), the access rows (DET-Art21(2)(f); point (d)), the actors that create or update and the arrangements for it (the Mirrors DET-Art21(10)(e), (f)) and the technical-requirements row DET-Art21(2)(i), which stays unassessed until the act exists. Its adoption is a text trigger for this file, and its content enters the matrix as an act under a registered source."
+  - id: DET-Art21(10)(a)
+    section: Art21
+    clause: Art. 21(10)(a)
+    paraphrase: Which data carrier or carriers are to be used.
+    applicability: mixed
+    areas:
+      - 4
+    mirrors: ESPR-Art9(2)(b)
+  - id: DET-Art21(10)(b)
+    section: Art21
+    clause: Art. 21(10)(b)
+    paraphrase: The layout in which the data carrier is presented and its positioning.
+    applicability: operator
+    areas:
+      - 4
+    mirrors: ESPR-Art9(2)(c)
+  - id: DET-Art21(10)(c)
+    section: Art21
+    clause: Art. 21(10)(c)
+    paraphrase: The technical elements of the DPP for which defined European or international standards are to be used. No ESPR counterpart; the only route by which the JTC 24 ENs can become binding for the detergents DPP.
+    applicability: commission
+    areas:
+      - 12
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the implementing act names the technical elements for which European or international standards are to be used. Not exercised, the act does not exist. Once it names the JTC 24 ENs or others, operationalisedBy is filled on the DET rows concerned and those rows are re-validated with a text trigger; the Regulation itself carries no presumption of conformity."
+  - id: DET-Art21(10)(d)
+    section: Art21
+    clause: Art. 21(10)(d)
+    paraphrase: Which actors have access to which data in the DPP.
+    applicability: mixed
+    areas:
+      - 5
+    mirrors: ESPR-Art9(2)(f)
+  - id: DET-Art21(10)(e)
+    section: Art21
+    clause: Art. 21(10)(e)
+    paraphrase: Which actors may create a DPP or update its data, and which data they may introduce or update.
+    applicability: mixed
+    areas:
+      - 5
+    mirrors: ESPR-Art9(2)(g)
+  - id: DET-Art21(10)(f)
+    section: Art21
+    clause: Art. 21(10)(f)
+    paraphrase: The detailed arrangements for introducing or updating data.
+    applicability: mixed
+    areas:
+      - 1
+      - 5
+      - 6
+    mirrors: ESPR-Art9(2)(h)
+  - id: DET-Art21(11)
+    section: Art21
+    clause: Art. 21(11)
+    paraphrase: Actors that update DPP data are responsible for the accuracy of the data they provide, unless they act on behalf of the manufacturer.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: an actor that updates passport data answers for its accuracy unless it acts on the manufacturer's behalf. A liability rule; the activity history (apps/main/src/activity-history/) records who changed what, which supports it but is not required by it."
+  - id: DET-Art21(12)(a)
+    section: Art21
+    clause: Art. 21(12)(a)
+    paraphrase: The operator placing the product on the market gives distributors and online marketplaces a digital copy of the data carrier or of the unique product identifier so that customers without physical access can reach it.
+    applicability: mixed
+    areas:
+      - 4
+      - 3
+    mirrors: ESPR-Art10(3)(a)
+  - id: DET-Art21(12)(b)
+    section: Art21
+    clause: Art. 21(12)(b)
+    paraphrase: That digital copy or a web link is provided free of charge, promptly and within five working days of a request.
+    applicability: operator
+    mirrors: ESPR-Art10(3)(b)
+  - id: DET-Art21(12)(c)
+    section: Art21
+    clause: Art. 21(12)(c)
+    paraphrase: The operator placing the product on the market makes a back-up copy of the DPP available through a DPP service provider.
+    applicability: mixed
+    areas:
+      - 6
+      - 2
+    mirrors: ESPR-Art10(4)
+  # ---- Article 22 -----------------------------------------------------------------------------
+  - id: DET-Art22(a)
+    section: Art22
+    clause: Art. 22(a)
+    paraphrase: The DPP is fully interoperable with other DPPs required by Union law in the technical, semantic and organisational aspects of end-to-end communication and data transfer.
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 7
+      - 8
+    mirrors: ESPR-Art11(a)
+  - id: DET-Art22(b)
+    section: Art22
+    clause: Art. 22(b)
+    paraphrase: All DPP data are based on open standards in an interoperable format and, as appropriate, machine-readable, structured, searchable and transferable through an open interoperable data exchange network without vendor lock-in.
+    applicability: software
+    areas:
+      - 1
+      - 2
+      - 13
+    mirrors: ESPR-Art10(1)(d)
+  - id: DET-Art22(c)
+    section: Art22
+    clause: Art. 22(c)
+    paraphrase: Consumers or other end-users, economic operators, competent national authorities, customs authorities, the Commission and other relevant actors have free access to the DPP according to their access rights under Union law.
+    applicability: software
+    areas:
+      - 5
+      - 11
+    mirrors: ESPR-Art11(b)
+  - id: DET-Art22(d)
+    section: Art22
+    clause: Art. 22(d)
+    paraphrase: Consumers and other end-users are not required to register or to provide a password to access the DPP. No ESPR counterpart.
+    applicability: software
+    areas:
+      - 5
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Met
+      operational: false
+      evidence:
+        - type: code
+          ref: apps/main/src/permalink/presentation/permalink.controller.ts
+          note: "GET /p/:id and the AAS read routes under it are @OptionalAuth: no session needed"
+        - type: code
+          ref: apps/main/src/identity/auth/infrastructure/guards/auth.guard.ts
+          note: an optional-auth route passes without a session
+        - type: code
+          ref: apps/client/src/router/routes/presentation/presentation.ts
+          note: the /p routes carry meta.public
+        - type: code
+          ref: apps/client/src/router/index.ts
+          note: the router guard redirects to sign-in only for routes without meta.public
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/gs1-resolver.controller.ts
+          note: the resolver routes are @OptionalAuth
+        - type: test
+          ref: apps/e2e/tests/passport-identity/publish-freeze.spec.ts
+          note: a cookie-less browser context gets 404 before and 200 after publication
+        - type: test
+          ref: apps/main/src/permalink/presentation/permalink.controller.spec.ts
+          note: the public permalink route serves a published passport to a request without a user
+        - type: check
+          ref: access.anonymous-reads-published
+          result: passed
+          date: 2026-09-07
+      notes: "Consumers and other end-users are not required to register or to provide a password to access the passport. A published passport is served at its permalink and through the GS1 resolver to anyone: the public routes carry no authentication requirement, the client's public routes never redirect to sign-in, and there is no account, password, CAPTCHA, cookie or consent gate on the way (verified in the code at d5f8219e, no such mechanism exists). Check access.anonymous-reads-published exercises the API limb against a live Instance from an empty browser context; its second assertion (the public view answers 200) is vacuous because the SPA shell answers 200 for any non-API path, so the view limb rests on the router-guard code and the E2E test rather than the Check (adversarial review, remark 1; a stronger Check asserting a rendered passport element and no sign-in form is a follow-up). Not operational: the property holds for every published passport by construction, the operator does nothing for it (publishing itself is DET-Art21(1)). Elements an operator withholds from anonymous readers are withheld from everyone outside the organisation, an access-rights choice under DET-Art21(2)(f), not a registration; the page-view counter that fires on the visit is DET-Art22(h). No ESPR counterpart; the same clause returns in the Toy Safety Regulation Art. 20(d)."
+  - id: DET-Art22(e)
+    section: Art22
+    clause: Art. 22(e)
+    paraphrase: The DPP is stored by the economic operator responsible for its creation or by DPP service providers.
+    applicability: mixed
+    areas:
+      - 6
+    mirrors: ESPR-Art11(c)
+  - id: DET-Art22(f)
+    section: Art22
+    clause: Art. 22(f)
+    paraphrase: A new DPP created for a product that already has one or more DPPs is linked to those original DPPs.
+    applicability: software
+    areas:
+      - 3
+      - 6
+    mirrors: ESPR-Art11(d)
+  - id: DET-Art22(g)
+    section: Art22
+    clause: Art. 22(g)
+    paraphrase: DPP service providers storing or processing the DPP do not sell, reuse or process its data beyond what the storage or processing service needs, unless the operator placing the product on the market agrees.
+    applicability: operator
+    mirrors: ESPR-Art11-sub2
+  - id: DET-Art22(h)
+    section: Art22
+    clause: Art. 22(h)
+    paraphrase: Economic operators do not track, analyse or use any usage information beyond what serving the DPP online strictly needs; in particular no personal data of the consumer or end-user is stored in the DPP without explicit consent under GDPR Art. 6. Related to ESPR-Art10(1)(e), with an explicit no-tracking and no-analytics prohibition added.
+    applicability: mixed
+    areas:
+      - 5
+      - 10
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/client/src/view/presentation/View.vue
+          note: addPageView() fires as soon as a passport loads in the public view
+        - type: code
+          ref: apps/client/src/stores/analytics.ts
+          note: posts the permalink and the full page URL, query string included
+        - type: code
+          ref: apps/main/src/analytics/presentation/passport-metric.controller.ts
+          note: POST /passport-metrics/page-views accepts anonymous calls; GET serves the aggregation to the organisation
+        - type: code
+          ref: apps/main/src/analytics/domain/passport-metric.ts
+          note: "two time-series documents per view: organisation, passport, template, URL or origin, minute timestamp; no IP, agent or visitor id"
+        - type: code
+          ref: apps/main/src/common/middleware/logger.middleware.ts
+          note: every request logged with ip and userAgent, 2xx at debug
+        - type: code
+          ref: apps/main/src/main.ts
+          note: debug level enabled; no cookie set on public routes
+        - type: code
+          ref: apps/main/src/ai/presentation/chat.gateway.ts
+          note: the anonymous chat logs each visitor message verbatim before forwarding it
+        - type: code
+          ref: apps/client/index.html
+          note: no third-party script, font or pixel
+        - type: test
+          ref: apps/main/src/analytics/domain/passport-metric.spec.ts
+          note: what a page view stores
+        - type: test
+          ref: apps/client/src/stores/analytics.spec.ts
+          note: the page-view call from the public view
+      notes: "Two limbs. Personal data of the consumer or end-user in the passport: met in substance, the public view is read-only, stores nothing a visitor enters, sets no cookie and loads nothing from a third party; the anonymous AI chat (off unless an organisation enables it) keeps no conversation but logs each message verbatim and forwards it to the configured third-party model. Usage information: not met as shipped. A first-party page-view counter runs on every anonymous visit and records organisation, passport, template, the full page URL and a minute-granularity timestamp in a time-series collection that the owning organisation queries; it stores no IP, user agent or visitor identifier, so it is an aggregate counter, but it analyses usage for the operator's benefit rather than for serving the passport and cannot be switched off by the instance or the organisation. The request log records IP address and user agent of every request, successful anonymous reads included, at a level the bootstrap enables, and only the format is configurable. Both are tracked in #840; the privacy notice and the needless session call on load are for the Privacy Review (#730). Restates ESPR-Art10(1)(e) (the personal-data limb, unassessed until #758) with the no-tracking prohibition added; the same clause returns in the Toy Safety Regulation Art. 20(h)."
+      gapIssue: 840
+  - id: DET-Art22(i)
+    section: Art22
+    clause: Art. 22(i)
+    paraphrase: Data authentication, reliability and integrity are ensured.
+    applicability: software
+    areas:
+      - 10
+    mirrors: ESPR-Art11(g)
+  - id: DET-Art22(j)
+    section: Art22
+    clause: Art. 22(j)
+    paraphrase: The DPP is designed and operated with a high level of security and privacy and so that fraud is avoided.
+    applicability: software
+    areas:
+      - 10
+      - 5
+    mirrors: ESPR-Art11(h)
+  # ---- Article 23 -----------------------------------------------------------------------------
+  - id: DET-Art23(1)
+    section: Art23
+    clause: Art. 23(1)
+    paraphrase: The data carrier, the unique product identifiers and the unique operator identifiers required under this Regulation comply with the standards applicable to them under ESPR. Folds ESPR-Art10(1)(c) (carrier and product identifier), ESPR-Art12(1) (operator identifiers) and ESPR-AnnexIII-para2 (the ISO/IEC 15459 series and the harmonised standards cited in the OJ) into one clause.
+    applicability: software
+    areas:
+      - 3
+      - 4
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.ts
+          note: GS1 Digital Link builder and validation
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch, serial; open-dpp UUID
+        - type: code
+          ref: apps/client/src/components/permalinks/PermalinkQrCode.vue
+          note: QR data carrier of the permalink or Digital Link
+        - type: test
+          ref: packages/dto/src/unique-product-identifiers/gs1/gs1-digital-link.spec.ts
+          note: Digital Link building and GTIN normalisation
+        - type: check
+          ref: identifiers.gs1-syntax-valid
+          result: passed
+          date: 2026-09-07
+      notes: "The carrier, the unique product identifiers and the unique operator identifiers follow the standards ESPR applies to them (ESPR Art. 10(1)(c), Art. 12(1) and the Annex III second paragraph: the ISO/IEC 15459 series and the harmonised standards cited in the OJ). Credited for the product side: the carriers encode GS1 Digital Link URIs that validate in the GS1 Syntax Engine (Check identifiers.gs1-syntax-valid), and GS1 is an ISO/IEC 15459 issuing agency; the QR carrier is a standard symbology. Missing: ISO/IEC 15459 conformance is neither asserted nor checked and the standard is unread (#518; same finding as CPR-Art77(1)(c) and BATT-Art77(3)-sub2), the QR symbology itself is not verified, and unique operator identifiers do not exist at all (no GLN, EORI or other legal-entity scheme on an organisation; #579, recorded as passport content on DET-AnnexVI-A(b)). gapIssue #518 because the row is about the identifier and carrier standards; the standards themselves (EN 18219, EN 18220) are the Tier B tickets #756 and #757."
+      gapIssue: 518
+  - id: DET-Art23(2)
+    section: Art23
+    clause: Art. 23(2)
+    paraphrase: Where a unique operator identifier is not yet available, ESPR Art. 12(2) applies to the operators that create or update a DPP under this Regulation (ESPR-Art12(2)); the identifier and carrier lifecycle rules of ESPR Art. 12(4) delegated acts also apply (ESPR-Art12(4)(a), (b)). Two ESPR provisions imported by one paragraph.
+    applicability: operator
+    areas:
+      - 3
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: the ESPR Art. 12(2) procedure for an operator without a unique operator identifier (the operator obtains one) and the ESPR Art. 12(4) lifecycle rules for identifiers and carriers, which no delegated act has fixed yet. The paragraph-by-paragraph Assessment of ESPR Art. 12 belongs to the identifiers ticket #756 (EN 18219); the absence of any operator identifier in open-dpp is recorded on DET-Art23(1) and DET-AnnexVI-A(b). Extract note (adversarial review, remark 5): the second sentence imports the ESPR Art. 12(4) lifecycle rules, which bind the software once such an act exists; the first Art. 12(4) act re-opens this row's applicability in an Extract of DET."
+  - id: DET-Art23(3)
+    section: Art23
+    clause: Art. 23(3)
+    paraphrase: Where the product also needs a DPP under an ESPR Art. 4 delegated act or other Union law, the unique product identifier, the unique operator identifier and the Art. 24(2) unique registration identifier are the same under both regimes. No ESPR counterpart (identifier reuse across regimes).
+    applicability: software
+    areas:
+      - 3
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.schema.ts
+          note: canonical identifier value globally unique across passports
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity or open-dpp UUID, several per passport
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: the passport's identifiers listed through the API
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has a name and slug, no operator identifier
+        - type: test
+          ref: apps/main/src/unique-product-identifier/infrastructure/unique-product-identifier.repository.spec.ts
+          note: global uniqueness of a bare GTIN across passports
+      notes: "Where the product also needs a passport under an ESPR delegated act or other Union law, its unique product identifier, unique operator identifier and unique registration identifier are the same under both regimes. Credited: one passport (DET-Art21(6)) carries one set of product identifiers that is globally unique across the instance, so the product identifier is the same by construction and a GS1 identity is the same everywhere. Missing: the unique operator identifier and the unique registration identifier do not exist in open-dpp at all (no operator identifier on an organisation, no registration-identifier field, no registry client; #579), so two of the three identifiers the clause equates cannot be the same because they cannot be held; and nothing stops an operator from minting a second passport with a different identifier for the other regime (#597, #839). Identifier reuse across regimes has no ESPR counterpart."
+      gapIssue: 579
+  - id: DET-Art23(4)
+    section: Art23
+    clause: Art. 23(4)
+    paraphrase: The procedures for issuing and verifying the digital credentials of actors with DPP access rights, established by ESPR Art. 11 fourth-subparagraph implementing acts, also apply under this Regulation.
+    applicability: commission
+    areas:
+      - 5
+    mirrors: ESPR-Art11-sub4
+  - id: DET-Art23(5)
+    section: Art23
+    clause: Art. 23(5)
+    paraphrase: The requirements DPP service providers must meet, set out in ESPR Art. 11 third-subparagraph delegated acts, also apply under this Regulation.
+    applicability: commission
+    mirrors: ESPR-Art11-sub3
+  # ---- Article 24 -----------------------------------------------------------------------------
+  - id: DET-Art24(1)-sub1
+    section: Art24
+    clause: Art. 24(1) first subparagraph
+    paraphrase: Before placing the product on the market the relevant economic operator uploads its unique product identifier and unique operator identifier into the registry established under ESPR Art. 13(1).
+    applicability: mixed
+    areas:
+      - 7
+      - 3
+    mirrors: ESPR-Art13(4)
+  - id: DET-Art24(1)-sub2
+    section: Art24
+    clause: Art. 24(1) second subparagraph
+    paraphrase: For products intended for release for free circulation the registry stores the product's commodity code. The commodity-code limb of ESPR-Art13(1), restated for detergents; the registry itself is the Commission's.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the registry stores the commodity code of a product intended for release for free circulation. The registry is the Commission's; the commodity code as passport content is the Mirror DET-AnnexVI-A(f) (ESPR-AnnexIII(d), Partial, #579) and the upload is the Mirror DET-Art24(1)-sub1 (ESPR-Art13(4), Gap, #579). Same reading as ESPR-Art13(1) and REG1778 Art. 8(7)(d)."
+  - id: DET-Art24(2)-sub1
+    section: Art24
+    clause: Art. 24(2) first subparagraph
+    paraphrase: On upload the registry automatically communicates to the operator a unique registration identifier tied to the uploaded identifiers; that communication is not proof of compliance.
+    applicability: mixed
+    areas:
+      - 7
+    mirrors: ESPR-Art13(5)
+  - id: DET-Art24(2)-sub2
+    section: Art24
+    clause: Art. 24(2) second subparagraph
+    paraphrase: The Commission may adopt, by the examination procedure, an implementing act on the registry arrangements for detergents, including the communication of the unique registration identifier. Related to ESPR-Art13(5)-sub2, whose act is Reg. 2026/1778; this is a separate, optional act for detergents.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: an optional implementing act on the registry arrangements for detergents, including the communication of the unique registration identifier. Not adopted; Regulation (EU) 2026/1778 (REG1778) is the ESPR counterpart already assessed. Its adoption joins the matrix as an act under a registered source."
+  - id: DET-Art24(3)
+    section: Art24
+    clause: Art. 24(3)
+    paraphrase: The Commission, competent national authorities and customs authorities have registry access for their duties under the Regulation.
+    applicability: commission
+    mirrors: ESPR-Art13(6)
+  # ---- Article 25 -----------------------------------------------------------------------------
+  - id: DET-Art25(1)
+    section: Art25
+    clause: Art. 25(1)
+    paraphrase: Detergents and end-user surfactants entering the Union market are subject to the verifications and other measures of Art. 25.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a scope clause subjecting products entering the Union market to the Art. 25 verifications. No software surface; the operator's side of customs is the Mirror DET-Art25(2) (ESPR-Art15(1), Gap, #579)."
+  - id: DET-Art25(2)
+    section: Art25
+    clause: Art. 25(2)
+    paraphrase: Whoever intends to place the product under the customs procedure "release for free circulation" provides or makes available the unique registration identifier to customs.
+    applicability: mixed
+    areas:
+      - 7
+    mirrors: ESPR-Art15(1)
+  - id: DET-Art25(3)
+    section: Art25
+    clause: Art. 25(3)
+    paraphrase: Customs release the product for free circulation only after verifying at least that the unique registration identifier and the commodity code match the registry data; release is not proof of compliance.
+    applicability: commission
+    mirrors: ESPR-Art15(2)
+  - id: DET-Art25(4)
+    section: Art25
+    clause: Art. 25(4)
+    paraphrase: The Art. 25(3) verification is electronic and automatic through the interconnection between the registry and the EU Customs Single Window Certificates Exchange System, and applies from 23 September 2029 or from the date that interconnection is operational, whichever is later. Related to ESPR-Art15(3), which sets the Commission's deadline for building that interconnection; this clause fixes when detergents use it.
+    applicability: commission
+    areas:
+      - 7
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: the automatic electronic verification through the interconnection between the registry and the EU Customs Single Window Certificates Exchange System, from 23 September 2029 or when the interconnection is operational. Built by the Commission (ESPR Art. 15(3), REG1778); an operator instance never talks to it. The date goes into the stage line of DET in sources.yaml."
+  - id: DET-Art25(5)
+    section: Art25
+    clause: Art. 25(5)
+    paraphrase: Customs authorities and the Commission may retrieve and use the DPP and registry data of the product for their duties under Union law, including risk management, customs controls and release for free circulation.
+    applicability: commission
+    areas:
+      - 5
+    mirrors: ESPR-Art15(4)
+  - id: DET-Art25(6)
+    section: Art25
+    clause: Art. 25(6)
+    paraphrase: The Art. 25 verifications and measures are carried out on the basis of the commodity codes and product descriptions listed in Annex VII.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: customs verifications run on the Annex VII list of commodity codes and product descriptions. An amendment of Annex VII (Art. 30(12)) is a text trigger only if it changes Chapter V or Annex VI, which it does not; the commodity code as passport content is DET-AnnexVI-A(f)."
+  - id: DET-Art25(7)
+    section: Art25
+    clause: Art. 25(7)
+    paraphrase: Art. 25 is without prejudice to other Union acts, in particular the Union Customs Code and Chapter VII of the Market Surveillance Regulation.
+    applicability: commission
+    mirrors: ESPR-Art15(5)
+  # ---- Article 30(2)-(3) ----------------------------------------------------------------------
+  - id: DET-Art30(2)
+    section: Art30
+    clause: Art. 30(2)
+    paraphrase: The Commission may adopt delegated acts amending Annex VI (the DPP information) to adapt it to technical and scientific progress and to the digital readiness of market surveillance authorities and end-users.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a power to amend Annex VI (the passport content) for technical and scientific progress and digital readiness. An amending act is a text trigger for this file (the Annex VI rows are re-extracted and re-validated)."
+  - id: DET-Art30(3)-sub1
+    section: Art30
+    clause: Art. 30(3) first subparagraph
+    paraphrase: The Commission may adopt delegated acts amending Art. 24(1) to require additional information drawn from Annex VI to be stored in the registry, weighing the criteria (a) to (d).
+    applicability: commission
+    areas:
+      - 7
+    mirrors: ESPR-Art13(2)
+  - id: DET-Art30(3)(a)
+    section: Art30
+    clause: Art. 30(3)(a)
+    paraphrase: Criterion for those acts, coherence with other relevant Union legal acts. No ESPR counterpart among the ESPR Art. 13(2) criteria.
+    applicability: commission
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Commission duty, assessed Not applicable by rule: a criterion (coherence with other Union acts) the Commission weighs when it requires more Annex VI information in the registry. No software surface; an act amending Art. 24(1) is a text trigger."
+  - id: DET-Art30(3)(b)
+    section: Art30
+    clause: Art. 30(3)(b)
+    paraphrase: Criterion, the need to allow verification of the DPP's authenticity.
+    applicability: commission
+    areas:
+      - 10
+    mirrors: ESPR-Art13(2)(a)
+  - id: DET-Art30(3)(c)
+    section: Art30
+    clause: Art. 30(3)(c)
+    paraphrase: Criterion, the relevance of the information for more efficient and effective market surveillance checks and customs controls.
+    applicability: commission
+    mirrors: ESPR-Art13(2)(b)
+  - id: DET-Art30(3)(d)
+    section: Art30
+    clause: Art. 30(3)(d)
+    paraphrase: Criterion, avoiding a disproportionate administrative burden on economic operators and national authorities.
+    applicability: commission
+    mirrors: ESPR-Art13(2)(c)
+  # ---- Annex VI -------------------------------------------------------------------------------
+  - id: DET-AnnexVI-A(a)
+    section: AnnexVI
+    clause: Annex VI Part A(a)
+    paraphrase: The trade name, the unique product identifier and a colour image of the packaging or label of the model, clear enough to identify it. Related to ESPR-AnnexIII(b), with the trade name and the image added.
+    applicability: software
+    areas:
+      - 3
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/presentation/passport-unique-product-identifier.controller.ts
+          note: the passport's unique product identifiers through the API
+        - type: code
+          ref: apps/main/src/aas/domain/asset-information.ts
+          note: "defaultThumbnails: product images on the shell"
+        - type: code
+          ref: apps/client/src/components/presentation/PassportHeader.vue
+          note: product images shown in the public view header
+        - type: code
+          ref: apps/client/src/components/media/MediaPreview.vue
+          note: an image attachment renders inline
+        - type: code
+          ref: apps/main/src/media/presentation/media.controller.ts
+          note: image upload (JPEG, PNG, HEIC, WebP, 15 MB) with virus scan
+        - type: test
+          ref: apps/main/src/media/infrastructure/media.service.spec.ts
+          note: upload of passport attachments and download streams
+      notes: "Trade name, unique product identifier and a colour image of the packaging or label of the model, clear enough to identify it. Credited: the passport carries its unique product identifiers (open-dpp UUID and GS1 identity), a product image is uploaded as a shell thumbnail or a File element and shown in the public view, and the trade name is a text Property. Missing: no trade-name element, no designated packaging or label image (a thumbnail is any image), no check that an image is present, and the identifier is not presented as Annex VI content but as passport metadata (#837). Restates ESPR-AnnexIII(b) (unassessed, #756) with the trade name and the image added."
+      gapIssue: 837
+  - id: DET-AnnexVI-A(b)
+    section: AnnexVI
+    clause: Annex VI Part A(b)
+    paraphrase: Name, postal and electronic address and telephone number of the manufacturer and, where applicable, of the importer or the authorised representative, plus the manufacturer's unique operator identifier. Folds ESPR-AnnexIII(g) and ESPR-AnnexIII(j), adds the telephone number and the authorised representative, and asks no EORI number.
+    applicability: software
+    areas:
+      - 3
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId on every element
+        - type: code
+          ref: apps/main/src/identity/organizations/domain/organization.ts
+          note: an organisation has a name and slug, no operator identifier or contact details
+      notes: "Name, postal and electronic address and telephone number of the manufacturer and, where applicable, of the importer or the authorised representative, plus the manufacturer's unique operator identifier. Credited: text Properties can hold every contact field in a template, with a semanticId each. Missing: no manufacturer, importer or authorised-representative element, no typing of address, e-mail or telephone, and no unique operator identifier anywhere (the organisation record has neither an identifier scheme nor contact details; #579 asks where it is configured); tracked in the content cluster #837. Folds ESPR-AnnexIII(g) (unassessed, #756) and ESPR-AnnexIII(j) (Partial, #827)."
+      gapIssue: 837
+  - id: DET-AnnexVI-A(c)
+    section: AnnexVI
+    clause: Annex VI Part A(c)
+    paraphrase: The reference of the DPP service provider hosting the back-up copy of the DPP.
+    applicability: software
+    areas:
+      - 6
+      - 8
+    mirrors: ESPR-AnnexIII(l)
+  - id: DET-AnnexVI-A(d)
+    section: AnnexVI
+    clause: Annex VI Part A(d)
+    paraphrase: The identification of the product allowing its traceability. No ESPR counterpart beyond the identifier of ESPR-AnnexIII(b).
+    applicability: software
+    areas:
+      - 3
+      - 9
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/unique-product-identifier/domain/unique.product.identifier.ts
+          note: GS1 identity with GTIN, batch and serial
+        - type: code
+          ref: apps/main/src/traceability-events/presentation/traceability-events.controller.ts
+          note: opaque EPCIS, UNTP or open-dpp event store
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+      notes: "The identification of the product allowing its traceability. Credited: a GS1 identity gives a batch or serial key that traces the product, and text Properties can hold a lot number, production site or date; the traceability-events store accepts EPCIS or UNTP payloads. Missing: no traceability-identification element, no query over the event store and no link between an event and the passport's identifiers (#837; the events store is the UNTP and EPCIS user story #189). No ESPR counterpart beyond the identifier of ESPR-AnnexIII(b)."
+      gapIssue: 837
+  - id: DET-AnnexVI-A(e)
+    section: AnnexVI
+    clause: Annex VI Part A(e)
+    paraphrase: An indication that the DPP is issued under the sole responsibility of the manufacturer. No ESPR counterpart (declaration-of-conformity wording carried into the passport).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+      notes: "An indication that the passport is issued under the sole responsibility of the manufacturer (the declaration-of-conformity wording carried into the passport). Credited: a text Property with the indication is modellable. Missing: nothing ships or renders it as a fixed statement of the passport, and a multilingual indication is not rendered (#838); tracked in #837. No ESPR counterpart."
+      gapIssue: 837
+  - id: DET-AnnexVI-A(f)
+    section: AnnexVI
+    clause: Annex VI Part A(f)
+    paraphrase: Where applicable, the Combined Nomenclature commodity codes under which the product is classified when the DPP is created.
+    applicability: software
+    areas:
+      - 8
+    mirrors: ESPR-AnnexIII(d)
+  - id: DET-AnnexVI-A(g)
+    section: AnnexVI
+    clause: Annex VI Part A(g)
+    paraphrase: A statement that the product's compliance with the Regulation has been demonstrated and, where relevant, references to other Union law the product complies with. Nearest ESPR-AnnexIII(e), which asks for the compliance documents themselves rather than a statement.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/register-submodel-element-classes.ts
+          note: the eleven supported submodel-element types
+        - type: code
+          ref: apps/client/src/components/aas/LinkCellField.vue
+          note: URL property, e.g. a link to the Union act complied with
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/file.ts
+          note: File element for an attached declaration
+      notes: "A statement that compliance with the Regulation has been demonstrated and, where relevant, references to other Union law the product complies with (the passport replaces the EU declaration of conformity, recital 44). Credited: a text Property for the statement, URL properties or a list for the references and a File element for an attached declaration are modellable. Missing: no statement element, no list of applicable Union acts, no document typing (#837). Nearest ESPR-AnnexIII(e) (Partial, #827), which asks for the compliance documents rather than a statement."
+      gapIssue: 837
+  - id: DET-AnnexVI-A(h)
+    section: AnnexVI
+    clause: Annex VI Part A(h)
+    paraphrase: A full list of the substances intentionally added to the product, identified as CLP Art. 18(3) prescribes, including carry-over preservatives where CLP, the Biocidal Products Regulation or Annex V require them on the label. No ESPR counterpart (ESPR-Art7(5) covers substances of concern only; this is the complete ingredient list).
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list of collections, one per substance
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+          note: name, identifier and preservative flag per substance
+        - type: code
+          ref: apps/main/src/aas/domain/common/has-semantics.ts
+          note: semanticId per substance, e.g. a CAS or EC number
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: lists render as tables in the public view
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+      notes: "The full list of substances intentionally added, identified as CLP Art. 18(3) prescribes (IUPAC or INCI name, EC or CAS number), including carry-over preservatives where the label must name them. Credited: a list of collections, one per substance with its name, identifiers and a preservative flag, is modellable and renders as a table in the public view. Missing: no ingredient element or CLP identification vocabulary, no carry-over-preservative flag, no validation of CAS or EC numbers (#837; the substances-of-concern shape of ESPR-Art7(5) is #827, this row wants every intentionally added substance). The ingredients data sheet of Annex IV stays a separate poison-centre submission and is not the passport."
+      gapIssue: 837
+  - id: DET-AnnexVI-A(h)-sub2
+    section: AnnexVI
+    clause: Annex VI Part A, paragraph after point (i)
+    paraphrase: The Annex VI Part A(h) ingredient list is not required for industrial and institutional detergents, nor for surfactants, where a REACH Art. 31 safety data sheet provides the equivalent information.
+    applicability: operator
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Not applicable
+      operational: false
+      evidence: []
+      notes: "Operator duty, assessed Not applicable by rule: whether a product is an industrial or institutional detergent or a surfactant whose REACH Art. 31 safety data sheet gives the equivalent information is the manufacturer's determination. open-dpp needs no representation of the carve-out; an operator that relies on it leaves the DET-AnnexVI-A(h) list out or attaches the safety data sheet as a File element instead."
+  - id: DET-AnnexVI-A(i)
+    section: AnnexVI
+    clause: Annex VI Part A(i)
+    paraphrase: The list of all intentionally added micro-organisms with their taxonomic classification (genus, species, and strain name or code). No ESPR counterpart.
+    applicability: software
+    areas:
+      - 8
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list of collections, one per micro-organism
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-collection.ts
+          note: genus, species, strain per micro-organism
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+      notes: "The list of all intentionally added micro-organisms with their taxonomic classification (genus, species, and strain name or code). Credited: a list of collections with three text Properties each is modellable and renders as a table. Missing: no micro-organism element or taxonomy vocabulary ships (#837). No ESPR counterpart."
+      gapIssue: 837
+  - id: DET-AnnexVI-B
+    section: AnnexVI
+    clause: Annex VI Part B
+    paraphrase: The DPP may include the labelling information of Art. 17(3) and (4) (the Annex V general labelling and dosage information). Nearest ESPR-AnnexIII(f); optional content fixed by the law.
+    applicability: software
+    areas:
+      - 8
+      - 11
+    assessment:
+      date: 2026-09-07
+      commit: d5f8219ecf526f8268cc403900855f728ba2ce8d
+      validator: agent:conformance-review
+      status: Partial
+      operational: true
+      evidence:
+        - type: code
+          ref: apps/main/src/templates/domain/template.ts
+          note: reusable AAS template per organisation
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/multi-language-property.ts
+          note: multilingual label text in the data model
+        - type: code
+          ref: apps/main/src/aas/domain/submodel-base/submodel-element-list.ts
+          note: a list for the dosage table
+        - type: code
+          ref: apps/client/src/components/presentation/SubmodelElementValue.vue
+          note: MultiLanguageProperty values are not rendered in the public view
+      notes: "Optional content: the Art. 17(3) and (4) labelling information (Annex V general labelling and dosage). Credited: the label text and a dosage table are modellable, in the data model per language. Missing: no Annex V structure ships, and a multilingual label text is not rendered in the public view (#838), so a label duplicated in the passport reaches a visitor only in single-language Properties or as an image (#837). Nearest ESPR-AnnexIII(f) (Partial, #827). The digital label of Art. 19 shares the data carrier (DET-Art21(5), #839)."
+      gapIssue: 837
