@@ -11,13 +11,11 @@ import { createObjectUrl, revokeObjectUrl } from "../lib/media";
 import { useIndexStore } from "../stores";
 import { useErrorHandlingStore } from "../stores/error.handling";
 import { HTTPCode } from "../stores/http-codes";
-import { useMediaStore } from "../stores/media";
 
 const logo = ref<MediaFile>();
 
 function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<BrandingDto>>) {
   const errorHandlingStore = useErrorHandlingStore();
-  const mediaStore = useMediaStore();
   const { t } = useI18n();
 
   const cleanupMediaUrls = () => {
@@ -55,12 +53,14 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
     cleanupMediaUrls();
     if (newLogo) {
       try {
-        const mediaResult = await mediaStore.fetchMedia(newLogo);
-        if (mediaResult && mediaResult.blob) {
+        // Logo bytes come from the public, ownership-gated branding route — NOT bare /media/:id,
+        // which is now authenticated. So the logo renders anonymously on the public passport page.
+        const response = await apiClient.dpp.branding.downloadLogo(newLogo);
+        const blob = response.data;
+        if (blob) {
           logo.value = {
-            blob: mediaResult.blob,
-            mediaInfo: mediaResult.mediaInfo,
-            url: createObjectUrl(mediaResult.blob),
+            blob,
+            url: createObjectUrl(blob),
           };
         }
       } catch (logoError) {

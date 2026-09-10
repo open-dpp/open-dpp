@@ -9,6 +9,7 @@ import {
 import { SubmodelDoc, SubmodelSchema } from "../../aas/infrastructure/schemas/submodel.schema";
 import { generateMongoConfig } from "../../database/config";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { MediaModule } from "../../media/media.module";
 import { UsersModule } from "../../identity/users/users.module";
 import { UniqueProductIdentifierRepository } from "../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import {
@@ -84,6 +85,9 @@ describe("DigitalProductDocumentService", () => {
         ]),
         ActivityHistoryModule,
         AasModule,
+        // EnvironmentService is re-provided at the root below, so its MediaService dependency
+        // must be visible here too (AasModule imports MediaModule but does not re-export it).
+        MediaModule,
         UsersModule,
         OrganizationsModule,
         PresentationConfigurationsModule,

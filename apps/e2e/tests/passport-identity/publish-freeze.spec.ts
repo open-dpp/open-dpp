@@ -62,6 +62,13 @@ test("a published passport still accepts new identifiers but no longer allows de
   page,
 }) => {
   const ids = await createBlankPassport(page);
+  // New passports start without identifiers, so create one BEFORE publishing to have a row
+  // whose delete button must be locked afterwards.
+  await gotoUpiList(page, ids);
+  await createGs1Upi(page, { gtin: GTIN14, serial: uniqueSerial() });
+  await page.getByTestId("gs1-link-prompt-skip").click();
+  await expect(upiRows(page)).toHaveCount(1);
+
   await publishPassport(page, ids);
   await gotoUpiList(page, ids);
 

@@ -18,7 +18,7 @@ import {
   UserRoleDto,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { ForbiddenError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
   allPermissionsPlainAllow,
   securityPlainFactory,
@@ -38,6 +38,8 @@ import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportsModule } from "../../passports/passports.module";
+import { Media } from "../../media/domain/media";
+import { MediaService } from "../../media/infrastructure/media.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
@@ -48,6 +50,7 @@ import { Environment } from "../domain/environment";
 import { createAasObject } from "../domain/security/aas-object";
 import { Permission } from "../domain/security/permission";
 import { PermissionPerObject } from "../domain/security/permission-per-object";
+import { Resource } from "../domain/resource";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
@@ -113,6 +116,7 @@ describe("environmentService", () => {
   let conceptDescriptionRepository: ConceptDescriptionRepository;
   let connection: Connection;
   let activityRepository: ActivityRepository;
+  let mediaService: MediaService;
   const latestVersion = ApiVersionsDto.v2;
 
   beforeAll(async () => {
@@ -149,6 +153,7 @@ describe("environmentService", () => {
       ConceptDescriptionRepository,
     );
     activityRepository = module.get<ActivityRepository>(ActivityRepository);
+    mediaService = module.get<MediaService>(MediaService);
   });
 
   beforeEach(() => {
@@ -256,6 +261,7 @@ describe("environmentService", () => {
     const digitalProductDocumentId = randomUUID();
     const correlationId = randomUUID();
     const userId = randomUUID();
+    const organizationId = randomUUID();
     const security = Security.create({});
     security.addPolicy(
       SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
@@ -307,6 +313,7 @@ describe("environmentService", () => {
     await environmentService.modifyAasShell(
       correlationId,
       digitalProductDocumentId,
+      organizationId,
       environment,
       assetAdministrationShell.id,
       modification,
@@ -389,6 +396,7 @@ describe("environmentService", () => {
     const digitalProductDocumentId = randomUUID();
     const correlationId = randomUUID();
     const userId = randomUUID();
+    const organizationId = randomUUID();
     const security = Security.create({});
     security.addPolicy(
       SubjectAttributes.create({ userRole: UserRole.ADMIN }),
@@ -437,6 +445,7 @@ describe("environmentService", () => {
       environmentService.modifyAasShell(
         correlationId,
         digitalProductDocumentId,
+        organizationId,
         environment,
         assetAdministrationShell.id,
         { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
@@ -1511,6 +1520,7 @@ describe("environmentService", () => {
       environmentService.modifyAasShell(
         randomUUID(),
         randomUUID(),
+        randomUUID(),
         environment,
         environment.assetAdministrationShells[0],
         { security: securityPlainFactory.build(undefined, { transient: transientParams }) },
@@ -1534,6 +1544,7 @@ describe("environmentService", () => {
     };
 
     await environmentService.modifyAasShell(
+      randomUUID(),
       randomUUID(),
       randomUUID(),
       environment,
@@ -1850,6 +1861,128 @@ describe("environmentService", () => {
       },
     ]);
     //
+  });
+
+  describe("modifyAasShell — ownership of media introduced as default thumbnails", () => {
+    async function saveMediaOwnedBy(organizationId: string): Promise<Media> {
+      const media = Media.create({
+        ownedByOrganizationId: organizationId,
+        createdByUserId: randomUUID(),
+        title: "thumb.webp",
+        description: "thumb.webp",
+        mimeType: "image/webp",
+        fileExtension: "webp",
+        size: 1,
+        originalFilename: "thumb.webp",
+        uniqueProductIdentifier: null,
+        dataFieldId: null,
+        bucket: "dpp",
+        objectName: "thumb",
+        eTag: "etag",
+        versionId: "v1",
+      });
+      await mediaService.save(media);
+      return media;
+    }
+
+    function thumbnailModification(mediaId: string) {
+      return {
+        assetInformation: { defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }] },
+      };
+    }
+
+    it("rejects a thumbnail that points at another organization's media and persists nothing", async () => {
+      const { correlationId, digitalProductDocumentId, environment, admin } =
+        await createDefaultEnvironment();
+      const organizationId = randomUUID();
+      const foreignMedia = await saveMediaOwnedBy(randomUUID());
+      const aasId = environment.assetAdministrationShells[0];
+
+      await expect(
+        environmentService.modifyAasShell(
+          correlationId,
+          digitalProductDocumentId,
+          organizationId,
+          environment,
+          aasId,
+          thumbnailModification(foreignMedia.id),
+          admin,
+        ),
+      ).rejects.toThrow(ValueError);
+
+      const found = await aasRepository.findOneOrFail(aasId);
+      expect(found.assetInformation.defaultThumbnails).toEqual([]);
+      const activities = await activityRepository.findByAggregateId(digitalProductDocumentId);
+      expect(activities.items).toEqual([]);
+    });
+
+    it("accepts a thumbnail owned by the organization", async () => {
+      const { correlationId, digitalProductDocumentId, environment, admin } =
+        await createDefaultEnvironment();
+      const organizationId = randomUUID();
+      const ownMedia = await saveMediaOwnedBy(organizationId);
+      const aasId = environment.assetAdministrationShells[0];
+
+      await environmentService.modifyAasShell(
+        correlationId,
+        digitalProductDocumentId,
+        organizationId,
+        environment,
+        aasId,
+        thumbnailModification(ownMedia.id),
+        admin,
+      );
+
+      const found = await aasRepository.findOneOrFail(aasId);
+      expect(found.assetInformation.defaultThumbnails.map((t) => t.path)).toEqual([ownMedia.id]);
+    });
+
+    it("tolerates a thumbnail path that resolves to no media record", async () => {
+      const { correlationId, digitalProductDocumentId, environment, admin } =
+        await createDefaultEnvironment();
+      const danglingId = randomUUID();
+      const aasId = environment.assetAdministrationShells[0];
+
+      await environmentService.modifyAasShell(
+        correlationId,
+        digitalProductDocumentId,
+        randomUUID(),
+        environment,
+        aasId,
+        thumbnailModification(danglingId),
+        admin,
+      );
+
+      const found = await aasRepository.findOneOrFail(aasId);
+      expect(found.assetInformation.defaultThumbnails.map((t) => t.path)).toEqual([danglingId]);
+    });
+
+    it("does not re-validate thumbnails the shell already held", async () => {
+      const { correlationId, digitalProductDocumentId, environment, admin } =
+        await createDefaultEnvironment();
+      const foreignMedia = await saveMediaOwnedBy(randomUUID());
+      const aasId = environment.assetAdministrationShells[0];
+      const aas = await aasRepository.findOneOrFail(aasId);
+      await aasRepository.save(
+        aas.withAssetInformation(
+          aas.assetInformation.withDefaultThumbnails([
+            Resource.create({ path: foreignMedia.id, contentType: "image/webp" }),
+          ]),
+        ),
+      );
+
+      await expect(
+        environmentService.modifyAasShell(
+          correlationId,
+          digitalProductDocumentId,
+          randomUUID(),
+          environment,
+          aasId,
+          { displayName: [{ language: "en", text: "Renamed" }] },
+          admin,
+        ),
+      ).resolves.toBeDefined();
+    });
   });
 
   describe("extraCleanup / atomic stale-config cleanup", () => {

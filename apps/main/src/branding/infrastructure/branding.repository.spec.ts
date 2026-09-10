@@ -93,6 +93,39 @@ describe("brandingRepository", () => {
     expect(migratedBranding.logo).toBe(logo);
   });
 
+  describe("isOrganizationLogo", () => {
+    it("returns true only when the media is the org's designated logo (no cross-org exposure)", async () => {
+      const orgId = randomUUID();
+      const otherOrgId = randomUUID();
+      const logoMediaId = randomUUID();
+      jest
+        .spyOn(organizationService, "getOrganization")
+        .mockResolvedValue(Organization.create({ name: "acme", slug: `acme-${randomUUID()}` }));
+      await brandingRepository.save(Branding.create({ organizationId: orgId, logo: logoMediaId }));
+
+      // owning org designated it as its logo → public
+      expect(await brandingRepository.isOrganizationLogo(logoMediaId, orgId)).toBe(true);
+      // another org's effective logo is not this media (no cross-org exposure)
+      expect(await brandingRepository.isOrganizationLogo(logoMediaId, otherOrgId)).toBe(false);
+      // a non-logo media id is never public
+      expect(await brandingRepository.isOrganizationLogo(randomUUID(), orgId)).toBe(false);
+    });
+
+    it("resolves the legacy organization.logo fallback for orgs without a BrandingDoc", async () => {
+      const orgId = randomUUID();
+      const legacyLogo = randomUUID();
+      jest
+        .spyOn(organizationService, "getOrganization")
+        .mockResolvedValue(
+          Organization.create({ name: "acme", slug: `acme-${randomUUID()}`, logo: legacyLogo }),
+        );
+
+      // no BrandingDoc saved → must still recognize the org.logo fallback (regression guard)
+      expect(await brandingRepository.isOrganizationLogo(legacyLogo, orgId)).toBe(true);
+      expect(await brandingRepository.isOrganizationLogo(randomUUID(), orgId)).toBe(false);
+    });
+  });
+
   it("should migrate logo from organization on save", async () => {
     const orgId = randomUUID();
     const logo = "logo-from-organization";

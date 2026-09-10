@@ -4,7 +4,6 @@ import { EnvModule } from "@open-dpp/env";
 import { PassportsModule } from "../passports/passports.module";
 import { PermalinkModule } from "../permalink/permalink.module";
 import { PolicyModule } from "../policy/policy.module";
-import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import {
   AiConfigurationDbSchema,
   AiConfigurationDoc,
@@ -23,7 +22,6 @@ import { McpClientModule } from "./mcp-client/mcp-client.module";
         schema: AiConfigurationDbSchema,
       },
     ]),
-    UniqueProductIdentifierModule,
     EnvModule,
     McpClientModule,
     PolicyModule,

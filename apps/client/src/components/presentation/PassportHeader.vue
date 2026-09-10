@@ -16,6 +16,8 @@ const aasUtils = useAasUtils();
 const { files, downloadDefaultThumbnails } = useAasGallery({
   translate: t,
   errorHandlingStore,
+  // Thumbnails are public media: fetch them through the permalink the passport was loaded with.
+  permalinkIdOrSlug: () => passportStore.permalinkIdOrSlug,
 });
 
 const firstShell = computed(() => {
@@ -48,13 +50,14 @@ watch(
 
 <template>
   <div id="product-details" class="flex flex-col gap-6">
-    <ProductImageGalleria
-      v-if="hasImages"
-      :auto-play="hasMultipleImages"
-      v-model="files"
-      :size="400"
-      :withBorder="true"
-    />
+    <div v-if="hasImages" class="w-full" data-testid="product-image-galleria">
+      <ProductImageGalleria
+        :auto-play="hasMultipleImages"
+        v-model="files"
+        :size="400"
+        :withBorder="true"
+      />
+    </div>
     <!-- General information card -->
     <div class="border-surface-200 bg-surface-0 rounded-xl border p-6 shadow-sm">
       <h3 class="text-surface-900 border-primary-500 mb-6 border-l-3 pl-4 text-lg font-semibold">

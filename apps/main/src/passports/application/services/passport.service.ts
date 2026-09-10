@@ -164,10 +164,10 @@ export class PassportService {
       templateId,
       environment,
     });
-    const upid = passport.createUniqueProductIdentifier();
 
+    // Passports no longer auto-mint a canonical OPEN_DPP_UUID UPI: media keys on the
+    // passport and public access resolves through permalinks, so no identifier is needed.
     const persist = async (txOptions: DbSessionOptions) => {
-      await this.uniqueProductIdentifierRepository.save(upid, txOptions);
       const persisted = await this.passportRepository.save(passport, txOptions);
       const snapshotConfigs =
         await this.presentationConfigurationService.snapshotTemplateConfigsToPassport(

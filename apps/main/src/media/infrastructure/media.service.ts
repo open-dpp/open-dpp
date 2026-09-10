@@ -95,62 +95,6 @@ export class MediaService {
     return await sharp(buffer).webp({ quality: 85 }).toBuffer();
   }
 
-  async uploadFileOfProductPassport(
-    originalFilename: string,
-    buffer: Buffer,
-    dataFieldId: string,
-    uniqueProductIdentifier: string,
-    createdByUserId: string,
-    ownedByOrganizationId: string,
-  ) {
-    const findMedia = await this.mediaDoc.find({
-      dataFieldId,
-      uniqueProductIdentifier,
-    });
-    if (findMedia.length > 0) {
-      await this.mediaDoc.deleteMany({
-        dataFieldId,
-        uniqueProductIdentifier,
-      });
-    }
-    const fileType = await fileTypeFromBuffer(buffer);
-    if (!fileType) {
-      throw new Error("File type not recognized");
-    }
-    let fileTypeMime = fileType.mime;
-    let uploadBuffer: Buffer = buffer;
-    if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await this.processImageBuffer(uploadBuffer);
-      fileTypeMime = "image/webp";
-    }
-    const uploadInfo = await this.uploadFile(
-      this.bucketNameDefault,
-      uploadBuffer,
-      dataFieldId,
-      [BucketDefaultPaths.PRODUCT_PASSPORT_FILES, uniqueProductIdentifier],
-      uploadBuffer.length,
-      fileTypeMime,
-    );
-    const media = Media.create({
-      createdByUserId,
-      ownedByOrganizationId,
-      title: originalFilename,
-      description: originalFilename,
-      mimeType: fileTypeMime,
-      fileExtension: fileType.ext,
-      size: uploadBuffer.length,
-      originalFilename,
-      uniqueProductIdentifier,
-      dataFieldId,
-      bucket: uploadInfo.location.bucket,
-      objectName: uploadInfo.location.objectName,
-      eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
-    });
-    await this.save(media);
-    return media;
-  }
-
   async uploadMedia(
     originalFilename: string,
     buffer: Buffer,
@@ -208,15 +152,6 @@ export class MediaService {
     }
     const objectName = this.buildBucketPath(remoteFileBaseName, remoteFolders);
     return await this.client.getObject(bucketName, objectName);
-  }
-
-  async getFilestreamOfProductPassport(dataFieldId: string, uniqueProductIdentifier: string) {
-    const media = await this.findOneDppFileOrFail(dataFieldId, uniqueProductIdentifier);
-    const stream = await this.getFilestreamOfMedia(media);
-    return {
-      stream,
-      media,
-    };
   }
 
   async getFilestreamById(id: string) {
@@ -298,17 +233,6 @@ export class MediaService {
       throw new NotFoundInDatabaseException(Media.name);
     }
     return this.convertToDomain(mediaDocument);
-  }
-
-  async findOneDppFileOrFail(dataFieldId: string, uniqueProductIdentifier: string) {
-    const mediaDocuments = await this.mediaDoc.find({
-      dataFieldId,
-      uniqueProductIdentifier,
-    });
-    if (mediaDocuments.length === 0) {
-      throw new NotFoundInDatabaseException(Media.name);
-    }
-    return this.convertToDomain(mediaDocuments[0]); // Assuming there's only one match
   }
 
   async findAll() {

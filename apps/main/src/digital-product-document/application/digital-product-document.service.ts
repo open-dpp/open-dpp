@@ -265,6 +265,7 @@ export class DigitalProductDocumentService<T extends DigitalProductDocumentEntit
     return await this.environmentService.modifyAasShell(
       correlationId,
       id,
+      item.getOrganizationId(),
       item.getEnvironment(),
       aasId,
       body,

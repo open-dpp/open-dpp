@@ -1,6 +1,6 @@
 # open-dpp — Domain Language
 
-Glossary of terms specific to open-dpp. Definitions describe what each term _is_, not how it is implemented. Currently focused on the identity / account-management area; extend as other areas are resolved.
+Glossary of terms specific to open-dpp. Definitions describe what each term _is_, not how it is implemented. Currently covers identity / account management and passport media; extend as other areas are resolved.
 
 ## Identity & Account
 
@@ -40,3 +40,20 @@ The privileged Member role of an Organization. Only Owners may change other Memb
 **Member Removal**:
 An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
 _Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).
+
+## Passport & Media
+
+**Permalink**:
+A public address under which a passport is presented. A passport can have several, and deleting one withdraws that address without touching the passport.
+
+**Permalink-gated Media**:
+A passport's media as the public can reach it: only through one of that passport's Permalinks, so access ends when the Permalink is deleted or the passport is unpublished. A Member of the owning Organization can reach a draft's media the same way.
+_Not to be confused with_: a Member's own media access inside the Organization, which needs no Permalink.
+
+**Referenced Media**:
+A media item a passport points at, as the value of a File element or as a default thumbnail of one of its shells. Only Referenced Media that the passport's Organization owns is reachable through the passport's Permalinks; a pointer at another Organization's media resolves to nothing.
+_Avoid_: attached file, linked media.
+
+**Organization Logo**:
+The one media item an Organization designates in its branding. It is the only media an Organization exposes to the public on its own, without a Permalink.
+_Not to be confused with_: the instance logo (the deployment's default branding shown when an Organization has none).

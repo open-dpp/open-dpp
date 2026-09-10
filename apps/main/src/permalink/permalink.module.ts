@@ -7,6 +7,7 @@ import { DatabaseModule } from "../database/database.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { InstanceSettingsModule } from "../instance-settings/instance-settings.module";
+import { MediaModule } from "../media/media.module";
 import { PassportsModule } from "../passports/passports.module";
 import {
   PresentationConfigurationDoc,
@@ -18,6 +19,7 @@ import { PermalinkDoc, PermalinkSchema } from "./infrastructure/permalink.schema
 import { PermalinkRepository } from "./infrastructure/permalink.repository";
 import { BaseUrlResolver } from "./application/services/base-url-resolver.service";
 import { PermalinkApplicationService } from "./application/services/permalink.application.service";
+import { MediaPermalinkController } from "./presentation/media-permalink.controller";
 import { PermalinkController } from "./presentation/permalink.controller";
 
 @Module({
@@ -32,12 +34,14 @@ import { PermalinkController } from "./presentation/permalink.controller";
     OrganizationsModule,
     UsersModule,
     InstanceSettingsModule,
+    // Permalink-gated media reads need MediaService (exported by MediaModule).
+    MediaModule,
     forwardRef(() => PassportsModule),
     forwardRef(() => UniqueProductIdentifierModule),
     BrandingModule,
     PresentationConfigurationsModule,
   ],
-  controllers: [PermalinkController],
+  controllers: [PermalinkController, MediaPermalinkController],
   providers: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver],
   exports: [PermalinkRepository, PermalinkApplicationService, BaseUrlResolver],
 })

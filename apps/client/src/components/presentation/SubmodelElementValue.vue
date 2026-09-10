@@ -5,7 +5,9 @@ import type {
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { usePassportStore } from "../../stores/passport";
 import formatDateValueForDisplay from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import PresentationComponentRenderer from "./PresentationComponentRenderer.vue";
@@ -21,6 +23,10 @@ const { element, path, config } = defineProps<{
 }>();
 
 const { t } = useI18n();
+const passportStore = usePassportStore();
+// Public media is fetched through the permalink the passport was loaded with, so access to a
+// passport's files ends together with the permalink. Empty outside the public page (editor).
+const permalinkIdOrSlug = computed(() => passportStore.permalinkIdOrSlug);
 </script>
 
 <template>
@@ -59,6 +65,7 @@ const { t } = useI18n();
     <MediaFieldView
       v-else-if="element.modelType === 'File' && typeof element.value === 'string'"
       :media-id="element.value"
+      :permalink-id-or-slug="permalinkIdOrSlug"
     />
     <List
       v-else-if="element.modelType === 'SubmodelElementList'"

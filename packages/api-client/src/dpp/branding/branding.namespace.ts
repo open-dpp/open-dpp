@@ -13,4 +13,15 @@ export class BrandingNamespace {
   public async set(branding: BrandingDto) {
     return await this.axiosInstance.put<BrandingDto>(this.brandingEndpoint, branding);
   }
+
+  /**
+   * Public, ownership-gated organization logo download. The bare `/media/:id` route is
+   * authenticated, so anonymous logo rendering goes through this branding-scoped route.
+   */
+  public async downloadLogo(mediaId: string) {
+    return await this.axiosInstance.get<Blob>(
+      `${this.brandingEndpoint}/logo/${encodeURIComponent(mediaId)}`,
+      { responseType: "blob" },
+    );
+  }
 }

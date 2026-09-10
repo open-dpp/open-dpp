@@ -12,7 +12,7 @@ function upiRows(page: import("@playwright/test").Page) {
   return page.getByTestId("upi-data-table").locator("tbody tr:not(.p-datatable-empty-message)");
 }
 
-test("a new passport is seeded with one internal identifier, reachable from the toolbar", async ({
+test("a new passport starts without identifiers; the toolbar leads to the empty list", async ({
   page,
 }) => {
   await createBlankPassport(page);
@@ -22,9 +22,11 @@ test("a new passport is seeded with one internal identifier, reachable from the 
   await page.waitForURL(/\/unique-product-identifiers$/);
 
   await expect(page.getByTestId("upi-data-table")).toBeVisible();
-  await expect(upiRows(page)).toHaveCount(1);
-  await expect(upiRows(page).first()).toContainText("OPEN_DPP_UUID");
-  await expect(upiRows(page).first().getByTestId("upi-delete-btn")).toBeEnabled();
+  await expect(upiRows(page)).toHaveCount(0);
+  await expect(page.getByTestId("upi-data-table")).toContainText(
+    /Keine eindeutigen Produktidentifikatoren gefunden|No unique product identifiers found/i,
+  );
+  await expect(page.locator("body")).not.toContainText("uniqueProductIdentifiers.list.");
 });
 
 test("creating a GS1 identifier and skipping the prompt adds a linkable row", async ({ page }) => {
@@ -35,7 +37,7 @@ test("creating a GS1 identifier and skipping the prompt adds a linkable row", as
   await createGs1Upi(page, { gtin: GTIN14, serial });
   await page.getByTestId("gs1-link-prompt-skip").click();
 
-  await expect(upiRows(page)).toHaveCount(2);
+  await expect(upiRows(page)).toHaveCount(1);
   const gs1Row = upiRows(page).filter({ hasText: serial });
   await expect(gs1Row).toHaveCount(1);
   await expect(gs1Row).toContainText(GTIN14);
@@ -78,8 +80,7 @@ test("an invalid GTIN is rejected and surfaced on the field", async ({ page }) =
   await page.getByTestId("upi-create-submit").click();
 
   await expect(page.getByTestId("upi-create-gtin-error")).toBeVisible();
-  await expect(upiRows(page)).toHaveCount(1);
-  await expect(upiRows(page).first()).toContainText("OPEN_DPP_UUID");
+  await expect(upiRows(page)).toHaveCount(0);
 });
 
 test("a GS1 identifier can be deleted while the passport is a draft", async ({ page }) => {
@@ -89,12 +90,11 @@ test("a GS1 identifier can be deleted while the passport is a draft", async ({ p
   const serial = uniqueSerial();
   await createGs1Upi(page, { gtin: GTIN14, serial });
   await page.getByTestId("gs1-link-prompt-skip").click();
-  await expect(upiRows(page)).toHaveCount(2);
+  await expect(upiRows(page)).toHaveCount(1);
 
   await upiRows(page).filter({ hasText: serial }).getByTestId("upi-delete-btn").click();
   await acceptDeleteConfirm(page);
 
-  await expect(upiRows(page)).toHaveCount(1);
-  await expect(upiRows(page).first()).toContainText("OPEN_DPP_UUID");
+  await expect(upiRows(page)).toHaveCount(0);
   await expect(upiRows(page).filter({ hasText: serial })).toHaveCount(0);
 });

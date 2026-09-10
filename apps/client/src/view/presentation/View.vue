@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
@@ -60,6 +60,10 @@ watch(
   },
   { immediate: true },
 );
+
+onUnmounted(() => {
+  passportStore.clearPermalink();
+});
 </script>
 
 <template>
