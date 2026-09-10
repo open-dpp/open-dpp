@@ -10,6 +10,7 @@ A production deployment of open-dpp requires the following external services:
 - A **MongoDB** instance with a replica set enabled
 - An **SMTP server** for outgoing email
 - An **S3-compatible object storage** service
+- Optionally, a **ClamAV** scanner for virus-scanning uploads
 
 Each service is configured through environment variables. For a complete reference, see [Configuration](/reference/configuration).
 
@@ -107,3 +108,28 @@ open-dpp stores file uploads (passport attachments, profile pictures) in an S3-c
 The bucket must exist before starting the application.
 
 Ensure that `OPEN_DPP_S3_SSL` is set to `"true"` whenever the storage endpoint is reachable over the public internet.
+
+## Virus scanning (ClamAV)
+
+Uploaded files (passport media, organization logos) are scanned when `OPEN_DPP_CLAMAV_URL` points to a [clamav-rest](https://hub.docker.com/r/ajilaag/clamav-rest) endpoint. When the variable is unset, uploads are accepted **unscanned** and the backend logs a warning at startup. The example and development compose files do not include ClamAV.
+
+| Variable              | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `OPEN_DPP_CLAMAV_URL` | clamav-rest endpoint including the port. Unset or empty disables scanning. |
+
+Add the service to your stack:
+
+```yaml
+services:
+  clamav-rest:
+    image: ajilaag/clamav-rest
+    restart: unless-stopped
+```
+
+and point open-dpp at it:
+
+```dotenv
+OPEN_DPP_CLAMAV_URL=http://clamav-rest:9000
+```
+
+ClamAV loads its signature database on start; plan for roughly 1–2 GB of RAM and a short delay before the first scan succeeds. While the scanner is unreachable, uploads are rejected with `The file was denied by our virus scanning system.`

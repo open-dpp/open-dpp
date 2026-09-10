@@ -368,6 +368,15 @@ describe("apiClient", () => {
       expect(response.data).toEqual(submodelCarbonFootprintResponse);
     });
 
+    it("should move submodel", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.moveSubmodel(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        { position: 0 },
+      );
+      expect(response.data).toEqual(submodelCarbonFootprintResponse);
+    });
+
     it("should create submodel element", async () => {
       const response = await sdk.dpp[appIdentifiable].aas.createSubmodelElement(
         aasWrapperId,
@@ -383,6 +392,16 @@ describe("apiClient", () => {
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
         propertyToAdd,
+      );
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
+
+    it("should move submodel element", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.moveSubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        { position: 0 },
       );
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
     });
@@ -417,6 +436,17 @@ describe("apiClient", () => {
         "column1",
       );
       expect(response.status).toEqual(200);
+      expect(response.data).toEqual(submodelDesignOfProductElement0);
+    });
+
+    it("should reorder column of submodel element list", async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.reorderColumn(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        "Design_V01.Author.ListProp",
+        "column1",
+        { position: 0 },
+      );
       expect(response.data).toEqual(submodelDesignOfProductElement0);
     });
 

@@ -1,5 +1,37 @@
 # @open-dpp/testing
 
+## 5.2.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.2.0
+  - @open-dpp/env@5.2.0
+
+## 5.1.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@5.1.0
+  - @open-dpp/env@5.1.0
+
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies [[`66b6537`](https://github.com/open-dpp/open-dpp/commit/66b65379357517e67e4266c003f67ccf73274eb7)]:
+  - @open-dpp/env@5.0.0
+  - @open-dpp/dto@5.0.0
+
+## 4.0.1
+
+### Patch Changes
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/dto@4.0.1
+  - @open-dpp/env@4.0.1
+
 ## 4.0.0
 
 ### Patch Changes

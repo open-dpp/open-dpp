@@ -145,7 +145,7 @@ interface AasDrawerProps {
   can: (action: PermissionType, object: string) => boolean;
 }
 
-type EditorVNodeType = {
+export type EditorVNodeType = {
   component: Component | undefined;
   props: { path: AasEditorPath; data: any | null; callback: callbackType | null };
 } | null;

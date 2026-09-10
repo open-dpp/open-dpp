@@ -21,7 +21,7 @@ This repository is a pnpm + Turborepo monorepo. If you are new to open-dpp, star
 - `apps/e2e/` — Playwright end-to-end tests.
 - `packages/` — shared libraries (`dto`, `api-client`, `env`, `exception`, `permission`, `testing`).
 - `docs/` — VitePress documentation and guides.
-- `docker/`, `docker-compose*.yml` — local infrastructure setup (MongoDB, MinIO, Mailpit, ClamAV).
+- `docker/`, `docker-compose*.yml` — local infrastructure setup (MongoDB, MinIO, Mailpit).
 
 Primary runtime boundaries:
 

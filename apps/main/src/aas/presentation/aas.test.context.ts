@@ -749,6 +749,102 @@ export function createAasTestContext<T>(
     );
   }
 
+  async function assertMoveSubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(
+      submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }),
+    );
+    const prop1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "prop1" }));
+    const sub1 = SubmodelElementCollection.create({ idShort: "sub1", value: [prop1] });
+    const sectionA = SubmodelElementCollection.create({ idShort: "sectionA", value: [sub1] });
+    const sectionB = SubmodelElementCollection.create({ idShort: "sectionB" });
+    submodel.addSubmodelElement(sectionA, { ability });
+    submodel.addSubmodelElement(sectionB, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/sectionA.sub1/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ targetParentIdShortPath: "sectionB" });
+    expect(response.status).toEqual(201);
+    expect(response.body.idShort).toEqual("sub1");
+
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    const foundSectionA = foundSubmodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "sectionA" }),
+    );
+    const foundSectionB = foundSubmodel.findSubmodelElementOrFail(
+      IdShortPath.create({ path: "sectionB" }),
+    );
+    expect(foundSectionA.getSubmodelElements()).toEqual([]);
+    expect(foundSectionB.getSubmodelElements().map((e) => e.idShort)).toEqual(["sub1"]);
+    expect(
+      foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "sectionB.sub1.prop1" })),
+    ).toBeDefined();
+
+    // An explicit null targets the Submodel root itself — distinct from
+    // omitting targetParentIdShortPath entirely, which keeps the current parent.
+    const rootResponse = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/sectionB.sub1/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ targetParentIdShortPath: null });
+    expect(rootResponse.status).toEqual(201);
+    expect(rootResponse.body.idShort).toEqual("sub1");
+
+    const submodelAfterRootMove = await submodelRepository.findOneOrFail(submodel.id);
+    expect(
+      submodelAfterRootMove.findSubmodelElementOrFail(IdShortPath.create({ path: "sub1" })),
+    ).toBeDefined();
+    expect(
+      submodelAfterRootMove
+        .findSubmodelElementOrFail(IdShortPath.create({ path: "sectionB" }))
+        .getSubmodelElements(),
+    ).toEqual([]);
+
+    // A datafield can never become a direct child of a table (its rows are
+    // SubmodelElementCollections) — this must be rejected as a 400, not a 500.
+    const table = SubmodelElementList.create({
+      idShort: "table1",
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    submodelAfterRootMove.addSubmodelElement(table, { ability });
+    await submodelRepository.save(submodelAfterRootMove);
+
+    const rejectedResponse = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/sub1.prop1/move`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ targetParentIdShortPath: "table1" });
+    expect(rejectedResponse.status).toEqual(400);
+
+    const submodelAfterRejectedMove = await submodelRepository.findOneOrFail(submodel.id);
+    expect(
+      submodelAfterRejectedMove.findSubmodelElementOrFail(IdShortPath.create({ path: "table1" })),
+    ).toBeDefined();
+    expect(
+      submodelAfterRejectedMove
+        .findSubmodelElementOrFail(IdShortPath.create({ path: "table1" }))
+        .getSubmodelElements(),
+    ).toEqual([]);
+    expect(
+      submodelAfterRejectedMove.findSubmodelElementOrFail(
+        IdShortPath.create({ path: "sub1.prop1" }),
+      ),
+    ).toBeDefined();
+  }
+
   async function assertGetSubmodelValue(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org?.id);
@@ -887,6 +983,61 @@ export function createAasTestContext<T>(
       displayName: response.body.displayName,
       description: response.body.description,
     }).toEqual(modificationBody);
+  }
+
+  async function assertMoveSubmodel(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePathV2}/${entity.id}/submodels/${btoa(submodels[1].id)}/move`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ position: 0 });
+    expect(response.status).toEqual(201);
+    expect(response.body.id).toEqual(submodels[1].id);
+
+    const getResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/submodels?limit=2`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(getResponse.status).toEqual(200);
+    expect(getResponse.body.result.map((s: any) => s.id)).toEqual([
+      submodels[1].id,
+      submodels[0].id,
+    ]);
+
+    const activitiesResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/activities`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(activitiesResponse.status).toEqual(200);
+    const moveActivity = activitiesResponse.body.result.find(
+      (a: any) => a.header.type === "SubmodelMoved",
+    );
+    expect(moveActivity).toBeDefined();
+    expect(moveActivity.payload.changes[0]).toMatchObject({
+      type: "SubmodelMoved",
+      submodelId: submodels[1].id,
+      oldPosition: 1,
+      position: 0,
+      path: submodels[1].idShort,
+    });
+
+    // The move must also surface when the activity history is scoped to the
+    // submodel's own path (e.g. the AAS editor drawer's Activity History tab) -
+    // not just in the unscoped list.
+    const pathFilteredResponse = await request(app.getHttpServer())
+      .get(`${basePathV2}/${entity.id}/activities?path=sw:${submodels[1].idShort}`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send();
+    expect(pathFilteredResponse.status).toEqual(200);
+    expect(
+      pathFilteredResponse.body.result.some((a: any) => a.header.type === "SubmodelMoved"),
+    ).toBe(true);
   }
 
   async function assertModifyValueOfSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -1491,6 +1642,32 @@ export function createAasTestContext<T>(
     expect(bodyGroup1.value[0].idShort).toEqual(col1.idShort);
   }
 
+  async function assertReorderColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie, submodel, submodelElementList, entity } =
+      await createEmpytTable(createEntity);
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column2" }));
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
+    row0.addSubmodelElement(col1, { ability });
+    row0.addSubmodelElement(col2, { ability });
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(
+        `${basePathV2}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col2.idShort}/reorder`,
+      )
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send({ position: 0 });
+    expect(response.status).toEqual(201);
+    const bodyRow0 = response.body.value[0];
+    expect(bodyRow0.value.map((c: any) => c.idShort)).toEqual(["column2", "column1"]);
+  }
+
   async function assertCreateGroupFromColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
     const { org, userCookie, submodel, submodelElementList, entity } =
       await createEmpytTable(createEntity);
@@ -1600,6 +1777,7 @@ export function createAasTestContext<T>(
       postSubmodelV1: assertPostSubmodelV1,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
+      moveSubmodel: assertMoveSubmodel,
       modifyValueOfSubmodel: assertModifyValueOfSubmodel,
       modifySubmodelElement: assertModifySubmodelElement,
       modifySubmodelElementValue: assertModifySubmodelElementValue,
@@ -1610,6 +1788,7 @@ export function createAasTestContext<T>(
       modifyColumnInGroup: assertModifyColumnInGroup,
       deleteColumnFromGroup: assertDeleteColumnFromGroup,
       moveColumnToGroup: assertMoveColumnToGroup,
+      reorderColumn: assertReorderColumn,
       createGroupFromColumn: assertCreateGroupFromColumn,
       addRow: assertAddRow,
       deletePolicy: assertDeletePolicy,
@@ -1620,6 +1799,7 @@ export function createAasTestContext<T>(
       postSubmodelElement: assertPostSubmodelElement,
       postSubmodelElementAtIdShortPathV1: assertPostSubmodelElementAtIdShortPathV1,
       postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
+      moveSubmodelElement: assertMoveSubmodelElement,
       downloadActivities: assertDownloadActivities,
     },
   };

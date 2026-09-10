@@ -17,6 +17,7 @@ import {
   parseAsSubmodelElementListOrFail,
 } from "./table-extensable";
 import { IdShortPath } from "../../common/id-short-path";
+import { AasAbility } from "../../security/aas-ability";
 import { TableExtension } from "./table-extension";
 import { KeyTypes } from "@open-dpp/dto";
 
@@ -97,6 +98,17 @@ export class NestedTableExtension implements ITableExtendable {
   ): void {
     this.performRecursive((tableExtension) => {
       tableExtension.createGroupFromColumn(columnIdShort, group, options);
+    });
+  }
+
+  reorderColumn(
+    idShortOfColumn: string,
+    groupIdShort: string | undefined,
+    position: number,
+    options: { ability: AasAbility },
+  ): void {
+    this.performRecursive((tableExtension) => {
+      tableExtension.reorderColumn(idShortOfColumn, groupIdShort, position, options);
     });
   }
 

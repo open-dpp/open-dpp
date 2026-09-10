@@ -197,6 +197,14 @@ export function aasHandlers(basePath: string) {
       },
     ),
     http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/columns/column1/reorder`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/groups/group1/columns`,
       async ({ request }) => {
         const errorResponse = checkQueryParameters(request, {
@@ -280,6 +288,14 @@ export function aasHandlers(basePath: string) {
       },
     ),
     http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/move`,
+      async () => {
+        return HttpResponse.json(submodelCarbonFootprintResponse, {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements`,
       async () => {
         return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
@@ -289,6 +305,14 @@ export function aasHandlers(basePath: string) {
     ),
     http.post(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`,
+      async () => {
+        return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
+          status: 200,
+        });
+      },
+    ),
+    http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}/move`,
       async () => {
         return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
           status: 200,

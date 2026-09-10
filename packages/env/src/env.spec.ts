@@ -12,8 +12,7 @@ const baseEnv = {
   OPEN_DPP_S3_SSL: "false",
   OPEN_DPP_S3_ACCESS_KEY: "minioadmin",
   OPEN_DPP_S3_SECRET_KEY: "minioadmin",
-  OPEN_DPP_CLAMAV_URL: "http://localhost",
-  OPEN_DPP_CLAMAV_PORT: "3310",
+  OPEN_DPP_CLAMAV_URL: "http://localhost:3310",
   OPEN_DPP_MAIL_HOST: "localhost",
   OPEN_DPP_MAIL_PORT: "1025",
   OPEN_DPP_MAIL_USER: "admin",
@@ -48,6 +47,29 @@ describe("validateEnv — OPEN_DPP_URL", () => {
   it("rejects when OPEN_DPP_URL includes a fragment", () => {
     expect(() => validateEnv({ ...baseEnv, OPEN_DPP_URL: "https://dpp.example.com#frag" })).toThrow(
       /OPEN_DPP_URL/,
+    );
+  });
+});
+
+describe("validateEnv — OPEN_DPP_CLAMAV_URL", () => {
+  it("accepts a URL with port", () => {
+    expect(validateEnv(baseEnv).OPEN_DPP_CLAMAV_URL).toBe("http://localhost:3310");
+  });
+
+  it("is optional (virus scanning disabled when omitted)", () => {
+    const { OPEN_DPP_CLAMAV_URL: _, ...withoutClamAv } = baseEnv;
+    expect(validateEnv(withoutClamAv).OPEN_DPP_CLAMAV_URL).toBeUndefined();
+  });
+
+  it("treats an empty string as omitted", () => {
+    expect(
+      validateEnv({ ...baseEnv, OPEN_DPP_CLAMAV_URL: "" }).OPEN_DPP_CLAMAV_URL,
+    ).toBeUndefined();
+  });
+
+  it("rejects a value without scheme", () => {
+    expect(() => validateEnv({ ...baseEnv, OPEN_DPP_CLAMAV_URL: "clamav-rest:9000" })).toThrow(
+      /OPEN_DPP_CLAMAV_URL/,
     );
   });
 });

@@ -15,6 +15,9 @@ import {
   AssetAdministrationShellModificationSchema,
   CreateGroupFromColumnSchema,
   DeletePolicyDtoSchema,
+  MoveSubmodelElementSchema,
+  MoveSubmodelSchema,
+  ReorderColumnSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -78,6 +81,11 @@ export function ApiPatchSubmodel(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetSubmodelByIdPath, prefix)));
 }
 
+export const ApiMoveSubmodelPath = `${ApiGetSubmodelByIdPath}/move`;
+export function ApiMoveSubmodel(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiMoveSubmodelPath, prefix)));
+}
+
 export const ApiGetSubmodelValuePath = "/:id/submodels/:submodelId/$value";
 export function ApiGetSubmodelValue(prefix?: string) {
   return applyDecorators(Get(withPrefix(ApiGetSubmodelValuePath, prefix)));
@@ -113,6 +121,11 @@ export function ApiPatchSubmodelElement(prefix?: string) {
 export function ApiPostSubmodelElementAtIdShortPath(prefix?: string) {
   return applyDecorators(Post(withPrefix(ApiGetSubmodelElementByIdPath, prefix)));
 }
+
+export const ApiMoveSubmodelElementPath = `${ApiGetSubmodelElementByIdPath}/move`;
+export function ApiMoveSubmodelElement(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiMoveSubmodelElementPath, prefix)));
+}
 export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
 
 export function ApiPostColumn(prefix?: string) {
@@ -127,6 +140,11 @@ export function ApiDeleteColumn(prefix?: string) {
 
 export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)));
+}
+
+export const ApiReorderColumnPath = `${ApiGetColumnByIdShortPath}/reorder`;
+export function ApiReorderColumn(prefix?: string) {
+  return applyDecorators(Post(withPrefix(ApiReorderColumnPath, prefix)));
 }
 
 export const ApiCreateGroupFromColumnPath = `${ApiGetSubmodelElementByIdPath}/groups`;
@@ -165,6 +183,18 @@ export const GroupIdShortParamSchema = z.string().meta({
 
 export const GroupIdShortParam = () =>
   Param("groupIdShort", new ZodValidationPipe(GroupIdShortParamSchema));
+
+export const GroupIdShortQueryParamSchema = z
+  .string()
+  .optional()
+  .meta({
+    description: "IdShort of the group the column currently lives in, if any.",
+    example: "Group1",
+    param: { in: "query", name: "groupIdShort" },
+  });
+
+export const GroupIdShortQueryParam = () =>
+  Query("groupIdShort", new ZodValidationPipe(GroupIdShortQueryParamSchema));
 
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
@@ -323,6 +353,10 @@ export const SubmodelElementModificationRequestBody = () =>
   Body(new ZodValidationPipe(SubmodelElementModificationSchema));
 export const CreateGroupFromColumnRequestBody = () =>
   Body(new ZodValidationPipe(CreateGroupFromColumnSchema));
+export const MoveSubmodelElementRequestBody = () =>
+  Body(new ZodValidationPipe(MoveSubmodelElementSchema));
+export const ReorderColumnRequestBody = () => Body(new ZodValidationPipe(ReorderColumnSchema));
+export const MoveSubmodelRequestBody = () => Body(new ZodValidationPipe(MoveSubmodelSchema));
 export const ValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
 
 export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

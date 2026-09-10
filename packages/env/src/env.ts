@@ -47,9 +47,11 @@ export const envSchema = z
       .string()
       .optional()
       .default("open-dpp-profile-pictures"),
-    // ClamAV
-    OPEN_DPP_CLAMAV_URL: z.coerce.string(),
-    OPEN_DPP_CLAMAV_PORT: z.coerce.number().max(65535).min(0),
+    // ClamAV — full URL incl. port; unset or empty disables virus scanning of uploads
+    OPEN_DPP_CLAMAV_URL: z.preprocess(
+      (v) => (v === "" ? undefined : v),
+      z.url({ protocol: /^https?$/ }).optional(),
+    ),
     // Misc
     OPEN_DPP_BUILD_API_DOC: asStrictBoolean.optional().default(false),
     OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce.string().or(z.number()).optional().default("10mb"),

@@ -65,6 +65,10 @@ async function bootstrap() {
   const envService = app.get(EnvService);
   const logger = new Logger("Bootstrap");
 
+  if (!envService.get("OPEN_DPP_CLAMAV_URL")) {
+    logger.warn("OPEN_DPP_CLAMAV_URL is not set — uploaded files are not virus-scanned");
+  }
+
   // Proxy SPA routes in development before setting global prefix
   if (process.env.NODE_ENV !== "production") {
     logger.log("Proxy established for routes / except /api");

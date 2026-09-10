@@ -1713,9 +1713,14 @@ describe("aasTableExtension composable", () => {
     });
 
     buildColumnMenu({ position: 0, addColumnActions: true });
-    // "common.actions" now only holds edit/remove — no disabled placeholder.
+    // "common.actions" holds edit, move left/right, and remove.
     const actionsSection = columnMenu.value.find((c) => c.label === "common.actions")!;
-    expect(actionsSection.items!.map((i) => i.label)).toEqual(["common.edit", "common.remove"]);
+    expect(actionsSection.items!.map((i) => i.label)).toEqual([
+      "common.edit",
+      "common.moveLeft",
+      "common.moveRight",
+      "common.remove",
+    ]);
 
     // Move-to-group is its own always-present top-level section.
     const moveToGroupSection = columnMenu.value.find(

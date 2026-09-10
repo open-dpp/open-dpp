@@ -1,5 +1,47 @@
 # @open-dpp/client
 
+## 5.2.0
+
+### Minor Changes
+
+- [#848](https://github.com/open-dpp/open-dpp/pull/848) [`fe4ad17`](https://github.com/open-dpp/open-dpp/commit/fe4ad177e8ece990b57ebf274454ac74d99de411) Thanks [@Hentra](https://github.com/Hentra)! - Add descriptions to table columns
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.2.0
+  - @open-dpp/dto@5.2.0
+
+## 5.1.0
+
+### Minor Changes
+
+- [#850](https://github.com/open-dpp/open-dpp/pull/850) [`76ee0cc`](https://github.com/open-dpp/open-dpp/commit/76ee0cc4b9a6d45d84c783d4c32e010fe67aead6) Thanks [@mr42](https://github.com/mr42)! - Fix qr code for firefox screens smaller then 930 pixels.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.1.0
+  - @open-dpp/dto@5.1.0
+
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.0.0
+  - @open-dpp/dto@5.0.0
+
+## 4.0.1
+
+### Patch Changes
+
+- [#725](https://github.com/open-dpp/open-dpp/pull/725) [`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25) Thanks [@mr42](https://github.com/mr42)! - In the passport and template editors, sections, subsections, and data fields can be moved.
+
+- Updated dependencies [[`5f4fb21`](https://github.com/open-dpp/open-dpp/commit/5f4fb215013e05dd129217a71ed457296bd82d25)]:
+  - @open-dpp/api-client@4.0.1
+  - @open-dpp/dto@4.0.1
+
 ## 4.0.0
 
 ### Patch Changes

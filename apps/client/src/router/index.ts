@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from "vue-router";
+import type { RouteRecordRaw, RouterScrollBehavior } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
 import { authClient } from "../auth-client.ts";
 
@@ -94,17 +94,25 @@ export const routes: RouteRecordRaw[] = [
   ...ADMIN_ROUTES,
 ];
 
+/** Only scroll to top on a real page change. A navigation that only changes
+ * query params (drawer open/close, pagination cursor, move/edit bookkeeping)
+ * keeps the current scroll position instead of jerking the viewport back up. */
+export const scrollBehavior: RouterScrollBehavior = (to, from, savedPosition) => {
+  if (savedPosition) return savedPosition;
+  if (to.hash) {
+    return { el: to.hash, behavior: "smooth", top: 150 };
+  }
+  if (to.path === from.path) {
+    return false;
+  }
+
+  return { top: 0 };
+};
+
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition;
-    if (to.hash) {
-      return { el: to.hash, behavior: "smooth", top: 150 };
-    }
-
-    return { top: 0 };
-  },
+  scrollBehavior,
 });
 
 router.beforeEach(async (to, from) => {

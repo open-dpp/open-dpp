@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { CreateApiKeyDto } from "@open-dpp/dto";
-import { NotFoundError } from "@open-dpp/exception";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Pagination } from "../../../../pagination/pagination";
@@ -50,7 +50,7 @@ export class ApiKeysService {
   private async findOwnedApiKeyOrFail(userId: string, keyId: string): Promise<ApiKey> {
     const apiKey = await this.apiKeysRepository.findOneByIdAndUserId(keyId, userId);
     if (!apiKey) {
-      throw new NotFoundError(ApiKey.name, keyId);
+      throw new NotFoundInDatabaseException(ApiKey.name, keyId);
     }
     return apiKey;
   }

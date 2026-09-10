@@ -8,6 +8,10 @@
     "noEntries": "No entries found",
     "moveUp": "Move up",
     "moveDown": "Move down",
+    "moveRight": "Move right",
+    "moveLeft": "Move left",
+    "move": "Move",
+    "moveTo": "Move to...",
     "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
@@ -155,8 +159,10 @@
     "submodel": "Section | Sections",
     "removeSubmodelElement": "Should the element really be removed?",
     "errorRemoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.remove the element.",
+    "errorMoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.move the element.",
     "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
     "errorRemoveSubmodel": "@.capitalize:common.failed to @.lower:common.remove @.lower:aasEditor.submodel.",
+    "errorMoveSubmodel": "@.capitalize:common.failed to @.lower:common.move @.lower:aasEditor.submodel.",
     "submodelElementList": "Table",
     "textField": "Text field",
     "file": "File",
@@ -607,6 +613,7 @@
     "label": "Activity history",
     "createdAt": "Date",
     "position": "Position",
+    "oldPosition": "Old position",
     "name": "Name",
     "group": "Group",
     "type": "Type",
@@ -614,6 +621,11 @@
     "oldValue": "Old value",
     "newValue": "New value",
     "userId": "User ID",
+    "movedFrom": "Moved from",
+    "movedTo": "Moved to",
+    "viewHistoryBeforeMove": "View history before move",
+    "live": "Live",
+    "beforeMove": "Before move to {path}",
     "languageOps": {
       "replace": "modified",
       "add": "added",
@@ -648,7 +660,9 @@
       "DigitalProductDocumentStatusChanged": "Status changed",
       "PolicyModified": "Permission modified",
       "FileValueChanged": "File changed",
-      "ReferenceElementValueChanged": "Reference changed"
+      "ReferenceElementValueChanged": "Reference changed",
+      "SubmodelElementMoved": "Element moved",
+      "SubmodelMoved": "Section moved"
     }
   },
   "passports": {

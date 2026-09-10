@@ -74,14 +74,19 @@ export function useActivityHistory(type: DigitalProductDocumentTypeType) {
     return pagingResult;
   }
 
-  async function changePeriod(newPeriod: Date[] | (Date | null)[]) {
+  async function changePeriod(
+    newPeriod: Date[] | (Date | null)[],
+    options?: { pushToUrl?: boolean },
+  ) {
     period.value = newPeriod;
-    await router.push({
-      query: {
-        ...route.query,
-        ...periodToQueryParams(),
-      },
-    });
+    if (options?.pushToUrl ?? true) {
+      await router.push({
+        query: {
+          ...route.query,
+          ...periodToQueryParams(),
+        },
+      });
+    }
   }
 
   async function downloadActivities(id: string) {

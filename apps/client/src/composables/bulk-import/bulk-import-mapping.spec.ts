@@ -89,7 +89,7 @@ describe("useBulkImportMapping", () => {
     const { submodels, draftInput, draftTarget, addMapping, mappings } = useBulkImportMapping();
     submodels.value = [buildSubmodel({ id: "submodel-1", idShort: "TechnicalData" })];
     draftInput.value = "sku";
-    draftTarget.value = { submodelIdShort: "submodel-1", output: "properties.sku" };
+    draftTarget.value = { submodelIdShort: "submodel-1", idShortPath: "properties.sku" };
 
     addMapping();
 
@@ -103,7 +103,7 @@ describe("useBulkImportMapping", () => {
   it("falls back to the raw target id when it can't resolve a submodel label", () => {
     const { draftInput, draftTarget, addMapping, mappings } = useBulkImportMapping();
     draftInput.value = "sku";
-    draftTarget.value = { submodelIdShort: "unknown-submodel", output: "properties.sku" };
+    draftTarget.value = { submodelIdShort: "unknown-submodel", idShortPath: "properties.sku" };
 
     addMapping();
 
@@ -141,7 +141,7 @@ describe("useBulkImportMapping", () => {
     submodels.value = [buildSubmodel()];
     mappings.value = [{ input: "a", submodelIdShort: "sm1", output: "a" }];
     draftInput.value = "a";
-    draftTarget.value = { submodelIdShort: "sm1", output: "a" };
+    draftTarget.value = { submodelIdShort: "sm1", idShortPath: "a" };
 
     reset();
 

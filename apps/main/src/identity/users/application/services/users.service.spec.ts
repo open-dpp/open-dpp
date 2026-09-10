@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Logger } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Language } from "@open-dpp/dto";
-import { NotFoundError, NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -242,7 +242,9 @@ describe("UsersService", () => {
     mockRepo.findOneOrFail.mockResolvedValue(user);
     mockRepo.update.mockResolvedValue(null);
 
-    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(NotFoundError);
+    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(
+      NotFoundInDatabaseException,
+    );
   });
 
   it("should set user email verified via domain method", async () => {
@@ -262,7 +264,7 @@ describe("UsersService", () => {
     mockRepo.findOneByEmail.mockResolvedValue(null);
 
     await expect(service.setUserEmailVerified("nonexistent@example.com", true)).rejects.toThrow(
-      NotFoundError,
+      NotFoundInDatabaseException,
     );
   });
 
@@ -272,7 +274,7 @@ describe("UsersService", () => {
     mockRepo.update.mockResolvedValue(null);
 
     await expect(service.setUserEmailVerified("test@example.com", true)).rejects.toThrow(
-      NotFoundError,
+      NotFoundInDatabaseException,
     );
   });
 
@@ -389,13 +391,13 @@ describe("UsersService", () => {
       expect(result).toBe(user);
     });
 
-    it("throws NotFoundError when the repository update returns null", async () => {
+    it("throws NotFoundInDatabaseException when the repository update returns null", async () => {
       const user = loadUser();
       mockRepo.findOneOrFail.mockResolvedValue(user);
       mockRepo.update.mockResolvedValue(null);
 
       await expect(service.updateProfile(user.id, { firstName: "Jane" })).rejects.toThrow(
-        NotFoundError,
+        NotFoundInDatabaseException,
       );
     });
   });

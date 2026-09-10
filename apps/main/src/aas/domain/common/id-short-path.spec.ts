@@ -3,6 +3,12 @@ import { IdShortPath } from "./id-short-path";
 import { ValueError } from "@open-dpp/exception";
 
 describe("id-short-path", () => {
+  it("create({ path: '' }) should produce the empty (root) path, not a single empty segment", () => {
+    expect(IdShortPath.create({ path: "" })).toEqual(IdShortPath.fromSegments([]));
+    expect(IdShortPath.create({ path: "" }).isEmpty()).toBe(true);
+    expect(IdShortPath.create({ path: "" }).toString()).toBe("");
+  });
+
   it("should be evaluate startsWith correctly", () => {
     expect(
       IdShortPath.create({ path: "path1" }).isChildOf(IdShortPath.create({ path: "path1" })),

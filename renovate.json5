@@ -1,0 +1,37 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  timezone: "Europe/Berlin",
+  schedule: ["before 6am"],
+  labels: ["dependencies"],
+  prConcurrentLimit: 10,
+  prHourlyLimit: 0,
+
+  // Load-bearing. "bump" makes Renovate update pnpm-lock.yaml with
+  // `pnpm install --lockfile-only`. Do NOT switch to "update-lockfile": that runs
+  // `pnpm update --no-save … --recursive`, which with injectWorkspacePackages
+  // writes injected copies of the workspace packages resolved against newer
+  // @nestjs/* and zod versions than the importers. Two ConfigService / ZodType
+  // instances then break the build (this is exactly why the Dependabot PRs were red).
+  rangeStrategy: "bump",
+
+  // Must stay >= pnpm's minimumReleaseAge (1440 min, see pnpm-workspace.yaml),
+  // otherwise Renovate proposes versions pnpm's supply-chain gate refuses and the
+  // lockfile update fails.
+  minimumReleaseAge: "3 days",
+  internalChecksFilter: "strict",
+
+  osvVulnerabilityAlerts: true,
+  vulnerabilityAlerts: {
+    labels: ["dependencies", "security"],
+    // Vulnerability PRs would otherwise default to a lockfile-only update
+    // (`pnpm update --no-save`, the split-graph problem above). These PRs
+    // target dependencies declared in a package.json, so bumping the range is
+    // always possible and keeps them on the `pnpm install` path.
+    rangeStrategy: "bump",
+  },
+
+  // Periodic full re-resolve. Regenerating the whole lockfile moves every range
+  // together, so it stays consistent (unlike a partial `pnpm update`).
+  lockFileMaintenance: { enabled: true },
+}
