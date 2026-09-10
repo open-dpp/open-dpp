@@ -677,6 +677,7 @@
     "loading": "Loading passport…",
     "delete": "Are you sure you want to delete the product passport? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport status",
+    "errorRemoveEditingRestrictions": "Failed to remove editing restrictions",
     "blank": "Blank",
     "fromTemplate": "From template"
   },
@@ -701,6 +702,7 @@
     "loading": "Loading template…",
     "delete": "Are you sure you want to delete the passport template? Once deleted, it will no longer be available.",
     "errorModifyStatus": "Failed to modify passport template status",
+    "errorRestrictPassportEditing": "Failed to restrict passport editing",
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",

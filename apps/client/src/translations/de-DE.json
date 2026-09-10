@@ -707,6 +707,7 @@
     "notFoundDescription": "Dieser Produktpass existiert nicht oder wurde entfernt. Bitte Link prüfen.",
     "loading": "Produktpass wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status des Produktpasses",
+    "errorRemoveEditingRestrictions": "Fehler beim Entfernen der Bearbeitungseinschränkung",
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage"
   },
@@ -731,6 +732,7 @@
     "notFoundDescription": "Diese Passvorlage existiert nicht oder wurde entfernt. Bitte Link prüfen.",
     "loading": "Passvorlage wird geladen…",
     "errorModifyStatus": "Fehler beim Ändern des Status der Passvorlage",
+    "errorRestrictPassportEditing": "Fehler beim Einschränken der Passbearbeitung",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "select": "Vorlage auswählen",
