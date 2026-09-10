@@ -118,7 +118,7 @@ describe("passportService", () => {
     expect(service).toBeDefined();
   });
 
-  it("createPassportFromTemplate copies the template's environment and links it to the passport", async () => {
+  it("createPassportFromTemplate copies the template's environment and passportEditingMode, and links it to the passport", async () => {
     const organizationId = randomUUID();
     const subject = SubjectAttributes.create({
       userRole: UserRole.USER,
@@ -138,6 +138,7 @@ describe("passportService", () => {
 
     expect(passport.templateId).toEqual(template.id);
     expect(passport.organizationId).toEqual(organizationId);
+    expect(passport.getEditingMode()).toEqual(PassportEditingMode.Full);
     expect(await passportRepository.findOne(passport.id)).toBeDefined();
     expect(
       await presentationConfigurationRepository.findByReference({
@@ -145,6 +146,23 @@ describe("passportService", () => {
         referenceId: passport.id,
       }),
     ).toBeDefined();
+
+    const restrictedTemplate = Template.create({
+      organizationId,
+      environment: await environmentService.createEnvironment(
+        { assetAdministrationShells: [{}] },
+        true,
+      ),
+    });
+    restrictedTemplate.restrictPassportEditingToData();
+    await templateRepository.save(restrictedTemplate);
+
+    const restrictedPassport = await service.createPassportFromTemplate(
+      organizationId,
+      restrictedTemplate.id,
+      subject,
+    );
+    expect(restrictedPassport.getEditingMode()).toEqual(PassportEditingMode.DataOnly);
   });
 
   it("createPassportFromTemplate rejects an archived template", async () => {

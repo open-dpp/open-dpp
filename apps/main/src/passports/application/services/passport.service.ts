@@ -9,6 +9,7 @@ import {
 import { InjectConnection } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../../database/query-options";
 import { TransactionService } from "../../../database/transaction.service";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { PassportExportable } from "../../../aas/domain/exportable/passport-exportable";
@@ -177,7 +178,13 @@ export class PassportService {
       );
     }
     const environment = await this.environmentService.copyEnvironment(template.environment);
-    return await this.createAndPersistPassport(organizationId, environment, templateId, options);
+    return await this.createAndPersistPassport(
+      organizationId,
+      environment,
+      templateId,
+      options,
+      template.getPassportEditingMode(),
+    );
   }
 
   /**
@@ -189,11 +196,13 @@ export class PassportService {
     environment: Environment,
     templateId?: string,
     options?: DbSessionOptions,
+    editingMode?: PassportEditingModeType,
   ): Promise<Passport> {
     const passport = Passport.create({
       organizationId,
       templateId,
       environment,
+      editingMode,
     });
     const upid = passport.createUniqueProductIdentifier();
 
