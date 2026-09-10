@@ -24,6 +24,7 @@ export const ActivityTypes = {
   SubmodelMoved: "SubmodelMoved",
   PolicyDeleted: "PolicyDeleted",
   DigitalProductDocumentStatusChanged: "DigitalProductDocumentStatusChanged",
+  PassportEditingModeChanged: "PassportEditingModeChanged",
 } as const;
 export const ActivityTypesEnum = z.enum(ActivityTypes);
 export type ActivityTypesType = z.infer<typeof ActivityTypesEnum>;
