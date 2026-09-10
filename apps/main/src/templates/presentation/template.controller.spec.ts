@@ -6,6 +6,7 @@ import {
   AssetKind,
   DigitalProductDocumentStatusModificationMethodDto,
   DigitalProductDocumentTypes,
+  PassportEditingModeDto,
 } from "@open-dpp/dto";
 import request from "supertest";
 import {
@@ -298,7 +299,7 @@ describe("templateController", () => {
     expect(response.body.paging_metadata.cursor).toBeNull();
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => {
-        const { passportEditingMode: _passportEditingMode, ...plain } = t.toPlain();
+        const plain = t.toPlain();
         return {
           ...plain,
           environment: {
@@ -323,7 +324,7 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     expect(response.body.result).toEqual(
       [t2, t1].map((t) => {
-        const { passportEditingMode: _passportEditingMode, ...plain } = t.toPlain();
+        const plain = t.toPlain();
         return {
           ...plain,
           createdAt: t.createdAt.toISOString(),
@@ -344,7 +345,7 @@ describe("templateController", () => {
         total_count: 1,
       },
       result: [t2].map((p) => {
-        const { passportEditingMode: _passportEditingMode, ...plain } = p.toPlain();
+        const plain = p.toPlain();
         return {
           ...plain,
           createdAt: p.createdAt.toISOString(),
@@ -386,6 +387,7 @@ describe("templateController", () => {
         currentStatus: DigitalProductDocumentStatus.Draft,
         previousStatus: null,
       },
+      passportEditingMode: "Full",
     });
     const foundAas = await ctx
       .getRepositories()
@@ -511,6 +513,34 @@ describe("templateController", () => {
     expect(response.status).toEqual(200);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(template.id);
     expect(foundPassport.isPublished()).toBeTruthy();
+  });
+
+  it("/PUT template passport-editing-mode", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository } = ctx.getRepositories();
+
+    const template = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await dppIdentifiableRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .put(`${basePathV2}/${template.id}/passport-editing-mode`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        mode: PassportEditingModeDto.DataOnly,
+      });
+    expect(response.status).toEqual(200);
+    expect(response.body.passportEditingMode).toEqual(PassportEditingModeDto.DataOnly);
+    const found = await dppIdentifiableRepository.findOneOrFail(template.id);
+    expect(found.getPassportEditingMode()).toEqual(PassportEditingModeDto.DataOnly);
   });
 
   it("/DELETE template", async () => {

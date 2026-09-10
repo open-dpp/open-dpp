@@ -92,13 +92,14 @@ describe("templateService", () => {
     const template = Template.create({ organizationId, environment: Environment.create({}) });
     await templateRepository.save(template);
 
-    await service.restrictPassportEditingToData(randomUUID(), organizationId, template.id, {
-      subject,
-      userId: randomUUID(),
-    });
+    const result = await service.restrictPassportEditingToData(
+      randomUUID(),
+      organizationId,
+      template.id,
+      { subject, userId: randomUUID() },
+    );
+    expect(result.passportEditingMode).toEqual(PassportEditingMode.DataOnly);
 
-    // Note: the returned DTO doesn't expose `passportEditingMode` yet — that's
-    // TemplateDtoSchema's job (commit 11) — so assert on the persisted entity instead.
     const persisted = await templateRepository.findOneOrFail(template.id);
     expect(persisted.getPassportEditingMode()).toEqual(PassportEditingMode.DataOnly);
 
