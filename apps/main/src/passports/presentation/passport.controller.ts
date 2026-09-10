@@ -14,6 +14,7 @@ import type {
   ReorderColumnDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
+  RemoveEditingRestrictionsDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
@@ -30,9 +31,11 @@ import {
   AllApiVersions,
   DigitalProductDocumentStatusModificationDtoSchema,
   PassportDtoSchema,
+  PassportEditingModeDto,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
   Populates,
+  RemoveEditingRestrictionsDtoSchema,
 } from "@open-dpp/dto";
 import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import { type Response } from "express";
@@ -258,6 +261,28 @@ export class PassportController
       subject,
       userId,
     });
+  }
+
+  @Put(":id/editing-mode")
+  async removeEditingRestrictions(
+    @CorrelationIdDecorator() correlationId: string,
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+    @UserIdDecorator() userId: string,
+    @Body(new ZodValidationPipe(RemoveEditingRestrictionsDtoSchema))
+    body: RemoveEditingRestrictionsDto,
+  ): Promise<PassportDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    if (body.mode === PassportEditingModeDto.Full) {
+      return this.passportService.removeEditingRestrictions(correlationId, organizationId, id, {
+        subject,
+        userId,
+      });
+    } else {
+      throw new BadRequestException(`Mode ${body.mode} not supported yet.`);
+    }
   }
 
   @Post()

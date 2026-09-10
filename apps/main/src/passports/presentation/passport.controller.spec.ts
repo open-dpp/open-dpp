@@ -698,6 +698,38 @@ describe("passportController", () => {
     expect(foundPassport.isPublished()).toBeTruthy();
   });
 
+  it("/PUT passport editing-mode", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const { dppIdentifiableRepository, uniqueProductIdentifierRepository } = ctx.getRepositories();
+
+    const passport = Passport.create({
+      organizationId: org!.id,
+      environment: Environment.create({}),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      editingMode: PassportEditingModeDto.DataOnly,
+    });
+
+    const upi = passport.createUniqueProductIdentifier();
+
+    await uniqueProductIdentifierRepository.save(upi);
+    await dppIdentifiableRepository.save(passport);
+
+    const response = await request(app.getHttpServer())
+      .put(`${basePathV2}/${passport.id}/editing-mode`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id)
+      .send({
+        mode: PassportEditingModeDto.Full,
+      });
+    expect(response.status).toEqual(200);
+    expect(response.body.editingMode).toEqual(PassportEditingModeDto.Full);
+    const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
+    expect(foundPassport.getEditingMode()).toEqual(PassportEditingModeDto.Full);
+  });
+
   it("/DELETE passport", async () => {
     const { app, getOrganizationAndUserWithCookie } = ctx.globals();
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
