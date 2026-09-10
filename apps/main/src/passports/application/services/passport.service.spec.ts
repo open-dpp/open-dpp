@@ -42,6 +42,9 @@ import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
 import { ActivityHistoryModule } from "../../../activity-history/activity-history.module";
+import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
+import { ActivityTypes } from "../../../activity-history/domain/activities/activity-types";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
 import { EmailService } from "../../../email/email.service";
 import { jest } from "@jest/globals";
 import { Template } from "../../../templates/domain/template";
@@ -55,6 +58,7 @@ describe("passportService", () => {
   let templateRepository: TemplateRepository;
   let module: TestingModule;
   let environmentService: EnvironmentService;
+  let activityRepository: ActivityRepository;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -94,6 +98,7 @@ describe("passportService", () => {
         send: jest.fn(),
       })
       .compile();
+    await module.init();
 
     service = module.get<PassportService>(PassportService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
@@ -102,6 +107,7 @@ describe("passportService", () => {
     );
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
     environmentService = module.get<EnvironmentService>(EnvironmentService);
+    activityRepository = module.get<ActivityRepository>(ActivityRepository);
   });
 
   afterAll(async () => {
@@ -248,6 +254,51 @@ describe("passportService", () => {
 
     const stillDynamic = await permalinkRepository.findOneOrFail(permalink.id);
     expect(stillDynamic.publishedUrl).toBeNull();
+  });
+
+  it("removeEditingRestrictions restores full editing and records an activity", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const passport = Passport.create({
+      organizationId,
+      templateId: randomUUID(),
+      environment: Environment.create({}),
+      editingMode: PassportEditingMode.DataOnly,
+    });
+    await passportRepository.save(passport);
+
+    await service.removeEditingRestrictions(randomUUID(), organizationId, passport.id, {
+      subject,
+      userId: randomUUID(),
+    });
+
+    const persisted = await passportRepository.findOneOrFail(passport.id);
+    expect(persisted.getEditingMode()).toEqual(PassportEditingMode.Full);
+
+    const activities = await activityRepository.findByAggregateId(passport.id, {
+      filter: { activityType: ActivityTypes.PassportEditingModeChanged },
+    });
+    expect(activities.items).toHaveLength(1);
+  });
+
+  it("removeEditingRestrictions throws when the passport is already fully editable", async () => {
+    const organizationId = randomUUID();
+    const subject = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
+    const passport = Passport.create({ organizationId, environment: Environment.create({}) });
+    await passportRepository.save(passport);
+
+    await expect(
+      service.removeEditingRestrictions(randomUUID(), organizationId, passport.id, {
+        subject,
+        userId: randomUUID(),
+      }),
+    ).rejects.toThrow("This passport's editing is not restricted.");
   });
 
   it("threads the stored presentationConfiguration into the exported passport", async () => {

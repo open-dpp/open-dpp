@@ -36,6 +36,7 @@ import { handleDppStatusChangeRequest } from "../../../digital-product-document/
 import { DigitalProductDocumentService } from "../../../digital-product-document/application/digital-product-document.service";
 import { ActivityRepository } from "../../../activity-history/infrastructure/activity.repository";
 import { DigitalProductDocumentStatusChangedActivity } from "../../../activity-history/domain/activities/digital-product-document-status-changed.activity";
+import { PassportEditingModeChangedActivity } from "../../../activity-history/domain/activities/passport-editing-mode-changed.activity";
 
 @Injectable()
 export class PassportService {
@@ -125,6 +126,36 @@ export class PassportService {
       if (body.method === DigitalProductDocumentStatusModificationMethodDto.Publish) {
         await this.permalinkApplicationService.freezeAllForPassport(persisted, options);
       }
+      if (!activity.isNoop()) {
+        await this.activityRepository.createMany([activity], options);
+      }
+      return persisted;
+    });
+    return PassportDtoSchema.parse(saved.toPlain());
+  }
+
+  async removeEditingRestrictions(
+    correlationId: string,
+    organizationId: string,
+    id: string,
+    userContext: UserContext,
+  ) {
+    const passport =
+      await this.digitalProductDocumentService.loadDigitalProductDocumentAndCheckOwnership(
+        id,
+        userContext.subject,
+        organizationId,
+      );
+    passport.withTracking().removeEditingRestrictions();
+    const activity = PassportEditingModeChangedActivity.create({
+      correlationId,
+      userId: userContext.userId,
+      digitalProductDocumentId: id,
+      item: passport,
+    });
+
+    const saved = await this.transactionService.withTransaction(async (options) => {
+      const persisted = await this.passportRepository.save(passport, options);
       if (!activity.isNoop()) {
         await this.activityRepository.createMany([activity], options);
       }
