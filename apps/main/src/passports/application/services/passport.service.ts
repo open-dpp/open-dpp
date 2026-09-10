@@ -7,8 +7,10 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
+import { ValueError } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../../database/query-options";
 import { TransactionService } from "../../../database/transaction.service";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
 import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
@@ -163,6 +165,14 @@ export class PassportService {
       return persisted;
     });
     return PassportDtoSchema.parse(saved.toPlain());
+  }
+
+  assertFullEditingMode(passport: Passport): void {
+    if (passport.getEditingMode() !== PassportEditingMode.Full) {
+      throw new ValueError(
+        `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+      );
+    }
   }
 
   async createPassportFromTemplate(

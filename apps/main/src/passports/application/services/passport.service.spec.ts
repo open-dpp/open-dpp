@@ -319,6 +319,27 @@ describe("passportService", () => {
     ).rejects.toThrow("This passport's editing is not restricted.");
   });
 
+  it("assertFullEditingMode does not throw for a fully editable passport", async () => {
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+    });
+
+    expect(() => service.assertFullEditingMode(passport)).not.toThrow();
+  });
+
+  it("assertFullEditingMode throws when the passport's editing is restricted to data", async () => {
+    const passport = Passport.create({
+      organizationId: randomUUID(),
+      environment: Environment.create({}),
+      editingMode: PassportEditingMode.DataOnly,
+    });
+
+    expect(() => service.assertFullEditingMode(passport)).toThrow(
+      `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+    );
+  });
+
   it("threads the stored presentationConfiguration into the exported passport", async () => {
     const organizationId = randomUUID();
     const passport = Passport.create({

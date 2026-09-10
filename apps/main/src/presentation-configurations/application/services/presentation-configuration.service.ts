@@ -6,10 +6,12 @@ import {
   DigitalProductDocumentTypes,
   DigitalProductDocumentTypesType,
 } from "@open-dpp/dto";
-import { NotFoundError } from "@open-dpp/exception";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
 import { AasAbility } from "../../../aas/domain/security/aas-ability";
 import type { DbSessionOptions } from "../../../database/query-options";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { Passport } from "../../../passports/domain/passport";
 import { PresentationConfiguration } from "../../domain/presentation-configuration";
 import {
@@ -20,12 +22,16 @@ import {
 /**
  * Minimal shape required by the service to identify a passport/template reference.
  * Both `Passport` and `Template` expose `id` and `organizationId` as public readonly fields,
- * so instances of either class satisfy this interface directly.
+ * so instances of either class satisfy this interface directly. `editingMode` is only
+ * meaningful (and should only be set) for a Passport reference — the caller already has the
+ * loaded `Passport` at hand wherever a holder is built, so `applyPatch` can enforce the
+ * editing-mode guard without a repository lookup of its own.
  */
 export interface PresentationReferenceHolder {
   readonly id: string;
   readonly organizationId: string;
   readonly referenceType: DigitalProductDocumentTypesType;
+  readonly editingMode?: PassportEditingModeType;
 }
 
 @Injectable()
@@ -81,6 +87,14 @@ export class PresentationConfigurationService {
       referenceType: holder.referenceType,
       referenceId: holder.id,
     });
+    if (
+      holder.referenceType === DigitalProductDocumentTypes.Passport &&
+      holder.editingMode === PassportEditingMode.DataOnly
+    ) {
+      throw new ValueError(
+        `Passport ${holder.id} editing is restricted to data; presentation configuration is not editable`,
+      );
+    }
     return this.persistPatch(config, patch, ability);
   }
 
