@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "./organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
-import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PassportEditingModeDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
 import { paginationParams } from "./pagination";
 
@@ -49,6 +49,15 @@ export function passportsHandlers() {
             ...passport1.lastStatusChange,
             currentStatus: DigitalProductDocumentStatusDto.Published,
           },
+        },
+        { status: 200 },
+      );
+    }),
+    http.put(`${passportsEndpointUrl}/${passport1.id}/editing-mode`, async () => {
+      return HttpResponse.json(
+        {
+          ...passport1,
+          editingMode: PassportEditingModeDto.Full,
         },
         { status: 200 },
       );

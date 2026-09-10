@@ -5,7 +5,7 @@ import { http, HttpResponse } from "msw";
 import { activeOrganization } from "./organization";
 import { checkQueryParameters } from "../../utils";
 import { baseURL } from "./index";
-import { DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import { DigitalProductDocumentStatusDto, PassportEditingModeDto } from "@open-dpp/dto";
 import { filterParams } from "./aas";
 
 export const paginationParams = { limit: 10, cursor: randomUUID() };
@@ -51,6 +51,15 @@ export function templatesHandlers() {
             ...template1.lastStatusChange,
             currentStatus: DigitalProductDocumentStatusDto.Published,
           },
+        },
+        { status: 200 },
+      );
+    }),
+    http.put(`${templatesEndpointUrl}/${template1.id}/passport-editing-mode`, async () => {
+      return HttpResponse.json(
+        {
+          ...template1,
+          passportEditingMode: PassportEditingModeDto.DataOnly,
         },
         { status: 200 },
       );
