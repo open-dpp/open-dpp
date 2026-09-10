@@ -131,6 +131,7 @@ describe("PresentationConfigurationController", () => {
       id: passport.id,
       organizationId: passport.organizationId,
       referenceType: DigitalProductDocumentTypes.Passport,
+      editingMode: passport.getEditingMode(),
     };
   }
 

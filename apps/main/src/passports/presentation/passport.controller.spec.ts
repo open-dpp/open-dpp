@@ -35,6 +35,7 @@ import {
   PassportEditingModeDto,
   ReferenceTypes,
 } from "@open-dpp/dto";
+import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { PermalinkApplicationService } from "../../permalink/application/services/permalink.application.service";
 import { PermalinkDoc, PermalinkSchema } from "../../permalink/infrastructure/permalink.schema";
 import { PermalinkModule } from "../../permalink/permalink.module";
@@ -113,6 +114,22 @@ describe("passportController", () => {
 
   async function savePassport(passport: Passport): Promise<Passport> {
     return ctx.getRepositories().dppIdentifiableRepository.save(passport);
+  }
+
+  async function createDataOnlyPassport(orgId?: string): Promise<Passport> {
+    const { aas, submodels } = ctx.getAasObjects();
+    return ctx.getRepositories().dppIdentifiableRepository.save(
+      Passport.create({
+        id: randomUUID(),
+        organizationId: orgId ?? randomUUID(),
+        environment: Environment.create({
+          assetAdministrationShells: [aas.id],
+          submodels: submodels.map((s) => s.id),
+          conceptDescriptions: [],
+        }),
+        editingMode: PassportEditingModeDto.DataOnly,
+      }),
+    );
   }
 
   it(`/GET List all passports`, async () => {
@@ -728,6 +745,29 @@ describe("passportController", () => {
     expect(response.body.editingMode).toEqual(PassportEditingModeDto.Full);
     const foundPassport = await dppIdentifiableRepository.findOneOrFail(passport.id);
     expect(foundPassport.getEditingMode()).toEqual(PassportEditingModeDto.Full);
+  });
+
+  it("blocks structural mutations on a DataOnly passport", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { submodels } = ctx.getAasObjects();
+    const passport = await createDataOnlyPassport(org.id);
+    const submodelElementJson = propertyInputPlainFactory.build();
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePathV2}/${passport.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+      .send(submodelElementJson);
+
+    expect(response.status).toEqual(400);
+    expect(response.body.message).toEqual(
+      `Passport ${passport.id} editing is restricted to data; structural changes are not allowed`,
+    );
+  });
+
+  it("still allows value-only edits on a DataOnly passport", async () => {
+    await ctx.asserts.modifySubmodelElementValue(createDataOnlyPassport, savePassport);
   });
 
   it("/DELETE passport", async () => {
