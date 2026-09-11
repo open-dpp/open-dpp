@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { DigitalProductDocumentStatusDto, type DigitalProductDocumentDto } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  PassportEditingModeDto,
+  type DigitalProductDocumentDto,
+} from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 import { computed, ref } from "vue";
 import {
@@ -7,6 +11,7 @@ import {
   type DigitalProductDocumentTypeType,
 } from "../../lib/digital-product-document.ts";
 import { useDigitalProductDocument } from "../../composables/digital-product-document.ts";
+import { useDigitalProductDocumentToolbar } from "../../composables/digital-product-document-toolbar.ts";
 import { useRouterUtils } from "../../composables/router-utils.ts";
 import { useRoute, useRouter } from "vue-router";
 
@@ -53,6 +58,13 @@ async function onPublishButtonClicked(item: DigitalProductDocumentDto) {
   await publish(item.id);
   await fetchDPD(item.id);
 }
+
+const {
+  passportEditingMode,
+  editingMode,
+  onRestrictPassportEditingButtonClicked,
+  onRemoveEditingRestrictionsButtonClicked,
+} = useDigitalProductDocumentToolbar(props.type, model, fetchDPD);
 
 async function navigateToActivityHistory() {
   await router.push(`${route.path}/activities`);
@@ -140,6 +152,30 @@ const permalinkActions = computed(() => [
             :aria-label="t('activityHistory.label')"
             v-tooltip.bottom="t('activityHistory.label')"
             @click="navigateToActivityHistory"
+          />
+          <Button
+            v-if="
+              type === DigitalProductDocumentType.Template &&
+              passportEditingMode === PassportEditingModeDto.Full
+            "
+            icon="pi pi-lock"
+            text
+            severity="secondary"
+            :aria-label="t('templates.restrictPassportEditing')"
+            v-tooltip.bottom="t('templates.restrictPassportEditingTooltip')"
+            @click="onRestrictPassportEditingButtonClicked(model)"
+          />
+          <Button
+            v-if="
+              type === DigitalProductDocumentType.Passport &&
+              editingMode === PassportEditingModeDto.DataOnly
+            "
+            icon="pi pi-lock-open"
+            text
+            severity="secondary"
+            :aria-label="t('passports.removeEditingRestrictions')"
+            v-tooltip.bottom="t('passports.removeEditingRestrictionsTooltip')"
+            @click="onRemoveEditingRestrictionsButtonClicked(model)"
           />
         </div>
       </template>
