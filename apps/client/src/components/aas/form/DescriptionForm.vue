@@ -15,5 +15,6 @@ const props = defineProps<{
     data-cy-prefix="description"
     :submit-attempted="props.submitAttempted"
     :disabled="props.disabled"
+    multiline
   />
 </template>

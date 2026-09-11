@@ -1,5 +1,27 @@
 # @open-dpp/main
 
+## 5.2.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.2.0
+  - @open-dpp/dto@5.2.0
+  - @open-dpp/env@5.2.0
+  - @open-dpp/exception@5.2.0
+  - @open-dpp/permission@5.2.0
+
+## 5.1.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.1.0
+  - @open-dpp/dto@5.1.0
+  - @open-dpp/env@5.1.0
+  - @open-dpp/exception@5.1.0
+  - @open-dpp/permission@5.1.0
+
 ## 5.0.0
 
 ### Major Changes
