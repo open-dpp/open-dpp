@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Quota } from "../domain/quota";
 import { QuotaDoc } from "./quota.schema";
+import { PolicyDocSchemaVersion } from "./policy.schema";
 import { NotFoundError } from "@open-dpp/exception";
 import type { PolicyKey } from "@open-dpp/dto";
 
@@ -66,6 +67,7 @@ export class QuotaRepository {
     }
 
     quotaDoc.set({
+      _schemaVersion: PolicyDocSchemaVersion.v1_0_0,
       key: quota.getKey(),
       organizationId: quota.getOrganizationId(),
       limit: quota.getLimit(),

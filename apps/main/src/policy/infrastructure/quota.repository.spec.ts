@@ -1,7 +1,8 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import type { Model } from "mongoose";
+import { MongooseModule, getModelToken } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -9,6 +10,7 @@ import { Quota } from "../domain/quota";
 import { QuotaRepository } from "./quota.repository";
 import { QuotaDoc, QuotaSchema } from "./quota.schema";
 import { PolicyKeyList } from "@open-dpp/dto";
+import { PolicyDocSchemaVersion } from "./policy.schema";
 
 describe("quotaRepository", () => {
   let quotaRepository: QuotaRepository;
@@ -37,6 +39,16 @@ describe("quotaRepository", () => {
     }).compile();
 
     quotaRepository = module.get<QuotaRepository>(QuotaRepository);
+  });
+
+  it("should stamp the schema version on every saved document", async () => {
+    const organizationId = randomUUID();
+
+    await quotaRepository.update(newQuota(organizationId));
+
+    const model = module.get<Model<QuotaDoc>>(getModelToken(QuotaDoc.name));
+    const document = await model.findOne({ organizationId }).lean();
+    expect(document?._schemaVersion).toBe(PolicyDocSchemaVersion.v1_0_0);
   });
 
   it("should save a quota with its counter and period and read it back", async () => {

@@ -1,7 +1,8 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import type { Model } from "mongoose";
+import { MongooseModule, getModelToken } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -9,6 +10,7 @@ import { Limit } from "../domain/limit";
 import { LimitRepository } from "./limit.repository";
 import { LimitDoc, LimitSchema } from "./limit.schema";
 import { PolicyKeyList } from "@open-dpp/dto";
+import { PolicyDocSchemaVersion } from "./policy.schema";
 
 describe("limitRepository", () => {
   let limitRepository: LimitRepository;
@@ -29,6 +31,18 @@ describe("limitRepository", () => {
     }).compile();
 
     limitRepository = module.get<LimitRepository>(LimitRepository);
+  });
+
+  it("should stamp the schema version on every saved document", async () => {
+    const organizationId = randomUUID();
+
+    await limitRepository.update(
+      Limit.create({ organizationId, key: PolicyKeyList.PASSPORT_CREATE_LIMIT, limit: 5 }),
+    );
+
+    const model = module.get<Model<LimitDoc>>(getModelToken(LimitDoc.name));
+    const document = await model.findOne({ organizationId }).lean();
+    expect(document?._schemaVersion).toBe(PolicyDocSchemaVersion.v1_0_0);
   });
 
   it("should save a limit and read it back", async () => {

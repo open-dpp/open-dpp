@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Limit } from "../domain/limit";
 import { LimitDoc } from "./limit.schema";
+import { PolicyDocSchemaVersion } from "./policy.schema";
 import { NotFoundError } from "@open-dpp/exception";
 import type { PolicyKey } from "@open-dpp/dto";
 
@@ -63,6 +64,7 @@ export class LimitRepository {
     }
 
     limitDoc.set({
+      _schemaVersion: PolicyDocSchemaVersion.v1_0_0,
       key: limit.getKey(),
       organizationId: limit.getOrganizationId(),
       limit: limit.getLimit(),
