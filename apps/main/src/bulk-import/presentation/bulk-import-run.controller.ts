@@ -22,6 +22,7 @@ import {
   BulkImportRunDtoSchema,
   BulkImportRunItemPaginationDtoSchema,
   BulkImportRunPaginationDtoSchema,
+  PolicyKeyList,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
@@ -34,6 +35,7 @@ import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { CursorQueryParam } from "../../aas/presentation/aas.decorators";
 import { LimitQueryParam } from "../../digital-product-document/presentation/digital-product-document-decorators";
 import { Pagination } from "../../pagination/pagination";
+import { Policy } from "../../policy/presentation/policy.decorator";
 import { BulkImportConfigService } from "../application/services/bulk-import-config.service";
 import { BulkImportRunService } from "../application/services/bulk-import-run.service";
 import { BulkImportFileParserService } from "../infrastructure/bulk-import-file-parser.service";
@@ -48,6 +50,7 @@ export class BulkImportRunController {
   ) {}
 
   @Post("bulk-import/configs/:configId/runs")
+  @Policy(PolicyKeyList.PASSPORT_CREATE_LIMIT)
   async createRun(
     @OrganizationId() organizationId: string,
     @Param("configId") configId: string,
@@ -63,6 +66,7 @@ export class BulkImportRunController {
   }
 
   @Post("bulk-import/configs/:configId/runs/upload")
+  @Policy(PolicyKeyList.PASSPORT_CREATE_LIMIT)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),

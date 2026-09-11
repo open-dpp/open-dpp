@@ -6,6 +6,7 @@ import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { passportsPlainFactory } from "@open-dpp/testing";
 import { Model, Model as MongooseModel } from "mongoose";
 
 import { AasModule } from "../../aas/aas.module";
@@ -414,6 +415,34 @@ describe("passportRepository", () => {
     });
     expect(secondPage.items.map((p) => p.id)).toEqual([a1.id]);
     expect(secondPage.totalCount).toBe(2);
+  });
+
+  it("countByOrganizationId — counts only the passports of the given organization", async () => {
+    const organizationId = randomUUID();
+    const otherOrganizationId = randomUUID();
+
+    const newPassport = (orgId: string) =>
+      Passport.fromPlain(
+        passportsPlainFactory.build({
+          organizationId: orgId,
+          environment: {
+            assetAdministrationShells: [randomUUID()],
+            submodels: [],
+            conceptDescriptions: [],
+          },
+        }),
+      );
+
+    await passportRepository.save(newPassport(organizationId));
+    await passportRepository.save(newPassport(organizationId));
+    await passportRepository.save(newPassport(otherOrganizationId));
+
+    expect(await passportRepository.countByOrganizationId(organizationId)).toBe(2);
+    expect(await passportRepository.countByOrganizationId(otherOrganizationId)).toBe(1);
+  });
+
+  it("countByOrganizationId — returns 0 for an organization without passports", async () => {
+    expect(await passportRepository.countByOrganizationId(randomUUID())).toBe(0);
   });
 
   afterAll(async () => {

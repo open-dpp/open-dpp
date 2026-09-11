@@ -19,10 +19,10 @@ import { Session } from "../../identity/auth/domain/session";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
-import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
+import { PolicyKeyList } from "@open-dpp/dto";
 
 @Controller("media")
 export class MediaController {
@@ -33,7 +33,7 @@ export class MediaController {
   }
 
   @Post("dpp/:upi/:dataFieldId")
-  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
+  @Policy(PolicyKeyList.MEDIA_STORAGE_LIMIT)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),
@@ -148,7 +148,7 @@ export class MediaController {
   }
 
   @Post("upload")
-  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
+  @Policy(PolicyKeyList.MEDIA_STORAGE_LIMIT)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),
@@ -186,7 +186,7 @@ export class MediaController {
   }
 
   @Post("organization-profile")
-  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
+  @Policy(PolicyKeyList.MEDIA_STORAGE_LIMIT)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),
