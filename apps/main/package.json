@@ -49,7 +49,7 @@
     "archiver": "^7.0.1",
     "axios": "^1.17.0",
     "better-auth": "^1.6.17",
-    "body-parser": "^2.2.2",
+    "body-parser": "^2.3.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",
     "cpx": "^1.5.0",
