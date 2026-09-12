@@ -28,3 +28,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Renovate security update: nodemailer@9.1.1
   - nodemailer@9.1.1
+  # Renovate security update: mjml@5.0.0
+  - mjml@5.0.0
