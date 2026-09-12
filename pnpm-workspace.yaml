@@ -28,3 +28,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Renovate security update: nodemailer@9.1.1
   - nodemailer@9.1.1
+  # Renovate security update: form-data@4.0.6
+  - form-data@4.0.6
