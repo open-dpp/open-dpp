@@ -28,3 +28,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Renovate security update: nodemailer@9.1.1
   - nodemailer@9.1.1
+  # Renovate security update: multer@2.3.0
+  - multer@2.3.0

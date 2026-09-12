@@ -377,8 +377,8 @@ importers:
         specifier: ^9.7.0
         version: 9.7.0
       multer:
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.0
+        version: 2.3.0
       nodemailer:
         specifier: ^9.1.1
         version: 9.1.1
@@ -6933,6 +6933,10 @@ packages:
     resolution: {integrity: sha512-mo+QTzKlx8R7E5ylSXxWzGoXoZbOsRMpyitcht8By2KHvMbf3tjwosZ/Mu/XYU6UuJ3VZnODIrak5ZrPiPyB6A==}
     engines: {node: '>= 10.16.0'}
 
+  multer@2.3.0:
+    resolution: {integrity: sha512-cjNbm3sttszgZeGfJR124D+jFEfkXCVAsoPBmFn9X7UxmDSFHWqE2CoEj0vrmSpuAFnqWR1Szcm9QTsiHr60Xw==}
+    engines: {node: '>= 10.16.0'}
+
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
     hasBin: true
@@ -10877,7 +10881,7 @@ snapshots:
       '@nestjs/passport': 11.0.5(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(passport@0.7.0)
       cookie-parser: 1.4.7
       express: 5.2.1(supports-color@8.1.1)
-      multer: 2.1.1
+      multer: 2.3.0
       passport: 0.7.0
       passport-azure-ad-oauth2: 0.0.4
       passport-github: 1.1.0
@@ -15692,6 +15696,13 @@ snapshots:
   muggle-string@0.4.1: {}
 
   multer@2.1.1:
+    dependencies:
+      append-field: 1.0.0
+      busboy: 1.6.0
+      concat-stream: 2.0.0
+      type-is: 1.6.18
+
+  multer@2.3.0:
     dependencies:
       append-field: 1.0.0
       busboy: 1.6.0
