@@ -92,7 +92,7 @@
     "@open-dpp/testing": "workspace:*",
     "@swc/core": "^1.15.41",
     "@swc/jest": "^0.2.39",
-    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/node-ts": "^23.6.4",
     "@types/archiver": "^7.0.0",
     "@types/body-parser": "^1.19.6",
