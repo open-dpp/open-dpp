@@ -338,8 +338,8 @@ importers:
         specifier: ^21.3.4
         version: 21.3.4(supports-color@8.1.1)
       form-data:
-        specifier: ^4.0.5
-        version: 4.0.5
+        specifier: ^4.0.6
+        version: 4.0.6
       handlebars:
         specifier: ^4.7.9
         version: 4.7.9

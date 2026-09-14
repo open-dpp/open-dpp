@@ -38,3 +38,5 @@ minimumReleaseAgeExclude:
   - multer@2.3.0
   # Renovate security update: dompurify@3.4.13
   - dompurify@3.4.13
+  # Renovate security update: form-data@4.0.6
+  - form-data@4.0.6
