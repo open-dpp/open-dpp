@@ -40,3 +40,6 @@ The privileged Member role of an Organization. Only Owners may change other Memb
 **Member Removal**:
 An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
 _Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).
+
+**Organization Slug**:
+better-auth's internal alias of an Organization. It always equals the Organization's id — set at creation and backfilled for older Organizations — is never chosen by a User and never exposed by the API. Organization names therefore need not be unique.
