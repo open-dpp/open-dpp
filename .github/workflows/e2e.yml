@@ -33,12 +33,12 @@ jobs:
       OPEN_DPP_MONGODB_DATABASE: "management"
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
-      # S3. The app runs on the host, so it reaches MinIO via the published port.
+      # S3. The app runs on the host, so it reaches RustFS via the published port.
       OPEN_DPP_S3_ENDPOINT: "localhost"
       OPEN_DPP_S3_PORT: "9000"
       OPEN_DPP_S3_SSL: "false"
-      OPEN_DPP_S3_ACCESS_KEY: "minioadmin"
-      OPEN_DPP_S3_SECRET_KEY: "test-minio-password"
+      OPEN_DPP_S3_ACCESS_KEY: "rustfsadmin"
+      OPEN_DPP_S3_SECRET_KEY: "test-rustfs-password"
       OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
       OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
       # Mail. The app SENDS via SMTP on 8026 (-> Mailpit 1025); the tests READ
@@ -88,10 +88,17 @@ jobs:
         run: docker compose -f docker-compose.dev.yml up -d
 
       # Neither init container has a healthcheck; both exit once they are done
-      # (rs.initiate for Mongo, bucket creation for MinIO). The replica set is
-      # mandatory because the app uses transactions.
+      # (rs.initiate for Mongo, bucket creation for RustFS). The replica set is
+      # mandatory because the app uses transactions. `docker wait` also returns
+      # for containers that have already exited, unlike `docker compose wait`,
+      # which errors when none of its targets is still running.
       - name: Wait for replica set and buckets
-        run: docker compose -f docker-compose.dev.yml wait mongo-init minio-init
+        run: |
+          for service in mongo-init rustfs-init; do
+            code=$(docker wait "$(docker compose -f docker-compose.dev.yml ps -aq "$service")")
+            echo "$service exited with status $code"
+            [ "$code" = "0" ] || exit 1
+          done
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
