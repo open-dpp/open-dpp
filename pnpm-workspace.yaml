@@ -36,3 +36,5 @@ minimumReleaseAgeExclude:
   - postcss@8.5.23
   # Renovate security update: multer@2.3.0
   - multer@2.3.0
+  # Renovate security update: dompurify@3.4.13
+  - dompurify@3.4.13
