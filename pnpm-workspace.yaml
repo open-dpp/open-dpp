@@ -28,3 +28,19 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Renovate security update: nodemailer@9.1.1
   - nodemailer@9.1.1
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
+  # Renovate security update: axios@1.18.0
+  - axios@1.18.0
+  # Renovate security update: postcss@8.5.23
+  - postcss@8.5.23
+  # Renovate security update: multer@2.3.0
+  - multer@2.3.0
+  # Renovate security update: dompurify@3.4.13
+  - dompurify@3.4.13
+  # Renovate security update: form-data@4.0.6
+  - form-data@4.0.6
+  # Renovate security update: body-parser@2.3.0
+  - body-parser@2.3.0
+  # Renovate security update: sharp@0.35.4
+  - sharp@0.35.4
