@@ -34,7 +34,7 @@
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.31.0",
     "@dotenvx/dotenvx": "^1.71.3",
-    "@types/node": "^22.20.0",
+    "@types/node": "^22.20.2",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.69.0",
     "tsx": "^4.20.0",
