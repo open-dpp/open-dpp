@@ -37,7 +37,7 @@ services:
 
   # S3-compatible object storage. RustFS replaces MinIO (community edition
   # archived, images pulled from Docker Hub in 2025): Apache-2.0, one
-  # multi-arch container, object versioning, a /health endpoint.
+  # multi-arch container, object versioning, a /health/ready endpoint.
   rustfs:
     container_name: rustfs
     image: rustfs/rustfs:1.0.0-rc.6
@@ -50,7 +50,7 @@ services:
       - "${OPEN_DPP_S3_PORT}:9000" # S3 API
       - "9001:9001" # RustFS console (web UI)
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health/ready"]
       interval: 10s
       timeout: 5s
       retries: 5

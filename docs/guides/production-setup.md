@@ -96,16 +96,17 @@ open-dpp sends transactional email for account management and notifications. Con
 
 open-dpp stores file uploads (passport attachments, profile pictures) in an S3-compatible object storage service. Both self-hosted solutions (such as [RustFS](https://rustfs.com), which the example compose stack uses) and managed services (AWS S3, Cloudflare R2, Hetzner Object Storage) are supported.
 
-| Variable                     | Description                                                     |
-| ---------------------------- | --------------------------------------------------------------- |
-| `OPEN_DPP_S3_ENDPOINT`       | Hostname or IP address of the S3 endpoint                       |
-| `OPEN_DPP_S3_PORT`           | Port of the S3 endpoint                                         |
-| `OPEN_DPP_S3_SSL`            | Set to `"true"` to enable TLS; required for any public endpoint |
-| `OPEN_DPP_S3_ACCESS_KEY`     | S3 access key                                                   |
-| `OPEN_DPP_S3_SECRET_KEY`     | S3 secret key                                                   |
-| `OPEN_DPP_S3_DEFAULT_BUCKET` | Bucket for passport files (default: `open-dpp`)                 |
+| Variable                             | Description                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| `OPEN_DPP_S3_ENDPOINT`               | Hostname or IP address of the S3 endpoint                                       |
+| `OPEN_DPP_S3_PORT`                   | Port of the S3 endpoint                                                         |
+| `OPEN_DPP_S3_SSL`                    | Set to `"true"` to enable TLS; required for any public endpoint                 |
+| `OPEN_DPP_S3_ACCESS_KEY`             | S3 access key                                                                   |
+| `OPEN_DPP_S3_SECRET_KEY`             | S3 secret key                                                                   |
+| `OPEN_DPP_S3_DEFAULT_BUCKET`         | Bucket for passport files (default: `open-dpp`)                                 |
+| `OPEN_DPP_S3_PROFILE_PICTURE_BUCKET` | Bucket for organization profile pictures (default: `open-dpp-profile-pictures`) |
 
-The buckets must exist before starting the application; the application never creates them and only needs object read, write and delete permissions on them. Object versioning is optional: when the bucket has it enabled, the version id of each upload is stored with the media record; downloads always fetch the current object. The buckets do not need any public-read policy, because the backend proxies every download.
+Both buckets (`OPEN_DPP_S3_DEFAULT_BUCKET` and `OPEN_DPP_S3_PROFILE_PICTURE_BUCKET`) must exist before starting the application; the application never creates them and only needs object read, write and delete permissions on them. Object versioning is optional: when the bucket has it enabled, the version id of each upload is stored with the media record; downloads always fetch the current object. The buckets do not need any public-read policy, because the backend proxies every download.
 
 Ensure that `OPEN_DPP_S3_SSL` is set to `"true"` whenever the storage endpoint is reachable over the public internet.
 
