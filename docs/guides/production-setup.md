@@ -94,7 +94,7 @@ open-dpp sends transactional email for account management and notifications. Con
 
 ## S3-compatible object storage
 
-open-dpp stores file uploads (passport attachments, profile pictures) in an S3-compatible object storage service. Both self-hosted solutions (such as MinIO) and managed services (AWS S3, Cloudflare R2, Hetzner Object Storage) are supported.
+open-dpp stores file uploads (passport attachments, profile pictures) in an S3-compatible object storage service. Both self-hosted solutions (such as [RustFS](https://rustfs.com), which the example compose stack uses) and managed services (AWS S3, Cloudflare R2, Hetzner Object Storage) are supported.
 
 | Variable                     | Description                                                     |
 | ---------------------------- | --------------------------------------------------------------- |
@@ -105,7 +105,7 @@ open-dpp stores file uploads (passport attachments, profile pictures) in an S3-c
 | `OPEN_DPP_S3_SECRET_KEY`     | S3 secret key                                                   |
 | `OPEN_DPP_S3_DEFAULT_BUCKET` | Bucket for passport files (default: `open-dpp`)                 |
 
-The bucket must exist before starting the application.
+The buckets must exist before starting the application; the application never creates them and only needs object read, write and delete permissions on them. Object versioning is optional: when the bucket has it enabled, the version id of each upload is stored with the media record; downloads always fetch the current object. The buckets do not need any public-read policy, because the backend proxies every download.
 
 Ensure that `OPEN_DPP_S3_SSL` is set to `"true"` whenever the storage endpoint is reachable over the public internet.
 

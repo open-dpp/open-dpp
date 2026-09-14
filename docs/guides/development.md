@@ -31,7 +31,7 @@ Use the project helper:
 make dev
 ```
 
-This starts required services from `docker-compose.dev.yml` (MongoDB, MinIO, and Mailpit). Virus scanning of uploads is disabled in development; see the [Production setup](/guides/production-setup#virus-scanning-clamav) guide to enable it.
+This starts required services from `docker-compose.dev.yml` (MongoDB, RustFS as S3-compatible object storage, and Mailpit). The `rustfs-init` container creates the two buckets from `.env.dev` with object versioning enabled and exits. Virus scanning of uploads is disabled in development; see the [Production setup](/guides/production-setup#virus-scanning-clamav) guide to enable it.
 
 ## 5) Start the application
 
@@ -43,6 +43,7 @@ After startup:
 
 - open-dpp: <http://localhost:3000>
 - Mailpit: <http://localhost:8025>
+- RustFS console: <http://localhost:9001> (log in with `OPEN_DPP_S3_ACCESS_KEY` / `OPEN_DPP_S3_SECRET_KEY`)
 
 ## 6) Run the end-to-end tests
 

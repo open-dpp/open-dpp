@@ -11,6 +11,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      rustfs-init:
+        condition: service_completed_successfully
     ports:
       - "3000:${OPEN_DPP_PORT}"
     env_file:
@@ -35,41 +37,43 @@ services:
     ports:
       - "8025:8025"
 
-  minio:
-    image: quay.io/minio/minio:latest
-    command: minio server /data --console-address ":9001"
+  # S3-compatible object storage. RustFS replaces MinIO (community edition
+  # archived, images pulled from Docker Hub in 2025): Apache-2.0, one
+  # multi-arch container, object versioning, a /health endpoint.
+  rustfs:
+    image: rustfs/rustfs:1.0.0-rc.6
     environment:
-      - MINIO_ROOT_USER=${OPEN_DPP_S3_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${OPEN_DPP_S3_SECRET_KEY}
+      - RUSTFS_ACCESS_KEY=${OPEN_DPP_S3_ACCESS_KEY}
+      - RUSTFS_SECRET_KEY=${OPEN_DPP_S3_SECRET_KEY}
     volumes:
-      - minio_data:/data
+      - rustfs_data:/data
     ports:
-      - "9001:9001"
+      - "9001:9001" # RustFS console (web UI)
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
 
-  minio-init:
-    image: minio/mc:latest
+  # Creates both buckets with object versioning enabled; idempotent, so it is
+  # safe to re-run against an existing volume. Nothing reads the buckets
+  # anonymously (the backend proxies downloads), so no public-read policy.
+  rustfs-init:
+    image: rustfs/rc:v0.1.35
     depends_on:
-      - minio
+      rustfs:
+        condition: service_healthy
     entrypoint: >
-      /bin/sh -c "
-      sleep 10;
-      /usr/bin/mc alias set myminio http://minio:${OPEN_DPP_S3_PORT} ${OPEN_DPP_S3_ACCESS_KEY} ${OPEN_DPP_S3_SECRET_KEY};
-      /usr/bin/mc mb myminio/${OPEN_DPP_S3_DEFAULT_BUCKET} --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/${OPEN_DPP_S3_DEFAULT_BUCKET};
-      /usr/bin/mc mb myminio/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET} --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET};
-      /usr/bin/mc version enable myminio/${OPEN_DPP_S3_DEFAULT_BUCKET};
-      /usr/bin/mc version enable myminio/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET};
-      exit 0;
+      /bin/sh -ec "
+      rc alias set local http://rustfs:9000 ${OPEN_DPP_S3_ACCESS_KEY} ${OPEN_DPP_S3_SECRET_KEY};
+      rc bucket create local/${OPEN_DPP_S3_DEFAULT_BUCKET} --ignore-existing --with-versioning;
+      rc bucket create local/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET} --ignore-existing --with-versioning;
       "
 
 volumes:
-  minio_data:
+  rustfs_data:
   mongo_db:
   mongo_config:
   api_db:

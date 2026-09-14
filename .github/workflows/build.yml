@@ -61,11 +61,11 @@ jobs:
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       # S3
-      OPEN_DPP_S3_ENDPOINT: "minio"
+      OPEN_DPP_S3_ENDPOINT: "rustfs"
       OPEN_DPP_S3_PORT: "9000"
       OPEN_DPP_S3_SSL: "false"
-      OPEN_DPP_S3_ACCESS_KEY: "minioadmin"
-      OPEN_DPP_S3_SECRET_KEY: "test-minio-password"
+      OPEN_DPP_S3_ACCESS_KEY: "rustfsadmin"
+      OPEN_DPP_S3_SECRET_KEY: "test-rustfs-password"
       OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
       OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
       # Mail
