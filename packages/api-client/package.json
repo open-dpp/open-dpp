@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@open-dpp/dto": "workspace:*",
-    "axios": "^1.17.0"
+    "axios": "^1.18.0"
   },
   "devDependencies": {
     "@open-dpp/testing": "workspace:*",
