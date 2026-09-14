@@ -34,3 +34,5 @@ minimumReleaseAgeExclude:
   - axios@1.18.0
   # Renovate security update: postcss@8.5.23
   - postcss@8.5.23
+  # Renovate security update: multer@2.3.0
+  - multer@2.3.0
