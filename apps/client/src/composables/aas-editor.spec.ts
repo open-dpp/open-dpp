@@ -58,6 +58,7 @@ const mocks = vi.hoisted(() => {
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
+    modifyValueOfSubmodelElement: vi.fn(),
     moveSubmodel: vi.fn(),
     moveSubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
@@ -82,6 +83,7 @@ vi.mock("../lib/api-client", () => ({
           createSubmodelElement: mocks.createSubmodelElement,
           createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          modifyValueOfSubmodelElement: mocks.modifyValueOfSubmodelElement,
           moveSubmodelElement: mocks.moveSubmodelElement,
           deleteSubmodelElementById: mocks.deleteSubmodelElementById,
         },
@@ -539,6 +541,70 @@ describe("aasEditor composable", () => {
 
     const leafNode = findTreeNodeByKey("Design_V01.Author.AuthorName")!;
     expect(leafNode.data.actions).toEqual(restrictedActions);
+  });
+
+  it("routes Property/File value edits through modifyValueOfSubmodelElement when isEditingRestrictedToData is true, but leaves container edits on the full endpoint", async () => {
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
+    mocks.getSubmodels.mockResolvedValue({ data: response, status: HTTPCode.OK });
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
+    const { init, selectTreeNode, editorVNode } = mountHarness({
+      id: aasWrapperId,
+      aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
+      errorHandlingStore,
+      selectedLanguage,
+      openConfirm: mockOpenConfirm,
+      translate,
+      status,
+      isEditingRestrictedToData: true,
+    });
+    await init();
+
+    // Property: only `value` is extracted from the full form submission.
+    selectTreeNode("Design_V01.Author.AuthorName");
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "AuthorName", value: "New Name" });
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel1.id,
+      "Design_V01.Author.AuthorName",
+      "New Name",
+    );
+    expect(mocks.modifySubmodelElement).not.toHaveBeenCalled();
+
+    // File: `value` and `contentType` are extracted, other metadata dropped.
+    selectTreeNode("Design_V01.AdditionalInformation.FileProp");
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({
+      idShort: "FileProp",
+      value: "new/path",
+      contentType: "application/pdf",
+    });
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel1.id,
+      "Design_V01.AdditionalInformation.FileProp",
+      { value: "new/path", contentType: "application/pdf" },
+    );
+
+    // Container (SubmodelElementCollection): no leaf value — stays on the full endpoint.
+    selectTreeNode(`${submodel2.idShort}.ProductCarbonFootprint_A4`);
+    mocks.modifySubmodelElement.mockResolvedValue({ status: HTTPCode.OK });
+    await editorVNode.value!.props.callback!({ idShort: "ProductCarbonFootprint_A4" });
+    expect(mocks.modifySubmodelElement).toHaveBeenCalledWith(
+      aasWrapperId,
+      submodel2.id,
+      "ProductCarbonFootprint_A4",
+      { idShort: "ProductCarbonFootprint_A4" },
+    );
+    expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledTimes(2);
   });
 
   it.each([

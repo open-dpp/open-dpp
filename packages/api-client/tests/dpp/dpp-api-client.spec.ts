@@ -576,6 +576,20 @@ describe("apiClient", () => {
       );
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
     });
+
+    it("should modify value of submodel element with a bare scalar payload (not wrapped in an object)", async () => {
+      // Regression test: a raw string payload (e.g. a Property's value) must still be
+      // sent as valid, correctly quoted JSON — axios does not JSON.stringify a bare
+      // scalar body unless the request explicitly declares a JSON content-type.
+      const response = await sdk.dpp[appIdentifiable].aas.modifyValueOfSubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        "a bare scalar value",
+      );
+      expect(response.status).toEqual(200);
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd));
+    });
   });
 
   describe("aas-integration", () => {

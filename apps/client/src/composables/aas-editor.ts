@@ -52,6 +52,7 @@ import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
 import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
 import { type IAasMoveDialog, useAasMoveDialog } from "./aas-move-dialog.ts";
+import { SCALAR_LEAF_MODEL_TYPES } from "../lib/submodel-element.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -285,14 +286,36 @@ export function useAasEditor({
     }
   }
 
-  async function modifySubmodelElement(path: AasEditorPath, data: SubmodelElementModificationDto) {
+  /** Extracts the value-only payload `modifyValueOfSubmodelElement` expects from the full
+   * modification payload the leaf editor's form submits. Only called for `modelType`s in
+   * `SCALAR_LEAF_MODEL_TYPES` that also have a working editor (Property, File) — the other
+   * listed types (MultiLanguageProperty, ReferenceElement) have no editor component yet, so
+   * this branch is unreachable for them today. */
+  function extractLeafValue(modelType: string, data: any): any {
+    if (modelType === AasSubmodelElements.File) {
+      return { value: data.value, contentType: data.contentType };
+    }
+    return data.value;
+  }
+
+  async function modifySubmodelElement(
+    path: AasEditorPath,
+    data: SubmodelElementModificationDto,
+    modelType?: string,
+  ) {
     if (path.submodelId && path.idShortPath) {
-      const response = await aasNamespace.modifySubmodelElement(
-        id,
-        path.submodelId,
-        path.idShortPath,
-        data,
-      );
+      // While restricted to data, a leaf element's structure/metadata stays frozen but its
+      // value stays editable — route through the value-only endpoint instead of the combined
+      // one, which is blocked for restricted passports on the backend
+      const response =
+        toValue(isRestrictedToData) && modelType && SCALAR_LEAF_MODEL_TYPES.includes(modelType)
+          ? await aasNamespace.modifyValueOfSubmodelElement(
+              id,
+              path.submodelId,
+              path.idShortPath,
+              extractLeafValue(modelType, data),
+            )
+          : await aasNamespace.modifySubmodelElement(id, path.submodelId, path.idShortPath, data);
       await finalizeApiRequest(response);
     }
   }
@@ -310,7 +333,7 @@ export function useAasEditor({
     } else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
       return async (data: any) => {
         try {
-          await modifySubmodelElement(toRaw(node.data.path), data);
+          await modifySubmodelElement(toRaw(node.data.path), data, node.data.modelType);
         } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
