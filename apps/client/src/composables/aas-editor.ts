@@ -64,6 +64,11 @@ export interface AasEditorProps {
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
   status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
+  /** Passport-only: true when the passport's editing is restricted to leaf data values by
+   * its template. Unlike `isArchived`, this does not block reaching a leaf element's editor
+   * (values stay editable) — it only blocks structural changes (create/delete) and locks
+   * container/shell editors and permissions, which have no leaf value of their own. */
+  isEditingRestrictedToData?: MaybeRefOrGetter<boolean>;
   /** Called after a submodel/submodel-element move succeeds. Moves change idShort
    * paths, which invalidates any data keyed by them (e.g. presentation config)
    * that isn't part of the reloaded shell/submodel payload and must be refetched. */
@@ -103,6 +108,7 @@ export function useAasEditor({
   translate,
   openConfirm,
   status,
+  isEditingRestrictedToData,
   onAfterMove,
 }: AasEditorProps): IAasEditor {
   const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
@@ -111,6 +117,7 @@ export function useAasEditor({
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
   const isArchived = computed(() => toValue(status) === DigitalProductDocumentStatusDto.Archived);
+  const isRestrictedToData = computed(() => toValue(isEditingRestrictedToData) ?? false);
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -123,7 +130,12 @@ export function useAasEditor({
 
   const { can } = useAasAbility({ getAccessPermissionRules });
 
-  const drawer = useAasDrawer({ onHideDrawer, can, isArchived });
+  const drawer = useAasDrawer({
+    onHideDrawer,
+    can,
+    isArchived,
+    isEditingRestrictedToData: isRestrictedToData,
+  });
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
@@ -397,23 +409,37 @@ export function useAasEditor({
 
   function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
     const missingPermissionMsg = translate(`${translatePrefix}.security.missingPermission`);
+    const archivedMsg = translate(`${translatePrefix}.security.archivedTooltip`);
+    const restrictedMsg = translate(`${translatePrefix}.security.editingRestrictedTooltip`);
     const labels = {
       [Permissions.Read]: "view",
       [Permissions.Edit]: "edit",
       [Permissions.Delete]: "remove",
       [Permissions.Create]: "add",
     };
+    // Structural mutations (create/delete a tree node) are frozen while restricted to data,
+    // same as while archived — but unlike archived, "edit" stays reachable so a leaf
+    // element's value can still be edited (the drawer opened via "edit" locks everything
+    // except the value field for leaf types; see PropertyEditor.vue/FileEditor.vue).
+    const isStructurallyBlocked = (permission: PermissionType) =>
+      (permission === Permissions.Create || permission === Permissions.Delete) &&
+      toValue(isRestrictedToData);
     const visible = (permission: PermissionType) => {
       if (toValue(isArchived) && permission !== Permissions.Read) {
         return false;
       }
       if (permission === Permissions.Create) {
-        return createVisible;
+        return createVisible && !toValue(isRestrictedToData);
       }
       if (permission === Permissions.Edit) {
         return can(permission, idShortPathIncludingSubmodel);
       }
       return true;
+    };
+    const blockedTooltip = (permission: PermissionType) => {
+      if (toValue(isArchived)) return archivedMsg;
+      if (isStructurallyBlocked(permission)) return restrictedMsg;
+      return undefined;
     };
     return Object.values(Permissions).reduce(
       (
@@ -424,10 +450,13 @@ export function useAasEditor({
           visible: visible(permission),
           enabled:
             (!toValue(isArchived) || permission === Permissions.Read) &&
+            !isStructurallyBlocked(permission) &&
             can(permission, idShortPathIncludingSubmodel),
-          tooltip: can(permission, idShortPathIncludingSubmodel)
-            ? translate(`common.${labels[permission]}`)
-            : missingPermissionMsg,
+          tooltip:
+            blockedTooltip(permission) ??
+            (can(permission, idShortPathIncludingSubmodel)
+              ? translate(`common.${labels[permission]}`)
+              : missingPermissionMsg),
         };
         return acc;
       },

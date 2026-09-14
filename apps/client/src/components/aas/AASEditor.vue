@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { type DigitalProductDocumentDto, DigitalProductDocumentStatusDto } from "@open-dpp/dto";
+import {
+  type DigitalProductDocumentDto,
+  DigitalProductDocumentStatusDto,
+  PassportDtoSchema,
+  PassportEditingModeDto,
+} from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -52,6 +57,13 @@ const status = computed(() => model.value.lastStatusChange?.currentStatus);
 
 const isArchived = computed(() => status.value === DigitalProductDocumentStatusDto.Archived);
 
+const isEditingRestrictedToData = computed(() =>
+  props.type === DigitalProductDocumentType.Passport
+    ? PassportDtoSchema.optional().parse(model.value)?.editingMode ===
+      PassportEditingModeDto.DataOnly
+    : false,
+);
+
 const presentationConfigStore = usePresentationConfigurationStore();
 
 function fetchPresentationConfig() {
@@ -74,6 +86,7 @@ const aasEditor = useAasEditor({
   translate: t,
   openConfirm: confirm.require,
   status: status,
+  isEditingRestrictedToData,
   onAfterMove: fetchPresentationConfig,
 });
 
@@ -164,6 +177,7 @@ const editorContext = computed<AasEditorContext>(() => ({
   aasNamespace,
   errorHandlingStore,
   isArchived: isArchived.value,
+  isEditingRestrictedToData: isEditingRestrictedToData.value,
   type: props.type,
   openDrawer: aasEditor.openDrawer,
   getAccessPermissionRules,
@@ -205,7 +219,7 @@ const editorContext = computed<AasEditorContext>(() => ({
             </div>
           </div>
           <Button
-            v-if="!isArchived"
+            v-if="!isArchived && !isEditingRestrictedToData"
             icon="pi pi-pencil"
             severity="primary"
             :aria-label="t('common.edit')"
@@ -223,6 +237,7 @@ const editorContext = computed<AasEditorContext>(() => ({
       :submodels="submodels"
       :loading="loading"
       :is-archived="isArchived"
+      :is-editing-restricted-to-data="isEditingRestrictedToData"
       :select-tree-node="selectTreeNode"
       :create-submodel="createSubmodel"
       :delete-submodel="deleteSubmodel"

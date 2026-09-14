@@ -493,6 +493,54 @@ describe("aasEditor composable", () => {
     expect(withoutChildren(actualListProp)).toEqual(expectedListProp);
   });
 
+  it("blocks structural actions (create/delete) but keeps edit reachable when isEditingRestrictedToData is true", async () => {
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
+    mocks.getSubmodels.mockResolvedValue({
+      data: response,
+      status: HTTPCode.OK,
+    });
+    mocks.getShells.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: [assetAdministrationShell1] },
+      status: HTTPCode.OK,
+    });
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
+    const { init, findTreeNodeByKey } = mountHarness({
+      id: aasWrapperId,
+      aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
+      errorHandlingStore,
+      selectedLanguage,
+      openConfirm: mockOpenConfirm,
+      translate,
+      status,
+      isEditingRestrictedToData: true,
+    });
+    await init();
+
+    const restrictedMsg = "aasEditor.security.editingRestrictedTooltip";
+    // submodel1's policy grants full permissions, so any remaining restriction here is
+    // solely the effect of isEditingRestrictedToData, not a permission gap.
+    const restrictedActions = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: false, enabled: false, tooltip: restrictedMsg },
+      delete: { visible: true, enabled: false, tooltip: restrictedMsg },
+    };
+
+    const submodelNode = findTreeNodeByKey(submodel1.id)!;
+    expect(submodelNode.data.actions).toEqual(restrictedActions);
+
+    const leafNode = findTreeNodeByKey("Design_V01.Author.AuthorName")!;
+    expect(leafNode.data.actions).toEqual(restrictedActions);
+  });
+
   it.each([
     {
       keyToSelect: submodel2.id,

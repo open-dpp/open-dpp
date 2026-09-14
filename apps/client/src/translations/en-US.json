@@ -99,6 +99,8 @@
     "security": {
       "unknownRole": "Unknown role",
       "missingPermission": "Missing permissions",
+      "archivedTooltip": "This document is archived and cannot be modified.",
+      "editingRestrictedTooltip": "Structural changes are restricted to data by the template.",
       "inheritedPermission": "Inherits permissions of parent node",
       "overriddenPermission": "Overrides permissions of parent node",
       "permissions": "Permissions",

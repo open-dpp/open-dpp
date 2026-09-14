@@ -40,6 +40,11 @@ const disableEdit = computed(() => {
   return props.isArchived || !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
+// Permissions are metadata, not a leaf value — stay locked while restricted to data,
+// unlike `disableEdit` above (which still governs the value field too, until a future
+// commit splits metadata from value editing for leaf elements).
+const disablePermissions = computed(() => disableEdit.value || props.isEditingRestrictedToData);
+
 async function submit() {
   await handleSubmit(async (data) => {
     if (permissionsFormRef.value) {
@@ -67,7 +72,7 @@ defineExpose<{
     />
     <PermissionsForm
       ref="permissionsFormRef"
-      :disabled="disableEdit"
+      :disabled="disablePermissions"
       :ignored-permission-options="[Permissions.Create]"
       :path="props.path"
       :modify-shell="props.modifyShell"

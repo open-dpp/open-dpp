@@ -99,6 +99,8 @@
     "security": {
       "unknownRole": "Unbekannte Rolle",
       "missingPermission": "Fehlende Rechte",
+      "archivedTooltip": "Dieses Dokument ist archiviert und kann nicht geändert werden.",
+      "editingRestrictedTooltip": "Strukturelle Änderungen sind durch die Vorlage auf Daten beschränkt.",
       "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
       "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
       "permissions": "Berechtigungen",

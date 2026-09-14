@@ -107,6 +107,7 @@ function mountTree(props: Record<string, unknown> = {}) {
       submodels: [],
       loading: false,
       isArchived: false,
+      isEditingRestrictedToData: false,
       selectedKeys: undefined,
       selectTreeNode: vi.fn(),
       createSubmodel: vi.fn(),
@@ -138,6 +139,14 @@ describe("AasSubmodelTree", () => {
     const wrapper = mountTree({ submodels: [makeSubmodelNode()] });
     expect(wrapper.text()).toContain("My Submodel");
     expect(wrapper.find("#row-submodel-1").exists()).toBe(true);
+  });
+
+  it("hides the Add Submodel button when editing is restricted to data", () => {
+    const wrapper = mountTree({
+      submodels: [makeSubmodelNode()],
+      isEditingRestrictedToData: true,
+    });
+    expect(wrapper.text()).not.toContain("Add submodel");
   });
 
   it("clicking a row's edit icon calls selectTreeNode with the node key", async () => {
