@@ -98,7 +98,7 @@
     "@types/body-parser": "^1.19.6",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
-    "@types/lodash": "^4.17.24",
+    "@types/lodash": "^4.17.25",
     "@types/mjml": "^4.7.4",
     "@types/mjml-core": "^4.15.2",
     "@types/multer": "^2.1.0",
