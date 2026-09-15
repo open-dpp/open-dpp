@@ -185,7 +185,7 @@ importers:
         specifier: ^27.4.0
         version: 27.4.0(@noble/hashes@2.2.0)(supports-color@8.1.1)
       postcss:
-        specifier: ^8.5.23
+        specifier: ^8.5.28
         version: 8.5.28
       resize-observer-polyfill:
         specifier: ^1.5.1
