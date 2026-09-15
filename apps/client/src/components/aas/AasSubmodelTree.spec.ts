@@ -26,6 +26,9 @@ const i18n = createI18n({
         submodel: "Submodels",
         addSubmodel: "Add submodel",
         type: "Type",
+        security: {
+          editingRestrictedTooltip: "Structural changes are restricted to data by the template.",
+        },
       },
       common: {
         add: "Add",
@@ -200,6 +203,22 @@ describe("AasSubmodelTree", () => {
     const wrapper = mountTree({ submodels: [makeSubmodelNode()], buildMoveMenu });
     await wrapper.find('[aria-label="Move"]').trigger("click");
     expect(buildMoveMenu).toHaveBeenCalledWith(expect.objectContaining({ key: "submodel-1" }));
+  });
+
+  it("disables the move button when editing is restricted to data", async () => {
+    const buildMoveMenu = vi.fn();
+    const wrapper = mountTree({
+      submodels: [makeSubmodelNode()],
+      buildMoveMenu,
+      isEditingRestrictedToData: true,
+    });
+
+    const moveButton = wrapper.find('[aria-label="Move"]');
+    expect(moveButton.exists()).toBe(true);
+    expect(moveButton.attributes("disabled")).toBeDefined();
+
+    await moveButton.trigger("click");
+    expect(buildMoveMenu).not.toHaveBeenCalled();
   });
 
   it("pagination controls call the corresponding props", async () => {

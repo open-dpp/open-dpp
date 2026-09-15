@@ -133,11 +133,15 @@ async function deleteClicked(node: TreeNode) {
                 />
                 <Button
                   v-if="node.data.actions.edit.visible"
-                  v-tooltip.top="t('common.move')"
+                  v-tooltip.top="
+                    props.isEditingRestrictedToData
+                      ? t('aasEditor.security.editingRestrictedTooltip')
+                      : t('common.move')
+                  "
                   :aria-label="t('common.move')"
                   icon="pi pi-sort-alt"
                   severity="secondary"
-                  :disabled="!node.data.actions.edit.enabled"
+                  :disabled="!node.data.actions.edit.enabled || props.isEditingRestrictedToData"
                   @click="moveClicked($event, node)"
                 />
                 <Button
