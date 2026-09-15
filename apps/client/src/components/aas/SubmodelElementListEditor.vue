@@ -74,12 +74,36 @@ const canEdit = computed(() => {
   );
 });
 
+// A table row is an element of this SubmodelElementList, and a cell is that element's
+// (or one of its columns') leaf value — same category as a Property/File editor's value
+// field, which stays editable while restricted to data. `canEdit` above stays the gate for
+// everything structural about the list itself (its own metadata/permissions, column
+// definitions/reordering via `disableColumnEditing`) — only cell rendering/editing uses
+// this looser check.
+const canEditCellValues = computed(() => {
+  return !props.isArchived && can(Permissions.Edit, idShortPathList.value);
+});
+
 const canDeleteColumnsAndRows = computed(() => {
   return (
     !props.isArchived &&
     !props.isEditingRestrictedToData &&
     can(Permissions.Delete, idShortPathList.value)
   );
+});
+
+// While archived or restricted to data, every action in the column/row menus (create,
+// edit, delete) is uniformly blocked — so disable the menu trigger itself instead of
+// letting the user open a menu full of disabled items. This is distinct from a partial
+// permission gap (e.g. can edit but not delete a column), where only some menu items are
+// disabled and the trigger must stay reachable — that per-item gating (via
+// disableColumnEditing/disableRowCreation/etc., already threaded into the menu builders)
+// is unaffected by this and still applies whenever the trigger itself isn't disabled.
+const columnRowMenuDisabled = computed(() => props.isArchived || props.isEditingRestrictedToData);
+const columnRowMenuDisabledTooltip = computed(() => {
+  if (props.isArchived) return t("aasEditor.security.archivedTooltip");
+  if (props.isEditingRestrictedToData) return t("aasEditor.security.editingRestrictedTooltip");
+  return undefined;
 });
 
 const confirm = useConfirm();
@@ -276,11 +300,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                 <Button
                   v-if="col.children"
                   :data-cy="`column-menu-${col.idShort}`"
+                  v-tooltip.top="columnRowMenuDisabledTooltip"
                   :aria-label="t('common.actions')"
                   icon="pi pi-chevron-down"
                   variant="text"
                   severity="secondary"
                   size="small"
+                  :disabled="columnRowMenuDisabled"
                   @click="
                     toggleColumnMenu($event, {
                       position: colIndex,
@@ -292,11 +318,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                 <Button
                   v-else
                   :data-cy="`column-menu-${col.idShort}`"
+                  v-tooltip.top="columnRowMenuDisabledTooltip"
                   :aria-label="t('common.actions')"
                   icon="pi pi-chevron-down"
                   variant="text"
                   severity="secondary"
                   size="small"
+                  :disabled="columnRowMenuDisabled"
                   @click="
                     toggleColumnMenu($event, {
                       position: colIndex,
@@ -320,11 +348,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                 <div class="flex items-center gap-2">
                   <Button
                     :data-cy="`column-menu-${col.idShort}-${subCol.idShort}`"
+                    v-tooltip.top="columnRowMenuDisabledTooltip"
                     :aria-label="t('common.actions')"
                     icon="pi pi-chevron-down"
                     variant="text"
                     severity="secondary"
                     size="small"
+                    :disabled="columnRowMenuDisabled"
                     @click="
                       toggleColumnMenu($event, {
                         position: subColIndex,
@@ -348,11 +378,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           <div class="flex items-center gap-2 rounded-md">
             <Button
               :data-cy="`row-menu-${index}`"
+              v-tooltip.top="columnRowMenuDisabledTooltip"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
               variant="text"
               severity="secondary"
               size="small"
+              :disabled="columnRowMenuDisabled"
               @click="toggleRowMenu($event, { position: index })"
             />
           </div>
@@ -369,10 +401,12 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           <div class="flex items-center gap-2">
             <Button
               :data-cy="`column-menu-${flatCol.idShort}`"
+              v-tooltip.top="columnRowMenuDisabledTooltip"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
               severity="secondary"
               size="small"
+              :disabled="columnRowMenuDisabled"
               @click="
                 toggleColumnMenu($event, {
                   position: flatIndex,
@@ -388,19 +422,19 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
           <div v-else>
             <FileField
               v-if="
-                canEdit &&
+                canEditCellValues &&
                 flatCol.plain.modelType === AasSubmodelElements.File &&
                 resolveContext(rowIndex, field) != null
               "
               :id="`${rowIndex}-${field}`"
               v-model:content-type="resolveContext(rowIndex, field).contentType"
-              :disabled="!canEdit"
+              :disabled="!canEditCellValues"
               :model-value="resolveFieldValue(cellData, field) ?? undefined"
               @update:model-value="(value) => onFileChange(value, cellData, rowIndex, field)"
             />
             <MediaFieldView
               v-else-if="
-                !canEdit &&
+                !canEditCellValues &&
                 flatCol.plain.modelType === AasSubmodelElements.File &&
                 resolveFieldValue(cellData, field) != null
               "
@@ -409,7 +443,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             <PropertyValue
               :class="[minPropertyColumnWidth[flatCol.plain.valueType] ?? '']"
               v-else-if="
-                canEdit &&
+                canEditCellValues &&
                 flatCol.plain.modelType === AasSubmodelElements.Property &&
                 (flatCol.plain.valueType === DataTypeDef.Date ||
                   flatCol.plain.valueType === DataTypeDef.DateTime ||
@@ -449,12 +483,12 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
               outlined
               @click="openNestedTable(rowIndex, flatCol)"
             />
-            <InputText v-else autofocus fluid readonly :disabled="!canEdit" />
+            <InputText v-else autofocus fluid readonly :disabled="!canEditCellValues" />
           </div>
         </template>
         <template
           v-if="
-            canEdit &&
+            canEditCellValues &&
             flatCol.plain.modelType !== AasSubmodelElements.File &&
             flatCol.plain.modelType !== AasSubmodelElements.SubmodelElementList &&
             !(
