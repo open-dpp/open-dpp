@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
+import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Session } from "../../../auth/domain/session";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
@@ -18,7 +18,6 @@ describe("OrganizationsService", () => {
   let service: OrganizationsService;
 
   const mockOrganizationsRepository = {
-    findOneBySlug: jest.fn<(slug: string) => Promise<Organization | null>>(),
     create:
       jest.fn<
         (organization: Organization, headers: BetterAuthHeaders) => Promise<Organization | null>
@@ -87,7 +86,6 @@ describe("OrganizationsService", () => {
     const headers = {};
     const organization = Organization.create({
       name: "Test Organization",
-      slug: "test-organization",
       metadata: {},
     });
     mockOrganizationsRepository.create.mockResolvedValue(organization);
@@ -114,38 +112,19 @@ describe("OrganizationsService", () => {
     mockInstanceSettingsService.getSettings.mockResolvedValue(
       InstanceSettings.create({ organizationCreationEnabled: { value: true } }),
     );
-    mockOrganizationsRepository.findOneBySlug.mockResolvedValue(null);
     const created = Organization.create({
       name: "Test Organization",
-      slug: "test-organization",
       metadata: {},
     });
     mockOrganizationsRepository.create.mockResolvedValue(created);
 
     await service.createOrganization(
-      { name: created.name, slug: created.slug, metadata: {} },
+      { name: created.name, metadata: {} },
       { userId: "user1" } as Session,
       {},
       UserRole.USER,
     );
 
     expect(mockPolicyService.ensureDefaultPolicies).toHaveBeenCalledWith(created.id);
-  });
-
-  it("should throw DuplicateOrganizationSlugError when creating organization with existing slug", async () => {
-    const slug = "existing-slug";
-    mockOrganizationsRepository.findOneBySlug.mockResolvedValue({ slug } as Organization);
-
-    const session = { userId: "user1" } as Session;
-    const headers = {};
-
-    await expect(
-      service.createOrganization(
-        { name: "Test", slug, metadata: {} },
-        session,
-        headers,
-        UserRole.ADMIN,
-      ),
-    ).rejects.toThrow(BadRequestException);
   });
 });

@@ -4,6 +4,7 @@ import { Controller, ForbiddenException, Get, Inject, Post, Req, Res } from "@ne
 import { toNodeHandler } from "better-auth/node";
 import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
 import { AUTH } from "../auth.provider";
+import { betterAuthPath, isBlockedBetterAuthPostPath } from "./blocked-better-auth-paths";
 import { OptionalAuth } from "./decorators/optional-auth.decorator";
 
 @Controller("auth")
@@ -19,13 +20,13 @@ export class AuthController {
     @Req() request: express.Request,
     @Res() response: express.Response,
   ) {
-    if (request.url.includes("/sign-up/email")) {
+    if (betterAuthPath(request.url) === "/sign-up/email") {
       const settings = await this.instanceSettingsService.getSettings();
       if (!settings.signupEnabled.value) {
         throw new ForbiddenException("Signup is disabled");
       }
     }
-    if (request.url.includes("/organization/create")) {
+    if (isBlockedBetterAuthPostPath(request.url)) {
       throw new ForbiddenException(
         "This operation is not supported. Please use the correct endpoint.",
       );
