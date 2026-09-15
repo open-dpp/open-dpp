@@ -1,8 +1,9 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
+import type { Model } from "mongoose";
 import { expect } from "@jest/globals";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { BulkImportProductLink } from "../domain/bulk-import-product-link";
@@ -36,6 +37,13 @@ describe("bulkImportProductLinkRepository", () => {
     await module.init();
 
     repository = module.get<BulkImportProductLinkRepository>(BulkImportProductLinkRepository);
+
+    // Mongoose builds unique indexes asynchronously; force it up front so the
+    // duplicate-rejection test cannot lose the race under full-suite load.
+    const model = module.get<Model<BulkImportProductLinkDoc>>(
+      getModelToken(BulkImportProductLinkDoc.name),
+    );
+    await model.syncIndexes();
   });
 
   it("saves a link and finds it by organization/template/externalId", async () => {
