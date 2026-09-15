@@ -5,7 +5,10 @@ import { PolicyManagementService } from "../../../../policy/application/services
 import { User } from "../../../users/domain/user";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
+import { Member } from "../../domain/member";
+import { MemberRole } from "../../domain/member-role.enum";
 import { Organization } from "../../domain/organization";
+import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { ProvisioningMailer } from "../../infrastructure/provisioning-mailer";
 import {
@@ -58,6 +61,9 @@ describe("OrganizationProvisioningService", () => {
     createForUser:
       jest.fn<(organization: Organization, userId: string) => Promise<Organization | null>>(),
   };
+  const membersRepository = {
+    findByUserId: jest.fn<(userId: string) => Promise<Member[]>>(),
+  };
   const policyManagementService = {
     ensureDefaultPolicies: jest.fn<(organizationId: string) => Promise<void>>(),
   };
@@ -71,6 +77,7 @@ describe("OrganizationProvisioningService", () => {
     usersRepository.save.mockResolvedValue(newUser);
     usersRepository.rollbackCreatedUser.mockResolvedValue(undefined);
     organizationsRepository.createForUser.mockResolvedValue(organization);
+    membersRepository.findByUserId.mockResolvedValue([]);
     policyManagementService.ensureDefaultPolicies.mockResolvedValue(undefined);
     mailer.notifyOwner.mockResolvedValue(true);
     logError = jest.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
@@ -81,6 +88,7 @@ describe("OrganizationProvisioningService", () => {
         OrganizationProvisioningService,
         { provide: UsersRepository, useValue: usersRepository },
         { provide: OrganizationsRepository, useValue: organizationsRepository },
+        { provide: MembersRepository, useValue: membersRepository },
         { provide: PolicyManagementService, useValue: policyManagementService },
         { provide: ProvisioningMailer, useValue: mailer },
       ],
@@ -190,6 +198,21 @@ describe("OrganizationProvisioningService", () => {
     await expect(service.provision(command)).rejects.toThrow(InternalServerErrorException);
 
     expect(usersRepository.rollbackCreatedUser).toHaveBeenCalledWith("user-1");
+  });
+
+  it("keeps a newly created user that a concurrent call already made an owner elsewhere", async () => {
+    organizationsRepository.createForUser.mockRejectedValue(new Error("better-auth down"));
+    // Interleaving: the other call found "our" user as existing and created its organization.
+    membersRepository.findByUserId.mockResolvedValue([
+      Member.create({ organizationId: "org-2", userId: "user-1", role: MemberRole.OWNER }),
+    ]);
+    const logWarn = jest.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
+
+    await expect(service.provision(command)).rejects.toThrow(InternalServerErrorException);
+
+    expect(membersRepository.findByUserId).toHaveBeenCalledWith("user-1");
+    expect(usersRepository.rollbackCreatedUser).not.toHaveBeenCalled();
+    expect(logWarn).toHaveBeenCalledWith(expect.stringContaining("user-1"));
   });
 
   it("never removes an existing user when the organization cannot be created", async () => {

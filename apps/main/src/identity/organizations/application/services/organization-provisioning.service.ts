@@ -5,6 +5,7 @@ import { User } from "../../../users/domain/user";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Organization } from "../../domain/organization";
+import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { ProvisioningMailer } from "../../infrastructure/provisioning-mailer";
 
@@ -47,6 +48,7 @@ export class OrganizationProvisioningService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly organizationsRepository: OrganizationsRepository,
+    private readonly membersRepository: MembersRepository,
     private readonly policyManagementService: PolicyManagementService,
     private readonly provisioningMailer: ProvisioningMailer,
   ) {}
@@ -113,8 +115,22 @@ export class OrganizationProvisioningService {
     }
   }
 
+  /**
+   * Compensation for the user this call created. A concurrent call for the same email may
+   * have found that user as "existing" (see findOrCreateOwner) and made it the owner of its
+   * own organization in the meantime; deleting it then would orphan that membership. So the
+   * user is only removed while no organization has adopted it.
+   */
   private async rollbackOwner(userId: string): Promise<void> {
     try {
+      const memberships = await this.membersRepository.findByUserId(userId);
+      if (memberships.length > 0) {
+        this.logger.warn(
+          `Rollback skipped: user ${userId} was created by this call but is already a member ` +
+            `of ${memberships.length} organization(s); keeping it`,
+        );
+        return;
+      }
       await this.usersRepository.rollbackCreatedUser(userId);
     } catch (error) {
       this.logger.error(

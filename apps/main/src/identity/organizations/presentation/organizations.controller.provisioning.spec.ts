@@ -26,6 +26,7 @@ import { UserRole } from "../../users/domain/user-role.enum";
 import { UsersRepository } from "../../users/infrastructure/adapters/users.repository";
 import { UsersModule } from "../../users/users.module";
 import { MemberRole } from "../domain/member-role.enum";
+import { Organization } from "../domain/organization";
 import { MembersRepository } from "../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
 import { OrganizationsModule } from "../organizations.module";
@@ -351,6 +352,45 @@ describe("OrganizationsController provisioning", () => {
       const usersRepository = moduleRef.get<UsersRepository>(UsersRepository);
       expect(await usersRepository.findOneByEmail(email)).toBeNull();
       expect(emailSend).not.toHaveBeenCalled();
+    });
+
+    it("keeps the created user when a concurrent call made it an owner before the rollback", async () => {
+      const { adminCookie } = await createAdmin();
+      const email = `${randomUUID()}@example.com`;
+      const organizationsRepository =
+        moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
+      const realCreateForUser = organizationsRepository.createForUser.bind(organizationsRepository);
+      let adoptedOrganizationId: string | undefined;
+      // Interleaving: while this call's organization create is in flight, a second call for the
+      // same email finds the user as "existing", makes it owner of its own organization and
+      // returns; then this call's create fails.
+      const spy = jest
+        .spyOn(organizationsRepository, "createForUser")
+        .mockImplementationOnce(async (_organization, userId) => {
+          const adopted = await realCreateForUser(
+            Organization.create({ name: "Concurrent GmbH", metadata: {} }),
+            userId,
+          );
+          adoptedOrganizationId = adopted!.id;
+          throw new Error("better-auth down");
+        });
+
+      emailSend.mockClear();
+      const response = await request(app.getHttpServer())
+        .post("/organizations")
+        .set("Cookie", adminCookie)
+        .send({ name: "ACME GmbH", owner: { email, locale: "en" } });
+
+      spy.mockRestore();
+      expect(response.status).toEqual(500);
+      const usersRepository = moduleRef.get<UsersRepository>(UsersRepository);
+      const owner = await usersRepository.findOneByEmail(email);
+      expect(owner).not.toBeNull();
+      const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
+      const memberships = await membersRepository.findByUserId(owner!.id);
+      expect(memberships.map((member) => [String(member.organizationId), member.role])).toEqual([
+        [adoptedOrganizationId, MemberRole.OWNER],
+      ]);
     });
 
     it("returns no provisioning without an owner", async () => {

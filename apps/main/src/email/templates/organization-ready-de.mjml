@@ -7,7 +7,9 @@
     <mj-section padding-bottom="20px" padding-top="10px">
       <mj-column>
         <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
-          ><strong>{{#if firstName}}Guten Tag {{ firstName }},{{else}}Guten Tag,{{/if}}</strong></mj-text
+          ><strong
+            >{{#if firstName}}Guten Tag {{ firstName }},{{else}}Guten Tag,{{/if}}</strong
+          ></mj-text
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >Ihre Organisation {{ organizationName }} wurde auf open-dpp eingerichtet.<br />

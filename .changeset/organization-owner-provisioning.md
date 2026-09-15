@@ -10,4 +10,4 @@
 - In that case the response carries `provisioning: { owner: { id, email, created }, emailSent }` (`OrganizationCreateResponseDto`, also returned by `@open-dpp/api-client` `organizations.post`). Without `owner` nothing changes.
 - Mails, in English and German: new and unverified owners get "Start using open-dpp" with a password link valid for one hour plus the verification mail; verified owners get "Your organization <name> is ready" linking to the organization's passports.
 - The standard verification mail is now localized as well: users with `preferredLanguage` "de" get "E-Mail-Adresse bestätigen".
-- If the organization cannot be created after a new user was created, the user is removed again and the request fails with 500. Mail failures are logged and reported as `emailSent: false`.
+- If the organization cannot be created after a new user was created, the user is removed again (unless a concurrent call for the same email already made it an owner) and the request fails with 500. Mail failures are logged and reported as `emailSent: false`.
