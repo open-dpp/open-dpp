@@ -52,8 +52,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/dto
       '@primeicons/vue':
-        specifier: ^8.0.0
-        version: 8.0.0(vue@3.5.38(typescript@5.9.3))
+        specifier: ^8.0.1
+        version: 8.0.1(vue@3.5.38(typescript@5.9.3))
       '@primeuix/themes':
         specifier: ^2.0.3
         version: 2.0.3
@@ -2735,11 +2735,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@primeicons/core@8.0.0':
-    resolution: {integrity: sha512-vPif+sXxajXCSL2bmNBP0QYliJONVRgFVpCg9e7hGn7IG18JkMAm4fF5HVld1N4sDATkZQM7jKVxdZ8EK09Giw==}
+  '@primeicons/core@8.0.1':
+    resolution: {integrity: sha512-KJ5j8h4KVbl7lX0UosENk8d8N43GGj7H7ICyCUV8re+VdduE69bYlxfaCtM2KRdpoy45eu4JiZgT5P1Mh2JNpg==}
 
-  '@primeicons/vue@8.0.0':
-    resolution: {integrity: sha512-sIqk+kZB9Bn0FqODjDAnNvRXY4Ypky2TInY/oIC3aAJOud1A3FoKruMC8IwiRDz1uHzxYnQqWwtFsfZAgC7qXQ==}
+  '@primeicons/vue@8.0.1':
+    resolution: {integrity: sha512-mNOajP2ni5gUkuFqHNxy2dmvXpYzvH3z/jeYOqD0W+iXu0g6M439PyHqayxhoOGjJ5R1h0L6xnYbm3nVHtPwvQ==}
     peerDependencies:
       vue: ^3
 
@@ -10240,7 +10240,7 @@ snapshots:
 
   '@jest/pattern@30.4.0':
     dependencies:
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
       jest-regex-util: 30.4.0
 
   '@jest/reporters@30.4.1(supports-color@8.1.1)':
@@ -10327,7 +10327,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -10910,13 +10910,13 @@ snapshots:
     dependencies:
       playwright: 1.60.0
 
-  '@primeicons/core@8.0.0':
+  '@primeicons/core@8.0.1':
     dependencies:
       '@primeuix/utils': 0.8.1
 
-  '@primeicons/vue@8.0.0(vue@3.5.38(typescript@5.9.3))':
+  '@primeicons/vue@8.0.1(vue@3.5.38(typescript@5.9.3))':
     dependencies:
-      '@primeicons/core': 8.0.0
+      '@primeicons/core': 8.0.1
       '@primeuix/utils': 0.8.1
       vue: 3.5.38(typescript@5.9.3)
 
@@ -11456,7 +11456,7 @@ snapshots:
   '@types/jsonwebtoken@9.0.10':
     dependencies:
       '@types/ms': 2.1.0
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
 
   '@types/language-tags@1.0.4': {}
 
@@ -11530,7 +11530,7 @@ snapshots:
 
   '@types/set-cookie-parser@2.4.10':
     dependencies:
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
 
   '@types/stack-utils@2.0.3': {}
 
@@ -14614,7 +14614,7 @@ snapshots:
   jest-haste-map@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -14764,7 +14764,7 @@ snapshots:
   jest-util@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
@@ -14792,13 +14792,13 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@30.4.1:
     dependencies:
-      '@types/node': 25.9.3
+      '@types/node': 22.20.2
       '@ungap/structured-clone': 1.3.1
       jest-util: 30.4.1
       merge-stream: 2.0.0
@@ -17721,7 +17721,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.17.0)
       browserslist: 4.28.9
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.24.0
+      enhanced-resolve: 5.25.1
       es-module-lexer: 2.1.0
       eslint-scope: 5.1.1
       events: 3.3.0
