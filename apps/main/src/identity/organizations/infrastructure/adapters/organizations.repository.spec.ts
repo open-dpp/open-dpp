@@ -165,4 +165,42 @@ describe("OrganizationsRepository", () => {
     const [call] = mockAuth.api.updateOrganization.mock.calls[0] as [{ body: { data: object } }];
     expect(call.body.data).not.toHaveProperty("slug");
   });
+
+  it("creates an organization for a given user as a headerless system action", async () => {
+    const organization = Organization.create({ name: "Provisioned Org", metadata: {} });
+    const id = new ObjectId().toString();
+    mockAuth.api.createOrganization.mockResolvedValue({
+      id,
+      name: "Provisioned Org",
+      slug: id,
+      logo: null,
+      metadata: {},
+      createdAt: new Date(),
+    });
+
+    const created = await repository.createForUser(organization, "user-1");
+
+    expect(created).toBeInstanceOf(Organization);
+    expect(created!.id).toBe(id);
+    const [call] = mockAuth.api.createOrganization.mock.calls[0] as [Record<string, unknown>];
+    expect(call).not.toHaveProperty("headers");
+    expect(call.body).toEqual(
+      expect.objectContaining({
+        name: "Provisioned Org",
+        slug: organization.slug,
+        userId: "user-1",
+      }),
+    );
+  });
+
+  it("returns null when better-auth returns nothing for a system-action create", async () => {
+    mockAuth.api.createOrganization.mockResolvedValue(null);
+
+    const created = await repository.createForUser(
+      Organization.create({ name: "Provisioned Org", metadata: {} }),
+      "user-1",
+    );
+
+    expect(created).toBeNull();
+  });
 });

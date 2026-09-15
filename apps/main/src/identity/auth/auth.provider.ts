@@ -10,7 +10,7 @@ import type { Db } from "mongodb";
 import { EmailChangeVerificationMail } from "../../email/domain/email-change-verification-mail";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
-import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
+import { createVerifyEmailMail } from "./infrastructure/verify-email-mail.factory";
 import { EmailService } from "../../email/email.service";
 import {
   completeVerifiedEmailChange,
@@ -221,9 +221,9 @@ export const AuthProvider: Provider = {
           token: string;
         }) => {
           const firstName = (user as any).firstName ?? "User";
+          const language = resolveUserLanguage(user);
           const decoded = decodeVerificationToken({ query: { token } });
           if (decoded?.updateTo) {
-            const language = resolveUserLanguage(user);
             await emailService.send(
               EmailChangeVerificationMail.create({
                 to: user.email,
@@ -239,14 +239,7 @@ export const AuthProvider: Provider = {
             return;
           }
           await emailService.send(
-            VerifyEmailMail.create({
-              to: user.email,
-              subject: "Verify E-Mail address",
-              templateProperties: {
-                link: url,
-                firstName,
-              },
-            }),
+            createVerifyEmailMail({ to: user.email, firstName, language, link: url }),
           );
         },
       },

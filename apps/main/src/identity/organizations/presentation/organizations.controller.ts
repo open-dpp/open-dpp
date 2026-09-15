@@ -16,18 +16,20 @@ import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers"
 import { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
 import { MembersService } from "../application/services/members.service";
+import { OrganizationProvisioningService } from "../application/services/organization-provisioning.service";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { MemberWithUser } from "../domain/member";
 import { MemberRole } from "../domain/member-role.enum";
-import { toOrganizationDto } from "./organization-dto.mapper";
+import { toOrganizationDto, toProvisionedOrganizationDto } from "./organization-dto.mapper";
 import { UserRoleDecorator } from "../../auth/presentation/decorators/user-role.decorator";
-import { type UserRoleType } from "../../users/domain/user-role.enum";
+import { UserRole, type UserRoleType } from "../../users/domain/user-role.enum";
 import {
   InvitationResponseDto,
   type MemberRoleChangeDto,
   MemberRoleChangeDtoSchema,
   type OrganizationCreateDto,
   OrganizationCreateDtoSchema,
+  type OrganizationCreateResponseDto,
   type OrganizationDto,
   PolicyKeyList,
 } from "@open-dpp/dto";
@@ -47,19 +49,37 @@ export class OrganizationsController {
 
   constructor(
     private readonly organizationsService: OrganizationsService,
+    private readonly organizationProvisioningService: OrganizationProvisioningService,
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly membersService: MembersService,
     private readonly invitationsRepository: InvitationsRepository,
     private readonly usersRepository: UsersRepository,
   ) {}
 
+  /**
+   * Without `owner` the caller becomes the owner. With `owner` (instance admins only) the
+   * organization is provisioned for that user and the response carries `provisioning`.
+   */
   @Post()
   async createOrganization(
     @Body(new ZodValidationPipe(OrganizationCreateDtoSchema)) body: OrganizationCreateDto,
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
     @UserRoleDecorator() userRole: UserRoleType,
-  ): Promise<OrganizationDto> {
+  ): Promise<OrganizationCreateResponseDto> {
+    if (body.owner) {
+      if (userRole !== UserRole.ADMIN) {
+        throw new ForbiddenException(
+          "Only instance admins can create an organization with an owner",
+        );
+      }
+      const result = await this.organizationProvisioningService.provision({
+        name: body.name,
+        owner: body.owner,
+        adminUserId: session.userId,
+      });
+      return toProvisionedOrganizationDto(result);
+    }
     const organization = await this.organizationsService.createOrganization(
       {
         name: body.name,

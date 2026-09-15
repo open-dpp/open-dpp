@@ -36,10 +36,12 @@ export class UsersRepository {
           data: {
             firstName: user.firstName,
             lastName: user.lastName,
+            preferredLanguage: user.preferredLanguage,
           },
         },
       });
-      return this.findOneByEmail(user.email);
+      // better-auth stores the email lowercased.
+      return this.findOneByEmail(user.email.toLowerCase());
     } catch (error) {
       this.logger.error(`Failed to create user ${user.email}`, error);
       return null;
@@ -73,6 +75,23 @@ export class UsersRepository {
     const document = await this.userModel.findOne({ email: { $eq: email } });
     if (!document) return null;
     return UserMapper.toDomain(document);
+  }
+
+  /**
+   * Compensation for a user created by a provisioning call that could not be completed:
+   * removes the user together with its sessions and accounts through better-auth's
+   * internal adapter. Only for users that own nothing else — memberships, invitations,
+   * API keys and verification rows are NOT cascaded, so this is not a general delete.
+   * better-auth's `removeUser` route needs an admin *session*, which API-key callers
+   * never have, hence the adapter.
+   */
+  async rollbackCreatedUser(id: string): Promise<void> {
+    const context = await this.auth.$context;
+    const user = await context.internalAdapter.findUserById(id);
+    if (!user) {
+      throw new NotFoundInDatabaseException(User.name, id);
+    }
+    await context.internalAdapter.deleteUser(id);
   }
 
   async findAllByIds(ids: string[]): Promise<User[]> {

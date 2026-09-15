@@ -29,20 +29,41 @@ export class OrganizationsRepository {
     return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
   }
 
+  private static toCreateBody(organization: Organization) {
+    return {
+      name: organization.name,
+      // Placeholder only: better-auth requires a unique slug in the body, but the
+      // creation hook (assignOrganizationIdAsSlug) replaces both id and slug on persist.
+      slug: organization.slug,
+      logo: organization.logo ?? undefined,
+      metadata: organization.metadata || {},
+    };
+  }
+
+  /** Creates the organization for the session behind `headers`, who becomes its owner. */
   async create(
     organization: Organization,
     headers: BetterAuthHeaders,
   ): Promise<Organization | null> {
     const result = await (this.auth.api as any).createOrganization({
       headers,
-      body: {
-        name: organization.name,
-        // Placeholder only: better-auth requires a unique slug in the body, but the
-        // creation hook (assignOrganizationIdAsSlug) replaces both id and slug on persist.
-        slug: organization.slug,
-        logo: organization.logo ?? undefined,
-        metadata: organization.metadata || {},
-      },
+      body: OrganizationsRepository.toCreateBody(organization),
+    });
+    if (!result) {
+      return null;
+    }
+    return OrganizationMapper.toDomainFromBetterAuth(result);
+  }
+
+  /**
+   * Creates the organization owned by `userId` as a better-auth *system action*: no
+   * headers, so no session is involved and nobody but `userId` becomes a member.
+   * better-auth rejects a call that carries headers without a session, hence the
+   * separate method instead of an optional `userId` on {@link create}.
+   */
+  async createForUser(organization: Organization, userId: string): Promise<Organization | null> {
+    const result = await (this.auth.api as any).createOrganization({
+      body: { ...OrganizationsRepository.toCreateBody(organization), userId },
     });
     if (!result) {
       return null;

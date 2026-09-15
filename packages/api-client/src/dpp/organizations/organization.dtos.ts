@@ -1,1 +1,7 @@
-export type { OrganizationCreateDto, OrganizationDto } from "@open-dpp/dto";
+export type {
+  OrganizationCreateDto,
+  OrganizationCreateResponseDto,
+  OrganizationDto,
+  OrganizationOwnerDto,
+  ProvisioningDto,
+} from "@open-dpp/dto";
