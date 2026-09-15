@@ -4,6 +4,8 @@ import { EmailModule } from "../../email/email.module";
 import { InstanceSettingsModule } from "../../instance-settings/instance-settings.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { SessionsService } from "./application/services/sessions.service";
+import { EmailVerificationLinkBuilder } from "./infrastructure/adapters/email-verification-link.builder";
+import { PasswordResetTokensRepository } from "./infrastructure/adapters/password-reset-tokens.repository";
 import { SessionsRepository } from "./infrastructure/adapters/sessions.repository";
 import { AUTH, AuthProvider } from "./auth.provider";
 import { AuthController } from "./presentation/auth.controller";
@@ -16,7 +18,20 @@ import { AuthController } from "./presentation/auth.controller";
     forwardRef(() => OrganizationsModule),
   ],
   controllers: [AuthController],
-  providers: [AuthProvider, SessionsService, SessionsRepository],
-  exports: [SessionsService, SessionsRepository, AUTH, EnvModule],
+  providers: [
+    AuthProvider,
+    SessionsService,
+    SessionsRepository,
+    PasswordResetTokensRepository,
+    EmailVerificationLinkBuilder,
+  ],
+  exports: [
+    SessionsService,
+    SessionsRepository,
+    PasswordResetTokensRepository,
+    EmailVerificationLinkBuilder,
+    AUTH,
+    EnvModule,
+  ],
 })
 export class AuthModule {}

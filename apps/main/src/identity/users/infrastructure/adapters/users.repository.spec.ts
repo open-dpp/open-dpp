@@ -2,12 +2,12 @@ import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
-import { getModelToken, MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Language } from "@open-dpp/dto";
 import { ObjectId } from "mongodb";
-import { Model } from "mongoose";
+import { type Connection, Model } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { EmailService } from "../../../../email/email.service";
 import { AuthModule } from "../../../auth/auth.module";
@@ -336,6 +336,62 @@ describe("UsersRepository", () => {
       expect(roundTripped!.firstName).toBe("Jane");
       expect(roundTripped!.lastName).toBe("Roe");
       expect(roundTripped!.name).toBe("Jane Roe");
+    });
+  });
+
+  describe("save (provisioning fields)", () => {
+    it("stores a mixed-case email lowercased and still returns the user", async () => {
+      const local = randomUUID();
+      const user = User.create({
+        email: `${local}@Example.COM`,
+        firstName: "Mixed",
+        lastName: "Case",
+        role: UserRole.USER,
+      });
+
+      const saved = await repository.save(user);
+
+      expect(saved).toBeInstanceOf(User);
+      expect(saved!.email).toBe(`${local}@example.com`);
+      expect(await repository.findOneByEmail(`${local}@example.com`)).not.toBeNull();
+    });
+
+    it("persists the preferred language of a new user", async () => {
+      const user = User.create({
+        email: `${randomUUID()}@test.test`,
+        firstName: "Lang",
+        lastName: "De",
+        role: UserRole.USER,
+        preferredLanguage: "de",
+      });
+
+      const saved = await repository.save(user);
+
+      expect(saved!.preferredLanguage).toBe("de");
+      expect((await repository.findOneById(saved!.id))!.preferredLanguage).toBe("de");
+    });
+  });
+
+  describe("rollbackCreatedUser", () => {
+    it("removes the user together with its sessions and accounts", async () => {
+      const password = "delete-me-1234";
+      const seeded = await seedUser({ password });
+      await auth.api.signInEmail({ body: { email: seeded.email, password } });
+      const connection = module.get<Connection>(getConnectionToken());
+      const userIdFilter = { userId: { $in: [seeded.id, new ObjectId(seeded.id)] } };
+      expect(await connection.db!.collection("session").countDocuments(userIdFilter)).toBe(1);
+      expect(await connection.db!.collection("account").countDocuments(userIdFilter)).toBe(1);
+
+      await repository.rollbackCreatedUser(seeded.id);
+
+      expect(await repository.findOneById(seeded.id)).toBeNull();
+      expect(await repository.findOneByEmail(seeded.email)).toBeNull();
+      expect(await connection.db!.collection("session").countDocuments(userIdFilter)).toBe(0);
+      expect(await connection.db!.collection("account").countDocuments(userIdFilter)).toBe(0);
+    });
+
+    it("rejects when the user does not exist", async () => {
+      await expect(repository.rollbackCreatedUser(new ObjectId().toHexString())).rejects.toThrow();
     });
   });
 });

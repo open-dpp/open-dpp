@@ -1,6 +1,10 @@
 import type { AxiosInstance } from "axios";
 import type { MemberDto } from "./member.dtos";
-import type { OrganizationCreateDto, OrganizationDto } from "./organization.dtos";
+import type {
+  OrganizationCreateDto,
+  OrganizationCreateResponseDto,
+  OrganizationDto,
+} from "./organization.dtos";
 import type { InvitationResponseDto, MemberRoleDtoType } from "@open-dpp/dto";
 
 export class OrganizationsNamespace {
@@ -20,8 +24,9 @@ export class OrganizationsNamespace {
     return this.axiosInstance.get<OrganizationDto[]>(`${this.basePath}/member`);
   }
 
+  /** With `owner` (instance admins only) the response carries `provisioning`. */
   public async post(data: OrganizationCreateDto) {
-    return this.axiosInstance.post<OrganizationDto>(`${this.basePath}`, data);
+    return this.axiosInstance.post<OrganizationCreateResponseDto>(`${this.basePath}`, data);
   }
 
   public async inviteUser(email: string, organizationId: string) {

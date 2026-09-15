@@ -47,10 +47,6 @@ export class OrganizationsService {
       throw new ForbiddenException("Organization creation is not enabled for this instance.");
     }
 
-    const existsWithSlug = await this.organizationsRepository.findOneBySlug(data.slug);
-    if (existsWithSlug) {
-      throw new BadRequestException();
-    }
     const organization = Organization.create(data);
     const createdOrganization = await this.organizationsRepository.create(organization, headers);
     if (!createdOrganization) {

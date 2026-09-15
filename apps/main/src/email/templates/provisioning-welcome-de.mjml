@@ -1,0 +1,35 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    {{> emailHeader }}
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong
+            >{{#if firstName}}Guten Tag {{ firstName }},{{else}}Guten Tag,{{/if}}</strong
+          ></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Ihre Organisation {{ organizationName }} wurde f&uuml;r Sie auf open-dpp eingerichtet.<br />
+          Legen Sie Ihr Passwort fest, um loszulegen.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{ link }}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >Jetzt mit open-dpp starten</mj-button
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial" padding-top="20px"
+          >Der Link ist eine Stunde g&uuml;ltig. Ist er abgelaufen, fordern Sie &uuml;ber
+          &bdquo;Passwort vergessen&ldquo; auf der Anmeldeseite einen neuen an.</mj-text
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -9,6 +9,8 @@ export const BaseEmailTypes = {
   EmailChangeNotification: "EMAIL_CHANGE_NOTIFICATION",
   EmailChangeVerification: "EMAIL_CHANGE_VERIFICATION",
   EmailChangeCompleted: "EMAIL_CHANGE_COMPLETED",
+  Welcome: "WELCOME",
+  OrganizationReady: "ORGANIZATION_READY",
 } as const;
 export type BaseEmailType = (typeof BaseEmailTypes)[keyof typeof BaseEmailTypes];
 

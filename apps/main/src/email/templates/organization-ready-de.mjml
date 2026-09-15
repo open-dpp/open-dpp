@@ -7,24 +7,24 @@
     <mj-section padding-bottom="20px" padding-top="10px">
       <mj-column>
         <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
-          ><strong>{{#if firstName}}Hey {{ firstName }}!{{else}}Hey there!{{/if}}</strong></mj-text
+          ><strong
+            >{{#if firstName}}Guten Tag {{ firstName }},{{else}}Guten Tag,{{/if}}</strong
+          ></mj-text
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
-          >Thank you for signing up to open-dpp!<br />
-          <p></p
-        ></mj-text>
-        <mj-text align="center" font-size="18px" font-family="Arial"
-          >Please verify your email address with the button below.</mj-text
+          >Ihre Organisation {{ organizationName }} wurde auf open-dpp eingerichtet.<br />
+          Daf&uuml;r wurde Ihr bestehendes Konto verwendet, Ihre Anmeldedaten bleiben
+          unver&auml;ndert.</mj-text
         >
         <mj-button
           background-color="#6BAD87"
           color="#FFFFFF"
-          href="{{link}}"
+          href="{{ link }}"
           font-family="Arial, sans-serif"
           padding="20px 0 0 0"
           font-weight="bold"
           font-size="16px"
-          >Verify email</mj-button
+          >Zu open-dpp</mj-button
         >
       </mj-column>
     </mj-section>

@@ -38,7 +38,13 @@ export { AasIntegrationNamespace } from "./dpp/integrations/aas-integration.name
 export * from "./dpp/digital-product-document/digital-product-document.namespace";
 
 export type { MemberDto } from "./dpp/organizations/member.dtos";
-export type { OrganizationCreateDto, OrganizationDto } from "./dpp/organizations/organization.dtos";
+export type {
+  OrganizationCreateDto,
+  OrganizationCreateResponseDto,
+  OrganizationDto,
+  OrganizationOwnerDto,
+  ProvisioningDto,
+} from "./dpp/organizations/organization.dtos";
 export { OrganizationsNamespace } from "./dpp/organizations/organizations.namespace";
 
 export { TemplatesNamespace } from "./dpp/templates/templates.namespace";
