@@ -52,8 +52,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/dto
       '@primeicons/vue':
-        specifier: ^8.0.0
-        version: 8.0.0(vue@3.5.38(typescript@5.9.3))
+        specifier: ^8.0.1
+        version: 8.0.1(vue@3.5.38(typescript@5.9.3))
       '@primeuix/themes':
         specifier: ^2.0.3
         version: 2.0.3
@@ -2735,11 +2735,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@primeicons/core@8.0.0':
-    resolution: {integrity: sha512-vPif+sXxajXCSL2bmNBP0QYliJONVRgFVpCg9e7hGn7IG18JkMAm4fF5HVld1N4sDATkZQM7jKVxdZ8EK09Giw==}
+  '@primeicons/core@8.0.1':
+    resolution: {integrity: sha512-KJ5j8h4KVbl7lX0UosENk8d8N43GGj7H7ICyCUV8re+VdduE69bYlxfaCtM2KRdpoy45eu4JiZgT5P1Mh2JNpg==}
 
-  '@primeicons/vue@8.0.0':
-    resolution: {integrity: sha512-sIqk+kZB9Bn0FqODjDAnNvRXY4Ypky2TInY/oIC3aAJOud1A3FoKruMC8IwiRDz1uHzxYnQqWwtFsfZAgC7qXQ==}
+  '@primeicons/vue@8.0.1':
+    resolution: {integrity: sha512-mNOajP2ni5gUkuFqHNxy2dmvXpYzvH3z/jeYOqD0W+iXu0g6M439PyHqayxhoOGjJ5R1h0L6xnYbm3nVHtPwvQ==}
     peerDependencies:
       vue: ^3
 
@@ -10910,13 +10910,13 @@ snapshots:
     dependencies:
       playwright: 1.60.0
 
-  '@primeicons/core@8.0.0':
+  '@primeicons/core@8.0.1':
     dependencies:
       '@primeuix/utils': 0.8.1
 
-  '@primeicons/vue@8.0.0(vue@3.5.38(typescript@5.9.3))':
+  '@primeicons/vue@8.0.1(vue@3.5.38(typescript@5.9.3))':
     dependencies:
-      '@primeicons/core': 8.0.0
+      '@primeicons/core': 8.0.1
       '@primeuix/utils': 0.8.1
       vue: 3.5.38(typescript@5.9.3)
 
