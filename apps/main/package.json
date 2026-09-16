@@ -37,7 +37,7 @@
     "@nestjs/platform-express": "^11.1.26",
     "@nestjs/platform-socket.io": "^11.1.26",
     "@nestjs/serve-static": "^5.0.5",
-    "@nestjs/swagger": "^11.4.4",
+    "@nestjs/swagger": "^11.4.7",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.26",
     "@open-dpp/api-client": "workspace:*",
