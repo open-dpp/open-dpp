@@ -24,6 +24,7 @@ export const organizationsPaths = {
         "equal to its id and cannot be chosen. Requires organization creation to be enabled for " +
         "the instance, unless the caller is an admin.",
       requestBody: {
+        required: true,
         content: {
           [ContentType.JSON]: { schema: OrganizationCreateDtoSchema },
         },

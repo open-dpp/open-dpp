@@ -14,6 +14,7 @@ describe("organizationsPaths", () => {
     const document = buildOpenApiDocumentation();
     const post = document.paths?.["/organizations"]?.post as Record<string, any> | undefined;
 
+    expect(post?.requestBody?.required).toBe(true);
     const body = post?.requestBody?.content?.["application/json"]?.schema as SchemaObject;
     expect(Object.keys(body.properties ?? {})).toEqual(["name", "owner"]);
     expect(body.required).toEqual(["name"]);
