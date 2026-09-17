@@ -715,6 +715,7 @@
     "restrictPassportEditingConfirmHeader": "Restrict Passport Editing",
     "restrictPassportEditingConfirmMessage": "Passports created from this template will only allow editing of field data from now on. This cannot be undone.",
     "restrictPassportEditingConfirmAccept": "Restrict Editing",
+    "restrictPassportEditingTag": "Limited Editing for Passports",
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "select": "Select template",

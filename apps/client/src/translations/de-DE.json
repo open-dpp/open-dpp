@@ -745,6 +745,7 @@
     "restrictPassportEditingConfirmHeader": "Passbearbeitung einschränken",
     "restrictPassportEditingConfirmMessage": "Aus dieser Vorlage erstellte Produktpässe erlauben ab sofort nur noch die Bearbeitung von Felddaten. Dies kann nicht rückgängig gemacht werden.",
     "restrictPassportEditingConfirmAccept": "Bearbeitung einschränken",
+    "restrictPassportEditingTag": "Beschränkte Bearbeitung für Pässe",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "select": "Vorlage auswählen",

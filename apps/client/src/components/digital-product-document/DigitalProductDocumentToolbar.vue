@@ -180,9 +180,16 @@ const permalinkActions = computed(() => [
         </div>
       </template>
       <template #center>
-        <Tag v-if="type === DigitalProductDocumentType.Passport" severity="contrast">{{
-          t(`status.${status.toLowerCase()}`)
-        }}</Tag>
+        <div v-if="type === DigitalProductDocumentType.Passport" class="flex items-center gap-2">
+          <Tag severity="contrast">{{ t(`status.${status.toLowerCase()}`) }}</Tag>
+          <Tag
+            v-if="editingMode === PassportEditingModeDto.DataOnly"
+            v-tooltip.bottom="t('passports.removeEditingRestrictionsTooltip')"
+            severity="warn"
+            icon="pi pi-lock"
+            >{{ t("status.dataOnly") }}</Tag
+          >
+        </div>
       </template>
       <template #end>
         <div class="flex items-center gap-2">
@@ -194,9 +201,16 @@ const permalinkActions = computed(() => [
             :model="permalinkActions"
             @click="qrCodeDialogVisible = true"
           />
-          <Tag v-if="type === DigitalProductDocumentType.Template" severity="contrast">{{
-            t(`status.${status.toLowerCase()}`)
-          }}</Tag>
+          <template v-if="type === DigitalProductDocumentType.Template">
+            <Tag
+              v-if="passportEditingMode === PassportEditingModeDto.DataOnly"
+              v-tooltip.bottom="t('templates.restrictPassportEditingTooltip')"
+              severity="warn"
+              icon="pi pi-lock"
+              >{{ t("templates.restrictPassportEditingTag") }}</Tag
+            >
+            <Tag severity="contrast">{{ t(`status.${status.toLowerCase()}`) }}</Tag>
+          </template>
         </div>
       </template>
     </Toolbar>
