@@ -53,7 +53,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",
     "cpx": "^1.5.0",
-    "dayjs": "^1.11.21",
+    "dayjs": "^1.11.23",
     "express": "^5.2.1",
     "file-type": "^21.3.4",
     "form-data": "^4.0.6",
