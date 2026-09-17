@@ -42,7 +42,7 @@
     "vue-i18n": "^11.4.5",
     "vue-router": "^5.1.0",
     "zod": "^4.4.3",
-    "zod-vue-i18n": "^0.0.8"
+    "zod-vue-i18n": "^0.0.9"
   },
   "devDependencies": {
     "@open-dpp/testing": "workspace:*",
