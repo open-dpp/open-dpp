@@ -85,7 +85,7 @@ importers:
         specifier: ^1.11.21
         version: 1.11.21
       dompurify:
-        specifier: ^3.4.13
+        specifier: ^3.4.15
         version: 3.4.15
       lodash:
         specifier: ^4.18.1
