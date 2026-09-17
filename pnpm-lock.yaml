@@ -82,8 +82,8 @@ importers:
         specifier: ^4.5.1
         version: 4.5.1
       dayjs:
-        specifier: ^1.11.21
-        version: 1.11.21
+        specifier: ^1.11.23
+        version: 1.11.23
       dompurify:
         specifier: ^3.4.15
         version: 3.4.15
@@ -329,8 +329,8 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0(supports-color@8.1.1)
       dayjs:
-        specifier: ^1.11.21
-        version: 1.11.21
+        specifier: ^1.11.23
+        version: 1.11.23
       express:
         specifier: ^5.2.1
         version: 5.2.1(supports-color@8.1.1)
@@ -4847,8 +4847,8 @@ packages:
   date.js@0.3.3:
     resolution: {integrity: sha512-HgigOS3h3k6HnW011nAb43c5xx5rBXk8P2v/WIT9Zv4koIaVXiH2BURguI78VVp+5Qc076T7OR378JViCnZtBw==}
 
-  dayjs@1.11.21:
-    resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
+  dayjs@1.11.23:
+    resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -13150,7 +13150,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  dayjs@1.11.21: {}
+  dayjs@1.11.23: {}
 
   debug@2.6.9(supports-color@8.1.1):
     dependencies:
