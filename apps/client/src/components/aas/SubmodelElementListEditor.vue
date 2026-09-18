@@ -93,18 +93,13 @@ const canDeleteColumnsAndRows = computed(() => {
 });
 
 // While archived or restricted to data, every action in the column/row menus (create,
-// edit, delete) is uniformly blocked — so disable the menu trigger itself instead of
+// edit, delete) is uniformly blocked — so hide the menu trigger itself instead of
 // letting the user open a menu full of disabled items. This is distinct from a partial
 // permission gap (e.g. can edit but not delete a column), where only some menu items are
 // disabled and the trigger must stay reachable — that per-item gating (via
 // disableColumnEditing/disableRowCreation/etc., already threaded into the menu builders)
-// is unaffected by this and still applies whenever the trigger itself isn't disabled.
-const columnRowMenuDisabled = computed(() => props.isArchived || props.isEditingRestrictedToData);
-const columnRowMenuDisabledTooltip = computed(() => {
-  if (props.isArchived) return t("aasEditor.security.archivedTooltip");
-  if (props.isEditingRestrictedToData) return t("aasEditor.security.editingRestrictedTooltip");
-  return undefined;
-});
+// is unaffected by this and still applies whenever the trigger itself is shown.
+const columnRowMenuVisible = computed(() => !props.isArchived && !props.isEditingRestrictedToData);
 
 const confirm = useConfirm();
 
@@ -298,15 +293,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             <template #header>
               <div class="flex items-center gap-2">
                 <Button
-                  v-if="col.children"
+                  v-if="col.children && columnRowMenuVisible"
                   :data-cy="`column-menu-${col.idShort}`"
-                  v-tooltip.top="columnRowMenuDisabledTooltip"
                   :aria-label="t('common.actions')"
                   icon="pi pi-chevron-down"
                   variant="text"
                   severity="secondary"
                   size="small"
-                  :disabled="columnRowMenuDisabled"
                   @click="
                     toggleColumnMenu($event, {
                       position: colIndex,
@@ -316,15 +309,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
                   "
                 />
                 <Button
-                  v-else
+                  v-else-if="columnRowMenuVisible"
                   :data-cy="`column-menu-${col.idShort}`"
-                  v-tooltip.top="columnRowMenuDisabledTooltip"
                   :aria-label="t('common.actions')"
                   icon="pi pi-chevron-down"
                   variant="text"
                   severity="secondary"
                   size="small"
-                  :disabled="columnRowMenuDisabled"
                   @click="
                     toggleColumnMenu($event, {
                       position: colIndex,
@@ -347,14 +338,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
               <template #header>
                 <div class="flex items-center gap-2">
                   <Button
+                    v-if="columnRowMenuVisible"
                     :data-cy="`column-menu-${col.idShort}-${subCol.idShort}`"
-                    v-tooltip.top="columnRowMenuDisabledTooltip"
                     :aria-label="t('common.actions')"
                     icon="pi pi-chevron-down"
                     variant="text"
                     severity="secondary"
                     size="small"
-                    :disabled="columnRowMenuDisabled"
                     @click="
                       toggleColumnMenu($event, {
                         position: subColIndex,
@@ -377,14 +367,13 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         <template #body="{ index }">
           <div class="flex items-center gap-2 rounded-md">
             <Button
+              v-if="columnRowMenuVisible"
               :data-cy="`row-menu-${index}`"
-              v-tooltip.top="columnRowMenuDisabledTooltip"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
               variant="text"
               severity="secondary"
               size="small"
-              :disabled="columnRowMenuDisabled"
               @click="toggleRowMenu($event, { position: index })"
             />
           </div>
@@ -400,13 +389,12 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         <template #header>
           <div class="flex items-center gap-2">
             <Button
+              v-if="columnRowMenuVisible"
               :data-cy="`column-menu-${flatCol.idShort}`"
-              v-tooltip.top="columnRowMenuDisabledTooltip"
               :aria-label="t('common.actions')"
               icon="pi pi-ellipsis-v"
               severity="secondary"
               size="small"
-              :disabled="columnRowMenuDisabled"
               @click="
                 toggleColumnMenu($event, {
                   position: flatIndex,

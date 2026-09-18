@@ -47,7 +47,7 @@ const i18n = createI18n({
 
 function makeActions(
   overrides: Partial<
-    Record<"read" | "edit" | "create" | "delete", { visible: boolean; enabled: boolean }>
+    Record<"read" | "edit" | "create" | "delete" | "move", { visible: boolean; enabled: boolean }>
   > = {},
 ) {
   return {
@@ -55,6 +55,7 @@ function makeActions(
     edit: { visible: true, enabled: true, tooltip: "Edit", ...overrides.edit },
     create: { visible: true, enabled: true, tooltip: "Add element", ...overrides.create },
     delete: { visible: true, enabled: true, tooltip: "Delete", ...overrides.delete },
+    move: { visible: true, enabled: true, tooltip: "Move", ...overrides.move },
   };
 }
 
@@ -205,20 +206,13 @@ describe("AasSubmodelTree", () => {
     expect(buildMoveMenu).toHaveBeenCalledWith(expect.objectContaining({ key: "submodel-1" }));
   });
 
-  it("disables the move button when editing is restricted to data", async () => {
+  it("hides the move button when its move action is not visible", () => {
     const buildMoveMenu = vi.fn();
-    const wrapper = mountTree({
-      submodels: [makeSubmodelNode()],
-      buildMoveMenu,
-      isEditingRestrictedToData: true,
-    });
+    const node = makeSubmodelNode();
+    node.data.actions.move = { visible: false, enabled: false, tooltip: "Move" };
+    const wrapper = mountTree({ submodels: [node], buildMoveMenu });
 
-    const moveButton = wrapper.find('[aria-label="Move"]');
-    expect(moveButton.exists()).toBe(true);
-    expect(moveButton.attributes("disabled")).toBeDefined();
-
-    await moveButton.trigger("click");
-    expect(buildMoveMenu).not.toHaveBeenCalled();
+    expect(wrapper.find('[aria-label="Move"]').exists()).toBe(false);
   });
 
   it("pagination controls call the corresponding props", async () => {

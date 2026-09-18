@@ -433,7 +433,6 @@ export function useAasEditor({
   function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
     const missingPermissionMsg = translate(`${translatePrefix}.security.missingPermission`);
     const archivedMsg = translate(`${translatePrefix}.security.archivedTooltip`);
-    const restrictedMsg = translate(`${translatePrefix}.security.editingRestrictedTooltip`);
     const labels = {
       [Permissions.Read]: "view",
       [Permissions.Edit]: "edit",
@@ -451,20 +450,22 @@ export function useAasEditor({
       if (toValue(isArchived) && permission !== Permissions.Read) {
         return false;
       }
+      if (isStructurallyBlocked(permission)) {
+        return false;
+      }
       if (permission === Permissions.Create) {
-        return createVisible && !toValue(isRestrictedToData);
+        return createVisible;
       }
       if (permission === Permissions.Edit) {
         return can(permission, idShortPathIncludingSubmodel);
       }
       return true;
     };
-    const blockedTooltip = (permission: PermissionType) => {
-      if (toValue(isArchived)) return archivedMsg;
-      if (isStructurallyBlocked(permission)) return restrictedMsg;
-      return undefined;
-    };
-    return Object.values(Permissions).reduce(
+    // Only Read can be both visible and archived at once (see visible() above) — every other
+    // permission that's blocked (archived or structurally-blocked) is hidden entirely, so its
+    // tooltip is never rendered and doesn't need a "why" message here.
+    const blockedTooltip = () => (toValue(isArchived) ? archivedMsg : undefined);
+    const actions = Object.values(Permissions).reduce(
       (
         acc: Record<string, { visible: boolean; enabled: boolean; tooltip: string }>,
         permission,
@@ -476,7 +477,7 @@ export function useAasEditor({
             !isStructurallyBlocked(permission) &&
             can(permission, idShortPathIncludingSubmodel),
           tooltip:
-            blockedTooltip(permission) ??
+            blockedTooltip() ??
             (can(permission, idShortPathIncludingSubmodel)
               ? translate(`common.${labels[permission]}`)
               : missingPermissionMsg),
@@ -485,6 +486,17 @@ export function useAasEditor({
       },
       {},
     );
+    // Move is a structural action gated by the same permission as Edit — but unlike Edit, it
+    // must be hidden while restricted to data (moving changes tree structure, it isn't a leaf
+    // value edit like the drawer Edit opens), so it can't just reuse actions.edit as-is.
+    const canMove = can(Permissions.Edit, idShortPathIncludingSubmodel);
+    const moveBlocked = toValue(isArchived) || toValue(isRestrictedToData);
+    actions.move = {
+      visible: !moveBlocked && canMove,
+      enabled: !moveBlocked && canMove,
+      tooltip: blockedTooltip() ?? (canMove ? translate("common.move") : missingPermissionMsg),
+    };
+    return actions;
   }
 
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {

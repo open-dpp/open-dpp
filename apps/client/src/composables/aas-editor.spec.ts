@@ -361,12 +361,14 @@ describe("aasEditor composable", () => {
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
       create: { visible: true, enabled: true, tooltip: "common.add" },
       delete: { visible: true, enabled: true, tooltip: "common.remove" },
+      move: { visible: true, enabled: true, tooltip: "common.move" },
     };
     const actionsOfLeaveNode = {
       read: { visible: true, enabled: true, tooltip: "common.view" },
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
       create: { visible: false, enabled: true, tooltip: "common.add" },
       delete: { visible: true, enabled: true, tooltip: "common.remove" },
+      move: { visible: true, enabled: true, tooltip: "common.move" },
     };
     const missingPermissionsMsg = "aasEditor.security.missingPermission";
     const actionsOfParentWithoutPermissions = {
@@ -382,6 +384,7 @@ describe("aasEditor composable", () => {
       },
       create: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
       delete: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+      move: { visible: false, enabled: false, tooltip: missingPermissionsMsg },
     };
 
     const withoutChildren = (value: any) => omit(value, "children");
@@ -495,7 +498,7 @@ describe("aasEditor composable", () => {
     expect(withoutChildren(actualListProp)).toEqual(expectedListProp);
   });
 
-  it("blocks structural actions (create/delete) but keeps edit reachable when isEditingRestrictedToData is true", async () => {
+  it("hides structural actions (create/delete) but keeps edit reachable when isEditingRestrictedToData is true", async () => {
     const response = {
       paging_metadata: { cursor: null },
       result: [submodel1, submodel2],
@@ -526,14 +529,17 @@ describe("aasEditor composable", () => {
     });
     await init();
 
-    const restrictedMsg = "aasEditor.security.editingRestrictedTooltip";
     // submodel1's policy grants full permissions, so any remaining restriction here is
-    // solely the effect of isEditingRestrictedToData, not a permission gap.
+    // solely the effect of isEditingRestrictedToData, not a permission gap. Create/delete/move
+    // are hidden (not just disabled), so their tooltip value is never actually rendered — it
+    // falls through to the normal label rather than a "restricted" message, since nothing needs
+    // it. Move is structural (like create/delete) even though it shares edit's permission gate.
     const restrictedActions = {
       read: { visible: true, enabled: true, tooltip: "common.view" },
       edit: { visible: true, enabled: true, tooltip: "common.edit" },
-      create: { visible: false, enabled: false, tooltip: restrictedMsg },
-      delete: { visible: true, enabled: false, tooltip: restrictedMsg },
+      create: { visible: false, enabled: false, tooltip: "common.add" },
+      delete: { visible: false, enabled: false, tooltip: "common.remove" },
+      move: { visible: false, enabled: false, tooltip: "common.move" },
     };
 
     const submodelNode = findTreeNodeByKey(submodel1.id)!;

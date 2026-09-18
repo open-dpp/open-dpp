@@ -179,23 +179,21 @@ describe("SubmodelElementListEditor — cell values stay editable while restrict
 });
 
 describe("SubmodelElementListEditor — column/row action menu triggers", () => {
-  it("disables the row and column menu triggers (not their individual items) when restricted to data", () => {
+  it("hides the row and column menu triggers (not their individual items) when restricted to data", () => {
     const wrapper = mountEditor({ isEditingRestrictedToData: true });
-    expect(wrapper.get('[data-cy="row-menu-0"]').attributes("disabled")).toBeDefined();
-    expect(wrapper.get('[data-cy="column-menu-Attachment"]').attributes("disabled")).toBeDefined();
+    expect(wrapper.find('[data-cy="row-menu-0"]').exists()).toBe(false);
+    expect(wrapper.find('[data-cy="column-menu-Attachment"]').exists()).toBe(false);
   });
 
-  it("disables the row and column menu triggers when archived", () => {
+  it("hides the row and column menu triggers when archived", () => {
     const wrapper = mountEditor({ isArchived: true });
-    expect(wrapper.get('[data-cy="row-menu-0"]').attributes("disabled")).toBeDefined();
-    expect(wrapper.get('[data-cy="column-menu-Attachment"]').attributes("disabled")).toBeDefined();
+    expect(wrapper.find('[data-cy="row-menu-0"]').exists()).toBe(false);
+    expect(wrapper.find('[data-cy="column-menu-Attachment"]').exists()).toBe(false);
   });
 
-  it("keeps the row and column menu triggers enabled when neither archived nor restricted", () => {
+  it("keeps the row and column menu triggers visible when neither archived nor restricted", () => {
     const wrapper = mountEditor({});
-    expect(wrapper.get('[data-cy="row-menu-0"]').attributes("disabled")).toBeUndefined();
-    expect(
-      wrapper.get('[data-cy="column-menu-Attachment"]').attributes("disabled"),
-    ).toBeUndefined();
+    expect(wrapper.find('[data-cy="row-menu-0"]').exists()).toBe(true);
+    expect(wrapper.find('[data-cy="column-menu-Attachment"]').exists()).toBe(true);
   });
 });
