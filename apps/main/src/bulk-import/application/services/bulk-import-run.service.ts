@@ -1,10 +1,11 @@
 import { ForbiddenException, Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
-import { ApiVersionsDto, BulkImportRunItemStatusDto } from "@open-dpp/dto";
+import { ApiVersionsDto, BulkImportRunItemStatusDto, PolicyKeyList } from "@open-dpp/dto";
 import { SubjectAttributes } from "../../../aas/domain/security/subject-attributes";
 import { TransactionService } from "../../../database/transaction.service";
 import { Pagination } from "../../../pagination/pagination";
 import { PagingResult } from "../../../pagination/paging-result";
 import { PassportService } from "../../../passports/application/services/passport.service";
+import { PolicyService } from "../../../policy/infrastructure/policy.service";
 import { BulkImportConfig } from "../../domain/bulk-import-config";
 import { BulkImportProductLink } from "../../domain/bulk-import-product-link";
 import { BulkImportRun } from "../../domain/bulk-import-run";
@@ -26,6 +27,7 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     private readonly bulkImportProductLinkRepository: BulkImportProductLinkRepository,
     private readonly passportService: PassportService,
     private readonly transactionService: TransactionService,
+    private readonly policyService: PolicyService,
   ) {}
 
   /**
@@ -231,6 +233,7 @@ export class BulkImportRunService implements OnApplicationBootstrap {
     config: BulkImportConfig,
     idValue: string,
   ): Promise<string> {
+    await this.assertPassportLimitNotReached(run.organizationId);
     return await this.transactionService.withTransaction(async (options) => {
       const passport = await this.passportService.createPassportFromTemplate(
         run.organizationId,
@@ -249,5 +252,23 @@ export class BulkImportRunService implements OnApplicationBootstrap {
       );
       return passport.id;
     });
+  }
+
+  /**
+   * The @Policy guard on the run endpoints only sees the passport count at submission time, so a
+   * run of N rows could otherwise blow past the cap. Re-checking before each created passport keeps
+   * the cap exact - rows that only update an already-linked passport never reach here and still
+   * succeed once the cap is hit.
+   */
+  private async assertPassportLimitNotReached(organizationId: string): Promise<void> {
+    const exceeded = await this.policyService.enforce(organizationId, [
+      PolicyKeyList.PASSPORT_CREATE_LIMIT,
+    ]);
+
+    if (exceeded) {
+      throw new ValueError(
+        `Passport limit exceeded: ${exceeded.used}/${exceeded.limit} passports used. No further passports can be created.`,
+      );
+    }
   }
 }

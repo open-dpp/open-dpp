@@ -1,123 +1,69 @@
-import type { Model as MongooseModel } from "mongoose";
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
+import { PolicyKeyList, type PolicyKey } from "@open-dpp/dto";
 import { EnvService } from "@open-dpp/env";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { Cap } from "../domain/cap";
-import { PolicyDefinitions, PolicyKey, PolicyQuotaRule } from "../domain/policy";
+import { ValueError } from "@open-dpp/exception";
+import { Limit } from "../domain/limit";
+import { PolicyDefinitions, PolicyQuotaRule } from "../domain/policy-rules";
 import { Quota } from "../domain/quota";
-import { CapEvaluatorService } from "./cap-evaluator.service";
-import { CapDoc } from "./cap.schema";
-import { QuotaDoc } from "./quota.schema";
+import { LimitEvaluatorService } from "./limit-evaluator.service";
+import { LimitRepository } from "./limit.repository";
+import { QuotaRepository } from "./quota.repository";
 
-interface EnforceResult {
+interface PolicyRuleUtilization {
   key: string;
   used: number;
   limit: number;
+  reset?: Date;
 }
 
-interface LimitAndValue {
+export interface LimitAndValue {
   limit: number;
   used: number;
+  reset?: Date;
 }
 
 @Injectable()
 export class PolicyService {
   private readonly envService: EnvService;
-  private readonly capEvaluatorService: CapEvaluatorService;
+  private readonly limitEvaluatorService: LimitEvaluatorService;
 
   constructor(
-    @InjectModel(CapDoc.name)
-    private readonly capModel: MongooseModel<CapDoc>,
-    @InjectModel(QuotaDoc.name)
-    private readonly quotaModel: MongooseModel<QuotaDoc>,
+    private readonly limitRepository: LimitRepository,
+    private readonly quotaRepository: QuotaRepository,
     envService: EnvService,
-    @Inject(forwardRef(() => CapEvaluatorService))
-    capEvaluatorService: CapEvaluatorService,
+    @Inject(forwardRef(() => LimitEvaluatorService))
+    limitEvaluatorService: LimitEvaluatorService,
   ) {
     this.envService = envService;
-    this.capEvaluatorService = capEvaluatorService;
+    this.limitEvaluatorService = limitEvaluatorService;
   }
 
-  private convertCapToDomain(capDoc: CapDoc): Cap {
-    return Cap.loadFromDb({
-      key: capDoc.key,
-      organizationId: capDoc.organizationId,
-      limit: capDoc.limit,
-    });
-  }
-
-  private convertQuotaToDomain(quotaDoc: QuotaDoc): Quota {
-    return Quota.loadFromDb({
-      key: quotaDoc.key,
-      organizationId: quotaDoc.organizationId,
-      limit: quotaDoc.limit,
-      count: quotaDoc.count,
-      period: quotaDoc.period,
-      lastSetBack: quotaDoc.lastSetBack,
-    });
-  }
-
-  async getCap(organizationId: string, key: PolicyKey): Promise<Cap> {
-    const capDoc = await this.capModel.findOne({ key, organizationId }).exec();
-
-    if (!capDoc) {
-      const defaultLimit = this.getDefaultLimit(key);
-
-      return Cap.create({
-        key,
-        organizationId,
-        limit: defaultLimit,
-      });
+  async isLimitReached(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
+    let limit = await this.limitRepository.findOneByOrganizationIdAndKey(orgaId, key);
+    if (!limit) {
+      limit = await this.limitRepository.update(this.createDefaultLimit(orgaId, key));
     }
 
-    return this.convertCapToDomain(capDoc);
-  }
-
-  async saveCap(cap: Cap): Promise<Cap> {
-    const capDoc = await this.capModel
-      .findOneAndUpdate(
-        { key: cap.getKey(), organizationId: cap.getOrganizationId() },
-        {
-          $set: {
-            key: cap.getKey(),
-            organizationId: cap.getOrganizationId(),
-            limit: cap.getLimit(),
-          },
-        },
-        {
-          new: true,
-          upsert: true,
-          runValidators: true,
-        },
-      )
-      .exec();
-
-    return this.convertCapToDomain(capDoc);
-  }
-
-  async isCapReached(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
-    const cap = await this.getCap(orgaId, key);
-    const currentCapCount = await this.capEvaluatorService.getCurrent(orgaId, key);
+    const used = await this.limitEvaluatorService.getCurrent(orgaId, key);
 
     return {
-      limit: cap.getLimit(),
-      used: currentCapCount,
+      limit: limit.getLimit(),
+      used,
     };
   }
 
   async getQuota(organizationId: string, key: PolicyKey): Promise<Quota | undefined> {
-    const quotaDoc = await this.quotaModel.findOne({ key, organizationId }).exec();
+    this.getQuotaRule(key);
 
-    if (!quotaDoc) {
+    const quota = await this.quotaRepository.findOneByOrganizationIdAndKey(organizationId, key);
+    if (!quota) {
       return undefined;
     }
 
-    const quota = this.convertQuotaToDomain(quotaDoc);
-
-    if (quota.needsReset()) {
+    const now = new Date();
+    if (quota.needsReset(now)) {
       quota.reset();
-      return await this.saveQuota(quota);
+      return await this.quotaRepository.update(quota);
     }
 
     return quota;
@@ -126,55 +72,31 @@ export class PolicyService {
   async isQuotaExceeded(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
     let quota = await this.getQuota(orgaId, key);
     if (!quota) {
-      const defaultLimit = this.getDefaultLimit(key);
-      const quotaRule = this.getQuotaRule(key);
-      quota = Quota.create({
-        key,
-        organizationId: orgaId,
-        limit: defaultLimit,
-        period: quotaRule.period,
-      });
-
-      quota = await this.saveQuota(quota);
+      quota = await this.quotaRepository.update(this.createDefaultQuota(orgaId, key));
     }
 
     return {
       limit: quota.getLimit(),
       used: quota.getCount(),
+      reset: quota.getNextReset(),
     };
   }
 
-  async getQuotaOrFail(organizationId: string, key: PolicyKey): Promise<Quota> {
-    const quota = await this.getQuota(organizationId, key);
-    if (!quota) {
-      throw new NotFoundInDatabaseException(Quota.name);
-    }
-    return quota;
+  createDefaultLimit(organizationId: string, key: PolicyKey): Limit {
+    return Limit.create({
+      key,
+      organizationId,
+      limit: this.getDefaultLimit(key),
+    });
   }
 
-  async saveQuota(quota: Quota): Promise<Quota> {
-    const quotaDoc = await this.quotaModel
-      .findOneAndUpdate(
-        { key: quota.getKey(), organizationId: quota.getOrganizationId() },
-        {
-          $set: {
-            key: quota.getKey(),
-            organizationId: quota.getOrganizationId(),
-            limit: quota.getLimit(),
-            count: quota.getCount(),
-            period: quota.getPeriod(),
-            lastSetBack: quota.getLastReset(),
-          },
-        },
-        {
-          new: true,
-          upsert: true,
-          runValidators: true,
-        },
-      )
-      .exec();
-
-    return this.convertQuotaToDomain(quotaDoc);
+  createDefaultQuota(organizationId: string, key: PolicyKey): Quota {
+    return Quota.create({
+      key,
+      organizationId,
+      limit: this.getDefaultLimit(key),
+      period: this.getQuotaRule(key).period,
+    });
   }
 
   private getDefaultLimit(key: PolicyKey): number {
@@ -187,30 +109,29 @@ export class PolicyService {
     const rule = PolicyDefinitions[key];
 
     if (rule.type !== "quota") {
-      throw new Error(`Policy ${PolicyKey[key]} is not a quota rule`);
+      throw new ValueError(`Policy ${PolicyKeyList[key]} is not a quota rule`);
     }
 
     return rule as PolicyQuotaRule;
   }
 
-  async enforce(organizationId: string, keys: PolicyKey[]): Promise<EnforceResult | null> {
-    let result: EnforceResult | null = null;
+  async enforce(organizationId: string, keys: PolicyKey[]): Promise<PolicyRuleUtilization | null> {
+    let result: PolicyRuleUtilization | null = null;
 
     for (const key of keys) {
       const rule = PolicyDefinitions[key];
 
       let limitAndValue: LimitAndValue;
-      if (rule.type === "cap") {
-        limitAndValue = await this.isCapReached(organizationId, key);
+      if (rule.type === "limit") {
+        limitAndValue = await this.isLimitReached(organizationId, key);
       } else {
         limitAndValue = await this.isQuotaExceeded(organizationId, key);
       }
 
       if (limitAndValue.limit !== 0 && limitAndValue.used >= limitAndValue.limit) {
         result = {
-          key: PolicyKey[key],
-          limit: limitAndValue.limit,
-          used: limitAndValue.used,
+          key: PolicyKeyList[key],
+          ...limitAndValue,
         };
       }
     }
@@ -220,19 +141,12 @@ export class PolicyService {
 
   async incrementQuota(organizationId: string, key: PolicyKey, amount: number = 1): Promise<Quota> {
     let quota = await this.getQuota(organizationId, key);
-
     if (!quota) {
-      const defaultLimit = this.getDefaultLimit(key);
-      const quotaRule = this.getQuotaRule(key);
-      quota = Quota.create({
-        key,
-        organizationId,
-        limit: defaultLimit,
-        period: quotaRule.period,
-      });
+      quota = this.createDefaultQuota(organizationId, key);
+      await this.quotaRepository.update(quota);
     }
 
     quota.increment(amount);
-    return await this.saveQuota(quota);
+    return await this.quotaRepository.update(quota);
   }
 }

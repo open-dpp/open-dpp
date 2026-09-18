@@ -26,6 +26,7 @@ import {
   InvitationResponseDto,
   type MemberRoleChangeDto,
   MemberRoleChangeDtoSchema,
+  PolicyKeyList,
 } from "@open-dpp/dto";
 import { InvitationsRepository } from "../infrastructure/adapters/invitations.repository";
 import { UsersRepository } from "../../users/infrastructure/adapters/users.repository";
@@ -35,6 +36,7 @@ import { OrganizationsRepository } from "../infrastructure/adapters/organization
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { OrganizationId } from "../../auth/presentation/decorators/organization-id.decorator";
 import { MemberHasRole } from "../../auth/presentation/decorators/member-has-role.decorator";
+import { Policy } from "../../../policy/presentation/policy.decorator";
 
 @Controller("organizations")
 export class OrganizationsController {
@@ -112,6 +114,7 @@ export class OrganizationsController {
   }
 
   @Post(":id/invite")
+  @Policy(PolicyKeyList.ORGANIZATION_MEMBER_LIMIT)
   async inviteMember(
     @Param("id") id: string,
     @Body() body: { email: string },

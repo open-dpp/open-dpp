@@ -62,6 +62,19 @@ export class MembersRepository {
     return documents.map((doc) => MemberMapper.toDomain(doc));
   }
 
+  async countByOrganizationId(organizationId: string): Promise<number> {
+    // The schema types organizationId as ObjectId, so a non-ObjectId id can never
+    // match — return early instead of letting Mongoose throw a CastError.
+    if (!Types.ObjectId.isValid(organizationId)) {
+      return 0;
+    }
+    // Better Auth stores organizationId as ObjectId
+    const filter = {
+      organizationId: { $eq: new Types.ObjectId(organizationId) },
+    };
+    return await this.memberModel.countDocuments(filter as any);
+  }
+
   async findByUserId(userId: string): Promise<Member[]> {
     const filter = {
       userId: idFilter(userId),

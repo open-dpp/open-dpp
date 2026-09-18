@@ -52,6 +52,7 @@ export type {
   PermalinkUpdateRequest,
 } from "./dpp/permalinks/permalinks.dtos";
 export { PermalinksNamespace } from "./dpp/permalinks/permalinks.namespace";
+export { PoliciesNamespace } from "./dpp/policy/policies.namespace";
 export type {
   UniqueProductIdentifierListDto,
   UniqueProductIdentifierListItemDto,

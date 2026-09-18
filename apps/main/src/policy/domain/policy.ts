@@ -1,48 +1,44 @@
-import type { QuotaPeriod } from "./quota";
-// policy.decorator.ts
-import { NumericEnvKeys } from "@open-dpp/env";
+import type { PolicyKey } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 
-export interface PolicyCapRule {
-  type: "cap";
+export interface PolicyCreateProps {
+  organizationId: string;
   key: PolicyKey;
-  defaultlimit: NumericEnvKeys;
-  description: string;
+  limit: number;
 }
 
-export interface PolicyQuotaRule {
-  type: "quota";
-  key: PolicyKey;
-  defaultlimit: NumericEnvKeys;
-  period: QuotaPeriod;
-  description: string;
+/**
+ * A policy rule applied to a single organization: the cap on `key` that this
+ * organization is held to. `Limit` is the plain form, `Quota` adds a counter
+ * that resets each period.
+ */
+export abstract class Policy {
+  private readonly key: PolicyKey;
+  private readonly organizationId: string;
+  private readonly limit: number;
+
+  protected constructor(key: PolicyKey, limit: number, organizationId: string) {
+    Policy.assertValidLimit(limit);
+    this.key = key;
+    this.limit = limit;
+    this.organizationId = organizationId;
+  }
+
+  protected static assertValidLimit(limit: number): void {
+    if (!Number.isInteger(limit) || limit < 0) {
+      throw new ValueError(`Limit must be a non-negative integer, got ${limit}`);
+    }
+  }
+
+  getKey() {
+    return this.key;
+  }
+
+  getOrganizationId() {
+    return this.organizationId;
+  }
+
+  getLimit(): number {
+    return this.limit;
+  }
 }
-
-export type PolicyRule = PolicyCapRule | PolicyQuotaRule;
-
-export enum PolicyKey {
-  AI_TOKEN_QUOTA,
-  MEDIA_STORAGE_CAP,
-  MODEL_CREATE_CAP,
-}
-
-export const PolicyDefinitions: Record<PolicyKey, PolicyRule> = {
-  [PolicyKey.AI_TOKEN_QUOTA]: {
-    type: "quota",
-    key: PolicyKey.AI_TOKEN_QUOTA,
-    defaultlimit: "OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA",
-    period: "month",
-    description: "AI tokens",
-  },
-  [PolicyKey.MEDIA_STORAGE_CAP]: {
-    type: "cap",
-    key: PolicyKey.MEDIA_STORAGE_CAP,
-    defaultlimit: "OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP",
-    description: "Media storage in MB",
-  },
-  [PolicyKey.MODEL_CREATE_CAP]: {
-    type: "cap",
-    key: PolicyKey.MODEL_CREATE_CAP,
-    defaultlimit: "OPEN_DPP_DEFAULT_MODEL_CREATE_CAP",
-    description: "Models created",
-  },
-};

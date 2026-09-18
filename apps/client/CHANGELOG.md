@@ -1,5 +1,13 @@
 # @open-dpp/client
 
+## 5.3.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/api-client@5.3.0
+  - @open-dpp/dto@5.3.0
+
 ## 5.2.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-command local setup of the example deployment stack (docker-compose.yml):
-# open-dpp + MongoDB + MinIO + Mailpit (no virus scanning, see
+# open-dpp + MongoDB + RustFS + Mailpit (no virus scanning, see
 # https://docs.open-dpp.de/guides/production-setup to add ClamAV).
 #
 # Works from a repo checkout (./scripts/setup.sh) or standalone in an empty
@@ -44,12 +44,14 @@ if [ -f .env ]; then
   echo ".env already exists — leaving it untouched"
 else
   echo "Creating .env from .env.example"
-  # hex output keeps the generated secret free of sed metacharacters
+  # hex output keeps the generated secrets free of sed metacharacters
   auth_secret="$(openssl rand -hex 32)"
+  s3_secret="$(openssl rand -hex 32)"
   sed \
     -e "s|change-this-to-a-good-secret|${auth_secret}|" \
+    -e "s|change-this-to-a-good-s3-secret|${s3_secret}|" \
     .env.example > .env
-  echo "  generated auth secret"
+  echo "  generated auth secret and S3 secret key"
   echo "  note: AI features additionally need a real value for OPEN_DPP_MISTRAL_API_KEY"
   echo "  note: uploads are not virus-scanned; set OPEN_DPP_CLAMAV_URL to enable (https://docs.open-dpp.de/guides/production-setup)"
 fi
@@ -57,10 +59,9 @@ fi
 echo "Starting the stack from docker-compose.yml"
 # a stale local :latest image fails env validation against the current .env.example
 docker compose pull || echo "warning: pull failed — starting with local images"
+# open-dpp depends on rustfs-init (creates the buckets), so this blocks until
+# the object storage is ready.
 docker compose up -d
-
-echo "Waiting for MinIO buckets to initialize"
-docker compose wait minio-init
 
 cat <<'EOF'
 
@@ -68,6 +69,7 @@ open-dpp is up. Open:
 
   app:     http://localhost:3000
   Mailpit: http://localhost:8025
+  RustFS:  http://localhost:9001 (object storage console; log in with the S3 keys from .env)
 
 Restart the stack later with `docker compose up -d` (or re-run this script).
 EOF

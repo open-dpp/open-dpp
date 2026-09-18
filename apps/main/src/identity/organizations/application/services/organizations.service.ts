@@ -19,6 +19,7 @@ import { InvitationsRepository } from "../../infrastructure/adapters/invitations
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { InstanceSettingsService } from "../../../../instance-settings/application/services/instance-settings.service";
+import { PolicyManagementService } from "../../../../policy/application/services/policy-management.service";
 import { InvitationPopulateDecorator } from "../invitation-populate-decorator";
 import type { InvitationResponseDto, InvitationStatusDtoType } from "@open-dpp/dto";
 
@@ -32,6 +33,7 @@ export class OrganizationsService {
     private readonly usersRepository: UsersRepository,
     private readonly invitationsRepository: InvitationsRepository,
     private readonly instanceSettingsService: InstanceSettingsService,
+    private readonly policyManagementService: PolicyManagementService,
   ) {}
 
   async createOrganization(
@@ -54,6 +56,16 @@ export class OrganizationsService {
     if (!createdOrganization) {
       throw new BadRequestException();
     }
+    try {
+      await this.policyManagementService.ensureDefaultPolicies(createdOrganization.id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to seed default policies for organization ${createdOrganization.id}; ` +
+          "it will be backfilled on next application bootstrap",
+        error,
+      );
+    }
+
     // BetterAuth's createOrganization already adds the authenticated user as owner; do not add again.
     return createdOrganization;
   }
