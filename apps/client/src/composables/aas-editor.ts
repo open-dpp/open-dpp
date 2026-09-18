@@ -52,6 +52,7 @@ import { useAasAbility } from "./aas-ability.ts";
 import { useAasGallery } from "./aas-gallery.ts";
 import { getVisualType as getVisualTypeHelper } from "../lib/aas-editor.ts";
 import { type IAasMoveDialog, useAasMoveDialog } from "./aas-move-dialog.ts";
+import { SCALAR_LEAF_MODEL_TYPES } from "../lib/submodel-element.ts";
 
 export interface AasEditorProps {
   id: string;
@@ -64,6 +65,11 @@ export interface AasEditorProps {
   translate: (label: string, ...args: unknown[]) => string;
   openConfirm: (option: ConfirmationOptions) => void;
   status: MaybeRefOrGetter<DigitalProductDocumentStatusDtoType>;
+  /** Passport-only: true when the passport's editing is restricted to leaf data values by
+   * its template. Unlike `isArchived`, this does not block reaching a leaf element's editor
+   * (values stay editable) — it only blocks structural changes (create/delete) and locks
+   * container/shell editors and permissions, which have no leaf value of their own. */
+  isEditingRestrictedToData?: MaybeRefOrGetter<boolean>;
   /** Called after a submodel/submodel-element move succeeds. Moves change idShort
    * paths, which invalidates any data keyed by them (e.g. presentation config)
    * that isn't part of the reloaded shell/submodel payload and must be refetched. */
@@ -103,6 +109,7 @@ export function useAasEditor({
   translate,
   openConfirm,
   status,
+  isEditingRestrictedToData,
   onAfterMove,
 }: AasEditorProps): IAasEditor {
   const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
@@ -111,6 +118,7 @@ export function useAasEditor({
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
   const isArchived = computed(() => toValue(status) === DigitalProductDocumentStatusDto.Archived);
+  const isRestrictedToData = computed(() => toValue(isEditingRestrictedToData) ?? false);
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -123,7 +131,12 @@ export function useAasEditor({
 
   const { can } = useAasAbility({ getAccessPermissionRules });
 
-  const drawer = useAasDrawer({ onHideDrawer, can, isArchived });
+  const drawer = useAasDrawer({
+    onHideDrawer,
+    can,
+    isArchived,
+    isEditingRestrictedToData: isRestrictedToData,
+  });
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
@@ -273,14 +286,36 @@ export function useAasEditor({
     }
   }
 
-  async function modifySubmodelElement(path: AasEditorPath, data: SubmodelElementModificationDto) {
+  /** Extracts the value-only payload `modifyValueOfSubmodelElement` expects from the full
+   * modification payload the leaf editor's form submits. Only called for `modelType`s in
+   * `SCALAR_LEAF_MODEL_TYPES` that also have a working editor (Property, File) — the other
+   * listed types (MultiLanguageProperty, ReferenceElement) have no editor component yet, so
+   * this branch is unreachable for them today. */
+  function extractLeafValue(modelType: string, data: any): any {
+    if (modelType === AasSubmodelElements.File) {
+      return { value: data.value, contentType: data.contentType };
+    }
+    return data.value;
+  }
+
+  async function modifySubmodelElement(
+    path: AasEditorPath,
+    data: SubmodelElementModificationDto,
+    modelType?: string,
+  ) {
     if (path.submodelId && path.idShortPath) {
-      const response = await aasNamespace.modifySubmodelElement(
-        id,
-        path.submodelId,
-        path.idShortPath,
-        data,
-      );
+      // While restricted to data, a leaf element's structure/metadata stays frozen but its
+      // value stays editable — route through the value-only endpoint instead of the combined
+      // one, which is blocked for restricted passports on the backend
+      const response =
+        toValue(isRestrictedToData) && modelType && SCALAR_LEAF_MODEL_TYPES.includes(modelType)
+          ? await aasNamespace.modifyValueOfSubmodelElement(
+              id,
+              path.submodelId,
+              path.idShortPath,
+              extractLeafValue(modelType, data),
+            )
+          : await aasNamespace.modifySubmodelElement(id, path.submodelId, path.idShortPath, data);
       await finalizeApiRequest(response);
     }
   }
@@ -298,7 +333,7 @@ export function useAasEditor({
     } else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
       return async (data: any) => {
         try {
-          await modifySubmodelElement(toRaw(node.data.path), data);
+          await modifySubmodelElement(toRaw(node.data.path), data, node.data.modelType);
         } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
@@ -397,14 +432,25 @@ export function useAasEditor({
 
   function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
     const missingPermissionMsg = translate(`${translatePrefix}.security.missingPermission`);
+    const archivedMsg = translate(`${translatePrefix}.security.archivedTooltip`);
     const labels = {
       [Permissions.Read]: "view",
       [Permissions.Edit]: "edit",
       [Permissions.Delete]: "remove",
       [Permissions.Create]: "add",
     };
+    // Structural mutations (create/delete a tree node) are frozen while restricted to data,
+    // same as while archived — but unlike archived, "edit" stays reachable so a leaf
+    // element's value can still be edited (the drawer opened via "edit" locks everything
+    // except the value field for leaf types; see PropertyEditor.vue/FileEditor.vue).
+    const isStructurallyBlocked = (permission: PermissionType) =>
+      (permission === Permissions.Create || permission === Permissions.Delete) &&
+      toValue(isRestrictedToData);
     const visible = (permission: PermissionType) => {
       if (toValue(isArchived) && permission !== Permissions.Read) {
+        return false;
+      }
+      if (isStructurallyBlocked(permission)) {
         return false;
       }
       if (permission === Permissions.Create) {
@@ -415,7 +461,11 @@ export function useAasEditor({
       }
       return true;
     };
-    return Object.values(Permissions).reduce(
+    // Only Read can be both visible and archived at once (see visible() above) — every other
+    // permission that's blocked (archived or structurally-blocked) is hidden entirely, so its
+    // tooltip is never rendered and doesn't need a "why" message here.
+    const blockedTooltip = () => (toValue(isArchived) ? archivedMsg : undefined);
+    const actions = Object.values(Permissions).reduce(
       (
         acc: Record<string, { visible: boolean; enabled: boolean; tooltip: string }>,
         permission,
@@ -424,15 +474,29 @@ export function useAasEditor({
           visible: visible(permission),
           enabled:
             (!toValue(isArchived) || permission === Permissions.Read) &&
+            !isStructurallyBlocked(permission) &&
             can(permission, idShortPathIncludingSubmodel),
-          tooltip: can(permission, idShortPathIncludingSubmodel)
-            ? translate(`common.${labels[permission]}`)
-            : missingPermissionMsg,
+          tooltip:
+            blockedTooltip() ??
+            (can(permission, idShortPathIncludingSubmodel)
+              ? translate(`common.${labels[permission]}`)
+              : missingPermissionMsg),
         };
         return acc;
       },
       {},
     );
+    // Move is a structural action gated by the same permission as Edit — but unlike Edit, it
+    // must be hidden while restricted to data (moving changes tree structure, it isn't a leaf
+    // value edit like the drawer Edit opens), so it can't just reuse actions.edit as-is.
+    const canMove = can(Permissions.Edit, idShortPathIncludingSubmodel);
+    const moveBlocked = toValue(isArchived) || toValue(isRestrictedToData);
+    actions.move = {
+      visible: !moveBlocked && canMove,
+      enabled: !moveBlocked && canMove,
+      tooltip: blockedTooltip() ?? (canMove ? translate("common.move") : missingPermissionMsg),
+    };
+    return actions;
   }
 
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {

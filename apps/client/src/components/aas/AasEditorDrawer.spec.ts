@@ -75,6 +75,7 @@ function makeEditorContext(overrides: Partial<AasEditorContext> = {}): AasEditor
     aasNamespace: {} as any,
     errorHandlingStore: { logErrorWithNotification: vi.fn() },
     isArchived: false,
+    isEditingRestrictedToData: false,
     type: DigitalProductDocumentType.Passport,
     openDrawer: vi.fn(),
     getAccessPermissionRules: vi.fn().mockReturnValue([]),

@@ -157,7 +157,7 @@ export class ValueModifierVisitor
 
   visitProperty(element: Property, context?: ValueModifierVisitorContextType): void {
     this.modificationGuard(element);
-    const value = z
+    const value = z.coerce
       .string()
       .nullish()
       .parse(context?.data !== undefined ? context.data : element.value);

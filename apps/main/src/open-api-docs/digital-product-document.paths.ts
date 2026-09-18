@@ -9,6 +9,8 @@ import {
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
+  RemoveEditingRestrictionsDtoSchema,
+  RestrictPassportEditingDtoSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementModificationSchema,
   SubmodelElementPaginationResponseDtoSchema,
@@ -726,6 +728,28 @@ function createTemplatePaths() {
         security,
       },
     },
+    [`/${tag}/{id}/passport-editing-mode`]: {
+      put: {
+        tags: [tag],
+        summary: `Restrict Passports created from this template to data-only editing.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: {
+              schema: RestrictPassportEditingDtoSchema,
+            },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
     [`/${tag}/import`]: {
       post: {
         tags: [tag],
@@ -842,6 +866,28 @@ function createPassportPaths() {
           content: {
             [ContentType.JSON]: {
               schema: DigitalProductDocumentStatusModificationDtoSchema,
+            },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+        },
+        security,
+      },
+    },
+    [`/${tag}/{id}/editing-mode`]: {
+      put: {
+        tags: [tag],
+        summary: `Remove this passport's data-only editing restriction.`,
+        parameters: [IdParamSchema, orgaIdHeader],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: {
+              schema: RemoveEditingRestrictionsDtoSchema,
             },
           },
         },

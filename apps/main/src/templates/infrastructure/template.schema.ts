@@ -1,3 +1,4 @@
+import type { PassportEditingModeType } from "../../digital-product-document/domain/passport-editing-mode";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import {
@@ -8,10 +9,12 @@ import {
   DigitalProductDocumentStatusChangeDbSchema,
   DigitalProductDocumentStatusChangeDoc,
 } from "../../digital-product-document/infrastructure/digital-product-document-status-change-db.schema";
+import { PassportEditingMode } from "../../digital-product-document/domain/passport-editing-mode";
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
+  v1_2_0: "1.2.0",
 } as const;
 type TemplateDocVersionType = (typeof TemplateDocVersion)[keyof typeof TemplateDocVersion];
 
@@ -41,6 +44,13 @@ export class TemplateDoc extends Document<string> {
 
   @Prop({ type: DigitalProductDocumentStatusChangeDbSchema, required: true })
   lastStatusChange: DigitalProductDocumentStatusChangeDoc;
+
+  @Prop({
+    type: String,
+    enum: Object.values(PassportEditingMode),
+    default: PassportEditingMode.Full,
+  })
+  passportEditingMode: PassportEditingModeType;
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);

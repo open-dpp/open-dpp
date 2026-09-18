@@ -26,6 +26,9 @@ const i18n = createI18n({
         submodel: "Submodels",
         addSubmodel: "Add submodel",
         type: "Type",
+        security: {
+          editingRestrictedTooltip: "Structural changes are restricted to data by the template.",
+        },
       },
       common: {
         add: "Add",
@@ -44,7 +47,7 @@ const i18n = createI18n({
 
 function makeActions(
   overrides: Partial<
-    Record<"read" | "edit" | "create" | "delete", { visible: boolean; enabled: boolean }>
+    Record<"read" | "edit" | "create" | "delete" | "move", { visible: boolean; enabled: boolean }>
   > = {},
 ) {
   return {
@@ -52,6 +55,7 @@ function makeActions(
     edit: { visible: true, enabled: true, tooltip: "Edit", ...overrides.edit },
     create: { visible: true, enabled: true, tooltip: "Add element", ...overrides.create },
     delete: { visible: true, enabled: true, tooltip: "Delete", ...overrides.delete },
+    move: { visible: true, enabled: true, tooltip: "Move", ...overrides.move },
   };
 }
 
@@ -107,6 +111,7 @@ function mountTree(props: Record<string, unknown> = {}) {
       submodels: [],
       loading: false,
       isArchived: false,
+      isEditingRestrictedToData: false,
       selectedKeys: undefined,
       selectTreeNode: vi.fn(),
       createSubmodel: vi.fn(),
@@ -138,6 +143,14 @@ describe("AasSubmodelTree", () => {
     const wrapper = mountTree({ submodels: [makeSubmodelNode()] });
     expect(wrapper.text()).toContain("My Submodel");
     expect(wrapper.find("#row-submodel-1").exists()).toBe(true);
+  });
+
+  it("hides the Add Submodel button when editing is restricted to data", () => {
+    const wrapper = mountTree({
+      submodels: [makeSubmodelNode()],
+      isEditingRestrictedToData: true,
+    });
+    expect(wrapper.text()).not.toContain("Add submodel");
   });
 
   it("clicking a row's edit icon calls selectTreeNode with the node key", async () => {
@@ -191,6 +204,15 @@ describe("AasSubmodelTree", () => {
     const wrapper = mountTree({ submodels: [makeSubmodelNode()], buildMoveMenu });
     await wrapper.find('[aria-label="Move"]').trigger("click");
     expect(buildMoveMenu).toHaveBeenCalledWith(expect.objectContaining({ key: "submodel-1" }));
+  });
+
+  it("hides the move button when its move action is not visible", () => {
+    const buildMoveMenu = vi.fn();
+    const node = makeSubmodelNode();
+    node.data.actions.move = { visible: false, enabled: false, tooltip: "Move" };
+    const wrapper = mountTree({ submodels: [node], buildMoveMenu });
+
+    expect(wrapper.find('[aria-label="Move"]').exists()).toBe(false);
   });
 
   it("pagination controls call the corresponding props", async () => {

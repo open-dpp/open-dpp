@@ -11,7 +11,7 @@ import {
   PresentationComponentNameType,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { ForbiddenError, NotFoundError } from "@open-dpp/exception";
+import { ForbiddenError, NotFoundError, ValueError } from "@open-dpp/exception";
 import type { Connection } from "mongoose";
 
 import { IdShortPath } from "../../../aas/domain/common/id-short-path";
@@ -22,6 +22,8 @@ import { SubjectAttributes } from "../../../aas/domain/security/subject-attribut
 import { generateMongoConfig } from "../../../database/config";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { PassportEditingMode } from "../../../digital-product-document/domain/passport-editing-mode";
+import type { PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { PresentationConfigurationRepository } from "../../infrastructure/presentation-configuration.repository";
@@ -69,11 +71,14 @@ describe("PresentationConfigurationService", () => {
     await module.close();
   });
 
-  function makePassport(opts: { templateId?: string } = {}): Passport {
+  function makePassport(
+    opts: { templateId?: string; editingMode?: PassportEditingModeType } = {},
+  ): Passport {
     return Passport.create({
       organizationId: randomUUID(),
       environment: Environment.create({}),
       templateId: opts.templateId,
+      editingMode: opts.editingMode,
     });
   }
 
@@ -89,6 +94,7 @@ describe("PresentationConfigurationService", () => {
       id: passport.id,
       organizationId: passport.organizationId,
       referenceType: DigitalProductDocumentTypes.Passport,
+      editingMode: passport.getEditingMode(),
     };
   }
 
@@ -248,6 +254,33 @@ describe("PresentationConfigurationService", () => {
       });
 
       expect(Object.fromEntries(cleared.elementDesign)).toEqual({});
+    });
+
+    it("rejects patching a config for a passport whose editing is restricted to data", async () => {
+      const passport = makePassport({ editingMode: PassportEditingMode.DataOnly });
+      const [defaultConfig] = await service.list(passportHolder(passport));
+
+      await expect(
+        service.applyPatch(passportHolder(passport), defaultConfig.id, {
+          elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
+        }),
+      ).rejects.toThrow(ValueError);
+
+      const [persisted] = await service.list(passportHolder(passport));
+      expect(persisted.elementDesign.size).toBe(0);
+    });
+
+    it("allows patching a config for a fully editable passport", async () => {
+      const passport = makePassport({ editingMode: PassportEditingMode.Full });
+      const [defaultConfig] = await service.list(passportHolder(passport));
+
+      const result = await service.applyPatch(passportHolder(passport), defaultConfig.id, {
+        elementDesign: { "submodel-1.prop": PresentationComponentName.BigNumber },
+      });
+
+      expect(Object.fromEntries(result.elementDesign)).toEqual({
+        "submodel-1.prop": PresentationComponentName.BigNumber,
+      });
     });
   });
 
