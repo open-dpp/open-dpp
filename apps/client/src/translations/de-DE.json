@@ -715,6 +715,7 @@
     "removeEditingRestrictionsConfirmHeader": "Bearbeitungseinschränkung entfernen",
     "removeEditingRestrictionsConfirmMessage": "Dieser Produktpass wird nicht mehr von seiner Vorlage gesteuert — zukünftige Änderungen der Vorlage wirken sich nicht mehr auf ihn aus. Dies kann nicht rückgängig gemacht werden.",
     "removeEditingRestrictionsConfirmAccept": "Einschränkung entfernen",
+    "restrictedEditingTag": "Beschränkte Bearbeitung",
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage"
   },

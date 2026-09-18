@@ -685,6 +685,7 @@
     "removeEditingRestrictionsConfirmHeader": "Remove Editing Restrictions",
     "removeEditingRestrictionsConfirmMessage": "This passport will no longer be controlled by its template — future template changes will not reach it. This cannot be undone.",
     "removeEditingRestrictionsConfirmAccept": "Remove Restrictions",
+    "restrictedEditingTag": "Restricted editing",
     "blank": "Blank",
     "fromTemplate": "From template"
   },

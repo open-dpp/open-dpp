@@ -187,7 +187,7 @@ const permalinkActions = computed(() => [
             v-tooltip.bottom="t('passports.removeEditingRestrictionsTooltip')"
             severity="warn"
             icon="pi pi-lock"
-            >{{ t("status.dataOnly") }}</Tag
+            >{{ t("passports.restrictedEditingTag") }}</Tag
           >
         </div>
       </template>
