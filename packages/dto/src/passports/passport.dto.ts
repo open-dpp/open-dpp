@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { AssetAdministrationShellCreateDtoSchema } from "../aas/asset-administration-shell-json-schema";
 import { DigitalProductDocumentDtoSchema } from "../digital-product-document/digital-product-document.schemas";
-import { PassportEditingModeDto, PassportEditingModeDtoEnum } from "../digital-product-document/passport-editing-mode.dto";
+import {
+  PassportEditingModeDto,
+  PassportEditingModeDtoEnum,
+} from "../digital-product-document/passport-editing-mode.dto";
 import { PagingMetadataDtoSchema } from "../shared/pagination.dto";
 
 export const PassportDtoSchema = DigitalProductDocumentDtoSchema.extend({

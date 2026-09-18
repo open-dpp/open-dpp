@@ -2,7 +2,10 @@ import { IChangeEvent } from "./change-event";
 import { z } from "zod/v4";
 import { ChangeEventTypes } from "./change-event-types";
 import { ConvertToPlainOptions } from "../../../aas/domain/convertable-to-plain";
-import { PassportEditingModeEnum, PassportEditingModeType } from "../../../digital-product-document/domain/passport-editing-mode";
+import {
+  PassportEditingModeEnum,
+  PassportEditingModeType,
+} from "../../../digital-product-document/domain/passport-editing-mode";
 
 const PassportEditingModeChangedSchema = z.object({
   type: z.literal(ChangeEventTypes.PassportEditingModeChanged),

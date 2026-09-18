@@ -1,8 +1,6 @@
 import {
   type DigitalProductDocumentDto,
-  type PassportDto,
   PassportDtoSchema,
-  type TemplateDto,
   TemplateDtoSchema,
 } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";

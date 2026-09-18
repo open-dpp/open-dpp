@@ -1,4 +1,8 @@
-import { PassportEditingModeDto, PassportEditingModeDtoEnum, PassportEditingModeDtoType } from "@open-dpp/dto";
+import {
+  PassportEditingModeDto,
+  PassportEditingModeDtoEnum,
+  PassportEditingModeDtoType,
+} from "@open-dpp/dto";
 
 export const PassportEditingMode = PassportEditingModeDto;
 export const PassportEditingModeEnum = PassportEditingModeDtoEnum;

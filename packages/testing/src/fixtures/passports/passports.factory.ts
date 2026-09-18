@@ -1,4 +1,8 @@
-import { DigitalProductDocumentStatusDto, PassportDtoSchema, PassportEditingModeDto } from "@open-dpp/dto";
+import {
+  DigitalProductDocumentStatusDto,
+  PassportDtoSchema,
+  PassportEditingModeDto,
+} from "@open-dpp/dto";
 import type { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";
