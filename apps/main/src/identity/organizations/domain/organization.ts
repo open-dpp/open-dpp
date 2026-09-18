@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { ObjectId } from "mongodb";
 import { Invitation } from "./invitation";
 import { Member } from "./member";
 import { MemberRoleType } from "./member-role.enum";
@@ -26,8 +26,7 @@ export class Organization {
   public readonly name: string;
   /**
    * Internal better-auth alias of the organization. Always equal to `id` for new
-   * organizations (set here on create and by the creation hook on persist); never
-   * exposed by the API and never chosen by a caller.
+   * organizations (set on create); never exposed by the API and never chosen by a caller.
    */
   public readonly slug: string;
   /**
@@ -56,14 +55,9 @@ export class Organization {
     this.members = members;
   }
 
-  /**
-   * The minted `id` (and therefore `slug`) is provisional: better-auth assigns the
-   * persisted identity on create (see assignOrganizationIdAsSlug), and the repository
-   * returns the persisted organization. Callers must use that return value, not this one.
-   */
   public static create(data: OrganizationCreateProps) {
     const now = new Date();
-    const id = randomUUID();
+    const id = new ObjectId().toHexString();
     return new Organization(id, data.name, id, data.logo ?? null, data.metadata ?? {}, now, []);
   }
 

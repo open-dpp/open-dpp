@@ -106,7 +106,7 @@ describe("OrganizationsRepository", () => {
     );
   });
 
-  it("sends a unique placeholder slug to better-auth on create", async () => {
+  it("sends the domain-minted id as the slug to better-auth on create", async () => {
     mockAuth.api.createOrganization.mockResolvedValue({
       id: new ObjectId().toString(),
       name: "Test Org",
@@ -115,36 +115,34 @@ describe("OrganizationsRepository", () => {
       metadata: "{}",
       createdAt: new Date(),
     });
+    const first = Organization.create({ name: "Test Org", metadata: {} });
+    const second = Organization.create({ name: "Test Org", metadata: {} });
 
-    await repository.create(Organization.create({ name: "Test Org", metadata: {} }), {});
-    await repository.create(Organization.create({ name: "Test Org", metadata: {} }), {});
+    await repository.create(first, {});
+    await repository.create(second, {});
 
     const slugs = mockAuth.api.createOrganization.mock.calls.map(
       ([call]: [{ body: { slug: string } }]) => call.body.slug,
     );
-    expect(slugs).toHaveLength(2);
-    expect(slugs[0]).toEqual(expect.any(String));
-    expect(slugs[0].length).toBeGreaterThan(0);
+    expect(slugs).toEqual([first.id, second.id]);
     expect(slugs[0]).not.toEqual(slugs[1]);
   });
 
-  it("returns the identity better-auth persisted, with slug equal to id", async () => {
-    const placeholder = Organization.create({ name: "Test Org", metadata: {} });
-    const persistedId = new ObjectId().toHexString();
+  it("returns the persisted organization whose id and slug equal the domain id", async () => {
+    const organization = Organization.create({ name: "Test Org", metadata: {} });
     mockAuth.api.createOrganization.mockResolvedValue({
-      id: persistedId,
+      id: organization.id,
       name: "Test Org",
-      slug: persistedId,
+      slug: organization.id,
       logo: null,
       metadata: "{}",
       createdAt: new Date(),
     });
 
-    const created = await repository.create(placeholder, {});
+    const created = await repository.create(organization, {});
 
-    expect(created?.id).toEqual(persistedId);
-    expect(created?.slug).toEqual(persistedId);
-    expect(created?.id).not.toEqual(placeholder.id);
+    expect(created?.id).toEqual(organization.id);
+    expect(created?.slug).toEqual(organization.id);
   });
 
   it("does not send a slug on update", async () => {

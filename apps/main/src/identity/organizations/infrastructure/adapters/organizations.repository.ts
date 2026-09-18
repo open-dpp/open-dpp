@@ -37,8 +37,6 @@ export class OrganizationsRepository {
       headers,
       body: {
         name: organization.name,
-        // Placeholder only: better-auth requires a unique slug in the body, but the
-        // creation hook (assignOrganizationIdAsSlug) replaces both id and slug on persist.
         slug: organization.slug,
         logo: organization.logo ?? undefined,
         metadata: organization.metadata || {},

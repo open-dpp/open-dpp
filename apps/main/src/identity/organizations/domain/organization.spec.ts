@@ -4,6 +4,8 @@ import { InvitationStatus } from "./invitation-status.enum";
 import { MemberRole } from "./member-role.enum";
 import { Organization } from "./organization";
 
+const OBJECT_ID_HEX = /^[0-9a-f]{24}$/;
+
 describe("organization", () => {
   it("creates an organization whose slug equals its id", () => {
     const organization = Organization.create({
@@ -15,6 +17,19 @@ describe("organization", () => {
     expect(organization.id).toBeDefined();
     expect(organization.name).toEqual("Test Org");
     expect(organization.slug).toEqual(organization.id);
+  });
+
+  it("mints an ObjectId hex string as id so Mongo stores a real ObjectId", () => {
+    const organization = Organization.create({ name: "Test Org", metadata: {} });
+
+    expect(organization.id).toMatch(OBJECT_ID_HEX);
+  });
+
+  it("mints a fresh id per create", () => {
+    const first = Organization.create({ name: "Test Org", metadata: {} });
+    const second = Organization.create({ name: "Test Org", metadata: {} });
+
+    expect(first.id).not.toEqual(second.id);
   });
 
   it("keeps a stored slug that differs from the id when loading from the database", () => {

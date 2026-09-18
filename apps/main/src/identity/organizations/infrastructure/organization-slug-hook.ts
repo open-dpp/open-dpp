@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { ValueError } from "@open-dpp/exception";
 
 export interface OrganizationIdAndSlug {
   id: string;
@@ -6,21 +6,24 @@ export interface OrganizationIdAndSlug {
 }
 
 /**
- * better-auth `organizationHooks.beforeCreateOrganization`: mints the organization id
- * up front and makes the slug equal to it. The caller's slug is ignored — the slug is
- * an internal alias of the id, not a value anyone chooses.
- *
- * Why here and not in the repository: `adapter.createOrganization` honours a hook-supplied
- * `id` (`forceAllowId: true`), so this is the one place that can set both fields in a
- * single write, for every creation path — including the session-less `userId` system
- * action. The id must be a 24-hex string: the Mongo adapter stores a valid ObjectId hex
- * as a real ObjectId and anything else (e.g. a UUID) as a raw string `_id`, which the
- * Mongoose `_id: ObjectId` schema then fails to hydrate.
- *
- * better-auth still checks the *incoming* slug for uniqueness before this hook runs, so
- * callers pass a unique placeholder (see OrganizationsRepository.create).
+ * The Mongo adapter stores a 24-hex string `_id` as a real ObjectId and anything else as a
+ * raw string, which the Mongoose `_id: ObjectId` schema then fails to hydrate.
  */
-export function assignOrganizationIdAsSlug(): { data: OrganizationIdAndSlug } {
-  const id = new ObjectId().toHexString();
-  return { data: { id, slug: id } };
+const OBJECT_ID_HEX = /^[0-9a-f]{24}$/;
+
+/**
+ * better-auth `organizationHooks.beforeCreateOrganization`: the domain mints the
+ * organization id and sends it as the slug (see Organization.create and
+ * OrganizationsRepository.create); this hook makes that slug the persisted `_id`, which
+ * `adapter.createOrganization` honours via `forceAllowId`.
+ */
+export function assignOrganizationSlugAsId(slug: string | undefined): {
+  data: OrganizationIdAndSlug;
+} {
+  if (slug === undefined || !OBJECT_ID_HEX.test(slug)) {
+    throw new ValueError(
+      `Organization slug must be the domain-minted ObjectId hex string, got ${JSON.stringify(slug)}`,
+    );
+  }
+  return { data: { id: slug, slug } };
 }
