@@ -38,7 +38,7 @@
     "ts-pattern": "^5.9.0",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.42",
-    "vue-chartjs": "^5.3.3",
+    "vue-chartjs": "^5.3.4",
     "vue-i18n": "^11.4.5",
     "vue-router": "^5.1.0",
     "zod": "^4.4.3",
