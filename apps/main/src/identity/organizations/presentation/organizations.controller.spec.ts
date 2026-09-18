@@ -34,6 +34,8 @@ import {
   InvitationDoc as InvitationSchema,
 } from "../infrastructure/schemas/invitation.schema";
 import { ORGANIZATION_ID_HEADER } from "../../auth/presentation/decorators/organization-id.decorator";
+import { OrganizationDtoSchema } from "@open-dpp/dto";
+import { UserRole } from "../../users/domain/user-role.enum";
 
 describe("OrganizationsController", () => {
   let app: INestApplication;
@@ -88,30 +90,125 @@ describe("OrganizationsController", () => {
     }
   });
 
-  it("should create organization", async () => {
+  it("creates an organization without a slug and stores the id as its slug", async () => {
     const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    const slug = `test-create-${randomUUID()}`;
 
     const response = await request(app.getHttpServer())
       .post("/organizations")
       .set("Cookie", userCookie)
-      .send({ name: "Test Organization", slug });
+      .send({ name: "Test Organization" });
 
     expect(response.status).toEqual(201);
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        name: "Test Organization",
-        slug,
-      }),
+    expect(OrganizationDtoSchema.parse(response.body)).toEqual(
+      expect.objectContaining({ id: expect.any(String), name: "Test Organization" }),
     );
+    expect(response.body).not.toHaveProperty("slug");
+    expect(response.body).not.toHaveProperty("members");
 
     const organizationsRepository = moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
     const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
     const org = await organizationsRepository.findOneById(response.body.id);
     expect(org).not.toBeNull();
     expect(org!.name).toEqual("Test Organization");
+    expect(org!.slug).toEqual(response.body.id);
     const members = await membersRepository.findByOrganizationId(response.body.id);
     expect(members.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("ignores a slug provided by the caller", async () => {
+    const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+    const response = await request(app.getHttpServer())
+      .post("/organizations")
+      .set("Cookie", userCookie)
+      .send({ name: "Test Organization", slug: `acme-${randomUUID()}` });
+
+    expect(response.status).toEqual(201);
+    const organizationsRepository = moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
+    const org = await organizationsRepository.findOneById(response.body.id);
+    expect(org!.slug).toEqual(response.body.id);
+  });
+
+  it("creates two organizations with the same name", async () => {
+    const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const name = `ACME GmbH ${randomUUID()}`;
+
+    const first = await request(app.getHttpServer())
+      .post("/organizations")
+      .set("Cookie", userCookie)
+      .send({ name });
+    const second = await request(app.getHttpServer())
+      .post("/organizations")
+      .set("Cookie", userCookie)
+      .send({ name });
+
+    expect(first.status).toEqual(201);
+    expect(second.status).toEqual(201);
+    expect(second.body.id).not.toEqual(first.body.id);
+    expect(second.body.name).toEqual(name);
+  });
+
+  it.each(["", "   "])("rejects the organization name %j", async (name) => {
+    const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+    const response = await request(app.getHttpServer())
+      .post("/organizations")
+      .set("Cookie", userCookie)
+      .send({ name });
+
+    expect(response.status).toEqual(400);
+  });
+
+  it("returns a single organization in the organization wire shape", async () => {
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+    const response = await request(app.getHttpServer())
+      .get(`/organizations/${org.id}`)
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(OrganizationDtoSchema.parse(response.body)).toEqual(
+      expect.objectContaining({ id: org.id, name: org.name }),
+    );
+    expect(response.body).not.toHaveProperty("slug");
+    expect(response.body).not.toHaveProperty("members");
+  });
+
+  it("lists all organizations for an admin in the organization wire shape", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { user: admin } = await betterAuthHelper.createUser({
+      role: UserRole.ADMIN,
+      email: `admin-${randomUUID()}@example.com`,
+    });
+    const { userCookie: adminCookie } = await betterAuthHelper.getUserWithCookie(admin.id);
+
+    const response = await request(app.getHttpServer())
+      .get("/organizations")
+      .set("Cookie", adminCookie);
+
+    expect(response.status).toEqual(200);
+    const ids = response.body.map((item: unknown) => OrganizationDtoSchema.parse(item).id);
+    expect(ids).toContain(org.id);
+    for (const item of response.body) {
+      expect(item).not.toHaveProperty("slug");
+      expect(item).not.toHaveProperty("members");
+    }
+  });
+
+  it("lists member organizations in the organization wire shape", async () => {
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+    const response = await request(app.getHttpServer())
+      .get("/organizations/member")
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    const ids = response.body.map((item: unknown) => OrganizationDtoSchema.parse(item).id);
+    expect(ids).toContain(org.id);
+    for (const item of response.body) {
+      expect(item).not.toHaveProperty("slug");
+      expect(item).not.toHaveProperty("members");
+    }
   });
 
   it("should update organization if authorized", async () => {
@@ -123,11 +220,10 @@ describe("OrganizationsController", () => {
       .send({ name: "Updated Organization", logo: "new-logo" });
 
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        name: "Updated Organization",
-      }),
+    expect(OrganizationDtoSchema.parse(response.body)).toEqual(
+      expect.objectContaining({ id: org.id, name: "Updated Organization" }),
     );
+    expect(response.body).not.toHaveProperty("slug");
 
     const organizationsRepository = moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
     const updatedOrg = await organizationsRepository.findOneById(org.id);

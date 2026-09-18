@@ -1,0 +1,34 @@
+<mjml>
+  <mj-head>
+    {{> emailHead }}
+  </mj-head>
+  <mj-body background-color="#6BAD87">
+    {{> emailHeader }}
+    <mj-section padding-bottom="20px" padding-top="10px">
+      <mj-column>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
+          ><strong
+            >{{#if firstName}}Guten Tag {{ firstName }},{{else}}Guten Tag,{{/if}}</strong
+          ></mj-text
+        >
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Vielen Dank f&uuml;r Ihre Registrierung bei open-dpp!<br />
+          <p></p
+        ></mj-text>
+        <mj-text align="center" font-size="18px" font-family="Arial"
+          >Bitte best&auml;tigen Sie Ihre E-Mail-Adresse &uuml;ber den Button unten.</mj-text
+        >
+        <mj-button
+          background-color="#6BAD87"
+          color="#FFFFFF"
+          href="{{link}}"
+          font-family="Arial, sans-serif"
+          padding="20px 0 0 0"
+          font-weight="bold"
+          font-size="16px"
+          >E-Mail-Adresse best&auml;tigen</mj-button
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -40,3 +40,10 @@ The privileged Member role of an Organization. Only Owners may change other Memb
 **Member Removal**:
 An Owner ending another User's membership in an Organization. Owners cannot be removed — they must first be demoted to the member role — and no one can remove their own membership this way. A removed Member immediately loses access to the Organization.
 _Not to be confused with_: leaving an Organization (self-initiated, a separate concept) or cancelling an Invitation (which ends a pending invite, not a membership).
+
+**Organization Slug**:
+better-auth's internal alias of an Organization. It always equals the Organization's id — set at creation and backfilled for older Organizations — is never chosen by a User and never exposed by the API. Organization names therefore need not be unique.
+
+**Provisioning**:
+An instance admin creating an Organization together with its Owner in one call (`POST /organizations` with `owner`). The Owner is looked up by email or created; the admin is not a Member. The Owner is told per their state: an unverified User gets a welcome mail with a password link plus the verification mail, a verified User gets a "ready" mail. A User created this way is removed again if the Organization cannot be created, unless a concurrent Provisioning for the same email has already made it an Owner elsewhere.
+_Not to be confused with_: an Invitation (which the invitee must accept) or sign-up (self-service).

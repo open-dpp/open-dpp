@@ -7,7 +7,7 @@
     <mj-section padding-bottom="20px" padding-top="10px">
       <mj-column>
         <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"
-          ><strong>Hey {{ firstName }}!</strong></mj-text
+          ><strong>{{#if firstName}}Hey {{ firstName }}!{{else}}Hey there!{{/if}}</strong></mj-text
         >
         <mj-text align="center" font-size="18px" font-family="Arial"
           >Thank you for signing up to open-dpp!<br />

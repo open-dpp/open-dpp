@@ -26,10 +26,7 @@ export const useOrganizationsStore = defineStore("organizations", () => {
 
   const createOrganization = async (orgData: { name: string }) => {
     try {
-      const { data } = await apiClient.dpp.organizations.post({
-        name: orgData.name,
-        slug: orgData.name, // Slug generation logic might be needed
-      });
+      const { data } = await apiClient.dpp.organizations.post({ name: orgData.name });
       if (data) {
         addOrganization(data);
         return data;

@@ -47,7 +47,6 @@ describe("OrganizationsRepository", () => {
   it("should pass undefined for logo if organization has no logo", async () => {
     const organization = Organization.create({
       name: "Test Org",
-      slug: "test-org",
       metadata: {},
     });
 
@@ -105,5 +104,103 @@ describe("OrganizationsRepository", () => {
         }),
       }),
     );
+  });
+
+  it("sends a unique placeholder slug to better-auth on create", async () => {
+    mockAuth.api.createOrganization.mockResolvedValue({
+      id: new ObjectId().toString(),
+      name: "Test Org",
+      slug: "irrelevant",
+      logo: null,
+      metadata: "{}",
+      createdAt: new Date(),
+    });
+
+    await repository.create(Organization.create({ name: "Test Org", metadata: {} }), {});
+    await repository.create(Organization.create({ name: "Test Org", metadata: {} }), {});
+
+    const slugs = mockAuth.api.createOrganization.mock.calls.map(
+      ([call]: [{ body: { slug: string } }]) => call.body.slug,
+    );
+    expect(slugs).toHaveLength(2);
+    expect(slugs[0]).toEqual(expect.any(String));
+    expect(slugs[0].length).toBeGreaterThan(0);
+    expect(slugs[0]).not.toEqual(slugs[1]);
+  });
+
+  it("returns the identity better-auth persisted, with slug equal to id", async () => {
+    const placeholder = Organization.create({ name: "Test Org", metadata: {} });
+    const persistedId = new ObjectId().toHexString();
+    mockAuth.api.createOrganization.mockResolvedValue({
+      id: persistedId,
+      name: "Test Org",
+      slug: persistedId,
+      logo: null,
+      metadata: "{}",
+      createdAt: new Date(),
+    });
+
+    const created = await repository.create(placeholder, {});
+
+    expect(created?.id).toEqual(persistedId);
+    expect(created?.slug).toEqual(persistedId);
+    expect(created?.id).not.toEqual(placeholder.id);
+  });
+
+  it("does not send a slug on update", async () => {
+    const organizationObjectId = new ObjectId();
+    const organization = Organization.loadFromDb({
+      id: organizationObjectId.toString(),
+      name: "Test Org",
+      slug: organizationObjectId.toString(),
+      logo: null,
+      metadata: {},
+      createdAt: new Date(),
+    });
+    mockAuth.api.updateOrganization.mockResolvedValue({});
+    mockOrganizationModel.findOne.mockResolvedValue(null);
+
+    await repository.update(organization, {});
+
+    const [call] = mockAuth.api.updateOrganization.mock.calls[0] as [{ body: { data: object } }];
+    expect(call.body.data).not.toHaveProperty("slug");
+  });
+
+  it("creates an organization for a given user as a headerless system action", async () => {
+    const organization = Organization.create({ name: "Provisioned Org", metadata: {} });
+    const id = new ObjectId().toString();
+    mockAuth.api.createOrganization.mockResolvedValue({
+      id,
+      name: "Provisioned Org",
+      slug: id,
+      logo: null,
+      metadata: {},
+      createdAt: new Date(),
+    });
+
+    const created = await repository.createForUser(organization, "user-1");
+
+    expect(created).toBeInstanceOf(Organization);
+    expect(created!.id).toBe(id);
+    const [call] = mockAuth.api.createOrganization.mock.calls[0] as [Record<string, unknown>];
+    expect(call).not.toHaveProperty("headers");
+    expect(call.body).toEqual(
+      expect.objectContaining({
+        name: "Provisioned Org",
+        slug: organization.slug,
+        userId: "user-1",
+      }),
+    );
+  });
+
+  it("returns null when better-auth returns nothing for a system-action create", async () => {
+    mockAuth.api.createOrganization.mockResolvedValue(null);
+
+    const created = await repository.createForUser(
+      Organization.create({ name: "Provisioned Org", metadata: {} }),
+      "user-1",
+    );
+
+    expect(created).toBeNull();
   });
 });

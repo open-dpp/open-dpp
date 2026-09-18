@@ -5,6 +5,7 @@ import { SessionsService } from "../auth/application/services/sessions.service";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
 import { MembersService } from "./application/services/members.service";
+import { OrganizationProvisioningService } from "./application/services/organization-provisioning.service";
 import { OrganizationsService } from "./application/services/organizations.service";
 import { InvitationsRepository } from "./infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "./infrastructure/adapters/members.repository";
@@ -12,6 +13,8 @@ import { OrganizationsRepository } from "./infrastructure/adapters/organizations
 import { InvitationMapper } from "./infrastructure/mappers/invitation.mapper";
 import { MemberMapper } from "./infrastructure/mappers/member.mapper";
 import { OrganizationMapper } from "./infrastructure/mappers/organization.mapper";
+import { OrganizationSlugInitializerService } from "./infrastructure/organization-slug-initializer.service";
+import { ProvisioningMailer } from "./infrastructure/provisioning-mailer";
 import { InvitationDoc, InvitationSchema } from "./infrastructure/schemas/invitation.schema";
 
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
@@ -42,8 +45,11 @@ import { PolicyModule } from "../../policy/policy.module";
     MembersRepository,
     InvitationsRepository,
     OrganizationsService,
+    OrganizationProvisioningService,
+    ProvisioningMailer,
     MembersService,
     SessionsService,
+    OrganizationSlugInitializerService,
   ],
   exports: [OrganizationsRepository, MembersRepository, OrganizationsService, MembersService],
 })

@@ -16,6 +16,11 @@ export interface DisposableUser {
   dispose: () => Promise<void>;
 }
 
+const VERIFY_EMAIL_SUBJECT: Record<string, string> = {
+  en: "Verify E-Mail address",
+  de: "E-Mail-Adresse bestätigen",
+};
+
 async function signUpViaApi(
   request: APIRequestContext,
   u: {
@@ -70,7 +75,8 @@ export async function createDisposableUser(
     firstName: "E2E",
     lastName: "User",
   };
-  await signUpViaApi(deps.request, { ...user, preferredLanguage: opts.preferredLanguage ?? "de" });
+  const preferredLanguage = opts.preferredLanguage ?? "de";
+  await signUpViaApi(deps.request, { ...user, preferredLanguage });
 
   // de-DE so the app i18n renders German throughout (matches the German UI
   // assertions in the account specs); without it a fresh context defaults to en-US.
@@ -80,7 +86,8 @@ export async function createDisposableUser(
   if (opts.verified) {
     const msg = await deps.mailpit.waitForMessage({
       to: user.email,
-      subjectContains: "Verify E-Mail address",
+      // The verification mail is localized by preferredLanguage (VERIFY_EMAIL_SUBJECT_BY_LANGUAGE).
+      subjectContains: VERIFY_EMAIL_SUBJECT[preferredLanguage] ?? VERIFY_EMAIL_SUBJECT.en,
       since,
     });
     await page.goto(MailpitClient.getVerifyLink(msg));

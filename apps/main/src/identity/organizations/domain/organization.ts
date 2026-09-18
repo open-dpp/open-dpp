@@ -5,13 +5,14 @@ import { MemberRoleType } from "./member-role.enum";
 
 export interface OrganizationCreateProps {
   name: string;
-  slug: string;
   logo?: string | null;
   metadata?: any;
 }
 
 export type OrganizationDbProps = OrganizationCreateProps & {
   id: string;
+  /** Stored verbatim; equals `id` for every organization created or backfilled since #852. */
+  slug: string;
   createdAt: Date;
 };
 
@@ -23,6 +24,11 @@ export interface OrganizationUpdateProps {
 export class Organization {
   public readonly id: string;
   public readonly name: string;
+  /**
+   * Internal better-auth alias of the organization. Always equal to `id` for new
+   * organizations (set here on create and by the creation hook on persist); never
+   * exposed by the API and never chosen by a caller.
+   */
   public readonly slug: string;
   /**
    * @deprecated Use `Branding.logo` instead.
@@ -50,17 +56,15 @@ export class Organization {
     this.members = members;
   }
 
+  /**
+   * The minted `id` (and therefore `slug`) is provisional: better-auth assigns the
+   * persisted identity on create (see assignOrganizationIdAsSlug), and the repository
+   * returns the persisted organization. Callers must use that return value, not this one.
+   */
   public static create(data: OrganizationCreateProps) {
     const now = new Date();
-    return new Organization(
-      randomUUID(),
-      data.name,
-      data.slug,
-      data.logo ?? null,
-      data.metadata ?? {},
-      now,
-      [],
-    );
+    const id = randomUUID();
+    return new Organization(id, data.name, id, data.logo ?? null, data.metadata ?? {}, now, []);
   }
 
   public static loadFromDb(data: OrganizationDbProps) {
