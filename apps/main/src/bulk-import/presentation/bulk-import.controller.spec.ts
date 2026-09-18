@@ -118,12 +118,18 @@ describe("BulkImport controllers", () => {
     fieldMappings: [{ input: "sku", output: "sku" }],
   });
 
+  // Wall-clock deadline rather than a fixed attempt count: under full-suite load a
+  // background run can take several seconds, well beyond 40 x 25 ms.
+  const RUN_COMPLETION_TIMEOUT_MS = 15_000;
+  const RUN_POLL_INTERVAL_MS = 25;
+
   async function waitForRunCompletion(
     runId: string,
     userCookie: string,
     organizationId: string,
   ): Promise<{ status: string }> {
-    for (let attempt = 0; attempt < 40; attempt++) {
+    const deadline = Date.now() + RUN_COMPLETION_TIMEOUT_MS;
+    while (Date.now() < deadline) {
       const response = await request(app.getHttpServer())
         .get(`/bulk-import/runs/${runId}`)
         .set("Cookie", userCookie)
@@ -131,9 +137,9 @@ describe("BulkImport controllers", () => {
       if (response.body.status !== "pending" && response.body.status !== "running") {
         return response.body;
       }
-      await new Promise((resolve) => setTimeout(resolve, 25));
+      await new Promise((resolve) => setTimeout(resolve, RUN_POLL_INTERVAL_MS));
     }
-    throw new Error(`Run ${runId} did not complete in time`);
+    throw new Error(`Run ${runId} did not complete within ${RUN_COMPLETION_TIMEOUT_MS} ms`);
   }
 
   // A run creates one passport per unlinked row, so both entry points must sit behind the same

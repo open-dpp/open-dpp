@@ -12,6 +12,7 @@ import { OrganizationsRepository } from "./infrastructure/adapters/organizations
 import { InvitationMapper } from "./infrastructure/mappers/invitation.mapper";
 import { MemberMapper } from "./infrastructure/mappers/member.mapper";
 import { OrganizationMapper } from "./infrastructure/mappers/organization.mapper";
+import { OrganizationSlugInitializerService } from "./infrastructure/organization-slug-initializer.service";
 import { InvitationDoc, InvitationSchema } from "./infrastructure/schemas/invitation.schema";
 
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
@@ -44,6 +45,7 @@ import { PolicyModule } from "../../policy/policy.module";
     OrganizationsService,
     MembersService,
     SessionsService,
+    OrganizationSlugInitializerService,
   ],
   exports: [OrganizationsRepository, MembersRepository, OrganizationsService, MembersService],
 })

@@ -20,6 +20,7 @@ import {
 } from "../email-change-requests/infrastructure/email-change-hooks";
 import { EMAIL_CHANGE_REQUEST_TTL_SECONDS } from "../email-change-requests/infrastructure/schemas/email-change-request.schema";
 import { findActiveOrganizationIdForUser } from "../organizations/infrastructure/active-organization-gate";
+import { assignOrganizationSlugAsId } from "../organizations/infrastructure/organization-slug-hook";
 import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
@@ -298,6 +299,11 @@ export const AuthProvider: Provider = {
           },
         }),
         organization({
+          organizationHooks: {
+            // The slug is the domain-minted id; see assignOrganizationSlugAsId.
+            beforeCreateOrganization: async ({ organization }) =>
+              assignOrganizationSlugAsId(organization.slug),
+          },
           async sendInvitationEmail(data) {
             try {
               if (!data.organization) {
