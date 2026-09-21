@@ -72,6 +72,18 @@ open-dpp is configured through environment variables. Some settings can also be 
 
 > `OPEN_DPP_AUTH_ADMIN_USERNAME` and `OPEN_DPP_AUTH_ADMIN_PASSWORD` must be provided together (both set or both omitted).
 
+## OAuth Provider
+
+| Variable                                | Type                     | Required    | Default | Description                                                                                                                                                                                                                                                           |
+| --------------------------------------- | ------------------------ | ----------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPEN_DPP_OAUTH_PROVIDER_ENABLED`       | strict boolean (string)  | No          | `false` | Lets open-dpp act as OpenID Connect provider for one operator-configured Trusted Client; value must be `"true"` or `"false"`. Unset or `"false"` = open-dpp is nobody's identity provider. See the [Production setup](/guides/production-setup#oauth-provider) guide. |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`     | string                   | Conditional | –       | The Trusted Client's `client_id`.                                                                                                                                                                                                                                     |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET` | string                   | Conditional | –       | The Trusted Client's `client_secret`; stored hashed, re-applied on every startup.                                                                                                                                                                                     |
+| `OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS` | string (comma-separated) | Conditional | –       | The Trusted Client's callback URLs: absolute `https` URLs without a fragment (`http` only on loopback hosts).                                                                                                                                                         |
+| `OPEN_DPP_OAUTH_PROVIDER_CLIENT_NAME`   | string                   | No          | –       | Display name of the Trusted Client; defaults to the client id.                                                                                                                                                                                                        |
+
+> `OPEN_DPP_OAUTH_PROVIDER_CLIENT_ID`, `OPEN_DPP_OAUTH_PROVIDER_CLIENT_SECRET` and `OPEN_DPP_OAUTH_PROVIDER_REDIRECT_URIS` are required while `OPEN_DPP_OAUTH_PROVIDER_ENABLED` is `"true"` and ignored otherwise. An empty value counts as unset. The Trusted Client is written from these variables on every startup, so changes need a restart; token lifetimes are fixed (access token 15 minutes, refresh token 7 days sliding). The contract the Trusted Client follows is in [Integrating a Trusted Client](/guides/production-setup#integrating-a-trusted-client).
+
 ## Instance settings
 
 | Variable                                          | Type                    | Required | Default | Description                                                                                                    |

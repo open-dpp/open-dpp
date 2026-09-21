@@ -4,6 +4,10 @@ import { Controller, ForbiddenException, Get, Inject, Post, Req, Res } from "@ne
 import { toNodeHandler } from "better-auth/node";
 import { InstanceSettingsService } from "../../../instance-settings/application/services/instance-settings.service";
 import { AUTH } from "../auth.provider";
+import {
+  OAUTH_TOKEN_PATH,
+  TOKEN_RESPONSE_HEADERS,
+} from "../infrastructure/oauth-provider/token-response-headers";
 import { betterAuthPath, isBlockedBetterAuthPostPath } from "./blocked-better-auth-paths";
 import { OptionalAuth } from "./decorators/optional-auth.decorator";
 
@@ -30,6 +34,9 @@ export class AuthController {
       throw new ForbiddenException(
         "This operation is not supported. Please use the correct endpoint.",
       );
+    }
+    if (betterAuthPath(request.url) === OAUTH_TOKEN_PATH) {
+      response.set(TOKEN_RESPONSE_HEADERS);
     }
     const handler = toNodeHandler(this.auth!);
     await handler(request, response);

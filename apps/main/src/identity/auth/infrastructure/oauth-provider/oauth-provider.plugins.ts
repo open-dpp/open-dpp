@@ -22,6 +22,13 @@ export const OAUTH_PROVIDER_GRANT_TYPES = ["authorization_code", "refresh_token"
 /** 15 minutes: a JWT access token cannot be revoked, so it has to be short-lived. */
 export const ACCESS_TOKEN_LIFETIME_SECONDS = 15 * 60;
 
+/**
+ * 7 days, sliding: every rotation restarts the window, so a landing-page session ends
+ * after a week without use. Nothing else cuts a refresh token off once the User has
+ * signed out of open-dpp, hence shorter than the plugin's 30-day default (#954).
+ */
+export const REFRESH_TOKEN_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
+
 export const OAUTH_PROVIDER_LOGIN_PAGE = "/signin";
 export const OAUTH_PROVIDER_SIGNUP_PAGE = "/signup";
 /** Mandatory in the plugin's options, never rendered: the Trusted Client skips consent. */
@@ -72,6 +79,7 @@ export function createOAuthProviderPlugins(trustedClient: TrustedClientEnv, issu
       scopes: [...OAUTH_PROVIDER_SCOPES],
       grantTypes: [...OAUTH_PROVIDER_GRANT_TYPES],
       accessTokenExpiresIn: ACCESS_TOKEN_LIFETIME_SECONDS,
+      refreshTokenExpiresIn: REFRESH_TOKEN_LIFETIME_SECONDS,
       // freezes the Trusted Client against the (already disabled) CRUD endpoints
       cachedTrustedClients: new Set([trustedClient.clientId]),
       storeClientSecret: { hash: hashClientSecret },

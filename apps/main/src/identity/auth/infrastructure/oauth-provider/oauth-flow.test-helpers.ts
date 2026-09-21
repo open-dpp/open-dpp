@@ -82,14 +82,20 @@ export interface CodeExchange {
   resource?: string;
 }
 
+/** `client_secret_basic`: the Trusted Client's credentials as the token, revoke and introspect endpoints take them. */
+export function clientBasicAuth(secret = TEST_TRUSTED_CLIENT.clientSecret): string {
+  return `Basic ${Buffer.from(`${TEST_TRUSTED_CLIENT.clientId}:${secret}`).toString("base64")}`;
+}
+
 /** POST /oauth2/token with client_secret_basic, as the Trusted Client's server does. */
-export function exchangeCode(app: INestApplication, { code, verifier, resource }: CodeExchange) {
-  const basic = Buffer.from(
-    `${TEST_TRUSTED_CLIENT.clientId}:${TEST_TRUSTED_CLIENT.clientSecret}`,
-  ).toString("base64");
+export function exchangeCode(
+  app: INestApplication,
+  { code, verifier, resource }: CodeExchange,
+  secret?: string,
+) {
   return request(app.getHttpServer())
     .post(`${AUTH_PATH}/oauth2/token`)
-    .set("Authorization", `Basic ${basic}`)
+    .set("Authorization", clientBasicAuth(secret))
     .type("form")
     .send({
       grant_type: "authorization_code",
@@ -100,19 +106,79 @@ export function exchangeCode(app: INestApplication, { code, verifier, resource }
     });
 }
 
-/** Payload of a JWT without signature verification: enough to assert claims in specs. */
-export function decodeJwtPayload(token: string): Record<string, unknown> {
-  const [, payload] = token.split(".");
-  if (!payload) {
+export interface RefreshRequest {
+  refreshToken: string;
+  /** Sent on every refresh to obtain a JWT access token again (otherwise the token is opaque). */
+  resource?: string;
+}
+
+/** POST /oauth2/token with the refresh_token grant, as the Trusted Client's server does. */
+export function refreshTokens(
+  app: INestApplication,
+  { refreshToken, resource }: RefreshRequest,
+  secret?: string,
+) {
+  return request(app.getHttpServer())
+    .post(`${AUTH_PATH}/oauth2/token`)
+    .set("Authorization", clientBasicAuth(secret))
+    .type("form")
+    .send({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      ...(resource ? { resource } : {}),
+    });
+}
+
+/** POST /oauth2/revoke (RFC 7009) with client_secret_basic. */
+export function revokeToken(
+  app: INestApplication,
+  token: string,
+  hint: "access_token" | "refresh_token",
+) {
+  return request(app.getHttpServer())
+    .post(`${AUTH_PATH}/oauth2/revoke`)
+    .set("Authorization", clientBasicAuth())
+    .type("form")
+    .send({ token, token_type_hint: hint });
+}
+
+/** POST /oauth2/introspect (RFC 7662) with client_secret_basic; the hint skips the access-token attempt. */
+export function introspectToken(
+  app: INestApplication,
+  token: string,
+  hint?: "access_token" | "refresh_token",
+) {
+  return request(app.getHttpServer())
+    .post(`${AUTH_PATH}/oauth2/introspect`)
+    .set("Authorization", clientBasicAuth())
+    .type("form")
+    .send(hint ? { token, token_type_hint: hint } : { token });
+}
+
+function decodeJwtPart(token: string, part: "header" | "payload"): Record<string, unknown> {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
     throw new Error("Not a JWT");
   }
-  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  const encoded = part === "header" ? parts[0] : parts[1];
+  return JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+}
+
+/** Header of a JWT: algorithm and key id, as the verifier sees them. */
+export function decodeJwtHeader(token: string): Record<string, unknown> {
+  return decodeJwtPart(token, "header");
+}
+
+/** Payload of a JWT without signature verification: enough to assert claims in specs. */
+export function decodeJwtPayload(token: string): Record<string, unknown> {
+  return decodeJwtPart(token, "payload");
 }
 
 export interface Tokens {
   access_token: string;
   token_type: string;
   expires_in: number;
+  expires_at: number;
   scope: string;
   id_token?: string;
   refresh_token?: string;
