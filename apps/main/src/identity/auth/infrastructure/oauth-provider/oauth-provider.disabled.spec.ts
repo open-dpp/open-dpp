@@ -5,6 +5,7 @@ import type { INestApplication } from "@nestjs/common";
 import type { Connection } from "mongoose";
 import request from "supertest";
 import {
+  API_PATH,
   AUTH_PATH,
   bootAuthTestApp,
   collectionNames,
@@ -48,5 +49,38 @@ describe("OAuth Provider disabled (the default)", () => {
     const names = await collectionNames(connection);
 
     expect(names.filter((name) => OAUTH_PROVIDER_COLLECTIONS.includes(name))).toEqual([]);
+  });
+
+  describe("behind the AuthGuard", () => {
+    let guarded: INestApplication;
+    let cookie: string;
+
+    beforeAll(async () => {
+      const testApp = await bootAuthTestApp({ withAuthGuard: true });
+      guarded = testApp.app;
+      ({ userCookie: cookie } =
+        await testApp.betterAuthHelper.createOrganizationAndUserWithCookie());
+    });
+
+    afterAll(async () => {
+      await guarded.close();
+    });
+
+    it("ignores a bearer token next to the browser session", async () => {
+      const response = await request(guarded.getHttpServer())
+        .get(`${API_PATH}/organizations/member`)
+        .set("Cookie", cookie)
+        .set("Authorization", "Bearer not.an.access-token");
+
+      expect(response.status).toBe(200);
+    });
+
+    it("refuses a bearer token without a browser session as before (no 401 of its own)", async () => {
+      const response = await request(guarded.getHttpServer())
+        .get(`${API_PATH}/organizations/member`)
+        .set("Authorization", "Bearer not.an.access-token");
+
+      expect(response.status).toBe(403);
+    });
   });
 });

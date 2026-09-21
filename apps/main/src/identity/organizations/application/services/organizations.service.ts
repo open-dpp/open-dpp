@@ -96,13 +96,20 @@ export class OrganizationsService {
     return result;
   }
 
-  async getMemberOrganizations(
-    userId: string,
-    headers: BetterAuthHeaders,
-  ): Promise<Organization[]> {
+  /**
+   * The organizations the User is a member of, read from the memberships: the answer
+   * is the same whichever credential (cookie, api key, Trusted Client token) the
+   * request carried, so it never asks better-auth for the browser session.
+   */
+  async getMemberOrganizations(userId: string): Promise<Organization[]> {
     this.logger.debug(`Getting organizations for user: ${userId}`);
-    // Using default repo (BetterAuth) as per original handler
-    return this.organizationsRepository.findManyByMember(headers);
+    const memberships = await this.membersRepository.findByUserId(userId);
+    if (memberships.length === 0) {
+      return [];
+    }
+    return this.organizationsRepository.findManyByIds(
+      memberships.map((membership) => membership.organizationId),
+    );
   }
 
   async getOrganization(organizationId: string, session?: Session): Promise<Organization | null> {

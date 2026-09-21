@@ -26,8 +26,9 @@ import {
   createOAuthProviderPlugins,
   OAUTH_PROVIDER_DISABLED_PATHS,
 } from "./infrastructure/oauth-provider/oauth-provider.plugins";
+import { AUTH_BASE_PATH } from "./auth-base-path";
+import { oauthProviderIssuer } from "./infrastructure/oauth-provider/oauth-provider.issuer";
 import { ensureTrustedClientUpserted } from "./infrastructure/oauth-provider/trusted-client-upsert";
-import { LatestApiVersionWithPrefixDto } from "@open-dpp/dto";
 import { DisplayLanguageEnum, DisplayLanguageType } from "@open-dpp/dto";
 
 export const AUTH = "auth";
@@ -143,14 +144,13 @@ export const AuthProvider: Provider = {
     }
     const mongoClient = mongooseConnection.getClient();
 
-    const authBasePath = `/api/${LatestApiVersionWithPrefixDto}/auth`;
     // OAuth Provider: present only when enabled; the issuer is the auth mount on the origin
     const trustedClient = configService.getTrustedClient();
-    const issuer = `${new URL(configService.get("OPEN_DPP_URL")).origin}${authBasePath}`;
+    const issuer = oauthProviderIssuer(configService);
 
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
-      basePath: authBasePath,
+      basePath: AUTH_BASE_PATH,
       secret: configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [configService.get("OPEN_DPP_URL")],
       ...(trustedClient ? { disabledPaths: [...OAUTH_PROVIDER_DISABLED_PATHS] } : {}),

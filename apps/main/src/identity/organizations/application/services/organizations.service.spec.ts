@@ -3,6 +3,8 @@ import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Session } from "../../../auth/domain/session";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
+import { Member } from "../../domain/member";
+import { MemberRole } from "../../domain/member-role.enum";
 import { Organization } from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
@@ -23,11 +25,13 @@ describe("OrganizationsService", () => {
         (organization: Organization, headers: BetterAuthHeaders) => Promise<Organization | null>
       >(),
     findOneById: jest.fn(),
+    findManyByIds: jest.fn<(ids: string[]) => Promise<Organization[]>>(),
     update: jest.fn(),
   };
 
   const mockMembersRepository = {
     findOneByUserIdAndOrganizationId: jest.fn(),
+    findByUserId: jest.fn<(userId: string) => Promise<Member[]>>(),
   };
 
   const mockUsersRepository = {
@@ -76,6 +80,37 @@ describe("OrganizationsService", () => {
     }).compile();
 
     service = module.get<OrganizationsService>(OrganizationsService);
+  });
+
+  describe("getMemberOrganizations", () => {
+    it("lists the organizations the user is a member of, from the memberships alone", async () => {
+      const memberships = [
+        Member.create({ userId: "user1", organizationId: "org-1", role: MemberRole.OWNER }),
+        Member.create({ userId: "user1", organizationId: "org-2", role: MemberRole.MEMBER }),
+      ];
+      const organizations = [
+        Organization.create({ name: "One", metadata: {} }),
+        Organization.create({ name: "Two", metadata: {} }),
+      ];
+      mockMembersRepository.findByUserId.mockResolvedValue(memberships);
+      mockOrganizationsRepository.findManyByIds.mockResolvedValue(organizations);
+
+      const result = await service.getMemberOrganizations("user1");
+
+      expect(result).toBe(organizations);
+      expect(mockMembersRepository.findByUserId).toHaveBeenCalledWith("user1");
+      expect(mockOrganizationsRepository.findManyByIds).toHaveBeenCalledWith(["org-1", "org-2"]);
+    });
+
+    it("answers an empty list without querying organizations for a user without memberships", async () => {
+      mockMembersRepository.findByUserId.mockResolvedValue([]);
+      mockOrganizationsRepository.findManyByIds.mockClear();
+
+      const result = await service.getMemberOrganizations("user1");
+
+      expect(result).toEqual([]);
+      expect(mockOrganizationsRepository.findManyByIds).not.toHaveBeenCalled();
+    });
   });
 
   it("should create organization ", async () => {

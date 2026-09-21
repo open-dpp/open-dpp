@@ -108,3 +108,55 @@ export function decodeJwtPayload(token: string): Record<string, unknown> {
   }
   return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
 }
+
+export interface Tokens {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  scope: string;
+  id_token?: string;
+  refresh_token?: string;
+}
+
+export interface TokenRequest {
+  /** The authorize `scope`; the default asks for every scope of the Trusted Client. */
+  scope?: string;
+  /** `resource` of the code exchange; `null` omits it, so the provider issues an opaque token. */
+  resource?: string | null;
+}
+
+/**
+ * The Trusted Client's flow up to the tokens, in three calls: authorize as a browser
+ * fetch, sign-in with the signed query, code exchange with `client_secret_basic` and
+ * (by default) `resource: ISSUER`, so the access token is a JWT.
+ */
+export async function obtainTokens(
+  app: INestApplication,
+  credentials: { email: string; password: string },
+  { scope, resource = ISSUER }: TokenRequest = {},
+): Promise<Tokens> {
+  const pkce = createPkcePair();
+  const { body: pending } = await authorize(app, authorizeQuery(pkce, scope ? { scope } : {}));
+  if (typeof pending?.url !== "string") {
+    throw new Error(`Authorize did not redirect: ${JSON.stringify(pending)}`);
+  }
+  const { body: resumed } = await signInWithOAuthQuery(
+    app,
+    credentials,
+    signedQueryOf(pending.url),
+  );
+  const code =
+    typeof resumed?.url === "string" ? new URL(resumed.url).searchParams.get("code") : null;
+  if (!code) {
+    throw new Error(`Sign-in did not yield a code: ${JSON.stringify(resumed)}`);
+  }
+  const response = await exchangeCode(app, {
+    code,
+    verifier: pkce.verifier,
+    ...(resource ? { resource } : {}),
+  });
+  if (response.status !== 200) {
+    throw new Error(`Token exchange failed: ${response.status} ${JSON.stringify(response.body)}`);
+  }
+  return response.body;
+}
