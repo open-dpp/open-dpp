@@ -1,5 +1,22 @@
 # @open-dpp/api-client
 
+## 6.0.0
+
+### Major Changes
+
+- [#876](https://github.com/open-dpp/open-dpp/pull/876) [`38a9a4c`](https://github.com/open-dpp/open-dpp/commit/38a9a4c0e5949e516222ca0937822ffd4402bf20) Thanks [@florianBieck](https://github.com/florianBieck)! - Organization slugs are an internal detail equal to the organization id, so organization names no longer need to be unique.
+
+  - `POST /organizations` accepts `{ name }` only and validates it (non-empty after trimming). A `slug` in the body is ignored; `logo` and `metadata` are no longer part of the create type (they were never forwarded).
+  - `OrganizationDto` is now a zod schema in `@open-dpp/dto` (re-exported by `@open-dpp/api-client`): `slug` is removed, the never-sent `updatedAt` is gone, and `createdAt` is an ISO string instead of `Date`.
+  - Organization responses no longer include the always-empty `members` array.
+  - Existing organizations are backfilled to `slug = id` on every startup.
+  - The raw better-auth routes `/organization/update` and `/organization/check-slug` return 403, like `/organization/create` already did.
+
+### Patch Changes
+
+- Updated dependencies [[`38a9a4c`](https://github.com/open-dpp/open-dpp/commit/38a9a4c0e5949e516222ca0937822ffd4402bf20)]:
+  - @open-dpp/dto@6.0.0
+
 ## 5.3.0
 
 ### Patch Changes
